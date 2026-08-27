@@ -1,0 +1,868 @@
+{
+  "sheet": "15_Police_Station",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.police.station_red",
+      "name": "Police station building red/grey",
+      "category": "building",
+      "tags": [
+        "police",
+        "station",
+        "hq",
+        "red",
+        "garage",
+        "sign"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full HQ: stairs entrance, POLICE+badge sign, garage door, curved roof deck with spotlights"
+    },
+    {
+      "id": "me.police.station_grey",
+      "name": "Police station building dark grey/blue",
+      "category": "building",
+      "tags": [
+        "police",
+        "station",
+        "hq",
+        "grey",
+        "garage"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        540
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same footprint as red variant; slate/grey panels"
+    },
+    {
+      "id": "me.police.station_white",
+      "name": "Police station building white/lavender/blue",
+      "category": "building",
+      "tags": [
+        "police",
+        "station",
+        "hq",
+        "white",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Light grey/lavender panel colorway of full station"
+    },
+    {
+      "id": "me.police.spotlight_front",
+      "name": "Roof spotlight facing front",
+      "category": "prop",
+      "tags": [
+        "spotlight",
+        "floodlight",
+        "roof",
+        "light"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Individual stadium floodlight on base"
+    },
+    {
+      "id": "me.police.spotlight_right",
+      "name": "Roof spotlight facing right",
+      "category": "prop",
+      "tags": [
+        "spotlight",
+        "floodlight",
+        "roof",
+        "light"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "roof",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Spotlight angled right"
+    },
+    {
+      "id": "me.police.spotlight_back",
+      "name": "Roof spotlight facing back",
+      "category": "prop",
+      "tags": [
+        "spotlight",
+        "floodlight",
+        "roof",
+        "light"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "roof",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Spotlight angled away"
+    },
+    {
+      "id": "me.police.spotlight_left",
+      "name": "Roof spotlight facing left",
+      "category": "prop",
+      "tags": [
+        "spotlight",
+        "floodlight",
+        "roof",
+        "light"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "roof",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Spotlight angled left"
+    },
+    {
+      "id": "me.police.rail_lights_curved",
+      "name": "Curved roof railing with spotlights",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "roof",
+        "spotlight",
+        "curved"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        140
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "U-shaped rail matching station balcony with attached lights"
+    },
+    {
+      "id": "me.police.rail_lights_straight",
+      "name": "Straight roof railing with spotlights",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "roof",
+        "spotlight"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        140
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Short straight rail + lights"
+    },
+    {
+      "id": "me.police.rail_plain",
+      "name": "Plain metal roof railing segment",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "roof",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        120
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Short grey fence/rail piece without lights"
+    },
+    {
+      "id": "me.police.sign_full",
+      "name": "POLICE sign with gold badge",
+      "category": "sign",
+      "tags": [
+        "police",
+        "sign",
+        "badge",
+        "neon"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        240
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal glowing POLICE text topped with star badge"
+    },
+    {
+      "id": "me.police.badge_large",
+      "name": "Gold police badge large",
+      "category": "decor",
+      "tags": [
+        "badge",
+        "star",
+        "gold",
+        "police"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        240
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Standalone six-point gold badge"
+    },
+    {
+      "id": "me.police.badge_small",
+      "name": "Gold police badge small",
+      "category": "decor",
+      "tags": [
+        "badge",
+        "star",
+        "gold",
+        "police"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        240
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Smaller badge variant"
+    },
+    {
+      "id": "me.police.roof_modular_empty",
+      "name": "Modular empty roof deck with railings",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "deck",
+        "modular",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Square roof floor surrounded by low walls/rails; hatch/doorway"
+    },
+    {
+      "id": "me.police.roof_ledge_slice",
+      "name": "Roof ledge / facade edge slice",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "ledge",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        380
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal roof edge strip matching station texture"
+    },
+    {
+      "id": "me.police.roof_cabin",
+      "name": "Rooftop access cabin / stair bulkhead",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "cabin",
+        "access",
+        "hatch"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        420
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small square roof utility/stair enclosure"
+    },
+    {
+      "id": "me.police.helicopter",
+      "name": "Police helicopter",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "police",
+        "aircraft",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        680
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Blue/grey chopper side profile; star on tail"
+    },
+    {
+      "id": "me.police.helipad",
+      "name": "Helipad circular H pad",
+      "category": "infra",
+      "tags": [
+        "helipad",
+        "landing",
+        "H",
+        "pad"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Concrete circle with white H; place on roof or ground"
+    },
+    {
+      "id": "me.police.car_front",
+      "name": "Police car front/rear view",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "cruiser",
+        "police",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark cruiser with light bar; front and rear top-down sprites"
+    },
+    {
+      "id": "me.police.car_side",
+      "name": "Police car side profile",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "cruiser",
+        "police",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side-facing dark blue/black patrol car"
+    },
+    {
+      "id": "me.police.station_wing_modular",
+      "name": "Police station modular wing / garage section",
+      "category": "building",
+      "tags": [
+        "police",
+        "modular",
+        "garage",
+        "entrance"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large mid-facade chunk with windows, pillars, roll-up garage"
+    },
+    {
+      "id": "me.police.facade_narrow_blue",
+      "name": "Narrow tall POLICE facade blue trim",
+      "category": "building",
+      "tags": [
+        "police",
+        "facade",
+        "narrow",
+        "blue",
+        "badge"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "3-story thin annex with POLICE lettering flanking gold badge"
+    },
+    {
+      "id": "me.police.facade_narrow_red",
+      "name": "Narrow tall POLICE facade red trim",
+      "category": "building",
+      "tags": [
+        "police",
+        "facade",
+        "narrow",
+        "red",
+        "badge"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same as blue narrow facade with terracotta/red accents"
+    },
+    {
+      "id": "me.police.box_front",
+      "name": "Police call box front",
+      "category": "infra",
+      "tags": [
+        "police_box",
+        "kiosk",
+        "phone",
+        "blue"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1080
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue British-style POLICE box with roof light"
+    },
+    {
+      "id": "me.police.box_side",
+      "name": "Police call box side",
+      "category": "infra",
+      "tags": [
+        "police_box",
+        "kiosk",
+        "phone",
+        "blue"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1080
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side view of police box"
+    },
+    {
+      "id": "me.police.parking_booth_orange",
+      "name": "Parking/security booth orange stripe",
+      "category": "building",
+      "tags": [
+        "booth",
+        "guard",
+        "parking",
+        "checkpoint"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small grey booth with orange band, door and window"
+    },
+    {
+      "id": "me.police.parking_booth_blue",
+      "name": "Parking/security booth blue stripe",
+      "category": "building",
+      "tags": [
+        "booth",
+        "guard",
+        "parking",
+        "checkpoint",
+        "siren"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Booth with blue stripe; may include roof beacon"
+    },
+    {
+      "id": "me.police.kiosk_terminal",
+      "name": "Security terminal / info kiosk",
+      "category": "prop",
+      "tags": [
+        "kiosk",
+        "terminal",
+        "screen",
+        "security"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small grey interactive screen pedestal"
+    },
+    {
+      "id": "me.police.searchlight_ground",
+      "name": "Ground searchlight on swivel base",
+      "category": "prop",
+      "tags": [
+        "searchlight",
+        "spotlight",
+        "ground"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1020
+      ],
+      "surface": "ground",
+      "facing": "northwest",
+      "multi_tile": true,
+      "notes": "Large silver searchlights angled up; left/right aiming"
+    },
+    {
+      "id": "me.police.barrier_arm_closed",
+      "name": "Boom barrier arm closed (horizontal)",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "gate",
+        "boom",
+        "stop",
+        "security"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Striped arm down with STOP sign"
+    },
+    {
+      "id": "me.police.barrier_arm_open",
+      "name": "Boom barrier arm open (vertical)",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "gate",
+        "boom",
+        "security"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Striped arm raised"
+    },
+    {
+      "id": "me.police.barrier_base",
+      "name": "Boom barrier mechanism base",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "gate",
+        "base"
+      ],
+      "band": 1,
+      "y_hint": [
+        1020,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey housing/control box for gate arm"
+    },
+    {
+      "id": "me.police.bollard",
+      "name": "Security bollard yellow top",
+      "category": "infra",
+      "tags": [
+        "bollard",
+        "obstacle",
+        "sidewalk"
+      ],
+      "band": 1,
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Short grey pillars with yellow/orange reflective caps"
+    },
+    {
+      "id": "me.police.siren_post",
+      "name": "Siren / beacon light on post",
+      "category": "prop",
+      "tags": [
+        "siren",
+        "beacon",
+        "light",
+        "emergency"
+      ],
+      "band": 1,
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small red/blue emergency light on thin stand"
+    },
+    {
+      "id": "me.police.signal_lights",
+      "name": "Traffic/gate signal lights",
+      "category": "infra",
+      "tags": [
+        "signal",
+        "lights",
+        "red",
+        "yellow",
+        "green"
+      ],
+      "band": 1,
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pole-mounted indicator lights for checkpoint"
+    },
+    {
+      "id": "me.police.car_side_alt",
+      "name": "Police car additional facing variants",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "cruiser",
+        "police"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        880
+      ],
+      "surface": "ground",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Extra cruiser sprites in band 1 (side/rear)"
+    },
+    {
+      "id": "me.police.roof_no_sign",
+      "name": "Police station roof module without sign",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "modular",
+        "police"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        400
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Roof piece matching HQ without POLICE signage"
+    },
+    {
+      "id": "me.police.roof_no_spotlights",
+      "name": "Police station roof module without spotlights",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "modular",
+        "police"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        400
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Roof deck without attached floodlights"
+    },
+    {
+      "id": "me.police.facade_narrow_blue_highlight",
+      "name": "Narrow facade blue highlight variant",
+      "category": "building",
+      "tags": [
+        "police",
+        "facade",
+        "narrow",
+        "blue",
+        "highlight"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Highlighted/lit variant of blue narrow POLICE facade"
+    },
+    {
+      "id": "me.police.facade_narrow_red_highlight",
+      "name": "Narrow facade red highlight variant",
+      "category": "building",
+      "tags": [
+        "police",
+        "facade",
+        "narrow",
+        "red",
+        "highlight"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Highlighted/lit variant of red narrow POLICE facade"
+    },
+    {
+      "id": "me.police.sidewalk_obstacle",
+      "name": "Sidewalk security obstacle / bollard pair",
+      "category": "infra",
+      "tags": [
+        "obstacle",
+        "bollard",
+        "sidewalk"
+      ],
+      "band": 1,
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Sidewalk_Obstacle singles; low barriers"
+    },
+    {
+      "id": "me.police.car_rear",
+      "name": "Police car rear view",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "cruiser",
+        "police",
+        "rear"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Rear-facing cruiser with taillights and light bar"
+    },
+    {
+      "id": "me.police.car_side_left",
+      "name": "Police car side facing left",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "cruiser",
+        "police"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        880
+      ],
+      "surface": "ground",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Left-facing side profile cruiser"
+    }
+  ],
+  "row_guide": "Band0 top-left: red police HQ; top-right: spotlights, rail+lights, POLICE sign/badge. Mid-left: grey HQ; mid-right: modular roof decks. Lower-left: white/lavender HQ; lower-right: helicopter, helipad, police cars. Band1: modular wing, narrow blue/red facades, police boxes, searchlights, parking booths, boom gates, bollards, sirens."
+}

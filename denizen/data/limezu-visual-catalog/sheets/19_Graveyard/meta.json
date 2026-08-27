@@ -1,0 +1,23 @@
+{
+  "sheet": "19_Graveyard",
+  "source": "assets/limezu/ext/themes/19_Graveyard.png",
+  "size": [
+    512,
+    640
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/19_Graveyard/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 640,
+      "path": "data/limezu-visual-catalog/sheets/19_Graveyard/band_00_y0-640.jpg",
+      "px_size": [
+        1024,
+        1280
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/19_graveyard",
+  "singles_count": 217
+}

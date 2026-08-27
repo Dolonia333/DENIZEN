@@ -1,0 +1,1049 @@
+{
+  "pack": "limezu_modern_exteriors",
+  "sheet_count": 24,
+  "band_height_px": 768,
+  "sheets": [
+    {
+      "sheet": "10_Vehicles",
+      "source": "assets/limezu/ext/themes/10_Vehicles.png",
+      "size": [
+        512,
+        2688
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/10_Vehicles/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/10_Vehicles/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/10_Vehicles/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/10_Vehicles/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 2688,
+          "path": "data/limezu-visual-catalog/sheets/10_Vehicles/band_03_y2304-2688.jpg",
+          "px_size": [
+            1024,
+            768
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/10_vehicles",
+      "singles_count": 273
+    },
+    {
+      "sheet": "11_Camping",
+      "source": "assets/limezu/ext/themes/11_Camping.png",
+      "size": [
+        512,
+        2896
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/11_Camping/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/11_Camping/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/11_Camping/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/11_Camping/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 2896,
+          "path": "data/limezu-visual-catalog/sheets/11_Camping/band_03_y2304-2896.jpg",
+          "px_size": [
+            1024,
+            1184
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/11_camping",
+      "singles_count": 693
+    },
+    {
+      "sheet": "12_Hotel_and_Hospital",
+      "source": "assets/limezu/ext/themes/12_Hotel_and_Hospital.png",
+      "size": [
+        512,
+        992
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/12_Hotel_and_Hospital/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/12_Hotel_and_Hospital/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 992,
+          "path": "data/limezu-visual-catalog/sheets/12_Hotel_and_Hospital/band_01_y768-992.jpg",
+          "px_size": [
+            1024,
+            448
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/12_hotel_and_hospital",
+      "singles_count": 41
+    },
+    {
+      "sheet": "13_School",
+      "source": "assets/limezu/ext/themes/13_School.png",
+      "size": [
+        512,
+        1856
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/13_School/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/13_School/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/13_School/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 1856,
+          "path": "data/limezu-visual-catalog/sheets/13_School/band_02_y1536-1856.jpg",
+          "px_size": [
+            1024,
+            640
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/13_school",
+      "singles_count": 125
+    },
+    {
+      "sheet": "14_Swimming_Pool",
+      "source": "assets/limezu/ext/themes/14_Swimming_Pool.png",
+      "size": [
+        512,
+        496
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/14_Swimming_Pool/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 496,
+          "path": "data/limezu-visual-catalog/sheets/14_Swimming_Pool/band_00_y0-496.jpg",
+          "px_size": [
+            1024,
+            992
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/14_swimming_pool",
+      "singles_count": 179
+    },
+    {
+      "sheet": "15_Police_Station",
+      "source": "assets/limezu/ext/themes/15_Police_Station.png",
+      "size": [
+        512,
+        1104
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/15_Police_Station/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/15_Police_Station/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1104,
+          "path": "data/limezu-visual-catalog/sheets/15_Police_Station/band_01_y768-1104.jpg",
+          "px_size": [
+            1024,
+            672
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/15_police_station",
+      "singles_count": 37
+    },
+    {
+      "sheet": "16_Office",
+      "source": "assets/limezu/ext/themes/16_Office.png",
+      "size": [
+        512,
+        1520
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/16_Office/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/16_Office/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1520,
+          "path": "data/limezu-visual-catalog/sheets/16_Office/band_01_y768-1520.jpg",
+          "px_size": [
+            1024,
+            1504
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/16_office",
+      "singles_count": 117
+    },
+    {
+      "sheet": "17_Garden",
+      "source": "assets/limezu/ext/themes/17_Garden.png",
+      "size": [
+        512,
+        3136
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/17_Garden/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/17_Garden/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/17_Garden/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/17_Garden/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 3072,
+          "path": "data/limezu-visual-catalog/sheets/17_Garden/band_03_y2304-3072.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 4,
+          "y0": 3072,
+          "y1": 3136,
+          "path": "data/limezu-visual-catalog/sheets/17_Garden/band_04_y3072-3136.jpg",
+          "px_size": [
+            1024,
+            128
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/17_garden",
+      "singles_count": 570
+    },
+    {
+      "sheet": "18_Fire_Station",
+      "source": "assets/limezu/ext/themes/18_Fire_Station.png",
+      "size": [
+        528,
+        480
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/18_Fire_Station/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 480,
+          "path": "data/limezu-visual-catalog/sheets/18_Fire_Station/band_00_y0-480.jpg",
+          "px_size": [
+            1056,
+            960
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/18_fire_station",
+      "singles_count": 42
+    },
+    {
+      "sheet": "19_Graveyard",
+      "source": "assets/limezu/ext/themes/19_Graveyard.png",
+      "size": [
+        512,
+        640
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/19_Graveyard/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 640,
+          "path": "data/limezu-visual-catalog/sheets/19_Graveyard/band_00_y0-640.jpg",
+          "px_size": [
+            1024,
+            1280
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/19_graveyard",
+      "singles_count": 217
+    },
+    {
+      "sheet": "1_Terrains_and_Fences",
+      "source": "assets/limezu/ext/themes/1_Terrains_and_Fences.png",
+      "size": [
+        512,
+        1184
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/1_Terrains_and_Fences/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/1_Terrains_and_Fences/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1184,
+          "path": "data/limezu-visual-catalog/sheets/1_Terrains_and_Fences/band_01_y768-1184.jpg",
+          "px_size": [
+            1024,
+            832
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/1_terrains_and_fences",
+      "singles_count": 462
+    },
+    {
+      "sheet": "20_Subway_and_Train_Station",
+      "source": "assets/limezu/ext/themes/20_Subway_and_Train_Station.png",
+      "size": [
+        512,
+        2960
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 2960,
+          "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_03_y2304-2960.jpg",
+          "px_size": [
+            1024,
+            1312
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/20_subway_and_train_station",
+      "singles_count": 582
+    },
+    {
+      "sheet": "21_Beach",
+      "source": "assets/limezu/ext/themes/21_Beach.png",
+      "size": [
+        512,
+        2000
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/21_Beach/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/21_Beach/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/21_Beach/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2000,
+          "path": "data/limezu-visual-catalog/sheets/21_Beach/band_02_y1536-2000.jpg",
+          "px_size": [
+            1024,
+            928
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/21_beach",
+      "singles_count": 316
+    },
+    {
+      "sheet": "22_Post_Office",
+      "source": "assets/limezu/ext/themes/22_Post_Office.png",
+      "size": [
+        512,
+        480
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/22_Post_Office/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 480,
+          "path": "data/limezu-visual-catalog/sheets/22_Post_Office/band_00_y0-480.jpg",
+          "px_size": [
+            1024,
+            960
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/22_post_office",
+      "singles_count": 44
+    },
+    {
+      "sheet": "23_MIlitary_Base",
+      "source": "assets/limezu/ext/themes/23_MIlitary_Base.png",
+      "size": [
+        512,
+        4575
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 3072,
+          "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_03_y2304-3072.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 4,
+          "y0": 3072,
+          "y1": 3840,
+          "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_04_y3072-3840.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 5,
+          "y0": 3840,
+          "y1": 4575,
+          "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_05_y3840-4575.jpg",
+          "px_size": [
+            1024,
+            1470
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/23_military_base",
+      "singles_count": 305
+    },
+    {
+      "sheet": "24_Additional_Houses",
+      "source": "assets/limezu/ext/themes/24_Additional_Houses.png",
+      "size": [
+        512,
+        4928
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/24_Additional_Houses/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/24_Additional_Houses/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/24_Additional_Houses/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/24_Additional_Houses/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 3072,
+          "path": "data/limezu-visual-catalog/sheets/24_Additional_Houses/band_03_y2304-3072.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 4,
+          "y0": 3072,
+          "y1": 3840,
+          "path": "data/limezu-visual-catalog/sheets/24_Additional_Houses/band_04_y3072-3840.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 5,
+          "y0": 3840,
+          "y1": 4608,
+          "path": "data/limezu-visual-catalog/sheets/24_Additional_Houses/band_05_y3840-4608.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 6,
+          "y0": 4608,
+          "y1": 4928,
+          "path": "data/limezu-visual-catalog/sheets/24_Additional_Houses/band_06_y4608-4928.jpg",
+          "px_size": [
+            1024,
+            640
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/24_additional_houses",
+      "singles_count": 215
+    },
+    {
+      "sheet": "2_City_Terrains",
+      "source": "assets/limezu/ext/themes/2_City_Terrains.png",
+      "size": [
+        944,
+        1648
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/2_City_Terrains/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/2_City_Terrains/band_00_y0-768.jpg",
+          "px_size": [
+            1888,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/2_City_Terrains/band_01_y768-1536.jpg",
+          "px_size": [
+            1888,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 1648,
+          "path": "data/limezu-visual-catalog/sheets/2_City_Terrains/band_02_y1536-1648.jpg",
+          "px_size": [
+            1888,
+            224
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/2_city_terrains",
+      "singles_count": 351
+    },
+    {
+      "sheet": "3_City_Props",
+      "source": "assets/limezu/ext/themes/3_City_Props.png",
+      "size": [
+        512,
+        3584
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/3_City_Props/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/3_City_Props/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/3_City_Props/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/3_City_Props/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 3072,
+          "path": "data/limezu-visual-catalog/sheets/3_City_Props/band_03_y2304-3072.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 4,
+          "y0": 3072,
+          "y1": 3584,
+          "path": "data/limezu-visual-catalog/sheets/3_City_Props/band_04_y3072-3584.jpg",
+          "px_size": [
+            1024,
+            1024
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/3_city_props",
+      "singles_count": 715
+    },
+    {
+      "sheet": "4_Generic_Buildings",
+      "source": "assets/limezu/ext/themes/4_Generic_Buildings.png",
+      "size": [
+        512,
+        3200
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 3072,
+          "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_03_y2304-3072.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 4,
+          "y0": 3072,
+          "y1": 3200,
+          "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_04_y3072-3200.jpg",
+          "px_size": [
+            1024,
+            256
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/4_generic_building",
+      "singles_count": 180
+    },
+    {
+      "sheet": "5_Floor_Modular_Buildings",
+      "source": "assets/limezu/ext/themes/5_Floor_Modular_Buildings.png",
+      "size": [
+        512,
+        4144
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/5_Floor_Modular_Buildings/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/5_Floor_Modular_Buildings/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1536,
+          "path": "data/limezu-visual-catalog/sheets/5_Floor_Modular_Buildings/band_01_y768-1536.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 2,
+          "y0": 1536,
+          "y1": 2304,
+          "path": "data/limezu-visual-catalog/sheets/5_Floor_Modular_Buildings/band_02_y1536-2304.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 3,
+          "y0": 2304,
+          "y1": 3072,
+          "path": "data/limezu-visual-catalog/sheets/5_Floor_Modular_Buildings/band_03_y2304-3072.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 4,
+          "y0": 3072,
+          "y1": 3840,
+          "path": "data/limezu-visual-catalog/sheets/5_Floor_Modular_Buildings/band_04_y3072-3840.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 5,
+          "y0": 3840,
+          "y1": 4144,
+          "path": "data/limezu-visual-catalog/sheets/5_Floor_Modular_Buildings/band_05_y3840-4144.jpg",
+          "px_size": [
+            1024,
+            608
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/5_floor_modular_building",
+      "singles_count": 343
+    },
+    {
+      "sheet": "6_Garage_Sales",
+      "source": "assets/limezu/ext/themes/6_Garage_Sales.png",
+      "size": [
+        512,
+        608
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/6_Garage_Sales/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 608,
+          "path": "data/limezu-visual-catalog/sheets/6_Garage_Sales/band_00_y0-608.jpg",
+          "px_size": [
+            1024,
+            1216
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/6_garage_sales",
+      "singles_count": 95
+    },
+    {
+      "sheet": "7_Villas",
+      "source": "assets/limezu/ext/themes/7_Villas.png",
+      "size": [
+        512,
+        912
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/7_Villas/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/7_Villas/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 912,
+          "path": "data/limezu-visual-catalog/sheets/7_Villas/band_01_y768-912.jpg",
+          "px_size": [
+            1024,
+            288
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/7_villas",
+      "singles_count": 194
+    },
+    {
+      "sheet": "8_Worksite",
+      "source": "assets/limezu/ext/themes/8_Worksite.png",
+      "size": [
+        512,
+        320
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/8_Worksite/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 320,
+          "path": "data/limezu-visual-catalog/sheets/8_Worksite/band_00_y0-320.jpg",
+          "px_size": [
+            1024,
+            640
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/8_worksite",
+      "singles_count": 71
+    },
+    {
+      "sheet": "9_Shopping_Center_and_Markets",
+      "source": "assets/limezu/ext/themes/9_Shopping_Center_and_Markets.png",
+      "size": [
+        512,
+        1088
+      ],
+      "overview": "data/limezu-visual-catalog/sheets/9_Shopping_Center_and_Markets/_overview.jpg",
+      "bands": [
+        {
+          "index": 0,
+          "y0": 0,
+          "y1": 768,
+          "path": "data/limezu-visual-catalog/sheets/9_Shopping_Center_and_Markets/band_00_y0-768.jpg",
+          "px_size": [
+            1024,
+            1536
+          ]
+        },
+        {
+          "index": 1,
+          "y0": 768,
+          "y1": 1088,
+          "path": "data/limezu-visual-catalog/sheets/9_Shopping_Center_and_Markets/band_01_y768-1088.jpg",
+          "px_size": [
+            1024,
+            640
+          ]
+        }
+      ],
+      "singles_dir": "assets/limezu/ext/singles/9_shopping_center_and_markets",
+      "singles_count": 57
+    }
+  ]
+}

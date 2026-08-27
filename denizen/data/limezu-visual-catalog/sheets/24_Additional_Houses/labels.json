@@ -1,0 +1,2082 @@
+{
+  "sheet": "24_Additional_Houses",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.houses.country_house",
+      "name": "Country house with balcony banisters",
+      "category": "building",
+      "tags": [
+        "house",
+        "country",
+        "balcony",
+        "two-story"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan/cream two-story blue-grey roof chimney; singles Country_House"
+    },
+    {
+      "id": "me.houses.country_house_no_banisters",
+      "name": "Country house without upper banisters",
+      "category": "building",
+      "tags": [
+        "house",
+        "country",
+        "two-story"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Country_House_No_Banisters"
+    },
+    {
+      "id": "me.houses.country_banister_balcony",
+      "name": "Country house balcony banister module",
+      "category": "infra",
+      "tags": [
+        "banister",
+        "balcony",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Country_House_Banister_Balcony"
+    },
+    {
+      "id": "me.houses.country_banister_ground",
+      "name": "Country house ground porch banister",
+      "category": "infra",
+      "tags": [
+        "banister",
+        "porch",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        350
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Country_House_Banister_Ground_Floor"
+    },
+    {
+      "id": "me.houses.fence_stone",
+      "name": "Stone/light-grey picket fence kit",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "stone",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Fence_1_*"
+    },
+    {
+      "id": "me.houses.fence_wood_light",
+      "name": "Light wood fence kit",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "wood",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        250
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Fence_2_*"
+    },
+    {
+      "id": "me.houses.fence_wood_dark",
+      "name": "Dark wood fence kit",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "wood",
+        "dark",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Fence_3_*"
+    },
+    {
+      "id": "me.houses.modern_house",
+      "name": "Modern shed-roof house with mailbox/planter",
+      "category": "building",
+      "tags": [
+        "house",
+        "modern",
+        "shed-roof"
+      ],
+      "band": 0,
+      "y_hint": [
+        450,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Modern_House"
+    },
+    {
+      "id": "me.houses.modern_house_unadorned",
+      "name": "Modern house clean without props",
+      "category": "building",
+      "tags": [
+        "house",
+        "modern",
+        "unadorned"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Modern_House_Unadorned"
+    },
+    {
+      "id": "me.houses.modern_banister_balcony",
+      "name": "Modern house balcony banister",
+      "category": "infra",
+      "tags": [
+        "banister",
+        "balcony",
+        "modern"
+      ],
+      "band": 0,
+      "y_hint": [
+        450,
+        600
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Modern_House_Banister_Balcony"
+    },
+    {
+      "id": "me.houses.prop_bench",
+      "name": "Outdoor wooden bench",
+      "category": "prop",
+      "tags": [
+        "bench",
+        "seating"
+      ],
+      "band": 0,
+      "y_hint": [
+        550,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Simple outdoor bench"
+    },
+    {
+      "id": "me.houses.prop_mailbox",
+      "name": "Red wall mailbox",
+      "category": "prop",
+      "tags": [
+        "mailbox",
+        "mail"
+      ],
+      "band": 0,
+      "y_hint": [
+        550,
+        700
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Terraced_House_Mailbox style"
+    },
+    {
+      "id": "me.houses.prop_ac_unit",
+      "name": "Outdoor AC unit",
+      "category": "prop",
+      "tags": [
+        "ac",
+        "hvac"
+      ],
+      "band": 0,
+      "y_hint": [
+        580,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Japanese_AC_Unit / Terraced_House_AC_Unit"
+    },
+    {
+      "id": "me.houses.prop_planters",
+      "name": "Planters with bushes and topiary",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "bush",
+        "plant"
+      ],
+      "band": 0,
+      "y_hint": [
+        580,
+        750
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Long and square planters; singles *Potted_Plant*"
+    },
+    {
+      "id": "me.houses.terraced_house_porch",
+      "name": "Terraced house with wooden porch and bushes",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced",
+        "porch",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Slanted grey roof light siding; singles Terraced_House_1.."
+    },
+    {
+      "id": "me.houses.terraced_house_brick_base",
+      "name": "Terraced house brick foundation no porch",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced",
+        "brick"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red brick ground floor variant"
+    },
+    {
+      "id": "me.houses.terraced_house_garage",
+      "name": "Terraced house with garage door and skylight",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced",
+        "garage"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Garage + roof vents/skylight"
+    },
+    {
+      "id": "me.houses.terraced_house_garage_plain",
+      "name": "Terraced house garage plain roof",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced",
+        "garage"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Garage variant without skylight"
+    },
+    {
+      "id": "me.houses.terraced_porch_module",
+      "name": "Standalone wooden porch/canopy",
+      "category": "infra",
+      "tags": [
+        "porch",
+        "canopy",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        800,
+        1050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_Canopy"
+    },
+    {
+      "id": "me.houses.terraced_window_modules",
+      "name": "Terraced house window texture tiles",
+      "category": "building",
+      "tags": [
+        "window",
+        "modular",
+        "terraced"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Loose window panes"
+    },
+    {
+      "id": "me.houses.terraced_modular_upper",
+      "name": "Modular upper floor + slanted roof units",
+      "category": "building",
+      "tags": [
+        "modular",
+        "roof",
+        "upper",
+        "terraced"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1536
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Below Modular label: upper slices; singles Terraced_House_Modular_*"
+    },
+    {
+      "id": "me.houses.terraced_modular_ac_overhang",
+      "name": "Upper modular with AC and metal overhang",
+      "category": "building",
+      "tags": [
+        "modular",
+        "ac",
+        "overhang"
+      ],
+      "band": 1,
+      "y_hint": [
+        1350,
+        1536
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "AC on wall + corrugated overhang"
+    },
+    {
+      "id": "me.houses.terraced_module_planter",
+      "name": "Terraced module with mailbox and planter",
+      "category": "building",
+      "tags": [
+        "terraced",
+        "modular",
+        "planter"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1800
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Door + red mailbox + bush planter"
+    },
+    {
+      "id": "me.houses.terraced_module_porch_ac",
+      "name": "Terraced module with porch and AC",
+      "category": "building",
+      "tags": [
+        "terraced",
+        "modular",
+        "porch",
+        "ac"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1820
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden porch awning + AC unit"
+    },
+    {
+      "id": "me.houses.terraced_module_garage_skylight",
+      "name": "Terraced module garage + skylight",
+      "category": "building",
+      "tags": [
+        "terraced",
+        "modular",
+        "garage",
+        "skylight"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Garage door + roof skylight"
+    },
+    {
+      "id": "me.houses.terraced_roof_segments",
+      "name": "Corrugated slanted roof segments",
+      "category": "building",
+      "tags": [
+        "roof",
+        "modular",
+        "terraced"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Roof pieces with/without vent; singles Terraced_House_Side_View_Roof_*"
+    },
+    {
+      "id": "me.houses.terraced_wall_brick_band",
+      "name": "Wall modules grey siding over brick",
+      "category": "building",
+      "tags": [
+        "wall",
+        "modular",
+        "brick",
+        "siding"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        2050
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Window bands and door strips"
+    },
+    {
+      "id": "me.houses.terraced_planter_props",
+      "name": "Bush planters and conical topiary",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "plant",
+        "terraced"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_Potted_Plant_*"
+    },
+    {
+      "id": "me.houses.terraced_ac_prop",
+      "name": "Silver AC unit prop",
+      "category": "prop",
+      "tags": [
+        "ac",
+        "hvac"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2080
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Terraced_House_AC_Unit"
+    },
+    {
+      "id": "me.houses.terraced_railing_post",
+      "name": "Vertical wooden railing post",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "post",
+        "wood"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Support post piece"
+    },
+    {
+      "id": "me.houses.terraced_wide_roof",
+      "name": "Wide single-slope corrugated roof",
+      "category": "building",
+      "tags": [
+        "roof",
+        "wide",
+        "terraced"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2280
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Very wide slanted roof span"
+    },
+    {
+      "id": "me.houses.stairs_railing",
+      "name": "Grey stairs with blue-grey railing",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "railing"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stair flight upward"
+    },
+    {
+      "id": "me.houses.umbrella_pair",
+      "name": "White patio umbrellas",
+      "category": "prop",
+      "tags": [
+        "umbrella",
+        "patio",
+        "outdoor"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Modern_House_Umbrella_*"
+    },
+    {
+      "id": "me.houses.modern_wide_facade",
+      "name": "Wide modern building glass doors/windows",
+      "category": "building",
+      "tags": [
+        "house",
+        "modern",
+        "commercial",
+        "glass"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Slanted roof light walls large glazing"
+    },
+    {
+      "id": "me.houses.umbrella_topdown",
+      "name": "Patio umbrellas top-down views",
+      "category": "prop",
+      "tags": [
+        "umbrella",
+        "patio",
+        "topdown"
+      ],
+      "band": 3,
+      "y_hint": [
+        2350,
+        2600
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Square white umbrellas from above"
+    },
+    {
+      "id": "me.houses.umbrella_with_table",
+      "name": "Umbrella over table and chairs",
+      "category": "prop",
+      "tags": [
+        "umbrella",
+        "table",
+        "chair",
+        "patio"
+      ],
+      "band": 3,
+      "y_hint": [
+        2400,
+        2650
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Modern_House_Umbrella_Composition"
+    },
+    {
+      "id": "me.houses.deck_chair",
+      "name": "Deck lounge chairs white/grey",
+      "category": "furniture",
+      "tags": [
+        "chair",
+        "deck",
+        "lounge"
+      ],
+      "band": 3,
+      "y_hint": [
+        2420,
+        2680
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Modern_House_Deck_Chair_*"
+    },
+    {
+      "id": "me.houses.tiny_table",
+      "name": "Tiny patio tables with/without drinks",
+      "category": "furniture",
+      "tags": [
+        "table",
+        "patio",
+        "drinks"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Modern_House_Tiny_Table_*"
+    },
+    {
+      "id": "me.houses.potted_plants_white",
+      "name": "White pot plants round and square",
+      "category": "nature",
+      "tags": [
+        "plant",
+        "pot"
+      ],
+      "band": 3,
+      "y_hint": [
+        2480,
+        2720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Modern_House_Pot / Potted_Plant*"
+    },
+    {
+      "id": "me.houses.glass_railing",
+      "name": "Modern glass railing modular",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "glass",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2720
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Modern_House_Glass_Railing_*"
+    },
+    {
+      "id": "me.houses.victorian_corner_terrace",
+      "name": "Victorian brick L-corner with roof terrace",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "brick",
+        "terrace",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2950
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Mansard blue-grey roof, stone trim; singles Victorian_House_*"
+    },
+    {
+      "id": "me.houses.victorian_facade_narrow",
+      "name": "Victorian narrow vertical facade strip",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "facade",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2600,
+        3000
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Column of windows + gable"
+    },
+    {
+      "id": "me.houses.victorian_facade_wide",
+      "name": "Victorian wide multi-floor facade",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "facade",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2600,
+        3020
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Gabled roof three floors double-windows"
+    },
+    {
+      "id": "me.houses.victorian_entrance_stairs",
+      "name": "Victorian stair entrance module",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "entrance",
+        "stairs"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        3000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stairs to central door; singles Victorian_House_1_Side_Entrance"
+    },
+    {
+      "id": "me.houses.victorian_roof_caps",
+      "name": "Victorian roof gables and chimneys",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "roof",
+        "chimney"
+      ],
+      "band": 3,
+      "y_hint": [
+        2900,
+        3072
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Roof tiling details for modular tops"
+    },
+    {
+      "id": "me.houses.victorian_corner_flat_roof",
+      "name": "Victorian corner with flat roof center",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "corner",
+        "roof"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3350
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sloped edges around flat grey center, chimneys"
+    },
+    {
+      "id": "me.houses.victorian_side_entrance_balcony",
+      "name": "Victorian narrow with raised entrance balcony",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "entrance",
+        "balcony"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ornate raised door with white railing stairs"
+    },
+    {
+      "id": "me.houses.victorian_tower_circle_window",
+      "name": "Victorian facade with circular tower window",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "tower",
+        "window"
+      ],
+      "band": 4,
+      "y_hint": [
+        3300,
+        3600
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Square tower circular window + arched below"
+    },
+    {
+      "id": "me.houses.victorian_flat_roof_chimneys",
+      "name": "Victorian section flat roof four chimneys",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "roof",
+        "chimney"
+      ],
+      "band": 4,
+      "y_hint": [
+        3350,
+        3650
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flat roof enclosed by tiled borders"
+    },
+    {
+      "id": "me.houses.victorian_tower_top",
+      "name": "Victorian tower top pyramidal roof",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "tower",
+        "roof"
+      ],
+      "band": 4,
+      "y_hint": [
+        3600,
+        3840
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pyramidal roof + circular decorative window"
+    },
+    {
+      "id": "me.houses.victorian_tower_partial",
+      "name": "Victorian tower top partial adjacent roof",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "tower",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        3550,
+        3800
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Partial tower+roof segment"
+    },
+    {
+      "id": "me.houses.victorian_arched_windows",
+      "name": "Victorian arched window facade wide/narrow",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "arch",
+        "window"
+      ],
+      "band": 5,
+      "y_hint": [
+        3840,
+        4050
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown brick white bands arched blue windows"
+    },
+    {
+      "id": "me.houses.japanese_house",
+      "name": "Japanese white house with garage",
+      "category": "building",
+      "tags": [
+        "house",
+        "japanese",
+        "garage"
+      ],
+      "band": 5,
+      "y_hint": [
+        4000,
+        4250
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White vertical siding grey roof; singles Japanese_House"
+    },
+    {
+      "id": "me.houses.japanese_porch",
+      "name": "Japanese house porch/entry component",
+      "category": "building",
+      "tags": [
+        "japanese",
+        "porch",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4100,
+        4300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Entry overhang module"
+    },
+    {
+      "id": "me.houses.japanese_pillars",
+      "name": "Wooden porch pillars",
+      "category": "infra",
+      "tags": [
+        "pillar",
+        "wood",
+        "porch"
+      ],
+      "band": 5,
+      "y_hint": [
+        4100,
+        4280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown vertical posts"
+    },
+    {
+      "id": "me.houses.one_story_house",
+      "name": "One-story grey house with wooden awning",
+      "category": "building",
+      "tags": [
+        "house",
+        "one-story",
+        "awning"
+      ],
+      "band": 5,
+      "y_hint": [
+        4000,
+        4300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles One_Story_House"
+    },
+    {
+      "id": "me.houses.japanese_shelf_props",
+      "name": "Wooden shelves and chest props",
+      "category": "furniture",
+      "tags": [
+        "shelf",
+        "chest",
+        "props"
+      ],
+      "band": 5,
+      "y_hint": [
+        4150,
+        4350
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Japanese_House_Shelf*"
+    },
+    {
+      "id": "me.houses.post_apoc_cabin",
+      "name": "Rustic log cabin orange door",
+      "category": "building",
+      "tags": [
+        "house",
+        "cabin",
+        "post-apoc",
+        "wood"
+      ],
+      "band": 5,
+      "y_hint": [
+        4250,
+        4450
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Post_Apocalyptic_House_1/2"
+    },
+    {
+      "id": "me.houses.post_apoc_door",
+      "name": "Cabin orange door component",
+      "category": "building",
+      "tags": [
+        "door",
+        "cabin",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4280,
+        4450
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Detached orange door frame"
+    },
+    {
+      "id": "me.houses.utility_shed_white",
+      "name": "White utility storage shed",
+      "category": "building",
+      "tags": [
+        "shed",
+        "utility",
+        "storage"
+      ],
+      "band": 5,
+      "y_hint": [
+        4280,
+        4450
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small white box shed"
+    },
+    {
+      "id": "me.houses.windmill",
+      "name": "Windmill with lattice tower and blades",
+      "category": "building",
+      "tags": [
+        "windmill",
+        "power",
+        "post-apoc"
+      ],
+      "band": 5,
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Post_Apocalyptic_House_Wind_Mill"
+    },
+    {
+      "id": "me.houses.windmill_tower",
+      "name": "Windmill lattice tower no propeller",
+      "category": "building",
+      "tags": [
+        "windmill",
+        "tower"
+      ],
+      "band": 5,
+      "y_hint": [
+        4280,
+        4500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles ...Wind_Mill_No_Propeller"
+    },
+    {
+      "id": "me.houses.windmill_propeller",
+      "name": "Windmill blades top-down",
+      "category": "prop",
+      "tags": [
+        "windmill",
+        "blade",
+        "propeller"
+      ],
+      "band": 5,
+      "y_hint": [
+        4300,
+        4480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles ...Wind_Mill_Propeller"
+    },
+    {
+      "id": "me.houses.solar_panels",
+      "name": "Solar panel array racks",
+      "category": "prop",
+      "tags": [
+        "solar",
+        "power",
+        "panels"
+      ],
+      "band": 5,
+      "y_hint": [
+        4300,
+        4500
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles ...Solar_Panels_1/2"
+    },
+    {
+      "id": "me.houses.generators",
+      "name": "Generator / machine boxes",
+      "category": "prop",
+      "tags": [
+        "generator",
+        "power",
+        "machine"
+      ],
+      "band": 5,
+      "y_hint": [
+        4320,
+        4520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles ...Generator_*"
+    },
+    {
+      "id": "me.houses.radio_antenna_box",
+      "name": "Radio box with antenna",
+      "category": "prop",
+      "tags": [
+        "radio",
+        "antenna",
+        "comms"
+      ],
+      "band": 5,
+      "y_hint": [
+        4350,
+        4520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "White box black antenna"
+    },
+    {
+      "id": "me.houses.haunted_roof_peaks",
+      "name": "Ornate gothic roof peaks",
+      "category": "building",
+      "tags": [
+        "haunted",
+        "roof",
+        "gothic"
+      ],
+      "band": 5,
+      "y_hint": [
+        4400,
+        4580
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Decorative peaks circular window; singles Haunted_House roof pieces"
+    },
+    {
+      "id": "me.houses.roof_pointed_cap",
+      "name": "Pointed metal roof/turret cap",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "cap",
+        "finial"
+      ],
+      "band": 5,
+      "y_hint": [
+        4450,
+        4580
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Dark pointed decorative cap"
+    },
+    {
+      "id": "me.houses.fence_enclosure",
+      "name": "Square wooden fence enclosure",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "enclosure",
+        "wood"
+      ],
+      "band": 5,
+      "y_hint": [
+        4450,
+        4600
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Complete square fence yard"
+    },
+    {
+      "id": "me.houses.fence_rustic_parts",
+      "name": "Rustic fence posts and rails",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "wood",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4480,
+        4608
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Fence_4/5/6_* pieces"
+    },
+    {
+      "id": "me.houses.haunted_house",
+      "name": "Gothic haunted house full stamp",
+      "category": "building",
+      "tags": [
+        "house",
+        "haunted",
+        "gothic",
+        "mansion"
+      ],
+      "band": 6,
+      "y_hint": [
+        4608,
+        4900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stone+timber arched doors lantern; singles Haunted_House"
+    },
+    {
+      "id": "me.houses.haunted_house_no_lantern",
+      "name": "Haunted house without hanging lantern",
+      "category": "building",
+      "tags": [
+        "house",
+        "haunted",
+        "gothic"
+      ],
+      "band": 6,
+      "y_hint": [
+        4608,
+        4900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Haunted_House_No_Lantern"
+    },
+    {
+      "id": "me.houses.haunted_basement_door",
+      "name": "Haunted basement door closed/open",
+      "category": "building",
+      "tags": [
+        "haunted",
+        "basement",
+        "door"
+      ],
+      "band": 6,
+      "y_hint": [
+        4750,
+        4900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Haunted_House_Basement_Door*"
+    },
+    {
+      "id": "me.houses.haunted_door_open",
+      "name": "Haunted main door open variant",
+      "category": "building",
+      "tags": [
+        "haunted",
+        "door",
+        "open"
+      ],
+      "band": 6,
+      "y_hint": [
+        4700,
+        4880
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Haunted_House_Door_Open"
+    },
+    {
+      "id": "me.houses.haunted_fence",
+      "name": "Haunted house fence kit",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "haunted",
+        "modular"
+      ],
+      "band": 6,
+      "y_hint": [
+        4608,
+        4780
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Haunted_House_Fence_*"
+    },
+    {
+      "id": "me.houses.haunted_poles",
+      "name": "Haunted wooden poles/stakes",
+      "category": "infra",
+      "tags": [
+        "pole",
+        "wood",
+        "haunted"
+      ],
+      "band": 6,
+      "y_hint": [
+        4650,
+        4800
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Haunted_House_Pole_*"
+    },
+    {
+      "id": "me.houses.haunted_sign_blank",
+      "name": "Blank wooden hanging signs",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "blank",
+        "wood"
+      ],
+      "band": 6,
+      "y_hint": [
+        4700,
+        4850
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Haunted_House_Sign_1..4 blank"
+    },
+    {
+      "id": "me.houses.haunted_sign_get_out",
+      "name": "GET OUT / danger / stop signs",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "warning",
+        "haunted"
+      ],
+      "band": 6,
+      "y_hint": [
+        4720,
+        4880
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Haunted_House_Sign_*_Get_Out/Danger/Stop"
+    },
+    {
+      "id": "me.houses.haunted_gates",
+      "name": "Wooden double gates and fence frames",
+      "category": "infra",
+      "tags": [
+        "gate",
+        "wood",
+        "haunted"
+      ],
+      "band": 6,
+      "y_hint": [
+        4650,
+        4900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Gate doors and open frames"
+    },
+    {
+      "id": "me.houses.haunted_beam",
+      "name": "Detached wooden beam fragment",
+      "category": "prop",
+      "tags": [
+        "beam",
+        "wood",
+        "decor"
+      ],
+      "band": 6,
+      "y_hint": [
+        4850,
+        4920
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small beam piece"
+    },
+    {
+      "id": "me.houses.doorway_interior_tile",
+      "name": "Dark doorway interior/shadow tile",
+      "category": "decal",
+      "tags": [
+        "doorway",
+        "interior",
+        "shadow"
+      ],
+      "band": 6,
+      "y_hint": [
+        4850,
+        4928
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tall dark rect for doorway depth"
+    },
+    {
+      "id": "me.houses.fence_4",
+      "name": "Fence kit 4 modular",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Fence_4_* \u2014 additional style on sheet"
+    },
+    {
+      "id": "me.houses.fence_5",
+      "name": "Fence kit 5 modular",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4480,
+        4600
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Fence_5_*"
+    },
+    {
+      "id": "me.houses.fence_6",
+      "name": "Fence kit 6 modular",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4480,
+        4608
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Fence_6_*"
+    },
+    {
+      "id": "me.houses.terraced_house_1",
+      "name": "Terraced house variant 1",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_1"
+    },
+    {
+      "id": "me.houses.terraced_house_2",
+      "name": "Terraced house variant 2",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_2"
+    },
+    {
+      "id": "me.houses.terraced_house_3",
+      "name": "Terraced house variant 3",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced"
+      ],
+      "band": 1,
+      "y_hint": [
+        950,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_3"
+    },
+    {
+      "id": "me.houses.terraced_house_4",
+      "name": "Terraced house variant 4",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced"
+      ],
+      "band": 1,
+      "y_hint": [
+        950,
+        1300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_4"
+    },
+    {
+      "id": "me.houses.terraced_house_5",
+      "name": "Terraced house variant 5",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1820
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_5"
+    },
+    {
+      "id": "me.houses.terraced_house_6",
+      "name": "Terraced house variant 6",
+      "category": "building",
+      "tags": [
+        "house",
+        "terraced"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_6"
+    },
+    {
+      "id": "me.houses.terraced_roof_styling",
+      "name": "Terraced roof styling pieces",
+      "category": "building",
+      "tags": [
+        "roof",
+        "styling",
+        "terraced"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_Roof_Styling_Piece*"
+    },
+    {
+      "id": "me.houses.terraced_roof_door",
+      "name": "Terraced roof access door",
+      "category": "building",
+      "tags": [
+        "roof",
+        "door",
+        "terraced"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        2050
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Terraced_House_Roof_Door"
+    },
+    {
+      "id": "me.houses.terraced_side_view",
+      "name": "Terraced side-view base and roof set",
+      "category": "building",
+      "tags": [
+        "terraced",
+        "side",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Terraced_House_Side_View_*"
+    },
+    {
+      "id": "me.houses.terraced_pot",
+      "name": "Terraced house pot prop",
+      "category": "prop",
+      "tags": [
+        "pot",
+        "decor"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Terraced_House_Pot"
+    },
+    {
+      "id": "me.houses.victorian_1",
+      "name": "Victorian house stamp 1",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "house"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2950
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Victorian_House_1"
+    },
+    {
+      "id": "me.houses.victorian_2",
+      "name": "Victorian house stamp 2",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "house"
+      ],
+      "band": 3,
+      "y_hint": [
+        2600,
+        3000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Victorian_House_2"
+    },
+    {
+      "id": "me.houses.victorian_3",
+      "name": "Victorian house stamp 3",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "house"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Victorian_House_3"
+    },
+    {
+      "id": "me.houses.victorian_4",
+      "name": "Victorian house stamp 4",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "house"
+      ],
+      "band": 4,
+      "y_hint": [
+        3200,
+        3550
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Victorian_House_4"
+    },
+    {
+      "id": "me.houses.victorian_5",
+      "name": "Victorian house stamp 5",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "house"
+      ],
+      "band": 4,
+      "y_hint": [
+        3300,
+        3650
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Victorian_House_5"
+    },
+    {
+      "id": "me.houses.victorian_6",
+      "name": "Victorian house stamp 6",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "house"
+      ],
+      "band": 4,
+      "y_hint": [
+        3500,
+        3800
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Victorian_House_6"
+    },
+    {
+      "id": "me.houses.victorian_7",
+      "name": "Victorian house stamp 7",
+      "category": "building",
+      "tags": [
+        "victorian",
+        "house"
+      ],
+      "band": 5,
+      "y_hint": [
+        3840,
+        4100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Victorian_House_7"
+    },
+    {
+      "id": "me.houses.japanese_door_open",
+      "name": "Japanese house door open",
+      "category": "building",
+      "tags": [
+        "japanese",
+        "door",
+        "open"
+      ],
+      "band": 5,
+      "y_hint": [
+        4050,
+        4280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Japanese_House_Door_Open"
+    },
+    {
+      "id": "me.houses.japanese_pots",
+      "name": "Japanese house pots 1-3",
+      "category": "prop",
+      "tags": [
+        "pot",
+        "japanese"
+      ],
+      "band": 5,
+      "y_hint": [
+        4150,
+        4350
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Japanese_House_Pot_*"
+    },
+    {
+      "id": "me.houses.one_story_door_open",
+      "name": "One-story house door open",
+      "category": "building",
+      "tags": [
+        "house",
+        "door",
+        "open"
+      ],
+      "band": 5,
+      "y_hint": [
+        4050,
+        4300
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles One_Story_House_Door_Open"
+    },
+    {
+      "id": "me.houses.post_apoc_1",
+      "name": "Post-apocalyptic house 1",
+      "category": "building",
+      "tags": [
+        "house",
+        "post-apoc"
+      ],
+      "band": 5,
+      "y_hint": [
+        4250,
+        4480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Post_Apocalyptic_House_1"
+    },
+    {
+      "id": "me.houses.post_apoc_2",
+      "name": "Post-apocalyptic house 2",
+      "category": "building",
+      "tags": [
+        "house",
+        "post-apoc"
+      ],
+      "band": 5,
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Post_Apocalyptic_House_2"
+    },
+    {
+      "id": "me.houses.post_apoc_door_open",
+      "name": "Post-apoc house door open",
+      "category": "building",
+      "tags": [
+        "door",
+        "post-apoc",
+        "open"
+      ],
+      "band": 5,
+      "y_hint": [
+        4280,
+        4480
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Post_Apocalyptic_House_Door_Open"
+    },
+    {
+      "id": "me.houses.modern_door_open",
+      "name": "Modern house door open",
+      "category": "building",
+      "tags": [
+        "modern",
+        "door",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        720
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Modern_House_Door_Open"
+    },
+    {
+      "id": "me.houses.modern_potted_bloomed",
+      "name": "Modern potted plant bloomed",
+      "category": "nature",
+      "tags": [
+        "plant",
+        "bloom",
+        "pot"
+      ],
+      "band": 3,
+      "y_hint": [
+        2480,
+        2720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Modern_House_Potted_Plant_Bloomed"
+    },
+    {
+      "id": "me.houses.umbrella_shadows",
+      "name": "Umbrella shadow variants",
+      "category": "decal",
+      "tags": [
+        "umbrella",
+        "shadow"
+      ],
+      "band": 3,
+      "y_hint": [
+        2400,
+        2680
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Modern_House_Umbrella_*_Shadow*"
+    }
+  ],
+  "row_guide": "Band0 (y0\u2013768): country house \u00b1banisters + banister modules; stone/light-wood/dark-wood fence kits; modern shed-roof house \u00b1props; bench/mailbox/AC/planters. Band1 (y768\u20131536): terraced slant-roof houses (porch, brick base, garage\u00b1skylight); porch canopy; window tiles; Modular\u2191 upper roof/wall slices. Band2 (y1536\u20132304): more terraced modules (planter/porch/garage); roof segments; brick/siding wall bands; planters/AC/posts; wide roof; stairs; patio umbrellas. Band3 (y2304\u20133072): modern wide glass facade; umbrellas/deck chairs/tiny tables/potted plants/glass railings; victorian brick L-terrace + facade strips + stair entrance + roof caps. Band4 (y3072\u20133840): victorian corner/entrance/tower/flat-roof chimney modules + tower tops. Band5 (y3840\u20134608): victorian arched facades; japanese house+porch+pillars; one-story awning house; shelf props; post-apoc cabin/door/shed; windmill\u00b1blades; solar; generators; radio; haunted roof peaks; fence enclosure/parts. Band6 (y4608\u20134928): haunted gothic house \u00b1lantern; basement/open doors; haunted fence/poles; blank+warning signs; gates; beam; doorway tile."
+}

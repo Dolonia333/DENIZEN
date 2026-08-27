@@ -1,0 +1,861 @@
+{
+  "sheet": "12_Hotel_and_Hospital",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.hotel_hospital.hotel_full",
+      "name": "Hotel building full stacked facade",
+      "category": "building",
+      "tags": [
+        "hotel",
+        "facade",
+        "tan",
+        "green",
+        "lodging"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Complete tan stone hotel with green trim, gold porthole lights, triple green doors, HOTEL marquee"
+    },
+    {
+      "id": "me.hotel_hospital.hotel_roof_band",
+      "name": "Hotel roof / parapet modular band",
+      "category": "building",
+      "tags": [
+        "hotel",
+        "roof",
+        "modular",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Green mansard/parapet top with chimneys"
+    },
+    {
+      "id": "me.hotel_hospital.hotel_mid_band",
+      "name": "Hotel mid-floor window modular band",
+      "category": "building",
+      "tags": [
+        "hotel",
+        "window",
+        "modular",
+        "floor"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        220
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Arched green-frame windows with gold circular sconces between bays; stackable"
+    },
+    {
+      "id": "me.hotel_hospital.hotel_ground_band",
+      "name": "Hotel ground-floor doors modular band",
+      "category": "building",
+      "tags": [
+        "hotel",
+        "entrance",
+        "doors",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark green double doors with glass panes and gold ornaments"
+    },
+    {
+      "id": "me.hotel_hospital.hotel_sign_horizontal",
+      "name": "HOTEL neon sign horizontal",
+      "category": "sign",
+      "tags": [
+        "hotel",
+        "sign",
+        "neon",
+        "marquee"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        120
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White block HOTEL letters with blue neon outline"
+    },
+    {
+      "id": "me.hotel_hospital.hotel_sign_vertical",
+      "name": "HOTEL sign vertical hanging",
+      "category": "sign",
+      "tags": [
+        "hotel",
+        "sign",
+        "vertical",
+        "blade"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "wall",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Tall narrow vertical HOTEL lettering on dark mount"
+    },
+    {
+      "id": "me.hotel_hospital.luggage_trolley_loaded",
+      "name": "Luggage trolley loaded with bags",
+      "category": "prop",
+      "tags": [
+        "luggage",
+        "trolley",
+        "bellhop",
+        "bags"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brass/gold cart with red carpet base stacked with suitcases"
+    },
+    {
+      "id": "me.hotel_hospital.luggage_trolley_empty",
+      "name": "Luggage trolley empty",
+      "category": "prop",
+      "tags": [
+        "luggage",
+        "trolley",
+        "bellhop",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Empty brass luggage cart"
+    },
+    {
+      "id": "me.hotel_hospital.hospital_full",
+      "name": "Hospital building full complex",
+      "category": "building",
+      "tags": [
+        "hospital",
+        "medical",
+        "helipad",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White/grey L-shaped hospital with roof helipad, entrance canopy, emergency bays"
+    },
+    {
+      "id": "me.hotel_hospital.hospital_roof_helipad",
+      "name": "Hospital rooftop with helipad H",
+      "category": "infra",
+      "tags": [
+        "hospital",
+        "helipad",
+        "roof",
+        "H"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue circular H pad on flat roof"
+    },
+    {
+      "id": "me.hotel_hospital.hospital_roof_utility",
+      "name": "Hospital roof utility room + HVAC",
+      "category": "infra",
+      "tags": [
+        "hospital",
+        "roof",
+        "hvac",
+        "utility",
+        "doors"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small white roof room with grey doors and AC unit"
+    },
+    {
+      "id": "me.hotel_hospital.hospital_mid_windows",
+      "name": "Hospital mid-floor window modular band",
+      "category": "building",
+      "tags": [
+        "hospital",
+        "window",
+        "modular",
+        "glass"
+      ],
+      "band": 0,
+      "y_hint": [
+        460,
+        620
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Long horizontal blue-tinted window strips; some with louvers"
+    },
+    {
+      "id": "me.hotel_hospital.hospital_sign_freestanding",
+      "name": "HOSPITAL freestanding pedestal sign",
+      "category": "sign",
+      "tags": [
+        "hospital",
+        "sign",
+        "cross",
+        "pedestal"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        600
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue HOSPITAL text with medical cross on stone base"
+    },
+    {
+      "id": "me.hotel_hospital.emergency_sign",
+      "name": "EMERGENCY banner sign",
+      "category": "sign",
+      "tags": [
+        "emergency",
+        "sign",
+        "hospital",
+        "cross"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        680
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue + EMERGENCY + banner with cross icons"
+    },
+    {
+      "id": "me.hotel_hospital.hospital_entrance",
+      "name": "Hospital main entrance with cross and arrow",
+      "category": "building",
+      "tags": [
+        "hospital",
+        "entrance",
+        "cross",
+        "canopy",
+        "arrow"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        880
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pillared canopy, blue medical cross, white pavement arrow pointing in"
+    },
+    {
+      "id": "me.hotel_hospital.hospital_window_wall",
+      "name": "Hospital window wall facade strip",
+      "category": "building",
+      "tags": [
+        "hospital",
+        "window",
+        "facade",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        860
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White paneled wall with row of blue-tinted windows"
+    },
+    {
+      "id": "me.hotel_hospital.emergency_shutter_signed",
+      "name": "Emergency bay roll-up shutter with sign",
+      "category": "building",
+      "tags": [
+        "emergency",
+        "garage",
+        "shutter",
+        "ambulance"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        880
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey roll-up door under EMERGENCY sign"
+    },
+    {
+      "id": "me.hotel_hospital.emergency_shutter_plain",
+      "name": "Emergency bay roll-up shutter plain",
+      "category": "building",
+      "tags": [
+        "emergency",
+        "garage",
+        "shutter"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shutter/frame without full signage header"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_empty_1",
+      "name": "Empty stretcher side inclined",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "empty"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        960
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Headrest raised; blue mattress"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_empty_2",
+      "name": "Empty stretcher side flat",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "empty"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        960
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Flat empty gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_empty_3",
+      "name": "Empty stretcher opposite side",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "empty"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        960
+      ],
+      "surface": "ground",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Mirrored side empty gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_empty_4",
+      "name": "Empty stretcher front view",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "empty"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        960
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "End-on empty stretcher"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_empty_5",
+      "name": "Empty stretcher back/alt view",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "empty"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        960
+      ],
+      "surface": "ground",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate empty stretcher orientation"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_1",
+      "name": "Occupied stretcher: suit brown hair lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_1; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_2",
+      "name": "Occupied stretcher: dark skin red shirt lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_2; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_3",
+      "name": "Occupied stretcher: red hair woman lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_3; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_4",
+      "name": "Occupied stretcher: elder grey mustache lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_4; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_5",
+      "name": "Occupied stretcher: bandaged white hair lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_5; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_6",
+      "name": "Occupied stretcher: blonde woman lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_6; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_7",
+      "name": "Occupied stretcher: black hair man lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_7; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_8",
+      "name": "Occupied stretcher: brown jacket sitting",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "sitting"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_8; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_9",
+      "name": "Occupied stretcher: elder grey sweater sitting",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "sitting"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_9; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_10",
+      "name": "Occupied stretcher: red hair lavender sitting",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "sitting"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_10; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_11",
+      "name": "Occupied stretcher: elder woman blue sitting",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "sitting"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_11; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_12",
+      "name": "Occupied stretcher: dark suit sitting",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "sitting"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_12; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_13",
+      "name": "Occupied stretcher: purple shirt lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_13; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_14",
+      "name": "Occupied stretcher: white medical gown lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_14; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_15",
+      "name": "Occupied stretcher: orange hair lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_15; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_16",
+      "name": "Occupied stretcher: bearded man lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_16; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_17",
+      "name": "Occupied stretcher: tan skin casual lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_17; diverse NPC patient on blue gurney"
+    },
+    {
+      "id": "me.hotel_hospital.stretcher_injured_18",
+      "name": "Occupied stretcher: grey hair woman lying",
+      "category": "furniture",
+      "tags": [
+        "stretcher",
+        "gurney",
+        "patient",
+        "npc",
+        "injured",
+        "lying"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        992
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stretcher_Injured_18; diverse NPC patient on blue gurney"
+    }
+  ],
+  "row_guide": "Band0 top: hotel modular roof/mid/ground bands, HOTEL horizontal+vertical signs, luggage trolleys loaded+empty. Band0 mid-lower: hospital roof helipad+HVAC utility, window modular bands, freestanding HOSPITAL sign, EMERGENCY banner. Band1 top: hospital entrance (cross+arrow), window wall, emergency shutters signed+plain. Band1 bottom: empty stretchers (5 orientations) then occupied stretchers injured_1–18 patient grid."
+}

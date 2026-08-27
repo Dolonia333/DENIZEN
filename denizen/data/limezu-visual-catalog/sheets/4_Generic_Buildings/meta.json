@@ -1,0 +1,63 @@
+{
+  "sheet": "4_Generic_Buildings",
+  "source": "assets/limezu/ext/themes/4_Generic_Buildings.png",
+  "size": [
+    512,
+    3200
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 768,
+      "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_00_y0-768.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 1,
+      "y0": 768,
+      "y1": 1536,
+      "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_01_y768-1536.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 2,
+      "y0": 1536,
+      "y1": 2304,
+      "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_02_y1536-2304.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 3,
+      "y0": 2304,
+      "y1": 3072,
+      "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_03_y2304-3072.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 4,
+      "y0": 3072,
+      "y1": 3200,
+      "path": "data/limezu-visual-catalog/sheets/4_Generic_Buildings/band_04_y3072-3200.jpg",
+      "px_size": [
+        1024,
+        256
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/4_generic_building",
+  "singles_count": 180
+}

@@ -1,0 +1,2693 @@
+{
+  "sheet": "20_Subway_and_Train_Station",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.subway.stairs_complete_1",
+      "name": "Station stairwell complete 1",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "station",
+        "platform",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Stairs_Complete_1."
+    },
+    {
+      "id": "me.subway.stairs_complete_2",
+      "name": "Station stairwell complete 2",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "station",
+        "platform",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Stairs_Complete_2."
+    },
+    {
+      "id": "me.subway.stairs_complete_3",
+      "name": "Station stairwell complete 3",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "station",
+        "platform",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Stairs_Complete_3."
+    },
+    {
+      "id": "me.subway.stairs_complete_4",
+      "name": "Station stairwell complete 4",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "station",
+        "platform",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Stairs_Complete_4."
+    },
+    {
+      "id": "me.subway.stairs_modular_set",
+      "name": "Stairs modular segments + structure",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "modular",
+        "structure",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        250
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Stairs_1-3, Stairs_Small*, Stairs_Structure*, Stairs_Base_Structure_2, Stairs_Railing_1-2."
+    },
+    {
+      "id": "me.subway.pillar_big",
+      "name": "Large cylindrical station pillar",
+      "category": "infra",
+      "tags": [
+        "pillar",
+        "column",
+        "station",
+        "concrete"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Big_Pillar."
+    },
+    {
+      "id": "me.subway.pillar_small",
+      "name": "Small station pillar",
+      "category": "infra",
+      "tags": [
+        "pillar",
+        "column",
+        "station"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Small_Pillar."
+    },
+    {
+      "id": "me.subway.floor_white_tile",
+      "name": "White station floor tiles",
+      "category": "terrain",
+      "tags": [
+        "floor",
+        "tile",
+        "station",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "floor",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: White_Tile_1-8, White_Tile_Pattern_Modular."
+    },
+    {
+      "id": "me.subway.floor_lilac_tile",
+      "name": "Lilac/purple accent floor tiles",
+      "category": "terrain",
+      "tags": [
+        "floor",
+        "tile",
+        "station",
+        "lilac",
+        "purple"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "floor",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Lilac_Tile_*_Vers_1/2."
+    },
+    {
+      "id": "me.subway.floor_spot_stains",
+      "name": "Dirty floor spot tiles",
+      "category": "terrain",
+      "tags": [
+        "floor",
+        "stain",
+        "dirt",
+        "wear"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        180
+      ],
+      "surface": "floor",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Ground_Tile_Spot_1-10."
+    },
+    {
+      "id": "me.subway.platform_edge_yellow",
+      "name": "Yellow tactile platform edge path",
+      "category": "infra",
+      "tags": [
+        "platform",
+        "edge",
+        "yellow",
+        "tactile",
+        "safety"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        250
+      ],
+      "surface": "floor",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Loges_Horizontal_Path_Yellow, Loges_Vertical_Path_Yellow."
+    },
+    {
+      "id": "me.subway.elevator_closed",
+      "name": "Elevator doors closed",
+      "category": "infra",
+      "tags": [
+        "elevator",
+        "door",
+        "station"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Elevator_Closed_Lights_*."
+    },
+    {
+      "id": "me.subway.elevator_opened",
+      "name": "Elevator doors opened",
+      "category": "infra",
+      "tags": [
+        "elevator",
+        "door",
+        "station",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Elevator_Opened_Lights_*."
+    },
+    {
+      "id": "me.subway.elevator_buttons",
+      "name": "Elevator call buttons",
+      "category": "prop",
+      "tags": [
+        "elevator",
+        "button",
+        "ui"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        280
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Elevator_Green_Button, Elevator_Red_Button."
+    },
+    {
+      "id": "me.subway.door_green",
+      "name": "Green station service door",
+      "category": "infra",
+      "tags": [
+        "door",
+        "service",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Green_Door."
+    },
+    {
+      "id": "me.subway.door_black_double",
+      "name": "Black double utility door",
+      "category": "infra",
+      "tags": [
+        "door",
+        "utility",
+        "black",
+        "double"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Black_Double_Door."
+    },
+    {
+      "id": "me.subway.turnstile_closed",
+      "name": "Ticket turnstile closed",
+      "category": "infra",
+      "tags": [
+        "turnstile",
+        "gate",
+        "ticket",
+        "closed"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Turnstile_Closed (+ Lateral_Part_*_Turnstile_*)."
+    },
+    {
+      "id": "me.subway.turnstile_opened",
+      "name": "Ticket turnstile opened",
+      "category": "infra",
+      "tags": [
+        "turnstile",
+        "gate",
+        "ticket",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Turnstile_Opened."
+    },
+    {
+      "id": "me.subway.drink_machine",
+      "name": "Drink vending machine",
+      "category": "prop",
+      "tags": [
+        "vending",
+        "drink",
+        "machine",
+        "kiosk"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Drink_Machine_Front/Back/Left/Right."
+    },
+    {
+      "id": "me.subway.coffee_machine",
+      "name": "Coffee vending machine",
+      "category": "prop",
+      "tags": [
+        "vending",
+        "coffee",
+        "machine",
+        "kiosk"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Coffee_Machine_Front/Back/Left/Right."
+    },
+    {
+      "id": "me.subway.map_monitor",
+      "name": "Subway map display",
+      "category": "sign",
+      "tags": [
+        "map",
+        "monitor",
+        "info",
+        "sign"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Map_Monitor."
+    },
+    {
+      "id": "me.subway.monitor_blank",
+      "name": "Blank info monitor",
+      "category": "sign",
+      "tags": [
+        "monitor",
+        "info",
+        "sign",
+        "led"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Monitor."
+    },
+    {
+      "id": "me.subway.sign_arrow_up",
+      "name": "Green arrow up sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "arrow",
+        "direction",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Arrow_Up_Green_Sign."
+    },
+    {
+      "id": "me.subway.sign_arrow_down",
+      "name": "Green arrow down sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "arrow",
+        "direction",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Arrow_Down_Green_Sign."
+    },
+    {
+      "id": "me.subway.sign_arrow_left",
+      "name": "Green arrow left sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "arrow",
+        "direction",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "wall",
+      "facing": "west",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Arrow_Left_Green_Sign."
+    },
+    {
+      "id": "me.subway.sign_arrow_right",
+      "name": "Green arrow right sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "arrow",
+        "direction",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "wall",
+      "facing": "east",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Arrow_Right_Green_Sign."
+    },
+    {
+      "id": "me.subway.sign_stop",
+      "name": "Stop / no-entry sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "stop",
+        "no_entry"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Stop_Sign."
+    },
+    {
+      "id": "me.subway.sos_box",
+      "name": "Emergency SOS call box",
+      "category": "prop",
+      "tags": [
+        "sos",
+        "emergency",
+        "box",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        340
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: SOS_Box."
+    },
+    {
+      "id": "me.subway.led_light",
+      "name": "LED strip light on/off",
+      "category": "prop",
+      "tags": [
+        "light",
+        "led",
+        "station"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Led_Light_On, Led_Light_Off."
+    },
+    {
+      "id": "me.subway.bench_green",
+      "name": "Green platform bench",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "seat",
+        "green",
+        "platform"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Three/Two_Seats_Green_Bench_*."
+    },
+    {
+      "id": "me.subway.bench_grey",
+      "name": "Grey platform bench",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "seat",
+        "grey",
+        "platform"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Three/Two_Seats_Grey_Bench_*."
+    },
+    {
+      "id": "me.subway.bench_black",
+      "name": "Black platform bench",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "seat",
+        "black",
+        "platform"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Three/Two_Seats_Black_Bench_*."
+    },
+    {
+      "id": "me.subway.wait_seats_orange",
+      "name": "Orange waiting seats row",
+      "category": "furniture",
+      "tags": [
+        "seat",
+        "waiting",
+        "orange",
+        "bucket"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Orange_Single/Couple/Triple_Wait_Seat_*."
+    },
+    {
+      "id": "me.subway.wait_seats_white",
+      "name": "White waiting seats row",
+      "category": "furniture",
+      "tags": [
+        "seat",
+        "waiting",
+        "white",
+        "bucket"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: White_Single/Couple/Triple_Wait_Seat_*."
+    },
+    {
+      "id": "me.subway.wait_seats_black",
+      "name": "Black waiting seats row",
+      "category": "furniture",
+      "tags": [
+        "seat",
+        "waiting",
+        "black",
+        "bucket"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Black_Single/Couple/Triple_Wait_Seat_*."
+    },
+    {
+      "id": "me.subway.plant_vase",
+      "name": "Potted station plant",
+      "category": "decor",
+      "tags": [
+        "plant",
+        "vase",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        360
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Plant_Vase_1-2, Vase_1-2."
+    },
+    {
+      "id": "me.subway.railing_generic",
+      "name": "Metal station railing",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "metal",
+        "barrier"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Railing."
+    },
+    {
+      "id": "me.subway.locker_small",
+      "name": "Small black locker",
+      "category": "prop",
+      "tags": [
+        "locker",
+        "storage",
+        "black"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Small_Black_Locker."
+    },
+    {
+      "id": "me.subway.train_blue_exterior",
+      "name": "Blue/white subway exterior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "subway",
+        "exterior",
+        "blue",
+        "car"
+      ],
+      "band": 0,
+      "y_hint": [
+        450,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Exterior_Train_Blue_Left/Middle/Right; Example_Train_Blue_*."
+    },
+    {
+      "id": "me.subway.train_blue_interior",
+      "name": "Blue/white subway interior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "subway",
+        "interior",
+        "blue",
+        "seats"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Interior_Train_Blue_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.train_blue_seats",
+      "name": "Blue train seat props",
+      "category": "furniture",
+      "tags": [
+        "train",
+        "seat",
+        "blue",
+        "interior"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        760
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Blue_Single_Seat_*, Double_Lateral_Seat, Single_Back_Seat_*."
+    },
+    {
+      "id": "me.subway.train_blue_controls",
+      "name": "Blue train driver controls",
+      "category": "prop",
+      "tags": [
+        "train",
+        "controls",
+        "cab",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Blue_Control_* , Buttons, Support, Front/Middle/Back_Down."
+    },
+    {
+      "id": "me.subway.train_orange_exterior",
+      "name": "Orange train exterior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "exterior",
+        "orange",
+        "car",
+        "brown",
+        "vintage"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Exterior_Train_Orange_Left/Middle/Right; Example_Train_Orange_*."
+    },
+    {
+      "id": "me.subway.train_orange_interior",
+      "name": "Orange train interior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "interior",
+        "orange",
+        "seats",
+        "brown",
+        "vintage"
+      ],
+      "band": 1,
+      "y_hint": [
+        828,
+        1050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Interior_Train_Orange_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.train_orange_seats",
+      "name": "Orange train seat props",
+      "category": "furniture",
+      "tags": [
+        "train",
+        "seat",
+        "orange",
+        "interior"
+      ],
+      "band": 1,
+      "y_hint": [
+        848,
+        1050
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Orange_*Seat* / Couple_Seats / Single_*_Seat_*."
+    },
+    {
+      "id": "me.subway.train_orange_controls",
+      "name": "Orange train driver controls + poles",
+      "category": "prop",
+      "tags": [
+        "train",
+        "controls",
+        "cab",
+        "orange",
+        "pole"
+      ],
+      "band": 1,
+      "y_hint": [
+        848,
+        1050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Orange_Control_*, Support*, Front/Middle/Back_Down."
+    },
+    {
+      "id": "me.subway.train_green_exterior",
+      "name": "Green train exterior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "exterior",
+        "green",
+        "car",
+        "commuter"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Exterior_Train_Green_Left/Middle/Right; Example_Train_Green_*."
+    },
+    {
+      "id": "me.subway.train_green_interior",
+      "name": "Green train interior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "interior",
+        "green",
+        "seats",
+        "commuter"
+      ],
+      "band": 1,
+      "y_hint": [
+        1060,
+        1300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Interior_Train_Green_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.train_green_seats",
+      "name": "Green train seat props",
+      "category": "furniture",
+      "tags": [
+        "train",
+        "seat",
+        "green",
+        "interior"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Green_*Seat* / Couple_Seats / Single_*_Seat_*."
+    },
+    {
+      "id": "me.subway.train_green_controls",
+      "name": "Green train driver controls + poles",
+      "category": "prop",
+      "tags": [
+        "train",
+        "controls",
+        "cab",
+        "green",
+        "pole"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Green_Control_*, Support*, Front/Middle/Back_Down."
+    },
+    {
+      "id": "me.subway.train_grey_exterior",
+      "name": "Grey train exterior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "exterior",
+        "grey",
+        "car",
+        "silver",
+        "modern"
+      ],
+      "band": 1,
+      "y_hint": [
+        1250,
+        1530
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Exterior_Train_Grey_Left/Middle/Right; Example_Train_Grey_*."
+    },
+    {
+      "id": "me.subway.train_grey_interior",
+      "name": "Grey train interior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "interior",
+        "grey",
+        "seats",
+        "silver",
+        "modern"
+      ],
+      "band": 1,
+      "y_hint": [
+        1310,
+        1530
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Interior_Train_Grey_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.train_grey_seats",
+      "name": "Grey train seat props",
+      "category": "furniture",
+      "tags": [
+        "train",
+        "seat",
+        "grey",
+        "interior"
+      ],
+      "band": 1,
+      "y_hint": [
+        1330,
+        1530
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Grey_*Seat* / Couple_Seats / Single_*_Seat_*."
+    },
+    {
+      "id": "me.subway.train_grey_controls",
+      "name": "Grey train driver controls + poles",
+      "category": "prop",
+      "tags": [
+        "train",
+        "controls",
+        "cab",
+        "grey",
+        "pole"
+      ],
+      "band": 1,
+      "y_hint": [
+        1330,
+        1530
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Grey_Control_*, Support*, Front/Middle/Back_Down."
+    },
+    {
+      "id": "me.subway.train_green_seats_red",
+      "name": "Green-train red bucket seats",
+      "category": "furniture",
+      "tags": [
+        "train",
+        "seat",
+        "red",
+        "green_train",
+        "bucket"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_Green_Single_Red_Seat_*."
+    },
+    {
+      "id": "me.subway.train_white_exterior",
+      "name": "White/teal high-speed exterior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "exterior",
+        "white",
+        "teal",
+        "bullet",
+        "high_speed"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Exterior_Train_White_*; LME stripe nose cars."
+    },
+    {
+      "id": "me.subway.train_white_interior",
+      "name": "White high-speed interior L/M/R",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "interior",
+        "white",
+        "orange_seats",
+        "high_speed"
+      ],
+      "band": 2,
+      "y_hint": [
+        1600,
+        1850
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Interior_Train_White_*."
+    },
+    {
+      "id": "me.subway.train_white_seats",
+      "name": "White-train orange/tan seats",
+      "category": "furniture",
+      "tags": [
+        "train",
+        "seat",
+        "white",
+        "orange",
+        "high_speed"
+      ],
+      "band": 2,
+      "y_hint": [
+        1650,
+        1900
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_White_Single/Double/Triple_Seat*, Seat_Base, Armrest."
+    },
+    {
+      "id": "me.subway.train_white_controls",
+      "name": "White-train cockpit monitors/controls",
+      "category": "prop",
+      "tags": [
+        "train",
+        "controls",
+        "cab",
+        "white",
+        "monitor"
+      ],
+      "band": 2,
+      "y_hint": [
+        1650,
+        1900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Train_White_Control_*, Monitor_*, Front/Middle/Back_Down."
+    },
+    {
+      "id": "me.subway.train_graffiti_car",
+      "name": "Graffiti-covered grey subway car",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "graffiti",
+        "dirty",
+        "exterior",
+        "grey"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        1950
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Graffiti_Train; pink slime + MEH tag."
+    },
+    {
+      "id": "me.subway.rail_brown_modular",
+      "name": "Brown rail track modular set",
+      "category": "infra",
+      "tags": [
+        "rail",
+        "track",
+        "brown",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Brown_Rail_* (corners, modular H/V, crossing, broken fragments)."
+    },
+    {
+      "id": "me.subway.rail_grey_modular",
+      "name": "Grey rail track modular set",
+      "category": "infra",
+      "tags": [
+        "rail",
+        "track",
+        "grey",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Grey_Rail_*."
+    },
+    {
+      "id": "me.subway.rail_tube",
+      "name": "Trackside tube/pipe",
+      "category": "infra",
+      "tags": [
+        "pipe",
+        "tube",
+        "trackside"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        2000
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Brown_Tube, Grey_Tube."
+    },
+    {
+      "id": "me.subway.graffiti_angry_face",
+      "name": "Angry face graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Angry_Face_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_angry_grey_face",
+      "name": "Angry grey face graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Angry_Grey_Face_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_crown_white",
+      "name": "Big white crown graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Big_White_Crown_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_flower",
+      "name": "Flower graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Flower_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_frog_clean",
+      "name": "Frog graffiti clean",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Frog_Clean_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_frog_dirty",
+      "name": "Frog graffiti dirty",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Frog_Dirty_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_hew",
+      "name": "HEW tag graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Hew_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_meh",
+      "name": "MEH tag graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Meh_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_smile",
+      "name": "Smile graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Smile_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_worm",
+      "name": "Worm graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Worm_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_fns_green",
+      "name": "Green FNS writing graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Green_FNS_Writing_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_fns_grey",
+      "name": "Grey FNS writing graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Grey_FNS_Writing_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_fns_red",
+      "name": "Red FNS writing graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Red_FNS_Writing_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_wolf_blue_clean",
+      "name": "Blue wolf graffiti clean",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Blue_Wolf_Clean_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_wolf_blue_dirty",
+      "name": "Blue wolf graffiti dirty",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Blue_Wolf_Dirty_Graffiti_1/2."
+    },
+    {
+      "id": "me.subway.graffiti_wolf_black_clean",
+      "name": "Black wolf graffiti clean",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Black_Wolf_Clean_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_wolf_black_dirty",
+      "name": "Black wolf graffiti dirty",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Black_Wolf_Dirty_Graffiti_1/2."
+    },
+    {
+      "id": "me.subway.graffiti_multicolor_drawing",
+      "name": "Multicolor drawing graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "tag",
+        "street",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Multicolor_Drawing_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_arrow_set",
+      "name": "Arrow graffiti set 1\u201311",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "arrow",
+        "tag"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Arrow_Graffiti_1-11."
+    },
+    {
+      "id": "me.subway.graffiti_spray_set",
+      "name": "Spray blot graffiti set",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "spray",
+        "paint"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Blue/Pink/Purple/Yellow_Spray_Graffiti."
+    },
+    {
+      "id": "me.subway.graffiti_writing_set",
+      "name": "Assorted writing graffiti tags",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "writing",
+        "tag",
+        "text"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2180
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: *_Writing_Graffiti, Writing_Graffiti_1-2, Black_Little_* , White_Little_*."
+    },
+    {
+      "id": "me.subway.graffiti_drops_clouds",
+      "name": "Pink/green drop & cloud graffiti",
+      "category": "decor",
+      "tags": [
+        "graffiti",
+        "slime",
+        "drop",
+        "cloud",
+        "tentacle"
+      ],
+      "band": 2,
+      "y_hint": [
+        1920,
+        2200
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Pink_Cloud/Drop/Tentacle_*, Green_Drop_*, Green/Purple_Little_Graffiti."
+    },
+    {
+      "id": "me.subway.poster_set",
+      "name": "Station posters & TRUTH stickers",
+      "category": "decor",
+      "tags": [
+        "poster",
+        "ad",
+        "sticker",
+        "truth"
+      ],
+      "band": 2,
+      "y_hint": [
+        1950,
+        2200
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Poster_1/2, Poster_Truth_*, Consumed_Poster, Single_Poster, Three_Posters, Poster_1_And_2."
+    },
+    {
+      "id": "me.subway.crack_set",
+      "name": "Wall crack/damage decals",
+      "category": "decor",
+      "tags": [
+        "crack",
+        "damage",
+        "wear",
+        "wall"
+      ],
+      "band": 2,
+      "y_hint": [
+        1980,
+        2220
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Crack_1-6 (+ Example_Crack_*)."
+    },
+    {
+      "id": "me.subway.baggage_black",
+      "name": "Black suitcase",
+      "category": "prop",
+      "tags": [
+        "luggage",
+        "baggage",
+        "black"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Black_Baggage(+_To_Insert)."
+    },
+    {
+      "id": "me.subway.baggage_brown",
+      "name": "Brown suitcase set",
+      "category": "prop",
+      "tags": [
+        "luggage",
+        "baggage",
+        "brown"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Brown_Baggage_1-3(+_To_Insert)."
+    },
+    {
+      "id": "me.subway.baggage_green",
+      "name": "Green suitcase",
+      "category": "prop",
+      "tags": [
+        "luggage",
+        "baggage",
+        "green"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Green_Baggage(+_To_Insert)."
+    },
+    {
+      "id": "me.subway.travel_case",
+      "name": "Travel case set",
+      "category": "prop",
+      "tags": [
+        "luggage",
+        "case"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Travel_Case_1-3."
+    },
+    {
+      "id": "me.subway.trolley_blue",
+      "name": "Blue luggage trolley",
+      "category": "prop",
+      "tags": [
+        "trolley",
+        "cart",
+        "luggage",
+        "blue"
+      ],
+      "band": 2,
+      "y_hint": [
+        2020,
+        2220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Blue_Trolley_1-2."
+    },
+    {
+      "id": "me.subway.trolley_green",
+      "name": "Green luggage trolley",
+      "category": "prop",
+      "tags": [
+        "trolley",
+        "cart",
+        "luggage",
+        "green"
+      ],
+      "band": 2,
+      "y_hint": [
+        2020,
+        2220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Green_Trolley_1-2."
+    },
+    {
+      "id": "me.subway.trolley_yellow",
+      "name": "Yellow luggage trolley",
+      "category": "prop",
+      "tags": [
+        "trolley",
+        "cart",
+        "luggage",
+        "yellow"
+      ],
+      "band": 2,
+      "y_hint": [
+        2020,
+        2220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Yellow_Trolley_1-2."
+    },
+    {
+      "id": "me.subway.trash_bags",
+      "name": "Plastic trash bags",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "bag",
+        "debris"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Plastic_Bag_1-4, Plastic_Bag_Bottles."
+    },
+    {
+      "id": "me.subway.trash_cans_pressed",
+      "name": "Pressed cans litter",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "can",
+        "litter"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Pressed_Can_1-3."
+    },
+    {
+      "id": "me.subway.bottles_box",
+      "name": "Bottle crate + bottles",
+      "category": "prop",
+      "tags": [
+        "bottle",
+        "crate",
+        "debris"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Bottle_1-2, Bottles_Box."
+    },
+    {
+      "id": "me.subway.cardboard_box",
+      "name": "Cardboard box / bed",
+      "category": "prop",
+      "tags": [
+        "cardboard",
+        "box",
+        "debris",
+        "homeless"
+      ],
+      "band": 2,
+      "y_hint": [
+        2080,
+        2260
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Box, Cardboard, Cardboard_Bed_1-2, Double_Wood_Board."
+    },
+    {
+      "id": "me.subway.ground_paper",
+      "name": "Ground paper litter",
+      "category": "prop",
+      "tags": [
+        "paper",
+        "litter",
+        "debris"
+      ],
+      "band": 2,
+      "y_hint": [
+        2080,
+        2260
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Ground_Paper_1-2."
+    },
+    {
+      "id": "me.subway.mattress_set",
+      "name": "Street mattresses + blankets + pillow",
+      "category": "prop",
+      "tags": [
+        "mattress",
+        "blanket",
+        "homeless",
+        "pillow"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Black/Green/Red_Mattress, Blue/Grey/Red_Folded_Blanket, Pillow."
+    },
+    {
+      "id": "me.subway.guitar_busker_set",
+      "name": "Busker guitar case + stands + money",
+      "category": "prop",
+      "tags": [
+        "guitar",
+        "busker",
+        "musician",
+        "money"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Guitar_Case(+_Money), Guitarist_Stand, Musician_Stand, Homeless_Ground_Money, Drum."
+    },
+    {
+      "id": "me.subway.control_desk_set",
+      "name": "Station control PC/monitors/box",
+      "category": "prop",
+      "tags": [
+        "control",
+        "monitor",
+        "pc",
+        "desk"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Control_Big_Monitor, Control_Small_Monitor, Control_PC, Control_Box."
+    },
+    {
+      "id": "me.subway.tunnel_large",
+      "name": "Large tunnel portal",
+      "category": "infra",
+      "tags": [
+        "tunnel",
+        "portal",
+        "arch",
+        "station"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2600
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Large_Tunnel_*, Big_Large_Tunnel_*, Big_Tunnel_Left/Right_Side."
+    },
+    {
+      "id": "me.subway.tunnel_double",
+      "name": "Double-arch tunnel portal",
+      "category": "infra",
+      "tags": [
+        "tunnel",
+        "portal",
+        "double",
+        "arch"
+      ],
+      "band": 3,
+      "y_hint": [
+        2320,
+        2620
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Double_Tunnel_*, High_Double_Tunnel_*."
+    },
+    {
+      "id": "me.subway.tunnel_single",
+      "name": "Single-arch tunnel portal",
+      "category": "infra",
+      "tags": [
+        "tunnel",
+        "portal",
+        "single",
+        "arch"
+      ],
+      "band": 3,
+      "y_hint": [
+        2340,
+        2650
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Single_Tunnel_*, High_Single_Tunnel_*, Medium/Small_Tunnel_Left/Right_Side."
+    },
+    {
+      "id": "me.subway.binary_edge_modular",
+      "name": "Hazard platform-edge binary modular",
+      "category": "infra",
+      "tags": [
+        "platform",
+        "edge",
+        "hazard",
+        "yellow",
+        "black",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2350,
+        2700
+      ],
+      "surface": "floor",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Binary_Edge_* (angles, diagonals, middles, shadows)."
+    },
+    {
+      "id": "me.subway.stairs_diamond_hub",
+      "name": "Diamond hub staircase assembly",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "diamond",
+        "hub",
+        "isometric"
+      ],
+      "band": 3,
+      "y_hint": [
+        2600,
+        2900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Four-way diamond stair arrangement in band 3."
+    },
+    {
+      "id": "me.subway.stairs_v_chevron",
+      "name": "V/chevron diagonal stair sets",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "diagonal",
+        "chevron",
+        "isometric"
+      ],
+      "band": 3,
+      "y_hint": [
+        2580,
+        2880
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "V-down and A-up chevron stair configurations."
+    },
+    {
+      "id": "me.subway.ui_number_blue",
+      "name": "Blue platform number icons 0\u20139",
+      "category": "sign",
+      "tags": [
+        "ui",
+        "number",
+        "blue",
+        "platform"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        2960
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Binary_Number_*_Blue + Example_Binary_Number."
+    },
+    {
+      "id": "me.subway.ui_number_orange",
+      "name": "Orange platform number icons 0\u20139",
+      "category": "sign",
+      "tags": [
+        "ui",
+        "number",
+        "orange",
+        "platform"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        2960
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Binary_Number_*_Orange."
+    },
+    {
+      "id": "me.subway.ui_number_modular",
+      "name": "Platform number modular base",
+      "category": "sign",
+      "tags": [
+        "ui",
+        "number",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        2960
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Binary_Number_Modular."
+    },
+    {
+      "id": "me.subway.vehicle_top_blue",
+      "name": "Top-down blue/white bus or train car",
+      "category": "vehicle",
+      "tags": [
+        "vehicle",
+        "bus",
+        "train",
+        "topdown",
+        "blue"
+      ],
+      "band": 3,
+      "y_hint": [
+        2320,
+        2550
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Long blue/white overhead vehicle."
+    },
+    {
+      "id": "me.subway.vehicle_top_grey",
+      "name": "Top-down grey bus or tram",
+      "category": "vehicle",
+      "tags": [
+        "vehicle",
+        "bus",
+        "tram",
+        "topdown",
+        "grey"
+      ],
+      "band": 3,
+      "y_hint": [
+        2350,
+        2580
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Long grey overhead vehicle."
+    },
+    {
+      "id": "me.subway.vehicle_front_dark",
+      "name": "Front-facing dark train/bus",
+      "category": "vehicle",
+      "tags": [
+        "vehicle",
+        "train",
+        "bus",
+        "front",
+        "dark"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Short dark lead/front vehicle sprite."
+    },
+    {
+      "id": "me.subway.vehicle_front_red",
+      "name": "Front-facing red/orange vehicle",
+      "category": "vehicle",
+      "tags": [
+        "vehicle",
+        "train",
+        "bus",
+        "front",
+        "red",
+        "orange"
+      ],
+      "band": 3,
+      "y_hint": [
+        2320,
+        2520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Red-orange locomotive/bus front."
+    },
+    {
+      "id": "me.subway.vehicle_top_teal_nose",
+      "name": "Top-down white/teal high-speed nose",
+      "category": "vehicle",
+      "tags": [
+        "vehicle",
+        "train",
+        "bullet",
+        "topdown",
+        "teal",
+        "white"
+      ],
+      "band": 3,
+      "y_hint": [
+        2380,
+        2600
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Aerodynamic white/teal overhead nose car."
+    },
+    {
+      "id": "me.subway.gallery_example",
+      "name": "Example gallery / composed stamp",
+      "category": "decor",
+      "tags": [
+        "example",
+        "gallery",
+        "stamp"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2300
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Gallery \u2014 composed reference arrangement."
+    },
+    {
+      "id": "me.subway.ticket_kiosk_tall",
+      "name": "Tall ticket/info kiosk",
+      "category": "prop",
+      "tags": [
+        "kiosk",
+        "ticket",
+        "info",
+        "machine",
+        "station"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Tall grey ticket/info terminals in station furniture row. Related: Control_Big_Monitor, Control_Small_Monitor, Control_Box."
+    },
+    {
+      "id": "me.subway.example_train_blue",
+      "name": "Example blue train stamp set",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "example",
+        "blue",
+        "stamp",
+        "assembled"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Train_Blue_1/2/Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.example_train_orange",
+      "name": "Example orange/brown train stamp",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "example",
+        "orange",
+        "stamp",
+        "assembled"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Train_Orange_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.example_train_green",
+      "name": "Example green train stamp",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "example",
+        "green",
+        "stamp",
+        "assembled"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Train_Green_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.example_train_grey",
+      "name": "Example grey/silver train stamp",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "example",
+        "grey",
+        "stamp",
+        "assembled"
+      ],
+      "band": 1,
+      "y_hint": [
+        1250,
+        1500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Train_Grey_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.example_train_white",
+      "name": "Example white high-speed train stamp",
+      "category": "vehicle",
+      "tags": [
+        "train",
+        "example",
+        "white",
+        "high_speed",
+        "stamp",
+        "assembled"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Train_White_Left/Middle/Right."
+    },
+    {
+      "id": "me.subway.example_turnstile",
+      "name": "Example lateral turnstile assembly",
+      "category": "infra",
+      "tags": [
+        "turnstile",
+        "example",
+        "gate",
+        "assembled"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Lateral_Turnstile_1-2."
+    },
+    {
+      "id": "me.subway.example_rail_brown",
+      "name": "Example brown rail assemblies",
+      "category": "infra",
+      "tags": [
+        "rail",
+        "example",
+        "brown",
+        "track"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Brown_Rail_*."
+    },
+    {
+      "id": "me.subway.example_rail_grey",
+      "name": "Example grey rail assemblies",
+      "category": "infra",
+      "tags": [
+        "rail",
+        "example",
+        "grey",
+        "track"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Example_Grey_Rail_*."
+    },
+    {
+      "id": "me.subway.pillar_height_set",
+      "name": "Tunnel pillar height variants",
+      "category": "infra",
+      "tags": [
+        "pillar",
+        "column",
+        "tunnel",
+        "height"
+      ],
+      "band": 3,
+      "y_hint": [
+        2400,
+        2750
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Graduated grey vertical pillars beside tunnel arches in band 3."
+    }
+  ],
+  "row_guide": "Band0 (y0\u2013768): stairwells, pillars, white/lilac floor tiles, yellow platform edges, elevators/doors, turnstiles, drink/coffee machines, map/arrow signs, benches & waiting seats, plants; blue/white subway exterior+interior+seats/controls. Band1 (y768\u20131536): orange/brown vintage, green commuter (red+green buckets), and grey/silver modern train exterior/interior kits with seats & cabs. Band2 (y1536\u20132304): white/teal high-speed LME train, graffiti subway car, brown/grey rail modulars, named graffiti/posters/cracks, luggage/trolleys, trash & busker props, control desk. Band3 (y2304\u20132960): tunnel portals/arches, binary hazard edges, isometric diamond/chevron stairs, blue/orange platform number UI, top-down vehicles."
+}

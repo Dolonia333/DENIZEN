@@ -1,0 +1,2597 @@
+{
+  "sheet": "2_City_Terrains",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.city_terrains.sidewalk_beige_fill",
+      "name": "Warm beige / cream sidewalk tiles fill",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "tile",
+        "fill",
+        "beige",
+        "sidewalk_1"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Square grid sidewalk fill; singles Sidewalk_1; color beige"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_straight",
+      "name": "Sidewalk beige straight curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "edge",
+        "beige"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight curb where beige sidewalk meets asphalt"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_outer_corner",
+      "name": "Sidewalk beige outer curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "outer",
+        "beige"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rounded/square outer curb corner"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_inner_corner",
+      "name": "Sidewalk beige inner curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "inner",
+        "beige"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner curb corner / driveway cut"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_curve",
+      "name": "Sidewalk beige curved curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "curve",
+        "roundabout",
+        "beige"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Curved curb for roundabouts and islands"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_fill",
+      "name": "Warm light-grey sidewalk tiles fill",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "tile",
+        "fill",
+        "warm_grey",
+        "sidewalk_2"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Square grid sidewalk fill; singles Sidewalk_2; color warm_grey"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_straight",
+      "name": "Sidewalk warm_grey straight curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "edge",
+        "warm_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight curb where warm_grey sidewalk meets asphalt"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_outer_corner",
+      "name": "Sidewalk warm_grey outer curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "outer",
+        "warm_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rounded/square outer curb corner"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_inner_corner",
+      "name": "Sidewalk warm_grey inner curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "inner",
+        "warm_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner curb corner / driveway cut"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_curve",
+      "name": "Sidewalk warm_grey curved curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "curve",
+        "roundabout",
+        "warm_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Curved curb for roundabouts and islands"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_fill",
+      "name": "Cool off-white / grey sidewalk tiles fill",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "tile",
+        "fill",
+        "cool_grey",
+        "sidewalk_3"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Square grid sidewalk fill; singles Sidewalk_3; color cool_grey"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_straight",
+      "name": "Sidewalk cool_grey straight curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "edge",
+        "cool_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight curb where cool_grey sidewalk meets asphalt"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_outer_corner",
+      "name": "Sidewalk cool_grey outer curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "outer",
+        "cool_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rounded/square outer curb corner"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_inner_corner",
+      "name": "Sidewalk cool_grey inner curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "inner",
+        "cool_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner curb corner / driveway cut"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_curve",
+      "name": "Sidewalk cool_grey curved curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "curve",
+        "roundabout",
+        "cool_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Curved curb for roundabouts and islands"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_fill",
+      "name": "Neutral medium-grey sidewalk tiles fill",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "tile",
+        "fill",
+        "neutral_grey",
+        "sidewalk_4"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Square grid sidewalk fill; singles Sidewalk_4; color neutral_grey"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_straight",
+      "name": "Sidewalk neutral_grey straight curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "edge",
+        "neutral_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight curb where neutral_grey sidewalk meets asphalt"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_outer_corner",
+      "name": "Sidewalk neutral_grey outer curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "outer",
+        "neutral_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rounded/square outer curb corner"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_inner_corner",
+      "name": "Sidewalk neutral_grey inner curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "inner",
+        "neutral_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner curb corner / driveway cut"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_curve",
+      "name": "Sidewalk neutral_grey curved curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "curve",
+        "roundabout",
+        "neutral_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        580
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Curved curb for roundabouts and islands"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_fill",
+      "name": "Bluish slate sidewalk tiles fill",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "tile",
+        "fill",
+        "slate",
+        "sidewalk_5"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Square grid sidewalk fill; singles Sidewalk_5; color slate"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_straight",
+      "name": "Sidewalk slate straight curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "edge",
+        "slate"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight curb where slate sidewalk meets asphalt"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_outer_corner",
+      "name": "Sidewalk slate outer curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "outer",
+        "slate"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rounded/square outer curb corner"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_inner_corner",
+      "name": "Sidewalk slate inner curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "inner",
+        "slate"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner curb corner / driveway cut"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_curve",
+      "name": "Sidewalk slate curved curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "curve",
+        "roundabout",
+        "slate"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Curved curb for roundabouts and islands"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_fill",
+      "name": "Dark charcoal sidewalk tiles fill",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "tile",
+        "fill",
+        "charcoal",
+        "sidewalk_6"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Square grid sidewalk fill; singles Sidewalk_6; color charcoal"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_straight",
+      "name": "Sidewalk charcoal straight curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "edge",
+        "charcoal"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight curb where charcoal sidewalk meets asphalt"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_outer_corner",
+      "name": "Sidewalk charcoal outer curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "outer",
+        "charcoal"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rounded/square outer curb corner"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_inner_corner",
+      "name": "Sidewalk charcoal inner curb corner",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "inner",
+        "charcoal"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner curb corner / driveway cut"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_curve",
+      "name": "Sidewalk charcoal curved curb",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "curve",
+        "roundabout",
+        "charcoal"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        780
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Curved curb for roundabouts and islands"
+    },
+    {
+      "id": "me.city_terrains.asphalt_fill",
+      "name": "Asphalt road fill tiles",
+      "category": "asphalt",
+      "tags": [
+        "asphalt",
+        "road",
+        "fill"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        768
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Dark grey asphalt base; singles Asphalt_1 family"
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_corner",
+      "name": "Asphalt white line corner pieces",
+      "category": "road_marking",
+      "tags": [
+        "asphalt",
+        "line",
+        "corner",
+        "marking"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small L/+ white paint corners on asphalt"
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_straight",
+      "name": "Asphalt white line straight segments",
+      "category": "road_marking",
+      "tags": [
+        "asphalt",
+        "line",
+        "straight",
+        "lane"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Thin white solid line strips"
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_dashed",
+      "name": "Asphalt white dashed lane lines",
+      "category": "road_marking",
+      "tags": [
+        "asphalt",
+        "line",
+        "dashed",
+        "lane"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        240
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Dashed white lane dividers"
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_t_junction",
+      "name": "Asphalt T-junction line markers",
+      "category": "road_marking",
+      "tags": [
+        "asphalt",
+        "line",
+        "t_junction"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "T-shaped white paint connectors"
+    },
+    {
+      "id": "me.city_terrains.bus_lane_horizontal",
+      "name": "BUS lane marking horizontal",
+      "category": "road_marking",
+      "tags": [
+        "bus",
+        "lane",
+        "text",
+        "yellow",
+        "asphalt"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Yellow BUS lettering for horizontal lanes"
+    },
+    {
+      "id": "me.city_terrains.bus_lane_vertical",
+      "name": "BUS lane marking vertical",
+      "category": "road_marking",
+      "tags": [
+        "bus",
+        "lane",
+        "text",
+        "yellow",
+        "asphalt"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Stacked yellow BUS for vertical lanes"
+    },
+    {
+      "id": "me.city_terrains.bus_lane_layout",
+      "name": "BUS lane composite layout strip",
+      "category": "road",
+      "tags": [
+        "bus",
+        "lane",
+        "layout",
+        "asphalt"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Multi-tile bus lane assemblies in composite blocks"
+    },
+    {
+      "id": "me.city_terrains.crosswalk_zebra_h",
+      "name": "Zebra crosswalk horizontal",
+      "category": "road_marking",
+      "tags": [
+        "crosswalk",
+        "zebra",
+        "white",
+        "pedestrian"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Thick white parallel bars across road"
+    },
+    {
+      "id": "me.city_terrains.crosswalk_zebra_v",
+      "name": "Zebra crosswalk vertical",
+      "category": "road_marking",
+      "tags": [
+        "crosswalk",
+        "zebra",
+        "white",
+        "pedestrian"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Vertical zebra stripe segments"
+    },
+    {
+      "id": "me.city_terrains.crosswalk_corner",
+      "name": "Crosswalk L / corner join",
+      "category": "road_marking",
+      "tags": [
+        "crosswalk",
+        "corner",
+        "junction"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "L-shaped crosswalk corners"
+    },
+    {
+      "id": "me.city_terrains.crosswalk_t",
+      "name": "Crosswalk T-junction",
+      "category": "road_marking",
+      "tags": [
+        "crosswalk",
+        "t_junction"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "T-junction zebra meeting"
+    },
+    {
+      "id": "me.city_terrains.parking_spot_p_h",
+      "name": "Parking space with P icon horizontal",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "P",
+        "asphalt",
+        "stall"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Side-by-side stalls with white P square"
+    },
+    {
+      "id": "me.city_terrains.parking_spot_p_v",
+      "name": "Parking space with P icon vertical",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "P",
+        "asphalt",
+        "stall"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stacked vertical parking stalls"
+    },
+    {
+      "id": "me.city_terrains.parking_spot_outline",
+      "name": "Empty parking stall outline",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "outline",
+        "stall"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "White bay outlines without P"
+    },
+    {
+      "id": "me.city_terrains.parking_row_triple",
+      "name": "Triple parking bay strip",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "row",
+        "multi"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "3-wide parking module in composites"
+    },
+    {
+      "id": "me.city_terrains.stairs_concrete",
+      "name": "Concrete stairs",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "concrete",
+        "sidewalk",
+        "elevation"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-down grey concrete step blocks"
+    },
+    {
+      "id": "me.city_terrains.roundabout_road",
+      "name": "Roundabout circular asphalt road",
+      "category": "road",
+      "tags": [
+        "roundabout",
+        "asphalt",
+        "circle",
+        "dashed"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Large circular road with dashed inner line"
+    },
+    {
+      "id": "me.city_terrains.roundabout_island",
+      "name": "Roundabout center island",
+      "category": "infra",
+      "tags": [
+        "roundabout",
+        "island",
+        "concrete"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Small circular concrete center island"
+    },
+    {
+      "id": "me.city_terrains.roundabout_sign",
+      "name": "Blue roundabout direction sign",
+      "category": "sign",
+      "tags": [
+        "roundabout",
+        "sign",
+        "blue",
+        "traffic"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue circular sign with white circulatory arrows on pole"
+    },
+    {
+      "id": "me.city_terrains.roundabout_layout",
+      "name": "Full roundabout + sidewalk plaza layout",
+      "category": "road",
+      "tags": [
+        "roundabout",
+        "layout",
+        "sidewalk",
+        "plaza"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Composite: circle road, island, sign, sidewalk corners"
+    },
+    {
+      "id": "me.city_terrains.median_island_pill",
+      "name": "Pill-shaped median / sidewalk island",
+      "category": "infra",
+      "tags": [
+        "median",
+        "island",
+        "curb",
+        "sidewalk"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rounded sidewalk medians in road"
+    },
+    {
+      "id": "me.city_terrains.curb_driveway_slope",
+      "name": "Driveway / ramp curb slope",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "driveway",
+        "ramp",
+        "slope"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        600
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Sloped curb where sidewalk drops to road"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_decorative_inset",
+      "name": "Decorative inset sidewalk tile 2x2",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "decorative",
+        "inset"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Light-grey tiles with inner border detail"
+    },
+    {
+      "id": "me.city_terrains.layout_bus_parking_roundabout",
+      "name": "Composite road layout (bus/parking/roundabout)",
+      "category": "road",
+      "tags": [
+        "layout",
+        "bus",
+        "parking",
+        "roundabout",
+        "sidewalk"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Large assembled examples mid-sheet"
+    },
+    {
+      "id": "me.city_terrains.arrow_straight",
+      "name": "Road arrow straight",
+      "category": "road_marking",
+      "tags": [
+        "arrow",
+        "straight",
+        "white",
+        "direction"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": false,
+      "notes": "White straight arrow stencil"
+    },
+    {
+      "id": "me.city_terrains.arrow_left",
+      "name": "Road arrow left turn",
+      "category": "road_marking",
+      "tags": [
+        "arrow",
+        "left",
+        "turn",
+        "white"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": false,
+      "notes": "Left-turn arrow"
+    },
+    {
+      "id": "me.city_terrains.arrow_right",
+      "name": "Road arrow right turn",
+      "category": "road_marking",
+      "tags": [
+        "arrow",
+        "right",
+        "turn",
+        "white"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Right-turn arrow"
+    },
+    {
+      "id": "me.city_terrains.arrow_uturn",
+      "name": "Road arrow U-turn",
+      "category": "road_marking",
+      "tags": [
+        "arrow",
+        "uturn",
+        "white"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "U-turn arrow"
+    },
+    {
+      "id": "me.city_terrains.arrow_straight_left",
+      "name": "Road arrow straight+left combo",
+      "category": "road_marking",
+      "tags": [
+        "arrow",
+        "straight",
+        "left",
+        "combo"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": false,
+      "notes": "Combined straight and left arrow"
+    },
+    {
+      "id": "me.city_terrains.arrow_straight_right",
+      "name": "Road arrow straight+right combo",
+      "category": "road_marking",
+      "tags": [
+        "arrow",
+        "straight",
+        "right",
+        "combo"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": false,
+      "notes": "Combined straight and right arrow"
+    },
+    {
+      "id": "me.city_terrains.arrow_double_head",
+      "name": "Road arrow double-headed",
+      "category": "road_marking",
+      "tags": [
+        "arrow",
+        "double",
+        "bidirectional"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Two-way arrow marking"
+    },
+    {
+      "id": "me.city_terrains.text_stop_vertical",
+      "name": "STOP text marking vertical",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "STOP",
+        "vertical"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Stacked white STOP letters"
+    },
+    {
+      "id": "me.city_terrains.text_stop_horizontal",
+      "name": "STOP text marking horizontal",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "STOP",
+        "horizontal"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Horizontal STOP word"
+    },
+    {
+      "id": "me.city_terrains.text_exit_vertical",
+      "name": "EXIT text marking vertical",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "EXIT",
+        "vertical"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Stacked white EXIT"
+    },
+    {
+      "id": "me.city_terrains.text_exit_horizontal",
+      "name": "EXIT text marking horizontal",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "EXIT",
+        "horizontal"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Horizontal EXIT"
+    },
+    {
+      "id": "me.city_terrains.text_turn_vertical",
+      "name": "TURN text marking vertical",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "TURN",
+        "vertical"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Stacked white TURN"
+    },
+    {
+      "id": "me.city_terrains.text_turn_horizontal",
+      "name": "TURN text marking horizontal",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "TURN",
+        "horizontal"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Horizontal TURN"
+    },
+    {
+      "id": "me.city_terrains.marking_p_icon",
+      "name": "Standalone parking P icon",
+      "category": "road_marking",
+      "tags": [
+        "parking",
+        "P",
+        "icon",
+        "overlay"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "White square P symbol overlay"
+    },
+    {
+      "id": "me.city_terrains.marking_line_short",
+      "name": "Short white line / dash segments",
+      "category": "road_marking",
+      "tags": [
+        "line",
+        "dash",
+        "short",
+        "lane"
+      ],
+      "band": 1,
+      "y_hint": [
+        1120,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Various short solid/dashed white bits"
+    },
+    {
+      "id": "me.city_terrains.marking_ladder_zone",
+      "name": "Ladder / loading-zone bar markings",
+      "category": "road_marking",
+      "tags": [
+        "ladder",
+        "loading",
+        "bars"
+      ],
+      "band": 1,
+      "y_hint": [
+        1120,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Parallel short bars between rails"
+    },
+    {
+      "id": "me.city_terrains.parking_lot_example_2x2",
+      "name": "Parking lot example 2x2 module",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "example",
+        "module",
+        "lot"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Example-labeled 2x2 stall grid"
+    },
+    {
+      "id": "me.city_terrains.parking_lot_example_2x3",
+      "name": "Parking lot example 2x3 module",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "example",
+        "module",
+        "lot"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Larger example parking configuration"
+    },
+    {
+      "id": "me.city_terrains.parking_lot_aisle",
+      "name": "Parking lot drive aisle between rows",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "aisle",
+        "lane"
+      ],
+      "band": 1,
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Central asphalt lane between opposing stalls"
+    },
+    {
+      "id": "me.city_terrains.parking_p_upright",
+      "name": "Parking P facing upright",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "P",
+        "north"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": false,
+      "notes": "Upright P for one side of aisle"
+    },
+    {
+      "id": "me.city_terrains.parking_p_inverted",
+      "name": "Parking P facing inverted",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "P",
+        "south"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Inverted P for opposite aisle side"
+    },
+    {
+      "id": "me.city_terrains.parking_overlay_mask",
+      "name": "Parking lines/symbols mask overlay",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "overlay",
+        "mask",
+        "lines"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1520
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "White-only line/P layer without asphalt fill"
+    },
+    {
+      "id": "me.city_terrains.parking_arrow_lot",
+      "name": "Parking lot navigation arrow",
+      "category": "road_marking",
+      "tags": [
+        "parking",
+        "arrow",
+        "lot"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small arrows inside parking lane examples"
+    },
+    {
+      "id": "me.city_terrains.ev_charging_spot",
+      "name": "EV charging parking stall",
+      "category": "parking",
+      "tags": [
+        "ev",
+        "charging",
+        "parking",
+        "green",
+        "electric"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Green EV stall with car+plug icon"
+    },
+    {
+      "id": "me.city_terrains.ev_icon_tile",
+      "name": "EV charging icon square",
+      "category": "road_marking",
+      "tags": [
+        "ev",
+        "icon",
+        "plug",
+        "green"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Green square with white EV/plug symbol"
+    },
+    {
+      "id": "me.city_terrains.hatching_green_diagonal",
+      "name": "Green diagonal hazard hatching",
+      "category": "road_marking",
+      "tags": [
+        "hatching",
+        "green",
+        "restricted",
+        "hazard"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Bright green diagonal stripes on asphalt"
+    },
+    {
+      "id": "me.city_terrains.ev_hatched_stall",
+      "name": "EV / restricted hatched stall",
+      "category": "parking",
+      "tags": [
+        "ev",
+        "hatching",
+        "parking",
+        "restricted"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Parking bay filled with green hatching + icon"
+    },
+    {
+      "id": "me.city_terrains.handicap_parking_green",
+      "name": "Accessible / handicap parking marker",
+      "category": "parking",
+      "tags": [
+        "handicap",
+        "accessible",
+        "parking",
+        "green"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Green square with access/wheelchair-style icon if present in set"
+    },
+    {
+      "id": "me.city_terrains.loading_zone_hatch",
+      "name": "Loading / no-park green hatch zone",
+      "category": "road_marking",
+      "tags": [
+        "loading",
+        "restricted",
+        "hatching",
+        "green"
+      ],
+      "band": 1,
+      "y_hint": [
+        1420,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Larger hatched restricted areas"
+    },
+    {
+      "id": "me.city_terrains.brand_logo_hatched",
+      "name": "LimeZu logo tile on green hatching",
+      "category": "utility",
+      "tags": [
+        "branding",
+        "logo",
+        "limezu",
+        "hatching",
+        "watermark"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "surface": "none",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Cat-head LimeZu signature on diagonal green hatch"
+    },
+    {
+      "id": "me.city_terrains.brand_logo_framed",
+      "name": "LimeZu logo tile in green frame",
+      "category": "utility",
+      "tags": [
+        "branding",
+        "logo",
+        "limezu",
+        "frame",
+        "watermark"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "surface": "none",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Cat-head logo inside green outlined square"
+    },
+    {
+      "id": "me.city_terrains.brand_action_hatched",
+      "name": "Action / figure icon on green hatching",
+      "category": "utility",
+      "tags": [
+        "branding",
+        "action",
+        "hatching",
+        "utility"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "surface": "none",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Green person/tool silhouette on hatch field"
+    },
+    {
+      "id": "me.city_terrains.brand_action_framed",
+      "name": "Action / figure icon framed",
+      "category": "utility",
+      "tags": [
+        "branding",
+        "action",
+        "frame",
+        "utility"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "surface": "none",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Framed green action icon without hatch"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_n",
+      "name": "Sidewalk beige curb north",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "beige",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for beige sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_n",
+      "name": "Sidewalk cool_grey curb north",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "cool_grey",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for cool_grey sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_n",
+      "name": "Sidewalk slate curb north",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "slate",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for slate sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_n",
+      "name": "Sidewalk charcoal curb north",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "charcoal",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for charcoal sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_s",
+      "name": "Sidewalk beige curb south",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "beige",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for beige sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_s",
+      "name": "Sidewalk cool_grey curb south",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "cool_grey",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for cool_grey sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_s",
+      "name": "Sidewalk slate curb south",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "slate",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for slate sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_s",
+      "name": "Sidewalk charcoal curb south",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "charcoal",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for charcoal sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_e",
+      "name": "Sidewalk beige curb east",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "beige",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for beige sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_e",
+      "name": "Sidewalk cool_grey curb east",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "cool_grey",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for cool_grey sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_e",
+      "name": "Sidewalk slate curb east",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "slate",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for slate sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_e",
+      "name": "Sidewalk charcoal curb east",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "charcoal",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for charcoal sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_w",
+      "name": "Sidewalk beige curb west",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "beige",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for beige sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_w",
+      "name": "Sidewalk cool_grey curb west",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "cool_grey",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for cool_grey sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_w",
+      "name": "Sidewalk slate curb west",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "slate",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for slate sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_w",
+      "name": "Sidewalk charcoal curb west",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "sidewalk",
+        "charcoal",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Facing-specific curb strip for charcoal sidewalk palette"
+    },
+    {
+      "id": "me.city_terrains.asphalt_fill_variation",
+      "name": "Asphalt fill micro-variations",
+      "category": "asphalt",
+      "tags": [
+        "asphalt",
+        "fill",
+        "variation"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        768
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Subtle asphalt texture variants from Asphalt_1 set"
+    },
+    {
+      "id": "me.city_terrains.crosswalk_segment_single",
+      "name": "Single zebra bar segment",
+      "category": "road_marking",
+      "tags": [
+        "crosswalk",
+        "segment",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Individual white crosswalk bar tile"
+    },
+    {
+      "id": "me.city_terrains.parking_stall_corner",
+      "name": "Parking bay corner marker",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "corner",
+        "line"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "L-corner paint for parking bays"
+    },
+    {
+      "id": "me.city_terrains.parking_stall_divider",
+      "name": "Parking bay divider line",
+      "category": "parking",
+      "tags": [
+        "parking",
+        "divider",
+        "line"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "White line between adjacent stalls"
+    },
+    {
+      "id": "me.city_terrains.roundabout_dashed_ring",
+      "name": "Roundabout dashed ring marking",
+      "category": "road_marking",
+      "tags": [
+        "roundabout",
+        "dashed",
+        "circle"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "White dashed circular lane inside roundabout"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_to_asphalt_transition",
+      "name": "Sidewalk-to-asphalt transition tile",
+      "category": "transition",
+      "tags": [
+        "sidewalk",
+        "asphalt",
+        "transition",
+        "curb"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Interface tiles where tiled pavement meets asphalt"
+    },
+    {
+      "id": "me.city_terrains.island_circular_small",
+      "name": "Small circular concrete island",
+      "category": "infra",
+      "tags": [
+        "island",
+        "circle",
+        "concrete",
+        "median"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        700
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Small round island without sign"
+    },
+    {
+      "id": "me.city_terrains.stairs_wide",
+      "name": "Wide concrete stair flight",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "concrete",
+        "wide"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wider stair assembly"
+    },
+    {
+      "id": "me.city_terrains.stairs_narrow",
+      "name": "Narrow concrete stair flight",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "concrete",
+        "narrow"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrower stair strip"
+    },
+    {
+      "id": "me.city_terrains.bus_lane_border_yellow",
+      "name": "BUS lane yellow border lines",
+      "category": "road_marking",
+      "tags": [
+        "bus",
+        "yellow",
+        "border",
+        "lane"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Yellow edge lines framing BUS text"
+    },
+    {
+      "id": "me.city_terrains.arrow_parking_lot_left",
+      "name": "Parking lot left flow arrow",
+      "category": "road_marking",
+      "tags": [
+        "parking",
+        "arrow",
+        "left"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": false,
+      "notes": "Lot-internal left arrow"
+    },
+    {
+      "id": "me.city_terrains.arrow_parking_lot_right",
+      "name": "Parking lot right flow arrow",
+      "category": "road_marking",
+      "tags": [
+        "parking",
+        "arrow",
+        "right"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Lot-internal right arrow"
+    },
+    {
+      "id": "me.city_terrains.text_stop_down",
+      "name": "STOP text facing down",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "STOP",
+        "south"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "STOP oriented south"
+    },
+    {
+      "id": "me.city_terrains.text_exit_down",
+      "name": "EXIT text facing down",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "EXIT",
+        "south"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "EXIT oriented south"
+    },
+    {
+      "id": "me.city_terrains.text_turn_down",
+      "name": "TURN text facing down",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "TURN",
+        "south"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "TURN oriented south"
+    },
+    {
+      "id": "me.city_terrains.text_stop_left",
+      "name": "STOP text facing left",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "STOP",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "STOP oriented west"
+    },
+    {
+      "id": "me.city_terrains.text_exit_left",
+      "name": "EXIT text facing left",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "EXIT",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "EXIT oriented west"
+    },
+    {
+      "id": "me.city_terrains.text_turn_left",
+      "name": "TURN text facing left",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "TURN",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "TURN oriented west"
+    },
+    {
+      "id": "me.city_terrains.text_stop_right",
+      "name": "STOP text facing right",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "STOP",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "STOP oriented east"
+    },
+    {
+      "id": "me.city_terrains.text_exit_right",
+      "name": "EXIT text facing right",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "EXIT",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "EXIT oriented east"
+    },
+    {
+      "id": "me.city_terrains.text_turn_right",
+      "name": "TURN text facing right",
+      "category": "road_marking",
+      "tags": [
+        "text",
+        "TURN",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "TURN oriented east"
+    },
+    {
+      "id": "me.city_terrains.ev_stall_border_green",
+      "name": "EV stall green border frame",
+      "category": "parking",
+      "tags": [
+        "ev",
+        "border",
+        "green",
+        "parking"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Green outline frame for EV bay"
+    },
+    {
+      "id": "me.city_terrains.hatching_green_single",
+      "name": "Single green hatch tile",
+      "category": "road_marking",
+      "tags": [
+        "hatching",
+        "green",
+        "tile"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "One-tile green diagonal hatch"
+    },
+    {
+      "id": "me.city_terrains.layout_culdesac",
+      "name": "Cul-de-sac / dead-end circular layout",
+      "category": "road",
+      "tags": [
+        "culdesac",
+        "circle",
+        "layout",
+        "asphalt"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Circular dead-end related to roundabout modules"
+    },
+    {
+      "id": "me.city_terrains.curb_connector_t",
+      "name": "Curb T-connector piece",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "connector",
+        "t_junction"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        400
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small T curb connector icons"
+    },
+    {
+      "id": "me.city_terrains.curb_connector_cross",
+      "name": "Curb cross connector",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "connector",
+        "cross"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        400
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small + curb connectors"
+    },
+    {
+      "id": "me.city_terrains.sidewalk_plaza_grid",
+      "name": "Large sidewalk plaza grid around roundabout",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "plaza",
+        "grid",
+        "roundabout"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        720
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Extended tiled plaza framing roundabouts"
+    }
+  ],
+  "row_guide": "Band0: six sidewalk color variants (beige\u2192charcoal) each with fill + straight/outer/inner/curve curbs; asphalt fill and line corners; BUS H/V lanes; zebra crosswalks; P parking H/V; concrete stairs; roundabout road/island/sign/layouts; median islands; driveway slopes. Band1: more composite road layouts; directional arrows (straight/left/right/U/combo); STOP/EXIT/TURN text (H+V); P icons and short line bits; parking-lot example modules with aisle and overlay masks; EV stalls, green hatching, restricted zones. Band2: LimeZu branding / watermark tiles (hatched and framed logos + action icons). Facing-specific curb strips for major sidewalk palettes; full STOP/EXIT/TURN orientations; parking-lot flow arrows; EV borders."
+}

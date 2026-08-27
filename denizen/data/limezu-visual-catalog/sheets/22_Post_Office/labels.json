@@ -1,0 +1,934 @@
+{
+  "sheet": "22_Post_Office",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.post_office.truck_right_side",
+      "name": "Delivery truck right side (logo)",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "delivery",
+        "postal",
+        "logo",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        21,
+        96
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Long white box van profile with DeliVery envelope logo. Singles: Truck_Right_Side."
+    },
+    {
+      "id": "me.post_office.truck_left_side",
+      "name": "Delivery truck left side (plain)",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "delivery",
+        "postal",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        101,
+        176
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Opposite plain white profile without logo. Singles: Truck_Left_Side."
+    },
+    {
+      "id": "me.post_office.truck_back_closed",
+      "name": "Delivery truck rear closed",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "delivery",
+        "rear",
+        "closed"
+      ],
+      "band": 0,
+      "y_hint": [
+        21,
+        150
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Rear with roll-up door shut. Singles: Truck_Back."
+    },
+    {
+      "id": "me.post_office.truck_back_open_full",
+      "name": "Delivery truck rear open full",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "delivery",
+        "rear",
+        "open",
+        "packages"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        176
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Open cargo packed with boxes. Singles: Truck_Back_Variant_Open_Full."
+    },
+    {
+      "id": "me.post_office.truck_back_open_empty",
+      "name": "Delivery truck rear open empty",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "delivery",
+        "rear",
+        "open",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Open empty cargo bay fragment. Singles: Truck_Back_Variant_Open_Empty. Partial rear variant."
+    },
+    {
+      "id": "me.post_office.truck_front",
+      "name": "Delivery truck front",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "delivery",
+        "front",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        21,
+        150
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Head-on cab/windshield/grille view. Singles: Truck_Front."
+    },
+    {
+      "id": "me.post_office.sign_pole_cones",
+      "name": "Orange triangle signal pole",
+      "category": "sign",
+      "tags": [
+        "signal",
+        "cone",
+        "pole",
+        "caution",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        8,
+        54
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Tall pole with stacked glowing orange triangles. Part of Roof_Decoration cluster / freestanding marker."
+    },
+    {
+      "id": "me.post_office.sign_envelope",
+      "name": "Envelope post office sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "envelope",
+        "mail",
+        "billboard"
+      ],
+      "band": 0,
+      "y_hint": [
+        22,
+        54
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large white envelope icon sign panel. Included in Roof_Decoration single with cones/rails."
+    },
+    {
+      "id": "me.post_office.roof_decoration",
+      "name": "Roof decoration cluster",
+      "category": "decor",
+      "tags": [
+        "roof",
+        "envelope",
+        "cones",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        8,
+        64
+      ],
+      "surface": "any",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Combined roof prop: envelope sign, orange markers, rail bits. Singles: Roof_Decoration."
+    },
+    {
+      "id": "me.post_office.roof_trapdoor_1",
+      "name": "Roof trapdoor 1",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "hatch",
+        "trapdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        32,
+        64
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Small metal roof access hatch. Singles: Roof_Trapdoor_1."
+    },
+    {
+      "id": "me.post_office.roof_trapdoor_2",
+      "name": "Roof trapdoor 2",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "hatch",
+        "trapdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        32,
+        64
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Alternate roof hatch. Singles: Roof_Trapdoor_2."
+    },
+    {
+      "id": "me.post_office.building_maroon",
+      "name": "Post office building maroon",
+      "category": "building",
+      "tags": [
+        "post_office",
+        "facade",
+        "maroon",
+        "glass",
+        "two_story",
+        "hvac",
+        "ladder"
+      ],
+      "band": 0,
+      "y_hint": [
+        64,
+        280
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full facade: roof HVAC+ladder, maroon upper wall, POST OFFICE awning, glass doors; orange accent stripe. Singles: Building_1."
+    },
+    {
+      "id": "me.post_office.building_green",
+      "name": "Post office building sage green",
+      "category": "building",
+      "tags": [
+        "post_office",
+        "facade",
+        "green",
+        "glass",
+        "two_story",
+        "hvac",
+        "ladder"
+      ],
+      "band": 0,
+      "y_hint": [
+        64,
+        280
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sage/olive upper accent variant. Singles: Building_2."
+    },
+    {
+      "id": "me.post_office.building_grey",
+      "name": "Post office building grey",
+      "category": "building",
+      "tags": [
+        "post_office",
+        "facade",
+        "grey",
+        "glass",
+        "two_story",
+        "hvac",
+        "ladder"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        480
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Neutral grey/blue-grey facade. Singles: Building_3."
+    },
+    {
+      "id": "me.post_office.building_orange_stripe",
+      "name": "Post office building orange stripe",
+      "category": "building",
+      "tags": [
+        "post_office",
+        "facade",
+        "orange",
+        "glass",
+        "two_story",
+        "hvac",
+        "ladder"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        480
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey facade with bright orange band above POST OFFICE sign. Singles: Building_4."
+    },
+    {
+      "id": "me.post_office.package_pile_large",
+      "name": "Large package pile with letters",
+      "category": "prop",
+      "tags": [
+        "packages",
+        "boxes",
+        "mail",
+        "pile"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        210
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Messy stacked boxes with loose envelopes on top. Singles: Multiple_Packages_1."
+    },
+    {
+      "id": "me.post_office.package_pile_small",
+      "name": "Small package stack",
+      "category": "prop",
+      "tags": [
+        "packages",
+        "boxes",
+        "stack"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        210
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Neater 2\u20133 box stack. Singles: Multiple_Packages_2."
+    },
+    {
+      "id": "me.post_office.package_big_1",
+      "name": "Large single package 1",
+      "category": "prop",
+      "tags": [
+        "package",
+        "box",
+        "cardboard"
+      ],
+      "band": 0,
+      "y_hint": [
+        208,
+        240
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Large taped cardboard box. Singles: Big_Single_Package_1."
+    },
+    {
+      "id": "me.post_office.package_big_2",
+      "name": "Large single package 2",
+      "category": "prop",
+      "tags": [
+        "package",
+        "box",
+        "cardboard"
+      ],
+      "band": 0,
+      "y_hint": [
+        208,
+        240
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Alternate large box shading/label. Singles: Big_Single_Package_2."
+    },
+    {
+      "id": "me.post_office.package_flat",
+      "name": "Flat package",
+      "category": "prop",
+      "tags": [
+        "package",
+        "box",
+        "flat"
+      ],
+      "band": 0,
+      "y_hint": [
+        218,
+        240
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Wide flat carton. Singles: Single_Package_1."
+    },
+    {
+      "id": "me.post_office.package_square",
+      "name": "Square package",
+      "category": "prop",
+      "tags": [
+        "package",
+        "box"
+      ],
+      "band": 0,
+      "y_hint": [
+        224,
+        240
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small square box. Singles: Single_Package_2."
+    },
+    {
+      "id": "me.post_office.package_tall",
+      "name": "Tall package",
+      "category": "prop",
+      "tags": [
+        "package",
+        "box",
+        "tall"
+      ],
+      "band": 0,
+      "y_hint": [
+        218,
+        240
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Vertical slender carton. Singles: Single_Package_3."
+    },
+    {
+      "id": "me.post_office.package_small_1",
+      "name": "Tiny package 1",
+      "category": "prop",
+      "tags": [
+        "package",
+        "box",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        224,
+        240
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "1x1 parcel. Singles: Single_Package_4."
+    },
+    {
+      "id": "me.post_office.package_small_2",
+      "name": "Tiny package 2",
+      "category": "prop",
+      "tags": [
+        "package",
+        "box",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        256,
+        272
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Alternate small parcel. Singles: Single_Package_5."
+    },
+    {
+      "id": "me.post_office.letter_1",
+      "name": "Loose letter 1",
+      "category": "prop",
+      "tags": [
+        "letter",
+        "envelope",
+        "mail"
+      ],
+      "band": 0,
+      "y_hint": [
+        229,
+        240
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Single white envelope prop. Singles: Letter_1."
+    },
+    {
+      "id": "me.post_office.letter_2",
+      "name": "Loose letter 2",
+      "category": "prop",
+      "tags": [
+        "letter",
+        "envelope",
+        "mail"
+      ],
+      "band": 0,
+      "y_hint": [
+        263,
+        272
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Alternate envelope orientation. Singles: Letter_2."
+    },
+    {
+      "id": "me.post_office.mailbox_blue_1_front",
+      "name": "Blue residential mailbox 1 front",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "blue",
+        "post"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue box on post, front. Singles: Blue_Mailbox_1_Front."
+    },
+    {
+      "id": "me.post_office.mailbox_blue_1_side_a",
+      "name": "Blue residential mailbox 1 side A",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "blue",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile. Singles: Blue_Mailbox_1_Side_1."
+    },
+    {
+      "id": "me.post_office.mailbox_blue_1_side_b",
+      "name": "Blue residential mailbox 1 side B",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "blue",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Opposite side profile. Singles: Blue_Mailbox_1_Side_2."
+    },
+    {
+      "id": "me.post_office.mailbox_blue_2_front",
+      "name": "Blue residential mailbox 2 front",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "blue",
+        "metal_post"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Second blue style (metal/bolted post row). Singles: Blue_Mailbox_2_Front."
+    },
+    {
+      "id": "me.post_office.mailbox_blue_2_side_a",
+      "name": "Blue residential mailbox 2 side A",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "blue",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Singles: Blue_Mailbox_2_Side_1."
+    },
+    {
+      "id": "me.post_office.mailbox_blue_2_side_b",
+      "name": "Blue residential mailbox 2 side B",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "blue",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Singles: Blue_Mailbox_2_Side_2."
+    },
+    {
+      "id": "me.post_office.mailbox_red_1_front",
+      "name": "Red residential mailbox 1 front",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "red",
+        "post"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Singles: Red_Mailbox_1_Front."
+    },
+    {
+      "id": "me.post_office.mailbox_red_1_side_a",
+      "name": "Red residential mailbox 1 side A",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "red",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Singles: Red_Mailbox_1_Side_1."
+    },
+    {
+      "id": "me.post_office.mailbox_red_1_side_b",
+      "name": "Red residential mailbox 1 side B",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "red",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Singles: Red_Mailbox_1_Side_2."
+    },
+    {
+      "id": "me.post_office.mailbox_red_2_front",
+      "name": "Red residential mailbox 2 front",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "red",
+        "metal_post"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Singles: Red_Mailbox_2_Front."
+    },
+    {
+      "id": "me.post_office.mailbox_red_2_side_a",
+      "name": "Red residential mailbox 2 side A",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "red",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Singles: Red_Mailbox_2_Side_1."
+    },
+    {
+      "id": "me.post_office.mailbox_red_2_side_b",
+      "name": "Red residential mailbox 2 side B",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "red",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Singles: Red_Mailbox_2_Side_2."
+    },
+    {
+      "id": "me.post_office.mailbox_black_1_front",
+      "name": "Black residential mailbox 1 front",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "black",
+        "grey",
+        "post"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey/black box on wood post. Singles: Black_Mailbox_1_Front."
+    },
+    {
+      "id": "me.post_office.mailbox_black_1_side_a",
+      "name": "Black residential mailbox 1 side A",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "black",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Singles: Black_Mailbox_1_Side_1."
+    },
+    {
+      "id": "me.post_office.mailbox_black_1_side_b",
+      "name": "Black residential mailbox 1 side B",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "black",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        222,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Singles: Black_Mailbox_1_Side_2."
+    },
+    {
+      "id": "me.post_office.mailbox_black_2_front",
+      "name": "Black residential mailbox 2 front",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "black",
+        "metal_post"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Singles: Black_Mailbox_2_Front."
+    },
+    {
+      "id": "me.post_office.mailbox_black_2_side_a",
+      "name": "Black residential mailbox 2 side A",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "black",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Singles: Black_Mailbox_2_Side_1."
+    },
+    {
+      "id": "me.post_office.mailbox_black_2_side_b",
+      "name": "Black residential mailbox 2 side B",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "residential",
+        "black",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        253,
+        272
+      ],
+      "surface": "sidewalk",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Singles: Black_Mailbox_2_Side_2."
+    },
+    {
+      "id": "me.post_office.dropbox_blue",
+      "name": "Public mail drop box blue",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "collection",
+        "dropbox",
+        "blue",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        284,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Street-corner collection box. Singles: Big_Blue_Mailbox."
+    },
+    {
+      "id": "me.post_office.dropbox_grey",
+      "name": "Public mail drop box grey",
+      "category": "infra",
+      "tags": [
+        "mailbox",
+        "collection",
+        "dropbox",
+        "grey",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        284,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey collection box twin. Singles: Big_Grey_Mailbox."
+    }
+  ],
+  "row_guide": "Single band (y0\u2013480): left = delivery truck orientations (logo east side, plain west side, front, closed/open rears); center-top = envelope sign, orange signal pole, roof hatches/decoration; left-mid = packages, letters, residential mailboxes (blue/red/black \u00d7 front/sides \u00d7 two post styles), public drop boxes; right = four full POST OFFICE building color variants (maroon, green, grey, orange-stripe) with rooftop HVAC and ladders."
+}

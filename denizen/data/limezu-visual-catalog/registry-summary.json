@@ -1,0 +1,362 @@
+{
+  "generated_at": "2026-08-27T19:21:50.934Z",
+  "sheet_count": 24,
+  "object_count": 2749,
+  "by_sheet": {
+    "10_Vehicles": {
+      "sheet": "10_Vehicles",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 279,
+      "categories": {
+        "vehicle": 173,
+        "prop": 88,
+        "npc": 4,
+        "building": 6,
+        "decal": 8
+      }
+    },
+    "11_Camping": {
+      "sheet": "11_Camping",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 185,
+      "categories": {
+        "terrain": 11,
+        "nature": 82,
+        "prop": 43,
+        "sign": 7,
+        "building": 9,
+        "vehicle": 12,
+        "infra": 11,
+        "furniture": 10
+      }
+    },
+    "12_Hotel_and_Hospital": {
+      "sheet": "12_Hotel_and_Hospital",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 41,
+      "categories": {
+        "building": 10,
+        "sign": 4,
+        "prop": 2,
+        "infra": 2,
+        "furniture": 23
+      }
+    },
+    "13_School": {
+      "sheet": "13_School",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 62,
+      "categories": {
+        "building": 3,
+        "decor": 1,
+        "infra": 5,
+        "prop": 42,
+        "furniture": 4,
+        "terrain": 7
+      }
+    },
+    "14_Swimming_Pool": {
+      "sheet": "14_Swimming_Pool",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 55,
+      "categories": {
+        "terrain": 3,
+        "infra": 12,
+        "furniture": 22,
+        "sign": 1,
+        "prop": 15,
+        "nature": 1,
+        "decor": 1
+      }
+    },
+    "15_Police_Station": {
+      "sheet": "15_Police_Station",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 43,
+      "categories": {
+        "building": 10,
+        "prop": 7,
+        "infra": 17,
+        "sign": 1,
+        "decor": 2,
+        "vehicle": 6
+      }
+    },
+    "16_Office": {
+      "sheet": "16_Office",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 66,
+      "categories": {
+        "building": 50,
+        "sign": 2,
+        "prop": 12,
+        "infra": 2
+      }
+    },
+    "17_Garden": {
+      "sheet": "17_Garden",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 171,
+      "categories": {
+        "nature": 35,
+        "infra": 9,
+        "decor": 13,
+        "prop": 59,
+        "building": 43,
+        "furniture": 11,
+        "terrain": 1
+      }
+    },
+    "18_Fire_Station": {
+      "sheet": "18_Fire_Station",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 30,
+      "categories": {
+        "building": 5,
+        "vehicle": 12,
+        "infra": 3,
+        "prop": 5,
+        "decor": 5
+      }
+    },
+    "19_Graveyard": {
+      "sheet": "19_Graveyard",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 217,
+      "categories": {
+        "terrain": 4,
+        "nature": 52,
+        "decor": 89,
+        "prop": 61,
+        "infra": 9,
+        "building": 2
+      }
+    },
+    "1_Terrains_and_Fences": {
+      "sheet": "1_Terrains_and_Fences",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 140,
+      "categories": {
+        "utility": 2,
+        "prop": 16,
+        "terrain": 62,
+        "path": 6,
+        "fence": 32,
+        "cliff": 12,
+        "wall": 9,
+        "infra": 1
+      }
+    },
+    "20_Subway_and_Train_Station": {
+      "sheet": "20_Subway_and_Train_Station",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 127,
+      "categories": {
+        "infra": 28,
+        "terrain": 3,
+        "prop": 27,
+        "sign": 10,
+        "furniture": 12,
+        "decor": 26,
+        "vehicle": 21
+      }
+    },
+    "21_Beach": {
+      "sheet": "21_Beach",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 90,
+      "categories": {
+        "terrain": 10,
+        "prop": 30,
+        "furniture": 14,
+        "sign": 4,
+        "building": 12,
+        "nature": 7,
+        "infra": 13
+      }
+    },
+    "22_Post_Office": {
+      "sheet": "22_Post_Office",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 46,
+      "categories": {
+        "vehicle": 6,
+        "sign": 2,
+        "decor": 1,
+        "infra": 22,
+        "building": 4,
+        "prop": 11
+      }
+    },
+    "23_MIlitary_Base": {
+      "sheet": "23_MIlitary_Base",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 114,
+      "categories": {
+        "infra": 24,
+        "sign": 2,
+        "prop": 20,
+        "building": 31,
+        "furniture": 14,
+        "vehicle": 23
+      }
+    },
+    "24_Additional_Houses": {
+      "sheet": "24_Additional_Houses",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 110,
+      "categories": {
+        "building": 65,
+        "infra": 19,
+        "prop": 15,
+        "nature": 4,
+        "furniture": 3,
+        "sign": 2,
+        "decal": 2
+      }
+    },
+    "2_City_Terrains": {
+      "sheet": "2_City_Terrains",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 131,
+      "categories": {
+        "sidewalk": 8,
+        "curb": 43,
+        "asphalt": 2,
+        "road_marking": 45,
+        "road": 5,
+        "parking": 16,
+        "infra": 6,
+        "sign": 1,
+        "utility": 4,
+        "transition": 1
+      }
+    },
+    "3_City_Props": {
+      "sheet": "3_City_Props",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 237,
+      "categories": {
+        "sign": 23,
+        "infra": 55,
+        "furniture": 6,
+        "fence": 3,
+        "prop": 81,
+        "nature": 21,
+        "decor": 6,
+        "building": 17,
+        "vehicle": 12,
+        "utility": 5,
+        "curb": 1,
+        "terrain": 2,
+        "road": 1,
+        "road_marking": 1,
+        "sidewalk": 1,
+        "decal": 1,
+        "npc": 1
+      }
+    },
+    "4_Generic_Buildings": {
+      "sheet": "4_Generic_Buildings",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 148,
+      "categories": {
+        "building": 119,
+        "infra": 7,
+        "prop": 17,
+        "furniture": 2,
+        "sign": 3
+      }
+    },
+    "5_Floor_Modular_Buildings": {
+      "sheet": "5_Floor_Modular_Buildings",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 139,
+      "categories": {
+        "building": 103,
+        "sign": 19,
+        "decal": 5,
+        "prop": 10,
+        "infra": 2
+      }
+    },
+    "6_Garage_Sales": {
+      "sheet": "6_Garage_Sales",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 52,
+      "categories": {
+        "building": 17,
+        "infra": 7,
+        "prop": 9,
+        "sign": 7,
+        "decor": 9,
+        "furniture": 3
+      }
+    },
+    "7_Villas": {
+      "sheet": "7_Villas",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 165,
+      "categories": {
+        "building": 32,
+        "decor": 20,
+        "infra": 13,
+        "nature": 44,
+        "sign": 2,
+        "prop": 38,
+        "terrain": 4,
+        "furniture": 12
+      }
+    },
+    "8_Worksite": {
+      "sheet": "8_Worksite",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 42,
+      "categories": {
+        "infra": 8,
+        "vehicle": 6,
+        "prop": 19,
+        "building": 2,
+        "terrain": 5,
+        "sign": 1,
+        "nature": 1
+      }
+    },
+    "9_Shopping_Center_and_Markets": {
+      "sheet": "9_Shopping_Center_and_Markets",
+      "pack": "limezu_modern_exteriors",
+      "object_count": 59,
+      "categories": {
+        "building": 41,
+        "sign": 5,
+        "prop": 5,
+        "infra": 8
+      }
+    }
+  },
+  "by_category": {
+    "vehicle": 271,
+    "prop": 632,
+    "npc": 5,
+    "building": 581,
+    "decal": 16,
+    "terrain": 112,
+    "nature": 247,
+    "sign": 96,
+    "infra": 283,
+    "furniture": 136,
+    "decor": 173,
+    "utility": 11,
+    "path": 6,
+    "fence": 35,
+    "cliff": 12,
+    "wall": 9,
+    "sidewalk": 9,
+    "curb": 44,
+    "asphalt": 2,
+    "road_marking": 46,
+    "road": 6,
+    "parking": 16,
+    "transition": 1
+  }
+}

@@ -1,0 +1,3323 @@
+{
+  "sheet": "7_Villas",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.villa.villa_orange_roof",
+      "name": "Two-story villa orange/rust roof",
+      "category": "building",
+      "tags": [
+        "villa",
+        "house",
+        "residence",
+        "two-story",
+        "balcony",
+        "porch",
+        "gable",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full villa stamp; singles Villa_1"
+    },
+    {
+      "id": "me.villa.villa_brown_roof",
+      "name": "Two-story villa brown roof",
+      "category": "building",
+      "tags": [
+        "villa",
+        "house",
+        "residence",
+        "two-story",
+        "balcony",
+        "porch",
+        "gable",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full villa stamp; singles Villa_2"
+    },
+    {
+      "id": "me.villa.villa_burgundy_roof",
+      "name": "Two-story villa burgundy/purple roof",
+      "category": "building",
+      "tags": [
+        "villa",
+        "house",
+        "residence",
+        "two-story",
+        "balcony",
+        "porch",
+        "gable",
+        "burgundy"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full villa stamp; singles Villa_3"
+    },
+    {
+      "id": "me.villa.villa_red_roof",
+      "name": "Two-story villa red roof",
+      "category": "building",
+      "tags": [
+        "villa",
+        "house",
+        "residence",
+        "two-story",
+        "balcony",
+        "porch",
+        "gable",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full villa stamp; singles Villa_4"
+    },
+    {
+      "id": "me.villa.villa_blue_roof",
+      "name": "Two-story villa blue roof",
+      "category": "building",
+      "tags": [
+        "villa",
+        "house",
+        "residence",
+        "two-story",
+        "balcony",
+        "porch",
+        "gable",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full villa stamp; singles Villa_5"
+    },
+    {
+      "id": "me.villa.toy_house_1",
+      "name": "Small playhouse/toy house (green)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_1; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.toy_house_2",
+      "name": "Small playhouse/toy house (yellow)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_2; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.toy_house_3",
+      "name": "Small playhouse/toy house (cream)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "cream"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_3; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.toy_house_4",
+      "name": "Small playhouse/toy house (beige)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "beige"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_4; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.toy_house_5",
+      "name": "Small playhouse/toy house (green_alt)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_5; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.toy_house_6",
+      "name": "Small playhouse/toy house (yellow_alt)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_6; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.toy_house_7",
+      "name": "Small playhouse/toy house (cream_alt)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "cream"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_7; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.toy_house_8",
+      "name": "Small playhouse/toy house (beige_alt)",
+      "category": "building",
+      "tags": [
+        "playhouse",
+        "toy",
+        "shed",
+        "cottage",
+        "small",
+        "kids",
+        "beige"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Toy_House_8; red gabled roof, arched door"
+    },
+    {
+      "id": "me.villa.chimney_1",
+      "name": "Villa chimney (orange)",
+      "category": "building",
+      "tags": [
+        "chimney",
+        "roof",
+        "modular",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Chimney_1"
+    },
+    {
+      "id": "me.villa.chimney_2",
+      "name": "Villa chimney (brown)",
+      "category": "building",
+      "tags": [
+        "chimney",
+        "roof",
+        "modular",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Chimney_2"
+    },
+    {
+      "id": "me.villa.chimney_3",
+      "name": "Villa chimney (burgundy)",
+      "category": "building",
+      "tags": [
+        "chimney",
+        "roof",
+        "modular",
+        "burgundy"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Chimney_3"
+    },
+    {
+      "id": "me.villa.chimney_4",
+      "name": "Villa chimney (red)",
+      "category": "building",
+      "tags": [
+        "chimney",
+        "roof",
+        "modular",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Chimney_4"
+    },
+    {
+      "id": "me.villa.chimney_5",
+      "name": "Villa chimney (blue)",
+      "category": "building",
+      "tags": [
+        "chimney",
+        "roof",
+        "modular",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Chimney_5"
+    },
+    {
+      "id": "me.villa.doormat_1",
+      "name": "Villa doormat variant 1",
+      "category": "decor",
+      "tags": [
+        "doormat",
+        "entrance",
+        "welcome"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Doormat_1"
+    },
+    {
+      "id": "me.villa.doormat_2",
+      "name": "Villa doormat variant 2",
+      "category": "decor",
+      "tags": [
+        "doormat",
+        "entrance"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Doormat_2"
+    },
+    {
+      "id": "me.villa.villa_ladder_1",
+      "name": "Villa exterior ladder",
+      "category": "infra",
+      "tags": [
+        "ladder",
+        "climb",
+        "access",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Ladder_1"
+    },
+    {
+      "id": "me.villa.villa_ladder_2",
+      "name": "Villa exterior ladder angled",
+      "category": "infra",
+      "tags": [
+        "ladder",
+        "climb",
+        "access",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Ladder_2"
+    },
+    {
+      "id": "me.villa.round_window_1",
+      "name": "Circular attic window on orange wall",
+      "category": "building",
+      "tags": [
+        "window",
+        "round",
+        "attic",
+        "modular",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        420
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Round_Window_1"
+    },
+    {
+      "id": "me.villa.round_window_2",
+      "name": "Circular attic window on brown wall",
+      "category": "building",
+      "tags": [
+        "window",
+        "round",
+        "attic",
+        "modular",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        420
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Round_Window_2"
+    },
+    {
+      "id": "me.villa.round_window_3",
+      "name": "Circular attic window on burgundy wall",
+      "category": "building",
+      "tags": [
+        "window",
+        "round",
+        "attic",
+        "modular",
+        "burgundy"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        420
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Round_Window_3"
+    },
+    {
+      "id": "me.villa.round_window_4",
+      "name": "Circular attic window on red wall",
+      "category": "building",
+      "tags": [
+        "window",
+        "round",
+        "attic",
+        "modular",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        420
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Round_Window_4"
+    },
+    {
+      "id": "me.villa.round_window_5",
+      "name": "Circular attic window on blue wall",
+      "category": "building",
+      "tags": [
+        "window",
+        "round",
+        "attic",
+        "modular",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        420
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Round_Window_5"
+    },
+    {
+      "id": "me.villa.roof_window_1",
+      "name": "Villa roof window/skylight 1",
+      "category": "building",
+      "tags": [
+        "window",
+        "roof",
+        "dormer",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Roof_Window_1"
+    },
+    {
+      "id": "me.villa.roof_window_2",
+      "name": "Villa roof window/skylight 2",
+      "category": "building",
+      "tags": [
+        "window",
+        "roof",
+        "dormer",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Roof_Window_2"
+    },
+    {
+      "id": "me.villa.roof_window_3",
+      "name": "Villa roof window/skylight 3",
+      "category": "building",
+      "tags": [
+        "window",
+        "roof",
+        "dormer",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Roof_Window_3"
+    },
+    {
+      "id": "me.villa.roof_window_4",
+      "name": "Villa roof window/skylight 4",
+      "category": "building",
+      "tags": [
+        "window",
+        "roof",
+        "dormer",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Roof_Window_4"
+    },
+    {
+      "id": "me.villa.roof_window_5",
+      "name": "Villa roof window/skylight 5",
+      "category": "building",
+      "tags": [
+        "window",
+        "roof",
+        "dormer",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Roof_Window_5"
+    },
+    {
+      "id": "me.villa.solar_panel_1",
+      "name": "Roof solar panel array 1",
+      "category": "infra",
+      "tags": [
+        "solar",
+        "panel",
+        "energy",
+        "roof",
+        "sustainable"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Solar_Panel_1"
+    },
+    {
+      "id": "me.villa.solar_panel_2",
+      "name": "Roof solar panel array 2",
+      "category": "infra",
+      "tags": [
+        "solar",
+        "panel",
+        "energy",
+        "roof",
+        "sustainable"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Solar_Panel_2"
+    },
+    {
+      "id": "me.villa.solar_panel_3",
+      "name": "Roof solar panel array 3",
+      "category": "infra",
+      "tags": [
+        "solar",
+        "panel",
+        "energy",
+        "roof",
+        "sustainable"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Solar_Panel_3"
+    },
+    {
+      "id": "me.villa.solar_panel_4",
+      "name": "Roof solar panel array 4",
+      "category": "infra",
+      "tags": [
+        "solar",
+        "panel",
+        "energy",
+        "roof",
+        "sustainable"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Solar_Panel_4"
+    },
+    {
+      "id": "me.villa.solar_panel_5",
+      "name": "Roof solar panel array 5",
+      "category": "infra",
+      "tags": [
+        "solar",
+        "panel",
+        "energy",
+        "roof",
+        "sustainable"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Solar_Panel_5"
+    },
+    {
+      "id": "me.villa.wall_pot_empty",
+      "name": "Empty pot on wall ledge",
+      "category": "decor",
+      "tags": [
+        "pot",
+        "wall",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Props cluster"
+    },
+    {
+      "id": "me.villa.wall_potted_bush",
+      "name": "Potted bush on wall ledge",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "bush",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.wall_ornament_bird",
+      "name": "White bird ornament on wall",
+      "category": "decor",
+      "tags": [
+        "ornament",
+        "bird",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.wall_potted_plant_small",
+      "name": "Small potted plant on wall",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "plant",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.wall_potted_plant_tall",
+      "name": "Tall potted plant on wall",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "plant",
+        "topiary",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.wall_sconce_white",
+      "name": "White wall light sconce",
+      "category": "decor",
+      "tags": [
+        "light",
+        "sconce",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.wall_sconce_yellow",
+      "name": "Yellow wall light sconce",
+      "category": "decor",
+      "tags": [
+        "light",
+        "sconce",
+        "wall",
+        "glow"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.hanging_plaque_diamond",
+      "name": "Hanging diamond/shield plaque",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "plaque",
+        "hanging",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.hanging_plaque_rect",
+      "name": "Hanging rectangular plaque",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "plaque",
+        "hanging",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.beam_hanging_bulb",
+      "name": "Wood beam with hanging bulb light",
+      "category": "decor",
+      "tags": [
+        "light",
+        "beam",
+        "hanging",
+        "porch"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.window_shutters_eave",
+      "name": "Window with open shutters and eave trim",
+      "category": "building",
+      "tags": [
+        "window",
+        "shutters",
+        "eave",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Repeated shuttered window modules"
+    },
+    {
+      "id": "me.villa.lemonade_stand_1",
+      "name": "Wooden lemonade/market stand empty",
+      "category": "prop",
+      "tags": [
+        "stand",
+        "market",
+        "lemonade",
+        "awning",
+        "vendor"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Lemonade_Stand_1"
+    },
+    {
+      "id": "me.villa.lemonade_stand_2",
+      "name": "Wooden lemonade/market stand stocked",
+      "category": "prop",
+      "tags": [
+        "stand",
+        "market",
+        "lemonade",
+        "awning",
+        "vendor",
+        "goods"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Lemonade_Stand_2"
+    },
+    {
+      "id": "me.villa.basketball_net_1",
+      "name": "Yard basketball hoop 1",
+      "category": "prop",
+      "tags": [
+        "basketball",
+        "sport",
+        "hoop",
+        "playground",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Basketball_Net_1"
+    },
+    {
+      "id": "me.villa.basketball_net_2",
+      "name": "Yard basketball hoop 2",
+      "category": "prop",
+      "tags": [
+        "basketball",
+        "sport",
+        "hoop",
+        "playground",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Basketball_Net_2"
+    },
+    {
+      "id": "me.villa.basketball_net_3",
+      "name": "Yard basketball hoop 3",
+      "category": "prop",
+      "tags": [
+        "basketball",
+        "sport",
+        "hoop",
+        "playground",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Basketball_Net_3"
+    },
+    {
+      "id": "me.villa.basketball_net_4",
+      "name": "Yard basketball hoop 4",
+      "category": "prop",
+      "tags": [
+        "basketball",
+        "sport",
+        "hoop",
+        "playground",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Basketball_Net_4"
+    },
+    {
+      "id": "me.villa.trampoline_1",
+      "name": "Trampoline with safety net (blue)",
+      "category": "prop",
+      "tags": [
+        "trampoline",
+        "playground",
+        "toy",
+        "net",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        620
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Trampoline_1"
+    },
+    {
+      "id": "me.villa.trampoline_2",
+      "name": "Trampoline with safety net (yellow)",
+      "category": "prop",
+      "tags": [
+        "trampoline",
+        "playground",
+        "toy",
+        "net",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        620
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Trampoline_2"
+    },
+    {
+      "id": "me.villa.trampoline_3",
+      "name": "Trampoline with safety net (grey)",
+      "category": "prop",
+      "tags": [
+        "trampoline",
+        "playground",
+        "toy",
+        "net",
+        "grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        620
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Trampoline_3"
+    },
+    {
+      "id": "me.villa.sandbox_1",
+      "name": "Sandbox with toys 1",
+      "category": "prop",
+      "tags": [
+        "sandbox",
+        "playground",
+        "toy",
+        "kids",
+        "sand"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Sand_Box_1"
+    },
+    {
+      "id": "me.villa.sandbox_2",
+      "name": "Sandbox with toys 2",
+      "category": "prop",
+      "tags": [
+        "sandbox",
+        "playground",
+        "toy",
+        "kids",
+        "sand"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Sand_Box_2"
+    },
+    {
+      "id": "me.villa.sandbox_3",
+      "name": "Sandbox with toys 3",
+      "category": "prop",
+      "tags": [
+        "sandbox",
+        "playground",
+        "toy",
+        "kids",
+        "sand"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Sand_Box_3"
+    },
+    {
+      "id": "me.villa.sandbox_4",
+      "name": "Sandbox with toys 4",
+      "category": "prop",
+      "tags": [
+        "sandbox",
+        "playground",
+        "toy",
+        "kids",
+        "sand"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Sand_Box_4"
+    },
+    {
+      "id": "me.villa.sandbox_modular_kit",
+      "name": "Sandbox modular frame/tile kit",
+      "category": "prop",
+      "tags": [
+        "sandbox",
+        "modular",
+        "frame",
+        "playground"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Sand_Box_Modular_1-22 pieces"
+    },
+    {
+      "id": "me.villa.seesaw_red",
+      "name": "Seesaw red seats",
+      "category": "prop",
+      "tags": [
+        "seesaw",
+        "playground",
+        "toy",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Rocking_1"
+    },
+    {
+      "id": "me.villa.seesaw_blue",
+      "name": "Seesaw blue seats",
+      "category": "prop",
+      "tags": [
+        "seesaw",
+        "playground",
+        "toy",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Rocking_2"
+    },
+    {
+      "id": "me.villa.seesaw_wood_tilted_left",
+      "name": "Wooden seesaw tilted left",
+      "category": "prop",
+      "tags": [
+        "seesaw",
+        "playground",
+        "toy",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Rocking_3"
+    },
+    {
+      "id": "me.villa.seesaw_wood_level",
+      "name": "Wooden seesaw level",
+      "category": "prop",
+      "tags": [
+        "seesaw",
+        "playground",
+        "toy",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Rocking_4"
+    },
+    {
+      "id": "me.villa.seesaw_wood_tilted_right",
+      "name": "Wooden seesaw tilted right",
+      "category": "prop",
+      "tags": [
+        "seesaw",
+        "playground",
+        "toy",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Rocking_5"
+    },
+    {
+      "id": "me.villa.seesaw_wood_level_alt",
+      "name": "Wooden seesaw level alt frame",
+      "category": "prop",
+      "tags": [
+        "seesaw",
+        "playground",
+        "toy",
+        "wood",
+        "animation"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Toy_Rocking_6"
+    },
+    {
+      "id": "me.villa.spring_rider_blue_duck",
+      "name": "Blue duck spring rider",
+      "category": "prop",
+      "tags": [
+        "spring-rider",
+        "playground",
+        "toy",
+        "duck",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Toy_Rocking_7"
+    },
+    {
+      "id": "me.villa.spring_rider_red_bird",
+      "name": "Red bird/hen spring rider",
+      "category": "prop",
+      "tags": [
+        "spring-rider",
+        "playground",
+        "toy",
+        "bird",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Toy_Rocking_8"
+    },
+    {
+      "id": "me.villa.tree_1",
+      "name": "Leafy green tree (small)",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "foliage",
+        "yard",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_1"
+    },
+    {
+      "id": "me.villa.tree_2",
+      "name": "Leafy green tree (medium)",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "foliage",
+        "yard",
+        "medium"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_2"
+    },
+    {
+      "id": "me.villa.tree_3",
+      "name": "Leafy green tree (large)",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "foliage",
+        "yard",
+        "large"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_3"
+    },
+    {
+      "id": "me.villa.tree_4",
+      "name": "Leafy green tree (large_canopy)",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "foliage",
+        "yard",
+        "large_canopy"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_4"
+    },
+    {
+      "id": "me.villa.stump_1",
+      "name": "Tree stump small",
+      "category": "nature",
+      "tags": [
+        "stump",
+        "wood",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Stomp_1"
+    },
+    {
+      "id": "me.villa.stump_2",
+      "name": "Tree stump large with rings",
+      "category": "nature",
+      "tags": [
+        "stump",
+        "wood",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Stomp_2"
+    },
+    {
+      "id": "me.villa.yard_flowers_1",
+      "name": "Yard flower bed/cluster (pink)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "pink"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Flowers_1"
+    },
+    {
+      "id": "me.villa.yard_flowers_2",
+      "name": "Yard flower bed/cluster (white)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Flowers_2"
+    },
+    {
+      "id": "me.villa.yard_flowers_3",
+      "name": "Yard flower bed/cluster (orange)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Flowers_3"
+    },
+    {
+      "id": "me.villa.yard_flowers_4",
+      "name": "Yard flower bed/cluster (yellow)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Flowers_4"
+    },
+    {
+      "id": "me.villa.yard_flowers_5",
+      "name": "Yard flower bed/cluster (mixed)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "mixed"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Villa_Yard_Flowers_5"
+    },
+    {
+      "id": "me.villa.yard_flowers_6",
+      "name": "Yard flower bed/cluster (pink_bed)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "pink"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_6"
+    },
+    {
+      "id": "me.villa.yard_flowers_7",
+      "name": "Yard flower bed/cluster (white_bed)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_7"
+    },
+    {
+      "id": "me.villa.yard_flowers_8",
+      "name": "Yard flower bed/cluster (orange_bed)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_8"
+    },
+    {
+      "id": "me.villa.yard_flowers_9",
+      "name": "Yard flower bed/cluster (yellow_bed)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_9"
+    },
+    {
+      "id": "me.villa.yard_flowers_10",
+      "name": "Yard flower bed/cluster (white_alt)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_10"
+    },
+    {
+      "id": "me.villa.yard_flowers_11",
+      "name": "Yard flower bed/cluster (pink_alt)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "pink"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_11"
+    },
+    {
+      "id": "me.villa.yard_flowers_12",
+      "name": "Yard flower bed/cluster (orange_alt)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_12"
+    },
+    {
+      "id": "me.villa.yard_flowers_13",
+      "name": "Yard flower bed/cluster (mixed_alt)",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "garden",
+        "yard",
+        "mixed"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Villa_Yard_Flowers_13"
+    },
+    {
+      "id": "me.villa.sapling_small",
+      "name": "Young sapling tree",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "sapling",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.bush_cluster_wide",
+      "name": "Wide leafy bush cluster",
+      "category": "nature",
+      "tags": [
+        "bush",
+        "shrub",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.sprouts_tuft",
+      "name": "Tiny green sprouts tuft",
+      "category": "nature",
+      "tags": [
+        "sprout",
+        "grass",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.bush_round_small",
+      "name": "Round green bush small",
+      "category": "nature",
+      "tags": [
+        "bush",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.bush_round_large",
+      "name": "Round green bush large",
+      "category": "nature",
+      "tags": [
+        "bush",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.plant_broadleaf",
+      "name": "Broadleaf garden plant",
+      "category": "nature",
+      "tags": [
+        "plant",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.clover_herb",
+      "name": "Clover/herb cluster",
+      "category": "nature",
+      "tags": [
+        "clover",
+        "herb",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.shrub_dense",
+      "name": "Dense branching shrub",
+      "category": "nature",
+      "tags": [
+        "shrub",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.branch_fallen_a",
+      "name": "Fallen thin branch A",
+      "category": "nature",
+      "tags": [
+        "branch",
+        "debris",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.branch_fallen_b",
+      "name": "Fallen thin branch B",
+      "category": "nature",
+      "tags": [
+        "branch",
+        "debris",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.pavers_grey_diagonal",
+      "name": "Grey stepping stones diagonal",
+      "category": "terrain",
+      "tags": [
+        "paver",
+        "stone",
+        "path",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.pavers_grey_vertical",
+      "name": "Grey stepping stones vertical",
+      "category": "terrain",
+      "tags": [
+        "paver",
+        "stone",
+        "path",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.pavers_brown_diagonal",
+      "name": "Brown stepping stones diagonal",
+      "category": "terrain",
+      "tags": [
+        "paver",
+        "stone",
+        "path",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.pavers_brown_vertical",
+      "name": "Brown stepping stones vertical",
+      "category": "terrain",
+      "tags": [
+        "paver",
+        "stone",
+        "path",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.log_with_mushrooms",
+      "name": "Fallen log with red mushrooms",
+      "category": "nature",
+      "tags": [
+        "log",
+        "mushroom",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.log_plain",
+      "name": "Fallen log plain",
+      "category": "nature",
+      "tags": [
+        "log",
+        "wood",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.bud_green",
+      "name": "Tiny green bud plant",
+      "category": "nature",
+      "tags": [
+        "bud",
+        "plant",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        740
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.plant_orange_small",
+      "name": "Small orange flower plant",
+      "category": "nature",
+      "tags": [
+        "flower",
+        "orange",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        740
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.hanging_flowers_1",
+      "name": "Hanging flower box / planter 1",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_1"
+    },
+    {
+      "id": "me.villa.hanging_flowers_2",
+      "name": "Hanging flower box / planter 2",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_2"
+    },
+    {
+      "id": "me.villa.hanging_flowers_3",
+      "name": "Hanging flower box / planter 3",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_3"
+    },
+    {
+      "id": "me.villa.hanging_flowers_4",
+      "name": "Hanging flower box / planter 4",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_4"
+    },
+    {
+      "id": "me.villa.hanging_flowers_5",
+      "name": "Hanging flower box / planter 5",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_5"
+    },
+    {
+      "id": "me.villa.hanging_flowers_6",
+      "name": "Hanging flower box / planter 6",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_6"
+    },
+    {
+      "id": "me.villa.hanging_flowers_7",
+      "name": "Hanging flower box / planter 7",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_7"
+    },
+    {
+      "id": "me.villa.hanging_flowers_8",
+      "name": "Hanging flower box / planter 8",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_8"
+    },
+    {
+      "id": "me.villa.hanging_flowers_9",
+      "name": "Hanging flower box / planter 9",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_9"
+    },
+    {
+      "id": "me.villa.hanging_flowers_10",
+      "name": "Hanging flower box / planter 10",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_10"
+    },
+    {
+      "id": "me.villa.hanging_flowers_11",
+      "name": "Hanging flower box / planter 11",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_11"
+    },
+    {
+      "id": "me.villa.hanging_flowers_12",
+      "name": "Hanging flower box / planter 12",
+      "category": "decor",
+      "tags": [
+        "hanging",
+        "flowers",
+        "planter",
+        "window-box",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Hanging_Flowers_12"
+    },
+    {
+      "id": "me.villa.pot_empty",
+      "name": "Empty terracotta pot",
+      "category": "decor",
+      "tags": [
+        "pot",
+        "empty",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pot_1"
+    },
+    {
+      "id": "me.villa.potted_flowers_1",
+      "name": "Potted flowers 1",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "flowers",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Potted_Flowers_1"
+    },
+    {
+      "id": "me.villa.potted_flowers_2",
+      "name": "Potted flowers 2",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "flowers",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Potted_Flowers_2"
+    },
+    {
+      "id": "me.villa.potted_flowers_3",
+      "name": "Potted flowers 3",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "flowers",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Potted_Flowers_3"
+    },
+    {
+      "id": "me.villa.potted_flowers_4",
+      "name": "Potted flowers 4",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "flowers",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Potted_Flowers_4"
+    },
+    {
+      "id": "me.villa.potted_flowers_5",
+      "name": "Potted flowers 5",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "flowers",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Potted_Flowers_5"
+    },
+    {
+      "id": "me.villa.potted_flowers_6",
+      "name": "Potted flowers 6",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "flowers",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Potted_Flowers_6"
+    },
+    {
+      "id": "me.villa.potted_plant_1",
+      "name": "Potted leafy plant 1",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "plant",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.potted_plant_2",
+      "name": "Potted leafy plant 2",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "plant",
+        "garden"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.armchair_1",
+      "name": "Outdoor armchair 1",
+      "category": "furniture",
+      "tags": [
+        "chair",
+        "seat",
+        "outdoor",
+        "patio"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Armchair_1"
+    },
+    {
+      "id": "me.villa.armchair_2",
+      "name": "Outdoor armchair 2",
+      "category": "furniture",
+      "tags": [
+        "chair",
+        "seat",
+        "outdoor",
+        "patio"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Armchair_2"
+    },
+    {
+      "id": "me.villa.picnic_1",
+      "name": "Picnic blanket scene 1",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_1"
+    },
+    {
+      "id": "me.villa.picnic_2",
+      "name": "Picnic blanket scene 2",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_2"
+    },
+    {
+      "id": "me.villa.picnic_3",
+      "name": "Picnic blanket scene 3",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_3"
+    },
+    {
+      "id": "me.villa.picnic_4",
+      "name": "Picnic blanket scene 4",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_4"
+    },
+    {
+      "id": "me.villa.picnic_5",
+      "name": "Picnic blanket scene 5",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_5"
+    },
+    {
+      "id": "me.villa.picnic_6",
+      "name": "Picnic blanket scene 6",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_6"
+    },
+    {
+      "id": "me.villa.picnic_7",
+      "name": "Picnic blanket scene 7",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_7"
+    },
+    {
+      "id": "me.villa.picnic_8",
+      "name": "Picnic blanket scene 8",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "outdoor",
+        "food",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_8"
+    },
+    {
+      "id": "me.villa.picnic_basket_open",
+      "name": "Large open picnic basket with cloth",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic_Props_1"
+    },
+    {
+      "id": "me.villa.picnic_basket_closed",
+      "name": "Small closed picnic basket",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_2"
+    },
+    {
+      "id": "me.villa.cooler_blue",
+      "name": "Blue cooler box",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_3"
+    },
+    {
+      "id": "me.villa.cooler_yellow",
+      "name": "Yellow cooler/toolbox",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_4"
+    },
+    {
+      "id": "me.villa.food_bag_fruit_knife",
+      "name": "Paper bag with fruit and knife",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_5"
+    },
+    {
+      "id": "me.villa.sandwich_on_napkin",
+      "name": "Sandwich/toast on napkin",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_6"
+    },
+    {
+      "id": "me.villa.bento_red",
+      "name": "Red food container",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_7"
+    },
+    {
+      "id": "me.villa.bento_red_utensils",
+      "name": "Red food container with utensils",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_8"
+    },
+    {
+      "id": "me.villa.scattered_cutlery",
+      "name": "Scattered utensils/scraps",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_9"
+    },
+    {
+      "id": "me.villa.appetizer_plate",
+      "name": "Plate of appetizers/sushi",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_10"
+    },
+    {
+      "id": "me.villa.fruit_cluster_red",
+      "name": "Cluster of red fruit",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_11"
+    },
+    {
+      "id": "me.villa.soda_cans",
+      "name": "Pair of soda cans",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_12"
+    },
+    {
+      "id": "me.villa.beverage_set",
+      "name": "Bottles and cups beverage set",
+      "category": "prop",
+      "tags": [
+        "picnic",
+        "food",
+        "outdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Picnic_Props_13"
+    },
+    {
+      "id": "me.villa.treehouse_complete",
+      "name": "Complete treehouse with tire swing and ladder",
+      "category": "building",
+      "tags": [
+        "treehouse",
+        "tree",
+        "cabin",
+        "deck",
+        "ladder",
+        "tire-swing",
+        "backyard",
+        "play"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        912
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_House_1; mushrooms at base"
+    },
+    {
+      "id": "me.villa.treehouse_base",
+      "name": "Treehouse trunk base with deck platform",
+      "category": "building",
+      "tags": [
+        "treehouse",
+        "deck",
+        "platform",
+        "trunk",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        912
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_House_Base_1"
+    },
+    {
+      "id": "me.villa.treehouse_cabin",
+      "name": "Treehouse cabin facade module",
+      "category": "building",
+      "tags": [
+        "treehouse",
+        "cabin",
+        "door",
+        "window",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        880
+      ],
+      "surface": "deck",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_House_House_1"
+    },
+    {
+      "id": "me.villa.treehouse_ladder_1",
+      "name": "Treehouse wooden ladder vertical",
+      "category": "infra",
+      "tags": [
+        "ladder",
+        "treehouse",
+        "climb",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        800,
+        912
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_House_Ladder_1"
+    },
+    {
+      "id": "me.villa.treehouse_ladder_2",
+      "name": "Treehouse wooden ladder angled",
+      "category": "infra",
+      "tags": [
+        "ladder",
+        "treehouse",
+        "climb",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        800,
+        912
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tree_House_Ladder_2"
+    },
+    {
+      "id": "me.villa.tire_swing",
+      "name": "Tire swing (attached to treehouse tree)",
+      "category": "prop",
+      "tags": [
+        "swing",
+        "tire",
+        "playground",
+        "tree"
+      ],
+      "band": 1,
+      "y_hint": [
+        780,
+        880
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Part of treehouse composition; may be inseparable on sheet"
+    },
+    {
+      "id": "me.villa.picnic_blanket_food",
+      "name": "Pink checkered picnic with food spread",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "food",
+        "outdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        860
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.picnic_blanket_toolbox",
+      "name": "Pink picnic blanket with yellow toolbox",
+      "category": "furniture",
+      "tags": [
+        "picnic",
+        "blanket",
+        "toolbox",
+        "tools",
+        "outdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        860
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.scatter_bottles_cans",
+      "name": "Scattered bottles and cans cluster",
+      "category": "prop",
+      "tags": [
+        "scatter",
+        "bottles",
+        "cans",
+        "junk",
+        "picnic"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        840
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.scatter_fruit_produce",
+      "name": "Scattered fruit/produce cluster",
+      "category": "prop",
+      "tags": [
+        "scatter",
+        "fruit",
+        "food",
+        "picnic"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        840
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false
+    },
+    {
+      "id": "me.villa.fence_picket_segment",
+      "name": "White picket fence on grass patch",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "picket",
+        "wood",
+        "boundary",
+        "yard"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Visible on overview mid-lower right"
+    },
+    {
+      "id": "me.villa.fence_rail_wood",
+      "name": "Wooden split-rail fence segment",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "rail",
+        "wood",
+        "boundary"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true
+    },
+    {
+      "id": "me.villa.ev_charger_white",
+      "name": "EV charging bollard white",
+      "category": "infra",
+      "tags": [
+        "ev",
+        "charger",
+        "utility",
+        "modern"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "White bollard with display"
+    },
+    {
+      "id": "me.villa.ev_charger_dark",
+      "name": "EV charging bollard dark",
+      "category": "infra",
+      "tags": [
+        "ev",
+        "charger",
+        "utility",
+        "modern"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false
+    }
+  ],
+  "row_guide": "Top: five large two-story villa colorways (orange/brown/burgundy/red/blue roofs) with porch+balcony. Upper-mid: modular chimneys, round attic windows, roof windows, solar panels, wall props (sconces, plaques, shuttered windows), lemonade stands. Mid-right: toy/playhouses, basketball hoops, seesaws, spring riders, sandboxes. Mid-lower: trampolines, yard trees/stumps/flowers/bushes, stepping stones, logs, hanging flower boxes, potted plants, picket/rail fencing, EV bollards, armchairs. Lower band0 / band1 top: picnic blankets and picnic props (baskets, coolers, food). Band1 (y768\u2013912): complete treehouse with tire swing, trunk+deck base, cabin module, ladders, picnic/toolbox blankets, bottle/fruit scatter."
+}

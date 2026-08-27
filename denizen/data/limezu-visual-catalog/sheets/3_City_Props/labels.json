@@ -1,0 +1,4860 @@
+{
+  "sheet": "3_City_Props",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.city_props.sign_warning_triangle_set",
+      "name": "Warning triangle traffic signs (red border)",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "warning",
+        "triangle",
+        "pole",
+        "regulatory"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Dense top-left grid: curves, intersections, pedestrians, bumps, traffic-light-ahead, narrowing; front/diagonal/back views"
+    },
+    {
+      "id": "me.city_props.sign_warning_yellow_set",
+      "name": "Yellow diamond/triangle hazard signs",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "warning",
+        "yellow",
+        "hazard",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Lightning/squiggle and other yellow hazard plates on poles"
+    },
+    {
+      "id": "me.city_props.sign_no_entry",
+      "name": "No-entry circular signs",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "prohibitory",
+        "no_entry",
+        "circle",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red circle with white bar; multiple facings"
+    },
+    {
+      "id": "me.city_props.sign_mandatory_arrow_set",
+      "name": "Blue mandatory direction arrow signs",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "mandatory",
+        "arrow",
+        "blue",
+        "circle",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Left/right/straight/diagonal white arrows on blue circles; multi-facing"
+    },
+    {
+      "id": "me.city_props.sign_parking_p",
+      "name": "Blue parking P signs",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "parking",
+        "blue",
+        "square",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Square blue P plates on poles; also small sidewalk variants lower in band"
+    },
+    {
+      "id": "me.city_props.sign_street_name_stack",
+      "name": "Street-name / direction blade stacks",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "street_name",
+        "directional",
+        "blue",
+        "green",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        220
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue/green rectangular blades single/double/triple; angled stacks"
+    },
+    {
+      "id": "me.city_props.sign_info_board_set",
+      "name": "Info / notice board signs on short posts",
+      "category": "sign",
+      "tags": [
+        "info",
+        "notice",
+        "pole",
+        "white",
+        "sale"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small white notice boards; red SALE plank; Info_Sign_* singles"
+    },
+    {
+      "id": "me.city_props.sign_hydrant_marker",
+      "name": "Hydrant location marker sign",
+      "category": "sign",
+      "tags": [
+        "hydrant",
+        "emergency",
+        "red",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        520
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red square icon on post near hydrant cluster"
+    },
+    {
+      "id": "me.city_props.lamp_ornate_double",
+      "name": "Ornate double-arm park street lamp",
+      "category": "infra",
+      "tags": [
+        "lamp",
+        "lighting",
+        "ornate",
+        "double",
+        "park"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall black decorative dual hanging lanterns; top-center"
+    },
+    {
+      "id": "me.city_props.lamp_modern_square",
+      "name": "Modern square-head street lamp",
+      "category": "infra",
+      "tags": [
+        "lamp",
+        "lighting",
+        "modern",
+        "grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shorter blocky grey post with square lantern"
+    },
+    {
+      "id": "me.city_props.lamp_cobra_double",
+      "name": "Double-arm cobra street lamp",
+      "category": "infra",
+      "tags": [
+        "lamp",
+        "lighting",
+        "cobra",
+        "double",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flared-base double-arm lamps plus detachable left/right arms"
+    },
+    {
+      "id": "me.city_props.lamp_globe_bollard",
+      "name": "Globe-top decorative lamp bollard",
+      "category": "infra",
+      "tags": [
+        "lamp",
+        "bollard",
+        "globe",
+        "lighting"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        700
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Also appears near kiosks in band4; Street_Lamp variants"
+    },
+    {
+      "id": "me.city_props.bench_wood_front",
+      "name": "Wooden park bench front view",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "seating",
+        "wood",
+        "park"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        90
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Slat bench with dark frame; Bench_1.."
+    },
+    {
+      "id": "me.city_props.bench_wood_side",
+      "name": "Wooden park bench side / angled",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "seating",
+        "wood",
+        "park",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        90
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side-profile bench variants"
+    },
+    {
+      "id": "me.city_props.fence_metal_picket",
+      "name": "Dark metal picket fence segments",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "metal",
+        "picket",
+        "gate"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical picket fence runs; top of mid band"
+    },
+    {
+      "id": "me.city_props.barrier_chain_post",
+      "name": "Chain/rope barrier between posts",
+      "category": "prop",
+      "tags": [
+        "barrier",
+        "chain",
+        "post",
+        "queue"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        620
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Low chain between grey posts near hedges"
+    },
+    {
+      "id": "me.city_props.playground_slide",
+      "name": "Playground slide on grass",
+      "category": "prop",
+      "tags": [
+        "playground",
+        "slide",
+        "park",
+        "kids",
+        "recreation"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red platform, tan chute, wooden supports; grass base"
+    },
+    {
+      "id": "me.city_props.playground_swings",
+      "name": "Playground swing set on grass",
+      "category": "prop",
+      "tags": [
+        "playground",
+        "swings",
+        "park",
+        "kids",
+        "recreation"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden A-frame with two red swings"
+    },
+    {
+      "id": "me.city_props.grass_patch_play",
+      "name": "Grass patch / play-surface tile",
+      "category": "nature",
+      "tags": [
+        "grass",
+        "patch",
+        "park",
+        "groundcover"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        180
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Solid grass and bordered grass squares near playground"
+    },
+    {
+      "id": "me.city_props.cart_candy_pink",
+      "name": "Pink-awning candy / snack cart",
+      "category": "prop",
+      "tags": [
+        "cart",
+        "vendor",
+        "candy",
+        "food",
+        "awning",
+        "pink"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Candies_Cart; pink/white striped awning"
+    },
+    {
+      "id": "me.city_props.cart_food_red_awning",
+      "name": "Red-awning street food cart",
+      "category": "prop",
+      "tags": [
+        "cart",
+        "vendor",
+        "food",
+        "awning",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Glass display / counter variants with red-white awning"
+    },
+    {
+      "id": "me.city_props.phone_booth_closed",
+      "name": "Red telephone booth closed",
+      "category": "prop",
+      "tags": [
+        "phone",
+        "booth",
+        "red",
+        "telephone",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        260
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "British-style booth with phone icon cap"
+    },
+    {
+      "id": "me.city_props.phone_booth_open",
+      "name": "Red telephone booth door open",
+      "category": "prop",
+      "tags": [
+        "phone",
+        "booth",
+        "red",
+        "telephone",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Door ajar showing interior handset"
+    },
+    {
+      "id": "me.city_props.atm_standalone",
+      "name": "Standalone ATM / banking kiosk",
+      "category": "prop",
+      "tags": [
+        "atm",
+        "bank",
+        "kiosk",
+        "electronics"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        540
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey/blue ATM with screen; also smaller blue pedestal nearby"
+    },
+    {
+      "id": "me.city_props.parking_meter",
+      "name": "Parking meter single and dual",
+      "category": "prop",
+      "tags": [
+        "parking",
+        "meter",
+        "pole",
+        "payment"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        340
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Single and double meters on posts"
+    },
+    {
+      "id": "me.city_props.mailbox_pillar",
+      "name": "Street mailbox / pillar box",
+      "category": "prop",
+      "tags": [
+        "mailbox",
+        "post",
+        "mail",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        520
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tan/red pillar receptacle near trash cluster"
+    },
+    {
+      "id": "me.city_props.fountain_tiered",
+      "name": "Tiered stone water fountain",
+      "category": "decor",
+      "tags": [
+        "fountain",
+        "water",
+        "park",
+        "stone"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        520
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Single-spout and two-tier variants"
+    },
+    {
+      "id": "me.city_props.drinking_fountain",
+      "name": "Drinking fountain",
+      "category": "prop",
+      "tags": [
+        "fountain",
+        "drinking",
+        "water",
+        "park"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Drinking_Fountain singles in amenity cluster"
+    },
+    {
+      "id": "me.city_props.traffic_light_vertical_states",
+      "name": "Vertical traffic light heads by color state",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "signal",
+        "red",
+        "yellow",
+        "green",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        260
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "R/Y/G lit modules and pedestrian walk/hand signals"
+    },
+    {
+      "id": "me.city_props.traffic_light_arm_early",
+      "name": "Early horizontal traffic-light arm pole",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "arm",
+        "pole",
+        "overhead"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Heavy pole with horizontal arm mid-band0"
+    },
+    {
+      "id": "me.city_props.barrier_sawhorse_striped",
+      "name": "Red-white striped sawhorse barriers",
+      "category": "prop",
+      "tags": [
+        "barrier",
+        "construction",
+        "striped",
+        "sawhorse"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Front and isometric angles"
+    },
+    {
+      "id": "me.city_props.bollard_pedestrian_set",
+      "name": "Pedestrian barrier posts / bollards",
+      "category": "prop",
+      "tags": [
+        "bollard",
+        "barrier",
+        "pedestrian",
+        "post"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        280
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Grey/black posts; Pedestrian_Barrier_Post_* plus modular left/mid/right"
+    },
+    {
+      "id": "me.city_props.stake_marker",
+      "name": "Grey and yellow marker stakes",
+      "category": "prop",
+      "tags": [
+        "stake",
+        "marker",
+        "survey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Grey_Stake / Yellow_Stake"
+    },
+    {
+      "id": "me.city_props.dumpster_green_closed",
+      "name": "Green dumpster closed",
+      "category": "prop",
+      "tags": [
+        "dumpster",
+        "trash",
+        "green",
+        "waste",
+        "closed"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large green metal dumpsters with lids shut"
+    },
+    {
+      "id": "me.city_props.dumpster_green_open_full",
+      "name": "Green dumpster open overflowing",
+      "category": "prop",
+      "tags": [
+        "dumpster",
+        "trash",
+        "green",
+        "waste",
+        "full",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Open lids with black bags"
+    },
+    {
+      "id": "me.city_props.trash_can_green_barrel",
+      "name": "Green wheeled/barrel trash cans",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "bin",
+        "green",
+        "barrel",
+        "waste"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        340
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Closed, bag-inside, tipped spilling variants"
+    },
+    {
+      "id": "me.city_props.trash_can_metal_round",
+      "name": "Round metal trash cans",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "bin",
+        "metal",
+        "waste"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grey cylindrical cans front/side"
+    },
+    {
+      "id": "me.city_props.trash_can_color_variants",
+      "name": "Color trash cans blue/black/green/small",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "bin",
+        "blue",
+        "black",
+        "green",
+        "waste"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue/black round bins and tall rectangular lids; Trashbin_* + color Open/Closed sets"
+    },
+    {
+      "id": "me.city_props.trash_bags_loose",
+      "name": "Loose black trash bags",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "bag",
+        "litter",
+        "waste"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Standing and slumped bags"
+    },
+    {
+      "id": "me.city_props.litter_pile_small",
+      "name": "Small litter / debris piles",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "litter",
+        "debris",
+        "waste"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Cans, paper, scraps; also Paper/Pizza/Milk/Orange_Juice trash singles"
+    },
+    {
+      "id": "me.city_props.barrels_stacked_colored",
+      "name": "Stacked blue and green metal barrels",
+      "category": "prop",
+      "tags": [
+        "barrel",
+        "stack",
+        "industrial",
+        "storage"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        540
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stacks of three; Stacked_Barrels"
+    },
+    {
+      "id": "me.city_props.hydrant_red",
+      "name": "Red fire hydrant",
+      "category": "infra",
+      "tags": [
+        "hydrant",
+        "fire",
+        "red",
+        "utility"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        520
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Classic red hydrant variants Hydrant_1-3"
+    },
+    {
+      "id": "me.city_props.planter_wood_flowers",
+      "name": "Wooden flower box planters",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "flowers",
+        "wood",
+        "pink",
+        "orange",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pink/orange/white flower boxes; Flowers_* / Flower_Bush_*"
+    },
+    {
+      "id": "me.city_props.planter_oval_stone",
+      "name": "Oval stone planter / bench bases",
+      "category": "furniture",
+      "tags": [
+        "planter",
+        "bench",
+        "stone",
+        "oval",
+        "park"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        400
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grid of oval stone bases some with rails"
+    },
+    {
+      "id": "me.city_props.planter_hedge_rect",
+      "name": "Rectangular hedge in stone planter",
+      "category": "nature",
+      "tags": [
+        "hedge",
+        "planter",
+        "shrub",
+        "stone"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Long manicured hedge planter"
+    },
+    {
+      "id": "me.city_props.tree_round_canopy",
+      "name": "Round-canopy deciduous trees",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "deciduous",
+        "green",
+        "park"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large and medium round crowns; Tree_* subset"
+    },
+    {
+      "id": "me.city_props.tree_cypress",
+      "name": "Tall cypress / flame trees",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "cypress",
+        "evergreen",
+        "narrow"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Slender pointed dark-green trees"
+    },
+    {
+      "id": "me.city_props.tree_in_square_planter",
+      "name": "Small trees in square planters",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "planter",
+        "square",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        400
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Rounded trees and stump-only planter variants"
+    },
+    {
+      "id": "me.city_props.shrub_and_bush_set",
+      "name": "Shrubs, bushes, and flower clumps",
+      "category": "nature",
+      "tags": [
+        "shrub",
+        "bush",
+        "flowers",
+        "groundcover"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        280
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Round bush, flowered bush, conical bush; Shrub_1-11"
+    },
+    {
+      "id": "me.city_props.pot_small",
+      "name": "Small pots",
+      "category": "nature",
+      "tags": [
+        "pot",
+        "plant",
+        "planter",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Pot_1-4"
+    },
+    {
+      "id": "me.city_props.hedge_tileable",
+      "name": "Tileable tall hedge segments",
+      "category": "nature",
+      "tags": [
+        "hedge",
+        "fence",
+        "green",
+        "tileable"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Left/middle/right hedge wall pieces"
+    },
+    {
+      "id": "me.city_props.grass_tufts_mixed",
+      "name": "Grass tufts and groundcover tiles",
+      "category": "nature",
+      "tags": [
+        "grass",
+        "tuft",
+        "groundcover",
+        "dry"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Tall grass, leafy clusters, green and dry squares"
+    },
+    {
+      "id": "me.city_props.electric_pole_set",
+      "name": "Utility / electric poles with crossarms",
+      "category": "infra",
+      "tags": [
+        "utility",
+        "pole",
+        "electric",
+        "wires",
+        "transformer"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        560
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Plain, with sagging wires, with transformer boxes; Electric_Pole_*"
+    },
+    {
+      "id": "me.city_props.manhole_covers",
+      "name": "Manhole covers",
+      "category": "infra",
+      "tags": [
+        "manhole",
+        "utility",
+        "ground",
+        "cover"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Circular textured covers; Manhole_1-8"
+    },
+    {
+      "id": "me.city_props.grate_utility",
+      "name": "Square utility / sewer grates",
+      "category": "infra",
+      "tags": [
+        "grate",
+        "sewer",
+        "utility",
+        "ground"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        340
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Grate_1-6"
+    },
+    {
+      "id": "me.city_props.billboard_hungry_burger",
+      "name": "Are You Hungry burger billboard posters",
+      "category": "sign",
+      "tags": [
+        "billboard",
+        "ad",
+        "food",
+        "burger",
+        "poster"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical ad stack orange/red/green variants"
+    },
+    {
+      "id": "me.city_props.billboard_blank_wide",
+      "name": "Blank white wide billboard",
+      "category": "sign",
+      "tags": [
+        "billboard",
+        "blank",
+        "ad",
+        "pillar"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide blank face on thick central pillar"
+    },
+    {
+      "id": "me.city_props.billboard_car_sale",
+      "name": "Car sale / parking availability board",
+      "category": "sign",
+      "tags": [
+        "billboard",
+        "cars",
+        "sale",
+        "parking",
+        "ad"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Yellow/green/red car icons with SALE header"
+    },
+    {
+      "id": "me.city_props.billboard_set_extra",
+      "name": "Additional billboard variants",
+      "category": "sign",
+      "tags": [
+        "billboard",
+        "ad",
+        "signage"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Billboard_1-8 remaining variants"
+    },
+    {
+      "id": "me.city_props.clothesline_colored",
+      "name": "Clothesline with colored laundry",
+      "category": "prop",
+      "tags": [
+        "clothesline",
+        "laundry",
+        "clothes",
+        "alley"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Poles with shirts etc.; Hanging_Clothes_*"
+    },
+    {
+      "id": "me.city_props.clothesline_white_sheets",
+      "name": "Clothesline with white sheets",
+      "category": "prop",
+      "tags": [
+        "clothesline",
+        "laundry",
+        "sheet",
+        "alley"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large white sheets with pink/blue center circles"
+    },
+    {
+      "id": "me.city_props.hanging_clothes_singles",
+      "name": "Individual hanging garment sprites",
+      "category": "prop",
+      "tags": [
+        "clothes",
+        "laundry",
+        "hanging",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        760
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grid of shirts/pants for custom lines"
+    },
+    {
+      "id": "me.city_props.parking_entrance_single_p",
+      "name": "Single-lane parking entrance with P signs",
+      "category": "infra",
+      "tags": [
+        "parking",
+        "entrance",
+        "ramp",
+        "underground",
+        "signs"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Arch with blue down-arrow and P; yellow-black bollards"
+    },
+    {
+      "id": "me.city_props.parking_entrance_double",
+      "name": "Double-lane parking entrance mixed signs",
+      "category": "infra",
+      "tags": [
+        "parking",
+        "entrance",
+        "ramp",
+        "underground",
+        "no_entry"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide arch with P, down arrows, and no-entry; Underground_Parking_*"
+    },
+    {
+      "id": "me.city_props.parking_exit_no_entry",
+      "name": "Single-lane parking exit no-entry",
+      "category": "infra",
+      "tags": [
+        "parking",
+        "exit",
+        "no_entry",
+        "ramp",
+        "underground"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Arch with dual red no-entry signs"
+    },
+    {
+      "id": "me.city_props.wind_turbine",
+      "name": "Wind turbine with red-tipped blades",
+      "category": "infra",
+      "tags": [
+        "wind",
+        "turbine",
+        "energy",
+        "industrial",
+        "tall"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall white tower; Wind_Turbine_1"
+    },
+    {
+      "id": "me.city_props.electric_box_warning",
+      "name": "Electrical transformer boxes with warnings",
+      "category": "infra",
+      "tags": [
+        "electric",
+        "transformer",
+        "utility",
+        "warning",
+        "box"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall and squat grey boxes; Electric_Box_*"
+    },
+    {
+      "id": "me.city_props.power_house",
+      "name": "Industrial power / substation building",
+      "category": "building",
+      "tags": [
+        "power",
+        "substation",
+        "industrial",
+        "building",
+        "ladder"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan walls, double door, roof ladder; Power_House_1"
+    },
+    {
+      "id": "me.city_props.water_tower_complete",
+      "name": "Water tower complete with legs",
+      "category": "infra",
+      "tags": [
+        "water_tower",
+        "industrial",
+        "tank",
+        "ladder"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden tank on metal legs; Water_Tower_*"
+    },
+    {
+      "id": "me.city_props.water_tower_tank_only",
+      "name": "Water tower tank-only piece",
+      "category": "infra",
+      "tags": [
+        "water_tower",
+        "tank",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tank without legs"
+    },
+    {
+      "id": "me.city_props.water_tower_base_only",
+      "name": "Water tower platform base only",
+      "category": "infra",
+      "tags": [
+        "water_tower",
+        "platform",
+        "legs",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Legs and platform without tank"
+    },
+    {
+      "id": "me.city_props.railing_circular_metal",
+      "name": "Curved circular metal railing",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "metal",
+        "circular",
+        "platform"
+      ],
+      "band": 1,
+      "y_hint": [
+        40,
+        140
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Semi-circle railing for tower platforms"
+    },
+    {
+      "id": "me.city_props.container_tan_side",
+      "name": "Tan shipping container side view",
+      "category": "prop",
+      "tags": [
+        "container",
+        "shipping",
+        "tan",
+        "storage",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        220
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Plain and SMC-lettered; Container_*"
+    },
+    {
+      "id": "me.city_props.container_tan_end",
+      "name": "Tan shipping container end doors",
+      "category": "prop",
+      "tags": [
+        "container",
+        "shipping",
+        "tan",
+        "doors"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Front door view"
+    },
+    {
+      "id": "me.city_props.container_blue_side",
+      "name": "Blue shipping container side view",
+      "category": "prop",
+      "tags": [
+        "container",
+        "shipping",
+        "blue",
+        "storage",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        150,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Including cbrc lettering; rust accents"
+    },
+    {
+      "id": "me.city_props.container_blue_end",
+      "name": "Blue shipping container end doors",
+      "category": "prop",
+      "tags": [
+        "container",
+        "shipping",
+        "blue",
+        "doors"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Front door view"
+    },
+    {
+      "id": "me.city_props.container_modular_pieces",
+      "name": "Modular shipping container segments",
+      "category": "prop",
+      "tags": [
+        "container",
+        "modular",
+        "shipping",
+        "half",
+        "top"
+      ],
+      "band": 1,
+      "y_hint": [
+        350,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Half sides, tops, small ends; Container_Modular_*"
+    },
+    {
+      "id": "me.city_props.container_house",
+      "name": "Converted container house",
+      "category": "building",
+      "tags": [
+        "container",
+        "house",
+        "dwelling",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Container_House_1"
+    },
+    {
+      "id": "me.city_props.tires_pair_and_pile",
+      "name": "Tires pair and tire mound",
+      "category": "prop",
+      "tags": [
+        "tire",
+        "junk",
+        "yard",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        100,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Leaning pair and triangular pile; Tire_*"
+    },
+    {
+      "id": "me.city_props.pallets_and_crates",
+      "name": "Wooden pallets and open crates",
+      "category": "prop",
+      "tags": [
+        "pallet",
+        "crate",
+        "wood",
+        "storage"
+      ],
+      "band": 1,
+      "y_hint": [
+        100,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pallet stack and filled crates"
+    },
+    {
+      "id": "me.city_props.cable_spools",
+      "name": "Cable / wire spools",
+      "category": "prop",
+      "tags": [
+        "spool",
+        "cable",
+        "wire",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Upright and lying spools"
+    },
+    {
+      "id": "me.city_props.pipes_and_hooks",
+      "name": "Metal pipes elbows and hooks",
+      "category": "prop",
+      "tags": [
+        "pipe",
+        "hook",
+        "metal",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Straight/elbow pipes and U-bolts"
+    },
+    {
+      "id": "me.city_props.barrels_metal_yard",
+      "name": "Weathered metal drums yard set",
+      "category": "prop",
+      "tags": [
+        "barrel",
+        "drum",
+        "metal",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        180,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Upright, on-side, red-label drums; Barrel_* / Brown_Barrel_*"
+    },
+    {
+      "id": "me.city_props.barrels_toxic_green",
+      "name": "Toxic green sludge barrels",
+      "category": "prop",
+      "tags": [
+        "barrel",
+        "toxic",
+        "hazard",
+        "biohazard",
+        "green"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Neon green overflowing barrels with puddles"
+    },
+    {
+      "id": "me.city_props.danger_sign_set",
+      "name": "Hazard / danger yard signs",
+      "category": "sign",
+      "tags": [
+        "danger",
+        "hazard",
+        "radiation",
+        "biohazard",
+        "warning"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Radiation, biohazard, skull signs; Danger_Sign_1-16"
+    },
+    {
+      "id": "me.city_props.junk_piles_large",
+      "name": "Large junk / trash mounds",
+      "category": "prop",
+      "tags": [
+        "junk",
+        "trash",
+        "pile",
+        "debris",
+        "scrap"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Piles with warning signs, tires, boxes; Junk_* / Trash_Pile_*"
+    },
+    {
+      "id": "me.city_props.scrap_metal_pieces",
+      "name": "Scrap metal and rubble pieces",
+      "category": "prop",
+      "tags": [
+        "scrap",
+        "metal",
+        "rubble",
+        "debris"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Scrap_Metal_*, bricks, planks, rocks; Brick_* / Holes_*"
+    },
+    {
+      "id": "me.city_props.broken_ladder",
+      "name": "Broken / wooden ladder",
+      "category": "prop",
+      "tags": [
+        "ladder",
+        "broken",
+        "wood",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        180,
+        300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Broken_Ladder_1"
+    },
+    {
+      "id": "me.city_props.car_wreck_grey",
+      "name": "Wrecked grey hatchback",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "wreck",
+        "junk",
+        "grey",
+        "abandoned"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile smashed; Car_Wreck_*"
+    },
+    {
+      "id": "me.city_props.car_wreck_teal",
+      "name": "Wrecked teal hatchback",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "wreck",
+        "junk",
+        "teal",
+        "abandoned"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile"
+    },
+    {
+      "id": "me.city_props.car_wreck_orange",
+      "name": "Wrecked orange hatchback",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "wreck",
+        "junk",
+        "orange",
+        "abandoned"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile"
+    },
+    {
+      "id": "me.city_props.car_wreck_stacked",
+      "name": "Stacked wrecked cars",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "wreck",
+        "stacked",
+        "junkyard"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        420
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Two-high color combinations"
+    },
+    {
+      "id": "me.city_props.car_wreck_upside_down",
+      "name": "Upside-down wrecked cars",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "wreck",
+        "flipped",
+        "undercarriage"
+      ],
+      "band": 1,
+      "y_hint": [
+        250,
+        420
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Teal/orange/grey roofs down"
+    },
+    {
+      "id": "me.city_props.car_wreck_on_side",
+      "name": "Wrecked cars on side",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "wreck",
+        "sideways",
+        "undercarriage"
+      ],
+      "band": 1,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Side-lying exposing undercarriage"
+    },
+    {
+      "id": "me.city_props.site_office_beige",
+      "name": "Beige portable site office",
+      "category": "building",
+      "tags": [
+        "office",
+        "portable",
+        "site",
+        "bars",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        250,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Barred windows, roof vents/antenna"
+    },
+    {
+      "id": "me.city_props.junk_shack",
+      "name": "Corrugated junk shack",
+      "category": "building",
+      "tags": [
+        "shack",
+        "corrugated",
+        "rusty",
+        "shed"
+      ],
+      "band": 1,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Junk_Shack_1 rusty roof"
+    },
+    {
+      "id": "me.city_props.fence_corrugated",
+      "name": "Corrugated metal fence segment",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "corrugated",
+        "metal",
+        "rusty"
+      ],
+      "band": 1,
+      "y_hint": [
+        280,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide rusty fence run"
+    },
+    {
+      "id": "me.city_props.security_booth_orange",
+      "name": "Security booth orange stripe",
+      "category": "building",
+      "tags": [
+        "security",
+        "booth",
+        "parking",
+        "orange"
+      ],
+      "band": 1,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey booth orange stripe; Orange_Structure"
+    },
+    {
+      "id": "me.city_props.security_booth_blue",
+      "name": "Security booth blue stripe with siren",
+      "category": "building",
+      "tags": [
+        "security",
+        "booth",
+        "parking",
+        "blue",
+        "siren"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        650
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue_Structure; roof light / yellow indicators"
+    },
+    {
+      "id": "me.city_props.stop_barrier_down",
+      "name": "Parking stop-arm barrier lowered",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "parking",
+        "gate",
+        "stop",
+        "closed"
+      ],
+      "band": 1,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal arm with STOP; Stop_Barrier_Front/Back"
+    },
+    {
+      "id": "me.city_props.stop_barrier_up",
+      "name": "Parking stop-arm barrier raised",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "parking",
+        "gate",
+        "stop",
+        "open"
+      ],
+      "band": 1,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical arm open; Stop_Barrier_Up_*"
+    },
+    {
+      "id": "me.city_props.bollard_security_yellow",
+      "name": "Security bollards grey and yellow",
+      "category": "prop",
+      "tags": [
+        "bollard",
+        "security",
+        "yellow",
+        "parking"
+      ],
+      "band": 1,
+      "y_hint": [
+        380,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Short cylindrical posts near gate"
+    },
+    {
+      "id": "me.city_props.hvac_units",
+      "name": "HVAC / AC rooftop units",
+      "category": "utility",
+      "tags": [
+        "hvac",
+        "ac",
+        "roof",
+        "vent",
+        "utility"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Square/rect grey vented units; Structure_Roof_Prop_*"
+    },
+    {
+      "id": "me.city_props.satellite_dish",
+      "name": "Satellite dish on pedestal",
+      "category": "utility",
+      "tags": [
+        "satellite",
+        "antenna",
+        "roof",
+        "dish"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "roof",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Large parabolic dish; Antenna"
+    },
+    {
+      "id": "me.city_props.solar_panel",
+      "name": "Tilted blue solar panel",
+      "category": "utility",
+      "tags": [
+        "solar",
+        "panel",
+        "energy",
+        "roof"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Solar_Panel"
+    },
+    {
+      "id": "me.city_props.structure_roof_lights",
+      "name": "Roof warning lights yellow/red",
+      "category": "utility",
+      "tags": [
+        "light",
+        "roof",
+        "warning",
+        "beacon"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Structure_Roof_Red_Light / Structure_Yellow_Light_*"
+    },
+    {
+      "id": "me.city_props.dumpster_green_side",
+      "name": "Green dumpster side profiles",
+      "category": "prop",
+      "tags": [
+        "dumpster",
+        "trash",
+        "green",
+        "side",
+        "waste"
+      ],
+      "band": 1,
+      "y_hint": [
+        550,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Closed and open side views"
+    },
+    {
+      "id": "me.city_props.trash_truck_green_side",
+      "name": "Green garbage truck side",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "garbage",
+        "green",
+        "waste",
+        "vehicle"
+      ],
+      "band": 1,
+      "y_hint": [
+        550,
+        750
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "White cab green body; Green_Trash_Truck_Right/Left"
+    },
+    {
+      "id": "me.city_props.trash_truck_green_front",
+      "name": "Green garbage truck front",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "garbage",
+        "green",
+        "waste",
+        "front"
+      ],
+      "band": 1,
+      "y_hint": [
+        550,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Green_Trash_Truck_Down"
+    },
+    {
+      "id": "me.city_props.trash_truck_green_rear",
+      "name": "Green garbage truck rear",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "garbage",
+        "green",
+        "waste",
+        "rear"
+      ],
+      "band": 1,
+      "y_hint": [
+        550,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Green_Trash_Truck_Up"
+    },
+    {
+      "id": "me.city_props.litter_cans_bottles",
+      "name": "Scattered cans bottles cardboard litter",
+      "category": "prop",
+      "tags": [
+        "litter",
+        "can",
+        "bottle",
+        "cardboard",
+        "trash"
+      ],
+      "band": 1,
+      "y_hint": [
+        580,
+        750
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Red/blue cans, bottles, Cardboard_Trash_*, Box_Trash_*"
+    },
+    {
+      "id": "me.city_props.dumpster_blue_states",
+      "name": "Blue dumpsters closed/open/full",
+      "category": "prop",
+      "tags": [
+        "dumpster",
+        "trash",
+        "blue",
+        "waste",
+        "states"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-hinged and side-hinged lid variants"
+    },
+    {
+      "id": "me.city_props.trash_cans_metal_band2",
+      "name": "Metal trash cans and bag piles",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "can",
+        "bag",
+        "metal",
+        "waste"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cans with lids askew; bag clusters with small flag"
+    },
+    {
+      "id": "me.city_props.propane_tanks",
+      "name": "Rusty propane tanks",
+      "category": "prop",
+      "tags": [
+        "propane",
+        "tank",
+        "gas",
+        "industrial"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown-orange tanks pair"
+    },
+    {
+      "id": "me.city_props.trash_truck_orange_side",
+      "name": "Orange garbage truck side",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "garbage",
+        "orange",
+        "waste",
+        "vehicle"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Orange_Trash_Truck_Right/Left"
+    },
+    {
+      "id": "me.city_props.trash_truck_orange_front",
+      "name": "Orange garbage truck front",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "garbage",
+        "orange",
+        "waste",
+        "front"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Orange_Trash_Truck_Down"
+    },
+    {
+      "id": "me.city_props.trash_truck_orange_rear",
+      "name": "Orange garbage truck rear/top",
+      "category": "vehicle",
+      "tags": [
+        "truck",
+        "garbage",
+        "orange",
+        "waste",
+        "rear",
+        "top"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Rear loader and long top views; Orange_Trash_Truck_Up"
+    },
+    {
+      "id": "me.city_props.ev_charging_station",
+      "name": "EV charging stations",
+      "category": "infra",
+      "tags": [
+        "ev",
+        "charging",
+        "electric",
+        "pedestal",
+        "green"
+      ],
+      "band": 2,
+      "y_hint": [
+        40,
+        180
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue/grey pedestals; EV_Charging_Station_* \u2014 also ATM-like grey units nearby"
+    },
+    {
+      "id": "me.city_props.kiosk_terminal_grey",
+      "name": "Grey street terminal / ticket ATM",
+      "category": "prop",
+      "tags": [
+        "kiosk",
+        "atm",
+        "terminal",
+        "ticket",
+        "electronics"
+      ],
+      "band": 2,
+      "y_hint": [
+        80,
+        220
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall grey units with blue screens near sign rows"
+    },
+    {
+      "id": "me.city_props.traffic_light_pole_tall_set",
+      "name": "Tall traffic poles with signal heads",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "pole",
+        "signal",
+        "street"
+      ],
+      "band": 2,
+      "y_hint": [
+        40,
+        220
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical RYG states and horizontal mounts; Traffic_Light_*"
+    },
+    {
+      "id": "me.city_props.bollard_striped_safety",
+      "name": "Black and red-white striped bollards",
+      "category": "prop",
+      "tags": [
+        "bollard",
+        "striped",
+        "safety",
+        "traffic"
+      ],
+      "band": 2,
+      "y_hint": [
+        120,
+        240
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Rounded-top bollard row"
+    },
+    {
+      "id": "me.city_props.bike_rack_rail",
+      "name": "Metal bike-rack / short railing barriers",
+      "category": "prop",
+      "tags": [
+        "bike",
+        "rack",
+        "railing",
+        "barrier",
+        "metal"
+      ],
+      "band": 2,
+      "y_hint": [
+        120,
+        240
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "U-shaped / short grey rail segments"
+    },
+    {
+      "id": "me.city_props.sign_new_regulatory_grid",
+      "name": "New traffic-sign regulatory grid",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "sign",
+        "regulatory",
+        "multi_facing",
+        "pole"
+      ],
+      "band": 2,
+      "y_hint": [
+        150,
+        450
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Traffic_Sign_New_* dense: circles/squares front+diagonal; ~117 singles"
+    },
+    {
+      "id": "me.city_props.sign_new_warning_white",
+      "name": "White warning triangles multi-facing",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "warning",
+        "triangle",
+        "white",
+        "multi_facing"
+      ],
+      "band": 2,
+      "y_hint": [
+        200,
+        500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Curves, lights, narrows, intersections \u2014 front/left/right"
+    },
+    {
+      "id": "me.city_props.sign_new_warning_yellow",
+      "name": "Yellow warning triangles multi-facing",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "warning",
+        "triangle",
+        "yellow",
+        "multi_facing"
+      ],
+      "band": 2,
+      "y_hint": [
+        250,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Yellow-background warning set"
+    },
+    {
+      "id": "me.city_props.sign_yield_inverted",
+      "name": "Yield / priority inverted triangles",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "yield",
+        "triangle",
+        "priority"
+      ],
+      "band": 2,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Large and small yield plates"
+    },
+    {
+      "id": "me.city_props.sign_modular_pieces",
+      "name": "Modular traffic-sign plate pieces",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "sign",
+        "modular",
+        "plate"
+      ],
+      "band": 2,
+      "y_hint": [
+        350,
+        520
+      ],
+      "surface": "sign",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Traffic_Sign_Modular_* detachable plates"
+    },
+    {
+      "id": "me.city_props.cone_orange_set",
+      "name": "Orange traffic cones upright and fallen",
+      "category": "prop",
+      "tags": [
+        "cone",
+        "traffic",
+        "orange",
+        "safety"
+      ],
+      "band": 2,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Cone_* orange/yellow and red/white; upright+knocked"
+    },
+    {
+      "id": "me.city_props.traffic_barrier_no_entry",
+      "name": "Heavy barriers with no-entry signs",
+      "category": "prop",
+      "tags": [
+        "barrier",
+        "no_entry",
+        "traffic",
+        "construction"
+      ],
+      "band": 2,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Traffic_Barrier_* with mounted circular no-entry"
+    },
+    {
+      "id": "me.city_props.traffic_barrier_plain",
+      "name": "Plain striped sawhorse barriers",
+      "category": "prop",
+      "tags": [
+        "barrier",
+        "striped",
+        "sawhorse",
+        "construction"
+      ],
+      "band": 2,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Yellow/white small barriers"
+    },
+    {
+      "id": "me.city_props.traffic_mast_cantilever_right",
+      "name": "Cantilever traffic mast arm right",
+      "category": "infra",
+      "tags": [
+        "traffic",
+        "mast",
+        "cantilever",
+        "overhead",
+        "pole"
+      ],
+      "band": 2,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Long horizontal arms with guy-wires; Traffic_Light_New_*"
+    },
+    {
+      "id": "me.city_props.traffic_mast_cantilever_left",
+      "name": "Cantilever traffic mast arm left",
+      "category": "infra",
+      "tags": [
+        "traffic",
+        "mast",
+        "cantilever",
+        "overhead",
+        "pole"
+      ],
+      "band": 2,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Mirrored left arms"
+    },
+    {
+      "id": "me.city_props.traffic_mast_diagonal",
+      "name": "Angled diagonal traffic support poles",
+      "category": "infra",
+      "tags": [
+        "traffic",
+        "mast",
+        "diagonal",
+        "pole"
+      ],
+      "band": 2,
+      "y_hint": [
+        420,
+        620
+      ],
+      "surface": "asphalt",
+      "facing": "southeast",
+      "multi_tile": true,
+      "notes": "45\u00b0 support arms"
+    },
+    {
+      "id": "me.city_props.traffic_sign_arrow_blue_red",
+      "name": "Blue and red arrow plates for masts",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "arrow",
+        "blue",
+        "red",
+        "mast",
+        "sign"
+      ],
+      "band": 2,
+      "y_hint": [
+        400,
+        650
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Square L/R/U/D arrows; Traffic_Light_New_*_Sign"
+    },
+    {
+      "id": "me.city_props.traffic_light_horizontal_states",
+      "name": "Horizontal traffic light modules by state",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "horizontal",
+        "red",
+        "yellow",
+        "green"
+      ],
+      "band": 2,
+      "y_hint": [
+        400,
+        650
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Individual R/Y/G horizontal heads for mounting"
+    },
+    {
+      "id": "me.city_props.traffic_light_vertical_modules",
+      "name": "Vertical traffic light modules by state",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "vertical",
+        "red",
+        "yellow",
+        "green"
+      ],
+      "band": 2,
+      "y_hint": [
+        400,
+        650
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pole-mount vertical heads; Traffic_Lights_*_Mod"
+    },
+    {
+      "id": "me.city_props.pedestrian_button_box",
+      "name": "Pedestrian button / signal control boxes",
+      "category": "infra",
+      "tags": [
+        "pedestrian",
+        "button",
+        "control",
+        "box",
+        "utility"
+      ],
+      "band": 2,
+      "y_hint": [
+        550,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small grey boxes with red indicators on pole bases"
+    },
+    {
+      "id": "me.city_props.traffic_mast_examples_assembled",
+      "name": "Assembled traffic mast examples with signs",
+      "category": "infra",
+      "tags": [
+        "traffic",
+        "mast",
+        "example",
+        "signal",
+        "arrow"
+      ],
+      "band": 3,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "EXAMPLES row: arms L/R with RYG + blue/red arrow plates"
+    },
+    {
+      "id": "me.city_props.bridge_pillar_concrete",
+      "name": "Thick concrete bridge / overpass pillars",
+      "category": "infra",
+      "tags": [
+        "pillar",
+        "concrete",
+        "bridge",
+        "overpass",
+        "support"
+      ],
+      "band": 3,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan-top grey recessed pillars in pairs"
+    },
+    {
+      "id": "me.city_props.railing_diagonal_slatted",
+      "name": "Diagonal slatted concrete ramp railing",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "diagonal",
+        "ramp",
+        "concrete",
+        "slat"
+      ],
+      "band": 3,
+      "y_hint": [
+        100,
+        280
+      ],
+      "surface": "concrete",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Stepped-height vertical slats for ramp sides"
+    },
+    {
+      "id": "me.city_props.platform_pavement_modular",
+      "name": "Modular pavement / planter base tiles",
+      "category": "infra",
+      "tags": [
+        "pavement",
+        "platform",
+        "modular",
+        "concrete",
+        "planter"
+      ],
+      "band": 3,
+      "y_hint": [
+        180,
+        380
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "3x3 pavement grid and bordered slab assemblies"
+    },
+    {
+      "id": "me.city_props.stairs_diagonal_blue_rail",
+      "name": "Diagonal stairs with blue railing",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "diagonal",
+        "railing",
+        "blue",
+        "concrete"
+      ],
+      "band": 3,
+      "y_hint": [
+        200,
+        420
+      ],
+      "surface": "concrete",
+      "facing": "southeast",
+      "multi_tile": true,
+      "notes": "Large diagonal stair blocks + left/right rail vertical strips"
+    },
+    {
+      "id": "me.city_props.stairs_example_narrow",
+      "name": "EXAMPLE narrow stairs assembly",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "example",
+        "concrete",
+        "railing"
+      ],
+      "band": 3,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Assembled narrow stairs labeled EXAMPLE"
+    },
+    {
+      "id": "me.city_props.curb_corner_pieces",
+      "name": "Concrete curb / wall corner pieces",
+      "category": "curb",
+      "tags": [
+        "curb",
+        "corner",
+        "concrete",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        280,
+        400
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "L-shaped corners and straight curb segments"
+    },
+    {
+      "id": "me.city_props.bollard_globe_metal",
+      "name": "Globe-cap metal bollard posts",
+      "category": "prop",
+      "tags": [
+        "bollard",
+        "globe",
+        "metal",
+        "decorative"
+      ],
+      "band": 3,
+      "y_hint": [
+        350,
+        550
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Column of identical spherical-cap bollards"
+    },
+    {
+      "id": "me.city_props.stairs_grand_modular",
+      "name": "Grand modular public staircase kit",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "modular",
+        "landing",
+        "underpass",
+        "stone"
+      ],
+      "band": 3,
+      "y_hint": [
+        350,
+        600
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top/mid/base left-center-right; arched openings under base"
+    },
+    {
+      "id": "me.city_props.water_hex_tiles",
+      "name": "Blue hexagonal water / pool tiles",
+      "category": "terrain",
+      "tags": [
+        "water",
+        "pool",
+        "hex",
+        "fountain",
+        "tile"
+      ],
+      "band": 3,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "1x2, 2x1, 2x2 bright blue hex-pattern water"
+    },
+    {
+      "id": "me.city_props.steps_small_stone",
+      "name": "Small stone step / curb strips",
+      "category": "infra",
+      "tags": [
+        "steps",
+        "curb",
+        "stone",
+        "small"
+      ],
+      "band": 3,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "One- and two-step thin strips"
+    },
+    {
+      "id": "me.city_props.road_asphalt_dashed_ns",
+      "name": "Asphalt road strip dashed center N-S",
+      "category": "road",
+      "tags": [
+        "road",
+        "asphalt",
+        "dashed",
+        "lane",
+        "north_south"
+      ],
+      "band": 3,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Vertical road segments with white dashed line + curb edges"
+    },
+    {
+      "id": "me.city_props.road_asphalt_dashed_diagonal",
+      "name": "Asphalt tiles with diagonal dashed lines",
+      "category": "road_marking",
+      "tags": [
+        "road",
+        "asphalt",
+        "dashed",
+        "diagonal",
+        "lane"
+      ],
+      "band": 3,
+      "y_hint": [
+        550,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Individual diagonal lane-mark tiles"
+    },
+    {
+      "id": "me.city_props.overpass_road_segments",
+      "name": "Elevated overpass road with guardrail",
+      "category": "infra",
+      "tags": [
+        "overpass",
+        "road",
+        "guardrail",
+        "elevated",
+        "asphalt"
+      ],
+      "band": 3,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Straight and angled elevated roadway with brown rail"
+    },
+    {
+      "id": "me.city_props.sidewalk_corner_tiles",
+      "name": "Sidewalk curb corner tiles",
+      "category": "sidewalk",
+      "tags": [
+        "sidewalk",
+        "curb",
+        "corner",
+        "pavement"
+      ],
+      "band": 3,
+      "y_hint": [
+        550,
+        720
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Light pavement with darker curb corners"
+    },
+    {
+      "id": "me.city_props.stairs_front_platform",
+      "name": "Front-facing concrete stairs to platform",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "platform",
+        "concrete",
+        "front"
+      ],
+      "band": 3,
+      "y_hint": [
+        650,
+        760
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Three-step front stairs and platform edges"
+    },
+    {
+      "id": "me.city_props.wires_overhead",
+      "name": "Overhead / hanging wire segments",
+      "category": "decor",
+      "tags": [
+        "wire",
+        "cable",
+        "overhead",
+        "utility"
+      ],
+      "band": 3,
+      "y_hint": [
+        550,
+        680
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight and sagging wires with insulator blobs"
+    },
+    {
+      "id": "me.city_props.posters_wall_set",
+      "name": "Wall posters and flyers",
+      "category": "decor",
+      "tags": [
+        "poster",
+        "flyer",
+        "wanted",
+        "wall",
+        "paper"
+      ],
+      "band": 3,
+      "y_hint": [
+        550,
+        680
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wanted silhouettes, prohibited circles, blank sheets"
+    },
+    {
+      "id": "me.city_props.paper_trash_ground",
+      "name": "Crumpled paper ground trash",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "paper",
+        "litter",
+        "ground"
+      ],
+      "band": 3,
+      "y_hint": [
+        550,
+        680
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "White crumpled clumps"
+    },
+    {
+      "id": "me.city_props.brake_marks",
+      "name": "Asphalt brake / skid marks",
+      "category": "decal",
+      "tags": [
+        "brake",
+        "skid",
+        "asphalt",
+        "decal",
+        "marks"
+      ],
+      "band": 3,
+      "y_hint": [
+        550,
+        750
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Brake_Marks_* if present on sheet lower road area / related"
+    },
+    {
+      "id": "me.city_props.platform_elevated_corners",
+      "name": "Elevated stone platform corners",
+      "category": "infra",
+      "tags": [
+        "platform",
+        "elevated",
+        "corner",
+        "stone",
+        "walkway"
+      ],
+      "band": 4,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "L-corners with tan trim and dark side walls"
+    },
+    {
+      "id": "me.city_props.platform_elevated_straight",
+      "name": "Elevated walkway straight segments",
+      "category": "infra",
+      "tags": [
+        "platform",
+        "elevated",
+        "straight",
+        "walkway",
+        "bridge"
+      ],
+      "band": 4,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "H/V straight elevated path pieces"
+    },
+    {
+      "id": "me.city_props.platform_stairs_integrated",
+      "name": "Platform stairs descending",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "platform",
+        "stone",
+        "steps"
+      ],
+      "band": 4,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide and narrow stairs into elevated platforms"
+    },
+    {
+      "id": "me.city_props.bridge_ornament_underside",
+      "name": "Decorative bridge underside ornament",
+      "category": "decor",
+      "tags": [
+        "bridge",
+        "ornament",
+        "underside",
+        "decor"
+      ],
+      "band": 4,
+      "y_hint": [
+        40,
+        100
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Scalloped dark decorative underside piece"
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_open",
+      "name": "Mushroom kiosk open window",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "mushroom",
+        "shop",
+        "food",
+        "red"
+      ],
+      "band": 4,
+      "y_hint": [
+        100,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red spotted cap; Kiosk_Mushroom_*"
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_flag",
+      "name": "Mushroom kiosk with heart flag",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "mushroom",
+        "shop",
+        "flag",
+        "heart"
+      ],
+      "band": 4,
+      "y_hint": [
+        100,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same kiosk with blue heart flag"
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_shutter",
+      "name": "Mushroom kiosk shutter closed",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "mushroom",
+        "closed",
+        "shutter"
+      ],
+      "band": 4,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Kiosk_Mushroom_Shutter_Closed / hollow bases"
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_props",
+      "name": "Mushroom kiosk accessory props",
+      "category": "prop",
+      "tags": [
+        "kiosk",
+        "mushroom",
+        "props",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Kiosk_Mushroom_Props_1-7 modular bits"
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_full",
+      "name": "Ice-cream / cupcake swirl kiosk",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "icecream",
+        "cupcake",
+        "dessert",
+        "shop"
+      ],
+      "band": 4,
+      "y_hint": [
+        100,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White swirl roof + cherry; Kiosk_Icecream*"
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_roof_only",
+      "name": "Ice-cream swirl roof piece",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "icecream",
+        "roof",
+        "modular",
+        "cherry"
+      ],
+      "band": 4,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Isolated swirl/cherry and cone-only version"
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_shutter",
+      "name": "Ice-cream kiosk shutter / hollow bases",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "icecream",
+        "shutter",
+        "hollow",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        250,
+        450
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Empty/shutter/hollow waffle-wall sections"
+    },
+    {
+      "id": "me.city_props.kiosk_coffee_cup_full",
+      "name": "Coffee-cup kiosk COFFEE AND TEA",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "coffee",
+        "tea",
+        "cup",
+        "shop"
+      ],
+      "band": 4,
+      "y_hint": [
+        150,
+        400
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Giant takeaway cup with green logo; Kiosk_Coffee_Cup*"
+    },
+    {
+      "id": "me.city_props.kiosk_coffee_modular",
+      "name": "Coffee kiosk modular lid/body/shutter",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "coffee",
+        "modular",
+        "shutter",
+        "hollow"
+      ],
+      "band": 4,
+      "y_hint": [
+        250,
+        480
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Lid, empty, hollow, shutter-closed pieces"
+    },
+    {
+      "id": "me.city_props.kiosk_infopoint",
+      "name": "Round info-point / small circular kiosk",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "infopoint",
+        "round",
+        "shop"
+      ],
+      "band": 4,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small tan round booths open/red-awning; Kiosk_Infopoint*"
+    },
+    {
+      "id": "me.city_props.kiosk_interior_counter",
+      "name": "Kiosk interior counter with NPC/register",
+      "category": "furniture",
+      "tags": [
+        "kiosk",
+        "interior",
+        "counter",
+        "npc",
+        "register"
+      ],
+      "band": 4,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "wood",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Staffed counters, pink mat, monitors, menu boards"
+    },
+    {
+      "id": "me.city_props.sign_heart_aframe",
+      "name": "Heart A-frame sandwich boards",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "aframe",
+        "heart",
+        "blue",
+        "red",
+        "kiosk"
+      ],
+      "band": 4,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue and red pavement boards"
+    },
+    {
+      "id": "me.city_props.sign_heart_pedestal",
+      "name": "Heart circular pedestal signs",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "pedestal",
+        "heart",
+        "blue",
+        "red"
+      ],
+      "band": 4,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Round heart plaques on short poles"
+    },
+    {
+      "id": "me.city_props.flag_heart_pennant",
+      "name": "Heart pennant flags",
+      "category": "decor",
+      "tags": [
+        "flag",
+        "heart",
+        "pennant",
+        "blue",
+        "red"
+      ],
+      "band": 4,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue/red hanging heart banners"
+    },
+    {
+      "id": "me.city_props.drone_quadcopter",
+      "name": "Quadcopter drones",
+      "category": "prop",
+      "tags": [
+        "drone",
+        "electronics",
+        "flying",
+        "gadget"
+      ],
+      "band": 4,
+      "y_hint": [
+        400,
+        512
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Drone_1-5 plus helix propeller"
+    },
+    {
+      "id": "me.city_props.drone_controller",
+      "name": "Drone / handheld controllers",
+      "category": "prop",
+      "tags": [
+        "controller",
+        "drone",
+        "electronics",
+        "gadget",
+        "joystick"
+      ],
+      "band": 4,
+      "y_hint": [
+        400,
+        512
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Drone_Controller_* walkie/tablet/joystick devices"
+    },
+    {
+      "id": "me.city_props.pigeon",
+      "name": "Pigeon sprites",
+      "category": "npc",
+      "tags": [
+        "pigeon",
+        "bird",
+        "animal",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pigeon_1-2 small ambient fauna (sheet scatter)"
+    },
+    {
+      "id": "me.city_props.pole_plain",
+      "name": "Plain grey pole",
+      "category": "infra",
+      "tags": [
+        "pole",
+        "utility",
+        "plain"
+      ],
+      "band": 2,
+      "y_hint": [
+        100,
+        300
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Bare pole single for mounting"
+    },
+    {
+      "id": "me.city_props.sign_generic_plate",
+      "name": "Generic blank sign plate",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "blank",
+        "plate"
+      ],
+      "band": 2,
+      "y_hint": [
+        500,
+        700
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Sign.png unlabelled grey plate"
+    },
+    {
+      "id": "me.city_props.tree_round_large",
+      "name": "Large round-canopy deciduous tree",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "deciduous",
+        "large",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Biggest round crowns mid-right band0"
+    },
+    {
+      "id": "me.city_props.tree_round_medium",
+      "name": "Medium round-canopy deciduous tree",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "deciduous",
+        "medium",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        540
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Smaller round crowns beside large trees"
+    },
+    {
+      "id": "me.city_props.tree_sapling_bare",
+      "name": "Bare sapling / thin branch stalks",
+      "category": "nature",
+      "tags": [
+        "tree",
+        "sapling",
+        "bare",
+        "branch"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Leafless thin trunks near tree cluster"
+    },
+    {
+      "id": "me.city_props.tree_planter_stump_only",
+      "name": "Square planter with stump only",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "stump",
+        "tree",
+        "square"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Planter showing only brown trunk stub"
+    },
+    {
+      "id": "me.city_props.bush_round_solid",
+      "name": "Solid round green bush",
+      "category": "nature",
+      "tags": [
+        "bush",
+        "round",
+        "green",
+        "shrub"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Dense round bush near playground grass"
+    },
+    {
+      "id": "me.city_props.bush_with_yellow_flower",
+      "name": "Bush with yellow flower accent",
+      "category": "nature",
+      "tags": [
+        "bush",
+        "flower",
+        "yellow",
+        "shrub"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small bush with single yellow bloom"
+    },
+    {
+      "id": "me.city_props.flowers_scatter_white_yellow",
+      "name": "Scatter white and yellow flower sprites",
+      "category": "nature",
+      "tags": [
+        "flowers",
+        "white",
+        "yellow",
+        "scatter",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Loose flower clumps for grass tiles"
+    },
+    {
+      "id": "me.city_props.planter_wood_pink",
+      "name": "Wooden planter pink flowers",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "wood",
+        "flowers",
+        "pink"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pink flower box pair"
+    },
+    {
+      "id": "me.city_props.planter_wood_orange",
+      "name": "Wooden planter orange/red flowers",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "wood",
+        "flowers",
+        "orange",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Orange/red flower boxes"
+    },
+    {
+      "id": "me.city_props.planter_wood_white",
+      "name": "Wooden planter white flowers",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "wood",
+        "flowers",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "White flower boxes"
+    },
+    {
+      "id": "me.city_props.planter_long_mixed_flowers",
+      "name": "Long stone planter mixed flowers and hedge",
+      "category": "nature",
+      "tags": [
+        "planter",
+        "long",
+        "hedge",
+        "flowers",
+        "stone"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Rectangular stone planter with white/yellow blooms"
+    },
+    {
+      "id": "me.city_props.lamp_cobra_arm_left",
+      "name": "Detached cobra lamp arm left",
+      "category": "infra",
+      "tags": [
+        "lamp",
+        "arm",
+        "left",
+        "modular",
+        "cobra"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "air",
+      "facing": "west",
+      "multi_tile": false,
+      "notes": "Left-facing detachable lamp arm"
+    },
+    {
+      "id": "me.city_props.lamp_cobra_arm_right",
+      "name": "Detached cobra lamp arm right",
+      "category": "infra",
+      "tags": [
+        "lamp",
+        "arm",
+        "right",
+        "modular",
+        "cobra"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        480
+      ],
+      "surface": "air",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Right-facing detachable lamp arm"
+    },
+    {
+      "id": "me.city_props.bench_variants_set",
+      "name": "Additional bench angle variants",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "seating",
+        "wood",
+        "variants"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Bench_3-7 remaining orientations"
+    },
+    {
+      "id": "me.city_props.trash_can_blue_closed",
+      "name": "Blue trash can closed",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "blue",
+        "closed",
+        "bin"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue_Closed_Trash_Can (+lateral)"
+    },
+    {
+      "id": "me.city_props.trash_can_blue_open",
+      "name": "Blue trash can open empty/full",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "blue",
+        "open",
+        "bin"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue open empty/full + lateral"
+    },
+    {
+      "id": "me.city_props.trash_can_black_closed",
+      "name": "Black trash can closed",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "black",
+        "closed",
+        "bin"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Black_Closed_*"
+    },
+    {
+      "id": "me.city_props.trash_can_black_open",
+      "name": "Black trash can open empty/full",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "black",
+        "open",
+        "bin"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Black open empty/full + lateral"
+    },
+    {
+      "id": "me.city_props.trash_can_green_closed",
+      "name": "Green trash can closed",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "green",
+        "closed",
+        "bin"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green_Closed_*"
+    },
+    {
+      "id": "me.city_props.trash_can_green_open",
+      "name": "Green trash can open empty/full",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "green",
+        "open",
+        "bin"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green open empty/full + lateral; tipped spilling"
+    },
+    {
+      "id": "me.city_props.trash_can_small_set",
+      "name": "Small trash cans empty/full/closed",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "small",
+        "bin",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        540
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small_Empty/Full/Closed_Trash_Can"
+    },
+    {
+      "id": "me.city_props.trashbin_street_set",
+      "name": "Street trashbin style variants",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "trashbin",
+        "street",
+        "variants"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Trashbin_1-15 rectangular/street styles"
+    },
+    {
+      "id": "me.city_props.dumpster_blue_closed",
+      "name": "Blue dumpster closed",
+      "category": "prop",
+      "tags": [
+        "dumpster",
+        "blue",
+        "closed",
+        "waste"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Fully closed blue commercial dumpster"
+    },
+    {
+      "id": "me.city_props.dumpster_blue_ajar",
+      "name": "Blue dumpster lid ajar",
+      "category": "prop",
+      "tags": [
+        "dumpster",
+        "blue",
+        "ajar",
+        "waste"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Slightly open lid"
+    },
+    {
+      "id": "me.city_props.dumpster_blue_open_full",
+      "name": "Blue dumpster open full",
+      "category": "prop",
+      "tags": [
+        "dumpster",
+        "blue",
+        "open",
+        "full",
+        "waste"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide open with bags visible"
+    },
+    {
+      "id": "me.city_props.phone_booth_cap_icon",
+      "name": "Telephone booth roof cap with phone icon",
+      "category": "prop",
+      "tags": [
+        "phone",
+        "booth",
+        "cap",
+        "icon",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Separate red cap/sign piece above booth"
+    },
+    {
+      "id": "me.city_props.cart_candies_extra",
+      "name": "Additional candy cart stock variants",
+      "category": "prop",
+      "tags": [
+        "cart",
+        "candy",
+        "vendor",
+        "variants"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        180
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Candies_Cart_2-3 stock/layout variants"
+    },
+    {
+      "id": "me.city_props.poster_hungry_wall",
+      "name": "Wall-mount Are You Hungry posters",
+      "category": "decor",
+      "tags": [
+        "poster",
+        "wall",
+        "food",
+        "ad",
+        "hungry"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Three color variants for walls/poles"
+    },
+    {
+      "id": "me.city_props.sheet_hanging_pink_center",
+      "name": "Hanging sheet pink center circle",
+      "category": "prop",
+      "tags": [
+        "sheet",
+        "laundry",
+        "pink",
+        "clothesline"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        760
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large white sheet pink medallion"
+    },
+    {
+      "id": "me.city_props.sheet_hanging_blue_center",
+      "name": "Hanging sheet blue center circle",
+      "category": "prop",
+      "tags": [
+        "sheet",
+        "laundry",
+        "blue",
+        "clothesline"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        760
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large white sheet blue medallion"
+    },
+    {
+      "id": "me.city_props.debris_framed_picture",
+      "name": "Debris framed picture prop",
+      "category": "prop",
+      "tags": [
+        "debris",
+        "picture",
+        "junk",
+        "frame"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Framed picture leaning in junk piles"
+    },
+    {
+      "id": "me.city_props.sack_brown",
+      "name": "Brown sack / bag of material",
+      "category": "prop",
+      "tags": [
+        "sack",
+        "bag",
+        "material",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        180
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Brown fabric sack in debris row"
+    },
+    {
+      "id": "me.city_props.holes_ground_set",
+      "name": "Ground holes / crater tiles",
+      "category": "terrain",
+      "tags": [
+        "holes",
+        "crater",
+        "damage",
+        "ground"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Holes_1-12 damaged ground pieces"
+    },
+    {
+      "id": "me.city_props.brick_rubble_set",
+      "name": "Brick rubble pieces",
+      "category": "prop",
+      "tags": [
+        "brick",
+        "rubble",
+        "debris",
+        "construction"
+      ],
+      "band": 1,
+      "y_hint": [
+        150,
+        300
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Brick_1-5"
+    },
+    {
+      "id": "me.city_props.trash_pile_modular",
+      "name": "Modular trash pile segments",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "pile",
+        "modular",
+        "waste"
+      ],
+      "band": 1,
+      "y_hint": [
+        100,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Trash_Pile_Modular_* / Trash_Pile_Props_*"
+    },
+    {
+      "id": "me.city_props.small_trash_pile",
+      "name": "Small trash pile clusters",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "pile",
+        "small",
+        "litter"
+      ],
+      "band": 1,
+      "y_hint": [
+        550,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Trash_Pile_* / Single_Trash_*"
+    },
+    {
+      "id": "me.city_props.security_booth_light_pole",
+      "name": "Security booth light pole accessory",
+      "category": "infra",
+      "tags": [
+        "security",
+        "light",
+        "pole",
+        "booth"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall lamp pole beside blue booth"
+    },
+    {
+      "id": "me.city_props.security_booth_yellow_lights",
+      "name": "Security booth yellow indicator lights",
+      "category": "prop",
+      "tags": [
+        "security",
+        "light",
+        "yellow",
+        "indicator"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        620
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Circular yellow lights for booth walls"
+    },
+    {
+      "id": "me.city_props.traffic_light_new_front",
+      "name": "New traffic light front assemblies",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "front",
+        "new",
+        "signal"
+      ],
+      "band": 2,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Traffic_Light_New_Front_* color states"
+    },
+    {
+      "id": "me.city_props.traffic_light_new_diagonal",
+      "name": "New traffic light diagonal assemblies",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "diagonal",
+        "new",
+        "signal"
+      ],
+      "band": 2,
+      "y_hint": [
+        400,
+        720
+      ],
+      "surface": "asphalt",
+      "facing": "southeast",
+      "multi_tile": true,
+      "notes": "Diagonal left/right up/down with R/Y/G"
+    },
+    {
+      "id": "me.city_props.traffic_light_new_back",
+      "name": "New traffic light back assemblies",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "back",
+        "new",
+        "signal"
+      ],
+      "band": 2,
+      "y_hint": [
+        500,
+        750
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Back and back-diagonal sign mounts"
+    },
+    {
+      "id": "me.city_props.traffic_lights_off",
+      "name": "Traffic lights all-off frontal",
+      "category": "infra",
+      "tags": [
+        "traffic_light",
+        "off",
+        "dark",
+        "signal"
+      ],
+      "band": 2,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Traffic_Lights_Off_Frontal"
+    },
+    {
+      "id": "me.city_props.water_tower_short",
+      "name": "Shorter water tower variant",
+      "category": "infra",
+      "tags": [
+        "water_tower",
+        "short",
+        "industrial"
+      ],
+      "band": 1,
+      "y_hint": [
+        40,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate shorter stand Water_Tower variant"
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_giant_cone",
+      "name": "Giant waffle-cone ice-cream kiosk version",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "icecream",
+        "cone",
+        "giant",
+        "shop"
+      ],
+      "band": 4,
+      "y_hint": [
+        100,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Kiosk_Icecream_Just_A_Giant_Cone_Version"
+    },
+    {
+      "id": "me.city_props.kiosk_infopoint_shutter",
+      "name": "Info-point kiosk shutter closed",
+      "category": "building",
+      "tags": [
+        "kiosk",
+        "infopoint",
+        "shutter",
+        "closed"
+      ],
+      "band": 4,
+      "y_hint": [
+        250,
+        420
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Kiosk_Infopoint_Shutter_Closed + hollows"
+    },
+    {
+      "id": "me.city_props.lamp_kiosk_globe",
+      "name": "Small globe lamp near kiosks",
+      "category": "infra",
+      "tags": [
+        "lamp",
+        "globe",
+        "kiosk",
+        "bollard"
+      ],
+      "band": 4,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "White globe on dark pedestal by heart signs"
+    },
+    {
+      "id": "me.city_props.cafe_table_heart",
+      "name": "Cafe pedestal tables with heart",
+      "category": "furniture",
+      "tags": [
+        "table",
+        "cafe",
+        "heart",
+        "blue",
+        "red"
+      ],
+      "band": 4,
+      "y_hint": [
+        220,
+        380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Round blue/red tables if present with mushroom props; else pedestal heart signs double as cafe markers"
+    },
+    {
+      "id": "me.city_props.stairs_vertical_rail_left",
+      "name": "Vertical stairs blue rail left",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "vertical",
+        "rail",
+        "left",
+        "blue"
+      ],
+      "band": 3,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow vertical stair strip rail on left"
+    },
+    {
+      "id": "me.city_props.stairs_vertical_rail_right",
+      "name": "Vertical stairs blue rail right",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "vertical",
+        "rail",
+        "right",
+        "blue"
+      ],
+      "band": 3,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow vertical stair strip rail on right"
+    },
+    {
+      "id": "me.city_props.platform_landing_wide",
+      "name": "Wide stone landing / platform slab",
+      "category": "infra",
+      "tags": [
+        "platform",
+        "landing",
+        "stone",
+        "wide"
+      ],
+      "band": 3,
+      "y_hint": [
+        350,
+        500
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large solid landing near grand stairs"
+    },
+    {
+      "id": "me.city_props.utility_wall_boxes",
+      "name": "Wall-mounted utility / junction boxes",
+      "category": "utility",
+      "tags": [
+        "utility",
+        "box",
+        "wall",
+        "junction"
+      ],
+      "band": 3,
+      "y_hint": [
+        550,
+        680
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small grey boxes near posters/wires"
+    },
+    {
+      "id": "me.city_props.pedestrian_barrier_modular",
+      "name": "Modular pedestrian barrier left/mid/right",
+      "category": "prop",
+      "tags": [
+        "barrier",
+        "pedestrian",
+        "modular",
+        "fence"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        340
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pedestrian_Barrier_Post_Modular_1/2 segments"
+    },
+    {
+      "id": "me.city_props.gate_wood_double",
+      "name": "Wooden slat double gate / fence doors",
+      "category": "fence",
+      "tags": [
+        "gate",
+        "wood",
+        "fence",
+        "door"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical wooden slat gate pairs near lamps"
+    },
+    {
+      "id": "me.city_props.pile_salt_sand",
+      "name": "Conical salt/sand utility piles",
+      "category": "prop",
+      "tags": [
+        "pile",
+        "salt",
+        "sand",
+        "utility"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Light blue and yellow conical piles near hydrant"
+    },
+    {
+      "id": "me.city_props.atm_blue_thin",
+      "name": "Thin blue pedestal ATM / ticket unit",
+      "category": "prop",
+      "tags": [
+        "atm",
+        "blue",
+        "pedestal",
+        "ticket"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        620
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Slimmer blue machine beside grey ATM/kiosk"
+    },
+    {
+      "id": "me.city_props.sign_classic_set",
+      "name": "Classic traffic sign set (older style)",
+      "category": "sign",
+      "tags": [
+        "traffic",
+        "sign",
+        "classic",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Traffic_Sign_* (~51) older style vs New grid in band2"
+    },
+    {
+      "id": "me.city_props.litter_food_packaging",
+      "name": "Food packaging litter milk/pizza/juice",
+      "category": "prop",
+      "tags": [
+        "litter",
+        "food",
+        "milk",
+        "pizza",
+        "juice",
+        "trash"
+      ],
+      "band": 1,
+      "y_hint": [
+        580,
+        750
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Milk_Trash, Pizza_Trash, Orange_Juice_Trash, Red/Blue/Open_Can_Trash"
+    }
+  ],
+  "row_guide": "Band0 (0\u2013768): dense traffic signs (warning/mandatory/parking/street blades); ornate+modern+cobra lamps; benches; playground slide/swings; candy/food carts; phone booths; ATM/parking meters/mailbox; fountains; early traffic lights; fences/sawhorses/bollards; green dumpsters & trash; hydrants; flower boxes/oval planters/hedges; round+cypress+planter trees; shrubs; electric poles/manholes/grates; billboards; clotheslines; underground parking arches. Band1 (768\u20131536): wind turbine; electric boxes; power house; water tower modular; shipping containers tan/blue (+modular); yard clutter (tires/pallets/spools/pipes/barrels); toxic barrels+danger signs; junk piles; car wrecks (side/stacked/flipped/on-side); site office/junk shack/corrugated fence; security booths+stop barriers; HVAC/satellite/solar/roof lights; green dumpster sides; green garbage truck facings; litter. Band2 (1536\u20132304): blue dumpsters; orange garbage truck facings; EV chargers/terminals; tall signal poles; bollards/bike rails; huge multi-facing traffic-sign grids (new/warning/yield/modular); cones; no-entry barriers; cantilever traffic masts L/R/diagonal with arrow plates and RYG modules; pedestrian boxes. Band3 (2304\u20133072): assembled mast examples; concrete bridge pillars; diagonal railings; modular pavement; blue-rail stairs+EXAMPLE; grand modular staircase; hex water; N-S asphalt dashed road; diagonal lane tiles; elevated overpass; sidewalk corners; front stairs; wires; wall posters; paper trash; brake marks. Band4 (3072\u20133584): elevated platform corners/straights/stairs; mushroom/icecream/coffee/infopoint kiosks (+shutters/hollows/interiors); heart A-frames/pedestals/flags; drones/controllers."
+}

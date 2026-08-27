@@ -1,0 +1,2806 @@
+{
+  "sheet": "1_Terrains_and_Fences",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.terrains_fences.debug_alignment_tiles",
+      "name": "Debug / alignment color blocks",
+      "category": "utility",
+      "tags": [
+        "debug",
+        "alignment",
+        "calibration"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        48
+      ],
+      "surface": "none",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Red/blue/white geometric test tiles at sheet top-left"
+    },
+    {
+      "id": "me.terrains_fences.prop_lilypad_cluster",
+      "name": "Lily pad clusters",
+      "category": "prop",
+      "tags": [
+        "water",
+        "plant",
+        "lilypad",
+        "decoration"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        64
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Green lily pad groups; top-right props"
+    },
+    {
+      "id": "me.terrains_fences.prop_lilypad_flower",
+      "name": "Lily pads with pink flowers",
+      "category": "prop",
+      "tags": [
+        "water",
+        "plant",
+        "lilypad",
+        "flower"
+      ],
+      "band": 0,
+      "y_hint": [
+        16,
+        64
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Flowering lily pad variants"
+    },
+    {
+      "id": "me.terrains_fences.prop_grass_tuft_small",
+      "name": "Small grass tufts / bushes",
+      "category": "prop",
+      "tags": [
+        "grass",
+        "foliage",
+        "decoration"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        64
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Tiny green foliage scatter"
+    },
+    {
+      "id": "me.terrains_fences.prop_dirt_patch_sprout",
+      "name": "Dirt patches with sprouts",
+      "category": "prop",
+      "tags": [
+        "dirt",
+        "grass",
+        "decoration"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        64
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small tan dirt islands with green sprouts"
+    },
+    {
+      "id": "me.terrains_fences.water_pond_fill",
+      "name": "Pond / open water fill block",
+      "category": "terrain",
+      "tags": [
+        "water",
+        "pond",
+        "fill",
+        "ripple"
+      ],
+      "band": 0,
+      "y_hint": [
+        16,
+        96
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Blue water block with ripple highlights; top-right"
+    },
+    {
+      "id": "me.terrains_fences.path_cobblestone",
+      "name": "Cobblestone paving fill",
+      "category": "path",
+      "tags": [
+        "stone",
+        "cobble",
+        "path",
+        "paving"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        128
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grey rounded cobble texture strip"
+    },
+    {
+      "id": "me.terrains_fences.path_herringbone",
+      "name": "Diagonal herringbone paving",
+      "category": "path",
+      "tags": [
+        "stone",
+        "brick",
+        "herringbone",
+        "path"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        128
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Light grey diagonal brick pavers"
+    },
+    {
+      "id": "me.terrains_fences.path_gravel",
+      "name": "Fine gravel / asphalt texture",
+      "category": "path",
+      "tags": [
+        "gravel",
+        "asphalt",
+        "path"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        128
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Dark fine-grain paving"
+    },
+    {
+      "id": "me.terrains_fences.path_dirt_strip",
+      "name": "Dirt / sand path strip",
+      "category": "path",
+      "tags": [
+        "dirt",
+        "sand",
+        "path"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        128
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Tan packed dirt path sample"
+    },
+    {
+      "id": "me.terrains_fences.grass_fill_bright",
+      "name": "Bright grass fill tiles",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "fill",
+        "autotile"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        200
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Solid lush green grass centers used across transition sets"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_transition_a",
+      "name": "Grass-to-dirt transition set A",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "transition",
+        "autotile",
+        "edge",
+        "corner"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        220
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "3x3 + edges/corners/island; light brown dirt border; singles Grass_1"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_transition_b",
+      "name": "Grass-to-dirt transition set B",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "transition",
+        "autotile"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        280
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Second dirt path palette; singles Grass_2"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_island",
+      "name": "Grass island on dirt",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "island",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        220
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Diamond/island grass patches surrounded by dirt"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_shallow",
+      "name": "Grass-to-shallow-water shoreline",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "shallow",
+        "shore",
+        "transition",
+        "autotile"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Light turquoise water edges; singles Grass_Water_1"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_deep",
+      "name": "Grass-to-deep-water shoreline",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "deep",
+        "shore",
+        "transition",
+        "autotile"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Darker blue water borders; singles Grass_Water_2/3"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_island",
+      "name": "Grass island on water",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "island",
+        "shore"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        240
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Diamond grassy islets in water"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_cliff_edge",
+      "name": "Grass cliff edge over water",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "cliff",
+        "shore",
+        "elevation"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        280
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grass atop brown bank dropping into water; singles Grass_Water_2"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_rocky",
+      "name": "Rocky grass-to-water shoreline",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "rock",
+        "shore",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Shoreline with grey stones; singles Grass_Water_4"
+    },
+    {
+      "id": "me.terrains_fences.deep_water_autotile",
+      "name": "Deep water autotile set",
+      "category": "terrain",
+      "tags": [
+        "water",
+        "deep",
+        "autotile",
+        "ripple"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Open deep blue water tiles; singles Deep_Water_1"
+    },
+    {
+      "id": "me.terrains_fences.water_inner_pond",
+      "name": "Small water pond cutouts in grass",
+      "category": "terrain",
+      "tags": [
+        "water",
+        "pond",
+        "hole",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        280
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "1x1 / small pond holes within grass"
+    },
+    {
+      "id": "me.terrains_fences.clay_court_orange",
+      "name": "Orange clay / court surface with grass border",
+      "category": "terrain",
+      "tags": [
+        "clay",
+        "court",
+        "orange",
+        "grass",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Orange-tan sports-court-like surface transitioning to grass"
+    },
+    {
+      "id": "me.terrains_fences.clay_court_line",
+      "name": "Clay court white line markings",
+      "category": "terrain",
+      "tags": [
+        "clay",
+        "court",
+        "line",
+        "marking"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        340
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "White painted line variants on clay"
+    },
+    {
+      "id": "me.terrains_fences.wood_border_on_grass",
+      "name": "Low wooden border / planter frame on grass",
+      "category": "fence",
+      "tags": [
+        "wood",
+        "border",
+        "frame",
+        "grass"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        280
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Thin wood strip enclosure pieces"
+    },
+    {
+      "id": "me.terrains_fences.wood_pier_on_water",
+      "name": "Wooden pier / dock frame over water",
+      "category": "fence",
+      "tags": [
+        "wood",
+        "pier",
+        "dock",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        300
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Wood walkway perimeter over light water"
+    },
+    {
+      "id": "me.terrains_fences.mound_dirt_low",
+      "name": "Low dirt mound with grass rim",
+      "category": "cliff",
+      "tags": [
+        "mound",
+        "dirt",
+        "grass",
+        "elevation"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        280
+      ],
+      "surface": "dirt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "T-shaped / arched dirt mound; singles Mound_1"
+    },
+    {
+      "id": "me.terrains_fences.mound_dirt_tall",
+      "name": "Tall two-tier dirt mound",
+      "category": "cliff",
+      "tags": [
+        "mound",
+        "dirt",
+        "grass",
+        "elevation"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "dirt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Higher mound with stone/dirt face; singles Mound_2"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_grass_enclosure",
+      "name": "Stone curb enclosing grass",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "grass",
+        "border",
+        "autotile"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Light grey curb frames around grass; singles Grass_Fenced_1"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_straight",
+      "name": "Stone curb straight segments",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Straight curb pieces N/E/S/W"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_corner",
+      "name": "Stone curb outer/inner corners",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "corner"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Corner and diamond curb frames"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_pillar",
+      "name": "Stone curb pillar / post",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "pillar"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        370
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Single vertical curb post"
+    },
+    {
+      "id": "me.terrains_fences.fence_picket_dark",
+      "name": "Dark picket fence modular set",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "picket",
+        "wood",
+        "dark"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        400
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Dark blue-grey picket rails + posts + diamond corners"
+    },
+    {
+      "id": "me.terrains_fences.fence_picket_on_stone",
+      "name": "Picket fence on stone foundation",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "picket",
+        "wood",
+        "stone",
+        "foundation"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        440
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Picket atop light stone base; posts and angled pieces"
+    },
+    {
+      "id": "me.terrains_fences.fence_picket_front",
+      "name": "Picket fence front span",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "picket",
+        "front"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        420
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal picket run facing viewer"
+    },
+    {
+      "id": "me.terrains_fences.fence_picket_side",
+      "name": "Picket fence side post",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "picket",
+        "side",
+        "post"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        420
+      ],
+      "surface": "grass",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Narrow vertical picket/side view"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_low",
+      "name": "Low red brick wall with tan cap",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "cap",
+        "low"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        420
+      ],
+      "surface": "brick",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Short brick segments, pillars, L-corners"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_tall",
+      "name": "Tall red brick wall with recessed panels",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "tall",
+        "panel",
+        "cap"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        480
+      ],
+      "surface": "brick",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Higher brick walls with architectural recesses"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_corner",
+      "name": "Brick wall outer/inner corners",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "corner"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        460
+      ],
+      "surface": "brick",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "L and diagonal brick joins"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_pillar",
+      "name": "Brick wall pillar / column",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "pillar"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        460
+      ],
+      "surface": "brick",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Standalone brick pillars with tan caps"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_window",
+      "name": "Brick wall with recessed window niche",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "window"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        480
+      ],
+      "surface": "brick",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark recessed openings in brick runs"
+    },
+    {
+      "id": "me.terrains_fences.wall_masonry_tan",
+      "name": "Thick tan masonry wall set",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "stone",
+        "masonry",
+        "tan"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        460
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Thick tan wall tops + faces; singles Wall_1/2/3"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_spiked_grey_base",
+      "name": "Spiked iron fence on grey stone base",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "metal",
+        "spiked",
+        "gate"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        520
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Wrought-iron bars with spikes; grey foundation"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_spiked_brown_base",
+      "name": "Spiked iron fence on brown base",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "metal",
+        "spiked",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        540
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Same iron style on brown/orange foundation"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_spiked_orange_base",
+      "name": "Spiked iron fence on orange/tan base",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "metal",
+        "spiked",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Iron fence on warm tan stone base"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_front",
+      "name": "Iron fence front rail span",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "front"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        560
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal spiked rail facing south"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_side",
+      "name": "Iron fence side / end post",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "post",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        560
+      ],
+      "surface": "stone",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Vertical iron post pieces"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_corner",
+      "name": "Iron fence corner / V joints",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "corner",
+        "diagonal"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Angled V and enclosure corners"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_oval_gate",
+      "name": "Ornate oval iron fence / gate enclosure",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "gate",
+        "ornate"
+      ],
+      "band": 0,
+      "y_hint": [
+        380,
+        520
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall oval spiked iron decorative enclosure"
+    },
+    {
+      "id": "me.terrains_fences.fence_chainlink_straight",
+      "name": "Chain-link fence straight segments",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "chainlink",
+        "metal",
+        "mesh"
+      ],
+      "band": 0,
+      "y_hint": [
+        380,
+        560
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Mesh panels with posts; cardinal runs"
+    },
+    {
+      "id": "me.terrains_fences.fence_chainlink_diagonal",
+      "name": "Chain-link fence diagonal / isometric",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "chainlink",
+        "diagonal",
+        "isometric"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        580
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "45-degree mesh segments forming diamonds"
+    },
+    {
+      "id": "me.terrains_fences.fence_chainlink_damaged",
+      "name": "Chain-link fence damaged / torn",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "chainlink",
+        "damaged",
+        "hole"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Torn mesh and circular cut-through variants"
+    },
+    {
+      "id": "me.terrains_fences.fence_chainlink_post",
+      "name": "Chain-link fence support post",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "chainlink",
+        "post"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Silver vertical support poles"
+    },
+    {
+      "id": "me.terrains_fences.fence_ornate_wood_iron",
+      "name": "Ornate fence wood base + iron spikes + light cap",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "ornate",
+        "wood",
+        "iron",
+        "cap"
+      ],
+      "band": 0,
+      "y_hint": [
+        440,
+        600
+      ],
+      "surface": "wood",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Hybrid decorative fence with posts and diagonals"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_path_orange",
+      "name": "Grass-to-orange packed-earth path",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "path",
+        "orange",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Orange-brown path edges and corners in grass"
+    },
+    {
+      "id": "me.terrains_fences.pool_tile_edge_white",
+      "name": "White-tiled pool edge / basin border",
+      "category": "terrain",
+      "tags": [
+        "pool",
+        "tile",
+        "edge",
+        "water",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "White border around cyan pool water; square and pointed ends"
+    },
+    {
+      "id": "me.terrains_fences.pool_water_cyan",
+      "name": "Pool basin cyan water fill",
+      "category": "terrain",
+      "tags": [
+        "pool",
+        "water",
+        "cyan",
+        "fill"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Bright pool water inside white tile borders"
+    },
+    {
+      "id": "me.terrains_fences.pool_shape_diamond",
+      "name": "Elongated / diamond pool outline",
+      "category": "terrain",
+      "tags": [
+        "pool",
+        "diamond",
+        "edge",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        660
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Pointed-end pool multi-tile silhouette"
+    },
+    {
+      "id": "me.terrains_fences.prop_rock_small",
+      "name": "Small pebbles and rocks",
+      "category": "prop",
+      "tags": [
+        "rock",
+        "pebble",
+        "scatter",
+        "decoration"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        700
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Tan/brown single pebbles; Props_Dirt"
+    },
+    {
+      "id": "me.terrains_fences.prop_rock_cluster",
+      "name": "Rock clusters",
+      "category": "prop",
+      "tags": [
+        "rock",
+        "cluster",
+        "scatter"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        700
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Multi-rock piles of varying sizes"
+    },
+    {
+      "id": "me.terrains_fences.prop_rock_large",
+      "name": "Larger grey / brown rocks",
+      "category": "prop",
+      "tags": [
+        "rock",
+        "boulder",
+        "decoration"
+      ],
+      "band": 0,
+      "y_hint": [
+        540,
+        720
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Bigger individual stones"
+    },
+    {
+      "id": "me.terrains_fences.prop_grass_sprout",
+      "name": "Grass sprouts and weed tufts",
+      "category": "prop",
+      "tags": [
+        "grass",
+        "plant",
+        "sprout",
+        "decoration"
+      ],
+      "band": 0,
+      "y_hint": [
+        540,
+        720
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Tiny green foliage; Props_Grass"
+    },
+    {
+      "id": "me.terrains_fences.prop_leaf_debris",
+      "name": "Autumn leaf / debris bits",
+      "category": "prop",
+      "tags": [
+        "leaf",
+        "debris",
+        "decoration",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        720
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Orange/brown leaf scatter"
+    },
+    {
+      "id": "me.terrains_fences.prop_sand_wisp",
+      "name": "Sand / dirt detail wisps",
+      "category": "prop",
+      "tags": [
+        "sand",
+        "dirt",
+        "decal"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        720
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Light ground-detail marks"
+    },
+    {
+      "id": "me.terrains_fences.guide_circle_square",
+      "name": "Placement guide circle / square outlines",
+      "category": "utility",
+      "tags": [
+        "guide",
+        "outline",
+        "marker",
+        "collision"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        720
+      ],
+      "surface": "none",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "White/pink wireframe circle and square guides"
+    },
+    {
+      "id": "me.terrains_fences.fence_wood_plank_stub",
+      "name": "Short wooden plank / fence stubs",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "wood",
+        "plank",
+        "stub"
+      ],
+      "band": 0,
+      "y_hint": [
+        620,
+        720
+      ],
+      "surface": "wood",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Vertical wood boards and short posts bottom-right"
+    },
+    {
+      "id": "me.terrains_fences.cliff_grass_top",
+      "name": "Rocky cliff face with grass top",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "rock",
+        "grass",
+        "elevation"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall brown cliff with grassy plateau; band0 bottom"
+    },
+    {
+      "id": "me.terrains_fences.cliff_dirt_top",
+      "name": "Rocky cliff face with dirt/sand top",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "rock",
+        "dirt",
+        "sand",
+        "elevation"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Cliff with dirt/sand plateau surface"
+    },
+    {
+      "id": "me.terrains_fences.cliff_edge_piece",
+      "name": "Cliff edge / corner rock strips",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "rock",
+        "edge",
+        "corner"
+      ],
+      "band": 0,
+      "y_hint": [
+        620,
+        760
+      ],
+      "surface": "rock",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Vertical edge pillars and tapered cliff corners"
+    },
+    {
+      "id": "me.terrains_fences.pit_void_in_grass",
+      "name": "Grass-bordered pit / void hole",
+      "category": "terrain",
+      "tags": [
+        "pit",
+        "void",
+        "hole",
+        "grass",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        760
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Black void patches edged by grass"
+    },
+    {
+      "id": "me.terrains_fences.dirt_patch_in_grass",
+      "name": "Irregular dirt patches in grass",
+      "category": "terrain",
+      "tags": [
+        "dirt",
+        "grass",
+        "patch",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        580
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Jagged dirt islands with grass tufts"
+    },
+    {
+      "id": "me.terrains_fences.floor_cobble_brown",
+      "name": "Brown cobble / cracked earth floor",
+      "category": "terrain",
+      "tags": [
+        "cobble",
+        "floor",
+        "brown",
+        "earth"
+      ],
+      "band": 0,
+      "y_hint": [
+        640,
+        740
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Brown textured floor patches near cliffs"
+    },
+    {
+      "id": "me.terrains_fences.waterfall_top_edge",
+      "name": "Waterfall top edge over cliff",
+      "category": "terrain",
+      "tags": [
+        "waterfall",
+        "water",
+        "cliff",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        680,
+        760
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue water spilling over rock lip"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_transition_c",
+      "name": "Grass-to-muted dirt transition (band1)",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "transition",
+        "autotile"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Band1 top-left dirt/grass set"
+    },
+    {
+      "id": "me.terrains_fences.grass_sand_transition",
+      "name": "Grass-to-sand transition autotile",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "sand",
+        "transition",
+        "autotile",
+        "beach"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        960
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Wavy yellow sand bordered by grass"
+    },
+    {
+      "id": "me.terrains_fences.sand_fill_rippled",
+      "name": "Rippled sand fill tiles",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "fill",
+        "ripple",
+        "dune"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        960
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Wind-swept wavy sand texture blocks"
+    },
+    {
+      "id": "me.terrains_fences.sand_fill_flat",
+      "name": "Flat / speckled sand fill",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "fill",
+        "flat"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        980
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Less rippled sand variants"
+    },
+    {
+      "id": "me.terrains_fences.sand_water_transition",
+      "name": "Sand-to-water beach shoreline",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "water",
+        "beach",
+        "shore",
+        "transition",
+        "autotile"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        1000
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Sand islands and edges in blue water"
+    },
+    {
+      "id": "me.terrains_fences.sand_blend_shade",
+      "name": "Sand shade-blend transition",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "blend",
+        "transition"
+      ],
+      "band": 1,
+      "y_hint": [
+        860,
+        1020
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Subtle light/dark sand blends"
+    },
+    {
+      "id": "me.terrains_fences.sand_patch_irregular",
+      "name": "Irregular sand patches / holes",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "patch",
+        "hole",
+        "scatter"
+      ],
+      "band": 1,
+      "y_hint": [
+        960,
+        1100
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Circular and blob sand patches; hollow frames"
+    },
+    {
+      "id": "me.terrains_fences.sand_cliff_plateau",
+      "name": "Raised sand plateau on rocky cliff",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "sand",
+        "plateau",
+        "elevation",
+        "rock"
+      ],
+      "band": 1,
+      "y_hint": [
+        960,
+        1120
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large multi-tile sand-top cliff block"
+    },
+    {
+      "id": "me.terrains_fences.cliff_rock_face_strip",
+      "name": "Rocky cliff face horizontal strips",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "rock",
+        "strip",
+        "elevation"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1160
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal rock face mid/base strips"
+    },
+    {
+      "id": "me.terrains_fences.cliff_rock_glow_edge",
+      "name": "Cliff edge with warm orange rim highlight",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "rock",
+        "edge",
+        "highlight"
+      ],
+      "band": 1,
+      "y_hint": [
+        1024,
+        1160
+      ],
+      "surface": "rock",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Top-edge rock with orange/yellow rim; corners"
+    },
+    {
+      "id": "me.terrains_fences.waterfall_full_strip",
+      "name": "Full waterfall vertical strip",
+      "category": "terrain",
+      "tags": [
+        "waterfall",
+        "water",
+        "cliff",
+        "multi"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1000
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Cascading blue water with splash base; rocky banks"
+    },
+    {
+      "id": "me.terrains_fences.waterfall_mid_segment",
+      "name": "Waterfall mid-height segment",
+      "category": "terrain",
+      "tags": [
+        "waterfall",
+        "water",
+        "segment"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        980
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shorter falling-water pieces for height customizing"
+    },
+    {
+      "id": "me.terrains_fences.waterfall_splash_base",
+      "name": "Waterfall splash / pool base",
+      "category": "terrain",
+      "tags": [
+        "waterfall",
+        "splash",
+        "water",
+        "base"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1020
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Foam splash where waterfall meets lower water"
+    },
+    {
+      "id": "me.terrains_fences.drain_pipe_outlet",
+      "name": "Concrete drain / sewer pipe outlet",
+      "category": "infra",
+      "tags": [
+        "pipe",
+        "drain",
+        "sewer",
+        "water",
+        "concrete"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        980
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Dark circular pipe discharging from rock wall"
+    },
+    {
+      "id": "me.terrains_fences.rock_water_bank",
+      "name": "Rock bank to water horizontal edge",
+      "category": "terrain",
+      "tags": [
+        "rock",
+        "water",
+        "bank",
+        "shore"
+      ],
+      "band": 1,
+      "y_hint": [
+        940,
+        1040
+      ],
+      "surface": "rock",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Brown rock edges meeting blue water"
+    },
+    {
+      "id": "me.terrains_fences.fence_slat_metal_grey",
+      "name": "Grey metal slat fence modular set",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "slat",
+        "metal",
+        "grey",
+        "modern"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1120
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Horizontal slat rails + posts + stubs; cool grey"
+    },
+    {
+      "id": "me.terrains_fences.fence_slat_wood_light",
+      "name": "Light wood slat fence modular set",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "slat",
+        "wood",
+        "light",
+        "modern"
+      ],
+      "band": 1,
+      "y_hint": [
+        1040,
+        1140
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Warm light-wood slats on concrete bases"
+    },
+    {
+      "id": "me.terrains_fences.fence_slat_wood_dark",
+      "name": "Dark wood / reddish slat fence set",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "slat",
+        "wood",
+        "dark",
+        "modern"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1180
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Dark reddish-brown slats on charcoal bases"
+    },
+    {
+      "id": "me.terrains_fences.fence_slat_front",
+      "name": "Slat fence front double-span",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "slat",
+        "front"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide front-facing slat panel (~2 tiles)"
+    },
+    {
+      "id": "me.terrains_fences.fence_slat_side",
+      "name": "Slat fence side view",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "slat",
+        "side"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "concrete",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Narrow side-facing fence strips L/R"
+    },
+    {
+      "id": "me.terrains_fences.fence_slat_post",
+      "name": "Slat fence end post with base",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "slat",
+        "post",
+        "base"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Individual posts with heavy stone/concrete footings"
+    },
+    {
+      "id": "me.terrains_fences.fence_metal_bar_modern",
+      "name": "Modern metal bar fence (bluish)",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "metal",
+        "bar",
+        "modern"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1100
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue-grey vertical-bar fence spans; singles Fence_1-ish in band1"
+    },
+    {
+      "id": "me.terrains_fences.fence_wood_bar_modern",
+      "name": "Modern wood-bar fence on stone",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "wood",
+        "bar",
+        "modern"
+      ],
+      "band": 1,
+      "y_hint": [
+        1020,
+        1140
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden horizontal bars / planks on stone; Fence_2/3"
+    },
+    {
+      "id": "me.terrains_fences.prop_fence_diagonal",
+      "name": "Diagonal iron fence prop pieces",
+      "category": "prop",
+      "tags": [
+        "fence",
+        "iron",
+        "diagonal",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Extra diagonal fence cutouts; Props_Fence family across sheet"
+    },
+    {
+      "id": "me.terrains_fences.prop_wall_brick_extra",
+      "name": "Extra brick wall prop segments",
+      "category": "prop",
+      "tags": [
+        "wall",
+        "brick",
+        "prop"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "brick",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Additional brick pieces; Props_Wall"
+    },
+    {
+      "id": "me.terrains_fences.prop_water_ripple",
+      "name": "Water surface ripple prop tiles",
+      "category": "prop",
+      "tags": [
+        "water",
+        "ripple",
+        "prop"
+      ],
+      "band": 0,
+      "y_hint": [
+        16,
+        120
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Individual ripple/highlight water tiles; Props_Water"
+    },
+    {
+      "id": "me.terrains_fences.prop_grass_fenced_extra",
+      "name": "Extra curbed-grass junction props",
+      "category": "prop",
+      "tags": [
+        "curb",
+        "grass",
+        "junction",
+        "prop"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        400
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Extra curb T/corner pieces; Props_Grass_Fenced"
+    },
+    {
+      "id": "me.terrains_fences.path_others_pavers",
+      "name": "Misc paving patterns (Others)",
+      "category": "path",
+      "tags": [
+        "paving",
+        "cobble",
+        "herringbone",
+        "path"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        160
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grey cobble + herringbone samples; singles Others"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_edge_n",
+      "name": "Grass-dirt edge north",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "edge",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        220
+      ],
+      "surface": "grass",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "North-facing grass over dirt edge strip"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_edge_s",
+      "name": "Grass-dirt edge south",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "edge",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        220
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "South-facing grass-dirt edge"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_edge_e",
+      "name": "Grass-dirt edge east",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "edge",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        220
+      ],
+      "surface": "grass",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "East-facing grass-dirt edge"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_edge_w",
+      "name": "Grass-dirt edge west",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "edge",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        220
+      ],
+      "surface": "grass",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "West-facing grass-dirt edge"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_corner_outer",
+      "name": "Grass-dirt outer corner",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "corner",
+        "outer"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Outer corner autotile pieces"
+    },
+    {
+      "id": "me.terrains_fences.grass_dirt_corner_inner",
+      "name": "Grass-dirt inner corner",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dirt",
+        "corner",
+        "inner"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner corner / hole autotile pieces"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_edge_n",
+      "name": "Grass-water shoreline north",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "shore",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "grass",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "North shoreline strip"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_edge_s",
+      "name": "Grass-water shoreline south",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "shore",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "South shoreline strip"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_edge_e",
+      "name": "Grass-water shoreline east",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "shore",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "grass",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "East shoreline strip"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_edge_w",
+      "name": "Grass-water shoreline west",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "shore",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        240
+      ],
+      "surface": "grass",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "West shoreline strip"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_corner_outer",
+      "name": "Grass-water outer corner",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "corner",
+        "outer"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        260
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Outer shore corners"
+    },
+    {
+      "id": "me.terrains_fences.grass_water_corner_inner",
+      "name": "Grass-water inner corner",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "water",
+        "corner",
+        "inner"
+      ],
+      "band": 0,
+      "y_hint": [
+        48,
+        260
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Inner shore corners / pond corners"
+    },
+    {
+      "id": "me.terrains_fences.sand_grass_edge",
+      "name": "Sand-grass edge strips",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "grass",
+        "edge",
+        "transition"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        960
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Cardinal sand-to-grass edges band1"
+    },
+    {
+      "id": "me.terrains_fences.sand_grass_corner",
+      "name": "Sand-grass corners",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "grass",
+        "corner",
+        "transition"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        980
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Sand-grass outer/inner corners"
+    },
+    {
+      "id": "me.terrains_fences.sand_water_edge",
+      "name": "Sand-water beach edge strips",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "water",
+        "beach",
+        "edge"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        1000
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Beach edge cardinals"
+    },
+    {
+      "id": "me.terrains_fences.sand_water_corner",
+      "name": "Sand-water beach corners",
+      "category": "terrain",
+      "tags": [
+        "sand",
+        "water",
+        "beach",
+        "corner"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        1020
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Beach outer/inner corners"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_front",
+      "name": "Brick wall front face",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "front"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "brick",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "South-facing brick wall run"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_side",
+      "name": "Brick wall side thickness",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "brick",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side/top-down wall thickness tiles"
+    },
+    {
+      "id": "me.terrains_fences.wall_brick_endcap",
+      "name": "Brick wall end cap / pillar join",
+      "category": "wall",
+      "tags": [
+        "wall",
+        "brick",
+        "endcap",
+        "pillar"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "brick",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Tan end-cap pillars on brick runs"
+    },
+    {
+      "id": "me.terrains_fences.fence_iron_gate_opening",
+      "name": "Iron fence gate opening span",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "iron",
+        "gate",
+        "opening"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        560
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wider opening / gate-ready iron span"
+    },
+    {
+      "id": "me.terrains_fences.fence_chainlink_front",
+      "name": "Chain-link front panel",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "chainlink",
+        "front"
+      ],
+      "band": 0,
+      "y_hint": [
+        380,
+        580
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Front-facing mesh panel"
+    },
+    {
+      "id": "me.terrains_fences.fence_chainlink_side",
+      "name": "Chain-link side panel",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "chainlink",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        380,
+        580
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side-facing mesh panel"
+    },
+    {
+      "id": "me.terrains_fences.fence_white_slat",
+      "name": "White modern slat / vinyl fence",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "slat",
+        "white",
+        "vinyl"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        640
+      ],
+      "surface": "concrete",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "White horizontal slat fence pieces if present mid-sheet"
+    },
+    {
+      "id": "me.terrains_fences.fence_bamboo_low",
+      "name": "Low wood stake / bamboo fence",
+      "category": "fence",
+      "tags": [
+        "fence",
+        "wood",
+        "bamboo",
+        "low",
+        "stake"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Low tied wooden stake segments"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_n",
+      "name": "Stone curb north edge",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "edge",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "stone",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "North curb strip"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_s",
+      "name": "Stone curb south edge",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "edge",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "stone",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "South curb strip"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_e",
+      "name": "Stone curb east edge",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "edge",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "stone",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "East curb strip"
+    },
+    {
+      "id": "me.terrains_fences.curb_stone_w",
+      "name": "Stone curb west edge",
+      "category": "terrain",
+      "tags": [
+        "curb",
+        "stone",
+        "edge",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "stone",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "West curb strip"
+    },
+    {
+      "id": "me.terrains_fences.cliff_grass_wide",
+      "name": "Wide grassy cliff face",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "grass",
+        "wide",
+        "rock"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wider multi-column grass-top cliff"
+    },
+    {
+      "id": "me.terrains_fences.cliff_grass_narrow",
+      "name": "Narrow grassy cliff face",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "grass",
+        "narrow",
+        "rock"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrower grass-top cliff column"
+    },
+    {
+      "id": "me.terrains_fences.cliff_sand_wide",
+      "name": "Wide sand-top cliff face",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "sand",
+        "wide",
+        "rock"
+      ],
+      "band": 1,
+      "y_hint": [
+        960,
+        1120
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide sand plateau cliff"
+    },
+    {
+      "id": "me.terrains_fences.cliff_sand_narrow",
+      "name": "Narrow sand-top cliff face",
+      "category": "cliff",
+      "tags": [
+        "cliff",
+        "sand",
+        "narrow",
+        "rock"
+      ],
+      "band": 1,
+      "y_hint": [
+        960,
+        1120
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow sand-top cliff edge"
+    },
+    {
+      "id": "me.terrains_fences.waterfall_left_bank",
+      "name": "Waterfall left rocky bank",
+      "category": "terrain",
+      "tags": [
+        "waterfall",
+        "bank",
+        "rock",
+        "left"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1000
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Left rock/grass framing waterfall"
+    },
+    {
+      "id": "me.terrains_fences.waterfall_right_bank",
+      "name": "Waterfall right rocky bank",
+      "category": "terrain",
+      "tags": [
+        "waterfall",
+        "bank",
+        "rock",
+        "right"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1000
+      ],
+      "surface": "rock",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Right rock/grass framing waterfall"
+    },
+    {
+      "id": "me.terrains_fences.prop_log_wood",
+      "name": "Wood log / short timber prop",
+      "category": "prop",
+      "tags": [
+        "wood",
+        "log",
+        "prop"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "dirt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small log pieces among top props"
+    },
+    {
+      "id": "me.terrains_fences.prop_reed_water",
+      "name": "Water reeds",
+      "category": "prop",
+      "tags": [
+        "reed",
+        "water",
+        "plant"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Reeds near lily pads if present"
+    },
+    {
+      "id": "me.terrains_fences.deep_water_edge",
+      "name": "Deep water edge ripples",
+      "category": "terrain",
+      "tags": [
+        "water",
+        "deep",
+        "edge",
+        "ripple"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Deep-water perimeter ripple tiles"
+    },
+    {
+      "id": "me.terrains_fences.deep_water_center",
+      "name": "Deep water center fill",
+      "category": "terrain",
+      "tags": [
+        "water",
+        "deep",
+        "fill",
+        "center"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Solid deep-water center tiles"
+    },
+    {
+      "id": "me.terrains_fences.grass_dark_variant",
+      "name": "Darker / mossy grass variant",
+      "category": "terrain",
+      "tags": [
+        "grass",
+        "dark",
+        "moss",
+        "fill"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        280
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Darker green grass transition set if present"
+    },
+    {
+      "id": "me.terrains_fences.path_stone_to_grass",
+      "name": "Stone path to grass transition",
+      "category": "path",
+      "tags": [
+        "stone",
+        "grass",
+        "path",
+        "transition"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        140
+      ],
+      "surface": "stone",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Paver edge meeting grass"
+    }
+  ],
+  "row_guide": "Band0 top: debug tiles, lily pads/foliage props, pond water, path samples (cobble/herringbone/gravel/dirt). Upper: grass\u2013dirt and grass\u2013water autotiles (shallow/deep/rocky), deep water, clay court, wood borders/piers, mounds. Mid: stone curbs around grass, dark picket fences (\u00b1stone base), low/tall brick walls, masonry walls. Mid-lower: spiked iron fences (grey/brown/orange bases), chain-link (straight/diagonal/damaged), ornate wood-iron fence, orange dirt paths, white-tile pools. Bottom band0: rock/plant scatter, guides, wood stubs, grass/dirt-top cliffs, pits, cobble floors, waterfall tops. Band1: grass\u2013dirt/sand/pit transitions, rippled sand fills, sand\u2013water beaches, sand plateau cliffs, rock strips, full waterfalls + drain pipe, modern slat fences (grey metal / light wood / dark wood) with front/side/post pieces."
+}

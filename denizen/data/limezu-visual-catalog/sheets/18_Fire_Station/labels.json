@@ -1,0 +1,631 @@
+{
+  "sheet": "18_Fire_Station",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.fire_station.building_main",
+      "name": "Fire station main building",
+      "category": "building",
+      "tags": [
+        "fire",
+        "station",
+        "brick",
+        "garage",
+        "emergency",
+        "sign"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan brick tower with FIRE STATION sign and extinguisher icon plus two-bay garage wing"
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_rear_left",
+      "name": "Garage bay with truck rear left",
+      "category": "building",
+      "tags": [
+        "fire",
+        "garage",
+        "truck",
+        "bay",
+        "rear"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Open bay showing rear of fire truck parked inside (left)"
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_rear_right",
+      "name": "Garage bay with truck rear right",
+      "category": "building",
+      "tags": [
+        "fire",
+        "garage",
+        "truck",
+        "bay",
+        "rear"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Open bay truck rear right"
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_front_left",
+      "name": "Garage bay with truck front left",
+      "category": "building",
+      "tags": [
+        "fire",
+        "garage",
+        "truck",
+        "bay",
+        "front",
+        "hood"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        380
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Open bay showing truck cab/hood facing out (left)"
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_front_right",
+      "name": "Garage bay with truck front right",
+      "category": "building",
+      "tags": [
+        "fire",
+        "garage",
+        "truck",
+        "bay",
+        "front",
+        "hood"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        380
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Open bay truck hood right"
+    },
+    {
+      "id": "me.fire_station.truck_east",
+      "name": "Fire rescue truck facing east",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "rescue",
+        "ladder",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile FIRE RESCUE truck facing right"
+    },
+    {
+      "id": "me.fire_station.truck_west",
+      "name": "Fire rescue truck facing west",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "rescue",
+        "ladder",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Side profile facing left"
+    },
+    {
+      "id": "me.fire_station.truck_south",
+      "name": "Fire rescue truck facing south",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "rescue",
+        "top-down",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-down truck cab at bottom"
+    },
+    {
+      "id": "me.fire_station.truck_north",
+      "name": "Fire rescue truck facing north",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "rescue",
+        "top-down",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Top-down truck cab at top"
+    },
+    {
+      "id": "me.fire_station.truck_ladder_east",
+      "name": "Ladder truck east extended",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "ladder",
+        "extended",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        260
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side view with ladder raised diagonally"
+    },
+    {
+      "id": "me.fire_station.truck_ladder_west",
+      "name": "Ladder truck west extended",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "ladder",
+        "extended",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Side view ladder up facing west"
+    },
+    {
+      "id": "me.fire_station.truck_ladder_south",
+      "name": "Ladder truck south extended",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "ladder",
+        "extended",
+        "top-down",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-down with ladder deployed"
+    },
+    {
+      "id": "me.fire_station.truck_ladder_north",
+      "name": "Ladder truck north extended",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "ladder",
+        "extended",
+        "top-down",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        300
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Top-down ladder north"
+    },
+    {
+      "id": "me.fire_station.truck_open_east",
+      "name": "Fire truck compartments open east",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "open",
+        "compartments",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side panels/compartments open facing east"
+    },
+    {
+      "id": "me.fire_station.truck_open_west",
+      "name": "Fire truck compartments open west",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "open",
+        "compartments",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Open compartments facing west"
+    },
+    {
+      "id": "me.fire_station.truck_open_south",
+      "name": "Fire truck open compartments south",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "open",
+        "top-down",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        400
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-down open-panel / flatbed variant south"
+    },
+    {
+      "id": "me.fire_station.truck_open_north",
+      "name": "Fire truck open compartments north",
+      "category": "vehicle",
+      "tags": [
+        "fire",
+        "truck",
+        "open",
+        "top-down",
+        "emergency"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        420
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Top-down open-panel variant north"
+    },
+    {
+      "id": "me.fire_station.hydrant",
+      "name": "Fire hydrant",
+      "category": "infra",
+      "tags": [
+        "hydrant",
+        "fire",
+        "water",
+        "street"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        470
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Standalone red hydrant"
+    },
+    {
+      "id": "me.fire_station.hydrant_hose_short",
+      "name": "Hydrant with short hose",
+      "category": "infra",
+      "tags": [
+        "hydrant",
+        "hose",
+        "fire",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        470
+      ],
+      "surface": "sidewalk",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Hydrant with short white hose attached"
+    },
+    {
+      "id": "me.fire_station.hydrant_hose_long",
+      "name": "Hydrant with long winding hose",
+      "category": "infra",
+      "tags": [
+        "hydrant",
+        "hose",
+        "fire",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Hydrant plus long snaking hose composition"
+    },
+    {
+      "id": "me.fire_station.hose_horizontal",
+      "name": "Hose segment horizontal",
+      "category": "prop",
+      "tags": [
+        "hose",
+        "tube",
+        "fire",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        410,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Straight horizontal hose/tube modular piece"
+    },
+    {
+      "id": "me.fire_station.hose_vertical",
+      "name": "Hose segment vertical",
+      "category": "prop",
+      "tags": [
+        "hose",
+        "tube",
+        "fire",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        410,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Vertical hose/tube modular piece"
+    },
+    {
+      "id": "me.fire_station.hose_corner",
+      "name": "Hose corner bend",
+      "category": "prop",
+      "tags": [
+        "hose",
+        "tube",
+        "fire",
+        "corner",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        410,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Corner bend hose pieces (L shapes)"
+    },
+    {
+      "id": "me.fire_station.hose_mouth",
+      "name": "Hose nozzle / mouth",
+      "category": "prop",
+      "tags": [
+        "hose",
+        "nozzle",
+        "fire",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Hose end/mouth fitting"
+    },
+    {
+      "id": "me.fire_station.hose_loop",
+      "name": "Hose coiled loop",
+      "category": "prop",
+      "tags": [
+        "hose",
+        "coil",
+        "fire",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        410,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Coiled or square-loop hose segment"
+    },
+    {
+      "id": "me.fire_station.water_puddle_small",
+      "name": "Water splash puddle small",
+      "category": "decor",
+      "tags": [
+        "water",
+        "puddle",
+        "splash",
+        "fire"
+      ],
+      "band": 0,
+      "y_hint": [
+        410,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small cyan water bubble/splash"
+    },
+    {
+      "id": "me.fire_station.water_puddle_medium",
+      "name": "Water splash puddle medium",
+      "category": "decor",
+      "tags": [
+        "water",
+        "puddle",
+        "splash",
+        "fire"
+      ],
+      "band": 0,
+      "y_hint": [
+        410,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium water splash cluster"
+    },
+    {
+      "id": "me.fire_station.water_puddle_large",
+      "name": "Water splash puddle large",
+      "category": "decor",
+      "tags": [
+        "water",
+        "puddle",
+        "splash",
+        "fire"
+      ],
+      "band": 0,
+      "y_hint": [
+        410,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Larger teal puddle/splash variants"
+    },
+    {
+      "id": "me.fire_station.ground_marker",
+      "name": "White square ground marker",
+      "category": "decor",
+      "tags": [
+        "marker",
+        "parking",
+        "zone",
+        "asphalt"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "White square outline floor/parking marker"
+    },
+    {
+      "id": "me.fire_station.extinguisher_icon_prop",
+      "name": "Fire extinguisher roof icon prop",
+      "category": "decor",
+      "tags": [
+        "extinguisher",
+        "fire",
+        "icon",
+        "sign"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        120
+      ],
+      "surface": "any",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Large red extinguisher graphic atop station sign; usable as brand prop"
+    }
+  ],
+  "row_guide": "Top-left: main fire station building. Right columns: fire trucks side and top-down in standard, ladder-up, and open-compartment states for all facings. Mid-left: garage bay cutouts with trucks front/rear. Bottom-left: hydrants, hose modules, water splashes, square marker."
+}

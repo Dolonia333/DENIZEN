@@ -1,0 +1,73 @@
+{
+  "sheet": "23_MIlitary_Base",
+  "source": "assets/limezu/ext/themes/23_MIlitary_Base.png",
+  "size": [
+    512,
+    4575
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 768,
+      "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_00_y0-768.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 1,
+      "y0": 768,
+      "y1": 1536,
+      "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_01_y768-1536.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 2,
+      "y0": 1536,
+      "y1": 2304,
+      "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_02_y1536-2304.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 3,
+      "y0": 2304,
+      "y1": 3072,
+      "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_03_y2304-3072.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 4,
+      "y0": 3072,
+      "y1": 3840,
+      "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_04_y3072-3840.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 5,
+      "y0": 3840,
+      "y1": 4575,
+      "path": "data/limezu-visual-catalog/sheets/23_MIlitary_Base/band_05_y3840-4575.jpg",
+      "px_size": [
+        1024,
+        1470
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/23_military_base",
+  "singles_count": 305
+}

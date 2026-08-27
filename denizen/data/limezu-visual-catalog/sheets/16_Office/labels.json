@@ -1,0 +1,1464 @@
+{
+  "sheet": "16_Office",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.office_ext.building_generic_corp",
+      "name": "G-NERIC CORP office building",
+      "category": "building",
+      "tags": [
+        "office",
+        "corp",
+        "facade",
+        "multi_story",
+        "grey",
+        "windows",
+        "entrance",
+        "assembled"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1450
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Full assembled multi-story office with G-NERIC CORP sign and flat roof. Singles: Example_1."
+    },
+    {
+      "id": "me.office_ext.building_lime_corp",
+      "name": "LIME CORP office building with fire escape",
+      "category": "building",
+      "tags": [
+        "office",
+        "corp",
+        "facade",
+        "multi_story",
+        "lime",
+        "balcony",
+        "fire_escape",
+        "assembled"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Taller/narrower assembled office with LIME CORP+lime icon and side balconies/fire escape. Singles: Example_2."
+    },
+    {
+      "id": "me.office_ext.sign_lime_corp",
+      "name": "LIME CORP wall sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "lime",
+        "corp",
+        "branding",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        360
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Yellow/white LIME CORP text with lime icon. Singles: Building_Sign_1."
+    },
+    {
+      "id": "me.office_ext.sign_generic_corp",
+      "name": "G-NERIC CORP wall sign",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "generic",
+        "corp",
+        "branding",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        380
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "White block G-NERIC CORP lettering. Singles: Building_Sign_2."
+    },
+    {
+      "id": "me.office_ext.satellite_dish",
+      "name": "Rooftop satellite dish",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "satellite",
+        "dish",
+        "antenna"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        340
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Parabolic dish on base with status lights. Singles: Shutter_Dish_Roof_Prop."
+    },
+    {
+      "id": "me.office_ext.solar_panel",
+      "name": "Rooftop solar panel",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "solar",
+        "panel",
+        "energy",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        380
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Blue rectangular tilted solar array. Singles: Solar_Panel_Roof_Prop."
+    },
+    {
+      "id": "me.office_ext.roof_access_cabin",
+      "name": "Rooftop access cabin/door",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "door",
+        "access",
+        "cabin"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        400
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Small grey doored roof-access hut. Singles: Cabin_Entrance_Roof_Prop."
+    },
+    {
+      "id": "me.office_ext.air_duct_1",
+      "name": "Rooftop air duct 1",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "hvac",
+        "duct",
+        "vent"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        420
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Air_Duct_1_Roof_Prop."
+    },
+    {
+      "id": "me.office_ext.air_duct_2",
+      "name": "Rooftop air duct 2",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "hvac",
+        "duct",
+        "vent"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        420
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Air_Duct_2_Roof_Prop."
+    },
+    {
+      "id": "me.office_ext.air_duct_3",
+      "name": "Rooftop air duct 3",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "hvac",
+        "duct",
+        "vent"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        420
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Air_Duct_3_Roof_Prop."
+    },
+    {
+      "id": "me.office_ext.roof_prop_1",
+      "name": "Rooftop utility box 1",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "vent",
+        "hvac",
+        "utility"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        440
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Prop_1."
+    },
+    {
+      "id": "me.office_ext.roof_prop_2",
+      "name": "Rooftop utility box 2",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "vent",
+        "hvac",
+        "utility"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        440
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Prop_2."
+    },
+    {
+      "id": "me.office_ext.roof_prop_3",
+      "name": "Rooftop utility box 3",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "vent",
+        "hvac",
+        "utility"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        440
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Prop_3."
+    },
+    {
+      "id": "me.office_ext.roof_stairs",
+      "name": "Rooftop stair hatch",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "stairs",
+        "hatch",
+        "access"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1250
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Stairs."
+    },
+    {
+      "id": "me.office_ext.roof_stairs_left",
+      "name": "Rooftop stair hatch left variant",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "stairs",
+        "hatch",
+        "access"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1250
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Stairs_Left."
+    },
+    {
+      "id": "me.office_ext.roof_left",
+      "name": "Flat roof left cap",
+      "category": "building",
+      "tags": [
+        "roof",
+        "modular",
+        "cap",
+        "left"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1050
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Left."
+    },
+    {
+      "id": "me.office_ext.roof_middle",
+      "name": "Flat roof middle modular",
+      "category": "building",
+      "tags": [
+        "roof",
+        "modular",
+        "cap",
+        "middle"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1050
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Middle_Modular."
+    },
+    {
+      "id": "me.office_ext.roof_right",
+      "name": "Flat roof right cap",
+      "category": "building",
+      "tags": [
+        "roof",
+        "modular",
+        "cap",
+        "right"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1050
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Right."
+    },
+    {
+      "id": "me.office_ext.glass_curtain_large",
+      "name": "Large lobby glass curtain panels",
+      "category": "building",
+      "tags": [
+        "glass",
+        "curtain",
+        "lobby",
+        "window",
+        "modern",
+        "white_frame"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Tall wide white-framed blue glass sections at top-left of sheet (lobby/storefront scale)."
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_left",
+      "name": "Dark grey facade left edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "left",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_1_Left, Building_1_Left_2."
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_middle",
+      "name": "Dark grey facade middle modular",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "middle",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_1_Middle_Modular, Building_1_Middle_Modular_2."
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_right",
+      "name": "Dark grey facade right edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "right",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_1_Right, Building_1_Right_2."
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_window",
+      "name": "Dark grey facade window modular insert",
+      "category": "building",
+      "tags": [
+        "facade",
+        "window",
+        "modular",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_1_Window_Modular."
+    },
+    {
+      "id": "me.office_ext.window_dark_grey_row",
+      "name": "Dark grey window L/M/R row set",
+      "category": "building",
+      "tags": [
+        "window",
+        "modular",
+        "row",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        270
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_1_Left/Middle/Right_Modular."
+    },
+    {
+      "id": "me.office_ext.window_shutter_dark_grey",
+      "name": "Dark grey window with shutter/AC",
+      "category": "building",
+      "tags": [
+        "window",
+        "shutter",
+        "ac",
+        "modular",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        290
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_With_Shutter_1_Modular."
+    },
+    {
+      "id": "me.office_ext.balcony_dark_grey_front",
+      "name": "Dark grey front balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "front",
+        "office",
+        "dark_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_1_Building_1, Balcony_2_Building_1."
+    },
+    {
+      "id": "me.office_ext.balcony_dark_grey_sides",
+      "name": "Dark grey side/middle balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "side",
+        "modular",
+        "office",
+        "dark_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_Left/Right/Middle_Modular_*_Building_1."
+    },
+    {
+      "id": "me.office_ext.diagonal_bottom_dark_grey",
+      "name": "Dark grey bottom diagonal footing",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "bottom",
+        "perspective",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        750
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Bottom_Diagonal_Left/Right_Building_1."
+    },
+    {
+      "id": "me.office_ext.diagonal_mid_dark_grey",
+      "name": "Dark grey mid diagonal wall strip",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "middle",
+        "perspective",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        450
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Diagonal_Middle_Modular_Left/Right_Building_1."
+    },
+    {
+      "id": "me.office_ext.diagonal_roof_dark_grey",
+      "name": "Dark grey roof diagonal cornice",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "roof",
+        "cornice",
+        "perspective",
+        "office",
+        "dark_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        400
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Diagonal_Left/Right_Building_1."
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_left",
+      "name": "Light grey facade left edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "left",
+        "office",
+        "light_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_2_Left, Building_2_Left_2."
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_middle",
+      "name": "Light grey facade middle modular",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "middle",
+        "office",
+        "light_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_2_Middle_Modular, Building_2_Middle_Modular_2."
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_right",
+      "name": "Light grey facade right edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "right",
+        "office",
+        "light_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_2_Right, Building_2_Right_2."
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_window",
+      "name": "Light grey facade window modular insert",
+      "category": "building",
+      "tags": [
+        "facade",
+        "window",
+        "modular",
+        "office",
+        "light_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_2_Window_Modular."
+    },
+    {
+      "id": "me.office_ext.window_light_grey_row",
+      "name": "Light grey window L/M/R row set",
+      "category": "building",
+      "tags": [
+        "window",
+        "modular",
+        "row",
+        "office",
+        "light_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        170,
+        420
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_2_Left/Middle/Right_Modular."
+    },
+    {
+      "id": "me.office_ext.window_shutter_light_grey",
+      "name": "Light grey window with shutter/AC",
+      "category": "building",
+      "tags": [
+        "window",
+        "shutter",
+        "ac",
+        "modular",
+        "office",
+        "light_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        190,
+        440
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_With_Shutter_2_Modular."
+    },
+    {
+      "id": "me.office_ext.balcony_light_grey_front",
+      "name": "Light grey front balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "front",
+        "office",
+        "light_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_1_Building_2, Balcony_2_Building_2."
+    },
+    {
+      "id": "me.office_ext.balcony_light_grey_sides",
+      "name": "Light grey side/middle balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "side",
+        "modular",
+        "office",
+        "light_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_Left/Right/Middle_Modular_*_Building_2."
+    },
+    {
+      "id": "me.office_ext.diagonal_bottom_light_grey",
+      "name": "Light/mid grey shared bottom diagonal footing",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "bottom",
+        "perspective",
+        "office",
+        "light_grey",
+        "mid_grey",
+        "shared"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        750
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Bottom_Diagonal_Left/Right_Building_2_And_3 (shared by styles 2+3)."
+    },
+    {
+      "id": "me.office_ext.diagonal_mid_light_grey",
+      "name": "Light/mid grey shared mid diagonal wall strip",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "middle",
+        "perspective",
+        "office",
+        "light_grey",
+        "mid_grey",
+        "shared"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        450
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Diagonal_Middle_Modular_Left/Right_Building_2_And_3 (shared by styles 2+3)."
+    },
+    {
+      "id": "me.office_ext.diagonal_roof_light_grey",
+      "name": "Light/mid grey shared roof diagonal cornice",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "roof",
+        "cornice",
+        "perspective",
+        "office",
+        "light_grey",
+        "mid_grey",
+        "shared"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        400
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Diagonal_Left/Right_Building_2_And_3 (shared by styles 2+3)."
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_left",
+      "name": "Mid grey facade left edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "left",
+        "office",
+        "mid_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        550
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_3_Left, Building_3_Left_2."
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_middle",
+      "name": "Mid grey facade middle modular",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "middle",
+        "office",
+        "mid_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        550
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_3_Middle_Modular."
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_right",
+      "name": "Mid grey facade right edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "right",
+        "office",
+        "mid_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        550
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_3_Right, Building_3_Right_2."
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_window",
+      "name": "Mid grey facade window modular insert",
+      "category": "building",
+      "tags": [
+        "facade",
+        "window",
+        "modular",
+        "office",
+        "mid_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        550
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_3_Window_Modular."
+    },
+    {
+      "id": "me.office_ext.window_mid_grey_row",
+      "name": "Mid grey window L/M/R row set",
+      "category": "building",
+      "tags": [
+        "window",
+        "modular",
+        "row",
+        "office",
+        "mid_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        570
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_3_Left/Middle/Right_Modular."
+    },
+    {
+      "id": "me.office_ext.window_shutter_mid_grey",
+      "name": "Mid grey window with shutter/AC",
+      "category": "building",
+      "tags": [
+        "window",
+        "shutter",
+        "ac",
+        "modular",
+        "office",
+        "mid_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        590
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_With_Shutter_3_Modular."
+    },
+    {
+      "id": "me.office_ext.balcony_mid_grey_front",
+      "name": "Mid grey front balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "front",
+        "office",
+        "mid_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_1_Building_3, Balcony_2_Building_3."
+    },
+    {
+      "id": "me.office_ext.balcony_mid_grey_sides",
+      "name": "Mid grey side/middle balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "side",
+        "modular",
+        "office",
+        "mid_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_Left/Right/Middle_Modular_*_Building_3."
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_left",
+      "name": "Blue-grey facade left edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "left",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_4_Left, Building_4_Left_2."
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_middle",
+      "name": "Blue-grey facade middle modular",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "middle",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_4_Middle_Modular, Building_4_Middle_Modular_2."
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_right",
+      "name": "Blue-grey facade right edge",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "right",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_4_Right, Building_4_Right_2."
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_window",
+      "name": "Blue-grey facade window modular insert",
+      "category": "building",
+      "tags": [
+        "facade",
+        "window",
+        "modular",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        700
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Building_4_Window_Modular."
+    },
+    {
+      "id": "me.office_ext.window_blue_grey_row",
+      "name": "Blue-grey window L/M/R row set",
+      "category": "building",
+      "tags": [
+        "window",
+        "modular",
+        "row",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        720
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_4_Left/Middle/Right_Modular."
+    },
+    {
+      "id": "me.office_ext.window_shutter_blue_grey",
+      "name": "Blue-grey window with shutter/AC",
+      "category": "building",
+      "tags": [
+        "window",
+        "shutter",
+        "ac",
+        "modular",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        440,
+        740
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Window_With_Shutter_4_Modular."
+    },
+    {
+      "id": "me.office_ext.balcony_blue_grey_front",
+      "name": "Blue-grey front balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "front",
+        "office",
+        "blue_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_1_Building_4, Balcony_2_Building_4."
+    },
+    {
+      "id": "me.office_ext.balcony_blue_grey_sides",
+      "name": "Blue-grey side/middle balcony modules",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "side",
+        "modular",
+        "office",
+        "blue_grey"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_Left/Right/Middle_Modular_*_Building_4."
+    },
+    {
+      "id": "me.office_ext.diagonal_bottom_blue_grey",
+      "name": "Blue-grey bottom diagonal footing",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "bottom",
+        "perspective",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        750
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Bottom_Diagonal_Left/Right_Building_4."
+    },
+    {
+      "id": "me.office_ext.diagonal_mid_blue_grey",
+      "name": "Blue-grey mid diagonal wall strip",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "middle",
+        "perspective",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        450
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Diagonal_Middle_Modular_Left/Right_Building_4."
+    },
+    {
+      "id": "me.office_ext.diagonal_roof_blue_grey",
+      "name": "Blue-grey roof diagonal cornice",
+      "category": "building",
+      "tags": [
+        "diagonal",
+        "roof",
+        "cornice",
+        "perspective",
+        "office",
+        "blue_grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        400
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Roof_Diagonal_Left/Right_Building_4."
+    },
+    {
+      "id": "me.office_ext.balcony_window_left",
+      "name": "Balcony window left",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "window",
+        "left",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_Window_Left_1-2."
+    },
+    {
+      "id": "me.office_ext.balcony_window_middle",
+      "name": "Balcony window middle modular",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "window",
+        "middle",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_Window_Middle_Modular_1-2."
+    },
+    {
+      "id": "me.office_ext.balcony_window_right",
+      "name": "Balcony window right",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "window",
+        "right",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Singles: Balcony_Window_Right_1-2."
+    },
+    {
+      "id": "me.office_ext.satellite_dish_band1",
+      "name": "Satellite dishes near example buildings",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "satellite",
+        "dish"
+      ],
+      "band": 1,
+      "y_hint": [
+        1050,
+        1200
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Dish cluster shown beside assembled Example buildings in band 1."
+    },
+    {
+      "id": "me.office_ext.solar_panel_band1",
+      "name": "Solar panels near example buildings",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "solar",
+        "panel",
+        "blue"
+      ],
+      "band": 1,
+      "y_hint": [
+        1050,
+        1200
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Paired blue solar panels beside Example buildings."
+    },
+    {
+      "id": "me.office_ext.hvac_cluster_band1",
+      "name": "HVAC/vent cluster near example buildings",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "hvac",
+        "vent",
+        "utility"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1250
+      ],
+      "surface": "roof",
+      "facing": "any",
+      "multi_tile": true,
+      "shadow_variant": "unknown",
+      "notes": "Small grey HVAC boxes clustered with Example_1/2 rooftops."
+    }
+  ],
+  "row_guide": "Band0 (y0\u2013768): large lobby glass curtains; dark/light/mid/blue-grey facade left/middle/right/window kits with matching window rows and shutter/AC windows; perspective diagonal bottom/mid/roof strips; LIME CORP + G-NERIC CORP signs; satellite dish, solar panel, roof-access cabin, air ducts, roof utility boxes. Band1 (y768\u20131520): flat roof L/M/R caps; assembled G-NERIC CORP (Example_1) and LIME CORP with fire-escape balconies (Example_2); per-style balcony front/side modules; balcony window L/M/R; rooftop dish/solar/HVAC cluster; roof stair hatches."
+}
