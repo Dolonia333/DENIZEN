@@ -76,13 +76,25 @@ def gen_grid():
 ROADS = gen_grid()
 
 
-TREE = "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png"
-LAMP = "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png"
+TREE = {
+    "me": "me.city_props.tree_in_square_planter",
+    "prefer": "Tree_9.png",
+}
+LAMP = {
+    "me": "me.city_props.lamp_ornate_double",
+    "prefer": "Street_Lamp_1.png",
+}
 # COMPLETE standalone traffic lights (pole + head + crossing sign). The
 # *_Mod_* variants are modular head pieces meant to stack on a pole — using one
-# alone renders a broken floating head. TL_1 = red, TL_2 = green.
-TLIGHT_R = "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_1.png"
-TLIGHT_G = "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_2.png"
+# alone renders a broken floating head. prefer pins the classic red/green poles.
+TLIGHT_R = {
+    "me": "me.city_props.traffic_light_pole_tall_set",
+    "prefer": "Traffic_Light_1.png",
+}
+TLIGHT_G = {
+    "me": "me.city_props.traffic_light_pole_tall_set",
+    "prefer": "Traffic_Light_2.png",
+}
 
 
 def in_slab(x, y):
@@ -126,16 +138,14 @@ def street_furniture():
             for j, px in enumerate(range(x + 48, x + w - 48, 208)):
                 for py in (y - 12, y + h + 22):      # just off each curb
                     if in_slab(px, py) and not on_road(px, py) and not near_cross(px, py, road):
-                        img = LAMP if (j % 2 == 0) else TREE
-                        out.append({"img": img, "x": px, "y": py,
-                                    "origin": "bc", "solid": True})
+                        stamp = {"x": px, "y": py, "origin": "bc", "solid": True, **(LAMP if (j % 2 == 0) else TREE)}
+                        out.append(stamp)
         else:
             for j, py in enumerate(range(y + 48, y + h - 48, 208)):
                 for px in (x - 12, x + w + 22):
                     if in_slab(px, py) and not on_road(px, py) and not near_cross(px, py, road):
-                        img = LAMP if (j % 2 == 0) else TREE
-                        out.append({"img": img, "x": px, "y": py,
-                                    "origin": "bc", "solid": True})
+                        stamp = {"x": px, "y": py, "origin": "bc", "solid": True, **(LAMP if (j % 2 == 0) else TREE)}
+                        out.append(stamp)
     return out
 
 
@@ -150,11 +160,10 @@ def traffic_control():
         for hx, hy, hw, hh in horis:
             if not (vy <= hy <= vy + vh):          # this vertical spans this cross-street
                 continue
-            for cx, cy, img in ((vx - 14, hy - 4, TLIGHT_R),
-                                (vx + vw + 14, hy + hh + 26, TLIGHT_G)):
+            for cx, cy, spec in ((vx - 14, hy - 4, TLIGHT_R),
+                                 (vx + vw + 14, hy + hh + 26, TLIGHT_G)):
                 if in_slab(cx, cy):
-                    out.append({"img": img, "x": cx, "y": cy,
-                                "origin": "bc", "solid": True})
+                    out.append({"x": cx, "y": cy, "origin": "bc", "solid": True, **spec})
     return out
 
 

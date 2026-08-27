@@ -38,6 +38,26 @@ for f in sorted(glob.glob(os.path.join(SPECS, "d*.json"))):
                 _struct_furniture.append(s)
         merged[k].extend(frag.get(k, []))
 
+# Resolve exterior catalog ids (me.* / exs.*) → img paths before footprint math.
+import sys
+sys.path.insert(0, os.path.join(DEN, "scripts"))
+from resolve_limezu_me_stamps import (  # noqa: E402
+    OUT_INDEX,
+    build_placement_index,
+    resolve_stamps,
+)
+
+if not os.path.exists(OUT_INDEX):
+    idx = build_placement_index()
+    json.dump(idx, open(OUT_INDEX, "w", encoding="utf-8"), indent=2)
+    open(OUT_INDEX, "a", encoding="utf-8").write("\n")
+
+merged["stamps"], _me_errs = resolve_stamps(merged["stamps"])
+if _me_errs:
+    print("me/exs resolve errors:", len(_me_errs))
+    for e in _me_errs[:10]:
+        print(" ", e)
+
 # Avenue connectors (old city -> D1 -> D3)
 merged["roads"] += [
     {"x": 3940, "y": 1880, "w": 160, "h": 64},
