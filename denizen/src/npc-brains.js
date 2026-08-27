@@ -3070,6 +3070,9 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
 
     // Directive inbox — prepended prominently so it can't be missed
     const directive = this._directives.get(npcName) || rt.directives.get(npcName);
+    if (directive) {
+      try { this.markDirectiveRunning(npcName); } catch (_) {}
+    }
     const directiveBlock = directive
       ? `## DIRECT ORDER FROM ${String(directive.from).toUpperCase()}\n${directive.task}\nThis is your mandatory current task. At your desk, use action run_skill with the right skill (research, github, coding-agent, etc.) — then on a later cycle set taskPhase to "finished" and save a report artifact.\n\n`
       : '';
@@ -5142,12 +5145,21 @@ ${brain.voiceAnchor || ''}`;
 
     if (decision.taskPhase === 'finished' && (this._directives.has(npcName) || rt.directives.has(npcName))) {
       const dir = this._directives.get(npcName) || rt.directives.get(npcName);
-      this._directives.delete(npcName);
-      rt.directives.delete(npcName);
-      this._savePersistedDirectives();
+      const blocked = decision.outcome === 'stuck' || decision.outcome === 'blocked';
+      try {
+        this.completeDirective(npcName, {
+          status: blocked ? 'blocked' : 'done',
+          note: decision.save || decision.message || decision.thought || null,
+          artifact: decision._artifactPath || null,
+        });
+      } catch (_) {
+        this._directives.delete(npcName);
+        rt.directives.delete(npcName);
+        this._savePersistedDirectives();
+      }
       if (decision.action !== 'report') {
         decision.action = 'report';
-        decision.target = dir.from;
+        decision.target = dir?.from;
         decision.message = decision.message || `Done — ${decision.save || 'task complete'}.`;
       }
     }
@@ -6949,9 +6961,23 @@ ${brain.voiceAnchor || ''}`;
 
   /**
    * Push a mandatory task directive from one NPC to another.
+   * Lifecycle: queued → running → done|blocked|expired
    */
   assignDirective(targetNpc, fromNpc, task, urgent = false) {
-    const entry = { from: fromNpc, task, ts: Date.now(), urgent };
+    const now = Date.now();
+    const entry = {
+      id: `dir_${now.toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+      from: fromNpc,
+      task,
+      ts: now,
+      urgent: !!urgent,
+      status: 'queued',
+      started_at: null,
+      completed_at: null,
+      expires_at: now + (Number(process.env.DENIZEN_DIRECTIVE_TTL_MS) || 36 * 60 * 60 * 1000),
+      result_note: null,
+      artifact: null,
+    };
     this._directives.set(targetNpc, entry);
     if (this._officeRuntimes) {
       for (const rt of this._officeRuntimes.values()) {
@@ -6962,36 +6988,118 @@ ${brain.voiceAnchor || ''}`;
     log.info('Directive', `${fromNpc} → ${targetNpc}: "${String(task).slice(0, 60)}"`);
     if (this.isPlayerChatBusy(targetNpc)) {
       log.info('Directive', `deferred think wake — ${targetNpc} in CEO chat`);
-      return;
+      return entry;
     }
     if (typeof this._thinkWakeFn === 'function') {
       this._thinkWakeFn(targetNpc, urgent ? 'urgent_directive' : 'directive', { urgent: true });
     }
+    return entry;
   }
 
   getDirective(npcName) {
     return this._directives.get(npcName) || null;
   }
 
+  /** Mark directive running when the local brain starts work on it. */
+  markDirectiveRunning(npcName) {
+    const entry = this._directives.get(npcName);
+    if (!entry || entry.status === 'running') return entry || null;
+    if (entry.status !== 'queued') return entry;
+    const next = { ...entry, status: 'running', started_at: Date.now() };
+    this._directives.set(npcName, next);
+    if (this._officeRuntimes) {
+      for (const rt of this._officeRuntimes.values()) {
+        if (rt.directives?.has?.(npcName)) rt.directives.set(npcName, next);
+      }
+    }
+    this._savePersistedDirectives();
+    return next;
+  }
+
   /**
-   * Clear a completed/stale directive. There was previously no way to do
-   * this at all — directives only ever got overwritten by the next one
-   * assigned to that NPC, so a one-off or abandoned task (e.g. a test
-   * directive) sat "active" indefinitely with nothing to complete it.
+   * Complete a directive with a terminal status.
+   * @param {string} npcName
+   * @param {{ status?: 'done'|'blocked'|'expired', note?: string, artifact?: string }} opts
    */
-  clearDirective(npcName) {
-    const had = this._directives.has(npcName);
+  completeDirective(npcName, opts = {}) {
+    const entry = this._directives.get(npcName);
+    if (!entry) return { ok: false, error: 'no_directive', npc: npcName };
+    const status = ['done', 'blocked', 'expired'].includes(opts.status) ? opts.status : 'done';
+    const closed = {
+      ...entry,
+      status,
+      completed_at: Date.now(),
+      result_note: opts.note != null ? String(opts.note).slice(0, 500) : entry.result_note,
+      artifact: opts.artifact != null ? String(opts.artifact).slice(0, 500) : entry.artifact,
+    };
     this._directives.delete(npcName);
     if (this._officeRuntimes) {
       for (const rt of this._officeRuntimes.values()) {
         rt.directives?.delete?.(npcName);
       }
     }
-    if (had) {
-      this._savePersistedDirectives();
-      log.info('Directive', `cleared for ${npcName}`);
+    this._savePersistedDirectives();
+    this._archiveDirective(npcName, closed);
+    log.info('Directive', `${status} for ${npcName}`);
+    try {
+      const ledger = require('./denizen-outcome-ledger');
+      ledger.appendOutcome({
+        actor: closed.from || 'mcp',
+        outcome_type: `directive.${status}`,
+        entity_type: 'npc_directive',
+        entity_key: npcName,
+        value_text: closed.result_note || closed.task,
+        value_json: {
+          directive_id: closed.id,
+          from: closed.from,
+          task: closed.task,
+          artifact: closed.artifact,
+          status,
+        },
+        source: 'complete_directive',
+        pass: status === 'done',
+      });
+    } catch (_) {}
+    return { ok: true, npc: npcName, directive: closed };
+  }
+
+  _archiveDirective(npcName, closed) {
+    try {
+      const archivePath = path.join(path.dirname(this._directivesPath), 'npc-directives-archive.jsonl');
+      fs.mkdirSync(path.dirname(archivePath), { recursive: true });
+      fs.appendFileSync(archivePath, `${JSON.stringify({ npc: npcName, ...closed, archived_at: Date.now() })}\n`);
+    } catch (_) {}
+  }
+
+  /**
+   * Clear a completed/stale directive (alias for complete done without note).
+   */
+  clearDirective(npcName) {
+    const had = this._directives.has(npcName);
+    if (!had) return false;
+    this.completeDirective(npcName, { status: 'done', note: 'cleared' });
+    return true;
+  }
+
+  /**
+   * Expire directives older than ttlMs. Returns array of { npc, directive }.
+   */
+  expireStaleDirectives(ttlMs = 36 * 60 * 60 * 1000) {
+    const now = Date.now();
+    const expired = [];
+    for (const [name, entry] of [...this._directives.entries()]) {
+      if (!entry) continue;
+      const age = now - (Number(entry.ts) || 0);
+      const pastExpiry = entry.expires_at != null && now >= Number(entry.expires_at);
+      if (age >= ttlMs || pastExpiry) {
+        const result = this.completeDirective(name, {
+          status: 'expired',
+          note: `expired after ${Math.round(age / 3600000)}h`,
+        });
+        if (result.ok) expired.push({ npc: name, directive: result.directive });
+      }
     }
-    return had;
+    return expired;
   }
 
   getAllDirectives() {
@@ -7002,6 +7110,31 @@ ${brain.voiceAnchor || ''}`;
     return out;
   }
 
+  listDirectives({ status = null, include_archived = false } = {}) {
+    const active = Object.entries(this.getAllDirectives()).map(([npc, d]) => ({
+      npc,
+      ...d,
+      active: true,
+    }));
+    let rows = active;
+    if (include_archived) {
+      try {
+        const archivePath = path.join(path.dirname(this._directivesPath), 'npc-directives-archive.jsonl');
+        if (fs.existsSync(archivePath)) {
+          const lines = fs.readFileSync(archivePath, 'utf8').split('\n').filter(Boolean).slice(-80);
+          for (const line of lines) {
+            try {
+              const row = JSON.parse(line);
+              rows.push({ ...row, active: false });
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+    if (status) rows = rows.filter((r) => r.status === status);
+    return rows;
+  }
+
   _loadPersistedDirectives() {
     try {
       if (!fs.existsSync(this._directivesPath)) return;
@@ -7010,10 +7143,17 @@ ${brain.voiceAnchor || ''}`;
       for (const [name, directive] of Object.entries(entries)) {
         if (!directive?.task) continue;
         this._directives.set(name, {
+          id: directive.id || null,
           from: String(directive.from || 'system'),
           task: String(directive.task),
           ts: Number(directive.ts) || Date.now(),
           urgent: !!directive.urgent,
+          status: directive.status || 'queued',
+          started_at: directive.started_at || null,
+          completed_at: directive.completed_at || null,
+          expires_at: directive.expires_at || null,
+          result_note: directive.result_note || null,
+          artifact: directive.artifact || null,
         });
       }
     } catch (err) {

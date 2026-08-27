@@ -19,6 +19,12 @@ describe('denizen-mcp-scopes', () => {
     assert.equal(mcpScopes.requiredScope('get_status'), 'read');
     assert.equal(mcpScopes.requiredScope('run_skill'), 'skills');
     assert.equal(mcpScopes.requiredScope('crm_draft_email'), 'crm_write');
+    assert.equal(mcpScopes.requiredScope('crm_park_deal'), 'crm_write');
+    assert.equal(mcpScopes.requiredScope('crm_working_set'), 'read');
+    assert.equal(mcpScopes.requiredScope('list_directives'), 'read');
+    assert.equal(mcpScopes.requiredScope('complete_directive'), 'delegate');
+    assert.equal(mcpScopes.requiredScope('record_outcome'), 'read');
+    assert.equal(mcpScopes.requiredScope('schedule_job'), 'delegate');
     assert.equal(mcpScopes.requiredScope('send_handoff'), 'handoff');
     assert.equal(mcpScopes.requiredScope('delegate_task'), 'delegate');
   });

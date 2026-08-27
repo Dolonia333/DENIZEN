@@ -20,11 +20,15 @@ async function saveOrgWorkspace(orgId, state, identityId, ifUpdatedAt) {
 }
 
 async function listPipeline(orgId, params = {}) {
+  const workingSet = require('./denizen-crm-working-set');
   const { state } = await loadOrgWorkspace(orgId);
   const deals = Array.isArray(state.deals) ? state.deals : [];
   const limit = Math.min(50, Math.max(1, Number(params.limit) || 20));
   const stageFilter = String(params.stage || '').trim().toLowerCase();
-  let open = deals.filter((d) => d && !/closed won|closed lost/i.test(String(d.stage || '')));
+  const includeWatchlist = params.includeWatchlist === true || params.include_watchlist === true;
+  let open = includeWatchlist
+    ? deals.filter((d) => d && !workingSet.isClosedDeal(d))
+    : deals.filter((d) => workingSet.isOpenPipelineDeal(d));
   if (stageFilter) {
     open = open.filter((d) => String(d.stage || '').toLowerCase().includes(stageFilter));
   }
@@ -32,17 +36,75 @@ async function listPipeline(orgId, params = {}) {
     id: d.id,
     title: d.title,
     contact: d.contact,
+    company: d.company,
     value: d.value,
     stage: d.stage,
+    status: d.status,
     probability: d.probability,
     health: d.health,
   }));
   const totalValue = open.reduce((s, d) => s + (Number(d.value) || 0), 0);
+  const watchCount = deals.filter((d) => workingSet.isWatchlistDeal(d)).length;
+  const empty = open.length === 0 && !(Array.isArray(state.contacts) && state.contacts.length);
   return {
-    summary: `Pipeline: ${open.length} open deal(s), ${totalValue.toLocaleString()} total value.`,
+    summary: empty
+      ? 'Working set empty — no open pursuits. Add real companies/contacts/deals; do not invent seed data.'
+      : `Working set: ${open.length} open deal(s), $${totalValue.toLocaleString()} pipeline${watchCount ? ` (${watchCount} watchlist parked)` : ''}.`,
     deals: rows,
     openCount: open.length,
     totalValue,
+    watchlistCount: watchCount,
+    empty,
+  };
+}
+
+/**
+ * Park a deal to watchlist (research / scrape) — not open pipeline, $0.
+ */
+async function parkDeal(orgId, params = {}, identityId = null) {
+  const dealId = params.dealId ?? params.deal_id ?? params.id;
+  const title = String(params.title || '').trim();
+  const reason = String(params.reason || params.parkReason || 'parked-to-watchlist').slice(0, 200);
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const deals = Array.isArray(state.deals) ? [...state.deals] : [];
+  let idx = -1;
+  if (dealId != null) idx = deals.findIndex((d) => String(d?.id) === String(dealId));
+  if (idx < 0 && title) idx = deals.findIndex((d) => String(d?.title || '').toLowerCase() === title.toLowerCase());
+  if (idx < 0) throw new Error('deal not found');
+
+  const prev = deals[idx];
+  const tags = [...new Set([...(prev.tags || []), 'watchlist', 'not-pipeline', 'parked'])];
+  const updated = {
+    ...prev,
+    status: 'watchlist',
+    stage: String(params.stage || 'Watch / Research'),
+    value: 0,
+    tags,
+    parkedAt: new Date().toISOString(),
+    parkReason: reason,
+  };
+  deals[idx] = updated;
+  await saveOrgWorkspace(orgId, { ...state, deals }, identityId, ifUpdatedAt);
+
+  try {
+    const ledger = require('./denizen-outcome-ledger');
+    ledger.appendOutcome({
+      org_id: orgId,
+      actor: params.actor || 'crm_park_deal',
+      outcome_type: 'crm.park_deal',
+      entity_type: 'deal',
+      entity_key: String(updated.id),
+      value_text: `Parked "${updated.title}" — ${reason}`,
+      value_json: { deal_id: updated.id, title: updated.title, reason, previous_stage: prev.stage },
+      source: 'crm_park_deal',
+      pass: true,
+    });
+  } catch (_) {}
+
+  return {
+    summary: `Parked deal "${updated.title}" to watchlist ($0, not pipeline).`,
+    deal: updated,
+    previousStage: prev.stage,
   };
 }
 
@@ -565,6 +627,7 @@ module.exports = {
   addContact,
   addDeal,
   updateDeal,
+  parkDeal,
   addTask,
   listTasks,
   listAtRisk,

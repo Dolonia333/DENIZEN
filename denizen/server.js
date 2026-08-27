@@ -13233,6 +13233,7 @@ startContentPipelineScheduler({
 startCrmScheduler({
   broadcastToOffice: _broadcastToOffice,
   log,
+  npcBrains,
 });
 
 // Nightly SAM.gov federal-opportunity auto-ingest (no-op until SAM_GOV_API_KEY
