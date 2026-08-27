@@ -13355,6 +13355,23 @@ server.listen(PORT, () => {
       });
       if (marketLoop?.ok) log.info('Market', `scheduler started (${marketLoop.tickMs}ms tick, US market hours)`);
     }
+
+    if (!/^(0|false|no|off)$/i.test(String(process.env.NPC_MCP_CLOUD_PATROL || '1'))) {
+      try {
+        const npcMcpPatrol = require('./src/npc-mcp-cloud-patrol-loop.js');
+        npcMcpPatrol.startNpcMcpCloudPatrol({
+          orgId: denizenDb.orgId,
+          createMcpToken: npcMcpGateway.createMcpToken,
+        }).then((r) => {
+          if (r?.ok) log.info('NpcMcpPatrol', `cloud patrol started (${r.intervalMs || 180000}ms)`);
+          else log.warn('NpcMcpPatrol', r?.reason || 'not started');
+        }).catch((err) => {
+          log.warn('NpcMcpPatrol', err?.message || err);
+        });
+      } catch (err) {
+        log.warn('NpcMcpPatrol', err?.message || err);
+      }
+    }
   }).catch(() => {});
 
   const parallel = process.env.LM_STUDIO_PARALLEL || 1;
