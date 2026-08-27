@@ -67,15 +67,34 @@ function createJelly(opts = {}) {
 
       if (skill === 'web-search' && deps.runWebSearch) {
         const broadcast = ctx.broadcast || deps.broadcast || (() => {});
+        const query = String(skillParams?.query || skillParams?.q || skillParams?.topic || '').trim();
+        const directUrl = skillParams?.directUrl || skillParams?.url || null;
+        const openOnly = skillParams?.openOnly === true;
+        // Autonomy must not "play in the browser" — openOnly is CEO chat only.
+        if (openOnly && !query && !directUrl) {
+          return {
+            ok: false,
+            error: 'web-search openOnly blocked for autonomous loops — provide a query or ask the CEO to open the browser',
+            skill: 'web-search',
+            npcName,
+          };
+        }
+        if (!query && !directUrl) {
+          return {
+            ok: false,
+            error: 'web-search requires query (or url) — empty browser opens are blocked',
+            skill: 'web-search',
+            npcName,
+          };
+        }
         deps.log?.info?.(JELLY.logTag, `${npcName} → web-search`);
         broadcast({ type: 'npc_skill_start', npcName, skill: 'web-search', skillParams, ts: Date.now() });
-        const query = skillParams?.query || skillParams?.q || skillParams?.topic || '';
         const r = await deps.runWebSearch(npcName, query, {
           broadcast,
           headless: skillParams?.headless === true,
           browserMode: skillParams?.browserMode,
-          openOnly: skillParams?.openOnly === true,
-          directUrl: skillParams?.directUrl || skillParams?.url || null,
+          openOnly: false,
+          directUrl,
           jobBoard: skillParams?.jobBoard || null,
           quiet: false,
         });

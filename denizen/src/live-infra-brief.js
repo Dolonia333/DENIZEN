@@ -33,11 +33,22 @@ function formatSnapshot({ report, directSupabase }) {
     lines.push('- Health check: no open issues at snapshot time');
   }
 
+  const fleet = Number(mesh.fleet_nodes);
+  const lmUp = !!lm.reachable;
+  if (lmUp && Number.isFinite(fleet) && fleet > 0) {
+    lines.push(
+      '- Mesh/.232: LIVE — tell users they are already connected; do not invent Desktop pairing steps.',
+    );
+  } else if (!lmUp || fleet === 0) {
+    lines.push(
+      '- Mesh/.232 down or 0 fleet nodes: On the GPU box run Denizen Desktop → pair → phone Compute/City Power: level + "Power the city". See COMPUTE_MESH.md. Then re-run health-check.',
+    );
+  }
+
   lines.push(
     '- Do NOT invent canvas-render prototype errors or past skill failures unless the CEO pasted a stack trace or a skill result says so.',
     '- Skill `(error)` in the work feed means read that output — do not guess the cause from old chat.',
     '- On Docker/NAS without .git, coding-agent writes direct-edit proposals under reports/code-reviews/ (approve copies files in).',
-    '- Mesh 0 nodes (jobs pending): On .232: run Denizen Desktop -> pair -> phone Compute/City Power: level + "Power the city" opt-in. See updated COMPUTE_MESH.md. Then research claims visibly. Monitor via health-check mesh scope.',
   );
 
   return lines.join('\n');
