@@ -37,7 +37,7 @@ const SAFE_SKILLS = new Set([
 ]);
 
 /** Skill names that are high-impact by nature when acting (not merely drafting). */
-const HIGH_SKILL_RE = /^(?:send-email|email-send|crm-send-email|deploy|cms-publish|platform-publish|job-applier)$/i;
+const HIGH_SKILL_RE = /^(?:send-email|email-send|crm-send-email|send_draft|send-draft|deploy|cms-publish|platform-publish|job-applier)$/i;
 
 /** Param keys that indicate a side-effecting action when truthy. */
 const HIGH_PARAM_KEYS = [

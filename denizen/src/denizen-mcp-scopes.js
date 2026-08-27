@@ -38,6 +38,8 @@ const TOOL_SCOPE = Object.freeze({
   record_outcome: 'read',
   run_skill: 'skills',
   crm_draft_email: 'crm_write',
+  send_draft: 'crm_write',
+  mail_policy_status: 'read',
   crm_park_deal: 'crm_write',
   send_handoff: 'handoff',
   acknowledge_handoff: 'handoff',
