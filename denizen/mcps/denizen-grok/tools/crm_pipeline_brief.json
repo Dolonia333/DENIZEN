@@ -1,6 +1,6 @@
 {
   "name": "crm_pipeline_brief",
-  "description": "Summarize CRM pipeline — deals, stages, and at-risk accounts.",
+  "description": "READ-ONLY pipeline brief grounded in the working set (not inflated open-deal counts). Watchlist RFPs are parked and not pipeline $. If empty, guides clean rebuild. Prefer crm_working_set for structured JSON.",
   "inputSchema": {
     "type": "object",
     "properties": {

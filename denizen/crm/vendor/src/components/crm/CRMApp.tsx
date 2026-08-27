@@ -46,6 +46,7 @@ import {
   MarketingTab,
   TeamTab,
   MyWorkPanel,
+  WorkingSetDashboard,
   AIProspector,
   LazyTab,
   type Board,
@@ -926,7 +927,13 @@ export default function CRMApp() {
     if (state.emailLog) setEmailLog(state.emailLog as EmailLogEntry[]);
     if (state.auditLog) setAuditLog(state.auditLog as AuditEntry[]);
     if (state.noteBoards) setNoteBoards(state.noteBoards);
-    if (state.industryConfig) setIndustryConfigRaw(state.industryConfig as IndustryConfig);
+    // Empty {} from a full reset is truthy but not a usable industry config — keep local default.
+    const ic = state.industryConfig as IndustryConfig | undefined;
+    if (ic && typeof ic === "object" && ic.id && ic.terminology && Array.isArray(ic.pipelineStages) && Array.isArray(ic.contactStatuses)) {
+      setIndustryConfigRaw(ic);
+    } else if (ic && typeof ic === "object" && Object.keys(ic).length === 0) {
+      setIndustryConfigRaw(DEFAULT_INDUSTRY_CONFIG);
+    }
     if (state.contactGroups) setContactGroups(state.contactGroups as import("./ContactGroups").ContactGroup[]);
     if (state.contactGroupMap) setContactGroupMap(state.contactGroupMap);
     if (state.crmQuotas) setCrmQuotas(state.crmQuotas as Quota[]);
@@ -1105,29 +1112,42 @@ export default function CRMApp() {
         </h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text2 }}>{role.blurb}</p>
       </div>
-      <MyWorkPanel
-        userName={denizenProfile.name}
-        deals={deals}
-        tasks={tasks}
-        tickets={supportTickets}
-        onNavigate={handleNavigate}
-      />
-      <RoleDashboard
-        roleId={activeRole}
-        contacts={contacts}
-        deals={deals}
-        tasks={tasks}
-        notes={notes}
-        meetings={meetings}
-        goals={goals}
-        auditLog={auditLog}
-        emailLog={emailLog}
-        sequences={sequences}
-        sequenceEnrollments={sequenceEnrollments}
-        submissions={submissions}
-        companies={companies}
-        onNavigate={handleNavigate}
-      />
+      {(activeRole === "me" || activeRole === "exec") && (
+        <WorkingSetDashboard
+          contacts={contacts}
+          deals={deals}
+          tasks={tasks}
+          companies={companies}
+          onNavigate={handleNavigate}
+        />
+      )}
+      {activeRole !== "me" && (
+        <MyWorkPanel
+          userName={denizenProfile.name}
+          deals={deals}
+          tasks={tasks}
+          tickets={supportTickets}
+          onNavigate={handleNavigate}
+        />
+      )}
+      {activeRole !== "me" && (
+        <RoleDashboard
+          roleId={activeRole}
+          contacts={contacts}
+          deals={deals}
+          tasks={tasks}
+          notes={notes}
+          meetings={meetings}
+          goals={goals}
+          auditLog={auditLog}
+          emailLog={emailLog}
+          sequences={sequences}
+          sequenceEnrollments={sequenceEnrollments}
+          submissions={submissions}
+          companies={companies}
+          onNavigate={handleNavigate}
+        />
+      )}
     </div>
   );
 

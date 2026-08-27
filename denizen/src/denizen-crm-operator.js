@@ -5,8 +5,10 @@
  * Full UI docs: denizen/crm/USER_GUIDE.md
  */
 
+const crmWorkingSet = require('./denizen-crm-working-set');
+
 const CRM_TABS = [
-  { id: 'dashboard', label: 'Dashboard', hint: 'KPIs, follow-ups, at-risk, goals' },
+  { id: 'dashboard', label: 'Dashboard', hint: 'My Board working set, KPIs, follow-ups' },
   { id: 'contacts', label: 'Contacts', hint: 'People, groups, import/export' },
   { id: 'sales', label: 'Sales', sub: ['leads', 'pipeline', 'hub', 'quotas'], hint: 'Pipeline kanban, lead scores, rep performance' },
   { id: 'schedule', label: 'Schedule', sub: ['tasks', 'calendar', 'interactions'], hint: 'Tasks, meetings, Google/Outlook sync' },
@@ -31,8 +33,8 @@ const CRM_TABS = [
 const SKILL_GROUPS = {
   setup: ['crm-setup-wizard', 'crm-setup-status', 'crm-apply-industry', 'crm-update-profile', 'crm-get-intake-link', 'crm-invite-teammate'],
   intake: ['crm-qualify-submission', 'crm-intake-to-pipeline', 'crm-generate-quote', 'crm-portal-link', 'crm-list-quotes'],
-  pipeline: ['crm-list-pipeline', 'crm-add-deal', 'crm-update-deal', 'crm-move-deal', 'crm-mark-deal-outcome', 'crm-save-at-risk-deal', 'crm-qualify-deal', 'crm-at-risk', 'crm-pipeline-brief'],
-  contacts: ['crm-add-contact', 'crm-update-contact', 'crm-enrich-contact', 'crm-dedupe-contacts', 'crm-import-contacts', 'crm-add-company', 'crm-link-company', 'crm-list-companies'],
+  pipeline: ['crm-working-set', 'crm-list-pipeline', 'crm-add-deal', 'crm-update-deal', 'crm-move-deal', 'crm-mark-deal-outcome', 'crm-save-at-risk-deal', 'crm-qualify-deal', 'crm-at-risk', 'crm-pipeline-brief'],
+  contacts: ['crm-list-contacts', 'crm-add-contact', 'crm-update-contact', 'crm-enrich-contact', 'crm-dedupe-contacts', 'crm-import-contacts', 'crm-add-company', 'crm-link-company', 'crm-list-companies', 'crm-capture'],
   comms: ['crm-draft-email', 'crm-draft-followup', 'crm-enroll-sequence', 'crm-add-sequence', 'crm-add-email-template', 'crm-schedule-followup', 'crm-add-note'],
   calendar: ['crm-calendar-status', 'crm-sync-calendar', 'crm-schedule-meeting', 'crm-list-meetings'],
   ops: ['crm-add-task', 'crm-list-tasks', 'crm-add-ticket', 'crm-list-tickets', 'crm-add-automation', 'crm-list-automations'],
@@ -45,6 +47,13 @@ function formatRunSkillLine() {
   return `denizen-data CRM skills: ${ALL_CRM_SKILLS.join(', ')}. Use [RUN_SKILL:skill-name:{"param":"value"}] or natural language — server infers the skill. Open CRM at /crm/ (Phone app). Wrong NPC → defer to skill owner.`;
 }
 
+function formatLocalChecklist() {
+  return [
+    'CRM local/slow checklist:',
+    ...crmWorkingSet.LOCAL_CHECKLIST,
+  ].join(' ');
+}
+
 function formatTabGuide(maxTabs = 8) {
   return CRM_TABS.slice(0, maxTabs).map((t) => `${t.label} (${t.id}): ${t.hint}`).join('; ');
 }
@@ -55,6 +64,9 @@ function formatOperatorBlock(npcName) {
     .join('\n');
   return [
     '## Meridian CRM operator map',
+    formatLocalChecklist(),
+    `Philosophy: ${crmWorkingSet.PHILOSOPHY}`,
+    'Start with crm-working-set (or MCP crm_working_set / crm://working-set).',
     formatRunSkillLine(),
     `Tabs: ${formatTabGuide(10)}…`,
     'Skill groups:',
@@ -64,7 +76,10 @@ function formatOperatorBlock(npcName) {
 }
 
 function getOperatorHint(maxLen = 600) {
-  const line = formatRunSkillLine();
+  const line = [
+    formatLocalChecklist(),
+    'Prefer crm-working-set before writes. Watchlist ≠ pipeline $. Empty board OK.',
+  ].join(' ');
   return line.length > maxLen ? `${line.slice(0, maxLen - 3)}…` : line;
 }
 
@@ -73,6 +88,7 @@ module.exports = {
   SKILL_GROUPS,
   ALL_CRM_SKILLS,
   formatRunSkillLine,
+  formatLocalChecklist,
   formatTabGuide,
   formatOperatorBlock,
   getOperatorHint,

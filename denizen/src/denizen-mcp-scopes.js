@@ -24,6 +24,7 @@ const TOOL_SCOPE = Object.freeze({
   list_pending_handoffs: 'read',
   team_standup: 'read',
   crm_pipeline_brief: 'read',
+  crm_working_set: 'read',
   business_context_brief: 'read',
   crm_list_tasks: 'read',
   get_market_quote: 'read',
