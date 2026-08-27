@@ -1,0 +1,18 @@
+{
+  "sheet": "16_Office",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.office_ext.sign_lime_corp",
+    "2": "me.office_ext.sign_generic_corp",
+    "3": "me.office_ext.balcony_mid_grey_front",
+    "4": "me.office_ext.balcony_mid_grey_front",
+    "5": "me.office_ext.balcony_light_grey_front",
+    "6": "me.office_ext.balcony_light_grey_front",
+    "7": "me.office_ext.balcony_blue_grey_front",
+    "8": "me.office_ext.balcony_blue_grey_front",
+    "9": "me.office_ext.balcony_dark_grey_front",
+    "10": "me.office_ext.balcony_dark_grey_front",
+    "11": "me.office_ext.building_lime_corp",
+    "12": "me.office_ext.building_generic_corp"
+  }
+}

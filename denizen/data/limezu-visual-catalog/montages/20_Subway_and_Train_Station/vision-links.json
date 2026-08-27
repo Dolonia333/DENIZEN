@@ -1,0 +1,27 @@
+{
+  "sheet": "20_Subway_and_Train_Station",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.subway.monitor_blank",
+    "2": "me.subway.control_desk_set",
+    "3": "me.subway.crack_set",
+    "4": "me.subway.crack_set",
+    "5": "me.subway.crack_set",
+    "6": "me.subway.crack_set",
+    "7": "me.subway.crack_set",
+    "8": "me.subway.poster_set",
+    "9": "me.subway.poster_set",
+    "10": "me.subway.poster_set",
+    "11": "me.subway.guitar_busker_set",
+    "12": "me.subway.trash_cans_pressed",
+    "13": "me.subway.trash_cans_pressed",
+    "14": "me.subway.trash_cans_pressed",
+    "15": "me.subway.guitar_busker_set",
+    "16": "me.subway.trash_bags",
+    "17": "me.subway.trash_bags",
+    "18": "me.subway.mattress_set",
+    "19": "me.subway.guitar_busker_set",
+    "20": "me.subway.cardboard_box",
+    "21": "me.subway.crack_set"
+  }
+}

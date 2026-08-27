@@ -1,0 +1,29 @@
+{
+  "sheet": "23_MIlitary_Base",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.military.quonset_tall_closed",
+    "2": "me.military.boom_gate_extended",
+    "3": "me.military.barrier_boom",
+    "4": "me.military.boom_gate_segments",
+    "5": "me.military.boom_gate_segments",
+    "6": "me.military.bunker_entrance_building",
+    "7": "me.military.tire_stacks",
+    "8": "me.military.tire_stacks",
+    "9": "me.military.tire_stacks",
+    "10": "me.military.training_dummy",
+    "11": "me.military.training_dummy",
+    "12": "me.military.training_dummy",
+    "13": "me.military.training_dummy",
+    "14": "me.military.shooting_target",
+    "15": "me.military.shooting_target",
+    "16": "me.military.bunker_base_props",
+    "17": "me.military.single_bed",
+    "18": "me.military.single_bed",
+    "19": "me.military.single_bed",
+    "20": "me.military.single_bed",
+    "21": "me.military.mine",
+    "22": "me.military.mine",
+    "23": "me.military.mine"
+  }
+}
