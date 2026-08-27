@@ -65,6 +65,7 @@ const ACTIONS = new Set([
   'crm-mark-deal-outcome',
   'crm-generate-quote',
   'crm-pipeline-brief',
+  'crm-working-set',
   'business-context-brief',
   'crm-dedupe-contacts',
   'crm-audit-workspace',
@@ -192,6 +193,8 @@ async function runAction(action, { npcName, params, config }) {
       return crmGenerateQuote(config, params);
     case 'crm-pipeline-brief':
       return crmPipelineBrief(config, params);
+    case 'crm-working-set':
+      return crmWorkingSetBrief(config, params);
     case 'business-context-brief':
       return businessContextBriefAction(config, params);
     case 'crm-dedupe-contacts':
@@ -1122,6 +1125,12 @@ async function crmPipelineBrief(config, params) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
   return crmSkills.pipelineBrief(orgId, params);
+}
+
+async function crmWorkingSetBrief(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.workingSetBrief(orgId, params);
 }
 
 async function businessContextBriefAction(config, params) {

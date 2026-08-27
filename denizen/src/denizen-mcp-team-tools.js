@@ -23,7 +23,7 @@ const _mcpPresenceBySession = new Map();
 const MCP_PRESENCE_MAX = 5000;
 
 /** Display-name patterns for ephemeral probe / e2e / health sessions — hide from roster. */
-const PROBE_NAME_RE = /^(test\s*user|testuser|probe|health\s*check|healthcheck|e2e|cypress|playwright|load\s*test|smoke\s*test)(\b|[_\-\d]|$)/i;
+const PROBE_NAME_RE = /^(\[purged\]\s*)?(test\s*user|testuser|probe|health\s*check|healthcheck|e2e|cypress|playwright|load\s*test|smoke\s*test)(\b|[_\-\d]|$)/i;
 
 const TEAM_TOOL_DEFINITIONS = [
   {
@@ -153,6 +153,7 @@ function presenceBucket(lastUsedAt) {
 function isProbeSessionName(displayName) {
   const name = String(displayName || '').trim();
   if (!name) return false;
+  if (/^\[purged\]/i.test(name)) return true;
   return PROBE_NAME_RE.test(name);
 }
 

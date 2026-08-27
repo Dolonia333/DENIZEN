@@ -269,12 +269,16 @@ function opportunityToDeal(opp, deals, rfpId, prob) {
     id: nextDealId(deals),
     title: (opp.title || opp.solicitationNumber || 'SAM.gov opportunity').slice(0, 300),
     contact: String(opp.contactName || opp.agency || '').slice(0, 200),
-    value: 0,                                    // dollar value unknown from search
-    stage: 'RFP Released',                       // real GovCon pipeline stage
-    probability: (prob != null && Number.isFinite(prob)) ? Math.round(prob * 100) : 30,
+    value: 0,                                    // dollar value unknown from search — never invent
+    // Scrape ingest lands on watchlist, NOT My Board / open pipeline.
+    // Promote only after a human contact + next-verb task exist.
+    status: 'watchlist',
+    stage: 'Watch / Research',
+    probability: (prob != null && Number.isFinite(prob)) ? Math.round(prob * 100) : 0,
     closeDate: due || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
     daysInStage: 0,
     health: 'good',
+    tags: ['federal-rfp', 'sam-scrape', 'watchlist', 'not-pipeline'],
     // custom fields (survive sanitizeState) — traceability + dedup
     source: 'sam_gov',
     samGovId: samDedupId(opp),
