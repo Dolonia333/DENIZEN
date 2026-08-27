@@ -13,6 +13,17 @@ let _deps = {};
 /** MCP last_used within this window counts as "online via AI client". */
 const MCP_ACTIVE_MS = Number(process.env.DENIZEN_MCP_PRESENCE_MS || 15 * 60 * 1000);
 
+/**
+ * Process-local MCP presence — touched on every authenticated MCP tool call.
+ * Avoids depending solely on denizen_list_mcp_tokens (capped / created_at order),
+ * so an active Grok/Cursor session always counts as mcp_online.
+ */
+const _mcpPresenceBySession = new Map();
+const MCP_PRESENCE_MAX = 5000;
+
+/** Display-name patterns for ephemeral probe / e2e / health sessions — hide from roster. */
+const PROBE_NAME_RE = /^(test\s*user|testuser|probe|health\s*check|healthcheck|e2e|cypress|playwright|load\s*test|smoke\s*test)(\b|[_\-\d]|$)/i;
+
 const TEAM_TOOL_DEFINITIONS = [
   {
     name: 'list_team',
@@ -98,6 +109,36 @@ function requireSession(scope) {
   return null;
 }
 
+/** Record MCP activity for a visitor session (call on every MCP tools/call). */
+function touchMcpPresence(sessionId, at = Date.now()) {
+  const sid = String(sessionId || '').trim();
+  if (!sid) return null;
+  const ts = typeof at === 'number' && Number.isFinite(at) ? at : Date.parse(at);
+  const ms = Number.isFinite(ts) ? ts : Date.now();
+  const prev = _mcpPresenceBySession.get(sid);
+  if (!prev || ms >= prev) _mcpPresenceBySession.set(sid, ms);
+  if (_mcpPresenceBySession.size > MCP_PRESENCE_MAX) {
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    for (const [k, v] of _mcpPresenceBySession) {
+      if (v < cutoff) _mcpPresenceBySession.delete(k);
+    }
+    while (_mcpPresenceBySession.size > MCP_PRESENCE_MAX) {
+      const oldest = _mcpPresenceBySession.keys().next().value;
+      _mcpPresenceBySession.delete(oldest);
+    }
+  }
+  return new Date(ms).toISOString();
+}
+
+function getMcpPresenceAt(sessionId) {
+  const ms = _mcpPresenceBySession.get(String(sessionId || '').trim());
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+
+function clearMcpPresenceForTests() {
+  _mcpPresenceBySession.clear();
+}
+
 function presenceBucket(lastUsedAt) {
   if (!lastUsedAt) return null;
   const ts = Date.parse(lastUsedAt);
@@ -108,6 +149,91 @@ function presenceBucket(lastUsedAt) {
   return 'stale';
 }
 
+function isProbeSessionName(displayName) {
+  const name = String(displayName || '').trim();
+  if (!name) return false;
+  return PROBE_NAME_RE.test(name);
+}
+
+function normalizeIdentityKey(tm) {
+  if (tm?.identity_id) return `id:${tm.identity_id}`;
+  const name = String(tm?.display_name || '').trim().toLowerCase();
+  if (name) return `name:${name}`;
+  return `session:${tm?.session_id || 'unknown'}`;
+}
+
+function newerIso(a, b) {
+  const ta = Date.parse(a || '');
+  const tb = Date.parse(b || '');
+  if (!Number.isFinite(ta)) return b || a || null;
+  if (!Number.isFinite(tb)) return a || b || null;
+  return ta >= tb ? a : b;
+}
+
+function presenceRank(tm) {
+  if (tm?.online) return 3;
+  if (tm?.mcp_presence === 'recent') return 2;
+  if (tm?.mcp_presence === 'stale') return 1;
+  return 0;
+}
+
+/** Drop probe/test clones; keep one row per human identity (best presence wins). */
+function collapseRosterByIdentity(teammates, { includeProbes = false } = {}) {
+  const filtered = [];
+  let prunedProbeCount = 0;
+  for (const tm of teammates || []) {
+    if (!includeProbes && isProbeSessionName(tm.display_name) && !tm.is_you) {
+      prunedProbeCount += 1;
+      continue;
+    }
+    filtered.push(tm);
+  }
+
+  const byKey = new Map();
+  for (const tm of filtered) {
+    const key = normalizeIdentityKey(tm);
+    const prev = byKey.get(key);
+    if (!prev) {
+      byKey.set(key, {
+        ...tm,
+        sessions_collapsed: 1,
+        session_ids: tm.session_id ? [tm.session_id] : [],
+      });
+      continue;
+    }
+    const sessionIds = new Set([...(prev.session_ids || []), tm.session_id].filter(Boolean));
+    const preferNew = presenceRank(tm) > presenceRank(prev)
+      || (presenceRank(tm) === presenceRank(prev)
+        && Date.parse(tm.last_mcp_at || '') > Date.parse(prev.last_mcp_at || ''));
+    const winner = preferNew ? tm : prev;
+    const loser = preferNew ? prev : tm;
+    byKey.set(key, {
+      ...winner,
+      online: !!(winner.online || loser.online),
+      ws_online: !!(winner.ws_online || loser.ws_online),
+      mcp_online: !!(winner.mcp_online || loser.mcp_online),
+      last_mcp_at: newerIso(winner.last_mcp_at, loser.last_mcp_at),
+      mcp_presence: presenceBucket(newerIso(winner.last_mcp_at, loser.last_mcp_at)),
+      mcp_clients: [...new Set([...(winner.mcp_clients || []), ...(loser.mcp_clients || [])])],
+      sessions_collapsed: (prev.sessions_collapsed || 1) + 1,
+      session_ids: [...sessionIds],
+      is_you: !!(winner.is_you || loser.is_you),
+    });
+    const merged = byKey.get(key);
+    if (merged.ws_online && merged.mcp_online) merged.presence = 'office+ai';
+    else if (merged.ws_online) merged.presence = 'office';
+    else if (merged.mcp_online) merged.presence = 'ai';
+    else if (merged.mcp_presence === 'recent') merged.presence = 'recent';
+    else merged.presence = merged.online ? 'ai' : 'offline';
+  }
+
+  const collapsed = [...byKey.values()].sort((a, b) => {
+    if (a.is_you !== b.is_you) return a.is_you ? -1 : 1;
+    return presenceRank(b) - presenceRank(a);
+  });
+  return { teammates: collapsed, pruned_probe_count: prunedProbeCount };
+}
+
 function inferClientType(token) {
   const label = String(token?.label || '').toLowerCase();
   const meta = token?.metadata || {};
@@ -115,6 +241,7 @@ function inferClientType(token) {
   if (client.includes('chatgpt') || label.includes('chatgpt')) return 'chatgpt';
   if (client.includes('cursor') || label.includes('cursor')) return 'cursor';
   if (client.includes('claude') || label.includes('claude')) return 'claude';
+  if (client.includes('grok') || label.includes('grok')) return 'grok';
   if (label.includes('team')) return 'team';
   if (label) return label.slice(0, 32);
   return 'mcp';
@@ -135,6 +262,22 @@ async function loadOrgMcpTokens(scope) {
   return [];
 }
 
+function pickBestLastMcpAt(...candidates) {
+  let best = null;
+  let bestAge = Infinity;
+  for (const raw of candidates) {
+    if (!raw) continue;
+    const ts = Date.parse(raw);
+    if (!Number.isFinite(ts)) continue;
+    const age = Date.now() - ts;
+    if (age < bestAge) {
+      bestAge = age;
+      best = typeof raw === 'string' ? raw : new Date(ts).toISOString();
+    }
+  }
+  return best;
+}
+
 function enrichTeammatesWithMcpPresence(teammates, tokens, onlineSet) {
   const bySession = new Map();
   for (const tok of tokens || []) {
@@ -149,7 +292,7 @@ function enrichTeammatesWithMcpPresence(teammates, tokens, onlineSet) {
     const sid = tm.session_id;
     const wsOnline = !!(onlineSet && onlineSet.has(sid));
     const sessionTokens = bySession.get(sid) || [];
-    let lastMcpAt = null;
+    let lastMcpFromTokens = null;
     let bestAge = Infinity;
     const clients = new Set();
     for (const tok of sessionTokens) {
@@ -157,9 +300,10 @@ function enrichTeammatesWithMcpPresence(teammates, tokens, onlineSet) {
       const ts = Date.parse(tok.last_used_at || '');
       if (Number.isFinite(ts) && Date.now() - ts < bestAge) {
         bestAge = Date.now() - ts;
-        lastMcpAt = tok.last_used_at;
+        lastMcpFromTokens = tok.last_used_at;
       }
     }
+    const lastMcpAt = pickBestLastMcpAt(lastMcpFromTokens, getMcpPresenceAt(sid), tm.last_mcp_at);
     const mcpBucket = presenceBucket(lastMcpAt);
     const mcpOnline = mcpBucket === 'active';
     let presence = 'offline';
@@ -181,9 +325,41 @@ function enrichTeammatesWithMcpPresence(teammates, tokens, onlineSet) {
   });
 }
 
+async function resolveSelfTeammate(scope) {
+  const visitor = _deps.denizenVisitor;
+  let displayName = null;
+  let identityId = null;
+  let npcKey = scope.npc_key && scope.npc_key !== '_team' ? scope.npc_key : null;
+  let assistantName = null;
+  if (visitor?.getSession) {
+    try {
+      const session = await visitor.getSession(scope.session_id);
+      displayName = session?.display_name || null;
+      identityId = session?.identity_id || null;
+    } catch (_) { /* ignore */ }
+  }
+  if (visitor?.getAssistant && !npcKey) {
+    try {
+      const asst = await visitor.getAssistant(scope.session_id);
+      npcKey = asst?.npc_key || npcKey;
+      assistantName = asst?.assistant_name || null;
+    } catch (_) { /* ignore */ }
+  }
+  return {
+    session_id: scope.session_id,
+    display_name: displayName || 'You',
+    identity_id: identityId,
+    npc_key: npcKey,
+    assistant_name: assistantName,
+    is_you: true,
+  };
+}
+
 async function toolListTeam(scope) {
   const err = requireSession(scope);
   if (err) return err;
+  // Always stamp the caller's MCP presence so standup/list_team itself counts as online.
+  touchMcpPresence(scope.session_id);
   const visitor = _deps.denizenVisitor;
   if (!visitor?.listTeammatesWithPresence) {
     return { ok: false, error: 'visitor module not configured' };
@@ -193,9 +369,16 @@ async function toolListTeam(scope) {
     : null;
   const onlineSet = online instanceof Set ? online : new Set(online || []);
   const raw = await visitor.listTeammatesWithPresence(scope.session_id, onlineSet);
+  const selfRow = await resolveSelfTeammate(scope);
+  const withSelf = [
+    selfRow,
+    ...(raw || []).filter((tm) => tm.session_id !== scope.session_id),
+  ];
   const tokens = await loadOrgMcpTokens(scope);
-  const teammates = enrichTeammatesWithMcpPresence(raw, tokens, onlineSet);
+  const enriched = enrichTeammatesWithMcpPresence(withSelf, tokens, onlineSet);
+  const { teammates, pruned_probe_count: prunedProbeCount } = collapseRosterByIdentity(enriched);
   const onlineCount = teammates.filter((t) => t.online).length;
+  const rawCount = withSelf.length;
   return {
     ok: true,
     org_slug: scope.org_slug,
@@ -203,10 +386,13 @@ async function toolListTeam(scope) {
     your_session_id: scope.session_id,
     teammates,
     count: teammates.length,
+    raw_session_count: rawCount,
+    pruned_probe_count: prunedProbeCount,
     online_count: onlineCount,
     presence_hint:
       'online = in office (WS) and/or AI client used MCP in the last '
-      + `${Math.round(MCP_ACTIVE_MS / 60000)} minutes`,
+      + `${Math.round(MCP_ACTIVE_MS / 60000)} minutes; roster collapsed by identity; `
+      + 'probe/TestUser/HealthCheck sessions filtered',
   };
 }
 
@@ -425,6 +611,8 @@ async function toolTeamStandup(scope, args = {}) {
     team: {
       count: team.count || 0,
       online_count: team.online_count || 0,
+      raw_session_count: team.raw_session_count || team.count || 0,
+      pruned_probe_count: team.pruned_probe_count || 0,
       teammates: team.teammates || [],
       presence_hint: team.presence_hint,
     },
@@ -502,6 +690,7 @@ function isTeamTool(name) {
 }
 
 async function callTool(scope, name, args) {
+  if (scope?.session_id) touchMcpPresence(scope.session_id);
   switch (name) {
     case 'list_team': return toolListTeam(scope, args);
     case 'send_handoff': return toolSendHandoff(scope, args);
@@ -520,5 +709,10 @@ module.exports = {
   callTool,
   buildStatusExtras,
   enrichTeammatesWithMcpPresence,
+  collapseRosterByIdentity,
+  isProbeSessionName,
+  touchMcpPresence,
+  getMcpPresenceAt,
+  clearMcpPresenceForTests,
   MCP_ACTIVE_MS,
 };
