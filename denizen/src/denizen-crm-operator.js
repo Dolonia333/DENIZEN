@@ -31,7 +31,7 @@ const CRM_TABS = [
 const SKILL_GROUPS = {
   setup: ['crm-setup-wizard', 'crm-setup-status', 'crm-apply-industry', 'crm-update-profile', 'crm-get-intake-link', 'crm-invite-teammate'],
   intake: ['crm-qualify-submission', 'crm-intake-to-pipeline', 'crm-generate-quote', 'crm-portal-link', 'crm-list-quotes'],
-  pipeline: ['crm-list-pipeline', 'crm-add-deal', 'crm-update-deal', 'crm-move-deal', 'crm-mark-deal-outcome', 'crm-save-at-risk-deal', 'crm-qualify-deal', 'crm-at-risk', 'crm-pipeline-brief'],
+  pipeline: ['crm-working-set', 'crm-list-pipeline', 'crm-add-deal', 'crm-update-deal', 'crm-move-deal', 'crm-mark-deal-outcome', 'crm-save-at-risk-deal', 'crm-qualify-deal', 'crm-at-risk', 'crm-pipeline-brief'],
   contacts: ['crm-add-contact', 'crm-update-contact', 'crm-enrich-contact', 'crm-dedupe-contacts', 'crm-import-contacts', 'crm-add-company', 'crm-link-company', 'crm-list-companies'],
   comms: ['crm-draft-email', 'crm-draft-followup', 'crm-enroll-sequence', 'crm-add-sequence', 'crm-add-email-template', 'crm-schedule-followup', 'crm-add-note'],
   calendar: ['crm-calendar-status', 'crm-sync-calendar', 'crm-schedule-meeting', 'crm-list-meetings'],

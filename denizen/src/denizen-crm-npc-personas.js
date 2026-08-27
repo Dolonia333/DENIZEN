@@ -8,6 +8,7 @@
 const CRM_READ_SKILLS_LIST = [
   'crm-summary', 'crm-setup-status', 'crm-list-pipeline', 'crm-list-tasks', 'crm-at-risk',
   'crm-list-industries', 'crm-list-tickets', 'crm-get-intake-link', 'crm-pipeline-brief',
+  'crm-working-set',
   'business-context-brief',
   'crm-recommend-package', 'crm-qualify-deal', 'crm-enrich-contact', 'crm-audit-workspace',
   'crm-export-snapshot', 'crm-draft-followup', 'intake-triage', 'lead-monitor',
@@ -78,6 +79,7 @@ const SKILL_OWNERS = {
   'crm-audit-workspace': 'Pier',
   'crm-export-snapshot': 'Pier',
   'crm-pipeline-brief': 'Abby',
+  'crm-working-set': 'Abby',
   'business-context-brief': 'Marcus',
   'crm-setup-wizard': 'Sarah',
   'crm-draft-followup': 'Roki',
@@ -293,6 +295,10 @@ function inferCrmAction(message) {
     return { skill: 'business-context-brief', params: params(), source: 'infer-crm-business' };
   }
 
+  if (/\b(my board|working.?set|live deals|open pursuits)\b/i.test(msg)
+    || (/\b(pipeline|crm|board)\b/i.test(msg) && /\b(empty|clean|watchlist|park)\b/i.test(msg))) {
+    return { skill: 'crm-working-set', params: params(), source: 'infer-crm' };
+  }
   if (/\b(pipeline|crm)\b.*\bbrief\b/i.test(msg) || /\bbrief\b.*\b(pipeline|crm)\b/i.test(msg)) {
     return { skill: 'crm-pipeline-brief', params: params(), source: 'infer-crm' };
   }
