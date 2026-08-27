@@ -104,6 +104,12 @@ const TEAM_RESOURCES = [
     description: 'Local NPC consults awaiting Grok/Claude replies (from telemetry self-triggers + mesh job)',
     mimeType: 'application/json',
   },
+  {
+    uri: 'supervisor://inbox',
+    name: 'cloud_supervisor_inbox',
+    description: 'Hallucination / loop / skill-failure events for cloud mentors guiding local LM NPCs',
+    mimeType: 'application/json',
+  },
 ];
 
 let _deps = {};
@@ -261,6 +267,10 @@ async function readResource(scope, uri) {
   if (uri === 'team://cursor-work') {
     const queue = await mcpCursorTools.callTool(scope, 'list_cursor_work', { status: 'pending', limit: 25 });
     return JSON.stringify(queue, null, 2);
+  }
+  if (uri === 'supervisor://inbox') {
+    const inbox = await mcpTeamTools.callTool(scope, 'cloud_supervisor_inbox', { limit: 40 });
+    return JSON.stringify(inbox, null, 2);
   }
   if (mcpResources.canReadTelemetry(scope, uri)) {
     // Covers fleet telemetry, grok consult queue, and mentor dialogues (scope-checked per URI).

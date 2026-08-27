@@ -13372,6 +13372,34 @@ server.listen(PORT, () => {
         log.warn('NpcMcpPatrol', err?.message || err);
       }
     }
+
+    if (!/^(0|false|no|off)$/i.test(String(process.env.NPC_MCP_CLOUD_SUPERVISOR || '1'))) {
+      try {
+        const supervisor = require('./src/npc-mcp-cloud-supervisor-loop.js');
+        const r = supervisor.startNpcMcpCloudSupervisor({
+          npcBrains,
+          announceInOffice: (payload) => {
+            try {
+              _agentBroadcast({
+                type: 'npc_response',
+                npcName: payload?.npcName || 'Grok',
+                fromName: 'Cloud supervisor',
+                text: payload?.message || payload?.text || '',
+                turn: 1,
+                ts: Date.now(),
+              });
+            } catch (_) {}
+          },
+          refreshNpcMemories: (name) => {
+            try { npcBrains.refreshDbMemories?.(name); } catch (_) {}
+          },
+        });
+        if (r?.ok) log.info('NpcMcpSupervisor', `cloud→local guide started (${r.intervalMs || 120000}ms)`);
+        else log.warn('NpcMcpSupervisor', r?.reason || 'not started');
+      } catch (err) {
+        log.warn('NpcMcpSupervisor', err?.message || err);
+      }
+    }
   }).catch(() => {});
 
   const parallel = process.env.LM_STUDIO_PARALLEL || 1;

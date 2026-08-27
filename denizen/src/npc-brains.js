@@ -1531,6 +1531,12 @@ class NpcBrainManager {
           message: 'same decision repeated without progress'
         });
       }
+      try {
+        require('./npc-cloud-supervisor-inbox').recordChronos(npcName, {
+          action: decision.action,
+          message: 'same decision repeated without progress',
+        });
+      } catch (_) {}
       // Also reset cycles or force rethink hint
       if (this._thinkCycles) this._thinkCycles[npcName] = 0;
     }
@@ -5023,6 +5029,12 @@ ${brain.voiceAnchor || ''}`;
           hallucinationGuard.check({ text: claimText, evidence, npc: npcName }).then(res => {
             if (res.flagged.length) {
               this._pendingGrounding.set(npcName, res.note);
+              try {
+                require('./npc-cloud-supervisor-inbox').recordHallucination(
+                  npcName,
+                  res.flagged.map((f) => ({ text: f.text, reason: f.reason })),
+                );
+              } catch (_) {}
               if (_broadcastFn) {
                 try {
                   _broadcastFn({ type: 'npc_hallucination_flag', npcName,

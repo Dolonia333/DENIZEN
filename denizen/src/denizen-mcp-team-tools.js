@@ -88,6 +88,20 @@ const TEAM_TOOL_DEFINITIONS = [
       },
     },
   },
+  {
+    name: 'cloud_supervisor_inbox',
+    description:
+      'Read the cloud→local supervisor inbox: hallucination flags, chronos loops, skill failures. '
+      + 'Free-tier Grok/ChatGPT/Claude can poll this, then assign_task / update_memory / mentor_* '
+      + 'to guide local LM Studio NPCs that keep doing the tool work.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'Max open events (default 25)' },
+        include_handled: { type: 'boolean', description: 'Include already-handled events (default false)' },
+      },
+    },
+  },
 ];
 
 function configure(deps = {}) {
@@ -796,6 +810,14 @@ async function callTool(scope, name, args) {
     case 'list_pending_handoffs': return toolListPendingHandoffs(scope, args);
     case 'acknowledge_handoff': return toolAcknowledgeHandoff(scope, args);
     case 'team_standup': return toolTeamStandup(scope, args);
+    case 'cloud_supervisor_inbox': {
+      const inbox = require('./npc-cloud-supervisor-inbox.js');
+      const limit = Math.max(1, Math.min(80, Number(args?.limit) || 25));
+      if (args?.include_handled) {
+        return { ok: true, ...inbox.summarizeForCloud(limit), events: inbox.readRecent(limit) };
+      }
+      return inbox.summarizeForCloud(limit);
+    }
     default: return { ok: false, error: `unknown team tool: ${name}` };
   }
 }
