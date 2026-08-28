@@ -9,7 +9,7 @@
   "h": 6368
  },
  "_compiled": {
-  "generated_at": "2026-08-28T10:50:07.093482+00:00",
+  "generated_at": "2026-08-28T11:01:06.790292+00:00",
   "compiler": "scripts/compile-coverage-showcase.py",
   "sources": {
    "registry": "data/limezu-visual-catalog/registry.jsonl",

@@ -96,10 +96,10 @@
   {
    "slot": "interior_fill",
    "name": "district_fill",
-   "x": 16,
-   "y": 16,
-   "w": 976,
-   "h": 1072,
+   "x": 64,
+   "y": 64,
+   "w": 880,
+   "h": 976,
    "density": {
     "building_shell": "light",
     "barrier": "dense",

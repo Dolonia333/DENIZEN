@@ -10225,1057 +10225,429 @@
   },
   {
    "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "x": 6044,
-   "y": 3088,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_2"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 5550,
-   "y": 2560,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_1"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 6248,
-   "y": 2754,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 6396,
-   "y": 2634,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6048,
-   "y": 2658,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5485,
-   "y": 2387,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 5836,
-   "y": 2631,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5637,
-   "y": 2399,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5507,
-   "y": 2681,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_5.png",
-   "x": 6275,
-   "y": 2264,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_5.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_5"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 6064,
-   "y": 3039,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5673,
-   "y": 2146,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 5648,
-   "y": 2420,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 5969,
-   "y": 2255,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_double"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 5712,
-   "y": 2601,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Grey_Single.png",
-   "x": 5549,
-   "y": 2519,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Grey_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_grey_single"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6329,
-   "y": 2735,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "x": 6300,
-   "y": 2983,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_2"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 5862,
-   "y": 3017,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6203,
-   "y": 2359,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5632,
-   "y": 2612,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5542,
-   "y": 2801,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
-   "x": 6005,
-   "y": 2770,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_8"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 6146,
-   "y": 2179,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5977,
-   "y": 2415,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
-   "x": 5483,
-   "y": 2867,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_red"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Black_Single.png",
-   "x": 5984,
-   "y": 2984,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_black_single"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6279,
-   "y": 2681,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.training_dummy",
    "prefer": "23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "x": 6140,
-   "y": 2506,
+   "x": 5845,
+   "y": 2309,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_4_Vers_2.png",
    "exs": "exs.23_military_base.military_base_target_4_vers_2"
   },
   {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 6087,
-   "y": 2356,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_1"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 6314,
-   "y": 2123,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_2"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5787,
-   "y": 2165,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 6229,
-   "y": 2990,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6097,
-   "y": 3168,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_4.png",
-   "x": 6234,
-   "y": 2531,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_4.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_4"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5687,
-   "y": 3035,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_3_Vers_2.png",
-   "x": 5543,
-   "y": 3042,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_3_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_3_vers_2"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 6020,
-   "y": 2702,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_double"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 5584,
-   "y": 2559,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5775,
-   "y": 2854,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
    "me": "me.military.target_variants",
-   "x": 5729,
-   "y": 2488,
+   "x": 6281,
+   "y": 2743,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
    "exs": "exs.23_military_base.military_base_target_down_vers_1"
   },
   {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 6269,
-   "y": 2818,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6352,
-   "y": 2872,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5802,
-   "y": 2760,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5592,
-   "y": 2978,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "x": 6142,
-   "y": 2269,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 6055,
-   "y": 3158,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5861,
-   "y": 2445,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "x": 5787,
-   "y": 2500,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 6384,
-   "y": 2165,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 6347,
-   "y": 2352,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
    "me": "me.military.tire_single",
    "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5475,
-   "y": 2844,
+   "x": 6069,
+   "y": 2778,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
    "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6083,
-   "y": 2533,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
   },
   {
    "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 5486,
-   "y": 2497,
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "x": 6002,
+   "y": 2591,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_double"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5635,
-   "y": 2265,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5645,
-   "y": 2677,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_1"
   },
   {
    "me": "me.military.soldier_helmet",
-   "x": 5705,
-   "y": 2710,
+   "x": 5852,
+   "y": 2592,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
    "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "x": 6337,
-   "y": 2136,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_2"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 6208,
-   "y": 2677,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_1"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5728,
-   "y": 2982,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 6444,
-   "y": 2847,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5634,
-   "y": 2575,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 5474,
-   "y": 2793,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5534,
-   "y": 2149,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6160,
-   "y": 2843,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 6240,
-   "y": 2296,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5695,
-   "y": 2480,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
   },
   {
    "me": "me.military.medical_supplies_small",
    "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
-   "x": 5936,
-   "y": 2635,
+   "x": 5721,
+   "y": 2702,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
    "exs": "exs.23_military_base.military_base_military_tent_box_small_6"
   },
   {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "x": 5771,
-   "y": 3112,
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 5808,
+   "y": 2475,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_4_vers_2"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
   },
   {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 6307,
-   "y": 2755,
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 5699,
+   "y": 2901,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_1"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6247,
-   "y": 2904,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
   },
   {
    "me": "me.military.mine",
-   "x": 5937,
-   "y": 2561,
+   "x": 5686,
+   "y": 2381,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
    "exs": "exs.23_military_base.military_base_mine_1"
   },
   {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 6070,
-   "y": 2855,
+   "me": "me.military.lockers_numbered",
+   "x": 6137,
+   "y": 2660,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 5699,
-   "y": 2410,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5849,
-   "y": 2184,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
   },
   {
    "me": "me.military.shooting_target",
    "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 6330,
-   "y": 2527,
+   "x": 6392,
+   "y": 2451,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
    "exs": "exs.23_military_base.military_base_target_1_vers_1"
   },
   {
-   "me": "me.military.lockers_numbered",
-   "x": 6109,
-   "y": 2370,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
    "me": "me.military.bunker_base_props",
-   "x": 6357,
-   "y": 2331,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "x": 5681,
-   "y": 2173,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_7"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5598,
-   "y": 3033,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 6125,
-   "y": 3001,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 5542,
-   "y": 2855,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_2"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 5771,
-   "y": 2293,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "x": 6223,
-   "y": 2327,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_2"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 5591,
-   "y": 2641,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "x": 6118,
-   "y": 2968,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_4_vers_2"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 6261,
-   "y": 2381,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5712,
-   "y": 3007,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5587,
-   "y": 2201,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 6359,
-   "y": 2836,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 6166,
-   "y": 2765,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 5999,
-   "y": 2890,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_1"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 6335,
-   "y": 2208,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5772,
-   "y": 2988,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 6279,
+   "x": 5747,
    "y": 2977,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
    "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
   },
   {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
-   "x": 5505,
-   "y": 2274,
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "x": 5827,
+   "y": 2390,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_3"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_2"
   },
   {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 6140,
-   "y": 2219,
+   "me": "me.military.target_variants",
+   "x": 6071,
+   "y": 2579,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
   },
   {
-   "me": "me.military.lockers_numbered",
-   "x": 6342,
-   "y": 2556,
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Grey_Single.png",
+   "x": 6360,
+   "y": 2459,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 6157,
-   "y": 2914,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "x": 6374,
-   "y": 3111,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_7"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5696,
-   "y": 2376,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5622,
-   "y": 2447,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Grey_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_grey_single"
   },
   {
    "me": "me.military.tire_stacks",
    "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 6042,
-   "y": 2700,
+   "x": 5564,
+   "y": 2751,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
    "exs": "exs.23_military_base.military_base_tires_pile_2"
   },
   {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 5932,
-   "y": 3140,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 6191,
-   "y": 2864,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6203,
-   "y": 2632,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
    "me": "me.military.soldier_helmet",
-   "x": 6366,
-   "y": 2595,
+   "x": 5525,
+   "y": 2911,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
    "exs": "exs.23_military_base.military_base_soldier_helmet"
   },
   {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "x": 5754,
-   "y": 2384,
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "x": 6090,
+   "y": 2539,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_4_vers_2"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
   },
   {
    "me": "me.military.bunker_base_props",
-   "x": 6291,
-   "y": 2780,
+   "x": 5604,
+   "y": 3093,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
    "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
   },
   {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "x": 5876,
-   "y": 2681,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_1"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "x": 6367,
-   "y": 3138,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_2"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 6291,
-   "y": 2381,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6161,
-   "y": 2611,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 5632,
-   "y": 2650,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_1"
-  },
-  {
    "me": "me.military.mine",
-   "x": 6425,
-   "y": 2771,
+   "x": 5601,
+   "y": 2351,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
    "exs": "exs.23_military_base.military_base_mine_1"
   },
   {
    "me": "me.military.lockers_numbered",
-   "x": 5563,
-   "y": 2380,
+   "x": 6329,
+   "y": 2307,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
    "exs": "exs.23_military_base.military_base_hangar_locker"
   },
   {
-   "me": "me.military.soldier_helmet",
-   "x": 5949,
-   "y": 2349,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
    "me": "me.military.streetlight_straight",
    "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 5779,
-   "y": 2715,
+   "x": 5694,
+   "y": 2601,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
    "exs": "exs.23_military_base.military_base_light_pole_left_side"
   },
   {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 5533,
+   "y": 2938,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 5960,
+   "y": 2849,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_1"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "x": 6372,
+   "y": 2754,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_2"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5830,
+   "y": 2550,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Black_Single.png",
+   "x": 6366,
+   "y": 3044,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_black_single"
+  },
+  {
    "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 5646,
-   "y": 2860,
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "x": 6341,
+   "y": 2937,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_1"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_double"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5558,
+   "y": 2346,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5659,
+   "y": 2851,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 5694,
+   "y": 3034,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5938,
+   "y": 2668,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
+   "x": 5590,
+   "y": 2468,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_8"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 5801,
+   "y": 2691,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
   },
   {
    "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 6212,
-   "y": 2392,
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
+   "x": 5949,
+   "y": 2966,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_red"
   },
   {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 5856,
-   "y": 2824,
+   "me": "me.military.bunker_base_props",
+   "x": 5760,
+   "y": 3034,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5623,
+   "y": 2465,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
   },
   {
    "me": "me.military.tire_single",
    "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 6432,
-   "y": 2688,
+   "x": 5964,
+   "y": 2730,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
    "exs": "exs.23_military_base.military_base_tire_brown_single"
   },
   {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 5680,
+   "y": 2801,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_3_Vers_2.png",
+   "x": 6319,
+   "y": 3123,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_3_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_3_vers_2"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5596,
+   "y": 2208,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
    "me": "me.military.shooting_target",
    "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 5965,
-   "y": 2150,
+   "x": 5800,
+   "y": 2770,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 5782,
+   "y": 2837,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5664,
+   "y": 2912,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "x": 6049,
+   "y": 2227,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_1"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
+   "x": 5934,
+   "y": 2808,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_3"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5872,
+   "y": 2719,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 6034,
+   "y": 3071,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6245,
+   "y": 2222,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 5624,
+   "y": 2209,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
    "exs": "exs.23_military_base.military_base_target_1_vers_1"
@@ -11283,44 +10655,463 @@
   {
    "me": "me.military.tire_stacks",
    "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 6427,
-   "y": 2931,
+   "x": 6226,
+   "y": 2770,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
    "exs": "exs.23_military_base.military_base_tires_pile_1"
   },
   {
-   "me": "me.military.mine",
-   "x": 6023,
-   "y": 3173,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
    "me": "me.military.soldier_helmet",
-   "x": 6312,
-   "y": 3016,
+   "x": 5916,
+   "y": 2258,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
    "exs": "exs.23_military_base.military_base_soldier_helmet"
   },
   {
-   "me": "me.military.warning_signs",
-   "prefer": "23_MIlitary_Base_16x16_Warning_Sign_Double_1.png",
-   "x": 5672,
-   "y": 2496,
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
+   "x": 5760,
+   "y": 2274,
    "origin": "bc",
-   "solid": true,
-   "interact": "read",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Double_1.png",
-   "exs": "exs.23_military_base.military_base_warning_sign_double_1"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_7"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5631,
+   "y": 2421,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5732,
+   "y": 3022,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 6045,
+   "y": 2710,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 6390,
+   "y": 2257,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 5689,
+   "y": 2493,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 6074,
+   "y": 3098,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "x": 6142,
+   "y": 2371,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_2"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "x": 6135,
+   "y": 2572,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_1"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 6150,
+   "y": 2703,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_4.png",
+   "x": 5672,
+   "y": 2258,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_4.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_4"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 5889,
+   "y": 2759,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_1"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5744,
+   "y": 2251,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6180,
+   "y": 2821,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 6139,
+   "y": 2517,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 5915,
+   "y": 2324,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "x": 6308,
+   "y": 2190,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_2"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5589,
+   "y": 2585,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 6286,
+   "y": 2642,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 5880,
+   "y": 2336,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_5.png",
+   "x": 5820,
+   "y": 2316,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_5.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_5"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "x": 5713,
+   "y": 3110,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_double"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 6134,
+   "y": 2300,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5541,
+   "y": 2808,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5758,
+   "y": 2891,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 5660,
+   "y": 2767,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 6192,
+   "y": 2576,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "x": 6265,
+   "y": 2968,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_2"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6254,
+   "y": 2763,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5991,
+   "y": 2678,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 6234,
+   "y": 2171,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 5664,
+   "y": 2953,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_1"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
+   "x": 6372,
+   "y": 2835,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_1"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5611,
+   "y": 2833,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 6376,
+   "y": 2788,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "x": 5853,
+   "y": 2502,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_double"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5930,
+   "y": 2868,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 5738,
+   "y": 3139,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 5971,
+   "y": 2224,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "x": 6096,
+   "y": 2948,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_2"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6306,
+   "y": 2795,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 5757,
+   "y": 2931,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 6243,
+   "y": 2195,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 5605,
+   "y": 2719,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
+   "x": 5673,
+   "y": 2665,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_1"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 6355,
+   "y": 2856,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_1"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 6128,
+   "y": 2687,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 6160,
+   "y": 3041,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5930,
+   "y": 2575,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 5820,
+   "y": 3031,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_3_Vers_2.png",
+   "x": 6209,
+   "y": 2279,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_3_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_3_vers_2"
   },
   {
    "me": "me.military.warning_signs",
    "prefer": "23_MIlitary_Base_16x16_Warning_Sign_Double_2.png",
-   "x": 6296,
-   "y": 2480,
+   "x": 6264,
+   "y": 2496,
    "origin": "bc",
    "solid": true,
    "interact": "read",
@@ -11328,9 +11119,20 @@
    "exs": "exs.23_military_base.military_base_warning_sign_double_2"
   },
   {
+   "me": "me.military.warning_signs",
+   "prefer": "23_MIlitary_Base_16x16_Warning_Sign_Double_1.png",
+   "x": 6168,
+   "y": 2768,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Double_1.png",
+   "exs": "exs.23_military_base.military_base_warning_sign_double_1"
+  },
+  {
    "me": "me.worksite.wood_scraps",
-   "x": 6047,
-   "y": 2487,
+   "x": 6186,
+   "y": 2752,
    "origin": "bc",
    "solid": true,
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Props_1.png",
@@ -11338,60 +11140,137 @@
   },
   {
    "me": "me.worksite.wood_scraps",
-   "x": 6318,
-   "y": 2503,
+   "x": 6197,
+   "y": 2645,
    "origin": "bc",
    "solid": true,
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Props_1.png",
    "exs": "exs.8_worksite.worksite_props_1"
   },
   {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 6147,
-   "y": 3098,
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 6032,
+   "y": 2553,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
   },
   {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "x": 6218,
-   "y": 2759,
+   "me": "me.military.target_variants",
+   "x": 6011,
+   "y": 2388,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_7"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 6014,
+   "y": 3048,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "x": 6058,
+   "y": 2497,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_double"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 6250,
+   "y": 2856,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
   },
   {
    "me": "me.military.training_dummy",
    "prefer": "23_MIlitary_Base_16x16_Target_3_Vers_2.png",
-   "x": 5560,
-   "y": 2232,
+   "x": 6007,
+   "y": 2340,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_3_Vers_2.png",
    "exs": "exs.23_military_base.military_base_target_3_vers_2"
   },
   {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 5994,
+   "y": 2654,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_4.png",
+   "x": 6341,
+   "y": 2742,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_4.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_4"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 6394,
+   "y": 2642,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
    "me": "me.military.lockers_numbered",
-   "x": 5996,
-   "y": 2660,
+   "x": 5547,
+   "y": 3000,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
    "exs": "exs.23_military_base.military_base_hangar_locker"
   },
   {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "x": 6110,
+   "y": 2590,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_1"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 5836,
+   "y": 2214,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5807,
+   "y": 2728,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
    "me": "me.military.target_variants",
-   "x": 6099,
-   "y": 2251,
+   "x": 5974,
+   "y": 2602,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
    "exs": "exs.23_military_base.military_base_target_down_vers_1"
   },
   {
    "me": "me.military.bunker_base_props",
-   "x": 5621,
-   "y": 2772,
+   "x": 5639,
+   "y": 3116,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
    "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
@@ -11399,84 +11278,26 @@
   {
    "me": "me.military.shooting_target",
    "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 6166,
-   "y": 3129,
+   "x": 6125,
+   "y": 2408,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
    "exs": "exs.23_military_base.military_base_target_2_vers_1"
   },
   {
-   "me": "me.military.soldier_helmet",
-   "x": 5669,
-   "y": 2806,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 5929,
-   "y": 2167,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
-  },
-  {
    "me": "me.military.tire_single",
    "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5882,
-   "y": 3111,
+   "x": 5884,
+   "y": 2385,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
    "exs": "exs.23_military_base.military_base_tire_brown_single"
   },
   {
-   "me": "me.military.mine",
-   "x": 6261,
-   "y": 2924,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6395,
-   "y": 2591,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "x": 5718,
-   "y": 2914,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_7.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_7"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 6389,
-   "y": 2918,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6054,
-   "y": 2777,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
    "me": "me.military.training_dummy",
    "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "x": 6158,
-   "y": 2792,
+   "x": 6051,
+   "y": 2456,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
    "exs": "exs.23_military_base.military_base_target_2_vers_2"
@@ -11484,712 +11305,43 @@
   {
    "me": "me.military.streetlight_straight",
    "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 6043,
-   "y": 2245,
+   "x": 6292,
+   "y": 3028,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
    "exs": "exs.23_military_base.military_base_light_pole_right_side"
   },
   {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 5717,
-   "y": 2938,
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "x": 6164,
+   "y": 2975,
    "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_1"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5574,
-   "y": 2771,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5945,
-   "y": 2677,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 6234,
-   "y": 2785,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
   },
   {
    "me": "me.military.mine",
-   "x": 5784,
-   "y": 2401,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 5819,
-   "y": 2893,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5719,
-   "y": 3104,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5897,
-   "y": 2304,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "x": 5952,
-   "y": 2946,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_2"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 5501,
-   "y": 3171,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 6112,
-   "y": 2676,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 5715,
-   "y": 2876,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_double"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "x": 6438,
-   "y": 2644,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_1"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5510,
-   "y": 2127,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 6370,
-   "y": 3185,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 5840,
-   "y": 2297,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 5564,
-   "y": 2698,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6241,
-   "y": 2157,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 6149,
-   "y": 2290,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "x": 5632,
-   "y": 2297,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_2"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 6104,
-   "y": 2219,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 6370,
-   "y": 2412,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 6073,
-   "y": 2424,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
-   "x": 5727,
-   "y": 2558,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_8"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 5871,
-   "y": 2401,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_double"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
    "x": 5713,
-   "y": 2627,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 5575,
-   "y": 2141,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
-   "x": 5610,
-   "y": 2375,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_3"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "x": 5610,
-   "y": 2174,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_2"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 5835,
-   "y": 2133,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5569,
-   "y": 3094,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 6103,
-   "y": 2154,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_1"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 6229,
-   "y": 2592,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 5573,
-   "y": 2163,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 6437,
-   "y": 2382,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 6010,
-   "y": 2270,
+   "y": 2792,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
    "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5533,
-   "y": 3099,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6283,
-   "y": 2594,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "x": 5536,
-   "y": 2298,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "x": 5618,
-   "y": 2958,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_2"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6223,
-   "y": 2711,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5752,
-   "y": 2888,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 6161,
-   "y": 2145,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_1_vers_1"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 5529,
-   "y": 2568,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_double"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5886,
-   "y": 2978,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5686,
-   "y": 3076,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 6210,
-   "y": 2265,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 6013,
-   "y": 2568,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 5816,
-   "y": 2533,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5824,
-   "y": 3100,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5771,
-   "y": 2606,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 6186,
-   "y": 2691,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_left_side"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_3_Vers_2.png",
-   "x": 6325,
-   "y": 2443,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_3_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_3_vers_2"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 5740,
-   "y": 2335,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_1"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5877,
-   "y": 2570,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 6427,
-   "y": 3131,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5616,
-   "y": 2336,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "x": 5473,
-   "y": 2222,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 6311,
-   "y": 2867,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 6064,
-   "y": 2297,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6384,
-   "y": 2866,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5668,
-   "y": 2330,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
-  },
-  {
-   "me": "me.military.tire_stacks",
-   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 5945,
-   "y": 2275,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "exs": "exs.23_military_base.military_base_tires_pile_double"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5664,
-   "y": 2909,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 5658,
-   "y": 2979,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
-  },
-  {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5505,
-   "y": 2196,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "exs": "exs.23_military_base.military_base_tire_brown_single"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5831,
-   "y": 3190,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "x": 6248,
-   "y": 2644,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 6032,
-   "y": 2600,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
-   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_3_Vers_2.png",
-   "x": 6031,
-   "y": 2904,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_3_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_3_vers_2"
-  },
-  {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 6148,
-   "y": 2633,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_2_vers_1"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6041,
-   "y": 2742,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5762,
-   "y": 2218,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
   },
   {
    "me": "me.military.first_aid_kit",
    "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 6208,
-   "y": 3160,
+   "x": 5741,
+   "y": 2911,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
    "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
-  },
-  {
-   "me": "me.military.mine",
-   "x": 5687,
-   "y": 2543,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "exs": "exs.23_military_base.military_base_mine_1"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 6401,
-   "y": 3054,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "exs": "exs.23_military_base.military_base_soldier_helmet"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5657,
-   "y": 3182,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "exs": "exs.23_military_base.military_base_light_pole_right_side"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 6202,
-   "y": 2122,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
-   "exs": "exs.23_military_base.military_base_hangar_locker"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "x": 6085,
-   "y": 3144,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "exs": "exs.23_military_base.military_base_military_tent_box_small_1"
-  },
-  {
-   "me": "me.military.training_dummy",
-   "prefer": "23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "x": 5900,
-   "y": 2560,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_4_Vers_2.png",
-   "exs": "exs.23_military_base.military_base_target_4_vers_2"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 6427,
-   "y": 3088,
-   "origin": "bc",
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "exs": "exs.23_military_base.military_base_target_down_vers_1"
   },
   {
    "me": "me.military.tire_stacks",
    "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 6046,
-   "y": 2350,
+   "x": 6097,
+   "y": 2724,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
    "exs": "exs.23_military_base.military_base_tires_pile_2"
@@ -12197,16 +11349,210 @@
   {
    "me": "me.military.tire_single",
    "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 6228,
-   "y": 2478,
+   "x": 6208,
+   "y": 2335,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
    "exs": "exs.23_military_base.military_base_tire_brown_single"
   },
   {
+   "me": "me.military.soldier_helmet",
+   "x": 6189,
+   "y": 2971,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6097,
+   "y": 2394,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 6299,
+   "y": 2240,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
    "me": "me.military.bunker_base_props",
-   "x": 6006,
-   "y": 3093,
+   "x": 6196,
+   "y": 2947,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5868,
+   "y": 3002,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_4_Vers_2.png",
+   "x": 5999,
+   "y": 2819,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_4_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_4_vers_2"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 6377,
+   "y": 2495,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
+   "x": 5766,
+   "y": 2436,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_3"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5781,
+   "y": 2528,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5863,
+   "y": 2438,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "x": 6014,
+   "y": 2456,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_2"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 6200,
+   "y": 2852,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6195,
+   "y": 2799,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5534,
+   "y": 2205,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 6390,
+   "y": 3053,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 5602,
+   "y": 2953,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 6281,
+   "y": 3142,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 6190,
+   "y": 3012,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5979,
+   "y": 2496,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 6003,
+   "y": 2733,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "x": 6210,
+   "y": 2914,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_double"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 6396,
+   "y": 2408,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6033,
+   "y": 2617,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 6099,
+   "y": 3068,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
    "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
@@ -12214,11 +11560,296 @@
   {
    "me": "me.military.shooting_target",
    "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 5933,
-   "y": 2300,
+   "x": 5987,
+   "y": 2843,
    "origin": "bc",
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
    "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "x": 5684,
+   "y": 2289,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_2"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
+   "x": 6319,
+   "y": 2925,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_6"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 5718,
+   "y": 2723,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 6312,
+   "y": 2824,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 6080,
+   "y": 2428,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "x": 6038,
+   "y": 2738,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_2"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 6300,
+   "y": 2856,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 6247,
+   "y": 2361,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5648,
+   "y": 3092,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 5573,
+   "y": 2398,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 6213,
+   "y": 2616,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5676,
+   "y": 2230,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "x": 5896,
+   "y": 2558,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_2"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 6015,
+   "y": 2845,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
+   "x": 6106,
+   "y": 2240,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_6"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 6227,
+   "y": 3054,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5653,
+   "y": 2571,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 5983,
+   "y": 3017,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 5814,
+   "y": 2202,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5563,
+   "y": 2656,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 5703,
+   "y": 2622,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5831,
+   "y": 2727,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_4_Vers_2.png",
+   "x": 5845,
+   "y": 2884,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_4_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_4_vers_2"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
+   "x": 6107,
+   "y": 3138,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_8"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 6390,
+   "y": 2682,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "x": 5673,
+   "y": 2455,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_1"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 6304,
+   "y": 2500,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 6090,
+   "y": 2872,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 6210,
+   "y": 2824,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 6048,
+   "y": 3016,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 6339,
+   "y": 2796,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 6077,
+   "y": 2313,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 6052,
+   "y": 2873,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_1"
   },
   {
    "me": "me.subway.train_graffiti_car",

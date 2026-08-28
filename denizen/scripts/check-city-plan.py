@@ -208,7 +208,7 @@ def main():
 
     src = args.src
     plan = json.load(open(src, encoding="utf-8"))
-    world_w = plan.get("worldSize", {}).get("w", 6144)
+    world_w = plan.get("worldSize", {}).get("w", 6656)
     world_h = plan.get("worldSize", {}).get("h", 6400)
     defects = []
     dims = {}

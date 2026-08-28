@@ -4,13 +4,17 @@
 
 **Goal:** Replace hand-stamped PNG collage with a **catalog-driven compiler** that understands what assets are, where they belong, how variants/colors fit biomes, how groups assemble, and how players interact — while using far more of the 6224 Singles.
 
-**Current baseline (this branch):**
+**Current baseline (promoted city plan, G7):**
 - Visual catalog: 24/24 sheets, 2749 `me.*`, 6224 `exs.*`, full Singles→`me.*` links
 - `placement-index.json` + merge resolves `me`/`exs` → `img`
-- `check-city-plan.py`: **0 defects** on merged plan
-- City still uses **~571 / 6224** Singles (~9%); layout is hand-authored `d*.json`
+- **6118 stamps**, `check-city-plan.py`: **0 hard defects**
+- **15/15** exterior districts compiler-replaced (d1–d15 via `--compiler-replaces HAND`)
+- Day/night TOD swaps on **338** light stamps (`day-night-variants.json`)
+- **1858** interact-tagged stamps; runtime handles sit/read/shop/play/enter/fish/dig/vend
+- Montage QA: **28/28** compiled fragments **0 hard defects** (world bounds 6656×6400)
+- Promoted merge: `bash scripts/promote-city-plan.sh`
 
-**Denizen MCP:** Not connected in cloud agent VM — NPC wake / bridge tasks deferred until NAS/desktop MCP available.
+**Denizen MCP:** Not connected in cloud agent VM — Wave 5 live dispatch deferred (offline prep committed).
 
 ---
 
@@ -19,13 +23,13 @@
 | Layer | Delivers | Status |
 |-------|----------|--------|
 | L0 Dictionary | `me.*` / `exs.*` ids, paths, bboxes | **Done** |
-| L1 Semantics | role, category, biome, palette, surface, interact | **Schema done** (W0-A) |
-| L2 Groups | `grp.*` recipes (multi-tile assemblies) | **Planned** |
-| L3 World model | districts = biome + palette + slots + density | **Planned** |
-| L4 Compiler | rules → stamps + interactions | **Planned** |
-| L5 QA | overlap, biome violations, coverage gates | **Partial** (overlap only) |
-| L6 Runtime | sit / enter / read / shop hooks | **Planned** |
-| L7 Atlas | packed PNG atlas for load perf | **Planned** |
+| L1 Semantics | role, category, biome, palette, surface, interact | **Done** (2749/2749 enriched) |
+| L2 Groups | `grp.*` recipes (multi-tile assemblies) | **Done** (20 recipes) |
+| L3 World model | districts = biome + palette + slots + density | **Done** (11 biomes + 15 full specs) |
+| L4 Compiler | rules → stamps + interactions | **Done** (passes A–H) |
+| L5 QA | overlap, biome violations, coverage gates | **Done** (0 hard defects; biome advisory optional) |
+| L6 Runtime | sit / enter / read / shop + TOD + atlas | **Done** |
+| L7 Atlas | packed PNG atlas for load perf | **Done** (~1891 frames) |
 
 ---
 
@@ -121,7 +125,9 @@
   failure) and runs `check-city-plan.py`'s exact defect checks against each
   fragment in isolation (resolving `me`/`exs` → `img` first, same as
   `compile-exterior-district.py --qa`), writing per-fragment stamp/biome/
-  defect counts to `montage-qa-report.json`. CLI exits 1 on any hard defect
+  defect counts to `montage-qa-report.json`. Isolated fragments inherit
+  `worldSize` from `data/city-plan.json` (6656×6400) so east-side districts
+  (d12, d99) are not falsely flagged OFFWORLD. CLI exits 1 on any hard defect
   (OVERLAP/FLOATING/ROADBLOCK/OFFWORLD/BADANIM/UNRESOLVED) — a visual agent
   still needs to eyeball the renders once MCP is up, but the mechanical gate
   runs today.

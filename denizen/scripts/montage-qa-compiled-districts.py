@@ -56,8 +56,24 @@ PREVIEW_DIR = CAT / "montages" / "qa-compiled-districts"  # gitignored (montages
 
 HARD_KINDS = {"OVERLAP", "FLOATING", "ROADBLOCK", "OFFWORLD", "BADANIM", "MISSING", "UNRESOLVED"}
 
+# Canonical played-world bounds (merge-city-plan.py / data/city-plan.json).
+DEFAULT_WORLD = {"w": 6656, "h": 6400}
+CITY_PLAN = DEN / "data" / "city-plan.json"
+
 THUMB = 64
 COLS = 10
+
+
+def load_world_size() -> dict:
+    """Played-world bounds for OFFWORLD checks on isolated fragments."""
+    if CITY_PLAN.is_file():
+        try:
+            ws = json.loads(CITY_PLAN.read_text(encoding="utf-8")).get("worldSize") or {}
+            if ws.get("w") and ws.get("h"):
+                return {"w": int(ws["w"]), "h": int(ws["h"])}
+        except Exception:
+            pass
+    return dict(DEFAULT_WORLD)
 
 
 def _load_module(name: str, path: Path):
@@ -97,6 +113,8 @@ def collect_defects(resolved: dict, catalog: dict, basename_to_me: dict, distric
     dims: dict = {}
     stamps = resolved.get("stamps", [])
     rects = []
+    world_w = resolved.get("worldSize", {}).get("w", DEFAULT_WORLD["w"])
+    world_h = resolved.get("worldSize", {}).get("h", DEFAULT_WORLD["h"])
 
     for s in stamps:
         if not s.get("img"):
@@ -108,8 +126,6 @@ def collect_defects(resolved: dict, catalog: dict, basename_to_me: dict, distric
             defects.append({"kind": "MISSING", "a": s["img"], "b": ""})
             continue
         rects.append((s, r))
-        world_w = resolved.get("worldSize", {}).get("w", 6144)
-        world_h = resolved.get("worldSize", {}).get("h", 6400)
         if r[0] < 0 or r[1] < 0 or r[0] + r[2] > world_w or r[1] + r[3] > world_h:
             defects.append({"kind": "OFFWORLD", "a": s["img"], "b": f"rect {r}"})
 
@@ -258,9 +274,11 @@ def render_preview(resolved: dict, out_path: Path) -> str:
 
 
 def qa_fragment(fp: Path, index: dict, catalog: dict, basename_to_me: dict, districts: list,
-                 strict_biome: bool, do_render: bool) -> dict:
+                 strict_biome: bool, do_render: bool, world_size: dict) -> dict:
     frag = json.loads(fp.read_text(encoding="utf-8"))
     resolved, resolve_errors = resolve_fragment(frag, index)
+    if not resolved.get("worldSize"):
+        resolved["worldSize"] = dict(world_size)
 
     result = collect_defects(resolved, catalog, basename_to_me, districts, strict_biome)
     for err in resolve_errors:
@@ -317,6 +335,7 @@ def main() -> int:
     catalog = ccp.load_enriched_catalog()
     basename_to_me = ccp.load_basename_to_me()
     districts = ccp.load_district_biomes()
+    world_size = load_world_size()
 
     fragments = sorted(GENERATED_DIR.glob("d*.json")) if GENERATED_DIR.is_dir() else []
     if not fragments:
@@ -326,7 +345,8 @@ def main() -> int:
     for fp in fragments:
         print(f"checking {fp.relative_to(DEN)} ...")
         results.append(qa_fragment(fp, index, catalog, basename_to_me, districts,
-                                    args.strict_biome, do_render=not args.no_render))
+                                    args.strict_biome, do_render=not args.no_render,
+                                    world_size=world_size))
 
     total_hard = sum(r["hard_defect_count"] for r in results)
     fragments_with_defects = [r["id"] for r in results if r["hard_defect_count"]]

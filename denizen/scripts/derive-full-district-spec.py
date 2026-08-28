@@ -143,9 +143,9 @@ def derive_slots(biome: str, rules: dict, bw: int, bh: int) -> list:
         {
             "slot": "interior_fill",
             "name": "district_fill",
-            "x": 16, "y": 16, "w": max(TILE, bw - 32), "h": max(TILE, bh - 32),
+            "x": 48, "y": 48, "w": max(TILE, bw - 96), "h": max(TILE, bh - 96),
             "density": density,
-            "_doc": f"auto-derived from placement-rules.biomes.{biome}.density",
+            "_doc": f"auto-derived from placement-rules.biomes.{biome}.density (48px edge margin keeps sprites inside bbox)",
         },
         {
             "slot": "path_edge",
