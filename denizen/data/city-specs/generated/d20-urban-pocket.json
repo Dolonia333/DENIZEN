@@ -5,13 +5,13 @@
  "biome": "urban_core",
  "bbox": {
   "x": 4096,
-  "y": 2112,
+  "y": 2160,
   "w": 480,
   "h": 320
  },
  "_compiled": {
   "spec": "data/city-specs/biome-specs/urban_core.json",
-  "seed": 20481,
+  "seed": 30481,
   "rules_version": "0.1.0",
   "coords": "local",
   "passes": {
@@ -49,28 +49,28 @@
     "recipes_available": 20
    },
    "E_props": {
-    "placed": 39,
+    "placed": 26,
     "slots": 2,
     "by_slot": {
      "sidewalk_edge": {
       "street_furn": {
-       "placed": 29,
-       "want": 31,
-       "attempts": 499,
+       "placed": 15,
+       "want": 15,
+       "attempts": 44,
        "pool": 15
       },
       "signage": {
        "placed": 4,
-       "want": 5,
-       "attempts": 399,
+       "want": 6,
+       "attempts": 446,
        "pool": 13
       }
      },
      "shopfront_row": {
       "building_shell": {
-       "placed": 6,
-       "want": 6,
-       "attempts": 71,
+       "placed": 7,
+       "want": 7,
+       "attempts": 43,
        "pool": 37
       }
      }
@@ -99,18 +99,18 @@
   },
   "occupancy": {
    "cells": 600,
-   "occupied_cells": 146,
+   "occupied_cells": 117,
    "reserved_cells": 7,
    "unwalkable_cells": 0,
-   "free_ratio": 0.757
+   "free_ratio": 0.805
   },
   "coverage": {
-   "stamps": 41,
-   "unique_me": 27,
-   "unique_singles": 36,
+   "stamps": 28,
+   "unique_me": 28,
+   "unique_singles": 28,
    "max_stamps": 60,
    "target_singles": 35,
-   "target_met": true
+   "target_met": false
   },
   "catalog_misses": []
  },
@@ -118,7 +118,7 @@
   {
    "tile": "sidewalk",
    "x": 4096,
-   "y": 2112,
+   "y": 2160,
    "w": 480,
    "h": 320,
    "depth": 0.87
@@ -126,7 +126,7 @@
   {
    "tile": "asphalt",
    "x": 4224,
-   "y": 2112,
+   "y": 2160,
    "w": 64,
    "h": 320,
    "depth": 1.1
@@ -137,7 +137,7 @@
   {
    "me": "me.generic_building.storefront_blue_three_story",
    "x": 4384,
-   "y": 2384,
+   "y": 2432,
    "origin": "bl",
    "solid": true,
    "interact": "shop"
@@ -146,22 +146,54 @@
    "me": "me.modular_floors.bakery_full",
    "prefer": "ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Bakery_Modular_2.png",
    "x": 4512,
-   "y": 2384,
+   "y": 2432,
    "origin": "bl",
    "solid": true,
    "interact": "shop"
   },
   {
-   "me": "me.city_props.pole_plain",
-   "x": 4296,
-   "y": 2176,
+   "me": "me.fire_station.hydrant",
+   "x": 4152,
+   "y": 2288,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.post_office.mailbox_red_1_front",
+   "prefer": "22_Post_Office_16x16_Red_Mailbox_2_Front.png",
+   "x": 4344,
+   "y": 2208,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.police.sidewalk_obstacle",
+   "prefer": "ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_2.png",
+   "x": 4168,
+   "y": 2384,
    "origin": "bc",
    "solid": true
   },
   {
    "me": "me.fire_station.hydrant_hose_long",
-   "x": 4216,
-   "y": 2384,
+   "x": 4536,
+   "y": 2240,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.city_props.electric_pole_set",
+   "prefer": "ME_Singles_City_Props_16x16_Electric_Pole_3.png",
+   "x": 4488,
+   "y": 2448,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.police.box_front",
+   "prefer": "ME_Singles_Police_Station_16x16_Police_Box_2.png",
+   "x": 4328,
+   "y": 2416,
    "origin": "bc",
    "solid": true
   },
@@ -169,288 +201,154 @@
    "me": "me.city_props.lamp_cobra_double",
    "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_3.png",
    "x": 4344,
-   "y": 2320,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.city_props.electric_pole_set",
-   "prefer": "ME_Singles_City_Props_16x16_Electric_Pole_1.png",
-   "x": 4520,
-   "y": 2256,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.mailbox_black_1_front",
-   "prefer": "22_Post_Office_16x16_Black_Mailbox_2_Front.png",
-   "x": 4296,
-   "y": 2272,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.fire_station.hydrant",
-   "x": 4136,
-   "y": 2288,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.police.sidewalk_obstacle",
-   "prefer": "ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_1.png",
-   "x": 4152,
-   "y": 2224,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_2.png",
-   "x": 4216,
-   "y": 2272,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.mailbox_red_1_front",
-   "prefer": "22_Post_Office_16x16_Red_Mailbox_1_Front.png",
-   "x": 4504,
-   "y": 2352,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.dropbox_grey",
-   "x": 4328,
-   "y": 2384,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.police.box_front",
-   "prefer": "ME_Singles_Police_Station_16x16_Police_Box_1.png",
-   "x": 4456,
-   "y": 2144,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.mailbox_blue_1_front",
-   "prefer": "22_Post_Office_16x16_Blue_Mailbox_1_Front.png",
-   "x": 4184,
    "y": 2336,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.city_props.traffic_light_pole_tall_set",
-   "prefer": "ME_Singles_City_Props_16x16_Traffic_Light_13.png",
-   "x": 4344,
-   "y": 2272,
    "origin": "bc",
    "solid": true
   },
   {
    "me": "me.city_props.hydrant_red",
    "prefer": "ME_Singles_City_Props_16x16_Hydrant_2.png",
-   "x": 4200,
-   "y": 2144,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.mailbox_blue_2_front",
-   "x": 4392,
-   "y": 2432,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.police.box_front",
-   "prefer": "ME_Singles_Police_Station_16x16_Police_Box_2.png",
-   "x": 4376,
-   "y": 2176,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.mailbox_blue_2_front",
-   "x": 4152,
-   "y": 2432,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.city_props.electric_pole_set",
-   "prefer": "ME_Singles_City_Props_16x16_Electric_Pole_2.png",
-   "x": 4312,
-   "y": 2432,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.mailbox_black_1_front",
-   "prefer": "22_Post_Office_16x16_Black_Mailbox_1_Front.png",
-   "x": 4552,
-   "y": 2320,
+   "x": 4568,
+   "y": 2336,
    "origin": "bc",
    "solid": true
   },
   {
    "me": "me.city_props.pole_plain",
-   "x": 4152,
-   "y": 2384,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.fire_station.hydrant",
-   "x": 4472,
-   "y": 2224,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.city_props.hydrant_red",
-   "prefer": "ME_Singles_City_Props_16x16_Hydrant_3.png",
-   "x": 4552,
+   "x": 4216,
    "y": 2208,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.post_office.mailbox_blue_2_front",
+   "x": 4104,
+   "y": 2448,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.city_props.traffic_light_pole_tall_set",
+   "prefer": "ME_Singles_City_Props_16x16_Traffic_Light_10.png",
+   "x": 4296,
+   "y": 2480,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.post_office.dropbox_grey",
+   "x": 4424,
+   "y": 2480,
    "origin": "bc",
    "solid": true
   },
   {
    "me": "me.post_office.mailbox_blue_1_front",
    "prefer": "22_Post_Office_16x16_Blue_Mailbox_2_Front.png",
-   "x": 4520,
-   "y": 2160,
+   "x": 4472,
+   "y": 2240,
    "origin": "bc",
    "solid": true
   },
   {
-   "me": "me.police.sidewalk_obstacle",
-   "prefer": "ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_2.png",
-   "x": 4104,
-   "y": 2240,
+   "me": "me.post_office.mailbox_black_1_front",
+   "prefer": "22_Post_Office_16x16_Black_Mailbox_2_Front.png",
+   "x": 4120,
+   "y": 2192,
    "origin": "bc",
    "solid": true
   },
   {
    "me": "me.city_props.lamp_ornate_double",
    "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "x": 4424,
-   "y": 2192,
+   "x": 4488,
+   "y": 2336,
    "origin": "bc",
    "solid": true
   },
   {
-   "me": "me.fire_station.hydrant_hose_long",
-   "x": 4456,
-   "y": 2432,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.city_props.lamp_cobra_double",
-   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_4.png",
-   "x": 4200,
-   "y": 2432,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.mailbox_red_1_front",
-   "prefer": "22_Post_Office_16x16_Red_Mailbox_2_Front.png",
+   "me": "me.city_props.sign_classic_set",
+   "prefer": "ME_Singles_City_Props_16x16_Traffic_Sign_45.png",
    "x": 4136,
-   "y": 2160,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.post_office.dropbox_grey",
-   "x": 4216,
    "y": 2192,
-   "origin": "bc",
-   "solid": true
-  },
-  {
-   "me": "me.city_props.sign_hydrant_marker",
-   "x": 4200,
-   "y": 2352,
    "origin": "bc",
    "solid": true,
    "interact": "read"
   },
   {
    "me": "me.subway.ui_number_blue",
-   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_9_Blue.png",
-   "x": 4504,
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_3_Blue.png",
+   "x": 4456,
    "y": 2192,
    "origin": "bc",
    "solid": true,
    "interact": "read"
   },
   {
-   "me": "me.subway.ui_number_orange",
-   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_9_Orange.png",
-   "x": 4168,
-   "y": 2128,
+   "me": "me.shopping.sign_mall",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_2.png",
+   "x": 4136,
+   "y": 2416,
    "origin": "bc",
    "solid": true,
    "interact": "read"
   },
   {
-   "me": "me.city_terrains.roundabout_sign",
-   "prefer": "ME_Singles_City_Terrains_16x16_Sidewalk_6_54.png",
-   "x": 4552,
-   "y": 2400,
+   "me": "me.city_props.sign_hydrant_marker",
+   "x": 4536,
+   "y": 2416,
    "origin": "bc",
    "solid": true,
    "interact": "read"
   },
   {
-   "me": "me.vehicles.car_wash",
-   "prefer": "ME_Singles_Vehicles_16x16_Gas_Station_Car_6.png",
-   "x": 4352,
-   "y": 2368,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "me": "me.generic_building.window_flowerbox_red",
-   "x": 4560,
-   "y": 2240,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "me": "me.generic_building.window_flowerbox_orange",
-   "prefer": "ME_Singles_Generic_Building_16x16_Condo_3_31.png",
-   "x": 4496,
-   "y": 2288,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "me": "me.generic_building.window_flowerbox_blue",
-   "prefer": "ME_Singles_Generic_Building_16x16_Condo_3_32.png",
-   "x": 4544,
+   "me": "me.generic_building.window_brown_standard",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_3_24.png",
+   "x": 4384,
    "y": 2256,
    "origin": "bl",
    "solid": true
   },
   {
-   "me": "me.generic_building.window_brown_standard",
-   "prefer": "ME_Singles_Generic_Building_16x16_Condo_3_28.png",
-   "x": 4512,
-   "y": 2304,
+   "me": "me.city_props.junk_shack",
+   "x": 4480,
+   "y": 2208,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.shopping.mall_facade",
+   "x": 4480,
+   "y": 2240,
    "origin": "bl",
    "solid": true
   },
   {
    "me": "me.generic_building.window_flowerbox_double",
-   "x": 4304,
-   "y": 2176,
+   "x": 4352,
+   "y": 2224,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.generic_building.window_flowerbox_red",
+   "x": 4480,
+   "y": 2272,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.generic_building.facade_beige_pipe_wall",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_9_Pipe_1.png",
+   "x": 4464,
+   "y": 2208,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.generic_building.window_redbrick_double_hooded",
+   "x": 4384,
+   "y": 2208,
    "origin": "bl",
    "solid": true
   }
@@ -461,7 +359,7 @@
  "labels": [
   {
    "x": 4336,
-   "y": 2136,
+   "y": 2184,
    "text": "MAIN STREET SOUTH"
   }
  ],

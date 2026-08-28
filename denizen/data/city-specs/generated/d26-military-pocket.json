@@ -5,7 +5,7 @@
  "biome": "military",
  "bbox": {
   "x": 5216,
-  "y": 2880,
+  "y": 2960,
   "w": 360,
   "h": 280
  },
@@ -36,7 +36,7 @@
     }
    },
    "C_landmarks": {
-    "placed": 3,
+    "placed": 2,
     "groups": 0,
     "group_stamps": 0,
     "pending": 0
@@ -49,24 +49,24 @@
     "recipes_available": 20
    },
    "E_props": {
-    "placed": 27,
+    "placed": 29,
     "slots": 2,
     "by_slot": {
      "perimeter_walk_edge": {
       "street_furn": {
        "placed": 0,
        "skipped": "no candidates",
-       "cells": 34
+       "cells": 46
       },
       "signage": {
        "placed": 0,
        "skipped": "no candidates",
-       "cells": 34
+       "cells": 46
       },
       "decor_small": {
        "placed": 1,
        "want": 1,
-       "attempts": 1,
+       "attempts": 2,
        "pool": 7
       }
      },
@@ -78,27 +78,27 @@
        "pool": 3
       },
       "vehicle": {
-       "placed": 8,
-       "want": 8,
-       "attempts": 52,
+       "placed": 9,
+       "want": 9,
+       "attempts": 110,
        "pool": 40
       },
       "decor_small": {
-       "placed": 13,
-       "want": 13,
-       "attempts": 22,
+       "placed": 14,
+       "want": 14,
+       "attempts": 33,
        "pool": 14
       },
       "vegetation": {
        "placed": 1,
        "want": 1,
-       "attempts": 8,
+       "attempts": 2,
        "pool": 1
       },
       "infra": {
        "placed": 2,
        "want": 10,
-       "attempts": 156,
+       "attempts": 162,
        "pool": 6
       }
      }
@@ -115,13 +115,13 @@
      "perimeter_walk_edge:decor_small": {
       "placed": 1,
       "want": 1,
-      "attempts": 3,
+      "attempts": 7,
       "pool": 10
      },
      "motor_pool:decor_small": {
       "placed": 5,
       "want": 5,
-      "attempts": 15,
+      "attempts": 10,
       "pool": 20
      }
     },
@@ -132,20 +132,20 @@
     "anims": 1,
     "animBands": 0,
     "interactions": {
-     "enter": 4,
+     "enter": 3,
      "read": 0
     }
    }
   },
   "occupancy": {
    "cells": 414,
-   "occupied_cells": 239,
+   "occupied_cells": 228,
    "reserved_cells": 11,
    "unwalkable_cells": 0,
-   "free_ratio": 0.423
+   "free_ratio": 0.449
   },
   "coverage": {
-   "stamps": 36,
+   "stamps": 37,
    "unique_me": 29,
    "unique_singles": 32,
    "max_stamps": 85,
@@ -158,7 +158,7 @@
   {
    "tile": "asphalt",
    "x": 5216,
-   "y": 2880,
+   "y": 2960,
    "w": 368,
    "h": 288,
    "depth": 0.9
@@ -166,7 +166,7 @@
   {
    "tile": "sidewalk",
    "x": 5216,
-   "y": 2880,
+   "y": 2960,
    "w": 368,
    "h": 32,
    "depth": 0.89
@@ -174,7 +174,7 @@
   {
    "tile": "sand",
    "x": 5232,
-   "y": 3040,
+   "y": 3120,
    "w": 144,
    "h": 112,
    "depth": 0.92
@@ -185,15 +185,7 @@
   {
    "me": "me.military.quonset_tall_closed",
    "x": 5280,
-   "y": 3120,
-   "origin": "bl",
-   "solid": true,
-   "interact": "enter"
-  },
-  {
-   "me": "me.military.watchtower_empty",
-   "x": 5456,
-   "y": 2912,
+   "y": 3200,
    "origin": "bl",
    "solid": true,
    "interact": "enter"
@@ -201,20 +193,20 @@
   {
    "me": "me.military.tank_green_south",
    "x": 5440,
-   "y": 3088,
+   "y": 3168,
    "origin": "bl",
    "solid": true
   },
   {
    "me": "me.military.lockers_numbered",
-   "x": 5384,
-   "y": 2913,
+   "x": 5388,
+   "y": 2985,
    "origin": "bc"
   },
   {
    "me": "me.worksite.site_entrance",
    "x": 5232,
-   "y": 3120,
+   "y": 3200,
    "origin": "bl",
    "solid": true,
    "interact": "enter"
@@ -222,214 +214,226 @@
   {
    "me": "me.military.barrier_boom",
    "x": 5248,
-   "y": 3088,
+   "y": 3168,
    "origin": "bl",
    "solid": true,
    "interact": "enter"
   },
   {
+   "me": "me.vehicles.sedan_green_south",
+   "x": 5472,
+   "y": 3040,
+   "origin": "bl",
+   "solid": true
+  },
+  {
    "me": "me.military.tank_green_east",
-   "prefer": "23_MIlitary_Base_16x16_Green_Tank_Gun_Right_Side_2.png",
-   "x": 5456,
+   "prefer": "23_MIlitary_Base_16x16_Green_Tank_Gun_Right_Side_1.png",
+   "x": 5312,
    "y": 3008,
    "origin": "bl",
    "solid": true
   },
   {
+   "me": "me.vehicles.compact_dark_green_east",
+   "x": 5520,
+   "y": 3088,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.vehicles.compact_dark_green_west",
+   "x": 5232,
+   "y": 3072,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.vehicles.sedan_b_dark_green_north",
+   "x": 5536,
+   "y": 3232,
+   "origin": "bl",
+   "solid": true
+  },
+  {
    "me": "me.vehicles.sedan_b_dark_green_south",
-   "x": 5344,
-   "y": 2928,
+   "x": 5440,
+   "y": 3008,
    "origin": "bl",
    "solid": true
   },
   {
-   "me": "me.vehicles.compact_dark_green_north",
-   "x": 5552,
-   "y": 3104,
+   "me": "me.vehicles.sedan_green_north",
+   "x": 5536,
+   "y": 3184,
    "origin": "bl",
    "solid": true
   },
   {
-   "me": "me.military.tank_green_north",
+   "me": "me.vehicles.compact_dark_green_south",
+   "x": 5216,
+   "y": 3120,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.vehicles.sedan_b_dark_green_east",
    "x": 5216,
    "y": 3024,
    "origin": "bl",
    "solid": true
   },
   {
-   "me": "me.vehicles.sedan_b_dark_green_north",
-   "x": 5456,
-   "y": 3136,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "me": "me.vehicles.sedan_green_west",
-   "x": 5440,
-   "y": 2960,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "me": "me.military.tank_tan_south",
-   "x": 5248,
-   "y": 2960,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "me": "me.vehicles.compact_dark_green_south",
-   "x": 5424,
-   "y": 2928,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5540,
-   "y": 3156,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.streetlight_straight",
-   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 5321,
-   "y": 3050,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.medical_supplies_small",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
-   "x": 5434,
-   "y": 3056,
-   "origin": "bc"
-  },
-  {
    "me": "me.military.first_aid_kit",
    "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
-   "x": 5237,
-   "y": 3150,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 5396,
-   "y": 3028,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5289,
-   "y": 2925,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.soldier_helmet",
-   "x": 5357,
-   "y": 3012,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.first_aid_kit",
-   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
-   "x": 5371,
-   "y": 2980,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.bunker_base_props",
-   "x": 5235,
-   "y": 2927,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.target_variants",
-   "x": 5406,
-   "y": 2994,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.lockers_numbered",
-   "x": 5390,
-   "y": 3002,
+   "x": 5323,
+   "y": 3094,
    "origin": "bc"
   },
   {
    "me": "me.military.medical_supplies_small",
    "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "x": 5257,
-   "y": 2978,
+   "x": 5353,
+   "y": 3092,
    "origin": "bc"
   },
   {
    "me": "me.military.streetlight_straight",
    "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5372,
-   "y": 3051,
+   "x": 5547,
+   "y": 3012,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5411,
+   "y": 3093,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5370,
+   "y": 3075,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5506,
+   "y": 3238,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5410,
+   "y": 3110,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
+   "x": 5259,
+   "y": 3109,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 5452,
+   "y": 3035,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5434,
+   "y": 3069,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5451,
+   "y": 3061,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5238,
+   "y": 3237,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 5336,
+   "y": 3151,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5341,
+   "y": 3060,
    "origin": "bc"
   },
   {
    "me": "me.worksite.wood_scraps",
-   "x": 5268,
-   "y": 3155,
+   "x": 5240,
+   "y": 3224,
    "origin": "bc",
    "solid": true
   },
   {
    "me": "me.military.wall_pillar",
-   "prefer": "23_MIlitary_Base_16x16_External_Wall_Pillar_1.png",
-   "x": 5544,
-   "y": 3104,
+   "prefer": "23_MIlitary_Base_16x16_External_Wall_Pillar_2.png",
+   "x": 5224,
+   "y": 3216,
    "origin": "bc",
    "solid": true
   },
   {
    "me": "me.military.wall_pillars_tall",
-   "prefer": "23_MIlitary_Base_16x16_External_Wall_Modular_Front_Left_Side.png",
+   "prefer": "23_MIlitary_Base_16x16_External_Wall_Modular_Front_Right_Side.png",
    "x": 5560,
-   "y": 2944,
+   "y": 3040,
    "origin": "bc",
    "solid": true
   },
   {
-   "me": "me.military.shooting_target",
-   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 5321,
-   "y": 2915,
+   "me": "me.military.mine",
+   "x": 5262,
+   "y": 2988,
    "origin": "bc"
   },
   {
    "me": "me.military.tire_stacks",
    "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 5237,
-   "y": 2984,
-   "origin": "bc"
-  },
-  {
-   "me": "me.military.barbed_wire_kit",
-   "prefer": "23_MIlitary_Base_16x16_Barbed_Wire_2_Bottom_Corner_Left_Small_2.png",
-   "x": 5415,
-   "y": 2935,
+   "x": 5417,
+   "y": 3167,
    "origin": "bc"
   },
   {
    "me": "me.military.sandbag_stacks",
    "prefer": "23_MIlitary_Base_16x16_Sandbag_Pile_Bottom_Middle_Modular_Right.png",
-   "x": 5424,
-   "y": 3082,
+   "x": 5394,
+   "y": 3064,
    "origin": "bc"
   },
   {
-   "me": "me.military.tire_single",
-   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5288,
-   "y": 2986,
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 5475,
+   "y": 3105,
+   "origin": "bc"
+  },
+  {
+   "me": "me.military.barbed_wire_kit",
+   "prefer": "23_MIlitary_Base_16x16_Barbed_Wire_2_Bottom_Corner_Right_Small_2.png",
+   "x": 5562,
+   "y": 3152,
    "origin": "bc"
   },
   {
    "me": "me.military.sandbag_single",
-   "x": 5537,
-   "y": 3051,
+   "x": 5316,
+   "y": 3038,
    "origin": "bc"
   }
  ],
@@ -439,7 +443,7 @@
    "fw": 80,
    "fh": 80,
    "x": 5240,
-   "y": 2952,
+   "y": 3032,
    "fps": 6
   }
  ],
@@ -448,7 +452,7 @@
  "labels": [
   {
    "x": 5396,
-   "y": 2904,
+   "y": 2984,
    "text": "MOTOR POOL ANNEX"
   }
  ],

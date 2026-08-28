@@ -867,6 +867,206 @@
    "w": 48,
    "h": 96,
    "depth": 0.91
+  },
+  {
+   "tile": "sand",
+   "x": 2752,
+   "y": 4816,
+   "w": 320,
+   "h": 240,
+   "depth": 0.92
+  },
+  {
+   "tile": "grass",
+   "x": 4320,
+   "y": 304,
+   "w": 480,
+   "h": 480,
+   "depth": 0.9
+  },
+  {
+   "tile": "sand",
+   "x": 4624,
+   "y": 608,
+   "w": 176,
+   "h": 176,
+   "depth": 0.92
+  },
+  {
+   "tile": "sidewalk",
+   "x": 4096,
+   "y": 2160,
+   "w": 480,
+   "h": 320,
+   "depth": 0.87
+  },
+  {
+   "tile": "asphalt",
+   "x": 4224,
+   "y": 2160,
+   "w": 64,
+   "h": 320,
+   "depth": 1.1
+  },
+  {
+   "tile": "sidewalk",
+   "x": 4096,
+   "y": 576,
+   "w": 480,
+   "h": 256,
+   "depth": 0.87
+  },
+  {
+   "tile": "asphalt",
+   "x": 4096,
+   "y": 832,
+   "w": 480,
+   "h": 64,
+   "depth": 1.1
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2880,
+   "y": 1968,
+   "w": 400,
+   "h": 304,
+   "depth": 0.87
+  },
+  {
+   "tile": "grass",
+   "x": 2880,
+   "y": 2192,
+   "w": 400,
+   "h": 80,
+   "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 2896,
+   "y": 1984,
+   "w": 144,
+   "h": 112,
+   "depth": 1.1
+  },
+  {
+   "tile": "grass",
+   "x": 2688,
+   "y": 3744,
+   "w": 400,
+   "h": 320,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2688,
+   "y": 3888,
+   "w": 400,
+   "h": 32,
+   "depth": 0.87
+  },
+  {
+   "tile": "grass",
+   "x": 1136,
+   "y": 4432,
+   "w": 400,
+   "h": 304,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 1136,
+   "y": 4432,
+   "w": 400,
+   "h": 32,
+   "depth": 0.87
+  },
+  {
+   "tile": "asphalt",
+   "x": 1328,
+   "y": 4464,
+   "w": 80,
+   "h": 64,
+   "depth": 1.1
+  },
+  {
+   "tile": "asphalt",
+   "x": 4208,
+   "y": 3344,
+   "w": 368,
+   "h": 288,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 4208,
+   "y": 3344,
+   "w": 368,
+   "h": 32,
+   "depth": 0.89
+  },
+  {
+   "tile": "sand",
+   "x": 4432,
+   "y": 3504,
+   "w": 128,
+   "h": 112,
+   "depth": 0.92
+  },
+  {
+   "tile": "asphalt",
+   "x": 5216,
+   "y": 2960,
+   "w": 368,
+   "h": 288,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 5216,
+   "y": 2960,
+   "w": 368,
+   "h": 32,
+   "depth": 0.89
+  },
+  {
+   "tile": "sand",
+   "x": 5232,
+   "y": 3120,
+   "w": 144,
+   "h": 112,
+   "depth": 0.92
+  },
+  {
+   "tile": "grass",
+   "x": 208,
+   "y": 5072,
+   "w": 368,
+   "h": 288,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 208,
+   "y": 5072,
+   "w": 368,
+   "h": 32,
+   "depth": 0.89
+  },
+  {
+   "tile": "sidewalk",
+   "x": 1600,
+   "y": 5264,
+   "w": 368,
+   "h": 288,
+   "depth": 0.9
+  },
+  {
+   "tile": "grass",
+   "x": 1616,
+   "y": 5328,
+   "w": 336,
+   "h": 208,
+   "depth": 0.92
   }
  ],
  "roads": [
@@ -1807,16 +2007,6 @@
    "exs": "exs.3_city_props.city_props_tree_9"
   },
   {
-   "x": 4310,
-   "y": 2384,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
    "x": 4212,
    "y": 2800,
    "origin": "bc",
@@ -2677,16 +2867,6 @@
    "exs": "exs.3_city_props.city_props_street_lamp_1"
   },
   {
-   "x": 2960,
-   "y": 1958,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
    "x": 3168,
    "y": 1860,
    "origin": "bc",
@@ -3378,16 +3558,6 @@
   },
   {
    "x": 4832,
-   "y": 3236,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 5248,
    "y": 3236,
    "origin": "bc",
    "solid": true,
@@ -10748,6 +10918,4750 @@
    "origin": "bc",
    "img": "ext/singles/21_beach/21_Beach_16x16_Gold_Blue_Shell_3.png",
    "exs": "exs.21_beach.beach_gold_blue_shell_3"
+  },
+  {
+   "me": "me.beach.sign_direction_small",
+   "x": 2784,
+   "y": 4848,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Direction_Pole_Small.png",
+   "exs": "exs.21_beach.beach_direction_pole_small"
+  },
+  {
+   "me": "me.beach.bar_ship",
+   "exs": "exs.21_beach.beach_ship_bar",
+   "x": 2912,
+   "y": 4848,
+   "origin": "tl",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ship_Bar.png"
+  },
+  {
+   "me": "me.beach.bar_ship",
+   "exs": "exs.21_beach.beach_ship_bar_counter_1",
+   "x": 2912,
+   "y": 4928,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ship_Bar_Counter_1.png"
+  },
+  {
+   "me": "me.beach.bar_ship",
+   "exs": "exs.21_beach.beach_ship_bar_counter_2",
+   "x": 2960,
+   "y": 4928,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ship_Bar_Counter_2.png"
+  },
+  {
+   "me": "me.beach.bar_ship",
+   "exs": "exs.21_beach.beach_ship_bar_chair_1",
+   "x": 2912,
+   "y": 4992,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ship_Bar_Chair_1.png"
+  },
+  {
+   "me": "me.beach.bar_ship",
+   "exs": "exs.21_beach.beach_ship_bar_table",
+   "x": 2928,
+   "y": 4992,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ship_Bar_Table.png"
+  },
+  {
+   "me": "me.beach.bar_table_drinks",
+   "exs": "exs.21_beach.beach_ship_bar_bottle_1_table",
+   "x": 2960,
+   "y": 5008,
+   "origin": "tl",
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ship_Bar_Bottle_1_Table.png"
+  },
+  {
+   "me": "me.beach.umbrella_blue_open",
+   "exs": "exs.21_beach.beach_blue_beach_umbrella_opened",
+   "x": 2992,
+   "y": 4928,
+   "origin": "tl",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Umbrella_Opened.png"
+  },
+  {
+   "me": "me.beach.towel_blue",
+   "exs": "exs.21_beach.beach_blue_beach_towel_1",
+   "x": 2976,
+   "y": 4992,
+   "origin": "tl",
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Towel_1.png"
+  },
+  {
+   "me": "me.beach.bucket_blue",
+   "exs": "exs.21_beach.beach_small_blue_bucket_1",
+   "x": 3024,
+   "y": 4992,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Blue_Bucket_1.png"
+  },
+  {
+   "me": "me.beach.shovel_blue",
+   "exs": "exs.21_beach.beach_small_blue_shovel_1",
+   "x": 3024,
+   "y": 4976,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Blue_Shovel_1.png"
+  },
+  {
+   "me": "me.beach.starfish",
+   "exs": "exs.21_beach.beach_blue_small_starfish",
+   "x": 2960,
+   "y": 4992,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Small_Starfish.png"
+  },
+  {
+   "me": "me.beach.umbrella_blue_open",
+   "exs": "exs.21_beach.beach_blue_beach_umbrella_opened",
+   "x": 2864,
+   "y": 4848,
+   "origin": "tl",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Umbrella_Opened.png"
+  },
+  {
+   "me": "me.beach.towel_blue",
+   "exs": "exs.21_beach.beach_blue_beach_towel_1",
+   "x": 2848,
+   "y": 4912,
+   "origin": "tl",
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Towel_1.png"
+  },
+  {
+   "me": "me.beach.bucket_blue",
+   "exs": "exs.21_beach.beach_small_blue_bucket_1",
+   "x": 2896,
+   "y": 4912,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Blue_Bucket_1.png"
+  },
+  {
+   "me": "me.beach.shovel_blue",
+   "exs": "exs.21_beach.beach_small_blue_shovel_1",
+   "x": 2896,
+   "y": 4896,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Blue_Shovel_1.png"
+  },
+  {
+   "me": "me.beach.starfish",
+   "exs": "exs.21_beach.beach_blue_small_starfish",
+   "x": 2832,
+   "y": 4912,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Small_Starfish.png"
+  },
+  {
+   "me": "me.pool.umbrella_orange_white",
+   "x": 2812,
+   "y": 4970,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Umbrella_6.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_umbrella_6"
+  },
+  {
+   "me": "me.beach.umbrella_blue_closed",
+   "prefer": "21_Beach_16x16_Blue_Beach_Umbrella_Closed.png",
+   "x": 2930,
+   "y": 4864,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Umbrella_Closed.png",
+   "exs": "exs.21_beach.beach_blue_beach_umbrella_closed"
+  },
+  {
+   "me": "me.pool.lifeguard_chair_wood",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Lifeguard_Chair_1.png",
+   "x": 2826,
+   "y": 4864,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Lifeguard_Chair_1.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_lifeguard_chair_1"
+  },
+  {
+   "me": "me.beach.bamboo_bar_sand",
+   "prefer": "21_Beach_16x16_Bamboo_Bar_Counter_1_Sand.png",
+   "x": 3042,
+   "y": 4890,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Counter_1_Sand.png",
+   "exs": "exs.21_beach.beach_bamboo_bar_counter_1_sand"
+  },
+  {
+   "me": "me.pool.sunbed_topdown",
+   "x": 2829,
+   "y": 4898,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Sunbed_6.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_sunbed_6"
+  },
+  {
+   "me": "me.pool.sunbed_orange_side",
+   "x": 2871,
+   "y": 5012,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Sunbed_5.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_sunbed_5"
+  },
+  {
+   "me": "me.beach.music_box",
+   "prefer": "21_Beach_16x16_Music_Box_Sand.png",
+   "x": 2808,
+   "y": 5003,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Music_Box_Sand.png",
+   "exs": "exs.21_beach.beach_music_box_sand"
+  },
+  {
+   "me": "me.beach.shells_brown",
+   "prefer": "21_Beach_16x16_Brown_Shell_1_Vers_1.png",
+   "x": 2887,
+   "y": 4849,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Brown_Shell_1_Vers_1.png",
+   "exs": "exs.21_beach.beach_brown_shell_1_vers_1"
+  },
+  {
+   "me": "me.camping.sleeping_bag_blue",
+   "prefer": "ME_Singles_Camping_16x16_Sleeping_Bag_4.png",
+   "x": 2931,
+   "y": 4891,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sleeping_Bag_4.png",
+   "exs": "exs.11_camping.camping_sleeping_bag_4"
+  },
+  {
+   "me": "me.beach.shells_pink_grey",
+   "prefer": "21_Beach_16x16_Ice_White_Shell_2_Vers_2.png",
+   "x": 2988,
+   "y": 4890,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ice_White_Shell_2_Vers_2.png",
+   "exs": "exs.21_beach.beach_ice_white_shell_2_vers_2"
+  },
+  {
+   "me": "me.beach.volley_net",
+   "x": 2835,
+   "y": 4939,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Net_Middle_Modular.png",
+   "exs": "exs.21_beach.beach_beach_volley_net_middle_modular"
+  },
+  {
+   "me": "me.vehicles.ice_cream_prop_3",
+   "prefer": "ME_Singles_Vehicles_16x16_Ice_Cream_Fallen_5.png",
+   "x": 2978,
+   "y": 4863,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ice_Cream_Fallen_5.png",
+   "exs": "exs.10_vehicles.vehicles_ice_cream_fallen_5"
+  },
+  {
+   "me": "me.beach.shovel_green",
+   "x": 2870,
+   "y": 4975,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Green_Shovel_To_Insert.png",
+   "exs": "exs.21_beach.beach_small_green_shovel_to_insert"
+  },
+  {
+   "me": "me.beach.sandcastle_simple",
+   "prefer": "21_Beach_16x16_Sand_Castle_Vers_1_Tower_3.png",
+   "x": 2917,
+   "y": 5024,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Sand_Castle_Vers_1_Tower_3.png",
+   "exs": "exs.21_beach.beach_sand_castle_vers_1_tower_3"
+  },
+  {
+   "me": "me.pool.float_popsicle_yellow",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Toy_Floating_8.png",
+   "x": 3038,
+   "y": 5036,
+   "origin": "bc",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Toy_Floating_8.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_toy_floating_8"
+  },
+  {
+   "me": "me.beach.umbrella_lightblue_closed",
+   "x": 2936,
+   "y": 4896,
+   "origin": "bc",
+   "depth": 4902.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Lightblue_Beach_Umbrella_Closed.png",
+   "exs": "exs.21_beach.beach_lightblue_beach_umbrella_closed"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "prefer": "ME_Singles_Camping_16x16_Tent_1.png",
+   "x": 2776,
+   "y": 4944,
+   "origin": "bc",
+   "depth": 4950.0,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_1.png",
+   "exs": "exs.11_camping.camping_tent_1"
+  },
+  {
+   "me": "me.beach.umbrella_green_open",
+   "x": 3032,
+   "y": 4960,
+   "origin": "bc",
+   "depth": 4966.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Beach_Umbrella_Opened.png",
+   "exs": "exs.21_beach.beach_green_beach_umbrella_opened"
+  },
+  {
+   "me": "me.beach.umbrella_green_closed",
+   "x": 3000,
+   "y": 4864,
+   "origin": "bc",
+   "depth": 4870.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Beach_Umbrella_Closed.png",
+   "exs": "exs.21_beach.beach_green_beach_umbrella_closed"
+  },
+  {
+   "me": "me.pool.umbrella_green_white",
+   "x": 2936,
+   "y": 5008,
+   "origin": "bc",
+   "depth": 5014.0,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Umbrella_7.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_umbrella_7"
+  },
+  {
+   "me": "me.pool.umbrella_cyan_white",
+   "x": 2904,
+   "y": 4960,
+   "origin": "bc",
+   "depth": 4966.0,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Umbrella_5.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_umbrella_5"
+  },
+  {
+   "me": "me.pool.umbrella_blue_white",
+   "x": 2872,
+   "y": 4880,
+   "origin": "bc",
+   "depth": 4886.0,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Umbrella_8.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_umbrella_8"
+  },
+  {
+   "me": "me.beach.float_orange",
+   "x": 3049,
+   "y": 4935,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Orange_Float.png",
+   "exs": "exs.21_beach.beach_orange_float"
+  },
+  {
+   "me": "me.beach.dj_set",
+   "prefer": "21_Beach_16x16_Mixer_Sand.png",
+   "x": 2780,
+   "y": 4904,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Mixer_Sand.png",
+   "exs": "exs.21_beach.beach_mixer_sand"
+  },
+  {
+   "me": "me.beach.float_green",
+   "x": 2780,
+   "y": 5003,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Float.png",
+   "exs": "exs.21_beach.beach_green_float"
+  },
+  {
+   "me": "me.camping.floating_wood",
+   "prefer": "ME_Singles_Camping_16x16_Floating_Wood_2.png",
+   "x": 2952,
+   "y": 5040,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Floating_Wood_2.png",
+   "exs": "exs.11_camping.camping_floating_wood_2"
+  },
+  {
+   "me": "me.camping.mobile_house_medium",
+   "prefer": "ME_Singles_Camping_16x16_Mobile_House_Medium_2.png",
+   "x": 4368,
+   "y": 480,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mobile_House_Medium_2.png",
+   "exs": "exs.11_camping.camping_mobile_house_medium_2"
+  },
+  {
+   "me": "me.camping.mobile_house_small",
+   "prefer": "ME_Singles_Camping_16x16_Mobile_House_Small_4.png",
+   "x": 4704,
+   "y": 400,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mobile_House_Small_4.png",
+   "exs": "exs.11_camping.camping_mobile_house_small_4"
+  },
+  {
+   "me": "me.camping.sign_gateway",
+   "x": 4552,
+   "y": 368,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Signboard_2.png",
+   "exs": "exs.11_camping.camping_signboard_2"
+  },
+  {
+   "me": "me.camping.campfire_lit_large",
+   "exs": "exs.11_camping.camping_campfire_3",
+   "x": 4608,
+   "y": 528,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Campfire_3.png"
+  },
+  {
+   "me": "me.camping.chair_blue",
+   "exs": "exs.11_camping.camping_chair_2",
+   "x": 4576,
+   "y": 512,
+   "origin": "tl",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Chair_2.png"
+  },
+  {
+   "me": "me.camping.chair_green",
+   "exs": "exs.11_camping.camping_chair_1",
+   "x": 4640,
+   "y": 512,
+   "origin": "tl",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Chair_1.png"
+  },
+  {
+   "me": "me.camping.chair_grey",
+   "exs": "exs.11_camping.camping_chair_4",
+   "x": 4608,
+   "y": 560,
+   "origin": "tl",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Chair_4.png"
+  },
+  {
+   "me": "me.camping.stump",
+   "exs": "exs.11_camping.camping_stump_1",
+   "x": 4592,
+   "y": 544,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Stump_1.png"
+  },
+  {
+   "me": "me.camping.stump",
+   "exs": "exs.11_camping.camping_stump_2",
+   "x": 4624,
+   "y": 544,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Stump_2.png"
+  },
+  {
+   "me": "me.camping.log_fallen",
+   "exs": "exs.11_camping.camping_cut_wood_1",
+   "x": 4608,
+   "y": 496,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Cut_Wood_1.png"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "exs": "exs.11_camping.camping_tent_1",
+   "x": 4672,
+   "y": 496,
+   "origin": "tl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_1.png"
+  },
+  {
+   "me": "me.camping.tent_blue_side",
+   "exs": "exs.11_camping.camping_tent_4",
+   "x": 4736,
+   "y": 512,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_4.png"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "exs": "exs.11_camping.camping_tent_1",
+   "x": 4592,
+   "y": 416,
+   "origin": "tl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_1.png"
+  },
+  {
+   "me": "me.camping.tent_blue_side",
+   "exs": "exs.11_camping.camping_tent_4",
+   "x": 4656,
+   "y": 432,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_4.png"
+  },
+  {
+   "me": "me.camping.fish_crate",
+   "exs": "exs.11_camping.camping_fish_crate_1",
+   "x": 4336,
+   "y": 368,
+   "origin": "tl",
+   "solid": true,
+   "interact": "fish",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_1.png"
+  },
+  {
+   "me": "me.camping.fish_crate",
+   "exs": "exs.11_camping.camping_fish_crate_4",
+   "x": 4336,
+   "y": 352,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_4.png"
+  },
+  {
+   "me": "me.camping.fish_bucket",
+   "exs": "exs.11_camping.camping_fish_bucket_1",
+   "x": 4368,
+   "y": 368,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Bucket_1.png"
+  },
+  {
+   "me": "me.camping.fishing_spot",
+   "exs": "exs.11_camping.camping_fishing_spot_1",
+   "x": 4384,
+   "y": 352,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fishing_Spot_1.png"
+  },
+  {
+   "me": "me.camping.pier_clothes",
+   "exs": "exs.11_camping.camping_pier_clothes_1",
+   "x": 4576,
+   "y": 544,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Clothes_1.png"
+  },
+  {
+   "me": "me.camping.pier_clothes",
+   "exs": "exs.11_camping.camping_pier_clothes_2",
+   "x": 4592,
+   "y": 544,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Clothes_2.png"
+  },
+  {
+   "me": "me.camping.pier_clothes",
+   "exs": "exs.11_camping.camping_pier_clothes_3",
+   "x": 4608,
+   "y": 544,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Clothes_3.png"
+  },
+  {
+   "me": "me.camping.pier_bin",
+   "exs": "exs.11_camping.camping_pier_bin_1",
+   "x": 4624,
+   "y": 560,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bin_1.png"
+  },
+  {
+   "me": "me.camping.rope",
+   "exs": "exs.11_camping.camping_rope_1",
+   "x": 4592,
+   "y": 560,
+   "origin": "tl",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rope_1.png"
+  },
+  {
+   "me": "me.camping.bush_yellow",
+   "prefer": "ME_Singles_Camping_16x16_Tree_131.png",
+   "x": 4748,
+   "y": 528,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_131.png",
+   "exs": "exs.11_camping.camping_tree_131"
+  },
+  {
+   "me": "me.camping.moss",
+   "x": 4409,
+   "y": 526,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Moss_1.png",
+   "exs": "exs.11_camping.camping_moss_1"
+  },
+  {
+   "me": "me.camping.tree_orange_fruit",
+   "prefer": "ME_Singles_Camping_16x16_Tree_118.png",
+   "x": 4500,
+   "y": 413,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_118.png",
+   "exs": "exs.11_camping.camping_tree_118"
+  },
+  {
+   "me": "me.camping.tree_green_leafy_top",
+   "x": 4571,
+   "y": 508,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_Props_1.png",
+   "exs": "exs.11_camping.camping_tree_props_1"
+  },
+  {
+   "me": "me.camping.tree_orange_bushy_large",
+   "prefer": "ME_Singles_Camping_16x16_Tree_161.png",
+   "x": 4648,
+   "y": 372,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_161.png",
+   "exs": "exs.11_camping.camping_tree_161"
+  },
+  {
+   "me": "me.camping.mushrooms",
+   "prefer": "ME_Singles_Camping_16x16_Mushrooms_5.png",
+   "x": 4699,
+   "y": 367,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mushrooms_5.png",
+   "exs": "exs.11_camping.camping_mushrooms_5"
+  },
+  {
+   "me": "me.camping.tree_yellow_sapling",
+   "x": 4421,
+   "y": 572,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_130.png",
+   "exs": "exs.11_camping.camping_tree_130"
+  },
+  {
+   "me": "me.camping.sprout",
+   "prefer": "ME_Singles_Camping_16x16_Sprout_3.png",
+   "x": 4364,
+   "y": 436,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sprout_3.png",
+   "exs": "exs.11_camping.camping_sprout_3"
+  },
+  {
+   "me": "me.camping.rock",
+   "prefer": "ME_Singles_Camping_16x16_Rock_9.png",
+   "x": 4455,
+   "y": 532,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rock_9.png",
+   "exs": "exs.11_camping.camping_rock_9"
+  },
+  {
+   "me": "me.camping.bush_green_plain",
+   "prefer": "ME_Singles_Camping_16x16_Tree_123.png",
+   "x": 4583,
+   "y": 431,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_123.png",
+   "exs": "exs.11_camping.camping_tree_123"
+  },
+  {
+   "me": "me.camping.pine_cone",
+   "x": 4549,
+   "y": 596,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pine_Cone_1.png",
+   "exs": "exs.11_camping.camping_pine_cone_1"
+  },
+  {
+   "me": "me.camping.tree_orange_sapling",
+   "x": 4756,
+   "y": 449,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_124.png",
+   "exs": "exs.11_camping.camping_tree_124"
+  },
+  {
+   "me": "me.camping.tree_green_round_medium",
+   "prefer": "ME_Singles_Camping_16x16_Tree_146.png",
+   "x": 4437,
+   "y": 351,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_146.png",
+   "exs": "exs.11_camping.camping_tree_146"
+  },
+  {
+   "me": "me.camping.tree_dead_large",
+   "prefer": "ME_Singles_Camping_16x16_Tree_Dead_23.png",
+   "x": 4376,
+   "y": 542,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_Dead_23.png",
+   "exs": "exs.11_camping.camping_tree_dead_23"
+  },
+  {
+   "me": "me.camping.tree_dead_stick",
+   "prefer": "ME_Singles_Camping_16x16_Tree_Dead_Stick_2.png",
+   "x": 4665,
+   "y": 420,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_Dead_Stick_2.png",
+   "exs": "exs.11_camping.camping_tree_dead_stick_2"
+  },
+  {
+   "me": "me.camping.tree_pine_tiered_green_medium",
+   "prefer": "ME_Singles_Camping_16x16_Tree_213.png",
+   "x": 4502,
+   "y": 527,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_213.png",
+   "exs": "exs.11_camping.camping_tree_213"
+  },
+  {
+   "me": "me.camping.tree_teal_leafy",
+   "x": 4539,
+   "y": 465,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_109.png",
+   "exs": "exs.11_camping.camping_tree_109"
+  },
+  {
+   "me": "me.camping.tree_green_sapling",
+   "x": 4678,
+   "y": 596,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_185.png",
+   "exs": "exs.11_camping.camping_tree_185"
+  },
+  {
+   "me": "me.camping.tree_orange_conical",
+   "prefer": "ME_Singles_Camping_16x16_Tree_189.png",
+   "x": 4652,
+   "y": 508,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_189.png",
+   "exs": "exs.11_camping.camping_tree_189"
+  },
+  {
+   "me": "me.camping.tree_yellow_leafy_full",
+   "prefer": "ME_Singles_Camping_16x16_Tree_156.png",
+   "x": 4500,
+   "y": 557,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_156.png",
+   "exs": "exs.11_camping.camping_tree_156"
+  },
+  {
+   "me": "me.camping.tree_teal_conical",
+   "prefer": "ME_Singles_Camping_16x16_Tree_Props_15.png",
+   "x": 4361,
+   "y": 348,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_Props_15.png",
+   "exs": "exs.11_camping.camping_tree_props_15"
+  },
+  {
+   "me": "me.camping.bush_green_berry",
+   "prefer": "ME_Singles_Camping_16x16_Tree_270.png",
+   "x": 4347,
+   "y": 493,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_270.png",
+   "exs": "exs.11_camping.camping_tree_270"
+  },
+  {
+   "me": "me.camping.bottle",
+   "prefer": "ME_Singles_Camping_16x16_Bottle_1.png",
+   "x": 4361,
+   "y": 573,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Bottle_1.png",
+   "exs": "exs.11_camping.camping_bottle_1"
+  },
+  {
+   "me": "me.camping.campfire_marshmallow",
+   "prefer": "ME_Singles_Camping_16x16_Campfire_Marshmallow_1.png",
+   "x": 4397,
+   "y": 428,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Campfire_Marshmallow_1.png",
+   "exs": "exs.11_camping.camping_campfire_marshmallow_1"
+  },
+  {
+   "me": "me.camping.campfire_unlit",
+   "prefer": "ME_Singles_Camping_16x16_Campfire_1.png",
+   "x": 4475,
+   "y": 597,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Campfire_1.png",
+   "exs": "exs.11_camping.camping_campfire_1"
+  },
+  {
+   "me": "me.camping.pier_crates",
+   "prefer": "ME_Singles_Camping_16x16_Pier_Props_6.png",
+   "x": 4614,
+   "y": 448,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Props_6.png",
+   "exs": "exs.11_camping.camping_pier_props_6"
+  },
+  {
+   "me": "me.camping.backpack_red",
+   "prefer": "ME_Singles_Camping_16x16_Backpack_10.png",
+   "x": 4450,
+   "y": 401,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Backpack_10.png",
+   "exs": "exs.11_camping.camping_backpack_10"
+  },
+  {
+   "me": "me.camping.apples",
+   "prefer": "ME_Singles_Camping_16x16_Apples_2.png",
+   "x": 4338,
+   "y": 545,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Apples_2.png",
+   "exs": "exs.11_camping.camping_apples_2"
+  },
+  {
+   "me": "me.camping.cooler_red",
+   "x": 4418,
+   "y": 448,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Bucket_2.png",
+   "exs": "exs.11_camping.camping_bucket_2"
+  },
+  {
+   "me": "me.camping.sleeping_bag_blue",
+   "prefer": "ME_Singles_Camping_16x16_Sleeping_Bag_5.png",
+   "x": 4354,
+   "y": 597,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sleeping_Bag_5.png",
+   "exs": "exs.11_camping.camping_sleeping_bag_5"
+  },
+  {
+   "me": "me.camping.pier_barrel",
+   "prefer": "ME_Singles_Camping_16x16_Pier_Barrel_2.png",
+   "x": 4419,
+   "y": 398,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Barrel_2.png",
+   "exs": "exs.11_camping.camping_pier_barrel_2"
+  },
+  {
+   "me": "me.camping.lantern_lit",
+   "prefer": "ME_Singles_Camping_16x16_Lantern_6.png",
+   "x": 4584,
+   "y": 572,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Lantern_6.png",
+   "exs": "exs.11_camping.camping_lantern_6"
+  },
+  {
+   "me": "me.camping.wood_board",
+   "prefer": "ME_Singles_Camping_16x16_Wood_Board_3.png",
+   "x": 4782,
+   "y": 706,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Wood_Board_3.png",
+   "exs": "exs.11_camping.camping_wood_board_3"
+  },
+  {
+   "me": "me.camping.beach_ball_multicolor",
+   "prefer": "ME_Singles_Camping_16x16_Ball_4.png",
+   "x": 4780,
+   "y": 737,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Ball_4.png",
+   "exs": "exs.11_camping.camping_ball_4"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "prefer": "ME_Singles_Camping_16x16_Tent_2.png",
+   "x": 4696,
+   "y": 416,
+   "origin": "bc",
+   "depth": 422.0,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_2.png",
+   "exs": "exs.11_camping.camping_tent_2"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "prefer": "ME_Singles_Camping_16x16_Tent_3.png",
+   "x": 4504,
+   "y": 592,
+   "origin": "bc",
+   "depth": 598.0,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_3.png",
+   "exs": "exs.11_camping.camping_tent_3"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "prefer": "ME_Singles_Camping_16x16_Tent_3.png",
+   "x": 4408,
+   "y": 432,
+   "origin": "bc",
+   "depth": 438.0,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_3.png",
+   "exs": "exs.11_camping.camping_tent_3"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "prefer": "ME_Singles_Camping_16x16_Tent_2.png",
+   "x": 4472,
+   "y": 448,
+   "origin": "bc",
+   "depth": 454.0,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_2.png",
+   "exs": "exs.11_camping.camping_tent_2"
+  },
+  {
+   "me": "me.camping.tent_blue_front",
+   "prefer": "ME_Singles_Camping_16x16_Tent_3.png",
+   "x": 4632,
+   "y": 448,
+   "origin": "bc",
+   "depth": 454.0,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_3.png",
+   "exs": "exs.11_camping.camping_tent_3"
+  },
+  {
+   "me": "me.camping.electric_plate",
+   "prefer": "ME_Singles_Camping_16x16_Electric_Plate_2.png",
+   "x": 4638,
+   "y": 400,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Electric_Plate_2.png",
+   "exs": "exs.11_camping.camping_electric_plate_2"
+  },
+  {
+   "me": "me.camping.hanging_cooking_pot",
+   "prefer": "ME_Singles_Camping_16x16_Hanging_Cooking_Pot_5.png",
+   "x": 4765,
+   "y": 362,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Hanging_Cooking_Pot_5.png",
+   "exs": "exs.11_camping.camping_hanging_cooking_pot_5"
+  },
+  {
+   "me": "me.camping.basket",
+   "prefer": "ME_Singles_Camping_16x16_Basket_1.png",
+   "x": 4337,
+   "y": 440,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Basket_1.png",
+   "exs": "exs.11_camping.camping_basket_1"
+  },
+  {
+   "me": "me.camping.barbecue",
+   "prefer": "ME_Singles_Camping_16x16_Barbecue_1.png",
+   "x": 4537,
+   "y": 553,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Barbecue_1.png",
+   "exs": "exs.11_camping.camping_barbecue_1"
+  },
+  {
+   "me": "me.camping.binoculars",
+   "prefer": "ME_Singles_Camping_16x16_Binoculars_2.png",
+   "x": 4530,
+   "y": 432,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Binoculars_2.png",
+   "exs": "exs.11_camping.camping_binoculars_2"
+  },
+  {
+   "me": "me.camping.sleeping_bag_blue",
+   "prefer": "ME_Singles_Camping_16x16_Sleeping_Bag_1.png",
+   "x": 4743,
+   "y": 681,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sleeping_Bag_1.png",
+   "exs": "exs.11_camping.camping_sleeping_bag_1"
+  },
+  {
+   "me": "me.camping.buoy_floating",
+   "prefer": "ME_Singles_Camping_16x16_Buoy_1.png",
+   "x": 4678,
+   "y": 739,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Buoy_1.png",
+   "exs": "exs.11_camping.camping_buoy_1"
+  },
+  {
+   "me": "me.generic_building.storefront_blue_three_story",
+   "x": 4384,
+   "y": 2432,
+   "origin": "bl",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_5_1.png",
+   "exs": "exs.4_generic_building.generic_building_condo_5_1"
+  },
+  {
+   "me": "me.modular_floors.bakery_full",
+   "prefer": "ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Bakery_Modular_2.png",
+   "x": 4512,
+   "y": 2432,
+   "origin": "bl",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Bakery_Modular_2.png",
+   "exs": "exs.5_floor_modular_building.floor_modular_building_ground_floor_bakery_modular_2"
+  },
+  {
+   "me": "me.fire_station.hydrant",
+   "x": 4152,
+   "y": 2288,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Hydrant_Tube_2.png",
+   "exs": "exs.18_fire_station.fire_station_fire_hydrant_tube_2"
+  },
+  {
+   "me": "me.post_office.mailbox_red_1_front",
+   "prefer": "22_Post_Office_16x16_Red_Mailbox_2_Front.png",
+   "x": 4344,
+   "y": 2208,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Red_Mailbox_2_Front.png",
+   "exs": "exs.22_post_office.post_office_red_mailbox_2_front"
+  },
+  {
+   "me": "me.police.sidewalk_obstacle",
+   "prefer": "ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_2.png",
+   "x": 4168,
+   "y": 2384,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_2.png",
+   "exs": "exs.15_police_station.police_station_sidewalk_obstacle_2"
+  },
+  {
+   "me": "me.fire_station.hydrant_hose_long",
+   "x": 4536,
+   "y": 2240,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Hydrant_Tube_Composition.png",
+   "exs": "exs.18_fire_station.fire_station_fire_hydrant_tube_composition"
+  },
+  {
+   "me": "me.city_props.electric_pole_set",
+   "prefer": "ME_Singles_City_Props_16x16_Electric_Pole_3.png",
+   "x": 4488,
+   "y": 2448,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_3.png",
+   "exs": "exs.3_city_props.city_props_electric_pole_3"
+  },
+  {
+   "me": "me.police.box_front",
+   "prefer": "ME_Singles_Police_Station_16x16_Police_Box_2.png",
+   "x": 4328,
+   "y": 2416,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Box_2.png",
+   "exs": "exs.15_police_station.police_station_police_box_2"
+  },
+  {
+   "me": "me.city_props.lamp_cobra_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_3.png",
+   "x": 4344,
+   "y": 2336,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_3.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_3"
+  },
+  {
+   "me": "me.city_props.hydrant_red",
+   "prefer": "ME_Singles_City_Props_16x16_Hydrant_2.png",
+   "x": 4568,
+   "y": 2336,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_2.png",
+   "exs": "exs.3_city_props.city_props_hydrant_2"
+  },
+  {
+   "me": "me.city_props.pole_plain",
+   "x": 4216,
+   "y": 2208,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pole_1.png",
+   "exs": "exs.3_city_props.city_props_pole_1"
+  },
+  {
+   "me": "me.post_office.mailbox_blue_2_front",
+   "x": 4104,
+   "y": 2448,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Big_Blue_Mailbox.png",
+   "exs": "exs.22_post_office.post_office_big_blue_mailbox"
+  },
+  {
+   "me": "me.city_props.traffic_light_pole_tall_set",
+   "prefer": "ME_Singles_City_Props_16x16_Traffic_Light_10.png",
+   "x": 4296,
+   "y": 2480,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_10.png",
+   "exs": "exs.3_city_props.city_props_traffic_light_10"
+  },
+  {
+   "me": "me.post_office.dropbox_grey",
+   "x": 4424,
+   "y": 2480,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Big_Grey_Mailbox.png",
+   "exs": "exs.22_post_office.post_office_big_grey_mailbox"
+  },
+  {
+   "me": "me.post_office.mailbox_blue_1_front",
+   "prefer": "22_Post_Office_16x16_Blue_Mailbox_2_Front.png",
+   "x": 4472,
+   "y": 2240,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Blue_Mailbox_2_Front.png",
+   "exs": "exs.22_post_office.post_office_blue_mailbox_2_front"
+  },
+  {
+   "me": "me.post_office.mailbox_black_1_front",
+   "prefer": "22_Post_Office_16x16_Black_Mailbox_2_Front.png",
+   "x": 4120,
+   "y": 2192,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Black_Mailbox_2_Front.png",
+   "exs": "exs.22_post_office.post_office_black_mailbox_2_front"
+  },
+  {
+   "me": "me.city_props.lamp_ornate_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 4488,
+   "y": 2336,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_1"
+  },
+  {
+   "me": "me.city_props.sign_classic_set",
+   "prefer": "ME_Singles_City_Props_16x16_Traffic_Sign_45.png",
+   "x": 4136,
+   "y": 2192,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Sign_45.png",
+   "exs": "exs.3_city_props.city_props_traffic_sign_45"
+  },
+  {
+   "me": "me.subway.ui_number_blue",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_3_Blue.png",
+   "x": 4456,
+   "y": 2192,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_3_Blue.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_binary_number_3_blue"
+  },
+  {
+   "me": "me.shopping.sign_mall",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_2.png",
+   "x": 4136,
+   "y": 2416,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_2.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_mall_signboard_2"
+  },
+  {
+   "me": "me.city_props.sign_hydrant_marker",
+   "x": 4536,
+   "y": 2416,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_Sign_1.png",
+   "exs": "exs.3_city_props.city_props_hydrant_sign_1"
+  },
+  {
+   "me": "me.generic_building.window_brown_standard",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_3_24.png",
+   "x": 4384,
+   "y": 2256,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_3_24.png",
+   "exs": "exs.4_generic_building.generic_building_condo_3_24"
+  },
+  {
+   "me": "me.city_props.junk_shack",
+   "x": 4480,
+   "y": 2208,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_Shack_1.png",
+   "exs": "exs.3_city_props.city_props_junk_shack_1"
+  },
+  {
+   "me": "me.shopping.mall_facade",
+   "x": 4480,
+   "y": 2240,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Props_1.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_mall_props_1"
+  },
+  {
+   "me": "me.generic_building.window_flowerbox_double",
+   "x": 4352,
+   "y": 2224,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_3_25.png",
+   "exs": "exs.4_generic_building.generic_building_condo_3_25"
+  },
+  {
+   "me": "me.generic_building.window_flowerbox_red",
+   "x": 4480,
+   "y": 2272,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_3_40.png",
+   "exs": "exs.4_generic_building.generic_building_condo_3_40"
+  },
+  {
+   "me": "me.generic_building.facade_beige_pipe_wall",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_9_Pipe_1.png",
+   "x": 4464,
+   "y": 2208,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_9_Pipe_1.png",
+   "exs": "exs.4_generic_building.generic_building_condo_9_pipe_1"
+  },
+  {
+   "me": "me.generic_building.window_redbrick_double_hooded",
+   "x": 4384,
+   "y": 2208,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_4_22.png",
+   "exs": "exs.4_generic_building.generic_building_condo_4_22"
+  },
+  {
+   "me": "me.city_props.sign_hydrant_marker",
+   "x": 4328,
+   "y": 768,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_Sign_1.png",
+   "exs": "exs.3_city_props.city_props_hydrant_sign_1"
+  },
+  {
+   "me": "me.garage_sales.hanging_sign_red",
+   "x": 4472,
+   "y": 640,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Sign_10.png",
+   "exs": "exs.6_garage_sales.garage_sales_sign_10"
+  },
+  {
+   "me": "me.garage_sales.hanging_sign_orange",
+   "prefer": "ME_Singles_Garage_Sales_16x16_Sign_7.png",
+   "x": 4152,
+   "y": 784,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Sign_7.png",
+   "exs": "exs.6_garage_sales.garage_sales_sign_7"
+  },
+  {
+   "me": "me.shopping.sign_mall",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_2.png",
+   "x": 4328,
+   "y": 672,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_2.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_mall_signboard_2"
+  },
+  {
+   "me": "me.shopping.sign_mall",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_1.png",
+   "x": 4424,
+   "y": 832,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_1.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_mall_signboard_1"
+  },
+  {
+   "me": "me.garage_sales.hanging_sign_red",
+   "x": 4120,
+   "y": 608,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Sign_10.png",
+   "exs": "exs.6_garage_sales.garage_sales_sign_10"
+  },
+  {
+   "me": "me.city_props.sign_hydrant_marker",
+   "x": 4232,
+   "y": 688,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_Sign_1.png",
+   "exs": "exs.3_city_props.city_props_hydrant_sign_1"
+  },
+  {
+   "me": "me.garage_sales.hanging_sign_orange",
+   "prefer": "ME_Singles_Garage_Sales_16x16_Sign_6.png",
+   "x": 4520,
+   "y": 800,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Sign_6.png",
+   "exs": "exs.6_garage_sales.garage_sales_sign_6"
+  },
+  {
+   "me": "me.city_props.sign_hydrant_marker",
+   "x": 4568,
+   "y": 688,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_Sign_1.png",
+   "exs": "exs.3_city_props.city_props_hydrant_sign_1"
+  },
+  {
+   "me": "me.shopping.sign_mall",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_1.png",
+   "x": 4424,
+   "y": 736,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Signboard_1.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_mall_signboard_1"
+  },
+  {
+   "me": "me.garage_sales.hanging_sign_red",
+   "x": 4568,
+   "y": 592,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Sign_10.png",
+   "exs": "exs.6_garage_sales.garage_sales_sign_10"
+  },
+  {
+   "me": "me.garage_sales.hanging_sign_orange",
+   "prefer": "ME_Singles_Garage_Sales_16x16_Sign_2.png",
+   "x": 4232,
+   "y": 592,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Sign_2.png",
+   "exs": "exs.6_garage_sales.garage_sales_sign_2"
+  },
+  {
+   "me": "me.city_props.bench_wood_front",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_1.png",
+   "x": 4281,
+   "y": 769,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+   "exs": "exs.3_city_props.city_props_bench_1"
+  },
+  {
+   "me": "me.generic_building.prop_bench_wood",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_4_34.png",
+   "x": 4320,
+   "y": 600,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_4_34.png",
+   "exs": "exs.4_generic_building.generic_building_condo_4_34"
+  },
+  {
+   "me": "me.city_props.bench_variants_set",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_3.png",
+   "x": 4160,
+   "y": 638,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_3.png",
+   "exs": "exs.3_city_props.city_props_bench_3"
+  },
+  {
+   "me": "me.city_props.bench_variants_set",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_4.png",
+   "x": 4528,
+   "y": 781,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_4.png",
+   "exs": "exs.3_city_props.city_props_bench_4"
+  },
+  {
+   "me": "me.city_props.bench_wood_front",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_7.png",
+   "x": 4530,
+   "y": 731,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_7.png",
+   "exs": "exs.3_city_props.city_props_bench_7"
+  },
+  {
+   "me": "me.generic_building.prop_bench_wood",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_4_35.png",
+   "x": 4144,
+   "y": 748,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_4_35.png",
+   "exs": "exs.4_generic_building.generic_building_condo_4_35"
+  },
+  {
+   "me": "me.city_props.bench_wood_front",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_7.png",
+   "x": 4526,
+   "y": 613,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_7.png",
+   "exs": "exs.3_city_props.city_props_bench_7"
+  },
+  {
+   "me": "me.city_props.bench_variants_set",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_4.png",
+   "x": 4135,
+   "y": 698,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_4.png",
+   "exs": "exs.3_city_props.city_props_bench_4"
+  },
+  {
+   "me": "me.generic_building.prop_bench_wood",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_4_37.png",
+   "x": 4525,
+   "y": 684,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_4_37.png",
+   "exs": "exs.4_generic_building.generic_building_condo_4_37"
+  },
+  {
+   "me": "me.city_props.bench_variants_set",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_4.png",
+   "x": 4128,
+   "y": 814,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_4.png",
+   "exs": "exs.3_city_props.city_props_bench_4"
+  },
+  {
+   "me": "me.city_props.bench_wood_front",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_1.png",
+   "x": 4392,
+   "y": 657,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+   "exs": "exs.3_city_props.city_props_bench_1"
+  },
+  {
+   "me": "me.generic_building.prop_bench_wood",
+   "prefer": "ME_Singles_Generic_Building_16x16_Condo_4_36.png",
+   "x": 4299,
+   "y": 832,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_4_36.png",
+   "exs": "exs.4_generic_building.generic_building_condo_4_36"
+  },
+  {
+   "me": "me.city_props.bench_wood_front",
+   "prefer": "ME_Singles_City_Props_16x16_Bench_7.png",
+   "x": 4222,
+   "y": 728,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_7.png",
+   "exs": "exs.3_city_props.city_props_bench_7"
+  },
+  {
+   "me": "me.shopping.market_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_3.png",
+   "x": 4104,
+   "y": 816,
+   "origin": "bc",
+   "depth": 822.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_3.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_3"
+  },
+  {
+   "me": "me.shopping.market_big_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_3.png",
+   "x": 4408,
+   "y": 704,
+   "origin": "bc",
+   "depth": 710.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_3.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_big_3"
+  },
+  {
+   "me": "me.shopping.market_tan_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "x": 4312,
+   "y": 768,
+   "origin": "bc",
+   "depth": 774.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_11"
+  },
+  {
+   "me": "me.shopping.market_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_2.png",
+   "x": 4456,
+   "y": 768,
+   "origin": "bc",
+   "depth": 774.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_2.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_2"
+  },
+  {
+   "me": "me.shopping.market_tan_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_9.png",
+   "x": 4216,
+   "y": 608,
+   "origin": "bc",
+   "depth": 614.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_9.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_9"
+  },
+  {
+   "me": "me.shopping.market_big_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_2.png",
+   "x": 4472,
+   "y": 608,
+   "origin": "bc",
+   "depth": 614.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_2.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_big_2"
+  },
+  {
+   "me": "me.shopping.market_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_6.png",
+   "x": 4152,
+   "y": 816,
+   "origin": "bc",
+   "depth": 822.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_6.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_6"
+  },
+  {
+   "me": "me.shopping.market_big_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_1.png",
+   "x": 4488,
+   "y": 720,
+   "origin": "bc",
+   "depth": 726.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_1.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_big_1"
+  },
+  {
+   "me": "me.shopping.market_tan_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "x": 4552,
+   "y": 608,
+   "origin": "bc",
+   "depth": 614.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_11"
+  },
+  {
+   "me": "me.shopping.market_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_10.png",
+   "x": 4536,
+   "y": 832,
+   "origin": "bc",
+   "depth": 838.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_10.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_10"
+  },
+  {
+   "me": "me.shopping.market_big_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_5.png",
+   "x": 4472,
+   "y": 832,
+   "origin": "bc",
+   "depth": 838.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_5.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_big_5"
+  },
+  {
+   "me": "me.shopping.market_tan_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "x": 4136,
+   "y": 640,
+   "origin": "bc",
+   "depth": 646.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_11"
+  },
+  {
+   "me": "me.shopping.market_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_5.png",
+   "x": 4152,
+   "y": 704,
+   "origin": "bc",
+   "depth": 710.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_5.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_5"
+  },
+  {
+   "me": "me.shopping.market_big_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_4.png",
+   "x": 4200,
+   "y": 672,
+   "origin": "bc",
+   "depth": 678.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_4.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_big_4"
+  },
+  {
+   "me": "me.shopping.market_tan_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_9.png",
+   "x": 4360,
+   "y": 800,
+   "origin": "bc",
+   "depth": 806.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_9.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_9"
+  },
+  {
+   "me": "me.shopping.market_big_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_6.png",
+   "x": 4104,
+   "y": 736,
+   "origin": "bc",
+   "depth": 742.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_6.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_big_6"
+  },
+  {
+   "me": "me.shopping.market_tan_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "x": 4232,
+   "y": 784,
+   "origin": "bc",
+   "depth": 790.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_11"
+  },
+  {
+   "me": "me.shopping.market_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_1.png",
+   "x": 4536,
+   "y": 656,
+   "origin": "bc",
+   "depth": 662.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_1.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_1"
+  },
+  {
+   "me": "me.shopping.market_big_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_5.png",
+   "x": 4200,
+   "y": 832,
+   "origin": "bc",
+   "depth": 838.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_5.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_big_5"
+  },
+  {
+   "me": "me.shopping.market_green_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_4.png",
+   "x": 4408,
+   "y": 608,
+   "origin": "bc",
+   "depth": 614.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_4.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_4"
+  },
+  {
+   "me": "me.shopping.market_tan_flat",
+   "prefer": "ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "x": 4360,
+   "y": 704,
+   "origin": "bc",
+   "depth": 710.0,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_11.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_medium_11"
+  },
+  {
+   "me": "me.school.clock_tower",
+   "prefer": "ME_Singles_School_16x16_Clock_Tower_2.png",
+   "x": 3016,
+   "y": 2208,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/13_school/ME_Singles_School_16x16_Clock_Tower_2.png",
+   "exs": "exs.13_school.school_clock_tower_2"
+  },
+  {
+   "me": "me.police.box_front",
+   "prefer": "ME_Singles_Police_Station_16x16_Police_Box_2.png",
+   "x": 3176,
+   "y": 2096,
+   "origin": "bc",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Box_2.png",
+   "exs": "exs.15_police_station.police_station_police_box_2"
+  },
+  {
+   "me": "me.vehicles.compact_grey_east",
+   "x": 2944,
+   "y": 2080,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_6.png",
+   "exs": "exs.10_vehicles.vehicles_car_right_6"
+  },
+  {
+   "me": "me.vehicles.compact_grey_south",
+   "x": 2912,
+   "y": 2016,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_6.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_6"
+  },
+  {
+   "me": "me.police.car_front",
+   "prefer": "ME_Singles_Police_Station_16x16_Police_Car_1.png",
+   "x": 2960,
+   "y": 2032,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Car_1.png",
+   "exs": "exs.15_police_station.police_station_police_car_1"
+  },
+  {
+   "me": "me.post_office.truck_back_closed",
+   "x": 2944,
+   "y": 2000,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Truck_Back.png",
+   "exs": "exs.22_post_office.post_office_truck_back"
+  },
+  {
+   "me": "me.school.playground_swing_set",
+   "x": 3035,
+   "y": 2058,
+   "origin": "bc",
+   "img": "ext/singles/13_school/ME_Singles_School_16x16_School_Yard_Toy_3.png",
+   "exs": "exs.13_school.school_school_yard_toy_3"
+  },
+  {
+   "me": "me.fire_station.hydrant_hose_long",
+   "x": 3160,
+   "y": 2000,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Hydrant_Tube_Composition.png",
+   "exs": "exs.18_fire_station.fire_station_fire_hydrant_tube_composition"
+  },
+  {
+   "me": "me.post_office.mailbox_red_1_front",
+   "prefer": "22_Post_Office_16x16_Red_Mailbox_2_Front.png",
+   "x": 3240,
+   "y": 2016,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Red_Mailbox_2_Front.png",
+   "exs": "exs.22_post_office.post_office_red_mailbox_2_front"
+  },
+  {
+   "me": "me.post_office.mailbox_blue_1_front",
+   "prefer": "22_Post_Office_16x16_Blue_Mailbox_1_Front.png",
+   "x": 3240,
+   "y": 2144,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Blue_Mailbox_1_Front.png",
+   "exs": "exs.22_post_office.post_office_blue_mailbox_1_front"
+  },
+  {
+   "me": "me.post_office.dropbox_grey",
+   "x": 3208,
+   "y": 2064,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Big_Grey_Mailbox.png",
+   "exs": "exs.22_post_office.post_office_big_grey_mailbox"
+  },
+  {
+   "me": "me.police.sidewalk_obstacle",
+   "prefer": "ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_1.png",
+   "x": 3256,
+   "y": 2080,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_1.png",
+   "exs": "exs.15_police_station.police_station_sidewalk_obstacle_1"
+  },
+  {
+   "me": "me.post_office.mailbox_black_1_front",
+   "prefer": "22_Post_Office_16x16_Black_Mailbox_1_Front.png",
+   "x": 3192,
+   "y": 2144,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Black_Mailbox_1_Front.png",
+   "exs": "exs.22_post_office.post_office_black_mailbox_1_front"
+  },
+  {
+   "me": "me.city_props.sign_info_board_set",
+   "prefer": "ME_Singles_City_Props_16x16_Info_Sign_6.png",
+   "x": 3208,
+   "y": 2032,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Info_Sign_6.png",
+   "exs": "exs.3_city_props.city_props_info_sign_6"
+  },
+  {
+   "me": "me.city_terrains.roundabout_sign",
+   "prefer": "ME_Singles_City_Terrains_16x16_Sidewalk_3_54.png",
+   "x": 3160,
+   "y": 2160,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/2_city_terrains/ME_Singles_City_Terrains_16x16_Sidewalk_3_54.png",
+   "exs": "exs.2_city_terrains.city_terrains_sidewalk_3_54"
+  },
+  {
+   "me": "me.hotel_hospital.stretcher_empty_4",
+   "prefer": "ME_Singles_Hotel_and_Hospital_16x16_Stretcher_3.png",
+   "x": 3254,
+   "y": 2058,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Stretcher_3.png",
+   "exs": "exs.12_hotel_and_hospital.hotel_and_hospital_stretcher_3"
+  },
+  {
+   "me": "me.hotel_hospital.stretcher_injured_1",
+   "prefer": "ME_Singles_Hotel_and_Hospital_16x16_Stretcher_Injured_12.png",
+   "x": 3225,
+   "y": 2182,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Stretcher_Injured_12.png",
+   "exs": "exs.12_hotel_and_hospital.hotel_and_hospital_stretcher_injured_12"
+  },
+  {
+   "me": "me.city_props.tree_in_square_planter",
+   "prefer": "ME_Singles_City_Props_16x16_Tree_10.png",
+   "x": 3201,
+   "y": 1997,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_10.png",
+   "exs": "exs.3_city_props.city_props_tree_10"
+  },
+  {
+   "me": "me.city_props.grass_tufts_mixed",
+   "prefer": "ME_Singles_City_Props_16x16_Shrub_9.png",
+   "x": 3127,
+   "y": 2261,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Shrub_9.png",
+   "exs": "exs.3_city_props.city_props_shrub_9"
+  },
+  {
+   "me": "me.city_props.pot_small",
+   "prefer": "ME_Singles_City_Props_16x16_Pot_1.png",
+   "x": 3075,
+   "y": 2269,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_1.png",
+   "exs": "exs.3_city_props.city_props_pot_1"
+  },
+  {
+   "me": "me.city_props.flowers_scatter_white_yellow",
+   "x": 3267,
+   "y": 2217,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flowers_1.png",
+   "exs": "exs.3_city_props.city_props_flowers_1"
+  },
+  {
+   "me": "me.school.goal_soccer_right",
+   "x": 2975,
+   "y": 2225,
+   "origin": "bc",
+   "img": "ext/singles/13_school/ME_Singles_School_16x16_Soccer_Net_2.png",
+   "exs": "exs.13_school.school_soccer_net_2"
+  },
+  {
+   "me": "me.school.hoop_basketball_angled",
+   "x": 2963,
+   "y": 2258,
+   "origin": "bc",
+   "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_4.png",
+   "exs": "exs.13_school.school_basketball_net_4"
+  },
+  {
+   "me": "me.post_office.package_pile_small",
+   "x": 3011,
+   "y": 2248,
+   "origin": "bc",
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Multiple_Packages_2.png",
+   "exs": "exs.22_post_office.post_office_multiple_packages_2"
+  },
+  {
+   "me": "me.hotel_hospital.stretcher_empty_4",
+   "prefer": "ME_Singles_Hotel_and_Hospital_16x16_Stretcher_2.png",
+   "x": 3254,
+   "y": 2268,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Stretcher_2.png",
+   "exs": "exs.12_hotel_and_hospital.hotel_and_hospital_stretcher_2"
+  },
+  {
+   "me": "me.post_office.package_big_1",
+   "prefer": "22_Post_Office_16x16_Big_Single_Package_2.png",
+   "x": 3027,
+   "y": 1996,
+   "origin": "bc",
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Big_Single_Package_2.png",
+   "exs": "exs.22_post_office.post_office_big_single_package_2"
+  },
+  {
+   "me": "me.post_office.letter_1",
+   "prefer": "22_Post_Office_16x16_Letter_1.png",
+   "x": 2904,
+   "y": 2234,
+   "origin": "bc",
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Letter_1.png",
+   "exs": "exs.22_post_office.post_office_letter_1"
+  },
+  {
+   "me": "me.city_props.trash_can_blue_open",
+   "prefer": "ME_Singles_City_Props_16x16_Blue_Open_Empty_Trash_Can.png",
+   "x": 3195,
+   "y": 2260,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Open_Empty_Trash_Can.png",
+   "exs": "exs.3_city_props.city_props_blue_open_empty_trash_can"
+  },
+  {
+   "me": "me.garden.statue_angel_standing",
+   "prefer": "ME_Singles_Garden_16x16_Statue_Angel_2.png",
+   "x": 3028,
+   "y": 4044,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Statue_Angel_2.png",
+   "exs": "exs.17_garden.garden_statue_angel_2"
+  },
+  {
+   "me": "me.garden.hedge_arch",
+   "x": 2712,
+   "y": 3880,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Arch_1.png",
+   "exs": "exs.17_garden.garden_grass_arch_1"
+  },
+  {
+   "me": "me.camping.tree_orange_conical",
+   "prefer": "ME_Singles_Camping_16x16_Tree_193.png",
+   "x": 3066,
+   "y": 3892,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_193.png",
+   "exs": "exs.11_camping.camping_tree_193"
+  },
+  {
+   "me": "me.garden.big_yellow_flower",
+   "x": 2970,
+   "y": 3823,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Yellow_Flower.png",
+   "exs": "exs.17_garden.garden_big_yellow_flower"
+  },
+  {
+   "me": "me.graveyard.group_four_leaf_clover_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Group_Four_Leaf_Clover_2.png",
+   "x": 3076,
+   "y": 3837,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Group_Four_Leaf_Clover_2.png",
+   "exs": "exs.19_graveyard.graveyard_group_four_leaf_clover_2"
+  },
+  {
+   "me": "me.graveyard.white_1_flowers_pot",
+   "prefer": "ME_Singles_Graveyard_16x16_White_1_Flowers_Pot.png",
+   "x": 2820,
+   "y": 3871,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_White_1_Flowers_Pot.png",
+   "exs": "exs.19_graveyard.graveyard_white_1_flowers_pot"
+  },
+  {
+   "me": "me.camping.tree_dead_stick",
+   "prefer": "ME_Singles_Camping_16x16_Tree_Dead_Stick_10.png",
+   "x": 3028,
+   "y": 3810,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_Dead_Stick_10.png",
+   "exs": "exs.11_camping.camping_tree_dead_stick_10"
+  },
+  {
+   "me": "me.graveyard.multicolor_flowers",
+   "x": 3049,
+   "y": 3763,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Multicolor_Flowers.png",
+   "exs": "exs.19_graveyard.graveyard_multicolor_flowers"
+  },
+  {
+   "me": "me.graveyard.brown_3_little_mushrooms",
+   "x": 2795,
+   "y": 3836,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Brown_3_Little_Mushrooms.png",
+   "exs": "exs.19_graveyard.graveyard_brown_3_little_mushrooms"
+  },
+  {
+   "me": "me.graveyard.red_group_flowers",
+   "x": 2823,
+   "y": 3795,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Red_Group_Flowers.png",
+   "exs": "exs.19_graveyard.graveyard_red_group_flowers"
+  },
+  {
+   "me": "me.garden.bush_potted",
+   "prefer": "ME_Singles_Garden_16x16_Bush_Potted_4.png",
+   "x": 2759,
+   "y": 3860,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_Potted_4.png",
+   "exs": "exs.17_garden.garden_bush_potted_4"
+  },
+  {
+   "me": "me.camping.tree_green_sapling",
+   "x": 2939,
+   "y": 3811,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_185.png",
+   "exs": "exs.11_camping.camping_tree_185"
+  },
+  {
+   "me": "me.garden.big_light_blue_flower",
+   "x": 2728,
+   "y": 3761,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Light_Blue_Flower.png",
+   "exs": "exs.17_garden.garden_big_light_blue_flower"
+  },
+  {
+   "me": "me.garden.bush_round",
+   "prefer": "ME_Singles_Garden_16x16_Bush_11.png",
+   "x": 2747,
+   "y": 3804,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_11.png",
+   "exs": "exs.17_garden.garden_bush_11"
+  },
+  {
+   "me": "me.garden.small_yellow_flower",
+   "x": 2892,
+   "y": 3808,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Yellow_Flower.png",
+   "exs": "exs.17_garden.garden_small_yellow_flower"
+  },
+  {
+   "me": "me.garden.big_white_flower",
+   "x": 2906,
+   "y": 3859,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_White_Flower.png",
+   "exs": "exs.17_garden.garden_big_white_flower"
+  },
+  {
+   "me": "me.camping.pine_cone",
+   "x": 2870,
+   "y": 3871,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pine_Cone_1.png",
+   "exs": "exs.11_camping.camping_pine_cone_1"
+  },
+  {
+   "me": "me.garden.small_red_flower",
+   "x": 2859,
+   "y": 3794,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Red_Flower.png",
+   "exs": "exs.17_garden.garden_small_red_flower"
+  },
+  {
+   "me": "me.graveyard.medium_tree_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Medium_Pumpkin_2.png",
+   "x": 3002,
+   "y": 3885,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Pumpkin_2.png",
+   "exs": "exs.19_graveyard.graveyard_medium_pumpkin_2"
+  },
+  {
+   "me": "me.garden.small_light_blue_flower",
+   "x": 3016,
+   "y": 3841,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Light_Blue_Flower.png",
+   "exs": "exs.17_garden.garden_small_light_blue_flower"
+  },
+  {
+   "me": "me.camping.tree_pine_tiered_green_medium",
+   "prefer": "ME_Singles_Camping_16x16_Tree_208.png",
+   "x": 2918,
+   "y": 3774,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_208.png",
+   "exs": "exs.11_camping.camping_tree_208"
+  },
+  {
+   "me": "me.camping.moss",
+   "x": 2952,
+   "y": 3872,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Moss_1.png",
+   "exs": "exs.11_camping.camping_moss_1"
+  },
+  {
+   "me": "me.camping.mushrooms",
+   "prefer": "ME_Singles_Camping_16x16_Mushrooms_5.png",
+   "x": 2708,
+   "y": 3825,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mushrooms_5.png",
+   "exs": "exs.11_camping.camping_mushrooms_5"
+  },
+  {
+   "me": "me.garden.big_sunflower",
+   "x": 3078,
+   "y": 3807,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Sunflower.png",
+   "exs": "exs.17_garden.garden_big_sunflower"
+  },
+  {
+   "me": "me.garden.tool_watering_can_red",
+   "prefer": "ME_Singles_Garden_16x16_Red_Watering_Can_Full_Left.png",
+   "x": 2849,
+   "y": 3826,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Red_Watering_Can_Full_Left.png",
+   "exs": "exs.17_garden.garden_red_watering_can_full_left"
+  },
+  {
+   "me": "me.garden.tool_scissors",
+   "x": 3028,
+   "y": 3776,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Scissors.png",
+   "exs": "exs.17_garden.garden_scissors"
+  },
+  {
+   "me": "me.garden.medium_sunflower_vase",
+   "x": 2789,
+   "y": 3775,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_Sunflower_Vase.png",
+   "exs": "exs.17_garden.garden_medium_sunflower_vase"
+  },
+  {
+   "me": "me.graveyard.pumpkin_branch_left",
+   "x": 2971,
+   "y": 3850,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Pumpikin_Brunch_Left.png",
+   "exs": "exs.19_graveyard.graveyard_pumpikin_brunch_left"
+  },
+  {
+   "me": "me.garden.bench_small",
+   "prefer": "ME_Singles_Garden_16x16_Small_Bench_Horizontal.png",
+   "x": 2885,
+   "y": 3834,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Bench_Horizontal.png",
+   "exs": "exs.17_garden.garden_small_bench_horizontal"
+  },
+  {
+   "me": "me.camping.sign_arrow",
+   "prefer": "ME_Singles_Camping_16x16_Sign_2.png",
+   "x": 2904,
+   "y": 3920,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sign_2.png",
+   "exs": "exs.11_camping.camping_sign_2"
+  },
+  {
+   "me": "me.garden.big_pink_flower",
+   "x": 2800,
+   "y": 3920,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Pink_Flower.png",
+   "exs": "exs.17_garden.garden_big_pink_flower"
+  },
+  {
+   "me": "me.camping.tree_orange_leafy_full",
+   "prefer": "ME_Singles_Camping_16x16_Tree_104.png",
+   "x": 2788,
+   "y": 4000,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_104.png",
+   "exs": "exs.11_camping.camping_tree_104"
+  },
+  {
+   "me": "me.camping.tree_orange_fruit",
+   "prefer": "ME_Singles_Camping_16x16_Tree_119.png",
+   "x": 2758,
+   "y": 3951,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_119.png",
+   "exs": "exs.11_camping.camping_tree_119"
+  },
+  {
+   "me": "me.graveyard.brown_1_mushrooms",
+   "prefer": "ME_Singles_Graveyard_16x16_Brown_1_Mushrooms.png",
+   "x": 2967,
+   "y": 4045,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Brown_1_Mushrooms.png",
+   "exs": "exs.19_graveyard.graveyard_brown_1_mushrooms"
+  },
+  {
+   "me": "me.garden.medium_light_blue_flower_vase",
+   "x": 2769,
+   "y": 4056,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_Light_Blue_Flower_Vase.png",
+   "exs": "exs.17_garden.garden_medium_light_blue_flower_vase"
+  },
+  {
+   "me": "me.graveyard.empty_pot_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Empty_Pot_1.png",
+   "x": 3066,
+   "y": 3947,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Empty_Pot_1.png",
+   "exs": "exs.19_graveyard.graveyard_empty_pot_1"
+  },
+  {
+   "me": "me.garden.small_light_blue_flower_vase",
+   "x": 3003,
+   "y": 3930,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Light_Blue_Flower_Vase.png",
+   "exs": "exs.17_garden.garden_small_light_blue_flower_vase"
+  },
+  {
+   "me": "me.garden.medium_sprout_vase",
+   "prefer": "ME_Singles_Garden_16x16_Medium_Sprout_Vase_3.png",
+   "x": 2836,
+   "y": 3943,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_Sprout_Vase_3.png",
+   "exs": "exs.17_garden.garden_medium_sprout_vase_3"
+  },
+  {
+   "me": "me.garden.medium_white_flower_vase",
+   "x": 3080,
+   "y": 3997,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_White_Flower_Vase.png",
+   "exs": "exs.17_garden.garden_medium_white_flower_vase"
+  },
+  {
+   "me": "me.garden.statue_angel_vines_dark",
+   "prefer": "ME_Singles_Garden_16x16_Angel_Statue_1.png",
+   "x": 2994,
+   "y": 3990,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Angel_Statue_1.png",
+   "exs": "exs.17_garden.garden_angel_statue_1"
+  },
+  {
+   "me": "me.camping.electric_plate",
+   "prefer": "ME_Singles_Camping_16x16_Electric_Plate_2.png",
+   "x": 2909,
+   "y": 3888,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Electric_Plate_2.png",
+   "exs": "exs.11_camping.camping_electric_plate_2"
+  },
+  {
+   "me": "me.graveyard.long_tombstone_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Long_Tombstone_2.png",
+   "x": 3040,
+   "y": 3848,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Long_Tombstone_2.png",
+   "exs": "exs.19_graveyard.graveyard_long_tombstone_2"
+  },
+  {
+   "me": "me.garden.tool_rake_blue",
+   "prefer": "ME_Singles_Garden_16x16_Ground_Blue_Rake_Left.png",
+   "x": 2848,
+   "y": 3890,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Ground_Blue_Rake_Left.png",
+   "exs": "exs.17_garden.garden_ground_blue_rake_left"
+  },
+  {
+   "me": "me.garden.tool_rake_red",
+   "prefer": "ME_Singles_Garden_16x16_Ground_Red_Rake_Left.png",
+   "x": 3056,
+   "y": 4003,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Ground_Red_Rake_Left.png",
+   "exs": "exs.17_garden.garden_ground_red_rake_left"
+  },
+  {
+   "me": "me.garden.birdhouse_big_brown",
+   "x": 2940,
+   "y": 3975,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Brown_Big_Bird_House.png",
+   "exs": "exs.17_garden.garden_brown_big_bird_house"
+  },
+  {
+   "me": "me.garden.vase_full",
+   "x": 2869,
+   "y": 4014,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Vase_Full.png",
+   "exs": "exs.17_garden.garden_vase_full"
+  },
+  {
+   "me": "me.graveyard.red_skull_coffin",
+   "x": 2893,
+   "y": 4022,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Red_Skull_Coffin.png",
+   "exs": "exs.19_graveyard.graveyard_red_skull_coffin"
+  },
+  {
+   "me": "me.garden.gate_iron",
+   "prefer": "ME_Singles_Garden_16x16_Gate_1.png",
+   "x": 1360,
+   "y": 4544,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Gate_1.png",
+   "exs": "exs.17_garden.garden_gate_1"
+  },
+  {
+   "me": "me.garden.medium_sunflower",
+   "x": 1465,
+   "y": 4465,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_Sunflower.png",
+   "exs": "exs.17_garden.garden_medium_sunflower"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_2.png",
+   "x": 1200,
+   "y": 4464,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_2.png",
+   "exs": "exs.17_garden.garden_pergola_right_support_fence_2"
+  },
+  {
+   "me": "me.vehicles.sedan_b_yellow_west",
+   "x": 1360,
+   "y": 4496,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_18.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_18"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_13.png",
+   "x": 1456,
+   "y": 4608,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_13.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_13"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_1.png",
+   "x": 1488,
+   "y": 4688,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_1.png",
+   "exs": "exs.17_garden.garden_pergola_right_support_fence_1"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_23.png",
+   "x": 1216,
+   "y": 4640,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_23.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_23"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Left_Support_Fence_1.png",
+   "x": 1264,
+   "y": 4640,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Left_Support_Fence_1.png",
+   "exs": "exs.17_garden.garden_pergola_left_support_fence_1"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_24.png",
+   "x": 1376,
+   "y": 4640,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_24.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_24"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_14.png",
+   "x": 1184,
+   "y": 4560,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_14.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_14"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Left_Support_Fence_2.png",
+   "x": 1392,
+   "y": 4704,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Left_Support_Fence_2.png",
+   "exs": "exs.17_garden.garden_pergola_left_support_fence_2"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_14.png",
+   "x": 1408,
+   "y": 4704,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_14.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_14"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_2.png",
+   "x": 1168,
+   "y": 4688,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_2.png",
+   "exs": "exs.17_garden.garden_pergola_right_support_fence_2"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_24.png",
+   "x": 1232,
+   "y": 4560,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_24.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_24"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Left_Support_Fence_2.png",
+   "x": 1408,
+   "y": 4592,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Left_Support_Fence_2.png",
+   "exs": "exs.17_garden.garden_pergola_left_support_fence_2"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_24.png",
+   "x": 1472,
+   "y": 4688,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_24.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_24"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_2.png",
+   "x": 1280,
+   "y": 4688,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_2.png",
+   "exs": "exs.17_garden.garden_pergola_right_support_fence_2"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_23.png",
+   "x": 1408,
+   "y": 4560,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_23.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_23"
+  },
+  {
+   "me": "me.garden.pergola_fence",
+   "prefer": "ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_1.png",
+   "x": 1248,
+   "y": 4640,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Right_Support_Fence_1.png",
+   "exs": "exs.17_garden.garden_pergola_right_support_fence_1"
+  },
+  {
+   "me": "me.terrains_fences.fence_white_slat",
+   "prefer": "ME_Singles_Terrains_and_Fences_16x16_Props_Fence_23.png",
+   "x": 1232,
+   "y": 4656,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Props_Fence_23.png",
+   "exs": "exs.1_terrains_and_fences.terrains_and_fences_props_fence_23"
+  },
+  {
+   "me": "me.garden.topiary_elephant",
+   "x": 1432,
+   "y": 4636,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Statue_1.png",
+   "exs": "exs.17_garden.garden_grass_statue_1"
+  },
+  {
+   "me": "me.garden.big_yellow_flower",
+   "x": 1267,
+   "y": 4707,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Yellow_Flower.png",
+   "exs": "exs.17_garden.garden_big_yellow_flower"
+  },
+  {
+   "me": "me.garden.medium_yellow_flower",
+   "x": 1298,
+   "y": 4582,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_Yellow_Flower.png",
+   "exs": "exs.17_garden.garden_medium_yellow_flower"
+  },
+  {
+   "me": "me.villa.potted_plant_1",
+   "prefer": "ME_Singles_Villas_16x16_Potted_Plant_1.png",
+   "x": 1497,
+   "y": 4578,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Potted_Plant_1.png",
+   "exs": "exs.7_villas.villas_potted_plant_1"
+  },
+  {
+   "me": "me.garden.medium_light_blue_flower",
+   "x": 1339,
+   "y": 4691,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_MEdium_Light_Blue_Flower.png",
+   "exs": "exs.17_garden.garden_medium_light_blue_flower"
+  },
+  {
+   "me": "me.garden.big_white_flower",
+   "x": 1291,
+   "y": 4630,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_White_Flower.png",
+   "exs": "exs.17_garden.garden_big_white_flower"
+  },
+  {
+   "me": "me.garden.small_sprout",
+   "prefer": "ME_Singles_Garden_16x16_Small_Sprout_3.png",
+   "x": 1517,
+   "y": 4618,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Sprout_3.png",
+   "exs": "exs.17_garden.garden_small_sprout_3"
+  },
+  {
+   "me": "me.garden.hedge_wall_1_flowered",
+   "prefer": "ME_Singles_Garden_16x16_Grass_Wall_1_23.png",
+   "x": 1371,
+   "y": 4572,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Wall_1_23.png",
+   "exs": "exs.17_garden.garden_grass_wall_1_23"
+  },
+  {
+   "me": "me.garden.small_light_blue_flower",
+   "x": 1175,
+   "y": 4629,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Light_Blue_Flower.png",
+   "exs": "exs.17_garden.garden_small_light_blue_flower"
+  },
+  {
+   "me": "me.villa.stump_1",
+   "prefer": "ME_Singles_Villas_16x16_Villa_Props_17.png",
+   "x": 1202,
+   "y": 4682,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_Props_17.png",
+   "exs": "exs.7_villas.villas_villa_props_17"
+  },
+  {
+   "me": "me.garden.small_sunflower",
+   "x": 1498,
+   "y": 4705,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Sunflower.png",
+   "exs": "exs.17_garden.garden_small_sunflower"
+  },
+  {
+   "me": "me.garden.small_white_flower",
+   "x": 1338,
+   "y": 4621,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_White_Flower.png",
+   "exs": "exs.17_garden.garden_small_white_flower"
+  },
+  {
+   "me": "me.garden.medium_white_flower",
+   "x": 1187,
+   "y": 4726,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_White_Flower.png",
+   "exs": "exs.17_garden.garden_medium_white_flower"
+  },
+  {
+   "me": "me.garden.small_yellow_flower",
+   "x": 1223,
+   "y": 4603,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Yellow_Flower.png",
+   "exs": "exs.17_garden.garden_small_yellow_flower"
+  },
+  {
+   "me": "me.villa.trampoline_1",
+   "prefer": "ME_Singles_Villas_16x16_Villa_Yard_Toy_Trampoline_2.png",
+   "x": 1450,
+   "y": 4552,
+   "origin": "bc",
+   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_Yard_Toy_Trampoline_2.png",
+   "exs": "exs.7_villas.villas_villa_yard_toy_trampoline_2"
+  },
+  {
+   "me": "me.garage_sales.box_stack_three",
+   "prefer": "ME_Singles_Garage_Sales_16x16_Box_2.png",
+   "x": 1413,
+   "y": 4667,
+   "origin": "bc",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Box_2.png",
+   "exs": "exs.6_garage_sales.garage_sales_box_2"
+  },
+  {
+   "me": "me.garage_sales.graffiti_misc",
+   "prefer": "ME_Singles_Garage_Sales_16x16_Graffiti_9.png",
+   "x": 1448,
+   "y": 4575,
+   "origin": "bc",
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Graffiti_9.png",
+   "exs": "exs.6_garage_sales.garage_sales_graffiti_9"
+  },
+  {
+   "me": "me.garden.small_white_flower_vase",
+   "x": 1192,
+   "y": 4608,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_White_Flower_Vase.png",
+   "exs": "exs.17_garden.garden_small_white_flower_vase"
+  },
+  {
+   "me": "me.garden.medium_sunflower_vase",
+   "x": 1302,
+   "y": 4716,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_Sunflower_Vase.png",
+   "exs": "exs.17_garden.garden_medium_sunflower_vase"
+  },
+  {
+   "me": "me.pool.ladder_rail_front",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Pool_2_35.png",
+   "x": 1208,
+   "y": 4640,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Pool_2_35.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_pool_2_35"
+  },
+  {
+   "me": "me.villa.treehouse_ladder_1",
+   "prefer": "ME_Singles_Villas_16x16_Tree_House_Ladder_2.png",
+   "x": 1480,
+   "y": 4592,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Tree_House_Ladder_2.png",
+   "exs": "exs.7_villas.villas_tree_house_ladder_2"
+  },
+  {
+   "me": "me.garden.birdhouse_little_brown",
+   "x": 1233,
+   "y": 4701,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Brown_Little_Bird_House.png",
+   "exs": "exs.17_garden.garden_brown_little_bird_house"
+  },
+  {
+   "me": "me.garden.big_red_flower_vase",
+   "x": 1359,
+   "y": 4661,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Red_Flower_Vase.png",
+   "exs": "exs.17_garden.garden_big_red_flower_vase"
+  },
+  {
+   "me": "me.garden.wood_cart_big_full",
+   "prefer": "ME_Singles_Garden_16x16_Big_Wood_Cart_Full_4.png",
+   "x": 1248,
+   "y": 4590,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Wood_Cart_Full_4.png",
+   "exs": "exs.17_garden.garden_big_wood_cart_full_4"
+  },
+  {
+   "me": "me.garden.birdhouse_little_blue",
+   "x": 1376,
+   "y": 4694,
+   "origin": "bc",
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Blue_Little_Bird_House.png",
+   "exs": "exs.17_garden.garden_blue_little_bird_house"
+  },
+  {
+   "me": "me.worksite.fence_gate_keypad",
+   "exs": "exs.8_worksite.worksite_door_1_1",
+   "x": 4224,
+   "y": 3384,
+   "origin": "tl",
+   "solid": true,
+   "interact": "unlock",
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Door_1_1.png"
+  },
+  {
+   "me": "me.worksite.fence_gate_keypad",
+   "exs": "exs.8_worksite.worksite_door_1_2",
+   "x": 4288,
+   "y": 3384,
+   "origin": "tl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Door_1_2.png"
+  },
+  {
+   "me": "me.worksite.fence_panel_hardhat",
+   "exs": "exs.8_worksite.worksite_fence_2_1",
+   "x": 4224,
+   "y": 3416,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Fence_2_1.png"
+  },
+  {
+   "me": "me.worksite.fence_panel_hardhat",
+   "exs": "exs.8_worksite.worksite_fence_2_2",
+   "x": 4240,
+   "y": 3416,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Fence_2_2.png"
+  },
+  {
+   "me": "me.worksite.fence_panel_hardhat",
+   "exs": "exs.8_worksite.worksite_fence_2_3",
+   "x": 4256,
+   "y": 3416,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Fence_2_3.png"
+  },
+  {
+   "me": "me.worksite.fence_panel_hardhat",
+   "exs": "exs.8_worksite.worksite_sign_2",
+   "x": 4272,
+   "y": 3416,
+   "origin": "tl",
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Sign_2.png"
+  },
+  {
+   "me": "me.worksite.fence_panel_hardhat",
+   "exs": "exs.8_worksite.worksite_fence_1_1",
+   "x": 4288,
+   "y": 3416,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Fence_1_1.png"
+  },
+  {
+   "me": "me.worksite.fence_panel_hardhat",
+   "exs": "exs.8_worksite.worksite_fence_1_2",
+   "x": 4304,
+   "y": 3416,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Fence_1_2.png"
+  },
+  {
+   "me": "me.worksite.fence_panel_hardhat",
+   "exs": "exs.8_worksite.worksite_fence_1_3",
+   "x": 4320,
+   "y": 3416,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Fence_1_3.png"
+  },
+  {
+   "me": "me.worksite.light_tower_b",
+   "prefer": "ME_Singles_Worksite_16x16_Light_Tower_1.png",
+   "x": 4496,
+   "y": 3424,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Light_Tower_1.png",
+   "exs": "exs.8_worksite.worksite_light_tower_1"
+  },
+  {
+   "me": "me.worksite.toolbox_closed",
+   "exs": "exs.8_worksite.worksite_tool_box_1",
+   "x": 4336,
+   "y": 3472,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Tool_Box_1.png"
+  },
+  {
+   "me": "me.worksite.lumber_stack",
+   "exs": "exs.8_worksite.worksite_stacked_material_1",
+   "x": 4256,
+   "y": 3504,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_1.png"
+  },
+  {
+   "me": "me.worksite.lumber_stack",
+   "exs": "exs.8_worksite.worksite_stacked_material_6",
+   "x": 4288,
+   "y": 3504,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_6.png"
+  },
+  {
+   "me": "me.worksite.lumber_stack",
+   "exs": "exs.8_worksite.worksite_stacked_material_4",
+   "x": 4304,
+   "y": 3504,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_4.png"
+  },
+  {
+   "me": "me.worksite.lumber_stack",
+   "exs": "exs.8_worksite.worksite_stacked_material_2",
+   "x": 4256,
+   "y": 3552,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_2.png"
+  },
+  {
+   "me": "me.worksite.lumber_stack",
+   "exs": "exs.8_worksite.worksite_stacked_material_7",
+   "x": 4288,
+   "y": 3552,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_7.png"
+  },
+  {
+   "me": "me.worksite.lumber_stack",
+   "exs": "exs.8_worksite.worksite_stacked_material_3",
+   "x": 4304,
+   "y": 3552,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_3.png"
+  },
+  {
+   "me": "me.worksite.storage_bin",
+   "exs": "exs.8_worksite.worksite_tool_box_3",
+   "x": 4336,
+   "y": 3552,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Tool_Box_3.png"
+  },
+  {
+   "me": "me.city_props.lamp_ornate_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 4472,
+   "y": 3376,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_1"
+  },
+  {
+   "me": "me.military.warning_signs",
+   "prefer": "23_MIlitary_Base_16x16_Warning_Sign_Double_Pole.png",
+   "x": 4312,
+   "y": 3376,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Double_Pole.png",
+   "exs": "exs.23_military_base.military_base_warning_sign_double_pole"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 4338,
+   "y": 3372,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 4436,
+   "y": 3436,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_1"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "x": 4232,
+   "y": 3604,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_2"
+  },
+  {
+   "me": "me.worksite.portable_toilet_red_closed",
+   "prefer": "ME_Singles_Worksite_16x16_Portable_Toilet_1.png",
+   "x": 4484,
+   "y": 3619,
+   "origin": "bc",
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Portable_Toilet_1.png",
+   "exs": "exs.8_worksite.worksite_portable_toilet_1"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 4519,
+   "y": 3548,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "x": 4550,
+   "y": 3555,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_1_vers_2"
+  },
+  {
+   "me": "me.city_props.stake_marker",
+   "prefer": "ME_Singles_City_Props_16x16_Grey_Stake.png",
+   "x": 4377,
+   "y": 3506,
+   "origin": "bc",
+   "interact": "read",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Grey_Stake.png",
+   "exs": "exs.3_city_props.city_props_grey_stake"
+  },
+  {
+   "me": "me.city_props.cone_orange_set",
+   "prefer": "ME_Singles_City_Props_16x16_Cone_9.png",
+   "x": 4376,
+   "y": 3453,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Cone_9.png",
+   "exs": "exs.3_city_props.city_props_cone_9"
+  },
+  {
+   "me": "me.city_props.trash_can_black_closed",
+   "prefer": "ME_Singles_City_Props_16x16_Black_Closed_Trash_Can.png",
+   "x": 4469,
+   "y": 3566,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Closed_Trash_Can.png",
+   "exs": "exs.3_city_props.city_props_black_closed_trash_can"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
+   "x": 4407,
+   "y": 3553,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_red"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 4405,
+   "y": 3618,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 4503,
+   "y": 3454,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 4423,
+   "y": 3411,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.city_props.propane_tanks",
+   "prefer": "ME_Singles_City_Props_16x16_Brown_Barrel_2.png",
+   "x": 4377,
+   "y": 3404,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Brown_Barrel_2.png",
+   "exs": "exs.3_city_props.city_props_brown_barrel_2"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Grey_Single.png",
+   "x": 4229,
+   "y": 3500,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Grey_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_grey_single"
+  },
+  {
+   "me": "me.city_props.trash_can_black_open",
+   "prefer": "ME_Singles_City_Props_16x16_Black_Open_Empty_Trash_Can.png",
+   "x": 4550,
+   "y": 3618,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Open_Empty_Trash_Can.png",
+   "exs": "exs.3_city_props.city_props_black_open_empty_trash_can"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "x": 4422,
+   "y": 3468,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
+  },
+  {
+   "me": "me.worksite.hard_hat",
+   "prefer": "ME_Singles_Worksite_16x16_Helmet_1.png",
+   "x": 4249,
+   "y": 3490,
+   "origin": "bc",
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Helmet_1.png",
+   "exs": "exs.8_worksite.worksite_helmet_1"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 4506,
+   "y": 3486,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "x": 4374,
+   "y": 3552,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_1"
+  },
+  {
+   "me": "me.military.tire_single",
+   "prefer": "23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 4404,
+   "y": 3409,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "exs": "exs.23_military_base.military_base_tire_brown_single"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
+   "x": 4422,
+   "y": 3601,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_3"
+  },
+  {
+   "me": "me.worksite.hard_hat",
+   "prefer": "ME_Singles_Worksite_16x16_Ground_1_3.png",
+   "x": 4501,
+   "y": 3471,
+   "origin": "bc",
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Ground_1_3.png",
+   "exs": "exs.8_worksite.worksite_ground_1_3"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 4358,
+   "y": 3411,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+  },
+  {
+   "me": "me.city_props.stake_marker",
+   "prefer": "ME_Singles_City_Props_16x16_Yellow_Stake.png",
+   "x": 4535,
+   "y": 3455,
+   "origin": "bc",
+   "interact": "read",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Yellow_Stake.png",
+   "exs": "exs.3_city_props.city_props_yellow_stake"
+  },
+  {
+   "me": "me.city_props.trash_can_black_closed",
+   "prefer": "ME_Singles_City_Props_16x16_Black_Closed_Lateral_Trash_Can.png",
+   "x": 4276,
+   "y": 3519,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Closed_Lateral_Trash_Can.png",
+   "exs": "exs.3_city_props.city_props_black_closed_lateral_trash_can"
+  },
+  {
+   "me": "me.military.training_dummy",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "x": 4395,
+   "y": 3598,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_2"
+  },
+  {
+   "me": "me.military.radio_tower_lattice_frame",
+   "x": 4424,
+   "y": 3488,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Radio_Tower_Structure_2.png",
+   "exs": "exs.23_military_base.military_base_radio_tower_structure_2"
+  },
+  {
+   "me": "me.military.wall_barbed",
+   "prefer": "23_MIlitary_Base_16x16_External_Wall_Modular_Back_Right_Side.png",
+   "x": 4520,
+   "y": 3584,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Modular_Back_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_external_wall_modular_back_right_side"
+  },
+  {
+   "me": "me.military.wall_pillar",
+   "prefer": "23_MIlitary_Base_16x16_External_Wall_Pillar_2.png",
+   "x": 4552,
+   "y": 3488,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Pillar_2.png",
+   "exs": "exs.23_military_base.military_base_external_wall_pillar_2"
+  },
+  {
+   "me": "me.military.barbed_wire_kit",
+   "prefer": "23_MIlitary_Base_16x16_Barbed_Wire_2_Bottom_Corner_Left_Small_2.png",
+   "x": 4432,
+   "y": 3600,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_2_Bottom_Corner_Left_Small_2.png",
+   "exs": "exs.23_military_base.military_base_barbed_wire_2_bottom_corner_left_small_2"
+  },
+  {
+   "me": "me.military.quonset_tall_closed",
+   "x": 5280,
+   "y": 3200,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar.png",
+   "exs": "exs.23_military_base.military_base_hangar"
+  },
+  {
+   "me": "me.military.tank_green_south",
+   "x": 5440,
+   "y": 3168,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Green_Tank_Base_Front_Side_.png",
+   "exs": "exs.23_military_base.military_base_green_tank_base_front_side"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5388,
+   "y": 2985,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.worksite.site_entrance",
+   "x": 5232,
+   "y": 3200,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Entrance_1.png",
+   "exs": "exs.8_worksite.worksite_entrance_1"
+  },
+  {
+   "me": "me.military.barrier_boom",
+   "x": 5248,
+   "y": 3168,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barrier_Base_1.png",
+   "exs": "exs.23_military_base.military_base_barrier_base_1"
+  },
+  {
+   "me": "me.vehicles.sedan_green_south",
+   "x": 5472,
+   "y": 3040,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_8.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_8"
+  },
+  {
+   "me": "me.military.tank_green_east",
+   "prefer": "23_MIlitary_Base_16x16_Green_Tank_Gun_Right_Side_1.png",
+   "x": 5312,
+   "y": 3008,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Green_Tank_Gun_Right_Side_1.png",
+   "exs": "exs.23_military_base.military_base_green_tank_gun_right_side_1"
+  },
+  {
+   "me": "me.vehicles.compact_dark_green_east",
+   "x": 5520,
+   "y": 3088,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_2.png",
+   "exs": "exs.10_vehicles.vehicles_car_right_2"
+  },
+  {
+   "me": "me.vehicles.compact_dark_green_west",
+   "x": 5232,
+   "y": 3072,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_2.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_2"
+  },
+  {
+   "me": "me.vehicles.sedan_b_dark_green_north",
+   "x": 5536,
+   "y": 3232,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_17.png",
+   "exs": "exs.10_vehicles.vehicles_car_up_17"
+  },
+  {
+   "me": "me.vehicles.sedan_b_dark_green_south",
+   "x": 5440,
+   "y": 3008,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_17.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_17"
+  },
+  {
+   "me": "me.vehicles.sedan_green_north",
+   "x": 5536,
+   "y": 3184,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_8.png",
+   "exs": "exs.10_vehicles.vehicles_car_up_8"
+  },
+  {
+   "me": "me.vehicles.compact_dark_green_south",
+   "x": 5216,
+   "y": 3120,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_2.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_2"
+  },
+  {
+   "me": "me.vehicles.sedan_b_dark_green_east",
+   "x": 5216,
+   "y": 3024,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_17.png",
+   "exs": "exs.10_vehicles.vehicles_car_right_17"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "x": 5323,
+   "y": 3094,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Dark_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_dark_green"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "x": 5353,
+   "y": 3092,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_2"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "x": 5547,
+   "y": 3012,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_right_side"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5411,
+   "y": 3093,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5370,
+   "y": 3075,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5506,
+   "y": 3238,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.lockers_numbered",
+   "x": 5410,
+   "y": 3110,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar_Locker.png",
+   "exs": "exs.23_military_base.military_base_hangar_locker"
+  },
+  {
+   "me": "me.military.medical_supplies_small",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
+   "x": 5259,
+   "y": 3109,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_8.png",
+   "exs": "exs.23_military_base.military_base_military_tent_box_small_8"
+  },
+  {
+   "me": "me.military.streetlight_straight",
+   "prefer": "23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "x": 5452,
+   "y": 3035,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
+   "exs": "exs.23_military_base.military_base_light_pole_left_side"
+  },
+  {
+   "me": "me.military.bunker_base_props",
+   "x": 5434,
+   "y": 3069,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker_Base_Trapdoor_Open_Props.png",
+   "exs": "exs.23_military_base.military_base_bunker_base_trapdoor_open_props"
+  },
+  {
+   "me": "me.military.target_variants",
+   "x": 5451,
+   "y": 3061,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_down_vers_1"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5238,
+   "y": 3237,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.military.first_aid_kit",
+   "prefer": "23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "x": 5336,
+   "y": 3151,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Green.png",
+   "exs": "exs.23_military_base.military_base_military_tent_first_aid_kit_green"
+  },
+  {
+   "me": "me.military.soldier_helmet",
+   "x": 5341,
+   "y": 3060,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "exs": "exs.23_military_base.military_base_soldier_helmet"
+  },
+  {
+   "me": "me.worksite.wood_scraps",
+   "x": 5240,
+   "y": 3224,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Props_1.png",
+   "exs": "exs.8_worksite.worksite_props_1"
+  },
+  {
+   "me": "me.military.wall_pillar",
+   "prefer": "23_MIlitary_Base_16x16_External_Wall_Pillar_2.png",
+   "x": 5224,
+   "y": 3216,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Pillar_2.png",
+   "exs": "exs.23_military_base.military_base_external_wall_pillar_2"
+  },
+  {
+   "me": "me.military.wall_pillars_tall",
+   "prefer": "23_MIlitary_Base_16x16_External_Wall_Modular_Front_Right_Side.png",
+   "x": 5560,
+   "y": 3040,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Modular_Front_Right_Side.png",
+   "exs": "exs.23_military_base.military_base_external_wall_modular_front_right_side"
+  },
+  {
+   "me": "me.military.mine",
+   "x": 5262,
+   "y": 2988,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "exs": "exs.23_military_base.military_base_mine_1"
+  },
+  {
+   "me": "me.military.tire_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "x": 5417,
+   "y": 3167,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "exs": "exs.23_military_base.military_base_tires_pile_2"
+  },
+  {
+   "me": "me.military.sandbag_stacks",
+   "prefer": "23_MIlitary_Base_16x16_Sandbag_Pile_Bottom_Middle_Modular_Right.png",
+   "x": 5394,
+   "y": 3064,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Bottom_Middle_Modular_Right.png",
+   "exs": "exs.23_military_base.military_base_sandbag_pile_bottom_middle_modular_right"
+  },
+  {
+   "me": "me.military.shooting_target",
+   "prefer": "23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 5475,
+   "y": 3105,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "exs": "exs.23_military_base.military_base_target_2_vers_1"
+  },
+  {
+   "me": "me.military.barbed_wire_kit",
+   "prefer": "23_MIlitary_Base_16x16_Barbed_Wire_2_Bottom_Corner_Right_Small_2.png",
+   "x": 5562,
+   "y": 3152,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_2_Bottom_Corner_Right_Small_2.png",
+   "exs": "exs.23_military_base.military_base_barbed_wire_2_bottom_corner_right_small_2"
+  },
+  {
+   "me": "me.military.sandbag_single",
+   "x": 5316,
+   "y": 3038,
+   "origin": "bc",
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Horizontal_Single.png",
+   "exs": "exs.23_military_base.military_base_sandbag_horizontal_single"
+  },
+  {
+   "me": "me.graveyard.grace_chapel",
+   "x": 256,
+   "y": 5264,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Grace_Chapel.png",
+   "exs": "exs.19_graveyard.graveyard_grace_chapel"
+  },
+  {
+   "me": "me.graveyard.gate_medium",
+   "x": 384,
+   "y": 5104,
+   "origin": "bc",
+   "solid": true,
+   "interact": "unlock",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Gate.png",
+   "exs": "exs.19_graveyard.graveyard_medium_gate"
+  },
+  {
+   "me": "me.graveyard.wood_large_cross_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Wood_Large_Cross_2.png",
+   "x": 508,
+   "y": 5322,
+   "origin": "bl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Wood_Large_Cross_2.png",
+   "exs": "exs.19_graveyard.graveyard_wood_large_cross_2"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_1",
+   "x": 512,
+   "y": 5152,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_1.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_4",
+   "x": 528,
+   "y": 5152,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_4.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_2",
+   "x": 512,
+   "y": 5168,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_2.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_5",
+   "x": 528,
+   "y": 5168,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_5.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_3",
+   "x": 512,
+   "y": 5184,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_3.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_6",
+   "x": 528,
+   "y": 5184,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_6.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_1",
+   "x": 512,
+   "y": 5200,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_1.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_4",
+   "x": 528,
+   "y": 5200,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_4.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_2",
+   "x": 512,
+   "y": 5216,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_2.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_5",
+   "x": 528,
+   "y": 5216,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_5.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_3",
+   "x": 512,
+   "y": 5232,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_3.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_6",
+   "x": 528,
+   "y": 5232,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_6.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_1",
+   "x": 464,
+   "y": 5248,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_1.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_4",
+   "x": 480,
+   "y": 5248,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_4.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_2",
+   "x": 464,
+   "y": 5264,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_2.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_5",
+   "x": 480,
+   "y": 5264,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_5.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_3",
+   "x": 464,
+   "y": 5280,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_3.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_6",
+   "x": 480,
+   "y": 5280,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_6.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_1",
+   "x": 464,
+   "y": 5296,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_1.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_4",
+   "x": 480,
+   "y": 5296,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_4.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_2",
+   "x": 464,
+   "y": 5312,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_2.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_5",
+   "x": 480,
+   "y": 5312,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_5.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_3",
+   "x": 464,
+   "y": 5328,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_3.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_6",
+   "x": 480,
+   "y": 5328,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_6.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_1",
+   "x": 528,
+   "y": 5248,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_1.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_4",
+   "x": 544,
+   "y": 5248,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_4.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_2",
+   "x": 528,
+   "y": 5264,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_2.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_5",
+   "x": 544,
+   "y": 5264,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_5.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_3",
+   "x": 528,
+   "y": 5280,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_3.png"
+  },
+  {
+   "me": "me.graveyard.small_black_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_black_tombstone_6",
+   "x": 544,
+   "y": 5280,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_6.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_1",
+   "x": 528,
+   "y": 5296,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_1.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_4",
+   "x": 544,
+   "y": 5296,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_4.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_2",
+   "x": 528,
+   "y": 5312,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_2.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_5",
+   "x": 544,
+   "y": 5312,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_5.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_3",
+   "x": 528,
+   "y": 5328,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_3.png"
+  },
+  {
+   "me": "me.graveyard.small_brown_tombstone_1",
+   "exs": "exs.19_graveyard.graveyard_small_brown_tombstone_6",
+   "x": 544,
+   "y": 5328,
+   "origin": "tl",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Brown_Tombstone_6.png"
+  },
+  {
+   "me": "me.graveyard.medium_red_candle",
+   "x": 464,
+   "y": 5096,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Red_Candle.png",
+   "exs": "exs.19_graveyard.graveyard_medium_red_candle"
+  },
+  {
+   "me": "me.graveyard.pumpkin_branch_right",
+   "x": 234,
+   "y": 5264,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Pumpikin_Brunch_Right.png",
+   "exs": "exs.19_graveyard.graveyard_pumpikin_brunch_right"
+  },
+  {
+   "me": "me.graveyard.empty_pot_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Empty_Pot_2.png",
+   "x": 405,
+   "y": 5298,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Empty_Pot_2.png",
+   "exs": "exs.19_graveyard.graveyard_empty_pot_2"
+  },
+  {
+   "me": "me.graveyard.crow_left",
+   "x": 443,
+   "y": 5293,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Crow_Left.png",
+   "exs": "exs.19_graveyard.graveyard_crow_left"
+  },
+  {
+   "me": "me.graveyard.squared_open_coffin",
+   "x": 421,
+   "y": 5296,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Squared_Open_Coffin.png",
+   "exs": "exs.19_graveyard.graveyard_squared_open_coffin"
+  },
+  {
+   "me": "me.graveyard.tiny_pumpkin_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Tiny_Pumpkin_1.png",
+   "x": 389,
+   "y": 5180,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Tiny_Pumpkin_1.png",
+   "exs": "exs.19_graveyard.graveyard_tiny_pumpkin_1"
+  },
+  {
+   "me": "me.graveyard.silver_coffin",
+   "x": 313,
+   "y": 5325,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Silver_Coffin.png",
+   "exs": "exs.19_graveyard.graveyard_silver_coffin"
+  },
+  {
+   "me": "me.graveyard.cross_pile_of_dirt",
+   "x": 436,
+   "y": 5245,
+   "origin": "bc",
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Cross_Pile_Of_Dirt.png",
+   "exs": "exs.19_graveyard.graveyard_cross_pile_of_dirt"
+  },
+  {
+   "me": "me.graveyard.shovel_big_pile_of_dirt",
+   "x": 328,
+   "y": 5228,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Shovel_Big_Pile_Of_Dirt.png",
+   "exs": "exs.19_graveyard.graveyard_shovel_big_pile_of_dirt"
+  },
+  {
+   "me": "me.graveyard.wall_candle_holder",
+   "x": 282,
+   "y": 5314,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Wall_Candle_Holder.png",
+   "exs": "exs.19_graveyard.graveyard_wall_candle_holder"
+  },
+  {
+   "me": "me.graveyard.dirt_ditch_silver_coffin",
+   "x": 469,
+   "y": 5156,
+   "origin": "bc",
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Dirt_Ditch_2_Silver_Coffin.png",
+   "exs": "exs.19_graveyard.graveyard_dirt_ditch_2_silver_coffin"
+  },
+  {
+   "me": "me.graveyard.dirt_ditch_silver_skull_coffin",
+   "x": 298,
+   "y": 5344,
+   "origin": "bc",
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Dirt_Ditch_2_Silver_Skull_Coffin.png",
+   "exs": "exs.19_graveyard.graveyard_dirt_ditch_2_silver_skull_coffin"
+  },
+  {
+   "me": "me.graveyard.shovel_little_pile_of_dirt",
+   "x": 392,
+   "y": 5264,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Shovel_Little_Pile_Of_Dirt.png",
+   "exs": "exs.19_graveyard.graveyard_shovel_little_pile_of_dirt"
+  },
+  {
+   "me": "me.graveyard.big_pile_of_dirt",
+   "x": 507,
+   "y": 5137,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Big_Pile_Of_Dirt.png",
+   "exs": "exs.19_graveyard.graveyard_big_pile_of_dirt"
+  },
+  {
+   "me": "me.graveyard.medium_brown_candle",
+   "x": 313,
+   "y": 5137,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Brown_Candle.png",
+   "exs": "exs.19_graveyard.graveyard_medium_brown_candle"
+  },
+  {
+   "me": "me.graveyard.pile_of_dirt",
+   "x": 314,
+   "y": 5151,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Pile_Of_Dirt.png",
+   "exs": "exs.19_graveyard.graveyard_pile_of_dirt"
+  },
+  {
+   "me": "me.graveyard.shovel",
+   "x": 408,
+   "y": 5265,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Shovel.png",
+   "exs": "exs.19_graveyard.graveyard_shovel"
+  },
+  {
+   "me": "me.graveyard.crow_front",
+   "x": 324,
+   "y": 5198,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Crow_Front.png",
+   "exs": "exs.19_graveyard.graveyard_crow_front"
+  },
+  {
+   "me": "me.graveyard.pumpkin_branch_left",
+   "x": 423,
+   "y": 5344,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Pumpikin_Brunch_Left.png",
+   "exs": "exs.19_graveyard.graveyard_pumpikin_brunch_left"
+  },
+  {
+   "me": "me.graveyard.squared_skull_coffin",
+   "x": 410,
+   "y": 5327,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Squared_Skull_Coffin.png",
+   "exs": "exs.19_graveyard.graveyard_squared_skull_coffin"
+  },
+  {
+   "me": "me.graveyard.candle_holder_off",
+   "prefer": "ME_Singles_Graveyard_16x16_Candle_Holder_On.png",
+   "x": 444,
+   "y": 5165,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Candle_Holder_On.png",
+   "exs": "exs.19_graveyard.graveyard_candle_holder_on"
+  },
+  {
+   "me": "me.graveyard.little_pumpkin_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Little_Pumpkin_2.png",
+   "x": 247,
+   "y": 5279,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Little_Pumpkin_2.png",
+   "exs": "exs.19_graveyard.graveyard_little_pumpkin_2"
+  },
+  {
+   "me": "me.graveyard.medium_blood_pumpkin_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Medium_Blood_Pumpkin_2.png",
+   "x": 280,
+   "y": 5156,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Blood_Pumpkin_2.png",
+   "exs": "exs.19_graveyard.graveyard_medium_blood_pumpkin_2"
+  },
+  {
+   "me": "me.graveyard.tiny_blood_pumpkin",
+   "x": 314,
+   "y": 5171,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Tiny_Blood_Pumpkin.png",
+   "exs": "exs.19_graveyard.graveyard_tiny_blood_pumpkin"
+  },
+  {
+   "me": "me.graveyard.red_skull_coffin",
+   "x": 300,
+   "y": 5203,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Red_Skull_Coffin.png",
+   "exs": "exs.19_graveyard.graveyard_red_skull_coffin"
+  },
+  {
+   "me": "me.graveyard.crow_back",
+   "x": 261,
+   "y": 5201,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Crow_Back.png",
+   "exs": "exs.19_graveyard.graveyard_crow_back"
+  },
+  {
+   "me": "me.graveyard.tree_trunk_pumpkin",
+   "x": 396,
+   "y": 5207,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Tree_Trunk_Pumpkin.png",
+   "exs": "exs.19_graveyard.graveyard_tree_trunk_pumpkin"
+  },
+  {
+   "me": "me.graveyard.white_group_flowers",
+   "x": 269,
+   "y": 5114,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_White_Group_Flowers.png",
+   "exs": "exs.19_graveyard.graveyard_white_group_flowers"
+  },
+  {
+   "me": "me.graveyard.multicolor_flowers",
+   "x": 488,
+   "y": 5216,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Multicolor_Flowers.png",
+   "exs": "exs.19_graveyard.graveyard_multicolor_flowers"
+  },
+  {
+   "me": "me.graveyard.brown_3_little_mushrooms",
+   "x": 353,
+   "y": 5268,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Brown_3_Little_Mushrooms.png",
+   "exs": "exs.19_graveyard.graveyard_brown_3_little_mushrooms"
+  },
+  {
+   "me": "me.graveyard.wood_cross_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Wood_Cross_2.png",
+   "x": 560,
+   "y": 5110,
+   "origin": "bc",
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Wood_Cross_2.png",
+   "exs": "exs.19_graveyard.graveyard_wood_cross_2"
+  },
+  {
+   "me": "me.graveyard.marble_brown_tombstone_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Marble_Brown_Tombstone_2.png",
+   "x": 367,
+   "y": 5338,
+   "origin": "bc",
+   "interact": "read",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Marble_Brown_Tombstone_2.png",
+   "exs": "exs.19_graveyard.graveyard_marble_brown_tombstone_2"
+  },
+  {
+   "me": "me.graveyard.long_tombstone_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Long_Tombstone_2.png",
+   "x": 464,
+   "y": 5191,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Long_Tombstone_2.png",
+   "exs": "exs.19_graveyard.graveyard_long_tombstone_2"
+  },
+  {
+   "me": "me.graveyard.wall_candle_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Wall_Candle_2.png",
+   "x": 426,
+   "y": 5202,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Wall_Candle_2.png",
+   "exs": "exs.19_graveyard.graveyard_wall_candle_2"
+  },
+  {
+   "me": "me.graveyard.consumed_candle_1",
+   "prefer": "ME_Singles_Graveyard_16x16_Consumed_Candle_1.png",
+   "x": 228,
+   "y": 5175,
+   "origin": "bc",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Consumed_Candle_1.png",
+   "exs": "exs.19_graveyard.graveyard_consumed_candle_1"
+  },
+  {
+   "me": "me.subway.turnstile_closed",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_turnstile_closed",
+   "x": 1632,
+   "y": 5360,
+   "origin": "tl",
+   "solid": true,
+   "interact": "unlock",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Closed.png"
+  },
+  {
+   "me": "me.subway.railing_generic",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_railing",
+   "x": 1632,
+   "y": 5424,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Railing.png"
+  },
+  {
+   "me": "me.subway.pillar_small",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_small_pillar",
+   "x": 1696,
+   "y": 5440,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png"
+  },
+  {
+   "me": "me.subway.stairs_complete_1",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_1.png",
+   "x": 1808,
+   "y": 5504,
+   "origin": "bl",
+   "solid": true,
+   "interact": "traverse",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_1.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_stairs_complete_1"
+  },
+  {
+   "me": "me.subway.tunnel_single",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_High_Single_Tunnel_Grey_Rail_Shadow.png",
+   "x": 1824,
+   "y": 5360,
+   "origin": "tl",
+   "solid": true,
+   "interact": "traverse",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_High_Single_Tunnel_Grey_Rail_Shadow.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_high_single_tunnel_grey_rail_shadow"
+  },
+  {
+   "me": "me.city_props.lamp_ornate_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 1768,
+   "y": 5312,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_1"
+  },
+  {
+   "me": "me.city_props.hydrant_red",
+   "prefer": "ME_Singles_City_Props_16x16_Hydrant_2.png",
+   "x": 1672,
+   "y": 5296,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_2.png",
+   "exs": "exs.3_city_props.city_props_hydrant_2"
+  },
+  {
+   "me": "me.city_props.pole_plain",
+   "x": 1928,
+   "y": 5312,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pole_1.png",
+   "exs": "exs.3_city_props.city_props_pole_1"
+  },
+  {
+   "me": "me.city_props.electric_pole_set",
+   "prefer": "ME_Singles_City_Props_16x16_Electric_Pole_2.png",
+   "x": 1880,
+   "y": 5296,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_2.png",
+   "exs": "exs.3_city_props.city_props_electric_pole_2"
+  },
+  {
+   "me": "me.city_props.lamp_cobra_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_3.png",
+   "x": 1816,
+   "y": 5312,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_3.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_3"
+  },
+  {
+   "me": "me.city_props.sign_info_board_set",
+   "prefer": "ME_Singles_City_Props_16x16_Info_Sign_6.png",
+   "x": 1720,
+   "y": 5328,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Info_Sign_6.png",
+   "exs": "exs.3_city_props.city_props_info_sign_6"
+  },
+  {
+   "me": "me.city_props.sign_classic_set",
+   "prefer": "ME_Singles_City_Props_16x16_Traffic_Sign_44.png",
+   "x": 1912,
+   "y": 5296,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Sign_44.png",
+   "exs": "exs.3_city_props.city_props_traffic_sign_44"
+  },
+  {
+   "me": "me.subway.ui_number_orange",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_7_Orange.png",
+   "x": 1608,
+   "y": 5280,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_7_Orange.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_binary_number_7_orange"
+  },
+  {
+   "me": "me.vehicles.gas_station_price_signboard_1",
+   "prefer": "ME_Singles_Vehicles_16x16_Gas_Station_Price_Signboard_3.png",
+   "x": 1637,
+   "y": 5336,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Gas_Station_Price_Signboard_3.png",
+   "exs": "exs.10_vehicles.vehicles_gas_station_price_signboard_3"
+  },
+  {
+   "me": "me.subway.graffiti_flower",
+   "x": 1680,
+   "y": 5332,
+   "origin": "bc",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Flower_Graffiti.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_flower_graffiti"
+  },
+  {
+   "me": "me.subway.bench_green",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_2.png",
+   "x": 1721,
+   "y": 5379,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_2.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_three_seats_green_bench_frontal_2"
+  },
+  {
+   "me": "me.subway.wait_seats_black",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Black_Couple_Wait_Seat_1.png",
+   "x": 1935,
+   "y": 5375,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Black_Couple_Wait_Seat_1.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_black_couple_wait_seat_1"
+  },
+  {
+   "me": "me.subway.train_orange_seats",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Train_Orange_Control_Seat_Right.png",
+   "x": 1948,
+   "y": 5477,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Train_Orange_Control_Seat_Right.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_train_orange_control_seat_right"
+  },
+  {
+   "me": "me.subway.train_grey_seats",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Train_Grey_Single_Seat_1.png",
+   "x": 1885,
+   "y": 5480,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Train_Grey_Single_Seat_1.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_train_grey_single_seat_1"
+  },
+  {
+   "me": "me.subway.bench_black",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Black_Bench_Frontal_1.png",
+   "x": 1669,
+   "y": 5532,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Black_Bench_Frontal_1.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_three_seats_black_bench_frontal_1"
+  },
+  {
+   "me": "me.subway.train_blue_seats",
+   "x": 1678,
+   "y": 5486,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Train_Blue_Double_Lateral_Seat.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_train_blue_double_lateral_seat"
+  },
+  {
+   "me": "me.subway.bench_grey",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_2.png",
+   "x": 1895,
+   "y": 5413,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_2.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_three_seats_grey_bench_frontal_2"
+  },
+  {
+   "me": "me.city_props.traffic_light_pole_tall_set",
+   "prefer": "ME_Singles_City_Props_16x16_Traffic_Light_14.png",
+   "x": 1752,
+   "y": 5536,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_14.png",
+   "exs": "exs.3_city_props.city_props_traffic_light_14"
+  },
+  {
+   "me": "me.city_props.electric_pole_set",
+   "prefer": "ME_Singles_City_Props_16x16_Electric_Pole_3.png",
+   "x": 1832,
+   "y": 5440,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_3.png",
+   "exs": "exs.3_city_props.city_props_electric_pole_3"
+  },
+  {
+   "me": "me.city_props.pole_plain",
+   "x": 1624,
+   "y": 5408,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pole_1.png",
+   "exs": "exs.3_city_props.city_props_pole_1"
+  },
+  {
+   "me": "me.city_props.lamp_cobra_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_4.png",
+   "x": 1736,
+   "y": 5440,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_4.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_4"
+  },
+  {
+   "me": "me.city_props.hydrant_red",
+   "prefer": "ME_Singles_City_Props_16x16_Hydrant_3.png",
+   "x": 1880,
+   "y": 5376,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_3.png",
+   "exs": "exs.3_city_props.city_props_hydrant_3"
+  },
+  {
+   "me": "me.city_props.lamp_ornate_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_2.png",
+   "x": 1800,
+   "y": 5392,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_2"
+  },
+  {
+   "me": "me.subway.ui_number_blue",
+   "prefer": "ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_7_Blue.png",
+   "x": 1624,
+   "y": 5440,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Binary_Number_7_Blue.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_binary_number_7_blue"
+  },
+  {
+   "me": "me.city_terrains.roundabout_sign",
+   "prefer": "ME_Singles_City_Terrains_16x16_Sidewalk_6_54.png",
+   "x": 1880,
+   "y": 5536,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/2_city_terrains/ME_Singles_City_Terrains_16x16_Sidewalk_6_54.png",
+   "exs": "exs.2_city_terrains.city_terrains_sidewalk_6_54"
+  },
+  {
+   "me": "me.city_props.sign_hydrant_marker",
+   "x": 1912,
+   "y": 5344,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_Sign_1.png",
+   "exs": "exs.3_city_props.city_props_hydrant_sign_1"
+  },
+  {
+   "me": "me.city_props.danger_sign_set",
+   "prefer": "ME_Singles_City_Props_16x16_Danger_Sign_13.png",
+   "x": 1752,
+   "y": 5344,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Danger_Sign_13.png",
+   "exs": "exs.3_city_props.city_props_danger_sign_13"
+  },
+  {
+   "me": "me.subway.sign_arrow_up",
+   "x": 1858,
+   "y": 5288,
+   "origin": "bc",
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Arrow_Up_Green_Sign.png",
+   "exs": "exs.20_subway_and_train_station.subway_and_train_station_arrow_up_green_sign"
   }
  ],
  "anims": [
@@ -11536,6 +16450,110 @@
    "x": 3400,
    "y": 5064,
    "fps": 5
+  },
+  {
+   "sheet": "ext/animated/Beach_Seagull_Idle_Right_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 2816,
+   "y": 4992,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Crabs_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 2972,
+   "y": 5036,
+   "fps": 5
+  },
+  {
+   "sheet": "ext/animated/Campfire_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 4536,
+   "y": 440,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Camping_Lantern_1.png",
+   "fw": 48,
+   "fh": 48,
+   "x": 4416,
+   "y": 464,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Fishes_1_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 4680,
+   "y": 744,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Spotlight_1_16x16.png",
+   "fw": 32,
+   "fh": 48,
+   "x": 2940,
+   "y": 2064,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Garden_Fountain_1_16x16.png",
+   "fw": 32,
+   "fh": 48,
+   "x": 2788,
+   "y": 3844,
+   "fps": 5
+  },
+  {
+   "sheet": "ext/animated/Clothes_Hanging_1_16x16.png",
+   "fw": 48,
+   "fh": 48,
+   "x": 1196,
+   "y": 4632,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Automatic_Barrier_1_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "x": 4232,
+   "y": 3416,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Worksite_Door_16x16.png",
+   "fw": 48,
+   "fh": 48,
+   "x": 4298,
+   "y": 3544,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Automatic_Barrier_1_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "x": 5240,
+   "y": 3032,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Worksite_Door_16x16.png",
+   "fw": 48,
+   "fh": 48,
+   "x": 278,
+   "y": 5248,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Automatic_Barrier_1_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "x": 1730,
+   "y": 5360,
+   "fps": 6
   }
  ],
  "animBands": [
@@ -11786,6 +16804,30 @@
    "h": 32,
    "fps": 5,
    "depth": 0.96,
+   "shore": "top"
+  },
+  {
+   "sheet": "ext/animated/_water_fill_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 2752,
+   "y": 5024,
+   "w": 320,
+   "h": 32,
+   "fps": 5,
+   "depth": 0.95,
+   "shore": "top"
+  },
+  {
+   "sheet": "ext/animated/_water_fill_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 4624,
+   "y": 720,
+   "w": 176,
+   "h": 64,
+   "fps": 5,
+   "depth": 0.95,
    "shore": "top"
   }
  ],
@@ -12488,6 +17530,61 @@
    "x": 3320,
    "y": 4840,
    "text": "SAND LOUNGE"
+  },
+  {
+   "x": 2912,
+   "y": 4832,
+   "text": "SHORE COVE"
+  },
+  {
+   "x": 4560,
+   "y": 320,
+   "text": "WILD CAMP"
+  },
+  {
+   "x": 4336,
+   "y": 2184,
+   "text": "MAIN STREET SOUTH"
+  },
+  {
+   "x": 4336,
+   "y": 600,
+   "text": "MARKET FORECOURT"
+  },
+  {
+   "x": 3080,
+   "y": 1980,
+   "text": "CIVIC ANNEX"
+  },
+  {
+   "x": 2888,
+   "y": 3756,
+   "text": "GARDEN GROVE"
+  },
+  {
+   "x": 1336,
+   "y": 4444,
+   "text": "CUL-DE-SAC YARD"
+  },
+  {
+   "x": 4388,
+   "y": 3368,
+   "text": "SCRAP YARD ANNEX"
+  },
+  {
+   "x": 5396,
+   "y": 2984,
+   "text": "MOTOR POOL ANNEX"
+  },
+  {
+   "x": 388,
+   "y": 5096,
+   "text": "OVERFLOW PLOT"
+  },
+  {
+   "x": 1780,
+   "y": 5288,
+   "text": "TRANSFER PLAZA"
   }
  ],
  "portals": [

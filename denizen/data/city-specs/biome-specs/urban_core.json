@@ -8,14 +8,14 @@
  "compiler": {
   "version": 1,
   "rules": "data/limezu-visual-catalog/placement-rules.json",
-  "seed": 20481,
+  "seed": 30481,
   "coords": "local",
   "out": "data/city-specs/generated/d20-urban-pocket.json",
   "_doc": "coords 'local': every rect/point below is relative to bbox, so relocating the pocket is a one-line bbox edit (EXTERIOR-MISTAKES.md #4)."
  },
  "bbox": {
   "x": 4096,
-  "y": 2112,
+  "y": 2160,
   "w": 480,
   "h": 320
  },
@@ -51,7 +51,7 @@
    "name": "sidewalk_edge",
    "surface": "sidewalk",
    "density": {
-    "street_furn": "dense",
+    "street_furn": "medium",
     "signage": "light"
    },
    "_doc": "benches, bins, lamps and a couple of pole signs lining the sidewalk on both sides of the avenue strip."

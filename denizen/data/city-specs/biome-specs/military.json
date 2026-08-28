@@ -16,7 +16,7 @@
  },
  "bbox": {
   "x": 5216,
-  "y": 2880,
+  "y": 2960,
   "w": 360,
   "h": 280
  },
@@ -96,15 +96,6 @@
    "solid": true,
    "interact": "enter",
    "_doc": "sealed quonset motor-shed, the pocket's hero silhouette"
-  },
-  {
-   "me": "me.military.watchtower_empty",
-   "at": {
-    "x": 300,
-    "y": 90
-   },
-   "anchor": "bl",
-   "solid": true
   },
   {
    "me": "me.military.tank_green_south",
