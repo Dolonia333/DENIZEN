@@ -1,0 +1,135 @@
+{
+ "_doc": "W3-B exterior district compiler spec — a 480x320 urban_core pocket immediately south of D1 Main Street's sidewalk (D1 bbox 4100,1600,1000,500 ends at world y=2100/2112 on the 16px grid). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/urban_core.json -v. Vocabulary comes from data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md. Verified clear of every hand-authored district's solid stamps (d1-d16); it only touches the d00-structure base sidewalk/avenue patches (which our own surfaces repaint) and d00's auto-placed street lamps/trees (which merge-city-plan.py already prunes when a district solid lands on them) plus D11's unused grass patch underneath — see scripts/check-city-plan.py notes in EXTERIOR-MISTAKES.md for why patch-level double-painting is harmless.",
+ "schema": "exterior-district-spec/1",
+ "id": "d20-urban-pocket",
+ "district": "D20 Urban Core Pocket (Main Street south extension)",
+ "biome": "urban_core",
+ "palette": "neutral_urban",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 20481,
+  "coords": "local",
+  "out": "data/city-specs/generated/d20-urban-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox, so relocating the pocket is a one-line bbox edit (EXTERIOR-MISTAKES.md #4)."
+ },
+ "bbox": {
+  "x": 4096,
+  "y": 2112,
+  "w": 480,
+  "h": 320
+ },
+ "label": "MAIN STREET SOUTH",
+ "label_at": {
+  "x": 240,
+  "y": 24
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 480,
+   "h": 320,
+   "depth": 0.87,
+   "_doc": "sidewalk covers the whole pocket so pass A snaps every cell to a real surface before anything is placed (no FLOATING)."
+  },
+  {
+   "surface": "asphalt",
+   "name": "avenue_strip",
+   "x": 128,
+   "y": 0,
+   "w": 64,
+   "h": 320,
+   "depth": 1.1,
+   "_doc": "continues the d00-structure north-south avenue (world x 4224-4288) straight through the pocket, so Main Street's own avenue does not dead-end at y=2112."
+  }
+ ],
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "sidewalk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "dense",
+    "signage": "light"
+   },
+   "_doc": "benches, bins, lamps and a couple of pole signs lining the sidewalk on both sides of the avenue strip."
+  },
+  {
+   "slot": "building_row",
+   "name": "shopfront_row",
+   "x": 208,
+   "y": 32,
+   "w": 272,
+   "h": 256,
+   "density": {
+    "building_shell": "medium"
+   },
+   "_doc": "east side of the avenue: the pinned storefront landmarks below plus scattered building_shell filler (window/door/facade singles) at medium density."
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.generic_building.storefront_blue_three_story",
+   "at": {
+    "x": 296,
+    "y": 280
+   },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "shop",
+   "_doc": "hero anchor: a 96x176 three-story glass storefront (exs.4_generic_building.generic_building_condo_5_1), tagged shop/storefront/condo."
+  },
+  {
+   "me": "me.modular_floors.bakery_full",
+   "at": {
+    "x": 420,
+    "y": 280
+   },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "shop",
+   "_doc": "small modular ground-floor bakery stub (16x48) beside the storefront, tagged shop/bakery."
+  }
+ ],
+ "interactions": {
+  "shop": [
+   "me.generic_building.storefront_blue_three_story",
+   "me.modular_floors.bakery_full"
+  ],
+  "sit": "auto",
+  "read": "auto"
+ },
+ "constraints": {
+  "max_stamps": 60,
+  "coverage_target_singles": 35,
+  "_doc": "480x320 pocket = 30x20 = 600 cells."
+ },
+ "passes": {
+  "A_ground": {
+   "enabled": true
+  },
+  "B_skeleton": {
+   "enabled": true
+  },
+  "C_landmarks": {
+   "enabled": true
+  },
+  "D_groups": {
+   "enabled": true
+  },
+  "E_props": {
+   "enabled": true
+  },
+  "F_canopy": {
+   "enabled": true
+  },
+  "G_detail": {
+   "enabled": true
+  },
+  "H_life": {
+   "enabled": true
+  }
+ }
+}
