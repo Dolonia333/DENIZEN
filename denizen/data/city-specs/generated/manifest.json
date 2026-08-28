@@ -1,0 +1,20 @@
+{
+  "_doc": "Active generated fragments for merge-city-plan.py --include-pockets. Pockets overlapping a d*-compiled replacement district are excluded (see EXTERIOR-PLACEMENT-BRAIN-PLAN.md W6).",
+  "include": [
+    "d18-beach-lounge.json",
+    "d19-beach-shore-pocket.json",
+    "d22-civic-pocket.json",
+    "d25-industrial-pocket.json",
+    "d26-military-pocket.json",
+    "d99-catalog-showcase.json"
+  ],
+  "exclude_reason": {
+    "d19-wild-camp-pocket.json": "overlaps d10-compiled wild district",
+    "d20-urban-pocket.json": "overlaps d11-compiled industrial bbox edge",
+    "d21-commercial-pocket.json": "OVERLAP with compiled/hand content",
+    "d23-park-pocket.json": "overlaps d7-compiled park district",
+    "d24-residential-pocket.json": "OVERLAP with d6-compiled residential",
+    "d27-memorial-pocket.json": "OVERLAP with d9-compiled memorial",
+    "d28-transit-pocket.json": "overlaps d13-compiled transit district"
+  }
+}

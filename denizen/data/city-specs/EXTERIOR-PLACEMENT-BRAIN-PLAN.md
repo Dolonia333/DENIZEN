@@ -275,6 +275,28 @@ docs/
   EXTERIOR-COMPILER.md
 ```
 
+**Gate G5:** Offline prep done; live MCP dispatch pending.
+
+### Wave 6 — Full migration + coverage sprint ✅
+| ID | Task | Output |
+|----|------|--------|
+| W6-A | Catalog showcase | `compile-coverage-showcase.py` → d99 (703 stamps, Tier A 43%) |
+| W6-B | Full district migration | d6/7/9/10/11/13 `-compiled.json` + `--compiler-replaces HAND` |
+| W6-C | Atlas runtime | ext-atlas wired in full-world.js (1870 frames, 100% hit rate) |
+| W6-D | Wave 5 prep | NPC routes, montage QA, `_asset-catalog-enriched.json` |
+| W6-E | Browser test | `?world=full` loads 3748 stamps, movement OK |
+
+**Promoted merge command (0 QA defects):**
+```bash
+python3 scripts/merge-city-plan.py --compiler-replaces HAND --include-pockets
+python3 scripts/check-city-plan.py   # exit 0
+python3 scripts/build-ext-atlas.py
+```
+
+Active pockets listed in `data/city-specs/generated/manifest.json` (excludes pockets that overlap compiled districts).
+
+**Coverage after W6:** 1298/2749 me.* (47%), 1799/6224 singles (29%), Tier A 43%, Tier B 53%. Tier A cap: only 252/581 buildings have linked Singles.
+
 ---
 
 ## Status log
@@ -286,4 +308,5 @@ docs/
 | G2 | **done** | Beach pilot compiles 51 stamps, 0 QA defects; merge `--include-generated` wired |
 | G3 | **done** | 11 biome specs + 12 compiler pockets promoted; 1764 stamps, 0 defects |
 | G4 | **done** | interact runtime, atlas builder, extended QA (biome advisory) |
-| G5 | **prepped, blocked on MCP** | W5-A/B/C offline artifacts committed (patrol routes, montage QA report, enriched NAS catalog); dispatch/visual-review/NAS-load steps still need a live Denizen MCP connection |
+| G5 | **prepped, blocked on MCP** | W5-A/B/C offline artifacts committed |
+| G6 | **done** | Full migration + showcase; **3748 stamps**, 0 QA defects |

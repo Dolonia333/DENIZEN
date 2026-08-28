@@ -42,6 +42,9 @@ ap = argparse.ArgumentParser(description=__doc__)
 ap.add_argument("--include-generated", action="store_true",
                 help="also merge data/city-specs/generated/d*.json "
                      "(compiler-generated district fragments)")
+ap.add_argument("--include-pockets", action="store_true",
+                help="with --compiler-replaces HAND, also merge generated "
+                     "pockets/showcase (excluding d*-compiled.json)")
 ap.add_argument("--compiler-replaces", choices=["HAND"], default=None,
                 help="HAND: for each hand district with a matching "
                      "data/city-specs/generated/d{N}-compiled.json, replace "
@@ -49,10 +52,6 @@ ap.add_argument("--compiler-replaces", choices=["HAND"], default=None,
                      "(patches/roads/solids/portals/npcs/vehicles still come "
                      "from the hand file, unless the spec painted full_bbox)")
 args = ap.parse_args()
-if args.compiler_replaces and args.include_generated:
-    print("note: --compiler-replaces already folds in every matching "
-          "generated/d*-compiled.json; ignoring --include-generated")
-    args.include_generated = False
 
 merged = {"worldSize": {"w": 6656, "h": 6400}, "patches": [], "roads": [],
           "stamps": [], "anims": [], "animBands": [], "solids": [],
@@ -77,9 +76,25 @@ if args.compiler_replaces == "HAND":
           f"available: {sorted(_replace_map)}")
 
 _frag_files = sorted(glob.glob(os.path.join(SPECS, "d*.json")))
-_generated_files = sorted(glob.glob(os.path.join(GENERATED, "d*.json"))) if args.include_generated else []
-_frag_files += _generated_files
+_generated_files = []
 if args.include_generated:
+    _generated_files = sorted(glob.glob(os.path.join(GENERATED, "d*.json")))
+elif args.include_pockets and args.compiler_replaces:
+    manifest_path = os.path.join(GENERATED, "manifest.json")
+    if os.path.exists(manifest_path):
+        manifest = json.load(open(manifest_path, encoding="utf-8"))
+        allow = set(manifest.get("include") or [])
+        _generated_files = sorted(
+            os.path.join(GENERATED, name) for name in allow
+            if os.path.exists(os.path.join(GENERATED, name))
+        )
+    else:
+        _generated_files = sorted(
+            f for f in glob.glob(os.path.join(GENERATED, "d*.json"))
+            if not re.match(r"^d\d+-compiled\.json$", os.path.basename(f))
+        )
+_frag_files += _generated_files
+if _generated_files:
     print(f"including {len(_generated_files)} generated fragment(s): "
           f"{[os.path.basename(f) for f in _generated_files]}")
 
