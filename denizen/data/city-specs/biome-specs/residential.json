@@ -1,0 +1,168 @@
+{
+ "_doc": "W3-C residential biome spec — a 400x304 fenced yard pocket south of D6 Residential District (D6 bbox ends y=4400; D9 graveyard sits x=200-1100 at the same latitude, so this pocket starts at x=1136 to stay clear of it). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/residential.json -v.",
+ "schema": "exterior-district-spec/1",
+ "id": "d24-residential-pocket",
+ "district": "D24 Cul-de-Sac Yard Pocket",
+ "biome": "residential",
+ "palette": "pastel_suburb",
+ "palette_secondary": "verdant",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 24081,
+  "coords": "local",
+  "out": "data/city-specs/generated/d24-residential-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox."
+ },
+ "bbox": {
+  "x": 1136,
+  "y": 4432,
+  "w": 400,
+  "h": 304
+ },
+ "label": "CUL-DE-SAC YARD",
+ "label_at": {
+  "x": 200,
+  "y": 12
+ },
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0,
+   "y": 0,
+   "w": 400,
+   "h": 304,
+   "depth": 0.9,
+   "_doc": "the yard lawn covers the WHOLE bbox first"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "front_walk",
+   "x": 0,
+   "y": 0,
+   "w": 400,
+   "h": 32,
+   "depth": 0.87,
+   "_doc": "front walk along the north edge, connecting toward D6's street grid"
+  },
+  {
+   "surface": "asphalt",
+   "name": "driveway",
+   "x": 192,
+   "y": 32,
+   "w": 80,
+   "h": 64,
+   "depth": 1.1,
+   "_doc": "short driveway stub off the front walk"
+  }
+ ],
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "front_walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "light",
+    "vegetation": "light",
+    "barrier": "light"
+   },
+   "_doc": "mailbox / lamp / low fence stub along the walk"
+  },
+  {
+   "slot": "parking_bay",
+   "name": "driveway_bay",
+   "x": 192,
+   "y": 32,
+   "w": 80,
+   "h": 64,
+   "density": {
+    "vehicle": "medium"
+   },
+   "_doc": "one car parked on the driveway"
+  },
+  {
+   "slot": "backlot",
+   "name": "fenced_yard",
+   "x": 16,
+   "y": 112,
+   "w": 368,
+   "h": 176,
+   "density": {
+    "barrier": "dense",
+    "vegetation": "dense",
+    "decor_small": "medium",
+    "infra": "light"
+   },
+   "_doc": "the fenced yard itself — barrier + vegetation dense, per placement-rules.biomes.residential.density"
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.garden.gate_iron",
+   "at": {
+    "x": 232,
+    "y": 112
+   },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "yard gate where the driveway meets the fenced backlot"
+  }
+ ],
+ "interactions": {
+  "sit": "auto"
+ },
+ "anims": [
+  {
+   "sheet": "ext/animated/Clothes_Hanging_1_16x16.png",
+   "fw": 48,
+   "fh": 48,
+   "at": {
+    "x": 60,
+    "y": 200
+   },
+   "fps": 4
+  }
+ ],
+ "constraints": {
+  "keep_clear": [
+   {
+    "x": 192,
+    "y": 0,
+    "w": 80,
+    "h": 32,
+    "why": "driveway apron off the front walk must stay clear for the parked car"
+   }
+  ],
+  "max_stamps": 90,
+  "coverage_target_singles": 30,
+  "max_solid_cell_ratio": 0.32,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "25x19 tiles = 475 cells."
+ },
+ "passes": {
+  "A_ground": {
+   "enabled": true
+  },
+  "B_skeleton": {
+   "enabled": true
+  },
+  "C_landmarks": {
+   "enabled": true
+  },
+  "D_groups": {
+   "enabled": true
+  },
+  "E_props": {
+   "enabled": true
+  },
+  "F_canopy": {
+   "enabled": true
+  },
+  "G_detail": {
+   "enabled": true
+  },
+  "H_life": {
+   "enabled": true
+  }
+ }
+}
