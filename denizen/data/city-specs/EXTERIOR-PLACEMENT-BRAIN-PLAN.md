@@ -108,6 +108,31 @@
 | W5-B | Visual agent pass on compiled districts via montage QA |
 | W5-C | Wire `city.limezu_assets` NAS table to enriched catalog |
 
+### Wave 6 — Coverage push (depends G3)
+| ID | Task | Output | Status |
+|----|------|--------|--------|
+| W6-A | Catalog coverage showcase — sweep every orphan `me.*` into empty world space | `scripts/compile-coverage-showcase.py` → `generated/d99-catalog-showcase.json` | ✅ 731 stamps, 0 QA defects |
+
+**W6-A notes.** The showcase discovers its own zones at runtime (maximal empty
+rectangles carved out of an occupancy grid of every stamp footprint, road,
+solid and patch in `city-plan.json`), groups orphans by `biome_primary`,
+shelf-packs them by true sprite rect, and paints a ground patch per biome
+segment. Emitted stamps carry `showcase: true`, so re-running ignores its own
+output — orphan detection and zone discovery stay idempotent as the city grows.
+Re-run it after any district lands, since a new district both consumes showcase
+zones and retires orphans:
+
+```
+python3 scripts/compile-coverage-showcase.py -v
+python3 scripts/merge-city-plan.py --include-generated
+python3 scripts/compile-coverage-showcase.py --verify-merged   # showcase-scoped QA
+```
+
+**Tier A is capped at 43.37% by linking, not by placement.** Only 252 of the
+581 building `me.*` are vision-linked to a pixel-perfect Single; the other 329
+have no image to stamp. Raising Tier A past this needs `me-to-singles.json`
+coverage for those 329, not more districts.
+
 ---
 
 ## Dependency graph (what must wait)
@@ -152,13 +177,16 @@ python3 scripts/render-city-preview.py --crop ... # visual spot-check
 
 ## Coverage targets (Tier A–E)
 
-| Tier | Target |
-|------|--------|
-| A Buildings/landmarks | 100% `me.*` building category placed somewhere |
-| B Props/trees/vehicles | ≥90% role-tagged placeables |
-| C Color variants | ≥1 use per variant family across biomes |
-| D Fragments | group-only, never solo stamp |
-| E Animated | ≥1 anim per theme sheet in matching biome |
+| Tier | Target | Baseline (W0-B) | After W3+W4 pockets | After W6-A showcase |
+|------|--------|-----------------|---------------------|---------------------|
+| A Buildings/landmarks | 100% `me.*` building category placed somewhere | — | 56/581 (9.64%) | **252/581 (43.37%)** — linking-capped |
+| B Props/trees/vehicles | ≥90% role-tagged placeables | — | 300/1150 (26.09%) | **599/1150 (52.09%)** |
+| C Color variants | ≥1 use per variant family across biomes | — | 140/332 (42.17%) | **237/332 (71.39%)** |
+| D Fragments | group-only, never solo stamp | — | 351/2916 (12.04%) | 580/2916 (19.89%) |
+| E Animated | ≥1 anim per theme sheet in matching biome | — | 16/24 themes | 16/24 themes |
+
+Overall `me.*` usage: 544/2749 (19.79%) → **1275/2749 (46.38%)**. Numbers come
+from `report-ext-catalog-coverage.py` against the merged plan.
 
 ---
 
