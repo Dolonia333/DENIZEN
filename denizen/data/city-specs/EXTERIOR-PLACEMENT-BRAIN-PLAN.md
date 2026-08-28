@@ -219,7 +219,7 @@ docs/
 |------|--------|-------|
 | G0 | **done** | All W0 deliverables committed; validate-placement-rules OK (2749/2749 roles) |
 | G1 | **done** | W1-A/B/C: 100% enrichment, 20 groups, variant map validated |
-| G2 | in_progress | W2 sub-agents running |
-| G3 | pending | |
+| G2 | **done** | Beach pilot compiles 51 stamps, 0 QA defects; merge `--include-generated` wired |
+| G3 | pending | Biome rollout (W3 parallel groups) |
 | G4 | pending | |
 | G5 | blocked | Denizen MCP not connected |

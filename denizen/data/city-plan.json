@@ -843,6 +843,30 @@
    "w": 48,
    "h": 64,
    "depth": 0.9
+  },
+  {
+   "tile": "sand",
+   "x": 3120,
+   "y": 4816,
+   "w": 400,
+   "h": 288,
+   "depth": 0.92
+  },
+  {
+   "tile": "sidewalk",
+   "x": 3120,
+   "y": 4816,
+   "w": 400,
+   "h": 32,
+   "depth": 0.91
+  },
+  {
+   "tile": "sidewalk",
+   "x": 3296,
+   "y": 4848,
+   "w": 48,
+   "h": 96,
+   "depth": 0.91
   }
  ],
  "roads": [
@@ -10242,6 +10266,488 @@
    "y": 4930,
    "origin": "bl",
    "solid": true
+  },
+  {
+   "me": "me.beach.bamboo_bar_sand",
+   "prefer": "21_Beach_16x16_Bamboo_Bar_Counter_2_Sand.png",
+   "x": 3192,
+   "y": 4944,
+   "origin": "bc",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Counter_2_Sand.png",
+   "exs": "exs.21_beach.beach_bamboo_bar_counter_2_sand"
+  },
+  {
+   "me": "me.pool.lifeguard_chair_wood",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Lifeguard_Chair_2.png",
+   "x": 3464,
+   "y": 5048,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Lifeguard_Chair_2.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_lifeguard_chair_2"
+  },
+  {
+   "me": "me.beach.sign_direction_big",
+   "x": 3296,
+   "y": 4848,
+   "origin": "bc",
+   "solid": true,
+   "interact": "read",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Direction_Pole_Big.png",
+   "exs": "exs.21_beach.beach_direction_pole_big"
+  },
+  {
+   "me": "me.beach.volley_net",
+   "exs": "exs.21_beach.beach_beach_volley_net_left",
+   "x": 3408,
+   "y": 4928,
+   "origin": "tl",
+   "solid": true,
+   "interact": "play",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Net_Left.png"
+  },
+  {
+   "me": "me.beach.volley_net",
+   "exs": "exs.21_beach.beach_beach_volley_net_middle_modular",
+   "x": 3456,
+   "y": 4928,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Net_Middle_Modular.png"
+  },
+  {
+   "me": "me.beach.volley_net",
+   "exs": "exs.21_beach.beach_beach_volley_net_right",
+   "x": 3488,
+   "y": 4928,
+   "origin": "tl",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Net_Right.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_left_up",
+   "x": 3440,
+   "y": 4976,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Left_Up.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_left_middle_modular",
+   "x": 3440,
+   "y": 4992,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Left_Middle_Modular.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_left_down",
+   "x": 3440,
+   "y": 5008,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Left_Down.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_middle_up_modular",
+   "x": 3456,
+   "y": 4976,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Middle_Up_Modular.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_middle_right_modular",
+   "x": 3472,
+   "y": 4992,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Middle_Right_Modular.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_middle_down_modular",
+   "x": 3456,
+   "y": 5008,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Middle_Down_Modular.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_right_up",
+   "x": 3472,
+   "y": 4976,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Right_Up.png"
+  },
+  {
+   "me": "me.beach.volley_court_lines",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_right_down",
+   "x": 3472,
+   "y": 5008,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Field_Line_Right_Down.png"
+  },
+  {
+   "me": "me.beach.ball_volleyball",
+   "exs": "exs.21_beach.beach_ball",
+   "x": 3456,
+   "y": 4992,
+   "origin": "tl",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ball.png"
+  },
+  {
+   "me": "me.beach.stage_spotlight",
+   "prefer": "21_Beach_16x16_Stage_Structure_Spotlight_Modular_Right_1.png",
+   "x": 3144,
+   "y": 4848,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Stage_Structure_Spotlight_Modular_Right_1.png",
+   "exs": "exs.21_beach.beach_stage_structure_spotlight_modular_right_1"
+  },
+  {
+   "me": "me.beach.info_board_blue",
+   "prefer": "21_Beach_16x16_Blue_Cartel_2.png",
+   "x": 3464,
+   "y": 4848,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Cartel_2.png",
+   "exs": "exs.21_beach.beach_blue_cartel_2"
+  },
+  {
+   "me": "me.beach.plants_tropical",
+   "prefer": "21_Beach_16x16_Small_Sprout_2_Vers_1.png",
+   "x": 3425,
+   "y": 4846,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Sprout_2_Vers_1.png",
+   "exs": "exs.21_beach.beach_small_sprout_2_vers_1"
+  },
+  {
+   "me": "me.camping.chair_blue",
+   "prefer": "ME_Singles_Camping_16x16_Chair_6.png",
+   "x": 3467,
+   "y": 4883,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Chair_6.png",
+   "exs": "exs.11_camping.camping_chair_6"
+  },
+  {
+   "me": "me.pool.sunbed_blue_side",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Sunbed_12.png",
+   "x": 3188,
+   "y": 4987,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Sunbed_12.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_sunbed_12"
+  },
+  {
+   "me": "me.beach.umbrella_blue_closed",
+   "prefer": "21_Beach_16x16_Blue_Beach_Umbrella_Closed.png",
+   "x": 3367,
+   "y": 4917,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Umbrella_Closed.png",
+   "exs": "exs.21_beach.beach_blue_beach_umbrella_closed"
+  },
+  {
+   "me": "me.beach.umbrella_green_closed",
+   "x": 3253,
+   "y": 4884,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Beach_Umbrella_Closed.png",
+   "exs": "exs.21_beach.beach_green_beach_umbrella_closed"
+  },
+  {
+   "me": "me.beach.towel_yellow_grey",
+   "prefer": "21_Beach_16x16_Yellow_Beach_Towel_1.png",
+   "x": 3277,
+   "y": 4946,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Yellow_Beach_Towel_1.png",
+   "exs": "exs.21_beach.beach_yellow_beach_towel_1"
+  },
+  {
+   "me": "me.pool.sunbed_orange_side",
+   "x": 3490,
+   "y": 4939,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Sunbed_5.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_sunbed_5"
+  },
+  {
+   "me": "me.pool.sunbed_green_side",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Sunbed_3.png",
+   "x": 3422,
+   "y": 4928,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Sunbed_3.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_sunbed_3"
+  },
+  {
+   "me": "me.beach.towel_green",
+   "prefer": "21_Beach_16x16_Green_Beach_Towel_2.png",
+   "x": 3270,
+   "y": 5007,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Beach_Towel_2.png",
+   "exs": "exs.21_beach.beach_green_beach_towel_2"
+  },
+  {
+   "me": "me.camping.cut_wood_bench",
+   "x": 3140,
+   "y": 4996,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Cut_Wood_Bench_1.png",
+   "exs": "exs.11_camping.camping_cut_wood_bench_1"
+  },
+  {
+   "me": "me.beach.umbrella_lightblue_closed",
+   "x": 3172,
+   "y": 4882,
+   "origin": "bc",
+   "solid": true,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Lightblue_Beach_Umbrella_Closed.png",
+   "exs": "exs.21_beach.beach_lightblue_beach_umbrella_closed"
+  },
+  {
+   "me": "me.beach.seagull",
+   "prefer": "21_Beach_16x16_Seagull_Back.png",
+   "x": 3280,
+   "y": 4904,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Seagull_Back.png",
+   "exs": "exs.21_beach.beach_seagull_back"
+  },
+  {
+   "me": "me.pool.palm_tree",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Palm_2.png",
+   "x": 3383,
+   "y": 5011,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Palm_2.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_palm_2"
+  },
+  {
+   "me": "me.beach.plants_tropical",
+   "prefer": "21_Beach_16x16_Small_Sprout_1_Vers_2.png",
+   "x": 3397,
+   "y": 4876,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Sprout_1_Vers_2.png",
+   "exs": "exs.21_beach.beach_small_sprout_1_vers_2"
+  },
+  {
+   "me": "me.camping.sleeping_bag_blue",
+   "prefer": "ME_Singles_Camping_16x16_Sleeping_Bag_1.png",
+   "x": 3140,
+   "y": 4883,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sleeping_Bag_1.png",
+   "exs": "exs.11_camping.camping_sleeping_bag_1"
+  },
+  {
+   "me": "me.vehicles.ice_cream_prop_3",
+   "prefer": "ME_Singles_Vehicles_16x16_Ice_Cream_Fallen_5.png",
+   "x": 3228,
+   "y": 4930,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ice_Cream_Fallen_5.png",
+   "exs": "exs.10_vehicles.vehicles_ice_cream_fallen_5"
+  },
+  {
+   "me": "me.beach.music_box",
+   "prefer": "21_Beach_16x16_Music_Box_Sand.png",
+   "x": 3142,
+   "y": 4975,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Music_Box_Sand.png",
+   "exs": "exs.21_beach.beach_music_box_sand"
+  },
+  {
+   "me": "me.beach.shells_brown",
+   "prefer": "21_Beach_16x16_Brown_Shell_1_Vers_1.png",
+   "x": 3365,
+   "y": 4964,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Brown_Shell_1_Vers_1.png",
+   "exs": "exs.21_beach.beach_brown_shell_1_vers_1"
+  },
+  {
+   "me": "me.beach.float_green",
+   "x": 3205,
+   "y": 4898,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Float.png",
+   "exs": "exs.21_beach.beach_green_float"
+  },
+  {
+   "me": "me.beach.speaker_medium_small",
+   "prefer": "21_Beach_16x16_Medium_Loudspeaker.png",
+   "x": 3378,
+   "y": 5066,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Medium_Loudspeaker.png",
+   "exs": "exs.21_beach.beach_medium_loudspeaker"
+  },
+  {
+   "me": "me.beach.bucket_blue",
+   "prefer": "21_Beach_16x16_Small_Ice_White_Bucket_Sand.png",
+   "x": 3422,
+   "y": 5042,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Ice_White_Bucket_Sand.png",
+   "exs": "exs.21_beach.beach_small_ice_white_bucket_sand"
+  },
+  {
+   "me": "me.beach.bucket_green",
+   "prefer": "21_Beach_16x16_Small_Green_Bucket_Sand.png",
+   "x": 3229,
+   "y": 5067,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Green_Bucket_Sand.png",
+   "exs": "exs.21_beach.beach_small_green_bucket_sand"
+  },
+  {
+   "me": "me.beach.bucket_red",
+   "prefer": "21_Beach_16x16_Small_Red_Bucket_Sand.png",
+   "x": 3412,
+   "y": 5062,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Small_Red_Bucket_Sand.png",
+   "exs": "exs.21_beach.beach_small_red_bucket_sand"
+  },
+  {
+   "me": "me.camping.floating_wood",
+   "prefer": "ME_Singles_Camping_16x16_Floating_Wood_1.png",
+   "x": 3259,
+   "y": 5083,
+   "origin": "bc",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Floating_Wood_1.png",
+   "exs": "exs.11_camping.camping_floating_wood_1"
+  },
+  {
+   "me": "me.pool.float_popsicle_yellow",
+   "prefer": "ME_Singles_Swimming_Pool_16x16_Toy_11.png",
+   "x": 3184,
+   "y": 5096,
+   "origin": "bc",
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Toy_11.png",
+   "exs": "exs.14_swimming_pool.swimming_pool_toy_11"
+  },
+  {
+   "me": "me.beach.palm_tree",
+   "x": 3352,
+   "y": 4976,
+   "origin": "bc",
+   "depth": 4982.0,
+   "img": "ext/singles/21_beach/21_Beach_16x16_Palm_Tree.png",
+   "exs": "exs.21_beach.beach_palm_tree"
+  },
+  {
+   "me": "me.beach.umbrella_blue_open",
+   "prefer": "21_Beach_16x16_Blue_Beach_Umbrella_Opened.png",
+   "x": 3480,
+   "y": 4992,
+   "origin": "bc",
+   "depth": 4998.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Umbrella_Opened.png",
+   "exs": "exs.21_beach.beach_blue_beach_umbrella_opened"
+  },
+  {
+   "me": "me.beach.umbrella_green_open",
+   "x": 3160,
+   "y": 4960,
+   "origin": "bc",
+   "depth": 4966.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Beach_Umbrella_Opened.png",
+   "exs": "exs.21_beach.beach_green_beach_umbrella_opened"
+  },
+  {
+   "me": "me.beach.umbrella_lightblue_open",
+   "x": 3448,
+   "y": 4928,
+   "origin": "bc",
+   "depth": 4934.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Lightblue_Beach_Umbrella_Opened.png",
+   "exs": "exs.21_beach.beach_lightblue_beach_umbrella_opened"
+  },
+  {
+   "me": "me.beach.umbrella_blue_open",
+   "prefer": "21_Beach_16x16_Yellow_Beach_Umbrella_Opened.png",
+   "x": 3432,
+   "y": 5008,
+   "origin": "bc",
+   "depth": 5014.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Yellow_Beach_Umbrella_Opened.png",
+   "exs": "exs.21_beach.beach_yellow_beach_umbrella_opened"
+  },
+  {
+   "me": "me.beach.umbrella_lightblue_open",
+   "x": 3192,
+   "y": 4880,
+   "origin": "bc",
+   "depth": 4886.0,
+   "interact": "sit",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Lightblue_Beach_Umbrella_Opened.png",
+   "exs": "exs.21_beach.beach_lightblue_beach_umbrella_opened"
+  },
+  {
+   "me": "me.beach.sand_hole",
+   "x": 3458,
+   "y": 4978,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Sand_Hole.png",
+   "exs": "exs.21_beach.beach_sand_hole"
+  },
+  {
+   "me": "me.beach.starfish",
+   "prefer": "21_Beach_16x16_Blue_Big_Starfish.png",
+   "x": 3362,
+   "y": 4873,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Big_Starfish.png",
+   "exs": "exs.21_beach.beach_blue_big_starfish"
+  },
+  {
+   "me": "me.beach.shells_gold",
+   "prefer": "21_Beach_16x16_Gold_Blue_Shell_3.png",
+   "x": 3288,
+   "y": 5047,
+   "origin": "bc",
+   "img": "ext/singles/21_beach/21_Beach_16x16_Gold_Blue_Shell_3.png",
+   "exs": "exs.21_beach.beach_gold_blue_shell_3"
   }
  ],
  "anims": [
@@ -11014,6 +11520,22 @@
    "x": 914,
    "y": 4714,
    "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Beach_Seagull_Idle_Left_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 3216,
+   "y": 5024,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Crabs_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 3400,
+   "y": 5064,
+   "fps": 5
   }
  ],
  "animBands": [
@@ -11250,6 +11772,18 @@
    "y": 4624,
    "w": 2496,
    "h": 512,
+   "fps": 5,
+   "depth": 0.96,
+   "shore": "top"
+  },
+  {
+   "sheet": "ext/animated/_water_fill_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 3120,
+   "y": 5072,
+   "w": 400,
+   "h": 32,
    "fps": 5,
    "depth": 0.96,
    "shore": "top"
@@ -11949,6 +12483,11 @@
    "x": 560,
    "y": 4432,
    "text": "OLD CEMETERY"
+  },
+  {
+   "x": 3320,
+   "y": 4840,
+   "text": "SAND LOUNGE"
   }
  ],
  "portals": [

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-28T00:42:21.443767+00:00",
+  "generated_at": "2026-08-28T01:46:56.786229+00:00",
   "sources": {
     "registry": {
       "path": "data/limezu-visual-catalog/registry.jsonl",
@@ -16,23 +16,23 @@
     },
     "city_plan": {
       "path": "data/city-plan.json",
-      "stamps": 1215,
-      "anims": 96,
-      "anim_bands": 23
+      "stamps": 1266,
+      "anims": 98,
+      "anim_bands": 24
     }
   },
   "totals": {
     "me_total": 2749,
     "me_linked_to_any_single": 1295,
-    "me_used": 358,
-    "me_unused": 2391,
-    "me_pct_used": 13.02,
+    "me_used": 377,
+    "me_unused": 2372,
+    "me_pct_used": 13.71,
     "exs_total": 6224,
-    "exs_used": 571,
-    "exs_unused": 5653,
-    "exs_pct_used": 9.17,
-    "city_plan_stamps_total": 1215,
-    "city_plan_unique_images": 642,
+    "exs_used": 607,
+    "exs_unused": 5617,
+    "exs_pct_used": 9.75,
+    "city_plan_stamps_total": 1266,
+    "city_plan_unique_images": 678,
     "city_plan_images_outside_ext_catalog_scope": 71,
     "city_plan_unresolved_ext_singles_images": 0
   },
@@ -107,21 +107,21 @@
     },
     "furniture": {
       "me_total": 136,
-      "me_used": 26,
-      "me_unused": 110,
-      "pct_used": 19.12
+      "me_used": 33,
+      "me_unused": 103,
+      "pct_used": 24.26
     },
     "infra": {
       "me_total": 283,
-      "me_used": 44,
-      "me_unused": 239,
-      "pct_used": 15.55
+      "me_used": 45,
+      "me_unused": 238,
+      "pct_used": 15.9
     },
     "nature": {
       "me_total": 247,
-      "me_used": 40,
-      "me_unused": 207,
-      "pct_used": 16.19
+      "me_used": 41,
+      "me_unused": 206,
+      "pct_used": 16.6
     },
     "npc": {
       "me_total": 5,
@@ -143,9 +143,9 @@
     },
     "prop": {
       "me_total": 632,
-      "me_used": 114,
-      "me_unused": 518,
-      "pct_used": 18.04
+      "me_used": 123,
+      "me_unused": 509,
+      "pct_used": 19.46
     },
     "road": {
       "me_total": 6,
@@ -173,9 +173,9 @@
     },
     "terrain": {
       "me_total": 112,
-      "me_used": 10,
-      "me_unused": 102,
-      "pct_used": 8.93
+      "me_used": 11,
+      "me_unused": 101,
+      "pct_used": 9.82
     },
     "transition": {
       "me_total": 1,
@@ -205,23 +205,23 @@
   "by_theme": {
     "10_Vehicles": {
       "me_total": 279,
-      "me_used": 26,
-      "me_unused": 253,
-      "me_pct_used": 9.32,
+      "me_used": 27,
+      "me_unused": 252,
+      "me_pct_used": 9.68,
       "exs_total": 273,
-      "exs_used": 36,
-      "exs_unused": 237,
-      "exs_pct_used": 13.19
+      "exs_used": 37,
+      "exs_unused": 236,
+      "exs_pct_used": 13.55
     },
     "11_Camping": {
       "me_total": 185,
-      "me_used": 36,
-      "me_unused": 149,
-      "me_pct_used": 19.46,
+      "me_used": 38,
+      "me_unused": 147,
+      "me_pct_used": 20.54,
       "exs_total": 693,
-      "exs_used": 69,
-      "exs_unused": 624,
-      "exs_pct_used": 9.96
+      "exs_used": 71,
+      "exs_unused": 622,
+      "exs_pct_used": 10.25
     },
     "12_Hotel_and_Hospital": {
       "me_total": 41,
@@ -245,13 +245,13 @@
     },
     "14_Swimming_Pool": {
       "me_total": 55,
-      "me_used": 7,
-      "me_unused": 48,
-      "me_pct_used": 12.73,
+      "me_used": 10,
+      "me_unused": 45,
+      "me_pct_used": 18.18,
       "exs_total": 179,
-      "exs_used": 8,
-      "exs_unused": 171,
-      "exs_pct_used": 4.47
+      "exs_used": 14,
+      "exs_unused": 165,
+      "exs_pct_used": 7.82
     },
     "15_Police_Station": {
       "me_total": 43,
@@ -325,13 +325,13 @@
     },
     "21_Beach": {
       "me_total": 90,
-      "me_used": 32,
-      "me_unused": 58,
-      "me_pct_used": 35.56,
+      "me_used": 45,
+      "me_unused": 45,
+      "me_pct_used": 50.0,
       "exs_total": 316,
-      "exs_used": 48,
-      "exs_unused": 268,
-      "exs_pct_used": 15.19
+      "exs_used": 75,
+      "exs_unused": 241,
+      "exs_pct_used": 23.73
     },
     "22_Post_Office": {
       "me_total": 46,
@@ -463,9 +463,9 @@
       ],
       "target": ">=90% role-tagged placeables used",
       "me_total": 1150,
-      "me_used": 186,
-      "me_unused": 964,
-      "pct_used": 16.17,
+      "me_used": 196,
+      "me_unused": 954,
+      "pct_used": 17.04,
       "target_met": false
     },
     "C_color_variants": {
@@ -473,9 +473,9 @@
       "target": ">=1 use per variant family across biomes",
       "method": "heuristic: me.* ids grouped by (sheet, category, id-with-color/facing/index tokens stripped); families = groups with >1 member",
       "variant_families_total": 332,
-      "variant_families_with_use": 96,
-      "variant_families_without_use": 236,
-      "pct_families_with_use": 28.92,
+      "variant_families_with_use": 100,
+      "variant_families_without_use": 232,
+      "pct_families_with_use": 30.12,
       "target_met": false,
       "zero_use_family_examples": [
         {
@@ -591,19 +591,6 @@
           ]
         },
         {
-          "family": "ice_cream_prop",
-          "sheet": "10_Vehicles",
-          "category": "prop",
-          "members": [
-            "me.vehicles.ice_cream_prop_1",
-            "me.vehicles.ice_cream_prop_2",
-            "me.vehicles.ice_cream_prop_3",
-            "me.vehicles.ice_cream_prop_4",
-            "me.vehicles.ice_cream_prop_5",
-            "me.vehicles.ice_cream_prop_6"
-          ]
-        },
-        {
           "family": "pizza_tuk_tuk_closed",
           "sheet": "10_Vehicles",
           "category": "vehicle",
@@ -706,6 +693,17 @@
             "me.vehicles.car_icon_orange",
             "me.vehicles.car_icon_grey"
           ]
+        },
+        {
+          "family": "sedan_lavender",
+          "sheet": "10_Vehicles",
+          "category": "vehicle",
+          "members": [
+            "me.vehicles.sedan_lavender_east",
+            "me.vehicles.sedan_lavender_west",
+            "me.vehicles.sedan_lavender_south",
+            "me.vehicles.sedan_lavender_north"
+          ]
         }
       ]
     },
@@ -713,9 +711,9 @@
       "label": "Fragments (group-only components)",
       "target": "fragments are never placed as a solo stamp (group-recipe usage only)",
       "exs_fragments_total": 2916,
-      "exs_fragments_used": 180,
-      "exs_fragments_unused": 2736,
-      "pct_used": 6.17,
+      "exs_fragments_used": 198,
+      "exs_fragments_unused": 2718,
+      "pct_used": 6.79,
       "note": "Group recipes (grp.*, Wave 1/2) do not exist yet, so every currently-used fragment is by definition a solo stamp today -- this is a baseline inventory, not yet a pass/fail QA gate. Re-check once W2 compiler ships grp.* usage."
     },
     "E_animated": {
@@ -728,7 +726,7 @@
       "pct_themes_covered": 66.67,
       "target_met": false,
       "distinct_animated_sheets_in_city_plan": 83,
-      "anim_rows_in_city_plan": 119,
+      "anim_rows_in_city_plan": 122,
       "themes_missing_anim": [
         "16_Office",
         "18_Fire_Station",
