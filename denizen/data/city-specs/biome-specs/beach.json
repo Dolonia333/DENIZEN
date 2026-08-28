@@ -1,0 +1,210 @@
+{
+ "_doc": "EXAMPLE exterior district compiler spec — a 400x280 sand lounge pocket on the west shore, below the park and west of D8's boardwalk. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/beach.json. Every rect/point below EXCEPT bbox is in LOCAL district coordinates, so the pocket can be relocated by editing bbox alone. Format: docs/EXTERIOR-COMPILER.md",
+ "schema": "exterior-district-spec/1",
+ "id": "d18-beach-lounge",
+ "district": "D18 Beach Lounge Pocket",
+ "biome": "beach",
+ "seed": 21084,
+ "out": "data/city-specs/generated/d18-beach-lounge.json",
+ "label": "SAND LOUNGE",
+ "label_at": [200, 24],
+ "bbox": {
+  "x": 3120,
+  "y": 4816,
+  "w": 400,
+  "h": 280
+ },
+ "ground": {
+  "base": {
+   "tile": "sand",
+   "depth": 0.92
+  },
+  "layers": [
+   {
+    "tile": "sidewalk",
+    "rect": [0, 0, 400, 32],
+    "depth": 0.91,
+    "_doc": "promenade strip along the north edge — the paved approach from the park"
+   },
+   {
+    "tile": "sidewalk",
+    "rect": [176, 32, 48, 96],
+    "depth": 0.91,
+    "_doc": "beach access ramp down onto the sand"
+   }
+  ]
+ },
+ "zones": [
+  {
+   "id": "promenade",
+   "rect": [0, 0, 400, 32],
+   "surface": "sidewalk",
+   "role": "circulation",
+   "density": 0.12,
+   "roles": ["street_kit", "sign"],
+   "_doc": "benches / bins / a direction pole; nothing tall that blocks the view south"
+  },
+  {
+   "id": "lounge",
+   "rect": [16, 48, 368, 144],
+   "surface": "sand",
+   "role": "leisure",
+   "density": 0.42,
+   "roles": ["seating", "shade_base", "table", "play"],
+   "spacing": 40,
+   "_doc": "towels, sunbeds, bar, umbrellas — the heart of the pocket"
+  },
+  {
+   "id": "shore",
+   "rect": [0, 200, 400, 80],
+   "surface": "sand",
+   "role": "shore",
+   "density": 0.18,
+   "roles": ["decal", "shell", "rock", "float"],
+   "spacing": 24,
+   "_doc": "wet-sand band: shells, starfish, sea rocks, a float. No solids over 32px."
+  }
+ ],
+ "reserve": [
+  {
+   "rect": [176, 32, 48, 168],
+   "reason": "beach access corridor promenade -> shore (must stay walkable)"
+  },
+  {
+   "rect": [0, 264, 400, 16],
+   "reason": "waterline: shoreline tile band, nothing stands here"
+  }
+ ],
+ "slots": [
+  {
+   "id": "bar",
+   "zone": "lounge",
+   "at": [72, 128],
+   "facing": "south",
+   "required": true,
+   "pick": {
+    "group": "grp.beach.bamboo_bar",
+    "fallback": {
+     "me": "me.beach.bamboo_bar_sand"
+    }
+   },
+   "interact": "shop",
+   "_doc": "landmark anchor: bamboo bar counter + stools + drinks table as one group"
+  },
+  {
+   "id": "volley",
+   "zone": "lounge",
+   "at": [264, 152],
+   "facing": "south",
+   "pick": {
+    "group": "grp.beach.volley_court",
+    "fallback": {
+     "me": "me.beach.volley_net"
+    }
+   },
+   "_doc": "net_left + modular middles + net_right + ball, laid on court lines"
+  },
+  {
+   "id": "lifeguard",
+   "zone": "shore",
+   "at": [344, 224],
+   "facing": "south",
+   "solid": true,
+   "pick": {
+    "me": "me.pool.lifeguard_chair_wood"
+   }
+  },
+  {
+   "id": "welcome_sign",
+   "zone": "promenade",
+   "at": [200, 28],
+   "facing": "south",
+   "solid": true,
+   "pick": {
+    "me": "me.beach.sign_direction_big"
+   },
+   "interact": "read"
+  }
+ ],
+ "palette": {
+  "prefer_colors": ["blue", "lightblue", "yellow"],
+  "variant_spread": "wide",
+  "_doc": "pass E/F variant scoring: keep the pocket cool-toned but spend unused colour variants rather than repeating one PNG"
+ },
+ "budgets": {
+  "max_stamps": 90,
+  "max_solid_cell_ratio": 0.28,
+  "min_free_cell_ratio": 0.45,
+  "_doc": "walkability guards — a 400x280 pocket is 25x18 = 450 cells"
+ },
+ "passes": {
+  "A_ground": {
+   "enabled": true
+  },
+  "B_skeleton": {
+   "enabled": true,
+   "path_tile": "sidewalk",
+   "path_width": 48,
+   "roads": []
+  },
+  "C_landmarks": {
+   "enabled": true,
+   "max": 4,
+   "reject_overlap_ratio": 0.2
+  },
+  "D_groups": {
+   "enabled": true,
+   "recipes": ["grp.beach.bamboo_bar", "grp.beach.volley_court"],
+   "max": 2
+  },
+  "E_props": {
+   "enabled": true,
+   "themes": ["21_Beach", "14_swimming_pool"],
+   "target_density": 0.42,
+   "max": 40
+  },
+  "F_canopy": {
+   "enabled": true,
+   "roles": ["canopy"],
+   "candidates": ["me.beach.palm_tree", "me.beach.umbrella_blue_open", "me.beach.umbrella_lightblue_open", "me.beach.umbrella_green_open"],
+   "spacing": 56,
+   "max": 9
+  },
+  "G_detail": {
+   "enabled": true,
+   "candidates": ["me.beach.shells_gold", "me.beach.shells_pink_grey", "me.beach.starfish", "me.beach.sand_hole", "me.beach.terrain_sand_mound_small"],
+   "count": 26
+  },
+  "H_life": {
+   "enabled": true,
+   "anims": [
+    {
+     "sheet": "ext/animated/Beach_Seagull_Idle_Left_16x16.png",
+     "fw": 32,
+     "fh": 32,
+     "at": [96, 208],
+     "fps": 4
+    },
+    {
+     "sheet": "ext/animated/Crabs_16x16.png",
+     "fw": 64,
+     "fh": 64,
+     "at": [280, 248],
+     "fps": 5
+    }
+   ],
+   "animBands": [
+    {
+     "sheet": "ext/animated/_water_fill_16x16.png",
+     "fw": 64,
+     "fh": 64,
+     "rect": [0, 264, 400, 16],
+     "fps": 5,
+     "depth": 0.96,
+     "shore": "top",
+     "_doc": "thin waterline so the pocket reads as coast; D8's sea sits east of x=3600"
+    }
+   ]
+  }
+ }
+}
