@@ -19,7 +19,7 @@
 | Layer | Delivers | Status |
 |-------|----------|--------|
 | L0 Dictionary | `me.*` / `exs.*` ids, paths, bboxes | **Done** |
-| L1 Semantics | role, category, biome, palette, surface, interact | **Planned** |
+| L1 Semantics | role, category, biome, palette, surface, interact | **Schema done** (W0-A) |
 | L2 Groups | `grp.*` recipes (multi-tile assemblies) | **Planned** |
 | L3 World model | districts = biome + palette + slots + density | **Planned** |
 | L4 Compiler | rules → stamps + interactions | **Planned** |
@@ -40,6 +40,18 @@
 | W0-D | Compiler | Design doc + empty `compile-exterior-district.py` CLI | `docs/EXTERIOR-COMPILER.md` + script stub | Opus thinking |
 
 **Gate G0:** Parent merges W0 outputs; schema validated; coverage baseline committed.
+
+- [x] **W0-A** — `placement-rules.json` + `placement-rules.schema.json` land the L1/L3
+  vocabularies: **24 roles**, **5 surfaces** + 4 mounts, **14 biomes** with all **24**
+  theme sheets mapped, **11 palettes** over the 22 colour tokens that actually occur in
+  `exs.*` ids, **6 interact** types (5 core + `board`), **5 density** levels, **12 slots**,
+  and **29** ordered `match`→`set` rules. Validated by
+  `python3 scripts/validate-placement-rules.py` (schema + referential integrity + a dry
+  run of the rules over `registry.jsonl`): **0 errors, 2749/2749 `me.*` resolve to a role**,
+  which already clears the G1 ≥90% role target.
+- [ ] W0-B — coverage baseline
+- [ ] W0-C — group candidates
+- [ ] W0-D — compiler design doc + CLI stub
 
 ### Wave 1 — Enrichment (depends G0 schema)
 | ID | Group | Task | Output |
@@ -120,6 +132,7 @@ W0 (parallel) ──► G0 ──► W1 (parallel) ──► G1 ──► W2 (se
 ## Testing checklist (every gate)
 
 ```bash
+python3 scripts/validate-placement-rules.py      # G0 schema + refs + rule dry run
 python3 scripts/enrich-me-placement-rules.py      # after W1
 python3 scripts/report-ext-catalog-coverage.py
 python3 scripts/compile-exterior-district.py --spec data/city-specs/d18-beach-compiler.json
@@ -171,6 +184,7 @@ Parent agent: merge outputs, resolve conflicts, run gates, update this doc check
 ```
 data/limezu-visual-catalog/
   placement-rules.json
+  placement-rules.schema.json
   me-placement-enriched.jsonl
   variant-palette-map.json
   coverage-report.json
@@ -184,6 +198,7 @@ data/city-specs/
     wild.json
     ...
 scripts/
+  validate-placement-rules.py
   enrich-me-placement-rules.py
   report-ext-catalog-coverage.py
   compile-exterior-district.py
@@ -198,7 +213,7 @@ docs/
 
 | Gate | Status | Notes |
 |------|--------|-------|
-| G0 | in_progress | Wave 0 sub-agents launched |
+| G0 | in_progress | W0-A schema landed + validated (0 errors, 100% role coverage); W0-B/C/D outstanding |
 | G1 | pending | |
 | G2 | pending | |
 | G3 | pending | |

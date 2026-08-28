@@ -66,6 +66,8 @@ data/limezu-visual-catalog/
   ext-singles-link-report.json
   me-to-singles.json                  # reverse index me_id → [singles…]
   placement-index.json                # me/exs → preferred stamp img (merge)
+  placement-rules.json                # roles/biomes/palettes/surfaces/interact/density
+  placement-rules.schema.json         # validation schema for the above
   group-candidates.json               # ranked multi_tile me.* → grp.* recipe candidates (W0-C)
   groups/
     grp.<theme>.<slug>.json           # fully authored stamp-group recipes (pieces + tile offsets)
@@ -77,6 +79,21 @@ data/limezu-visual-catalog/
     meta.json
     labels.json               # vision labels (tracked)
     _overview.jpg / band_*.jpg  # regenerable, gitignored
+```
+
+## Placement rules (`placement-rules.json`)
+
+Semantics layer for the exterior placement brain (see
+`data/city-specs/EXTERIOR-PLACEMENT-BRAIN-PLAN.md`). One file holds the shared
+vocabularies the enrichment pass, the group recipes and the district compiler
+all key off: 24 **roles** (what an asset structurally is), the 5 paintable
+**surfaces** plus wall/roof/air **mounts**, 14 **biomes** covering all 24 theme
+sheets, 11 colour **palettes**, the sit/enter/read/shop/play **interact**
+contract, 5 **density** levels, 12 named **slots**, and an ordered list of
+`match`→`set` rules that derive all of the above from `registry.jsonl`.
+
+```bash
+python3 scripts/validate-placement-rules.py     # schema + refs + rule dry run
 ```
 
 ## Label schema (`labels.json`)
