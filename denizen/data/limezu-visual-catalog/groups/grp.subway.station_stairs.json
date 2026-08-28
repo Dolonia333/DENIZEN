@@ -1,0 +1,118 @@
+{
+  "id": "grp.subway.station_stairs",
+  "name": "Station stairwell entrance (railed stairs + support pillar + tactile platform edge)",
+  "biome": "subway",
+  "category": "infra",
+  "surface": "ground",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.subway.stairs_complete_1",
+    "me.subway.pillar_big",
+    "me.subway.pillar_small",
+    "me.subway.platform_edge_yellow"
+  ],
+  "footprint_tiles": { "w": 7, "h": 6 },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy below are tile offsets from the top-left of the footprint; the stairwell descends toward dy+ (south/away from viewer)."
+  },
+  "offset_basis_summary": "Stairs_Complete_1 is already a single pre-composed multi-tile Single (railing + steps baked into one cutout), so it needs no internal offsets. The support pillar and the tactile platform-edge tiles live in unrelated rows on the Subway sheet, so their placement here is hand-authored to form a plausible station-entrance composition: safety tiles mark the top edge, the stairs descend below, and a structural pillar anchors one side.",
+  "pieces": [
+    {
+      "role": "platform_edge_yellow_horizontal",
+      "me": "me.subway.platform_edge_yellow",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_loges_horizontal_path_yellow",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Loges_Horizontal_Path_Yellow.png",
+      "dx": 2,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any",
+      "notes": "Tactile hazard strip along the top edge of the stairwell opening; repeat horizontally to span the full stair width."
+    },
+    {
+      "role": "platform_edge_yellow_horizontal_2",
+      "me": "me.subway.platform_edge_yellow",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_loges_horizontal_path_yellow",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Loges_Horizontal_Path_Yellow.png",
+      "dx": 3,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "platform_edge_yellow_corner",
+      "me": "me.subway.platform_edge_yellow",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_loges_vertical_path_yellow",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Loges_Vertical_Path_Yellow.png",
+      "dx": 4,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any",
+      "notes": "Turns the tactile strip along the pillar side to close the hazard border."
+    },
+    {
+      "role": "stairwell",
+      "me": "me.subway.stairs_complete_1",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_stairs_complete_1",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_1.png",
+      "dx": 2,
+      "dy": 1,
+      "w": 48,
+      "h": 80,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "south",
+      "notes": "Single pre-composed Single (railings + steps baked in); already spans 3x5 tiles by itself."
+    },
+    {
+      "role": "support_pillar",
+      "me": "me.subway.pillar_big",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_big_pillar",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Big_Pillar.png",
+      "dx": 0,
+      "dy": 1,
+      "w": 16,
+      "h": 80,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any",
+      "notes": "Structural column beside the stairwell opening, same height as the stair unit."
+    },
+    {
+      "role": "secondary_pillar",
+      "me": "me.subway.pillar_small",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_small_pillar",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
+      "dx": 6,
+      "dy": 2,
+      "w": 16,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any",
+      "notes": "Optional far-side pillar for a symmetric double-column entrance; omit for a narrower footprint."
+    }
+  ],
+  "variants": {
+    "stairwell_style": "Swap stairwell piece for stairs_complete_2/3/4 (me.subway.stairs_complete_2/3/4) for a different rail/step skin, or for the me.subway.stairs_modular_set pieces (Stairs_Structure_1/2 + Stairs_1-3 + Stairs_Railing_1-2 + Stairs_Base_Structure_2) to hand-build a custom-length staircase.",
+    "pillar_count": "secondary_pillar is optional; drop it for a single-column entrance against a wall."
+  },
+  "interact": "traverse",
+  "notes": "me.subway.stairs_modular_set (rank 45 in group-candidates.json) is the mechanically-detected sibling candidate for this scene; this authored example widens it into a full entrance composition with a support pillar and tactile safety edge, matching how these props read together on real station facades."
+}

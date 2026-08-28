@@ -66,6 +66,9 @@ data/limezu-visual-catalog/
   ext-singles-link-report.json
   me-to-singles.json                  # reverse index me_id → [singles…]
   placement-index.json                # me/exs → preferred stamp img (merge)
+  group-candidates.json               # ranked multi_tile me.* → grp.* recipe candidates (W0-C)
+  groups/
+    grp.<theme>.<slug>.json           # fully authored stamp-group recipes (pieces + tile offsets)
   montages-manifest.json
   montages/<SheetName>/
     index.json / me-vocab.json / vision-links.json
@@ -127,9 +130,40 @@ data/limezu-visual-catalog/
 - All canvases are 16px-aligned; `content_bbox` is the opaque footprint inside the canvas
 - `vision_link.source`: `spatial_filename` | `vision` (montage override). Confidence: `high` | `medium` | `weak` | `vision`
 
+## Stamp group candidates (`group-candidates.json`)
+
+`scripts/build-limezu-group-candidates.py` scans all `multi_tile: true` `me.*` labels, pulls
+their linked `exs.*` Singles from `me-to-singles.json`, and keeps only those whose siblings
+(≥2) co-locate within the same 768px sheet vision-labeling band the `me.*` was labeled in —
+i.e. the Singles genuinely form one physical multi-piece composition on the contact sheet
+rather than a scattered color/size-variant family. Candidates are ranked by piece count +
+bbox fill-ratio (compactness) + assembly-keyword signal, and the top 50 are emitted with a
+suggested `grp.<theme>.<slug>` id, `pieces[]` (exs id + tile-unit offset inferred from
+`sheet_x`/`sheet_y` when the layout is compact), footprint, biome, and a `priority`
+(`high`/`medium`/`low`, ordered for W1-C authoring):
+
+```bash
+python3 scripts/build-limezu-group-candidates.py
+```
+
+## Authored group recipes (`groups/*.json`)
+
+Fully hand-authored `grp.*` stamp-group definitions — used both for mechanically-detected
+candidates (e.g. `me.subway.stairs_modular_set`) and for cross-`me.*` composite scenes whose
+pieces are scattered across the sheet and have no usable spatial relationship (e.g. a
+campfire + folding chairs + stumps). Each recipe lists `pieces[]` with `me`/`exs` id, a tile
+(`dx`/`dy`, 16px = 1 tile) offset from the group footprint's top-left, and an
+`offset_basis` of `sheet_relative` (derived from the Singles' real `sheet_x`/`sheet_y`,
+valid when LimeZu laid the pieces out on the sheet in their composed arrangement) or
+`authored` (hand-placed, when the pieces are unrelated on the sheet). See:
+
+- `groups/grp.beach.volley_court.json` — net + 8 modular sand-court line tiles + ball
+- `groups/grp.camping.campfire_set.json` — lit fire + folding chairs + stumps + firewood
+- `groups/grp.subway.station_stairs.json` — railed stairwell + support pillar + tactile edge
+
 ## Next (exteriors only)
 
 1. Convert more district stamps from raw PNG paths → `me.*` / `exs.*`
 2. Atlas pack for exterior Singles used by `city-plan.json` (fewer GETs)
-3. Multi-tile stamp groups from `me.*` + sibling singles
+3. Author the remaining `grp.*` recipes from `group-candidates.json` (W1-C, ≥20 groups)
 4. Keep `check-city-plan.py` clean (see `data/city-specs/EXTERIOR-MISTAKES.md`)
