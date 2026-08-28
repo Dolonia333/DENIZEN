@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-28T02:32:12.094586+00:00",
+  "generated_at": "2026-08-28T02:47:58.097382+00:00",
   "sources": {
     "registry": {
       "path": "data/limezu-visual-catalog/registry.jsonl",
@@ -16,7 +16,7 @@
     },
     "city_plan": {
       "path": "data/city-plan.json",
-      "stamps": 1764,
+      "stamps": 2495,
       "anims": 111,
       "anim_bands": 26
     }
@@ -24,15 +24,15 @@
   "totals": {
     "me_total": 2749,
     "me_linked_to_any_single": 1295,
-    "me_used": 544,
-    "me_unused": 2205,
-    "me_pct_used": 19.79,
+    "me_used": 1275,
+    "me_unused": 1474,
+    "me_pct_used": 46.38,
     "exs_total": 6224,
-    "exs_used": 893,
-    "exs_unused": 5331,
-    "exs_pct_used": 14.35,
-    "city_plan_stamps_total": 1764,
-    "city_plan_unique_images": 964,
+    "exs_used": 1624,
+    "exs_unused": 4600,
+    "exs_pct_used": 26.09,
+    "city_plan_stamps_total": 2495,
+    "city_plan_unique_images": 1695,
     "city_plan_images_outside_ext_catalog_scope": 71,
     "city_plan_unresolved_ext_singles_images": 0
   },
@@ -65,93 +65,93 @@
   "by_category": {
     "asphalt": {
       "me_total": 2,
-      "me_used": 0,
-      "me_unused": 2,
-      "pct_used": 0.0
+      "me_used": 1,
+      "me_unused": 1,
+      "pct_used": 50.0
     },
     "building": {
       "me_total": 581,
-      "me_used": 56,
-      "me_unused": 525,
-      "pct_used": 9.64
+      "me_used": 252,
+      "me_unused": 329,
+      "pct_used": 43.37
     },
     "cliff": {
       "me_total": 12,
-      "me_used": 0,
-      "me_unused": 12,
-      "pct_used": 0.0
+      "me_used": 3,
+      "me_unused": 9,
+      "pct_used": 25.0
     },
     "curb": {
       "me_total": 44,
-      "me_used": 0,
-      "me_unused": 44,
-      "pct_used": 0.0
+      "me_used": 28,
+      "me_unused": 16,
+      "pct_used": 63.64
     },
     "decal": {
       "me_total": 16,
-      "me_used": 1,
-      "me_unused": 15,
-      "pct_used": 6.25
+      "me_used": 2,
+      "me_unused": 14,
+      "pct_used": 12.5
     },
     "decor": {
       "me_total": 173,
-      "me_used": 40,
-      "me_unused": 133,
-      "pct_used": 23.12
+      "me_used": 71,
+      "me_unused": 102,
+      "pct_used": 41.04
     },
     "fence": {
       "me_total": 35,
-      "me_used": 1,
-      "me_unused": 34,
-      "pct_used": 2.86
+      "me_used": 8,
+      "me_unused": 27,
+      "pct_used": 22.86
     },
     "furniture": {
       "me_total": 136,
-      "me_used": 46,
-      "me_unused": 90,
-      "pct_used": 33.82
+      "me_used": 73,
+      "me_unused": 63,
+      "pct_used": 53.68
     },
     "infra": {
       "me_total": 283,
-      "me_used": 59,
-      "me_unused": 224,
-      "pct_used": 20.85
+      "me_used": 137,
+      "me_unused": 146,
+      "pct_used": 48.41
     },
     "nature": {
       "me_total": 247,
-      "me_used": 80,
-      "me_unused": 167,
-      "pct_used": 32.39
+      "me_used": 120,
+      "me_unused": 127,
+      "pct_used": 48.58
     },
     "npc": {
       "me_total": 5,
-      "me_used": 0,
-      "me_unused": 5,
-      "pct_used": 0.0
+      "me_used": 2,
+      "me_unused": 3,
+      "pct_used": 40.0
     },
     "parking": {
       "me_total": 16,
-      "me_used": 0,
-      "me_unused": 16,
-      "pct_used": 0.0
+      "me_used": 2,
+      "me_unused": 14,
+      "pct_used": 12.5
     },
     "path": {
       "me_total": 6,
-      "me_used": 0,
-      "me_unused": 6,
-      "pct_used": 0.0
+      "me_used": 2,
+      "me_unused": 4,
+      "pct_used": 33.33
     },
     "prop": {
       "me_total": 632,
-      "me_used": 177,
-      "me_unused": 455,
-      "pct_used": 28.01
+      "me_used": 324,
+      "me_unused": 308,
+      "pct_used": 51.27
     },
     "road": {
       "me_total": 6,
-      "me_used": 0,
-      "me_unused": 6,
-      "pct_used": 0.0
+      "me_used": 2,
+      "me_unused": 4,
+      "pct_used": 33.33
     },
     "road_marking": {
       "me_total": 46,
@@ -161,21 +161,21 @@
     },
     "sidewalk": {
       "me_total": 9,
-      "me_used": 0,
-      "me_unused": 9,
-      "pct_used": 0.0
+      "me_used": 4,
+      "me_unused": 5,
+      "pct_used": 44.44
     },
     "sign": {
       "me_total": 96,
-      "me_used": 30,
-      "me_unused": 66,
-      "pct_used": 31.25
+      "me_used": 50,
+      "me_unused": 46,
+      "pct_used": 52.08
     },
     "terrain": {
       "me_total": 112,
-      "me_used": 11,
-      "me_unused": 101,
-      "pct_used": 9.82
+      "me_used": 34,
+      "me_unused": 78,
+      "pct_used": 30.36
     },
     "transition": {
       "me_total": 1,
@@ -185,263 +185,263 @@
     },
     "utility": {
       "me_total": 11,
-      "me_used": 0,
-      "me_unused": 11,
-      "pct_used": 0.0
+      "me_used": 3,
+      "me_unused": 8,
+      "pct_used": 27.27
     },
     "vehicle": {
       "me_total": 271,
-      "me_used": 43,
-      "me_unused": 228,
-      "pct_used": 15.87
+      "me_used": 155,
+      "me_unused": 116,
+      "pct_used": 57.2
     },
     "wall": {
       "me_total": 9,
-      "me_used": 0,
-      "me_unused": 9,
-      "pct_used": 0.0
+      "me_used": 2,
+      "me_unused": 7,
+      "pct_used": 22.22
     }
   },
   "by_theme": {
     "10_Vehicles": {
       "me_total": 279,
-      "me_used": 37,
-      "me_unused": 242,
-      "me_pct_used": 13.26,
+      "me_used": 131,
+      "me_unused": 148,
+      "me_pct_used": 46.95,
       "exs_total": 273,
-      "exs_used": 47,
-      "exs_unused": 226,
-      "exs_pct_used": 17.22
+      "exs_used": 141,
+      "exs_unused": 132,
+      "exs_pct_used": 51.65
     },
     "11_Camping": {
       "me_total": 185,
-      "me_used": 72,
-      "me_unused": 113,
-      "me_pct_used": 38.92,
+      "me_used": 87,
+      "me_unused": 98,
+      "me_pct_used": 47.03,
       "exs_total": 693,
-      "exs_used": 130,
-      "exs_unused": 563,
-      "exs_pct_used": 18.76
+      "exs_used": 145,
+      "exs_unused": 548,
+      "exs_pct_used": 20.92
     },
     "12_Hotel_and_Hospital": {
       "me_total": 41,
-      "me_used": 7,
-      "me_unused": 34,
-      "me_pct_used": 17.07,
+      "me_used": 16,
+      "me_unused": 25,
+      "me_pct_used": 39.02,
       "exs_total": 41,
-      "exs_used": 11,
-      "exs_unused": 30,
-      "exs_pct_used": 26.83
+      "exs_used": 20,
+      "exs_unused": 21,
+      "exs_pct_used": 48.78
     },
     "13_School": {
       "me_total": 62,
-      "me_used": 14,
-      "me_unused": 48,
-      "me_pct_used": 22.58,
+      "me_used": 35,
+      "me_unused": 27,
+      "me_pct_used": 56.45,
       "exs_total": 125,
-      "exs_used": 20,
-      "exs_unused": 105,
-      "exs_pct_used": 16.0
+      "exs_used": 41,
+      "exs_unused": 84,
+      "exs_pct_used": 32.8
     },
     "14_Swimming_Pool": {
       "me_total": 55,
-      "me_used": 16,
-      "me_unused": 39,
-      "me_pct_used": 29.09,
+      "me_used": 34,
+      "me_unused": 21,
+      "me_pct_used": 61.82,
       "exs_total": 179,
-      "exs_used": 21,
-      "exs_unused": 158,
-      "exs_pct_used": 11.73
+      "exs_used": 39,
+      "exs_unused": 140,
+      "exs_pct_used": 21.79
     },
     "15_Police_Station": {
       "me_total": 43,
-      "me_used": 9,
-      "me_unused": 34,
-      "me_pct_used": 20.93,
+      "me_used": 22,
+      "me_unused": 21,
+      "me_pct_used": 51.16,
       "exs_total": 37,
-      "exs_used": 15,
-      "exs_unused": 22,
-      "exs_pct_used": 40.54
+      "exs_used": 28,
+      "exs_unused": 9,
+      "exs_pct_used": 75.68
     },
     "16_Office": {
       "me_total": 66,
-      "me_used": 0,
-      "me_unused": 66,
-      "me_pct_used": 0.0,
+      "me_used": 31,
+      "me_unused": 35,
+      "me_pct_used": 46.97,
       "exs_total": 117,
-      "exs_used": 0,
-      "exs_unused": 117,
-      "exs_pct_used": 0.0
+      "exs_used": 31,
+      "exs_unused": 86,
+      "exs_pct_used": 26.5
     },
     "17_Garden": {
       "me_total": 171,
-      "me_used": 49,
-      "me_unused": 122,
-      "me_pct_used": 28.65,
+      "me_used": 122,
+      "me_unused": 49,
+      "me_pct_used": 71.35,
       "exs_total": 570,
-      "exs_used": 70,
-      "exs_unused": 500,
-      "exs_pct_used": 12.28
+      "exs_used": 143,
+      "exs_unused": 427,
+      "exs_pct_used": 25.09
     },
     "18_Fire_Station": {
       "me_total": 30,
-      "me_used": 5,
-      "me_unused": 25,
-      "me_pct_used": 16.67,
+      "me_used": 16,
+      "me_unused": 14,
+      "me_pct_used": 53.33,
       "exs_total": 42,
-      "exs_used": 6,
-      "exs_unused": 36,
-      "exs_pct_used": 14.29
+      "exs_used": 17,
+      "exs_unused": 25,
+      "exs_pct_used": 40.48
     },
     "19_Graveyard": {
       "me_total": 217,
-      "me_used": 67,
-      "me_unused": 150,
-      "me_pct_used": 30.88,
+      "me_used": 96,
+      "me_unused": 121,
+      "me_pct_used": 44.24,
       "exs_total": 217,
-      "exs_used": 96,
-      "exs_unused": 121,
-      "exs_pct_used": 44.24
+      "exs_used": 125,
+      "exs_unused": 92,
+      "exs_pct_used": 57.6
     },
     "1_Terrains_and_Fences": {
       "me_total": 140,
-      "me_used": 1,
-      "me_unused": 139,
-      "me_pct_used": 0.71,
+      "me_used": 26,
+      "me_unused": 114,
+      "me_pct_used": 18.57,
       "exs_total": 462,
-      "exs_used": 4,
-      "exs_unused": 458,
-      "exs_pct_used": 0.87
+      "exs_used": 29,
+      "exs_unused": 433,
+      "exs_pct_used": 6.28
     },
     "20_Subway_and_Train_Station": {
       "me_total": 127,
-      "me_used": 46,
-      "me_unused": 81,
-      "me_pct_used": 36.22,
+      "me_used": 111,
+      "me_unused": 16,
+      "me_pct_used": 87.4,
       "exs_total": 582,
-      "exs_used": 64,
-      "exs_unused": 518,
-      "exs_pct_used": 11.0
+      "exs_used": 129,
+      "exs_unused": 453,
+      "exs_pct_used": 22.16
     },
     "21_Beach": {
       "me_total": 90,
-      "me_used": 51,
-      "me_unused": 39,
-      "me_pct_used": 56.67,
+      "me_used": 68,
+      "me_unused": 22,
+      "me_pct_used": 75.56,
       "exs_total": 316,
-      "exs_used": 90,
-      "exs_unused": 226,
-      "exs_pct_used": 28.48
+      "exs_used": 107,
+      "exs_unused": 209,
+      "exs_pct_used": 33.86
     },
     "22_Post_Office": {
       "me_total": 46,
-      "me_used": 13,
-      "me_unused": 33,
-      "me_pct_used": 28.26,
+      "me_used": 24,
+      "me_unused": 22,
+      "me_pct_used": 52.17,
       "exs_total": 44,
-      "exs_used": 18,
-      "exs_unused": 26,
-      "exs_pct_used": 40.91
+      "exs_used": 29,
+      "exs_unused": 15,
+      "exs_pct_used": 65.91
     },
     "23_MIlitary_Base": {
       "me_total": 114,
-      "me_used": 35,
-      "me_unused": 79,
-      "me_pct_used": 30.7,
+      "me_used": 63,
+      "me_unused": 51,
+      "me_pct_used": 55.26,
       "exs_total": 305,
-      "exs_used": 70,
-      "exs_unused": 235,
-      "exs_pct_used": 22.95
+      "exs_used": 98,
+      "exs_unused": 207,
+      "exs_pct_used": 32.13
     },
     "24_Additional_Houses": {
       "me_total": 110,
-      "me_used": 4,
-      "me_unused": 106,
-      "me_pct_used": 3.64,
+      "me_used": 45,
+      "me_unused": 65,
+      "me_pct_used": 40.91,
       "exs_total": 215,
-      "exs_used": 4,
-      "exs_unused": 211,
-      "exs_pct_used": 1.86
+      "exs_used": 45,
+      "exs_unused": 170,
+      "exs_pct_used": 20.93
     },
     "2_City_Terrains": {
       "me_total": 131,
-      "me_used": 1,
-      "me_unused": 130,
-      "me_pct_used": 0.76,
+      "me_used": 39,
+      "me_unused": 92,
+      "me_pct_used": 29.77,
       "exs_total": 351,
-      "exs_used": 2,
-      "exs_unused": 349,
-      "exs_pct_used": 0.57
+      "exs_used": 40,
+      "exs_unused": 311,
+      "exs_pct_used": 11.4
     },
     "3_City_Props": {
       "me_total": 237,
-      "me_used": 61,
-      "me_unused": 176,
-      "me_pct_used": 25.74,
+      "me_used": 112,
+      "me_unused": 125,
+      "me_pct_used": 47.26,
       "exs_total": 715,
-      "exs_used": 120,
-      "exs_unused": 595,
-      "exs_pct_used": 16.78
+      "exs_used": 171,
+      "exs_unused": 544,
+      "exs_pct_used": 23.92
     },
     "4_Generic_Buildings": {
       "me_total": 148,
-      "me_used": 11,
-      "me_unused": 137,
-      "me_pct_used": 7.43,
+      "me_used": 69,
+      "me_unused": 79,
+      "me_pct_used": 46.62,
       "exs_total": 180,
-      "exs_used": 14,
-      "exs_unused": 166,
-      "exs_pct_used": 7.78
+      "exs_used": 72,
+      "exs_unused": 108,
+      "exs_pct_used": 40.0
     },
     "5_Floor_Modular_Buildings": {
       "me_total": 139,
-      "me_used": 8,
-      "me_unused": 131,
-      "me_pct_used": 5.76,
+      "me_used": 36,
+      "me_unused": 103,
+      "me_pct_used": 25.9,
       "exs_total": 343,
-      "exs_used": 16,
-      "exs_unused": 327,
-      "exs_pct_used": 4.66
+      "exs_used": 44,
+      "exs_unused": 299,
+      "exs_pct_used": 12.83
     },
     "6_Garage_Sales": {
       "me_total": 52,
-      "me_used": 8,
-      "me_unused": 44,
-      "me_pct_used": 15.38,
+      "me_used": 25,
+      "me_unused": 27,
+      "me_pct_used": 48.08,
       "exs_total": 95,
-      "exs_used": 14,
-      "exs_unused": 81,
-      "exs_pct_used": 14.74
+      "exs_used": 31,
+      "exs_unused": 64,
+      "exs_pct_used": 32.63
     },
     "7_Villas": {
       "me_total": 165,
-      "me_used": 7,
-      "me_unused": 158,
-      "me_pct_used": 4.24,
+      "me_used": 25,
+      "me_unused": 140,
+      "me_pct_used": 15.15,
       "exs_total": 194,
-      "exs_used": 8,
-      "exs_unused": 186,
-      "exs_pct_used": 4.12
+      "exs_used": 26,
+      "exs_unused": 168,
+      "exs_pct_used": 13.4
     },
     "8_Worksite": {
       "me_total": 42,
-      "me_used": 14,
-      "me_unused": 28,
-      "me_pct_used": 33.33,
+      "me_used": 23,
+      "me_unused": 19,
+      "me_pct_used": 54.76,
       "exs_total": 71,
-      "exs_used": 28,
-      "exs_unused": 43,
-      "exs_pct_used": 39.44
+      "exs_used": 37,
+      "exs_unused": 34,
+      "exs_pct_used": 52.11
     },
     "9_Shopping_Center_and_Markets": {
       "me_total": 59,
-      "me_used": 8,
-      "me_unused": 51,
-      "me_pct_used": 13.56,
+      "me_used": 19,
+      "me_unused": 40,
+      "me_pct_used": 32.2,
       "exs_total": 57,
-      "exs_used": 25,
-      "exs_unused": 32,
-      "exs_pct_used": 43.86
+      "exs_used": 36,
+      "exs_unused": 21,
+      "exs_pct_used": 63.16
     }
   },
   "tiers": {
@@ -449,9 +449,9 @@
       "label": "Buildings / landmarks",
       "target": "100% me.* building category placed somewhere",
       "me_total": 581,
-      "me_used": 56,
-      "me_unused": 525,
-      "pct_used": 9.64,
+      "me_used": 252,
+      "me_unused": 329,
+      "pct_used": 43.37,
       "target_met": false
     },
     "B_props_trees_vehicles": {
@@ -463,9 +463,9 @@
       ],
       "target": ">=90% role-tagged placeables used",
       "me_total": 1150,
-      "me_used": 300,
-      "me_unused": 850,
-      "pct_used": 26.09,
+      "me_used": 599,
+      "me_unused": 551,
+      "pct_used": 52.09,
       "target_met": false
     },
     "C_color_variants": {
@@ -473,9 +473,9 @@
       "target": ">=1 use per variant family across biomes",
       "method": "heuristic: me.* ids grouped by (sheet, category, id-with-color/facing/index tokens stripped); families = groups with >1 member",
       "variant_families_total": 332,
-      "variant_families_with_use": 140,
-      "variant_families_without_use": 192,
-      "pct_families_with_use": 42.17,
+      "variant_families_with_use": 237,
+      "variant_families_without_use": 95,
+      "pct_families_with_use": 71.39,
       "target_met": false,
       "zero_use_family_examples": [
         {
@@ -485,69 +485,6 @@
           "members": [
             "me.vehicles.rowboat_docked_north",
             "me.vehicles.rowboat_docked_west"
-          ]
-        },
-        {
-          "family": "motorboat",
-          "sheet": "10_Vehicles",
-          "category": "vehicle",
-          "members": [
-            "me.vehicles.motorboat_white_east",
-            "me.vehicles.motorboat_white_west"
-          ]
-        },
-        {
-          "family": "motorboat_fishing",
-          "sheet": "10_Vehicles",
-          "category": "vehicle",
-          "members": [
-            "me.vehicles.motorboat_fishing_west",
-            "me.vehicles.motorboat_fishing_east"
-          ]
-        },
-        {
-          "family": "fishing_boat_wood",
-          "sheet": "10_Vehicles",
-          "category": "vehicle",
-          "members": [
-            "me.vehicles.fishing_boat_wood_west",
-            "me.vehicles.fishing_boat_wood_east"
-          ]
-        },
-        {
-          "family": "bus",
-          "sheet": "10_Vehicles",
-          "category": "vehicle",
-          "members": [
-            "me.vehicles.bus_yellow_east",
-            "me.vehicles.bus_yellow_west",
-            "me.vehicles.bus_yellow_south",
-            "me.vehicles.bus_yellow_north",
-            "me.vehicles.bus_pink_east",
-            "me.vehicles.bus_pink_west",
-            "me.vehicles.bus_pink_south",
-            "me.vehicles.bus_pink_north",
-            "me.vehicles.bus_cyan_east",
-            "me.vehicles.bus_cyan_west",
-            "me.vehicles.bus_cyan_south",
-            "me.vehicles.bus_cyan_north",
-            "me.vehicles.bus_brown_east",
-            "me.vehicles.bus_brown_west",
-            "me.vehicles.bus_brown_south",
-            "me.vehicles.bus_brown_north",
-            "me.vehicles.bus_grey_east",
-            "me.vehicles.bus_grey_west",
-            "me.vehicles.bus_grey_south",
-            "me.vehicles.bus_grey_north"
-          ]
-        },
-        {
-          "family": "bus_door",
-          "sheet": "10_Vehicles",
-          "category": "vehicle",
-          "members": [
-            "me.vehicles.bus_yellow_door_east",
-            "me.vehicles.bus_yellow_door_west"
           ]
         },
         {
@@ -614,23 +551,6 @@
           ]
         },
         {
-          "family": "gas_station_price_digit",
-          "sheet": "10_Vehicles",
-          "category": "prop",
-          "members": [
-            "me.vehicles.gas_station_price_digit_1",
-            "me.vehicles.gas_station_price_digit_2",
-            "me.vehicles.gas_station_price_digit_3",
-            "me.vehicles.gas_station_price_digit_4",
-            "me.vehicles.gas_station_price_digit_5",
-            "me.vehicles.gas_station_price_digit_6",
-            "me.vehicles.gas_station_price_digit_7",
-            "me.vehicles.gas_station_price_digit_8",
-            "me.vehicles.gas_station_price_digit_9",
-            "me.vehicles.gas_station_price_digit_10"
-          ]
-        },
-        {
           "family": "gas_station_prop",
           "sheet": "10_Vehicles",
           "category": "prop",
@@ -638,37 +558,6 @@
             "me.vehicles.gas_station_prop_1",
             "me.vehicles.gas_station_prop_2",
             "me.vehicles.gas_station_prop_3"
-          ]
-        },
-        {
-          "family": "gas_station_doormat",
-          "sheet": "10_Vehicles",
-          "category": "prop",
-          "members": [
-            "me.vehicles.gas_station_doormat_1",
-            "me.vehicles.gas_station_doormat_2"
-          ]
-        },
-        {
-          "family": "helicopter_prop",
-          "sheet": "10_Vehicles",
-          "category": "prop",
-          "members": [
-            "me.vehicles.helicopter_prop_1",
-            "me.vehicles.helicopter_prop_2",
-            "me.vehicles.helicopter_prop_3",
-            "me.vehicles.helicopter_prop_4",
-            "me.vehicles.helicopter_prop_5",
-            "me.vehicles.helicopter_prop_6"
-          ]
-        },
-        {
-          "family": "public_phone",
-          "sheet": "10_Vehicles",
-          "category": "prop",
-          "members": [
-            "me.vehicles.public_phone_1",
-            "me.vehicles.public_phone_2"
           ]
         },
         {
@@ -684,25 +573,108 @@
           ]
         },
         {
-          "family": "sedan_lavender",
+          "family": "skid_corner",
           "sheet": "10_Vehicles",
-          "category": "vehicle",
+          "category": "decal",
           "members": [
-            "me.vehicles.sedan_lavender_east",
-            "me.vehicles.sedan_lavender_west",
-            "me.vehicles.sedan_lavender_south",
-            "me.vehicles.sedan_lavender_north"
+            "me.vehicles.skid_corner_ne",
+            "me.vehicles.skid_corner_nw",
+            "me.vehicles.skid_corner_se",
+            "me.vehicles.skid_corner_sw"
           ]
         },
         {
-          "family": "sedan_b_slate",
-          "sheet": "10_Vehicles",
+          "family": "rv",
+          "sheet": "11_Camping",
           "category": "vehicle",
           "members": [
-            "me.vehicles.sedan_b_slate_east",
-            "me.vehicles.sedan_b_slate_west",
-            "me.vehicles.sedan_b_slate_south",
-            "me.vehicles.sedan_b_slate_north"
+            "me.camping.rv_side_left",
+            "me.camping.rv_side_right"
+          ]
+        },
+        {
+          "family": "motorboat",
+          "sheet": "11_Camping",
+          "category": "vehicle",
+          "members": [
+            "me.camping.motorboat_n",
+            "me.camping.motorboat_s",
+            "me.camping.motorboat_e",
+            "me.camping.motorboat_w"
+          ]
+        },
+        {
+          "family": "flower",
+          "sheet": "11_Camping",
+          "category": "nature",
+          "members": [
+            "me.camping.flower_red",
+            "me.camping.flower_yellow",
+            "me.camping.flower_white",
+            "me.camping.flower_blue_pink"
+          ]
+        },
+        {
+          "family": "tree_leafy_segment",
+          "sheet": "11_Camping",
+          "category": "nature",
+          "members": [
+            "me.camping.tree_orange_leafy_segment",
+            "me.camping.tree_yellow_leafy_segment"
+          ]
+        },
+        {
+          "family": "tree_bushy_segment",
+          "sheet": "11_Camping",
+          "category": "nature",
+          "members": [
+            "me.camping.tree_green_bushy_segment",
+            "me.camping.tree_orange_bushy_segment"
+          ]
+        },
+        {
+          "family": "tree_bushy_cluster",
+          "sheet": "11_Camping",
+          "category": "nature",
+          "members": [
+            "me.camping.tree_bushy_cluster_green",
+            "me.camping.tree_bushy_cluster_orange"
+          ]
+        },
+        {
+          "family": "tree_bushy_individual",
+          "sheet": "11_Camping",
+          "category": "nature",
+          "members": [
+            "me.camping.tree_bushy_individual_green",
+            "me.camping.tree_bushy_individual_orange"
+          ]
+        },
+        {
+          "family": "sign_circle",
+          "sheet": "11_Camping",
+          "category": "sign",
+          "members": [
+            "me.camping.sign_circle_red",
+            "me.camping.sign_circle_blue"
+          ]
+        },
+        {
+          "family": "hoop_basketball",
+          "sheet": "13_School",
+          "category": "prop",
+          "members": [
+            "me.school.hoop_basketball_front",
+            "me.school.hoop_basketball_side"
+          ]
+        },
+        {
+          "family": "beach_chair",
+          "sheet": "14_Swimming_Pool",
+          "category": "furniture",
+          "members": [
+            "me.pool.beach_chair_orange",
+            "me.pool.beach_chair_red"
           ]
         }
       ]
@@ -711,9 +683,9 @@
       "label": "Fragments (group-only components)",
       "target": "fragments are never placed as a solo stamp (group-recipe usage only)",
       "exs_fragments_total": 2916,
-      "exs_fragments_used": 351,
-      "exs_fragments_unused": 2565,
-      "pct_used": 12.04,
+      "exs_fragments_used": 580,
+      "exs_fragments_unused": 2336,
+      "pct_used": 19.89,
       "note": "Group recipes (grp.*, Wave 1/2) do not exist yet, so every currently-used fragment is by definition a solo stamp today -- this is a baseline inventory, not yet a pass/fail QA gate. Re-check once W2 compiler ships grp.* usage."
     },
     "E_animated": {
@@ -769,253 +741,164 @@
     }
   },
   "orphans": {
-    "unused_buildings_total": 525,
+    "unused_buildings_total": 329,
     "top_50_unused_buildings": [
       {
-        "id": "me.modular_floors.bait_shop_full",
-        "name": "Bait shop storefront with fish hook sign",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "bait",
-          "fish"
-        ],
-        "multi_tile": true,
-        "available_singles": 83
-      },
-      {
-        "id": "me.garden.greenhouse_structure_layer",
-        "name": "Greenhouse structure modular LAYER1",
-        "sheet": "17_Garden",
-        "tags": [
-          "garden",
-          "greenhouse",
-          "structure",
-          "modular",
-          "layer1"
-        ],
-        "multi_tile": true,
-        "available_singles": 50
-      },
-      {
-        "id": "me.garden.greenhouse_glass_layer",
-        "name": "Greenhouse glass PANEL LAYER2",
-        "sheet": "17_Garden",
-        "tags": [
-          "garden",
-          "greenhouse",
-          "glass",
-          "modular",
-          "layer2"
-        ],
-        "multi_tile": true,
-        "available_singles": 48
-      },
-      {
-        "id": "me.garden.greenhouse_structure_see_through",
-        "name": "Greenhouse structure see-through modular",
-        "sheet": "17_Garden",
-        "tags": [
-          "garden",
-          "greenhouse",
-          "structure",
-          "see_through"
-        ],
-        "multi_tile": true,
-        "available_singles": 34
-      },
-      {
-        "id": "me.modular_floors.music_piano",
-        "name": "Music store piano window",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "music",
-          "piano"
-        ],
-        "multi_tile": true,
-        "available_singles": 18
-      },
-      {
-        "id": "me.garden.greenhouse_roof_layer",
-        "name": "Greenhouse roof modular tiles",
-        "sheet": "17_Garden",
-        "tags": [
-          "garden",
-          "greenhouse",
-          "roof",
-          "modular"
-        ],
-        "multi_tile": true,
-        "available_singles": 16
-      },
-      {
-        "id": "me.modular_floors.butchery_full",
-        "name": "Butchery storefront with meat/cleavers",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "butchery",
-          "sign"
-        ],
-        "multi_tile": true,
-        "available_singles": 15
-      },
-      {
-        "id": "me.modular_floors.ice_cream_full",
-        "name": "Ice cream shop with striped awning",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "ice-cream",
-          "awning"
-        ],
-        "multi_tile": true,
-        "available_singles": 15
-      },
-      {
-        "id": "me.office_ext.balcony_window_left",
-        "name": "Balcony window left",
-        "sheet": "16_Office",
-        "tags": [
-          "balcony",
-          "window",
-          "left",
-          "modular"
-        ],
-        "multi_tile": true,
-        "available_singles": 14
-      },
-      {
-        "id": "me.office_ext.balcony_window_right",
-        "name": "Balcony window right",
-        "sheet": "16_Office",
-        "tags": [
-          "balcony",
-          "window",
-          "right",
-          "modular"
-        ],
-        "multi_tile": true,
-        "available_singles": 14
-      },
-      {
-        "id": "me.generic_building.window_misc_square_column",
-        "name": "Misc small square window variants",
-        "sheet": "4_Generic_Buildings",
-        "tags": [
-          "window",
-          "square",
-          "misc",
-          "variant"
-        ],
-        "multi_tile": false,
-        "available_singles": 11
-      },
-      {
-        "id": "me.modular_floors.red_roof_modular",
-        "name": "Red-kit roof modular edge set",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "roof",
-          "red",
-          "modular"
-        ],
-        "multi_tile": true,
-        "available_singles": 11
-      },
-      {
-        "id": "me.houses.terraced_side_view",
-        "name": "Terraced side-view base and roof set",
-        "sheet": "24_Additional_Houses",
-        "tags": [
-          "terraced",
-          "side",
-          "modular"
-        ],
-        "multi_tile": true,
-        "available_singles": 10
-      },
-      {
-        "id": "me.modular_floors.shop_generic_dark",
-        "name": "Generic shopfronts dark kit",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "generic",
-          "dark"
-        ],
-        "multi_tile": true,
-        "available_singles": 10
-      },
-      {
-        "id": "me.garage_sales.shutter_graffiti",
-        "name": "Garage shutter with graffiti",
-        "sheet": "6_Garage_Sales",
-        "tags": [
-          "garage",
-          "shutter",
-          "graffiti",
-          "door"
-        ],
-        "multi_tile": true,
-        "available_singles": 10
-      },
-      {
-        "id": "me.villa.toy_house_1",
-        "name": "Small playhouse/toy house (green)",
-        "sheet": "7_Villas",
-        "tags": [
-          "playhouse",
-          "toy",
-          "shed",
-          "cottage",
-          "small",
-          "kids",
-          "green"
-        ],
-        "multi_tile": true,
-        "available_singles": 10
-      },
-      {
-        "id": "me.modular_floors.dark_condo_ground",
-        "name": "Dark condo ground entrance set",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "ground",
-          "condo",
-          "dark"
-        ],
-        "multi_tile": true,
-        "available_singles": 9
-      },
-      {
-        "id": "me.modular_floors.gun_store_orange",
-        "name": "Gun store orange/red facade with sign",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "gun-store",
-          "orange"
-        ],
-        "multi_tile": true,
-        "available_singles": 9
-      },
-      {
-        "id": "me.vehicles.car_wash",
-        "name": "Car wash entrance building",
+        "id": "me.vehicles.gas_station_canopy_b",
+        "name": "Gas station canopy B",
         "sheet": "10_Vehicles",
         "tags": [
-          "car_wash",
-          "building",
-          "service"
+          "gas_station",
+          "canopy"
         ],
         "multi_tile": true,
-        "available_singles": 8
+        "available_singles": 0
       },
       {
-        "id": "me.office_ext.balcony_dark_grey_sides",
-        "name": "Dark grey side/middle balcony modules",
+        "id": "me.vehicles.helipad_corner",
+        "name": "Helipad corner with rail and lights",
+        "sheet": "10_Vehicles",
+        "tags": [
+          "helipad",
+          "infrastructure"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.vehicles.helipad_full",
+        "name": "Full helipad with H marking",
+        "sheet": "10_Vehicles",
+        "tags": [
+          "helipad",
+          "infrastructure",
+          "H"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.camping.tent_green_front",
+        "name": "Green A-frame tent front",
+        "sheet": "11_Camping",
+        "tags": [
+          "camping",
+          "tent",
+          "green",
+          "shelter"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.camping.tent_green_side",
+        "name": "Green A-frame tent side",
+        "sheet": "11_Camping",
+        "tags": [
+          "camping",
+          "tent",
+          "green",
+          "side"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.camping.tent_tan_front",
+        "name": "Tan A-frame tent front",
+        "sheet": "11_Camping",
+        "tags": [
+          "camping",
+          "tent",
+          "tan",
+          "shelter"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.camping.tent_tan_side",
+        "name": "Tan A-frame tent side",
+        "sheet": "11_Camping",
+        "tags": [
+          "camping",
+          "tent",
+          "tan",
+          "side"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.hotel_hospital.emergency_shutter_signed",
+        "name": "Emergency bay roll-up shutter with sign",
+        "sheet": "12_Hotel_and_Hospital",
+        "tags": [
+          "emergency",
+          "garage",
+          "shutter",
+          "ambulance"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.hotel_hospital.hospital_window_wall",
+        "name": "Hospital window wall facade strip",
+        "sheet": "12_Hotel_and_Hospital",
+        "tags": [
+          "hospital",
+          "window",
+          "facade",
+          "modular"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.police.facade_narrow_red_highlight",
+        "name": "Narrow facade red highlight variant",
+        "sheet": "15_Police_Station",
+        "tags": [
+          "police",
+          "facade",
+          "narrow",
+          "red",
+          "highlight"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.police.parking_booth_blue",
+        "name": "Parking/security booth blue stripe",
+        "sheet": "15_Police_Station",
+        "tags": [
+          "booth",
+          "guard",
+          "parking",
+          "checkpoint",
+          "siren"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.police.station_wing_modular",
+        "name": "Police station modular wing / garage section",
+        "sheet": "15_Police_Station",
+        "tags": [
+          "police",
+          "modular",
+          "garage",
+          "entrance"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.balcony_blue_grey_sides",
+        "name": "Blue-grey side/middle balcony modules",
         "sheet": "16_Office",
         "tags": [
           "balcony",
@@ -1023,148 +906,104 @@
           "side",
           "modular",
           "office",
-          "dark_grey"
+          "blue_grey"
         ],
         "multi_tile": true,
-        "available_singles": 8
+        "available_singles": 0
       },
       {
-        "id": "me.generic_building.window_flowerbox_orange",
-        "name": "Window with orange flower box",
-        "sheet": "4_Generic_Buildings",
-        "tags": [
-          "window",
-          "flowerbox",
-          "orange",
-          "decor"
-        ],
-        "multi_tile": false,
-        "available_singles": 8
-      },
-      {
-        "id": "me.office_ext.facade_dark_grey_left",
-        "name": "Dark grey facade left edge",
-        "sheet": "16_Office",
-        "tags": [
-          "facade",
-          "modular",
-          "left",
-          "office",
-          "dark_grey"
-        ],
-        "multi_tile": true,
-        "available_singles": 7
-      },
-      {
-        "id": "me.office_ext.facade_dark_grey_right",
-        "name": "Dark grey facade right edge",
-        "sheet": "16_Office",
-        "tags": [
-          "facade",
-          "modular",
-          "right",
-          "office",
-          "dark_grey"
-        ],
-        "multi_tile": true,
-        "available_singles": 7
-      },
-      {
-        "id": "me.military.tent_tan_open",
-        "name": "Tan military tent open interior",
-        "sheet": "23_MIlitary_Base",
-        "tags": [
-          "tent",
-          "tan",
-          "open",
-          "interior"
-        ],
-        "multi_tile": true,
-        "available_singles": 7
-      },
-      {
-        "id": "me.houses.terraced_house_porch",
-        "name": "Terraced house with wooden porch and bushes",
-        "sheet": "24_Additional_Houses",
-        "tags": [
-          "house",
-          "terraced",
-          "porch",
-          "modular"
-        ],
-        "multi_tile": true,
-        "available_singles": 7
-      },
-      {
-        "id": "me.modular_floors.dark_roof_flat",
-        "name": "Dark/black kit flat roof edges",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "roof",
-          "dark",
-          "modular",
-          "flat"
-        ],
-        "multi_tile": true,
-        "available_singles": 7
-      },
-      {
-        "id": "me.modular_floors.ground_condo_wood_door",
-        "name": "Condo ground wooden door + windows",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "ground",
-          "condo",
-          "door",
-          "wood"
-        ],
-        "multi_tile": true,
-        "available_singles": 7
-      },
-      {
-        "id": "me.office_ext.balcony_window_middle",
-        "name": "Balcony window middle modular",
+        "id": "me.office_ext.balcony_light_grey_sides",
+        "name": "Light grey side/middle balcony modules",
         "sheet": "16_Office",
         "tags": [
           "balcony",
-          "window",
-          "middle",
-          "modular"
+          "railing",
+          "side",
+          "modular",
+          "office",
+          "light_grey"
         ],
         "multi_tile": true,
-        "available_singles": 6
+        "available_singles": 0
       },
       {
-        "id": "me.office_ext.diagonal_bottom_dark_grey",
-        "name": "Dark grey bottom diagonal footing",
+        "id": "me.office_ext.balcony_mid_grey_sides",
+        "name": "Mid grey side/middle balcony modules",
+        "sheet": "16_Office",
+        "tags": [
+          "balcony",
+          "railing",
+          "side",
+          "modular",
+          "office",
+          "mid_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.diagonal_bottom_blue_grey",
+        "name": "Blue-grey bottom diagonal footing",
         "sheet": "16_Office",
         "tags": [
           "diagonal",
           "bottom",
           "perspective",
           "office",
-          "dark_grey"
+          "blue_grey"
         ],
         "multi_tile": true,
-        "available_singles": 6
+        "available_singles": 0
       },
       {
-        "id": "me.office_ext.diagonal_mid_dark_grey",
-        "name": "Dark grey mid diagonal wall strip",
+        "id": "me.office_ext.diagonal_bottom_light_grey",
+        "name": "Light/mid grey shared bottom diagonal footing",
+        "sheet": "16_Office",
+        "tags": [
+          "diagonal",
+          "bottom",
+          "perspective",
+          "office",
+          "light_grey",
+          "mid_grey",
+          "shared"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.diagonal_mid_blue_grey",
+        "name": "Blue-grey mid diagonal wall strip",
         "sheet": "16_Office",
         "tags": [
           "diagonal",
           "middle",
           "perspective",
           "office",
-          "dark_grey"
+          "blue_grey"
         ],
         "multi_tile": true,
-        "available_singles": 6
+        "available_singles": 0
       },
       {
-        "id": "me.office_ext.diagonal_roof_dark_grey",
-        "name": "Dark grey roof diagonal cornice",
+        "id": "me.office_ext.diagonal_mid_light_grey",
+        "name": "Light/mid grey shared mid diagonal wall strip",
+        "sheet": "16_Office",
+        "tags": [
+          "diagonal",
+          "middle",
+          "perspective",
+          "office",
+          "light_grey",
+          "mid_grey",
+          "shared"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.diagonal_roof_blue_grey",
+        "name": "Blue-grey roof diagonal cornice",
         "sheet": "16_Office",
         "tags": [
           "diagonal",
@@ -1172,244 +1011,241 @@
           "cornice",
           "perspective",
           "office",
-          "dark_grey"
+          "blue_grey"
         ],
         "multi_tile": true,
-        "available_singles": 6
+        "available_singles": 0
       },
       {
-        "id": "me.office_ext.facade_dark_grey_middle",
-        "name": "Dark grey facade middle modular",
+        "id": "me.office_ext.diagonal_roof_light_grey",
+        "name": "Light/mid grey shared roof diagonal cornice",
+        "sheet": "16_Office",
+        "tags": [
+          "diagonal",
+          "roof",
+          "cornice",
+          "perspective",
+          "office",
+          "light_grey",
+          "mid_grey",
+          "shared"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.facade_blue_grey_left",
+        "name": "Blue-grey facade left edge",
+        "sheet": "16_Office",
+        "tags": [
+          "facade",
+          "modular",
+          "left",
+          "office",
+          "blue_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.facade_blue_grey_middle",
+        "name": "Blue-grey facade middle modular",
         "sheet": "16_Office",
         "tags": [
           "facade",
           "modular",
           "middle",
           "office",
-          "dark_grey"
+          "blue_grey"
         ],
         "multi_tile": true,
-        "available_singles": 6
+        "available_singles": 0
       },
       {
-        "id": "me.beach.ship_bar_anchor_variant",
-        "name": "Ship bar anchor logo variant",
-        "sheet": "21_Beach",
+        "id": "me.office_ext.facade_blue_grey_right",
+        "name": "Blue-grey facade right edge",
+        "sheet": "16_Office",
         "tags": [
-          "beach",
-          "bar",
-          "ship",
-          "anchor",
-          "variant"
-        ],
-        "multi_tile": true,
-        "available_singles": 6
-      },
-      {
-        "id": "me.houses.terraced_roof_styling",
-        "name": "Terraced roof styling pieces",
-        "sheet": "24_Additional_Houses",
-        "tags": [
-          "roof",
-          "styling",
-          "terraced"
-        ],
-        "multi_tile": true,
-        "available_singles": 6
-      },
-      {
-        "id": "me.modular_floors.fitness_full",
-        "name": "Fitness gym storefront with dumbbell sign",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "fitness",
-          "gym"
-        ],
-        "multi_tile": true,
-        "available_singles": 6
-      },
-      {
-        "id": "me.modular_floors.fitness_variants_b4",
-        "name": "Fitness full/base/sign variants",
-        "sheet": "5_Floor_Modular_Buildings",
-        "tags": [
-          "shop",
-          "fitness",
-          "gym"
-        ],
-        "multi_tile": true,
-        "available_singles": 6
-      },
-      {
-        "id": "me.school.wall_modular_set",
-        "name": "School wall / roof modular corridor strips",
-        "sheet": "13_School",
-        "tags": [
-          "school",
-          "wall",
-          "modular",
-          "roof",
-          "brick",
-          "corridor"
-        ],
-        "multi_tile": true,
-        "available_singles": 5
-      },
-      {
-        "id": "me.garden.greenhouse_example_small",
-        "name": "Small greenhouse example assembly",
-        "sheet": "17_Garden",
-        "tags": [
-          "garden",
-          "greenhouse",
-          "example",
-          "small"
-        ],
-        "multi_tile": true,
-        "available_singles": 5
-      },
-      {
-        "id": "me.city_props.kiosk_mushroom_shutter",
-        "name": "Mushroom kiosk shutter closed",
-        "sheet": "3_City_Props",
-        "tags": [
-          "kiosk",
-          "mushroom",
-          "closed",
-          "shutter"
-        ],
-        "multi_tile": true,
-        "available_singles": 5
-      },
-      {
-        "id": "me.generic_building.door_brown_single_wood",
-        "name": "Brown single wood door",
-        "sheet": "4_Generic_Buildings",
-        "tags": [
-          "door",
-          "brown",
-          "wood",
-          "residential"
-        ],
-        "multi_tile": false,
-        "available_singles": 5
-      },
-      {
-        "id": "me.generic_building.example_rowhouses_narrow",
-        "name": "Example narrow brick row-houses",
-        "sheet": "4_Generic_Buildings",
-        "tags": [
-          "example",
-          "rowhouse",
-          "brick",
-          "residential",
-          "assembled"
-        ],
-        "multi_tile": true,
-        "available_singles": 5
-      },
-      {
-        "id": "me.generic_building.roof_snow_slope",
-        "name": "Snow-covered sloped roof edge modules",
-        "sheet": "4_Generic_Buildings",
-        "tags": [
-          "roof",
-          "snow",
-          "slope",
-          "winter"
-        ],
-        "multi_tile": true,
-        "available_singles": 5
-      },
-      {
-        "id": "me.generic_building.window_grey_stone_arch_band",
-        "name": "Grey stone arched window horizontal band",
-        "sheet": "4_Generic_Buildings",
-        "tags": [
-          "window",
-          "grey",
-          "stone",
-          "arch",
-          "band",
-          "modular"
-        ],
-        "multi_tile": true,
-        "available_singles": 5
-      },
-      {
-        "id": "me.garage_sales.facade_grey_wide",
-        "name": "Grey brick facade wide multi-story",
-        "sheet": "6_Garage_Sales",
-        "tags": [
-          "apartment",
           "facade",
-          "grey",
           "modular",
-          "windows",
-          "residential"
+          "right",
+          "office",
+          "blue_grey"
         ],
         "multi_tile": true,
-        "available_singles": 5
+        "available_singles": 0
       },
       {
-        "id": "me.garage_sales.facade_yellow_wide",
-        "name": "Yellow brick facade wide multi-story",
-        "sheet": "6_Garage_Sales",
-        "tags": [
-          "apartment",
-          "facade",
-          "yellow",
-          "modular",
-          "windows",
-          "residential"
-        ],
-        "multi_tile": true,
-        "available_singles": 5
-      },
-      {
-        "id": "me.villa.chimney_1",
-        "name": "Villa chimney (orange)",
-        "sheet": "7_Villas",
-        "tags": [
-          "chimney",
-          "roof",
-          "modular",
-          "orange"
-        ],
-        "multi_tile": false,
-        "available_singles": 5
-      },
-      {
-        "id": "me.villa.roof_window_1",
-        "name": "Villa roof window/skylight 1",
-        "sheet": "7_Villas",
-        "tags": [
-          "window",
-          "roof",
-          "dormer",
-          "modular"
-        ],
-        "multi_tile": false,
-        "available_singles": 5
-      },
-      {
-        "id": "me.office_ext.facade_mid_grey_window",
-        "name": "Mid grey facade window modular insert",
+        "id": "me.office_ext.facade_blue_grey_window",
+        "name": "Blue-grey facade window modular insert",
         "sheet": "16_Office",
         "tags": [
           "facade",
           "window",
           "modular",
           "office",
+          "blue_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.facade_dark_grey_window",
+        "name": "Dark grey facade window modular insert",
+        "sheet": "16_Office",
+        "tags": [
+          "facade",
+          "window",
+          "modular",
+          "office",
+          "dark_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.facade_light_grey_window",
+        "name": "Light grey facade window modular insert",
+        "sheet": "16_Office",
+        "tags": [
+          "facade",
+          "window",
+          "modular",
+          "office",
+          "light_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.facade_mid_grey_left",
+        "name": "Mid grey facade left edge",
+        "sheet": "16_Office",
+        "tags": [
+          "facade",
+          "modular",
+          "left",
+          "office",
           "mid_grey"
         ],
         "multi_tile": true,
-        "available_singles": 4
+        "available_singles": 0
       },
       {
-        "id": "me.office_ext.window_shutter_light_grey",
-        "name": "Light grey window with shutter/AC",
+        "id": "me.office_ext.facade_mid_grey_middle",
+        "name": "Mid grey facade middle modular",
+        "sheet": "16_Office",
+        "tags": [
+          "facade",
+          "modular",
+          "middle",
+          "office",
+          "mid_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.facade_mid_grey_right",
+        "name": "Mid grey facade right edge",
+        "sheet": "16_Office",
+        "tags": [
+          "facade",
+          "modular",
+          "right",
+          "office",
+          "mid_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.glass_curtain_large",
+        "name": "Large lobby glass curtain panels",
+        "sheet": "16_Office",
+        "tags": [
+          "glass",
+          "curtain",
+          "lobby",
+          "window",
+          "modern",
+          "white_frame"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.roof_left",
+        "name": "Flat roof left cap",
+        "sheet": "16_Office",
+        "tags": [
+          "roof",
+          "modular",
+          "cap",
+          "left"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.window_blue_grey_row",
+        "name": "Blue-grey window L/M/R row set",
+        "sheet": "16_Office",
+        "tags": [
+          "window",
+          "modular",
+          "row",
+          "office",
+          "blue_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.window_dark_grey_row",
+        "name": "Dark grey window L/M/R row set",
+        "sheet": "16_Office",
+        "tags": [
+          "window",
+          "modular",
+          "row",
+          "office",
+          "dark_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.window_light_grey_row",
+        "name": "Light grey window L/M/R row set",
+        "sheet": "16_Office",
+        "tags": [
+          "window",
+          "modular",
+          "row",
+          "office",
+          "light_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.window_mid_grey_row",
+        "name": "Mid grey window L/M/R row set",
+        "sheet": "16_Office",
+        "tags": [
+          "window",
+          "modular",
+          "row",
+          "office",
+          "mid_grey"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.window_shutter_blue_grey",
+        "name": "Blue-grey window with shutter/AC",
         "sheet": "16_Office",
         "tags": [
           "window",
@@ -1417,50 +1253,207 @@
           "ac",
           "modular",
           "office",
-          "light_grey"
+          "blue_grey"
         ],
         "multi_tile": false,
-        "available_singles": 4
+        "available_singles": 0
       },
       {
-        "id": "me.garden.palace_1_entrance_variant",
-        "name": "Palace entrance variant set 1",
+        "id": "me.office_ext.window_shutter_dark_grey",
+        "name": "Dark grey window with shutter/AC",
+        "sheet": "16_Office",
+        "tags": [
+          "window",
+          "shutter",
+          "ac",
+          "modular",
+          "office",
+          "dark_grey"
+        ],
+        "multi_tile": false,
+        "available_singles": 0
+      },
+      {
+        "id": "me.office_ext.window_shutter_mid_grey",
+        "name": "Mid grey window with shutter/AC",
+        "sheet": "16_Office",
+        "tags": [
+          "window",
+          "shutter",
+          "ac",
+          "modular",
+          "office",
+          "mid_grey"
+        ],
+        "multi_tile": false,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.facade_arch_alcove",
+        "name": "Narrow facade arch/alcove segment",
         "sheet": "17_Garden",
         "tags": [
           "garden",
-          "palace",
-          "entrance",
-          "variant"
+          "facade",
+          "arch",
+          "alcove"
         ],
         "multi_tile": true,
-        "available_singles": 4
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.facade_door_columns_2",
+        "name": "Brown facade with 2 columns",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "facade",
+          "door",
+          "columns"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.facade_door_columns_4",
+        "name": "Brown facade with 4 columns",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "facade",
+          "door",
+          "columns"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.facade_door_plain",
+        "name": "Brown facade door+windows plain",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "facade",
+          "door",
+          "plain"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.greenhouse_interior",
+        "name": "Greenhouse interior furnished view",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "greenhouse",
+          "interior"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.greenhouse_overgrown",
+        "name": "Overgrown vine-covered greenhouse",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "greenhouse",
+          "vines",
+          "overgrown"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.manor_balcony",
+        "name": "Manor balconies with railings",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "manor",
+          "balcony"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.manor_column",
+        "name": "Manor white columns",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "manor",
+          "column"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.manor_entrance_door",
+        "name": "Manor entrance doors",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "manor",
+          "door",
+          "entrance"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.manor_facade_main",
+        "name": "Manor / museum main facade assembly",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "manor",
+          "facade",
+          "main"
+        ],
+        "multi_tile": true,
+        "available_singles": 0
+      },
+      {
+        "id": "me.garden.manor_roof_cap",
+        "name": "Manor roof stone caps / vents",
+        "sheet": "17_Garden",
+        "tags": [
+          "garden",
+          "manor",
+          "roof",
+          "cap"
+        ],
+        "multi_tile": false,
+        "available_singles": 0
       }
     ],
     "top_5_orphan_themes_by_unused_building_count": [
       {
-        "sheet": "4_Generic_Buildings",
-        "unused_building_count": 109,
-        "building_total": 119
-      },
-      {
         "sheet": "5_Floor_Modular_Buildings",
-        "unused_building_count": 98,
+        "unused_building_count": 79,
         "building_total": 103
       },
       {
+        "sheet": "4_Generic_Buildings",
+        "unused_building_count": 63,
+        "building_total": 119
+      },
+      {
         "sheet": "24_Additional_Houses",
-        "unused_building_count": 61,
+        "unused_building_count": 40,
         "building_total": 65
       },
       {
-        "sheet": "16_Office",
-        "unused_building_count": 50,
-        "building_total": 50
+        "sheet": "9_Shopping_Center_and_Markets",
+        "unused_building_count": 28,
+        "building_total": 41
       },
       {
-        "sheet": "17_Garden",
-        "unused_building_count": 42,
-        "building_total": 43
+        "sheet": "16_Office",
+        "unused_building_count": 27,
+        "building_total": 50
       }
     ]
   }
