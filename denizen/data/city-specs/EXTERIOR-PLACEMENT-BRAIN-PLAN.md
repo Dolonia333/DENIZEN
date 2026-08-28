@@ -102,11 +102,41 @@
 **Gate G4:** Unit tests pass (4/4); browser test deferred to desktop.
 
 ### Wave 5 — Denizen integration (when MCP available)
-| ID | Task |
-|----|------|
-| W5-A | `assign_task` NPC patrol routes per biome |
-| W5-B | Visual agent pass on compiled districts via montage QA |
-| W5-C | Wire `city.limezu_assets` NAS table to enriched catalog |
+| ID | Task | Offline prep output | Status |
+|----|------|----------------------|--------|
+| W5-A | `assign_task` NPC patrol routes per biome | `data/city-specs/npc-patrol-routes.json` | ✅ prep done, MCP call pending |
+| W5-B | Visual agent pass on compiled districts via montage QA | `data/limezu-visual-catalog/montage-qa-report.json` | ✅ prep done, agent review pending |
+| W5-C | Wire `city.limezu_assets` NAS table to enriched catalog | `assets/limezu/_asset-catalog-enriched.json` (+ `.tsv`) | ✅ prep done, NAS run pending |
+
+- [x] **W5-A** — `scripts/build-npc-patrol-routes.py` derives 1-2 patrol
+  waypoints per biome (hand-authored `d*.json` bbox center + compiled-pocket
+  bbox center) for the 12 biomes with resolvable geometry (all 11 Wave 3
+  biomes + `rural`/farm), with a placeholder `npc_role`, a stamp-density
+  `dwell_ms`, and `interact_zones` pulled from real interact-tagged stamps.
+  Ready for `assign_task`/`delegate_task` (`.cursor/rules/denizen-bridge.mdc`)
+  the moment Denizen MCP connects — nothing to derive live, just dispatch.
+- [x] **W5-B** — `scripts/montage-qa-compiled-districts.py` renders every
+  `data/city-specs/generated/d*.json` fragment via `render-city-preview.py`'s
+  real compositor (falls back to stitched stamp thumbnails on a render
+  failure) and runs `check-city-plan.py`'s exact defect checks against each
+  fragment in isolation (resolving `me`/`exs` → `img` first, same as
+  `compile-exterior-district.py --qa`), writing per-fragment stamp/biome/
+  defect counts to `montage-qa-report.json`. CLI exits 1 on any hard defect
+  (OVERLAP/FLOATING/ROADBLOCK/OFFWORLD/BADANIM/UNRESOLVED) — a visual agent
+  still needs to eyeball the renders once MCP is up, but the mechanical gate
+  runs today.
+- [x] **W5-C** — `scripts/export-limezu-assets-catalog.py` builds
+  `assets/limezu/_asset-catalog-enriched.json` (+ `--tsv`): all 6224 `exs.*`
+  Singles, `{path, kind, theme, w, h, tags, me, biome, role}`, 100%
+  `me`/`biome`/`role` resolved. Schema-compatible with (superset of)
+  `infra/setup-city-db-nas.py`'s `city.limezu_assets(path,kind,theme,w,h)` —
+  script docstring documents the `ALTER TABLE` + COPY steps to run against
+  the live NAS once the bridge is back; nothing there is touched yet.
+
+**Bridge stub:** `data/cursor-bridge-queue.jsonl` now carries one
+`status: "template"` row (ignored by `list_cursor_work`'s default `pending`
+filter) documenting the real persisted row shape and pointing at the three
+W5 outputs above — see `docs/DENIZEN_CURSOR_BRIDGE.md` "Row template".
 
 ### Wave 6 — Coverage push (depends G3)
 | ID | Task | Output | Status |
@@ -171,6 +201,11 @@ python3 scripts/merge-city-plan.py              # prints QA
 python3 scripts/check-city-plan.py              # exit 0
 python3 scripts/audit-placement-logic.py        # advisory
 python3 scripts/render-city-preview.py --crop ... # visual spot-check
+
+# Wave 5 prep (offline; see Wave 5 section)
+python3 scripts/build-npc-patrol-routes.py            # data/city-specs/npc-patrol-routes.json
+python3 scripts/montage-qa-compiled-districts.py      # exit 1 if any generated/d*.json has a hard defect
+python3 scripts/export-limezu-assets-catalog.py --tsv # assets/limezu/_asset-catalog-enriched.{json,tsv}
 ```
 
 ---
@@ -251,4 +286,4 @@ docs/
 | G2 | **done** | Beach pilot compiles 51 stamps, 0 QA defects; merge `--include-generated` wired |
 | G3 | **done** | 11 biome specs + 12 compiler pockets promoted; 1764 stamps, 0 defects |
 | G4 | **done** | interact runtime, atlas builder, extended QA (biome advisory) |
-| G5 | blocked | Denizen MCP not connected |
+| G5 | **prepped, blocked on MCP** | W5-A/B/C offline artifacts committed (patrol routes, montage QA report, enriched NAS catalog); dispatch/visual-review/NAS-load steps still need a live Denizen MCP connection |
