@@ -425,17 +425,19 @@ ground the object stands on, which is what the occupancy grid reasons about.
 
 ## Integration with merge
 
-`merge-city-plan.py` globs `data/city-specs/d*.json` — **non-recursive**. So the default
-output directory `data/city-specs/generated/` is deliberately *outside* the merge:
-compiling cannot disturb the currently-clean QA gate (0 defects on 1215 stamps) while
-passes C–G are still stubs.
+`merge-city-plan.py` globs `data/city-specs/d*.json` by default — **non-recursive**, so
+`data/city-specs/generated/` is deliberately *outside* the merge: compiling cannot disturb
+the currently-clean QA gate while passes C–G are still stubs.
 
-Promoting a compiled district at W2-C is one of:
+**W2-C landed the promotion switch:** pass `--include-generated` to also merge
+`data/city-specs/generated/d*.json`, keeping generated and hand-authored fragments in
+visibly separate directories with zero risk to the default (no-flag) merge, which is
+byte-for-byte unchanged.
 
-1. **Recommended** — add `generated/d*.json` to the merge glob, keeping generated and
-   hand-authored fragments in visibly separate directories.
-2. Point `compiler.out` at `data/city-specs/d18-beach-lounge.json` so the existing glob
-   picks it up with no merge change.
+```bash
+python3 scripts/merge-city-plan.py                     # hand-authored districts only (unchanged default)
+python3 scripts/merge-city-plan.py --include-generated # + every data/city-specs/generated/d*.json
+```
 
 Either way the compiler must respect what merge already does:
 
@@ -448,14 +450,61 @@ Either way the compiler must respect what merge already does:
 - Merge nudges building-keyword stamps off the street grid. Compiled districts should not
   need it; if the nudge count rises after a compile, pass B under-reserved.
 
+### Promoting a compiled district
+
+Once a district's fill passes (C–G) are far enough along that you want it live in
+`data/city-plan.json`, promote it like this:
+
+1. **Compile** the spec (and iterate until `--qa` is clean):
+
+   ```bash
+   python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/<biome>.json --qa
+   ```
+
+   This writes `data/city-specs/generated/<id>.json` (per `compiler.out`, default
+   `data/city-specs/generated/<id>.json` — leave it there; only the `generated/` directory
+   is picked up by `--include-generated`).
+
+2. **Merge with the flag** to fold it into the live plan:
+
+   ```bash
+   python3 scripts/merge-city-plan.py --include-generated
+   ```
+
+   The console reports `including N generated fragment(s): [...]` so you can confirm
+   exactly which files were folded in.
+
+3. **Gate on QA** — the merge step already shells out to `check-city-plan.py`, but always
+   re-run it standalone and require exit code `0` before committing:
+
+   ```bash
+   python3 scripts/check-city-plan.py
+   ```
+
+4. **Check catalog coverage** (optional but recommended — confirms the promoted
+   district is actually spending new Singles, not just adding empty patches):
+
+   ```bash
+   python3 scripts/report-ext-catalog-coverage.py
+   ```
+
+5. **Commit both** the spec's generated fragment (`data/city-specs/generated/<id>.json`,
+   so reviewers can diff what compiled) and the regenerated `data/city-plan.json`.
+
+To un-promote (pull a district back out while it's reworked), just go back to running
+`merge-city-plan.py` without `--include-generated` and commit the regenerated
+`city-plan.json` — nothing needs deleting since the fragment lives outside the default
+glob.
+
 Full loop:
 
 ```bash
 python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/beach.json --qa
 python3 scripts/compile-city-structure.py
-python3 scripts/merge-city-plan.py            # resolves me/exs, prints QA
-python3 scripts/check-city-plan.py            # exit 0 required
-python3 scripts/audit-placement-logic.py      # advisory
+python3 scripts/merge-city-plan.py --include-generated   # resolves me/exs, prints QA
+python3 scripts/check-city-plan.py                        # exit 0 required
+python3 scripts/report-ext-catalog-coverage.py            # advisory: catalog usage delta
+python3 scripts/audit-placement-logic.py                  # advisory
 python3 scripts/render-city-preview.py --crop 3120 4816 3520 5096   # x0 y0 x1 y1
 ```
 

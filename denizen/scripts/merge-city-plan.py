@@ -4,8 +4,15 @@
 Adds arterial connector roads and the subway teleport portals (wired to the
 D3 Station Square stair entrances). Validates every referenced asset exists.
 Run after editing any district fragment.
+
+Compiler-generated fragments (scripts/compile-exterior-district.py) write to
+data/city-specs/generated/*.json, deliberately OUTSIDE the default `d*.json`
+glob so a WIP compile can't disturb the hand-authored city. Pass
+--include-generated to also merge data/city-specs/generated/d*.json once a
+compiled district is ready to promote (see docs/EXTERIOR-COMPILER.md).
 """
 
+import argparse
 import glob
 import json
 import os
@@ -15,8 +22,15 @@ from PIL import Image
 
 DEN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = os.path.join(DEN, "data", "city-specs")
+GENERATED = os.path.join(SPECS, "generated")
 ASSETS = os.path.join(DEN, "assets", "limezu")
 OUT = os.path.join(DEN, "data", "city-plan.json")
+
+ap = argparse.ArgumentParser(description=__doc__)
+ap.add_argument("--include-generated", action="store_true",
+                help="also merge data/city-specs/generated/d*.json "
+                     "(compiler-generated district fragments)")
+args = ap.parse_args()
 
 merged = {"worldSize": {"w": 6656, "h": 6400}, "patches": [], "roads": [],
           "stamps": [], "anims": [], "animBands": [], "solids": [],
@@ -28,7 +42,14 @@ merged = {"worldSize": {"w": 6656, "h": 6400}, "patches": [], "roads": [],
 # post-merge, once every district's stamps are known.
 _struct_furniture = []
 
-for f in sorted(glob.glob(os.path.join(SPECS, "d*.json"))):
+_frag_files = sorted(glob.glob(os.path.join(SPECS, "d*.json")))
+_generated_files = sorted(glob.glob(os.path.join(GENERATED, "d*.json"))) if args.include_generated else []
+_frag_files += _generated_files
+if args.include_generated:
+    print(f"including {len(_generated_files)} generated fragment(s): "
+          f"{[os.path.basename(f) for f in _generated_files]}")
+
+for f in _frag_files:
     frag = json.load(open(f, encoding="utf-8"))
     is_struct = os.path.basename(f).startswith("d00")
     for k in merged:
