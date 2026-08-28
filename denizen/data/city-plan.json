@@ -1683,16 +1683,6 @@
    "exs": "exs.3_city_props.city_props_street_lamp_1"
   },
   {
-   "x": 3478,
-   "y": 2448,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
    "x": 3380,
    "y": 2864,
    "origin": "bc",
@@ -1735,16 +1725,6 @@
   {
    "x": 4310,
    "y": 928,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
-   "x": 4212,
-   "y": 1344,
    "origin": "bc",
    "solid": true,
    "me": "me.city_props.lamp_ornate_double",
@@ -1963,6 +1943,16 @@
    "exs": "exs.3_city_props.city_props_tree_9"
   },
   {
+   "x": 5044,
+   "y": 2800,
+   "origin": "bc",
+   "solid": true,
+   "me": "me.city_props.tree_in_square_planter",
+   "prefer": "Tree_9.png",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
+   "exs": "exs.3_city_props.city_props_tree_9"
+  },
+  {
    "x": 5142,
    "y": 2800,
    "origin": "bc",
@@ -2043,16 +2033,6 @@
    "exs": "exs.3_city_props.city_props_street_lamp_1"
   },
   {
-   "x": 5974,
-   "y": 2032,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
    "x": 5876,
    "y": 2240,
    "origin": "bc",
@@ -2093,16 +2073,6 @@
    "exs": "exs.3_city_props.city_props_street_lamp_1"
   },
   {
-   "x": 5974,
-   "y": 2864,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
    "x": 5876,
    "y": 3072,
    "origin": "bc",
@@ -2384,56 +2354,6 @@
   },
   {
    "x": 4416,
-   "y": 1188,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 4416,
-   "y": 1286,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 4624,
-   "y": 1188,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
-   "x": 4624,
-   "y": 1286,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
-   "x": 4832,
-   "y": 1188,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 4832,
    "y": 1286,
    "origin": "bc",
    "solid": true,
@@ -2773,16 +2693,6 @@
    "exs": "exs.3_city_props.city_props_tree_9"
   },
   {
-   "x": 3584,
-   "y": 1958,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
    "x": 3792,
    "y": 1860,
    "origin": "bc",
@@ -2833,34 +2743,24 @@
    "exs": "exs.3_city_props.city_props_tree_9"
   },
   {
-   "x": 4416,
+   "x": 4624,
    "y": 1958,
+   "origin": "bc",
+   "solid": true,
+   "me": "me.city_props.lamp_ornate_double",
+   "prefer": "Street_Lamp_1.png",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_1"
+  },
+  {
+   "x": 4832,
+   "y": 1860,
    "origin": "bc",
    "solid": true,
    "me": "me.city_props.tree_in_square_planter",
    "prefer": "Tree_9.png",
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
    "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 4624,
-   "y": 1860,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
-   "x": 4624,
-   "y": 1958,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
   },
   {
    "x": 4832,
@@ -3053,16 +2953,6 @@
    "exs": "exs.3_city_props.city_props_tree_9"
   },
   {
-   "x": 1296,
-   "y": 2646,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
    "x": 1504,
    "y": 2548,
    "origin": "bc",
@@ -3204,36 +3094,6 @@
   },
   {
    "x": 3584,
-   "y": 2548,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 3584,
-   "y": 2646,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 3792,
-   "y": 2646,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
-   "x": 4000,
    "y": 2548,
    "origin": "bc",
    "solid": true,
@@ -3261,26 +3121,6 @@
    "prefer": "Tree_9.png",
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
    "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 4624,
-   "y": 2548,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
-   "x": 4624,
-   "y": 2646,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
   },
   {
    "x": 4832,
@@ -3693,16 +3533,6 @@
    "exs": "exs.3_city_props.city_props_traffic_light_2"
   },
   {
-   "x": 882,
-   "y": 2556,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.traffic_light_pole_tall_set",
-   "prefer": "Traffic_Light_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_1.png",
-   "exs": "exs.3_city_props.city_props_traffic_light_1"
-  },
-  {
    "x": 974,
    "y": 2650,
    "origin": "bc",
@@ -3903,38 +3733,8 @@
    "exs": "exs.3_city_props.city_props_traffic_light_2"
   },
   {
-   "x": 3470,
-   "y": 2650,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.traffic_light_pole_tall_set",
-   "prefer": "Traffic_Light_2.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_2.png",
-   "exs": "exs.3_city_props.city_props_traffic_light_2"
-  },
-  {
    "x": 3378,
    "y": 3244,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.traffic_light_pole_tall_set",
-   "prefer": "Traffic_Light_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_1.png",
-   "exs": "exs.3_city_props.city_props_traffic_light_1"
-  },
-  {
-   "x": 4302,
-   "y": 1290,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.traffic_light_pole_tall_set",
-   "prefer": "Traffic_Light_2.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_2.png",
-   "exs": "exs.3_city_props.city_props_traffic_light_2"
-  },
-  {
-   "x": 4210,
-   "y": 1868,
    "origin": "bc",
    "solid": true,
    "me": "me.city_props.traffic_light_pole_tall_set",
@@ -3975,16 +3775,6 @@
   {
    "x": 4210,
    "y": 3244,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.traffic_light_pole_tall_set",
-   "prefer": "Traffic_Light_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_1.png",
-   "exs": "exs.3_city_props.city_props_traffic_light_1"
-  },
-  {
-   "x": 5042,
-   "y": 1196,
    "origin": "bc",
    "solid": true,
    "me": "me.city_props.traffic_light_pole_tall_set",
@@ -4001,16 +3791,6 @@
    "prefer": "Traffic_Light_2.png",
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_2.png",
    "exs": "exs.3_city_props.city_props_traffic_light_2"
-  },
-  {
-   "x": 5042,
-   "y": 1868,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.traffic_light_pole_tall_set",
-   "prefer": "Traffic_Light_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Light_1.png",
-   "exs": "exs.3_city_props.city_props_traffic_light_1"
   },
   {
    "x": 5134,
@@ -4174,8 +3954,8 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_1.png",
-   "x": 4412,
-   "y": 1820,
+   "x": 4280,
+   "y": 1900,
    "origin": "bl",
    "solid": true
   },
@@ -4216,7 +3996,7 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png",
-   "x": 4816,
+   "x": 4880,
    "y": 1866,
    "origin": "bl",
    "solid": true
@@ -4552,22 +4332,22 @@
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_103.png",
-   "x": 3004,
-   "y": 386,
+   "x": 3200,
+   "y": 300,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_159.png",
-   "x": 3054,
-   "y": 406,
+   "x": 2800,
+   "y": 600,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_164.png",
-   "x": 3105,
-   "y": 386,
+   "x": 3300,
+   "y": 300,
    "origin": "bl",
    "solid": true
   },
@@ -4906,23 +4686,23 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Stacked_Barrels_1.png",
    "x": 4410,
-   "y": 2786,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_1.png",
    "x": 4460,
-   "y": 2780,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Brown_Barrel_1.png",
-   "x": 4478,
-   "y": 2786,
+   "x": 4520,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Tool_Box_1.png",
@@ -4936,7 +4716,7 @@
    "x": 4548,
    "y": 2770,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Light_Tower_1.png",
@@ -4975,10 +4755,10 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_2.png",
-   "x": 4484,
-   "y": 2806,
+   "x": 4300,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Broken_Ladder_1.png",
@@ -5041,63 +4821,63 @@
    "x": 4956,
    "y": 2620,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_3.png",
    "x": 4956,
    "y": 2668,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_4.png",
    "x": 4956,
    "y": 2716,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_10.png",
    "x": 4660,
    "y": 2850,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_5.png",
-   "x": 4692,
-   "y": 2870,
+   "x": 4760,
+   "y": 3000,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_1.png",
-   "x": 4750,
-   "y": 2882,
+   "x": 4680,
+   "y": 2880,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_8.png",
-   "x": 4776,
-   "y": 2898,
+   "x": 4860,
+   "y": 2930,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_3.png",
    "x": 4688,
    "y": 2926,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_12.png",
-   "x": 4756,
-   "y": 2950,
+   "x": 4880,
+   "y": 2960,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_1.png",
@@ -5132,14 +4912,14 @@
    "x": 5028,
    "y": 2770,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
    "x": 5036,
    "y": 2830,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
@@ -5181,7 +4961,7 @@
    "x": 4900,
    "y": 2962,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_3.png",
@@ -5209,14 +4989,14 @@
    "x": 4532,
    "y": 2950,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
    "x": 4562,
    "y": 2960,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_2.png",
@@ -5619,24 +5399,24 @@
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 6100,
-   "y": 2870,
+   "x": 6200,
+   "y": 2400,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
    "x": 5942,
    "y": 2864,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 6212,
-   "y": 2876,
+   "x": 6400,
+   "y": 2750,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
@@ -6587,14 +6367,14 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Mailbox_1.png",
    "x": 2210,
-   "y": 978,
+   "y": 1016,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
    "x": 2270,
-   "y": 980,
+   "y": 1016,
    "origin": "bl",
    "solid": true
   },
@@ -6664,28 +6444,28 @@
   {
    "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_1.png",
    "x": 2196,
-   "y": 1460,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_2.png",
    "x": 2286,
-   "y": 1456,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
    "x": 2130,
-   "y": 1466,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png",
    "x": 2350,
-   "y": 1462,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
@@ -6754,10 +6534,10 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Billboard_5.png",
-   "x": 2404,
-   "y": 1180,
+   "x": 1980,
+   "y": 1520,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_1.png",
@@ -7236,7 +7016,7 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_ATM_1.png",
    "x": 4188,
-   "y": 1198,
+   "y": 1220,
    "origin": "bl",
    "solid": true
   },
@@ -7586,7 +7366,7 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Sign_New_47.png",
    "x": 4484,
-   "y": 1452,
+   "y": 1860,
    "origin": "bl",
    "solid": false
   },
@@ -7663,8 +7443,8 @@
   },
   {
    "img": "ext/singles/22_post_office/22_Post_Office_16x16_Red_Mailbox_1_Front.png",
-   "x": 5456,
-   "y": 1808,
+   "x": 5600,
+   "y": 1840,
    "origin": "bl",
    "solid": true
   },
@@ -7838,7 +7618,7 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png",
-   "x": 6068,
+   "x": 6160,
    "y": 1812,
    "origin": "bl",
    "solid": true
@@ -8007,7 +7787,7 @@
   {
    "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png",
    "x": 5852,
-   "y": 2018,
+   "y": 2080,
    "origin": "bl",
    "solid": true
   },
@@ -8020,8 +7800,8 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "x": 5856,
-   "y": 1996,
+   "x": 5780,
+   "y": 2080,
    "origin": "bl",
    "solid": true
   },
@@ -8447,8 +8227,8 @@
   },
   {
    "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hospital_Sign_1.png",
-   "x": 3308,
-   "y": 2952,
+   "x": 3336,
+   "y": 3010,
    "origin": "bl",
    "solid": true
   },
@@ -8483,7 +8263,7 @@
   {
    "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Parking_Booth_1.png",
    "x": 3592,
-   "y": 2280,
+   "y": 2320,
    "origin": "bl",
    "solid": true
   },
@@ -8925,8 +8705,8 @@
   },
   {
    "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Palm_1.png",
-   "x": 1698,
-   "y": 3858,
+   "x": 2400,
+   "y": 4300,
    "origin": "bl",
    "solid": true
   },
@@ -9094,14 +8874,14 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_1.png",
    "x": 430,
-   "y": 4106,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_3.png",
    "x": 800,
-   "y": 4106,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
@@ -9128,29 +8908,29 @@
   },
   {
    "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_1.png",
-   "x": 1288,
-   "y": 4054,
+   "x": 1480,
+   "y": 4150,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_6.png",
    "x": 1820,
-   "y": 4108,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_6.png",
    "x": 2020,
-   "y": 4108,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png",
-   "x": 2060,
-   "y": 4108,
+   "x": 2180,
+   "y": 4200,
    "origin": "bl",
    "solid": true
   },
@@ -10350,8 +10130,8 @@
   },
   {
    "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Wood_Large_Cross_1.png",
-   "x": 922,
-   "y": 4738,
+   "x": 700,
+   "y": 4600,
    "origin": "bl",
    "solid": true
   },
@@ -11537,7 +11317,7 @@
    "h": 448
   },
   {
-   "x": 5084,
+   "x": 5120,
    "y": 2542,
    "w": 8,
    "h": 448
@@ -11918,18 +11698,18 @@
    "x": 5216,
    "y": 1840,
    "w": 64,
-   "h": 96
+   "h": 32
   },
   {
    "x": 6016,
    "y": 1840,
    "w": 64,
-   "h": 112
+   "h": 32
   },
   {
    "x": 400,
    "y": 2900,
-   "w": 536,
+   "w": 496,
    "h": 160
   },
   {

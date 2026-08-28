@@ -203,14 +203,14 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Mailbox_1.png",
    "x": 2210,
-   "y": 978,
+   "y": 1016,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
    "x": 2270,
-   "y": 980,
+   "y": 1016,
    "origin": "bl",
    "solid": true
   },
@@ -280,28 +280,28 @@
   {
    "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_1.png",
    "x": 2196,
-   "y": 1460,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_2.png",
    "x": 2286,
-   "y": 1456,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
    "x": 2130,
-   "y": 1466,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png",
    "x": 2350,
-   "y": 1462,
+   "y": 1496,
    "origin": "bl",
    "solid": true
   },
@@ -370,10 +370,10 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Billboard_5.png",
-   "x": 2404,
-   "y": 1180,
+   "x": 1980,
+   "y": 1520,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_1.png",

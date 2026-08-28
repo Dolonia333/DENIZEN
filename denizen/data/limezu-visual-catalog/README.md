@@ -132,3 +132,4 @@ data/limezu-visual-catalog/
 1. Convert more district stamps from raw PNG paths → `me.*` / `exs.*`
 2. Atlas pack for exterior Singles used by `city-plan.json` (fewer GETs)
 3. Multi-tile stamp groups from `me.*` + sibling singles
+4. Keep `check-city-plan.py` clean (see `data/city-specs/EXTERIOR-MISTAKES.md`)

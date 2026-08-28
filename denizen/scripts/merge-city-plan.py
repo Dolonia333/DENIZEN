@@ -9,6 +9,7 @@ Run after editing any district fragment.
 import glob
 import json
 import os
+import sys
 
 from PIL import Image
 
@@ -136,12 +137,32 @@ for s in merged["stamps"]:
         _obstacles.append(r)
 
 
+def _overlap_area(a, b):
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    ox = max(0, min(ax + aw, bx + bw) - max(ax, bx))
+    oy = max(0, min(ay + ah, by + bh) - max(ay, by))
+    return ox * oy
+
+
 def _base_in_obstacle(s):
+    """True if structure furniture collides with a district obstacle.
+
+    Uses baseline point (legacy) OR substantial sprite overlap so lamps/trees
+    that stand just outside a building footprint but visually sit inside it
+    still get pruned.
+    """
     bx, by = s["x"], s["y"]          # furniture is origin "bc": (x,y) is the base
+    fr = _rect(s)
     for rx, ry, rw, rh in _obstacles:
-        # inset 6px so props legitimately hugging an edge survive
-        if rx + 6 <= bx <= rx + rw - 6 and ry + 6 <= by <= ry + rh:
+        # inset 2px — tighter than before so curb-side props near facades prune
+        if rx + 2 <= bx <= rx + rw - 2 and ry + 2 <= by <= ry + rh:
             return True
+        if fr:
+            oa = _overlap_area(fr, (rx, ry, rw, rh))
+            smaller = fr[2] * fr[3]
+            if smaller and oa / smaller > 0.25:
+                return True
     return False
 
 
@@ -214,3 +235,13 @@ print(f"nudged {_nudged} buildings off the streets")
 print("missing:", len(missing))
 for m in missing[:10]:
     print("  MISS", m)
+
+# QA gate (advisory print; exit code left to check-city-plan when run alone)
+import subprocess
+qa = subprocess.run(
+    [sys.executable, os.path.join(DEN, "scripts", "check-city-plan.py"), OUT],
+    capture_output=True, text=True,
+)
+print(qa.stdout.strip() or qa.stderr.strip())
+if qa.returncode:
+    print("(merge wrote plan anyway — re-run check-city-plan.py until clean)")

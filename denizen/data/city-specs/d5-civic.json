@@ -95,7 +95,7 @@
   {
    "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hospital_Sign_1.png",
    "x": 3336,
-   "y": 2952,
+   "y": 3010,
    "origin": "bl",
    "solid": true
   },
@@ -130,7 +130,7 @@
   {
    "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Parking_Booth_1.png",
    "x": 3592,
-   "y": 2280,
+   "y": 2320,
    "origin": "bl",
    "solid": true
   },

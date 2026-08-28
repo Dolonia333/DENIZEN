@@ -111,8 +111,8 @@
   },
   {
    "img": "ext/singles/22_post_office/22_Post_Office_16x16_Red_Mailbox_1_Front.png",
-   "x": 5456,
-   "y": 1808,
+   "x": 5600,
+   "y": 1840,
    "origin": "bl",
    "solid": true
   },
@@ -286,7 +286,7 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png",
-   "x": 6068,
+   "x": 6160,
    "y": 1812,
    "origin": "bl",
    "solid": true
@@ -455,7 +455,7 @@
   {
    "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png",
    "x": 5904,
-   "y": 2018,
+   "y": 2080,
    "origin": "bl",
    "solid": true
   },
@@ -468,8 +468,8 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "x": 5856,
-   "y": 1996,
+   "x": 5780,
+   "y": 2080,
    "origin": "bl",
    "solid": true
   }
@@ -520,13 +520,13 @@
    "x": 5216,
    "y": 1840,
    "w": 64,
-   "h": 96
+   "h": 32
   },
   {
    "x": 6016,
    "y": 1840,
    "w": 64,
-   "h": 112
+   "h": 32
   }
  ],
  "labels": [

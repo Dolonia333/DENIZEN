@@ -256,8 +256,8 @@
   },
   {
    "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Palm_1.png",
-   "x": 1698,
-   "y": 3858,
+   "x": 2400,
+   "y": 4300,
    "origin": "bl",
    "solid": true
   },
@@ -425,14 +425,14 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_1.png",
    "x": 430,
-   "y": 4106,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_3.png",
    "x": 800,
-   "y": 4106,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
@@ -459,29 +459,29 @@
   },
   {
    "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_1.png",
-   "x": 1288,
-   "y": 4054,
+   "x": 1480,
+   "y": 4150,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_6.png",
    "x": 1820,
-   "y": 4108,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_6.png",
    "x": 2020,
-   "y": 4108,
+   "y": 4140,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png",
-   "x": 2060,
-   "y": 4108,
+   "x": 2180,
+   "y": 4200,
    "origin": "bl",
    "solid": true
   },
