@@ -21,7 +21,9 @@ This is layer **L4** of the placement brain (see
 | Vocabulary owner | `data/limezu-visual-catalog/placement-rules.json` (W0-A) |
 | Group recipes | `data/limezu-visual-catalog/groups/grp.*.json` (W0-C / W1-C) |
 | Footprints | `data/limezu-visual-catalog/placement-index.json` |
-| Status | W0-D scaffold — plumbing real, fill passes C–G are stub hooks |
+| Candidate pool | `data/limezu-visual-catalog/me-placement-enriched.jsonl` (W1-A) |
+| Palette scoring | `data/limezu-visual-catalog/variant-palette-map.json` (W1-B) |
+| Status | W2-A — all eight passes implemented |
 
 **The rules file is authoritative for names.** Every biome, surface, slot archetype, role,
 density level, palette and interact verb a spec uses must exist in
@@ -41,10 +43,11 @@ python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/
 | `--spec PATH` | **required** — district spec JSON |
 | `--out PATH` | fragment destination (default: `compiler.out`, else `data/city-specs/generated/<id>.json`) |
 | `--seed N` | override `compiler.seed` |
-| `--passes A_ground,B_skeleton` | run a subset (debugging one pass at a time) |
+| `--passes A,C` | run a subset, debugging one pass at a time (bare letter or full `C_landmarks`); an unknown name is an error, not a silently empty fragment |
 | `--validate-only` | check the spec, emit nothing — cheap CI gate on specs |
 | `--dry-run` | compile in memory, print counts, write nothing |
 | `--qa` | run `check-city-plan.py` on the fragment; exits non-zero on defects |
+| | (the gate measures PNG rects, so `--qa` hands it an id-resolved copy — the same resolution `merge-city-plan.py` does — and deletes it afterwards) |
 | `--stats-json PATH` | write the `_compiled` provenance block separately |
 | `-v` | per-pass stats as they run |
 
@@ -227,13 +230,13 @@ invalidate something earlier, so no pass ever needs to back out another pass's w
 | Pass | Name | Emits | Status |
 |------|------|-------|--------|
 | A | Ground | `patches` + the surface map | **implemented** |
-| B | Skeleton | reservations, `roads`, resolved slot cell sets | **implemented** (`between` band derivation TODO) |
-| C | Landmarks | large solid `stamps` from `landmarks[]` | stub hook (W2-A) |
-| D | Groups | atomic `grp.*` assemblies | stub hook (W2-A); recipes pre-validated |
-| E | Props | per-slot scattered `stamps` | stub hook (W2-A) |
-| F | Canopy | parasols / palms / awnings | stub hook (W2-A) |
-| G | Detail | non-solid decals and dressing | stub hook (W2-A) |
-| H | Life | `anims`, `animBands`, `labels` | **implemented**; `interact` wiring TODO (W4-A) |
+| B | Skeleton | reservations, `roads`, resolved slot cell sets | **implemented** (path auto-routing still TODO) |
+| C | Landmarks | large solid `stamps` from `landmarks[]` | **implemented** |
+| D | Groups | atomic `grp.*` assemblies | **implemented** (recipes pre-validated first) |
+| E | Props | per-slot scattered `stamps` | **implemented** |
+| F | Canopy | parasols / palms / awnings | **implemented** |
+| G | Detail | non-solid decals and dressing | **implemented** |
+| H | Life | `anims`, `animBands`, `labels`, `interact` | **implemented** (runtime hooks are W4-A) |
 
 ### A — Ground
 
@@ -263,11 +266,17 @@ Circulation and slot geometry, before anything can block it:
    which is what passes E–G scatter into:
    - an explicit rect → the cells it covers;
    - `surface: "sidewalk"` → every cell of that surface (`derived_from: patches`);
-   - `between: ["sand", "water"]` → *TODO (W2-A)*: walk the surface map for cells of A
-     adjacent to B and dilate by the archetype's `band_px`. Until then a `shore_line` slot
-     resolves to **zero** cells rather than to the wrong ones, and says so in the stats.
+   - `between: ["sand", "water"]` → the boundary band: cells of A orthogonally touching a
+     cell of B, grown `band_px` wide (the seed row counts as the band's first row) across
+     **both** surfaces. A `shore_line` slot therefore owns the wet sand *and* the first
+     strip of water, because the shells go on one and the floats on the other.
 
-*TODO (W2-A):* auto-route paths between district entrances and landmark anchors (A\* over
+Each slot keeps two views: the walkable free cells a scatter pass may stand on
+(`cells` in the stats) and every cell in the band (`band_cells`). Water stays in the
+second view only, and only a role the surface's `roles_allowed` admits can reach it —
+that is how a `water_prop` gets to the sea without anything else following it in.
+
+*TODO (W2-B):* auto-route paths between district entrances and landmark anchors (A\* over
 free cells), emit them as patches, and reserve the corridor.
 
 ### C — Landmarks
@@ -275,9 +284,13 @@ free cells), emit them as patches, and reserve the corridor.
 Pinned hero objects from `landmarks[]`, largest footprint first, because big inflexible
 pieces must claim space before anything small can box them out. `pin: true` means the
 anchor is authoritative and must not drift. Per landmark: resolve `me`/`exs` → footprint
-via the catalog, snap the anchor to a cell whose surface the object accepts, reject when
-`occ.overlap_ratio()` exceeds the rules' `reject_on` threshold, claim with an entrance
-halo, emit `{me, prefer?, x, y, origin, solid}`.
+via the catalog, snap the anchor so the *sprite* lands on the tile lattice, move it to a
+cell whose surface the object accepts (a spiral search out to 3 tiles — skipped entirely
+when `pin: true`, which either works where the spec put it or is dropped), reject when
+`occ.overlap_ratio()` exceeds 0.30, claim with a clearance halo, and reserve a one-tile
+apron in front of anything carrying an `interact` verb so the counter stays reachable.
+Then emit `{me, prefer?, x, y, origin, solid, interact?}`. A landmark may also name a
+`grp`, in which case pass D's atomic placement runs at that exact anchor.
 
 Marking real obstacles `solid: true` also buys the district a free service from the merge:
 `merge-city-plan.py` prunes auto-placed street lamps and trees that land inside any solid
@@ -291,25 +304,55 @@ Expands `grp.*` recipes into multi-stamp assemblies. A recipe (W0-C format) decl
 tile footprint: two net posts, the modular net panel, eight modular sand court-line tiles,
 and a ball mid-court.
 
-A group is **atomic**: its union footprint is tested against the occupancy once, and either
-every member lands at `anchor + (dx, dy) × 16` or the whole group is rejected. This is the
-direct fix for mistake #1 (stamp collage instead of composed scenes) and for coverage tier
-D — fragment Singles like a lone modular court-line tile must never be stamped solo.
+A group is **atomic**: either every member lands at `anchor + (dx, dy) × 16` or the whole
+group is rejected. This is the direct fix for mistake #1 (stamp collage instead of composed
+scenes) and for coverage tier D — fragment Singles like a lone modular court-line tile must
+never be stamped solo.
 
-Placement is W2-A's work. Today the pass **pre-validates** every referenced recipe instead:
-each piece must resolve in the catalog, and each offset must fit the declared footprint.
-Data problems surface now rather than during W2-A.
+The pass **pre-validates** every referenced recipe first (each piece resolvable, each
+offset inside the declared footprint), then samples `count` anchors from the named slot's
+free cells in a seeded order and tests each one:
+
+- the union footprint may not touch a `RESERVED` cell — circulation is absolute;
+- ≥80% of the union's cells must be the recipe's `surface`, folded onto one of the five
+  real surfaces through the rules' `registry_aliases` (recipes say `"ground"`, the surface
+  map says `grass`). An unknown surface name means *no constraint*, never *reject*;
+- each piece is tested against what **earlier passes** claimed, not against its own
+  siblings — pieces overlap each other by design, that is what makes a scene.
+
+Pieces are emitted with their `exs` (a recipe names an exact Single, and some of those
+`me.*` roll-ups are not in the placement index at all), and the group's `interact` verb
+goes on its first solid piece — the thing a player walks up to — not on all eight
+court-line tiles.
 
 ### E — Props
 
-Per-slot scatter. The candidate pool is enriched `me.*` (W1-A) filtered by the biome's
-`forbid_tags`, the slot archetype's `roles`, and the surface's `roles_allowed`; anchors come
-from a jittered sample seeded per slot. Each role's `density` level resolves through the
-rules into `target_coverage`, `min_spacing_mult` (scaling the role's own `spacing_px`),
-`props_per_kilopx2` and `jitter_px`, so "dense" means the same thing in every district.
+Per-slot scatter. The candidate pool is enriched `me.*` (W1-A), filtered by:
 
-Variant selection is **coverage-aware**: `palette` scores the colour family and the pass
-biases toward Singles the city has not used yet, so a district spends new assets instead of
+- the **slot archetype's** `roles` — the archetype decides what belongs in it, not the
+  spec, so a `canopy` density on an `interior_fill` slot is pass F's job and E says so in
+  its stats instead of placing it;
+- the biome (`biomes_allowed`, plus the always-drawable `universal` kit) and its
+  `forbid_tags`;
+- **both directions of the surface contract**: the role's `surfaces` and the surface's
+  `roles_allowed`. A row's own primary surface is a hard constraint only across the
+  walkable/unwalkable line — a pool float must stay on water and a sand mound must stay
+  off it, but a sunbed filed under `grass` is fine on sand;
+- a **tier-D guard**: `group_only` rows plus the modular autotile pieces, sheet
+  `Example_*` cutouts and bare shadows the enrichment did not catch;
+- **palette tiers**: `palette` first, `palette_secondary` only if the primary tier is
+  empty. Treating them as one set is how a beach ends up with pine trees on it — camping
+  conifers score on `festive_market`.
+
+Each role's `density` level resolves through the rules into `props_per_kilopx2` (the count,
+over the slot's usable area), `min_spacing_mult` (scaling the role's own `spacing_px`) and
+`jitter_px` (sub-tile offset for `align: free` roles), so "dense" means the same thing in
+every district.
+
+Variant selection is **coverage-aware**: candidates rotate least-used-first, and within a
+candidate the Single is chosen by palette score among the variants that share the id's
+canonical footprint (so a `Grey_Shell` family never yields a signboard) with a penalty on
+Singles this district already spent. That is what turns a compile into coverage instead of
 repeating the same six PNGs (mistake #2, coverage tier C).
 
 ### F — Canopy
@@ -317,13 +360,20 @@ repeating the same six PNGs (mistake #2, coverage tier C).
 Overhead cover (parasols, palms, awnings, market tents) last among the solids, because it
 overhangs what pass E placed and must see the ground props to avoid burying an interactable
 or blocking a sightline. The rules give `canopy` `layer: overhead` with a y-sort depth bias
-and `collision: none` — its tile stays walkable, so it claims `CLEAR`, not `SOLID`.
+and `collision: none` — its tile stays walkable, so it claims `CLEAR`, not `SOLID`, and it
+is the one role allowed to stand on a cell pass E dressed with `DECOR`. Its *ground* claim
+is one tile, not the sprite's full width: a parasol has a single pole, and its shade is
+supposed to fall across the loungers. Candidates come from `passes.F_canopy.candidates`
+when the spec names them, otherwise from the enriched pool (where a parasol filed
+`furniture_ext` is promoted on the strength of the `canopy` role's own `tags_any`).
 
 ### G — Detail
 
 High-count, zero-collision dressing — shells, starfish, sand holes, litter, decals — into
-cells that are still empty, up to the density level's `target_coverage`. Claims `DECOR` only
-and never sets `solid`, so pass G cannot create an `OVERLAP` defect by construction.
+cells that are still empty. Claims `DECOR` only and never sets `solid`, so pass G cannot
+create an `OVERLAP` defect by construction. It runs `decor_small` and `water_prop` over
+every slot that declares them, but never above `medium`: pass E already spent the slot's
+headroom at the declared level, and G is the sweep-up.
 
 ### H — Life
 
@@ -331,9 +381,14 @@ Everything that makes the district move or respond: `anims`, `animBands` (includ
 water surfaces pass A reserved, with `shore: "top"` foam), `vehicles`, `labels`, `portals`
 and NPC anchors. Frame math is validated against sheet dimensions to pre-empt `BADANIM`.
 
-*TODO (W4-A):* attach `interact` verbs from `interactions{}` to the stamps C–G placed
-(`"auto"` = every stamp whose role and tags match the verb's rules entry). It runs last
-precisely because interaction attaches to objects the earlier passes chose.
+Then `interactions{}` is wired onto the stamps C–G actually chose — which is why this runs
+last. `"auto"` matches the verb's rules entry (role + `tags_any`) or the asset's own
+enriched `interact`; an explicit list matches by `me` id, or by the `grp` recipe that
+emitted the stamp (in which case only the group's primary piece is wired). A verb pass C
+or D already attached wins and is counted, never overwritten.
+
+*TODO (W4-A):* the runtime handlers in `src/full-world.js`, and `npc_anchor` spawn hints —
+`npcs` entries need a `char` the renderer can spawn, which the compiler cannot invent.
 
 ---
 
@@ -353,9 +408,25 @@ A 16px cell grid over the bbox with, per cell, a surface name and a flag byte:
 
 Plus a list of claimed solid world-rects backing `overlap_ratio(rect)`, which returns the
 worst overlap as a fraction of the *smaller* sprite — the exact metric
-`check-city-plan.py` flags at 35%. The compiler's accept/reject test and the QA gate
-therefore measure the same thing, and a compiled district is clean because it was never
-allowed to be dirty.
+`check-city-plan.py` flags at 35%. The compiler rejects above **0.30**, leaving the merge's
+own nudges some headroom, so a compiled district is clean because it was never allowed to
+be dirty.
+
+Cells and sprites are deliberately different things:
+
+| | what it covers |
+|---|---|
+| **claim** (a solid) | the bottom **24px band** of the sprite — exactly the collider `src/full-world.js` builds for `solid: true`, so the grid can never disagree with the runtime |
+| **claim** (a non-solid) | the full sprite rect, as `DECOR` or `CLEAR` |
+| **ground test** | the same 24px band (one tile wide for an overhead piece) — what must be *free* is the ground the sprite stands on, not the whole PNG |
+| **overlap test** | the full sprite rect, solids only — the pair the QA gate compares |
+
+That split is why a 64×80 palm costs one tile row instead of five, and why a parasol may
+shade a lounger without either of them being a defect.
+
+`constraints{}` are live budgets, not decoration: `max_stamps`, `min_free_cell_ratio` and
+`max_solid_cell_ratio` stop a scatter mid-role rather than being reported after the fact,
+and `budget_breaches()` prints anything a compile still could not honour.
 
 ### Determinism
 
@@ -368,9 +439,15 @@ re-running with the same spec, seed and catalog reproduces the fragment **byte f
 ### Provenance
 
 Every fragment carries a `_compiled` block: spec path, seed, rules version, coords mode,
-per-pass stats, occupancy stats and any unresolved catalog ids. `_doc` marks the file
-generated. When a district looks wrong, the fragment itself says which spec and seed made
-it.
+per-pass stats, occupancy stats, a `coverage` block (stamps, unique `me.*` ids, unique
+Singles, and whether `coverage_target_singles` was met) and any unresolved catalog ids.
+`_doc` marks the file generated. When a district looks wrong, the fragment itself says
+which spec and seed made it.
+
+Per-pass stats are written to be read: every scatter reports `placed` against `want`, how
+many `attempts` it took and how big the candidate `pool` was, and every rejection carries
+its reason (`no candidates`, `not a plaza role`, `0/2 placed in clearing`). A thin district
+tells you *why* it is thin.
 
 ---
 
@@ -426,8 +503,8 @@ ground the object stands on, which is what the occupancy grid reasons about.
 ## Integration with merge
 
 `merge-city-plan.py` globs `data/city-specs/d*.json` by default — **non-recursive**, so
-`data/city-specs/generated/` is deliberately *outside* the merge: compiling cannot disturb
-the currently-clean QA gate while passes C–G are still stubs.
+`data/city-specs/generated/` is deliberately *outside* the merge, so recompiling a district
+can never disturb the currently-clean QA gate by accident.
 
 **W2-C landed the promotion switch:** pass `--include-generated` to also merge
 `data/city-specs/generated/d*.json`, keeping generated and hand-authored fragments in
@@ -517,7 +594,7 @@ fixing them after the fact:
 
 | Defect | Prevented by |
 |--------|--------------|
-| `OVERLAP` | occupancy `SOLID` claims + `overlap_ratio` reject below the 0.35 the gate flags |
+| `OVERLAP` | occupancy `SOLID` claims + `overlap_ratio` reject at 0.30, below the 0.35 the gate flags |
 | `FLOATING` | pass A paints ground across the bbox before any placement; surface checked per anchor |
 | `ROADBLOCK` | pass B reserves road lanes plus a one-tile shoulder before C–G run |
 | `OFFWORLD` | validation bounds-checks bbox against 6656×6400; every rect is bbox-checked |
@@ -552,34 +629,44 @@ spec OK: d18-beach-lounge (D18 Beach Lounge Pocket) biome=beach 400x280 @(3120,4
   pass A_ground     {'patches': 3, 'unpaintable_surfaces': 1}
   pass B_skeleton   {'keep_clear': 1, 'roads': 0, 'slots': {'promenade_edge': {…'cells': 50},
                      'lounge': {…'cells': 180}, 'court': {…'cells': 63},
-                     'wet_sand': {…'cells': 0, 'derived_from': 'surface_boundary'}}}
-  pass C_landmarks  {'placed': 0, 'pending': 3, 'todo': True}
-  pass D_groups     {'groups': 0, 'pending': 1, 'recipes_checked': 1, 'todo': True}
-  …
-  pass H_life       {'labels': 1, 'anims': 2, 'animBands': 1, 'todo': True}
-compiled seed=21084: {'patches': 3, 'anims': 2, 'animBands': 1, 'labels': 1}
-stub passes (no fill logic yet): C_landmarks, D_groups, E_props, F_canopy, G_detail, H_life
-checked data/city-specs/generated/d18-beach-lounge.json: 0 stamps
+                     'wet_sand': {…'cells': 66, 'band_cells': 125,
+                                  'derived_from': 'surface_boundary'}}}
+  pass C_landmarks  {'placed': 3, 'groups': 0, 'group_stamps': 0, 'pending': 0}
+  pass D_groups     {'groups': 1, 'stamps': 12, 'pending': 0, 'recipes_checked': 1}
+  pass E_props      {'placed': 27, 'slots': 4, 'by_slot': {'lounge': {'furniture_ext':
+                     {'placed': 10, 'want': 10, 'attempts': 36, 'pool': 20}, 'canopy':
+                     'not a interior_fill role', …}, …}}
+  pass F_canopy     {'placed': 6, 'by_slot': {'lounge': {…}}, 'candidates': 'spec'}
+  pass G_detail     {'placed': 3, 'by_slot': {…}, 'candidates': 'spec'}
+  pass H_life       {'labels': 1, 'anims': 2, 'animBands': 1,
+                     'interactions': {'sit': 16, 'shop': 1, 'read': 1, 'play': 1}}
+compiled seed=21084: {'patches': 3, 'stamps': 51, 'anims': 2, 'animBands': 1, 'labels': 1}
+coverage: 50 unique Singles from 51 stamps (39 me.* ids), target 45 MET
+checked data/city-specs/generated/d18-beach-lounge.qa.json: 51 stamps
 defects: none
 ```
 
 ---
 
-## Handoff to W2-A
+## What is left
 
-Land the fill passes one at a time, in letter order — each only needs the occupancy grid
-and the catalog, both of which already work. Per the master plan, **do not start C–G until
-gate G1** (enrichment) lands, since they need role/biome per `me.*`.
+The pipeline, validation, emitter and QA contract are settled; every pass is a single
+function returning a stats dict, so the remaining work is additive.
 
-1. **B (finish)** — `between` / `surface_boundary` band derivation, so `shore_line` and
-   `road_edge` slots resolve. Pure geometry over the existing surface map; no G1 dependency.
-2. **C** — landmark resolution (footprint → snap → reject → claim → emit). Smallest useful
-   pass; unblocks visual review of the pilot.
-3. **D** — group placement, on top of the recipe pre-validation already in the pass. Biggest
-   quality win per line, and only needs W1-C to author more recipes.
-4. **E/F/G** — scatter; needs W1-A enrichment for role/biome filtering and W1-B for palette
-   scoring.
-5. **H (finish)** — `interact` wiring, paired with W4-A runtime hooks.
+1. **B** — auto-route paths (A\* over free cells) between district entrances and landmark
+   anchors, emit them as patches and reserve the corridor. Pure geometry (W2-B).
+2. **W2-C** — make `--include-generated` the default once the generated districts are
+   reviewed (the switch itself already exists), and re-baseline the coverage report.
+   `--include-generated` merges clean today: 1266 stamps, 0 defects, 0 missing.
+3. **W3** — roll the remaining biome specs. Nothing in the compiler is beach-specific; a
+   biome needs enrichment coverage for the roles its slots declare, which is where a thin
+   pass shows up as `{'placed': 0, 'skipped': 'no candidates'}`.
+4. **W4-A** — runtime `interact` handlers, and `npc_anchor` → `npcs` (the renderer needs a
+   `char` per NPC that the compiler has no basis to choose).
+5. **W4-C** — the extra QA gates: biome violation, coverage regression against the previous
+   compile, and turning `budget_breaches()` from a warning into a gate.
 
-Each pass is a single function returning a stats dict. The pipeline, validation, emitter and
-QA contract stay untouched.
+Two data-quality notes for whoever owns the catalog, since the compiler can only place what
+the enrichment describes: `me.beach.seagull` is filed `vegetation` (so it lands as a solid
+obstacle), and several beach `me.*` roll-ups referenced by group recipes are missing from
+`placement-index.json` — pass D works around that by emitting the piece's `exs`.
