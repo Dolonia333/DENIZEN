@@ -236,7 +236,7 @@ invalidate something earlier, so no pass ever needs to back out another pass's w
 | E | Props | per-slot scattered `stamps` | **implemented** |
 | F | Canopy | parasols / palms / awnings | **implemented** |
 | G | Detail | non-solid decals and dressing | **implemented** |
-| H | Life | `anims`, `animBands`, `labels`, `interact` | **implemented** (runtime hooks are W4-A) |
+| H | Life | `anims`, `animBands`, `labels`, `interact` | **implemented** (runtime handlers live in `src/full-world.js`) |
 
 ### A — Ground
 
@@ -661,8 +661,14 @@ function returning a stats dict, so the remaining work is additive.
 3. **W3** — roll the remaining biome specs. Nothing in the compiler is beach-specific; a
    biome needs enrichment coverage for the roles its slots declare, which is where a thin
    pass shows up as `{'placed': 0, 'skipped': 'no candidates'}`.
-4. **W4-A** — runtime `interact` handlers, and `npc_anchor` → `npcs` (the renderer needs a
-   `char` per NPC that the compiler has no basis to choose).
+4. **W4-A** — `npc_anchor` → `npcs` (the renderer needs a `char` per NPC that the compiler
+   has no basis to choose). The runtime `interact` handlers are done: `merge-city-plan.py`
+   carries the verb through the me→img resolve untouched, and `src/full-world.js` collects
+   every tagged stamp into `state.interactables` (footprint, verb, `me`, `img`, anchor) and
+   runs `sit` / `read` / `shop` / `play` / `enter` when the player is within 48px and presses
+   E, Space, the mobile action button, or taps the object. Each interaction also fires a
+   `denizen:city-interact` window event, so a real shop or quest system can hook the verbs
+   without touching the renderer.
 5. **W4-C** — the extra QA gates: biome violation, coverage regression against the previous
    compile, and turning `budget_breaches()` from a warning into a gate.
 

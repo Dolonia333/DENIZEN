@@ -180,6 +180,9 @@ const state = {
   built: false,
   portals: [],
   vehicles: [],
+  interactables: [],
+  planLabels: [],
+  seated: null,
   worldW: WORLD_W,
   worldH: WORLD_H,
 };
@@ -520,7 +523,8 @@ function build(scene) {
 //   patches [{tile:'grass|sidewalk|asphalt', x,y,w,h, depth?}]        terrain
 //   roads   [{x,y,w,h}]                                    asphalt + sidewalk
 //   stamps  [{img:'ext/...', x,y, origin?:'bl|tl|bc', depth?, scale?,
-//             solid?:{dx,dy,w,h} | true}]                buildings and props
+//             solid?:{dx,dy,w,h} | true,
+//             interact?:'sit|read|shop|play|enter'}]     buildings and props
 //   anims   [{sheet:'ext/animated/...', fw,fh, x,y, fps?, frames?, depth?,
 //             origin?}]                                    animated objects
 //   solids  [{x,y,w,h}]                                     extra collision
@@ -727,6 +731,8 @@ function renderGround(scene, plan) {
 }
 
 function placeCityPlan(scene, plan) {
+  // District signs double as sign-post copy for `interact:"read"` stamps.
+  state.planLabels = plan.labels || [];
   // animBands: {sheet, fw, fh, x,y,w,h, fps} → one tiling sprite per region,
   // frame-stepped on a timer (continuous animated ocean/water surfaces).
   (plan.animBands || []).forEach((b) => {
@@ -776,6 +782,7 @@ function placeCityPlan(scene, plan) {
     } else if (s.solid) {
       state.solids.push({ x: s.x + (s.solid.dx || 0), y: s.y + (s.solid.dy || 0), w: s.solid.w, h: s.solid.h });
     }
+    if (s.interact) registerInteractable(s, img);
   });
   (plan.anims || []).forEach((a, i) => {
     const key = planKey(a.sheet);
@@ -857,9 +864,383 @@ function placeCityPlan(scene, plan) {
     }
     state.portals.push(portal);
   });
-  console.log('[FullWorld] city plan placed:', (plan.stamps || []).length, 'stamps,', (plan.anims || []).length, 'anims,', (plan.portals || []).length, 'portals');
+  indexInteractables();
+  console.log('[FullWorld] city plan placed:', (plan.stamps || []).length, 'stamps,',
+    (plan.anims || []).length, 'anims,', (plan.portals || []).length, 'portals,',
+    state.interactables.length, 'interactables');
   // Everything the city will ever draw now exists — safe to bucket it.
   installChunkCulling(scene);
+}
+
+// ── Stamp interactions ──────────────────────────────────────────────────────
+// The exterior compiler's life pass tags stamps with an `interact` verb —
+// sit | read | shop | play | enter (docs/EXTERIOR-COMPILER.md, pass H). The
+// verb survives the me→img resolve in scripts/merge-city-plan.py, so by the
+// time a stamp reaches the renderer it carries both its art and its behaviour.
+// Every tagged stamp lands in state.interactables; the tick loop offers the
+// nearest one in range and E (or a tap on the object) runs it.
+
+const INTERACT_RANGE = 48;
+const INTERACT_CELL = 128;
+const INTERACT_PROMPT = {
+  sit: 'Sit',
+  read: 'Read',
+  shop: 'Shop',
+  play: 'Play',
+  enter: 'Enter',
+};
+
+/** Collect one placed stamp's footprint + verb. `img` is the placed image. */
+function registerInteractable(s, img) {
+  const w = img.displayWidth;
+  const h = img.displayHeight;
+  const left = s.origin === 'bc' ? s.x - w / 2 : s.x;
+  const top = s.origin === 'tl' ? s.y : s.y - h;
+  state.interactables.push({
+    x: left, y: top, w, h,
+    cx: left + w / 2,
+    baseY: top + h,
+    interact: s.interact,
+    me: s.me || null,
+    img: s.img,
+    anchor: s.origin || 'bl',
+    href: s.href || null,
+    teleport: s.teleport || null,
+    sp: img,
+  });
+}
+
+function indexInteractables() {
+  const grid = new Map();
+  state.interactables.forEach((it) => {
+    const k = `${Math.floor(it.cx / INTERACT_CELL)},${Math.floor(it.baseY / INTERACT_CELL)}`;
+    let cell = grid.get(k);
+    if (!cell) { cell = []; grid.set(k, cell); }
+    cell.push(it);
+  });
+  state._interactGrid = grid;
+}
+
+/** Distance from a point to an interactable's footprint (0 when inside). */
+function rectDist(it, x, y) {
+  const dx = Math.max(it.x - x, 0, x - (it.x + it.w));
+  const dy = Math.max(it.y - y, 0, y - (it.y + it.h));
+  return Math.hypot(dx, dy);
+}
+
+// Grid lookup rather than a scan: the plan already places 1,266 stamps and the
+// city is checked every frame.
+function nearestInteractable(x, y, range = INTERACT_RANGE) {
+  const grid = state._interactGrid;
+  if (!grid) return null;
+  const cx = Math.floor(x / INTERACT_CELL);
+  const cy = Math.floor(y / INTERACT_CELL);
+  let best = null;
+  let bestD = range;
+  for (let gy = cy - 1; gy <= cy + 1; gy += 1) {
+    for (let gx = cx - 1; gx <= cx + 1; gx += 1) {
+      const cell = grid.get(`${gx},${gy}`);
+      if (!cell) continue;
+      for (const it of cell) {
+        const d = rectDist(it, x, y);
+        if (d <= bestD) { bestD = d; best = it; }
+      }
+    }
+  }
+  return best;
+}
+
+/** "me.pool.sunbed_blue_side" → "Sunbed Blue Side" (falls back to the file). */
+function stampName(it) {
+  const raw = it.me
+    ? it.me.split('.').pop()
+    : (it.img || '').split('/').pop().replace(/\.png$/i, '');
+  return (raw || 'object')
+    .replace(/\d+x\d+/gi, '')
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** The district sign nearest a stamp — what a "read" sign post actually says. */
+function nearestLabelText(it, range = 240) {
+  let best = null;
+  let bestD = range;
+  (state.planLabels || []).forEach((l) => {
+    const d = Math.hypot(l.x - it.cx, l.y - it.baseY);
+    if (d <= bestD) { bestD = d; best = l; }
+  });
+  return best ? best.text : null;
+}
+
+// HUD text lives in the camera's scroll-free space, which Phaser still scales
+// by the camera zoom around its centre — so screen pixels must be converted.
+function hudPoint(cam, sx, sy) {
+  const z = cam.zoom || 1;
+  return {
+    x: cam.centerX + (sx - cam.centerX) / z,
+    y: cam.centerY + (sy - cam.centerY) / z,
+  };
+}
+
+function hudText(scene, key, style) {
+  if (state[key]) return state[key];
+  const t = scene.add.text(0, 0, '', {
+    fontFamily: 'monospace', fontSize: '10px', color: '#f8fafc',
+    backgroundColor: '#0f172ae6', padding: { x: 6, y: 3 },
+    align: 'center', ...style,
+  }).setOrigin(0.5, 1).setScrollFactor(0).setDepth(9500).setVisible(false);
+  t.setResolution(2);
+  state[key] = t;
+  return t;
+}
+
+/** Bottom-centre one-liner: the "press E to …" offer, or its result. */
+function showPrompt(scene, text) {
+  const t = hudText(scene, 'interactPrompt');
+  if (t.text !== text) t.setText(text);
+  const cam = scene.cameras.main;
+  // Clear of the bottom dock and the phone's touch controls.
+  const at = hudPoint(cam, cam.centerX, cam.height - 100);
+  t.setPosition(at.x, at.y);
+  t.setVisible(true);
+}
+
+function hidePrompt() {
+  if (state.interactPrompt) state.interactPrompt.setVisible(false);
+}
+
+function showHint(scene, text, ttl = 2600) {
+  const t = hudText(scene, 'interactHint', { color: '#bbf7d0' });
+  t.setText(text);
+  const cam = scene.cameras.main;
+  const at = hudPoint(cam, cam.centerX, cam.height - 128);
+  t.setPosition(at.x, at.y);
+  t.setVisible(true);
+  state._hintUntil = ttl > 0 ? scene.time.now + ttl : Infinity;
+}
+
+function hideHint() {
+  if (state.interactHint) state.interactHint.setVisible(false);
+  state._hintUntil = 0;
+}
+
+/**
+ * Centre-screen panel for the verbs that have something to say (read / shop).
+ * Deliberately plain: a sign or a shop counter is a text surface until there's
+ * a real shop system to hand off to.
+ */
+function showPanel(scene, title, body) {
+  const cam = scene.cameras.main;
+  if (!state.interactPanel) {
+    const box = scene.add.rectangle(0, 0, 10, 10, 0x0f172a, 0.94)
+      .setScrollFactor(0).setDepth(9600).setStrokeStyle(1, 0x64748b);
+    const txt = scene.add.text(0, 0, '', {
+      fontFamily: 'monospace', fontSize: '10px', color: '#e2e8f0',
+      align: 'center', lineSpacing: 4, wordWrap: { width: 200 },
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(9601);
+    txt.setResolution(2);
+    state.interactPanel = { box, txt };
+  }
+  const { box, txt } = state.interactPanel;
+  txt.setText(`${title}\n\n${body}\n\nE / ESC — close`);
+  const at = hudPoint(cam, cam.centerX, cam.centerY);
+  box.setPosition(at.x, at.y);
+  box.setSize(txt.width + 24, txt.height + 24);
+  txt.setPosition(at.x, at.y);
+  box.setVisible(true);
+  txt.setVisible(true);
+  state.panelOpen = true;
+}
+
+function hidePanel() {
+  if (!state.interactPanel) return;
+  state.interactPanel.box.setVisible(false);
+  state.interactPanel.txt.setVisible(false);
+  state.panelOpen = false;
+}
+
+/** Other systems (quests, shops, telemetry) can listen instead of being wired. */
+function emitInteract(verb, it) {
+  try {
+    window.dispatchEvent(new CustomEvent('denizen:city-interact', {
+      detail: { verb, me: it.me, img: it.img, x: it.cx, y: it.baseY, name: stampName(it) },
+    }));
+  } catch (_) {}
+}
+
+function sitDown(scene, it) {
+  const p = state.player;
+  if (!p) return;
+  // Seat point is the stamp's baseline, a couple of pixels south so the player
+  // y-sorts in FRONT of the seat instead of disappearing behind it.
+  const sx = it.cx;
+  const sy = it.baseY + 2;
+  state.seated = { it, from: { x: p.x, y: p.y } };
+  if (!hitsSolid(sx, sy)) { p.x = sx; p.y = sy; }
+  p.setDepth(p.y);
+  state.moveTarget = null;
+  state.playerDir = 'd';
+  p.play(`${state.playerTex}_idle_d`, true);
+  showHint(scene, `Sitting at the ${stampName(it).toLowerCase()} — move to get up`, 0);
+}
+
+function standUp() {
+  if (!state.seated) return;
+  const p = state.player;
+  const from = state.seated.from;
+  if (p && from && hitsSolid(p.x, p.y)) { p.x = from.x; p.y = from.y; }
+  state.seated = null;
+  hideHint();
+}
+
+/** A brief squash-and-stretch on the prop — "you had a go at it". */
+function playWith(scene, it) {
+  const sp = it.sp;
+  if (sp && !sp._fwPlaying) {
+    sp._fwPlaying = true;
+    const sx = sp.scaleX;
+    const sy = sp.scaleY;
+    scene.tweens.add({
+      targets: sp, scaleX: sx * 1.08, scaleY: sy * 0.92,
+      duration: 130, yoyo: true, repeat: 2, ease: 'Sine.easeInOut',
+      onComplete: () => { sp.setScale(sx, sy); sp._fwPlaying = false; },
+    });
+  }
+  showHint(scene, `You have a go at the ${stampName(it).toLowerCase()}`);
+}
+
+/**
+ * `enter` reuses the plan's portal flow when a door is declared for the stamp
+ * (on the stamp itself, or the nearest plan portal to its base) — otherwise
+ * there is nothing to walk into yet, so say so rather than teleport blind.
+ */
+function enterStamp(scene, it) {
+  const target = it.teleport || nearestPortalTarget(it);
+  if (target && target.teleport) {
+    const p = state.player;
+    p.x = target.teleport.x;
+    p.y = target.teleport.y;
+    state.moveTarget = null;
+    showHint(scene, `Entered the ${stampName(it).toLowerCase()}`);
+    return;
+  }
+  const href = it.href || (target && target.href);
+  if (href && !state._enteringOffice) {
+    state._enteringOffice = true;
+    try { window.location.href = href; } catch (_) {}
+    return;
+  }
+  console.info('[FullWorld] enter: no door wired for', it.me || it.img);
+  showHint(scene, `${stampName(it)} — the door is locked`);
+}
+
+function nearestPortalTarget(it, range = 96) {
+  let best = null;
+  let bestD = range;
+  (state.portals || []).forEach((pt) => {
+    const d = Math.hypot((pt.x0 + pt.x1) / 2 - it.cx, pt.y - it.baseY);
+    if (d <= bestD) { bestD = d; best = pt; }
+  });
+  return best;
+}
+
+function runInteract(scene, it) {
+  if (!it) return;
+  emitInteract(it.interact, it);
+  switch (it.interact) {
+    case 'sit':
+      if (state.seated) standUp(); else sitDown(scene, it);
+      break;
+    case 'read':
+      showPanel(scene, nearestLabelText(it) || stampName(it),
+        `${stampName(it)}\nCity of Denizen — District notice board.`);
+      break;
+    case 'shop':
+      console.info('[FullWorld] shop:', it.me || it.img);
+      showPanel(scene, stampName(it).toUpperCase(),
+        'The counter is open but unattended.\nNothing for sale yet.');
+      break;
+    case 'play':
+      playWith(scene, it);
+      break;
+    case 'enter':
+      enterStamp(scene, it);
+      break;
+    default:
+      console.info('[FullWorld] unknown interact verb:', it.interact, it.me || it.img);
+  }
+}
+
+function interactBlocked() {
+  if (window.__DenizenGameInputBlocked) return true;
+  try {
+    if (document.documentElement.dataset.denizenModal === 'open') return true;
+  } catch (_) {}
+  return false;
+}
+
+// addKeys() registers a preventDefault capture, so E/Space would be eaten by
+// the city while a chat or login field has focus — the office guards the same
+// way (office-scene.js _typingInField).
+function typingInField() {
+  try {
+    const el = document.activeElement;
+    return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+  } catch (_) {
+    return false;
+  }
+}
+
+// One pass per frame: keep the offer in sync with where the player stands, and
+// turn a fresh E press (or a tap on the object itself) into the verb's handler.
+function updateInteractions(scene) {
+  const p = state.player;
+  if (!p) return;
+  const k = state.keys || {};
+  const typing = typingInField();
+  // Mobile action button (src/mobile-controls.js) counts as an E press.
+  const pressed = (!typing && !!(k.interact?.isDown || k.interact2?.isDown))
+    || !!window.__DenizenTouchState?.interact;
+  const fresh = pressed && !state._interactWasDown && !interactBlocked();
+  state._interactWasDown = pressed;
+  const escDown = !typing && !!k.esc?.isDown;
+  const escaped = escDown && !state._escWasDown;
+  state._escWasDown = escDown;
+
+  if (state._hintUntil && scene.time.now > state._hintUntil) hideHint();
+
+  const near = state.seated ? state.seated.it : nearestInteractable(p.x, p.y);
+  state.nearInteract = near;
+
+  if (state.panelOpen) {
+    // An open sign / shop panel owns E and ESC, and closes if you walk off.
+    if (fresh || escaped || !near) hidePanel();
+    return;
+  }
+  if (escaped && state.seated) standUp();
+
+  if (near) {
+    const verb = INTERACT_PROMPT[near.interact] || 'Use';
+    const action = state.seated ? 'Stand up' : `${verb} · ${stampName(near)}`;
+    showPrompt(scene, `E — ${action}`);
+  } else {
+    hidePrompt();
+  }
+
+  if (fresh && near) runInteract(scene, near);
+
+  // Tap straight onto an in-range object (phones have no E key).
+  const tap = state.interactTap;
+  state.interactTap = null;
+  if (tap && !interactBlocked()) {
+    const hit = nearestInteractable(tap.x, tap.y, 8);
+    if (hit && rectDist(hit, p.x, p.y) <= INTERACT_RANGE) {
+      state.moveTarget = null;
+      runInteract(scene, hit);
+    }
+  }
 }
 
 // ── Zone builders ───────────────────────────────────────────────────────────
@@ -1242,7 +1623,13 @@ function spawnPlayer(scene, x, y) {
   state.keys = scene.input.keyboard.addKeys({
     up: 'W', down: 'S', left: 'A', right: 'D',
     u2: 'UP', d2: 'DOWN', l2: 'LEFT', r2: 'RIGHT',
+    interact: 'E', interact2: 'SPACE', esc: 'ESC',
   });
+  // addKeys() installs a preventDefault capture for each key, which fires on the
+  // global keydown BEFORE a focused chat/login field sees the character — the
+  // office clears the same captures for exactly this reason. The page body is
+  // fixed/overflow:hidden, so releasing Space cannot scroll anything.
+  try { scene.input.keyboard.removeCapture('E,SPACE,ESC'); } catch (_) {}
   installTapToMove(scene);
 }
 
@@ -1378,6 +1765,9 @@ function installTapToMove(scene) {
     const wx = Number.isFinite(pointer.worldX) ? pointer.worldX : cam.scrollX + pointer.x / cam.zoom;
     const wy = Number.isFinite(pointer.worldY) ? pointer.worldY : cam.scrollY + pointer.y / cam.zoom;
     state.moveTarget = { x: wx, y: wy };
+    // A tap that landed ON an interactable is a request to use it, not only to
+    // walk there — updateInteractions decides once it knows the player's range.
+    state.interactTap = { x: wx, y: wy };
   });
 }
 
@@ -1448,6 +1838,11 @@ function tick(scene, dt) {
     speedScale = Math.min(1, stick.mag);
     state.moveTarget = null;
   }
+
+  // Seated on an `interact:"sit"` stamp: any deliberate move gets you up again,
+  // and until then the player stays parked on the seat.
+  if (state.seated && (vx || vy || state.moveTarget)) standUp();
+  if (state.seated) { vx = 0; vy = 0; state.moveTarget = null; }
 
   // Denizen HQ entrance: the glass door slides open on approach; walking
   // through the OPEN door returns to the office interior.
@@ -1542,6 +1937,9 @@ function tick(scene, dt) {
   }
   p.setDepth(p.y);
 
+  // Stamp interactions (sit / read / shop / play / enter)
+  updateInteractions(scene);
+
   // Driving vehicles
   state.vehicles.forEach((v) => {
     if (v.kind === 'lane') {
@@ -1604,5 +2002,10 @@ function tick(scene, dt) {
 }
 
 if (typeof window !== 'undefined') {
-  window.DenizenFullWorld = { buildFullWorld, state, textureBudget };
+  window.DenizenFullWorld = {
+    buildFullWorld, state, textureBudget,
+    // Interaction handles, so the city can be poked from the console/tests:
+    // DenizenFullWorld.state.interactables, nearestInteractable(x,y), runInteract.
+    runInteract, nearestInteractable, indexInteractables,
+  };
 }
