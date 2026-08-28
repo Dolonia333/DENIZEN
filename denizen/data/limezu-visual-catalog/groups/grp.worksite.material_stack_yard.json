@@ -1,0 +1,142 @@
+{
+  "id": "grp.worksite.material_stack_yard",
+  "name": "Site material stack yard (lumber piles + toolbox + storage bin)",
+  "biome": "worksite",
+  "category": "prop",
+  "surface": "asphalt",
+  "facing": "any",
+  "solid": true,
+  "source_me_ids": [
+    "me.worksite.lumber_stack",
+    "me.worksite.toolbox_closed",
+    "me.worksite.storage_bin"
+  ],
+  "footprint_tiles": {
+    "w": 8,
+    "h": 6
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the toolbox sits at the back with two rows of stacked material piles and the storage bin anchoring the front-right corner."
+  },
+  "offset_basis_summary": "Stacked_Material_1/2/3/4/6/7, Tool_Box_1 and Tool_Box_3 all occupy one contiguous block of the 8_Worksite sheet (x48-192, y176-304), so every offset here is read directly from sheet_x/sheet_y with origin snapped to (48,176).",
+  "pieces": [
+    {
+      "role": "toolbox",
+      "me": "me.worksite.toolbox_closed",
+      "exs": "exs.8_worksite.worksite_tool_box_1",
+      "basename": "ME_Singles_Worksite_16x16_Tool_Box_1.png",
+      "dx": 5,
+      "dy": 0,
+      "w": 32,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "pile_row1_a",
+      "me": "me.worksite.lumber_stack",
+      "exs": "exs.8_worksite.worksite_stacked_material_1",
+      "basename": "ME_Singles_Worksite_16x16_Stacked_Material_1.png",
+      "dx": 0,
+      "dy": 2,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "pile_row1_b",
+      "me": "me.worksite.lumber_stack",
+      "exs": "exs.8_worksite.worksite_stacked_material_6",
+      "basename": "ME_Singles_Worksite_16x16_Stacked_Material_6.png",
+      "dx": 2,
+      "dy": 2,
+      "w": 16,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "pile_row1_c",
+      "me": "me.worksite.lumber_stack",
+      "exs": "exs.8_worksite.worksite_stacked_material_4",
+      "basename": "ME_Singles_Worksite_16x16_Stacked_Material_4.png",
+      "dx": 3,
+      "dy": 2,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "pile_row2_a",
+      "me": "me.worksite.lumber_stack",
+      "exs": "exs.8_worksite.worksite_stacked_material_2",
+      "basename": "ME_Singles_Worksite_16x16_Stacked_Material_2.png",
+      "dx": 0,
+      "dy": 5,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "pile_row2_b",
+      "me": "me.worksite.lumber_stack",
+      "exs": "exs.8_worksite.worksite_stacked_material_7",
+      "basename": "ME_Singles_Worksite_16x16_Stacked_Material_7.png",
+      "dx": 2,
+      "dy": 5,
+      "w": 16,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "pile_row2_c",
+      "me": "me.worksite.lumber_stack",
+      "exs": "exs.8_worksite.worksite_stacked_material_3",
+      "basename": "ME_Singles_Worksite_16x16_Stacked_Material_3.png",
+      "dx": 3,
+      "dy": 5,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "storage_bin",
+      "me": "me.worksite.storage_bin",
+      "exs": "exs.8_worksite.worksite_tool_box_3",
+      "basename": "ME_Singles_Worksite_16x16_Tool_Box_3.png",
+      "dx": 5,
+      "dy": 5,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    }
+  ],
+  "variants": {
+    "pile_extra": "worksite_stacked_material_5 (x160,y256) can be appended as a fourth column on pile_row2 for a wider yard."
+  },
+  "interact": null,
+  "notes": "Fully sheet-relative material yard: the lumber-stack columns, toolbox and storage bin occupy one packed rectangle of the 8_Worksite sheet, reproduced here as a ready-made stack yard corner."
+}

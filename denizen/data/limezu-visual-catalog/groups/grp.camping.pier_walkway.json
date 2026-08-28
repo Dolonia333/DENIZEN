@@ -1,0 +1,130 @@
+{
+  "id": "grp.camping.pier_walkway",
+  "name": "Wooden pier walkway (straight modular deck + support poles + life buoy)",
+  "biome": "camping",
+  "category": "infra",
+  "surface": "water",
+  "facing": "east",
+  "solid": false,
+  "source_me_ids": [
+    "me.camping.pier_deck_straight",
+    "me.camping.pier_pole",
+    "me.camping.life_buoy"
+  ],
+  "footprint_tiles": {
+    "w": 4,
+    "h": 3
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the deck runs east over the water with support poles beneath and a life buoy hung on the near rail."
+  },
+  "offset_basis_summary": "Pier_7 through Pier_10 are four consecutive 16px tiles on the 11_Camping sheet (x48-96, y176) forming a literal straight deck run, so their offsets are read directly from sheet_x/sheet_y. The support poles and life buoy live in unrelated sheet rows (y208-272), so their placement under/beside the deck is hand-authored.",
+  "pieces": [
+    {
+      "role": "deck_1",
+      "me": "me.camping.pier_deck_straight",
+      "exs": "exs.11_camping.camping_pier_7",
+      "basename": "ME_Singles_Camping_16x16_Pier_7.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "east"
+    },
+    {
+      "role": "deck_2",
+      "me": "me.camping.pier_deck_straight",
+      "exs": "exs.11_camping.camping_pier_8",
+      "basename": "ME_Singles_Camping_16x16_Pier_8.png",
+      "dx": 1,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "east"
+    },
+    {
+      "role": "deck_3",
+      "me": "me.camping.pier_deck_straight",
+      "exs": "exs.11_camping.camping_pier_9",
+      "basename": "ME_Singles_Camping_16x16_Pier_9.png",
+      "dx": 2,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "east"
+    },
+    {
+      "role": "deck_4",
+      "me": "me.camping.pier_deck_straight",
+      "exs": "exs.11_camping.camping_pier_10",
+      "basename": "ME_Singles_Camping_16x16_Pier_10.png",
+      "dx": 3,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "east"
+    },
+    {
+      "role": "support_pole_near",
+      "me": "me.camping.pier_pole",
+      "exs": "exs.11_camping.camping_pier_pole_1",
+      "basename": "ME_Singles_Camping_16x16_Pier_Pole_1.png",
+      "dx": 0,
+      "dy": 1,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any",
+      "notes": "Piling beneath the deck's near end, visually supporting the walkway."
+    },
+    {
+      "role": "support_pole_far",
+      "me": "me.camping.pier_pole",
+      "exs": "exs.11_camping.camping_pier_pole_2",
+      "basename": "ME_Singles_Camping_16x16_Pier_Pole_2.png",
+      "dx": 3,
+      "dy": 1,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "life_buoy",
+      "me": "me.camping.life_buoy",
+      "exs": "exs.11_camping.camping_life_buoy_1",
+      "basename": "ME_Singles_Camping_16x16_Life_Buoy_1.png",
+      "dx": 1,
+      "dy": 0,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any",
+      "notes": "Hung on the deck rail; overlaps deck_2's tile as a wall-mounted prop, not a floor obstruction."
+    }
+  ],
+  "variants": {
+    "length": "Repeat deck_2/deck_3 (modular middle tiles) to extend the pier further over the water before capping with deck_4."
+  },
+  "interact": "traverse",
+  "notes": "Straight run of the modular pier-deck kit (sheet_relative core) dressed with hand-authored pilings and a life buoy so it reads as a usable dock rather than a bare tile strip."
+}

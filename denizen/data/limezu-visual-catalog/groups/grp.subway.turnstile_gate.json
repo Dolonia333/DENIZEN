@@ -1,0 +1,76 @@
+{
+  "id": "grp.subway.turnstile_gate",
+  "name": "Ticket turnstile gate (closed turnstile + entry railing + support pillar)",
+  "biome": "subway",
+  "category": "infra",
+  "surface": "ground",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.subway.turnstile_closed",
+    "me.subway.railing_generic",
+    "me.subway.pillar_small"
+  ],
+  "footprint_tiles": {
+    "w": 5,
+    "h": 9
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the turnstile blocks the entry lane with the railing extending the barrier line and a pillar anchoring the far side."
+  },
+  "offset_basis_summary": "Turnstile_Closed and Railing sit in the same sheet column of the 20_Subway_and_Train_Station sheet (x288, y32 and y96), so that pair is sheet_relative. Small_Pillar lives in a separate sheet region (x304,y176) with no spatial relation to the turnstile, so its placement as a far-side structural column is hand-authored.",
+  "pieces": [
+    {
+      "role": "turnstile",
+      "me": "me.subway.turnstile_closed",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_turnstile_closed",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Closed.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 32,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south",
+      "interact": "unlock"
+    },
+    {
+      "role": "entry_railing",
+      "me": "me.subway.railing_generic",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_railing",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Railing.png",
+      "dx": 0,
+      "dy": 4,
+      "w": 48,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any",
+      "notes": "Extends the barrier line beside the turnstile lane."
+    },
+    {
+      "role": "far_pillar",
+      "me": "me.subway.pillar_small",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_small_pillar",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
+      "dx": 4,
+      "dy": 5,
+      "w": 16,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any",
+      "notes": "Structural column marking the far end of the gate lane."
+    }
+  ],
+  "variants": {
+    "gate_state": "Swap me.subway.turnstile_closed for me.subway.turnstile_opened to show an unlocked lane.",
+    "pillar_optional": "far_pillar is optional; drop it for a gate against an existing wall."
+  },
+  "interact": "unlock",
+  "notes": "Sheet-relative turnstile+railing pair widened into a full gate lane with a hand-placed support pillar, matching the entrance-composition pattern used by grp.subway.station_stairs."
+}

@@ -1,0 +1,106 @@
+{
+  "id": "grp.beach.umbrella_towel_spot",
+  "name": "Beach leisure spot (open parasol + towel + bucket, shovel and starfish scatter)",
+  "biome": "beach",
+  "category": "recreation",
+  "surface": "sand",
+  "facing": "south",
+  "solid": false,
+  "source_me_ids": [
+    "me.beach.umbrella_blue_open",
+    "me.beach.towel_blue",
+    "me.beach.bucket_blue",
+    "me.beach.shovel_blue",
+    "me.beach.starfish"
+  ],
+  "footprint_tiles": {
+    "w": 6,
+    "h": 5
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the parasol anchors the back row and the towel/toys spread out in front of it on the sand."
+  },
+  "offset_basis_summary": "Umbrella, towel, bucket, shovel and starfish singles live in unrelated rows/columns of the 21_Beach sheet (umbrella at ~y208, towel at ~y96, bucket at ~y32, shovel at ~y32, starfish at ~y64-80), so every offset here is hand-authored to form a plausible sunbathing spot: parasol shading the towel, toys scattered beside it.",
+  "pieces": [
+    {
+      "role": "parasol",
+      "me": "me.beach.umbrella_blue_open",
+      "exs": "exs.21_beach.beach_blue_beach_umbrella_opened",
+      "basename": "21_Beach_16x16_Blue_Beach_Umbrella_Opened.png",
+      "dx": 2,
+      "dy": 0,
+      "w": 48,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "south",
+      "notes": "Open blue beach umbrella; shades the towel spot below it."
+    },
+    {
+      "role": "towel",
+      "me": "me.beach.towel_blue",
+      "exs": "exs.21_beach.beach_blue_beach_towel_1",
+      "basename": "21_Beach_16x16_Blue_Beach_Towel_1.png",
+      "dx": 1,
+      "dy": 4,
+      "w": 32,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "bucket",
+      "me": "me.beach.bucket_blue",
+      "exs": "exs.21_beach.beach_small_blue_bucket_1",
+      "basename": "21_Beach_16x16_Small_Blue_Bucket_1.png",
+      "dx": 4,
+      "dy": 4,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "shovel",
+      "me": "me.beach.shovel_blue",
+      "exs": "exs.21_beach.beach_small_blue_shovel_1",
+      "basename": "21_Beach_16x16_Small_Blue_Shovel_1.png",
+      "dx": 4,
+      "dy": 3,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any",
+      "notes": "Lies flat beside the bucket, propped against it."
+    },
+    {
+      "role": "starfish",
+      "me": "me.beach.starfish",
+      "exs": "exs.21_beach.beach_blue_small_starfish",
+      "basename": "21_Beach_16x16_Blue_Small_Starfish.png",
+      "dx": 0,
+      "dy": 4,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any",
+      "notes": "Loose decorative scatter on the sand; swap color variant freely."
+    }
+  ],
+  "variants": {
+    "umbrella_color": "Swap me.beach.umbrella_blue_open for green/lightblue open variants; keep towel/toy colors independent.",
+    "toy_scatter": "bucket/shovel/starfish are all optional scatter; drop any subset for a sparser spot."
+  },
+  "interact": null,
+  "notes": "Loose leisure scatter group (not a single sheet-derived multi_tile me.*): mirrors how beach chairs/umbrellas/toys are strewn near each other on real beach scenes. Do not stamp me.beach.umbrella_blue_open alone expecting towel/toys nearby -- author as this grp for a complete spot."
+}

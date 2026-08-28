@@ -1,0 +1,106 @@
+{
+  "id": "grp.graveyard.grave_dig_site",
+  "name": "Freshly dug grave site (open dirt ditch + shovel + loose dirt piles + cross marker)",
+  "biome": "graveyard",
+  "category": "memorial",
+  "surface": "grass",
+  "facing": "south",
+  "solid": false,
+  "source_me_ids": [
+    "me.graveyard.dirt_ditch_1",
+    "me.graveyard.shovel",
+    "me.graveyard.pile_of_dirt",
+    "me.graveyard.shovel_little_pile_of_dirt",
+    "me.graveyard.cross_pile_of_dirt"
+  ],
+  "footprint_tiles": {
+    "w": 6,
+    "h": 3
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the open ditch anchors the scene with the shovel and dirt piles scattered along its near edge."
+  },
+  "offset_basis_summary": "Dirt_Ditch_1 is a standalone 48x48 single with no linked siblings, so it is placed as a hand-authored anchor. Shovel, Pile_Of_Dirt and Shovel_Little_Pile_Of_Dirt are three consecutive tiles on the same sheet row (x400-432, y240) -- that trio is sheet_relative to each other -- while Cross_Pile_Of_Dirt sits further right (x480,y240) and is included as an authored variant marker.",
+  "pieces": [
+    {
+      "role": "open_ditch",
+      "me": "me.graveyard.dirt_ditch_1",
+      "exs": "exs.19_graveyard.graveyard_dirt_ditch_1",
+      "basename": "ME_Singles_Graveyard_16x16_Dirt_Ditch_1.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 48,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "south",
+      "notes": "Open dirt grave pit; the visual centerpiece of the scene."
+    },
+    {
+      "role": "shovel",
+      "me": "me.graveyard.shovel",
+      "exs": "exs.19_graveyard.graveyard_shovel",
+      "basename": "ME_Singles_Graveyard_16x16_Shovel.png",
+      "dx": 3,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any",
+      "notes": "Sheet-relative anchor for the pile_of_dirt/shovel_little_pile trio; placed jabbed into the ground beside the ditch."
+    },
+    {
+      "role": "dirt_pile",
+      "me": "me.graveyard.pile_of_dirt",
+      "exs": "exs.19_graveyard.graveyard_pile_of_dirt",
+      "basename": "ME_Singles_Graveyard_16x16_Pile_Of_Dirt.png",
+      "dx": 4,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "shovel_in_small_pile",
+      "me": "me.graveyard.shovel_little_pile_of_dirt",
+      "exs": "exs.19_graveyard.graveyard_shovel_little_pile_of_dirt",
+      "basename": "ME_Singles_Graveyard_16x16_Shovel_Little_Pile_Of_Dirt.png",
+      "dx": 5,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "cross_marker",
+      "me": "me.graveyard.cross_pile_of_dirt",
+      "exs": "exs.19_graveyard.graveyard_cross_pile_of_dirt",
+      "basename": "ME_Singles_Graveyard_16x16_Cross_Pile_Of_Dirt.png",
+      "dx": 1,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any",
+      "notes": "Improvised wood-cross marker on a neighboring dirt mound; hand-placed beside the ditch's near edge, opposite the shovel trio."
+    }
+  ],
+  "variants": {
+    "marker": "Omit cross_marker for a plain unmarked dig; swap in a wood_grave_* prop instead for a marked-but-open grave.",
+    "fill_state": "Pair with a graveyard.dirt_ditch_wood_grave / dirt_ditch_red_coffin variant once the grave is filled/occupied."
+  },
+  "interact": "dig",
+  "notes": "Composite dig-site scene anchored on the standalone dirt-ditch single, dressed with the sheet-adjacent shovel/dirt-pile trio plus a hand-placed cross marker -- mirrors the campfire_set pattern of combining one big anchor prop with small scattered decorations."
+}
