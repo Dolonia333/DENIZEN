@@ -49,9 +49,13 @@
   `python3 scripts/validate-placement-rules.py` (schema + referential integrity + a dry
   run of the rules over `registry.jsonl`): **0 errors, 2749/2749 `me.*` resolve to a role**,
   which already clears the G1 ≥90% role target.
-- [ ] W0-B — coverage baseline
-- [ ] W0-C — group candidates
-- [ ] W0-D — compiler design doc + CLI stub
+- [x] **W0-B** — `report-ext-catalog-coverage.py` + baseline `coverage-report.json`
+  (6224 singles, 571 used, Tier A–E all NOT MET — expected pre-compiler)
+- [x] **W0-C** — `group-candidates.json` (50 ranked multi_tile candidates) +
+  3 authored recipes: `grp.beach.volley_court`, `grp.camping.campfire_set`,
+  `grp.subway.station_stairs`
+- [x] **W0-D** — `docs/EXTERIOR-COMPILER.md` + `compile-exterior-district.py`
+  scaffold (passes A/B/H real; C–G stub hooks)
 
 ### Wave 1 — Enrichment (depends G0 schema)
 | ID | Group | Task | Output |
@@ -213,8 +217,8 @@ docs/
 
 | Gate | Status | Notes |
 |------|--------|-------|
-| G0 | in_progress | W0-A schema landed + validated (0 errors, 100% role coverage); W0-B/C/D outstanding |
-| G1 | pending | |
+| G0 | **done** | All W0 deliverables committed; validate-placement-rules OK (2749/2749 roles) |
+| G1 | in_progress | W1-A/B/C sub-agents running |
 | G2 | pending | |
 | G3 | pending | |
 | G4 | pending | |
