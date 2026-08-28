@@ -1106,6 +1106,9 @@ const INTERACT_PROMPT = {
   shop: 'Shop',
   play: 'Play',
   enter: 'Enter',
+  fish: 'Fish',
+  dig: 'Dig',
+  vend: 'Use',
 };
 
 /** Collect one placed stamp's footprint + verb. `img` is the placed image. */
@@ -1385,6 +1388,15 @@ function runInteract(scene, it) {
       break;
     case 'enter':
       enterStamp(scene, it);
+      break;
+    case 'fish':
+      showHint(scene, `You cast a line at the ${stampName(it).toLowerCase()} — no bite yet`);
+      break;
+    case 'dig':
+      showHint(scene, `You dig at the ${stampName(it).toLowerCase()} — just dirt for now`);
+      break;
+    case 'vend':
+      showHint(scene, `${stampName(it)} — the machine hums but dispenses nothing yet`);
       break;
     default:
       console.info('[FullWorld] unknown interact verb:', it.interact, it.me || it.img);

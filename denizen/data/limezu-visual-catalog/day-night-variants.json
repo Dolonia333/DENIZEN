@@ -210,10 +210,10 @@
   "me_rules": 4,
   "img_rules": 1,
   "plan_matches": {
-   "anim": 249,
-   "day_override": 1,
+   "anim": 331,
+   "day_override": 2,
    "img": 5
   },
-  "plan_matches_total": 255
+  "plan_matches_total": 338
  }
 }

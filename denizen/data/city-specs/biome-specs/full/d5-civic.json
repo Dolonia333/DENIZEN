@@ -1,0 +1,113 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d5-civic.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d5-civic.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d5-compiled",
+ "district": "D5 Civic Safety Campus",
+ "biome": "civic",
+ "palette": "civic_blue",
+ "palette_secondary": "neutral_urban",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 105001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d5-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 3296,
+  "y": 1904,
+  "w": 800,
+  "h": 1168
+ },
+ "label": "CIVIC SAFETY CAMPUS",
+ "label_at": {
+  "x": 399,
+  "y": 16
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 800,
+   "h": 1168,
+   "depth": 0.5,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "asphalt",
+   "x": 32,
+   "y": 368,
+   "w": 352,
+   "h": 128,
+   "depth": 0.9
+  },
+  {
+   "surface": "asphalt",
+   "x": 448,
+   "y": 320,
+   "w": 336,
+   "h": 192,
+   "depth": 0.9
+  },
+  {
+   "surface": "asphalt",
+   "x": 32,
+   "y": 784,
+   "w": 224,
+   "h": 208,
+   "depth": 0.9
+  },
+  {
+   "surface": "asphalt",
+   "x": 480,
+   "y": 560,
+   "w": 176,
+   "h": 128,
+   "depth": 0.9
+  },
+  {
+   "surface": "grass",
+   "x": 128,
+   "y": 512,
+   "w": 224,
+   "h": 208,
+   "depth": 0.95
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 768,
+   "h": 1136,
+   "density": {
+    "building_shell": "medium",
+    "street_furn": "medium",
+    "vegetation": "light",
+    "vehicle": "medium"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.civic.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

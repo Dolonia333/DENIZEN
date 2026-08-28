@@ -288,14 +288,29 @@ docs/
 
 **Promoted merge command (0 QA defects):**
 ```bash
-python3 scripts/merge-city-plan.py --compiler-replaces HAND --include-pockets
-python3 scripts/check-city-plan.py   # exit 0
+bash scripts/promote-city-plan.sh
+# or manually:
+# 1) merge --compiler-replaces HAND --include-pockets (manifest WITHOUT d99)
+# 2) python3 scripts/compile-coverage-showcase.py
+# 3) merge again with d99 back in manifest.json
 python3 scripts/build-ext-atlas.py
+python3 scripts/build-day-night-variants.py
 ```
 
 Active pockets listed in `data/city-specs/generated/manifest.json` (excludes pockets that overlap compiled districts).
 
-**Coverage after W6:** 1298/2749 me.* (47%), 1799/6224 singles (29%), Tier A 43%, Tier B 53%. Tier A cap: only 252/581 buildings have linked Singles.
+**Coverage after W7:** 6161 stamps, 15/15 exterior districts compiler-replaced (d1–d15 except d00/d16/d17), day/night TOD on 339+ light stamps.
+
+### Wave 7 — Full district migration + TOD ✅
+| ID | Task | Output |
+|----|------|--------|
+| W7-A | Derive + compile d1,d2,d3,d4,d5,d8,d12,d14,d15 | `biome-specs/full/d*.json` + `d*-compiled.json` |
+| W7-B | Fix pocket overlaps (d25/d26 removed from manifest) | updated `manifest.json` |
+| W7-C | Day/night asset swapping | `day-night-variants.json` + `full-world.js` TOD hooks |
+| W7-D | Showcase refresh workflow | `promote-city-plan.sh` (showcase after pockets) |
+| W7-E | `fish` interact verb | `full-world.js` + test fix |
+
+**Gate G7:** `bash scripts/promote-city-plan.sh` → **6161 stamps, 0 QA defects**.
 
 ---
 
@@ -310,3 +325,4 @@ Active pockets listed in `data/city-specs/generated/manifest.json` (excludes poc
 | G4 | **done** | interact runtime, atlas builder, extended QA (biome advisory) |
 | G5 | **prepped, blocked on MCP** | W5-A/B/C offline artifacts committed |
 | G6 | **done** | Full migration + showcase; **3748 stamps**, 0 QA defects |
+| G7 | **done** | All d1–d15 compiler-replaced; **6161 stamps**, TOD lights, 0 QA defects |

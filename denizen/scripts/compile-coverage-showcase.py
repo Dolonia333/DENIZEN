@@ -183,9 +183,13 @@ def build_occupancy(plan: dict, dims: Dims, world_w: int, world_h: int) -> list[
     gw, gh = world_w // GRID_CELL, world_h // GRID_CELL
     occ = [[0] * gw for _ in range(gh)]
 
-    def mark(x: int, y: int, w: int, h: int) -> None:
+    def mark(x: int, y: int, w: int, h: int, pad: int = 24) -> None:
         if w <= 0 or h <= 0:
             return
+        x -= pad
+        y -= pad
+        w += pad * 2
+        h += pad * 2
         for gy in range(max(0, y // GRID_CELL), min(gh, (y + h - 1) // GRID_CELL + 1)):
             row = occ[gy]
             for gx in range(max(0, x // GRID_CELL), min(gw, (x + w - 1) // GRID_CELL + 1)):

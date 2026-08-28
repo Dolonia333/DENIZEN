@@ -1,20 +1,20 @@
 {
-  "_doc": "Active generated fragments for merge-city-plan.py --include-pockets. Pockets overlapping a d*-compiled replacement district are excluded (see EXTERIOR-PLACEMENT-BRAIN-PLAN.md W6).",
-  "include": [
-    "d18-beach-lounge.json",
-    "d19-beach-shore-pocket.json",
-    "d22-civic-pocket.json",
-    "d25-industrial-pocket.json",
-    "d26-military-pocket.json",
-    "d99-catalog-showcase.json"
-  ],
-  "exclude_reason": {
-    "d19-wild-camp-pocket.json": "overlaps d10-compiled wild district",
-    "d20-urban-pocket.json": "overlaps d11-compiled industrial bbox edge",
-    "d21-commercial-pocket.json": "OVERLAP with compiled/hand content",
-    "d23-park-pocket.json": "overlaps d7-compiled park district",
-    "d24-residential-pocket.json": "OVERLAP with d6-compiled residential",
-    "d27-memorial-pocket.json": "OVERLAP with d9-compiled memorial",
-    "d28-transit-pocket.json": "overlaps d13-compiled transit district"
-  }
+ "_doc": "Active generated fragments for merge-city-plan.py --include-pockets. Pockets overlapping a d*-compiled replacement district are excluded (see EXTERIOR-PLACEMENT-BRAIN-PLAN.md W6/W7). Re-run compile-coverage-showcase.py after changing compiled districts, then merge with d99.",
+ "include": [
+  "d18-beach-lounge.json",
+  "d19-beach-shore-pocket.json",
+  "d22-civic-pocket.json",
+  "d99-catalog-showcase.json"
+ ],
+ "exclude_reason": {
+  "d19-wild-camp-pocket.json": "overlaps d10-compiled wild district",
+  "d20-urban-pocket.json": "overlaps d11-compiled / d1-compiled urban bbox",
+  "d21-commercial-pocket.json": "OVERLAP with d2/d4-compiled commercial districts",
+  "d23-park-pocket.json": "overlaps d7-compiled park district",
+  "d24-residential-pocket.json": "OVERLAP with d6-compiled residential",
+  "d25-industrial-pocket.json": "OVERLAP with d8-compiled beach (was D11 annex; d11-compiled fills bbox)",
+  "d26-military-pocket.json": "OVERLAP with d12-compiled military / d8 beach edge",
+  "d27-memorial-pocket.json": "OVERLAP with d9-compiled memorial",
+  "d28-transit-pocket.json": "overlaps d13-compiled transit district"
+ }
 }

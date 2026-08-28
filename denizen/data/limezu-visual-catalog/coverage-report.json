@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-28T03:49:16.837830+00:00",
+  "generated_at": "2026-08-28T10:44:00.055307+00:00",
   "sources": {
     "registry": {
       "path": "data/limezu-visual-catalog/registry.jsonl",
@@ -16,8 +16,8 @@
     },
     "city_plan": {
       "path": "data/city-plan.json",
-      "stamps": 3748,
-      "anims": 96,
+      "stamps": 6263,
+      "anims": 40,
       "anim_bands": 25
     }
   },
@@ -28,37 +28,37 @@
     "me_unused": 1451,
     "me_pct_used": 47.22,
     "exs_total": 6224,
-    "exs_used": 1799,
-    "exs_unused": 4425,
-    "exs_pct_used": 28.9,
-    "city_plan_stamps_total": 3748,
-    "city_plan_unique_images": 1870,
-    "city_plan_images_outside_ext_catalog_scope": 71,
+    "exs_used": 1875,
+    "exs_unused": 4349,
+    "exs_pct_used": 30.13,
+    "city_plan_stamps_total": 6263,
+    "city_plan_unique_images": 1923,
+    "city_plan_images_outside_ext_catalog_scope": 48,
     "city_plan_unresolved_ext_singles_images": 0
   },
   "usage_resolution": {
     "method": "A Single is 'used' if referenced directly by stamp.exs, or if stamp.img (legacy raw path, no me/exs tag) matches a catalog Single's path. A me.* is 'used' if referenced directly by stamp.me, or if any Single vision-linked to it is used.",
     "images_outside_ext_catalog_scope_sample": [
-      "farm/cut/barn_red.png",
-      "farm/cut/bed_beet.png",
-      "farm/cut/bed_cabbage.png",
-      "farm/cut/bed_carrot.png",
-      "farm/cut/bed_eggplant.png",
-      "farm/cut/bed_strawberry.png",
-      "farm/cut/bed_tomato.png",
-      "farm/cut/bed_wheat.png",
-      "farm/cut/coop_small.png",
-      "farm/cut/dirt_plot.png",
-      "farm/cut/farmhouse.png",
-      "farm/cut/fence_end.png",
-      "farm/cut/fence_h.png",
-      "farm/cut/hay_mound.png",
-      "farm/cut/haybale.png",
-      "farm/cut/milkcans.png",
-      "farm/cut/pen_fence.png",
-      "farm/cut/shelter_logs.png",
-      "farm/cut/silo_metal.png",
-      "farm/cut/silo_red.png"
+      "singles/16_grocery_store/Grocery_Store_Singles_170.png",
+      "singles/16_grocery_store/Grocery_Store_Singles_171.png",
+      "singles/16_grocery_store/Grocery_Store_Singles_249.png",
+      "singles/16_grocery_store/Grocery_Store_Singles_308.png",
+      "singles/16_grocery_store/Grocery_Store_Singles_380.png",
+      "singles/16_grocery_store/Grocery_Store_Singles_423.png",
+      "singles/16_grocery_store/Grocery_Store_Singles_424.png",
+      "singles/16_grocery_store/Grocery_Store_Singles_426.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_146.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_147.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_148.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_165.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_173.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_175.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_223.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_231.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_267.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_429.png",
+      "singles/21_clothing_store/Clothing_Store_Singles_433.png",
+      "singles/22_museum/Museum_Singles_1.png"
     ],
     "unresolved_ext_singles_images_sample": []
   },
@@ -209,9 +209,9 @@
       "me_unused": 148,
       "me_pct_used": 46.95,
       "exs_total": 273,
-      "exs_used": 143,
-      "exs_unused": 130,
-      "exs_pct_used": 52.38
+      "exs_used": 138,
+      "exs_unused": 135,
+      "exs_pct_used": 50.55
     },
     "11_Camping": {
       "me_total": 185,
@@ -219,9 +219,9 @@
       "me_unused": 98,
       "me_pct_used": 47.03,
       "exs_total": 693,
-      "exs_used": 219,
-      "exs_unused": 474,
-      "exs_pct_used": 31.6
+      "exs_used": 225,
+      "exs_unused": 468,
+      "exs_pct_used": 32.47
     },
     "12_Hotel_and_Hospital": {
       "me_total": 41,
@@ -229,9 +229,9 @@
       "me_unused": 25,
       "me_pct_used": 39.02,
       "exs_total": 41,
-      "exs_used": 20,
-      "exs_unused": 21,
-      "exs_pct_used": 48.78
+      "exs_used": 18,
+      "exs_unused": 23,
+      "exs_pct_used": 43.9
     },
     "13_School": {
       "me_total": 62,
@@ -239,9 +239,9 @@
       "me_unused": 27,
       "me_pct_used": 56.45,
       "exs_total": 125,
-      "exs_used": 37,
-      "exs_unused": 88,
-      "exs_pct_used": 29.6
+      "exs_used": 36,
+      "exs_unused": 89,
+      "exs_pct_used": 28.8
     },
     "14_Swimming_Pool": {
       "me_total": 55,
@@ -249,9 +249,9 @@
       "me_unused": 21,
       "me_pct_used": 61.82,
       "exs_total": 179,
-      "exs_used": 41,
-      "exs_unused": 138,
-      "exs_pct_used": 22.91
+      "exs_used": 51,
+      "exs_unused": 128,
+      "exs_pct_used": 28.49
     },
     "15_Police_Station": {
       "me_total": 43,
@@ -259,9 +259,9 @@
       "me_unused": 21,
       "me_pct_used": 51.16,
       "exs_total": 37,
-      "exs_used": 28,
-      "exs_unused": 9,
-      "exs_pct_used": 75.68
+      "exs_used": 24,
+      "exs_unused": 13,
+      "exs_pct_used": 64.86
     },
     "16_Office": {
       "me_total": 66,
@@ -279,9 +279,9 @@
       "me_unused": 48,
       "me_pct_used": 71.93,
       "exs_total": 570,
-      "exs_used": 192,
-      "exs_unused": 378,
-      "exs_pct_used": 33.68
+      "exs_used": 187,
+      "exs_unused": 383,
+      "exs_pct_used": 32.81
     },
     "18_Fire_Station": {
       "me_total": 30,
@@ -309,9 +309,9 @@
       "me_unused": 114,
       "me_pct_used": 18.57,
       "exs_total": 462,
-      "exs_used": 26,
-      "exs_unused": 436,
-      "exs_pct_used": 5.63
+      "exs_used": 27,
+      "exs_unused": 435,
+      "exs_pct_used": 5.84
     },
     "20_Subway_and_Train_Station": {
       "me_total": 127,
@@ -319,9 +319,9 @@
       "me_unused": 10,
       "me_pct_used": 92.13,
       "exs_total": 582,
-      "exs_used": 139,
-      "exs_unused": 443,
-      "exs_pct_used": 23.88
+      "exs_used": 152,
+      "exs_unused": 430,
+      "exs_pct_used": 26.12
     },
     "21_Beach": {
       "me_total": 90,
@@ -329,9 +329,9 @@
       "me_unused": 22,
       "me_pct_used": 75.56,
       "exs_total": 316,
-      "exs_used": 112,
-      "exs_unused": 204,
-      "exs_pct_used": 35.44
+      "exs_used": 173,
+      "exs_unused": 143,
+      "exs_pct_used": 54.75
     },
     "22_Post_Office": {
       "me_total": 46,
@@ -339,9 +339,9 @@
       "me_unused": 22,
       "me_pct_used": 52.17,
       "exs_total": 44,
-      "exs_used": 27,
-      "exs_unused": 17,
-      "exs_pct_used": 61.36
+      "exs_used": 29,
+      "exs_unused": 15,
+      "exs_pct_used": 65.91
     },
     "23_MIlitary_Base": {
       "me_total": 114,
@@ -349,9 +349,9 @@
       "me_unused": 51,
       "me_pct_used": 55.26,
       "exs_total": 305,
-      "exs_used": 105,
-      "exs_unused": 200,
-      "exs_pct_used": 34.43
+      "exs_used": 91,
+      "exs_unused": 214,
+      "exs_pct_used": 29.84
     },
     "24_Additional_Houses": {
       "me_total": 110,
@@ -359,9 +359,9 @@
       "me_unused": 65,
       "me_pct_used": 40.91,
       "exs_total": 215,
-      "exs_used": 46,
-      "exs_unused": 169,
-      "exs_pct_used": 21.4
+      "exs_used": 47,
+      "exs_unused": 168,
+      "exs_pct_used": 21.86
     },
     "2_City_Terrains": {
       "me_total": 131,
@@ -369,9 +369,9 @@
       "me_unused": 92,
       "me_pct_used": 29.77,
       "exs_total": 351,
-      "exs_used": 39,
-      "exs_unused": 312,
-      "exs_pct_used": 11.11
+      "exs_used": 40,
+      "exs_unused": 311,
+      "exs_pct_used": 11.4
     },
     "3_City_Props": {
       "me_total": 237,
@@ -379,9 +379,9 @@
       "me_unused": 125,
       "me_pct_used": 47.26,
       "exs_total": 715,
-      "exs_used": 171,
-      "exs_unused": 544,
-      "exs_pct_used": 23.92
+      "exs_used": 177,
+      "exs_unused": 538,
+      "exs_pct_used": 24.76
     },
     "4_Generic_Buildings": {
       "me_total": 148,
@@ -389,9 +389,9 @@
       "me_unused": 79,
       "me_pct_used": 46.62,
       "exs_total": 180,
-      "exs_used": 69,
-      "exs_unused": 111,
-      "exs_pct_used": 38.33
+      "exs_used": 72,
+      "exs_unused": 108,
+      "exs_pct_used": 40.0
     },
     "5_Floor_Modular_Buildings": {
       "me_total": 139,
@@ -399,9 +399,9 @@
       "me_unused": 103,
       "me_pct_used": 25.9,
       "exs_total": 343,
-      "exs_used": 44,
-      "exs_unused": 299,
-      "exs_pct_used": 12.83
+      "exs_used": 36,
+      "exs_unused": 307,
+      "exs_pct_used": 10.5
     },
     "6_Garage_Sales": {
       "me_total": 52,
@@ -409,9 +409,9 @@
       "me_unused": 27,
       "me_pct_used": 48.08,
       "exs_total": 95,
-      "exs_used": 30,
-      "exs_unused": 65,
-      "exs_pct_used": 31.58
+      "exs_used": 28,
+      "exs_unused": 67,
+      "exs_pct_used": 29.47
     },
     "7_Villas": {
       "me_total": 165,
@@ -429,9 +429,9 @@
       "me_unused": 19,
       "me_pct_used": 54.76,
       "exs_total": 71,
-      "exs_used": 46,
-      "exs_unused": 25,
-      "exs_pct_used": 64.79
+      "exs_used": 48,
+      "exs_unused": 23,
+      "exs_pct_used": 67.61
     },
     "9_Shopping_Center_and_Markets": {
       "me_total": 59,
@@ -439,9 +439,9 @@
       "me_unused": 40,
       "me_pct_used": 32.2,
       "exs_total": 57,
-      "exs_used": 24,
-      "exs_unused": 33,
-      "exs_pct_used": 42.11
+      "exs_used": 35,
+      "exs_unused": 22,
+      "exs_pct_used": 61.4
     }
   },
   "tiers": {
@@ -683,9 +683,9 @@
       "label": "Fragments (group-only components)",
       "target": "fragments are never placed as a solo stamp (group-recipe usage only)",
       "exs_fragments_total": 2916,
-      "exs_fragments_used": 717,
-      "exs_fragments_unused": 2199,
-      "pct_used": 24.59,
+      "exs_fragments_used": 802,
+      "exs_fragments_unused": 2114,
+      "pct_used": 27.5,
       "note": "Group recipes (grp.*, Wave 1/2) do not exist yet, so every currently-used fragment is by definition a solo stamp today -- this is a baseline inventory, not yet a pass/fail QA gate. Re-check once W2 compiler ships grp.* usage."
     },
     "E_animated": {
@@ -693,21 +693,27 @@
       "target": ">=1 anim per theme sheet in matching biome",
       "method": "heuristic keyword match: ext/animated/*.png basenames vs per-theme keyword list (THEME_ANIM_KEYWORDS); refine once animated assets carry theme/biome tags",
       "themes_total": 24,
-      "themes_with_matched_anim": 16,
-      "themes_without_matched_anim": 8,
-      "pct_themes_covered": 66.67,
+      "themes_with_matched_anim": 10,
+      "themes_without_matched_anim": 14,
+      "pct_themes_covered": 41.67,
       "target_met": false,
-      "distinct_animated_sheets_in_city_plan": 80,
-      "anim_rows_in_city_plan": 121,
+      "distinct_animated_sheets_in_city_plan": 51,
+      "anim_rows_in_city_plan": 65,
       "themes_missing_anim": [
+        "10_Vehicles",
+        "12_Hotel_and_Hospital",
+        "13_School",
+        "15_Police_Station",
         "16_Office",
         "18_Fire_Station",
+        "22_Post_Office",
         "24_Additional_Houses",
         "2_City_Terrains",
         "4_Generic_Buildings",
         "5_Floor_Modular_Buildings",
         "6_Garage_Sales",
-        "7_Villas"
+        "7_Villas",
+        "9_Shopping_Center_and_Markets"
       ],
       "uncategorized_animated_assets": [
         "Clothes_Hanging_1_16x16.png",
@@ -715,10 +721,8 @@
         "Clothing_Store_Singles_441.png",
         "Crabs_16x16.png",
         "Crow_idle_16x16.png",
-        "Fishes_1_16x16.png",
         "Flame_1_16x16.png",
         "Flame_2_16x16.png",
-        "Fountain_16x16.png",
         "Grocery_Store_Singles_100.png",
         "Grocery_Store_Singles_102.png",
         "Grocery_Store_Singles_56.png",
@@ -726,15 +730,7 @@
         "Ice_Cream_Shop_Singles_28.png",
         "Ice_Cream_Shop_Singles_44.png",
         "Ice_Cream_Shop_Singles_52.png",
-        "Living_Room_Singles_3.png",
-        "Pigeon_16x16.png",
-        "anim_chicken_front.png",
-        "anim_chicken_peck.png",
-        "anim_cow_front.png",
-        "anim_cow_graze.png",
-        "anim_dog_idle.png",
-        "anim_sheep_front.png",
-        "anim_sheep_graze.png"
+        "Living_Room_Singles_3.png"
       ]
     }
   },

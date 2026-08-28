@@ -1,0 +1,129 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d12-military.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d12-military.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d12-compiled",
+ "district": "D12 Military Base (scenes 29, 58, 59, 60, 61)",
+ "biome": "military",
+ "palette": "military_olive",
+ "palette_secondary": "industrial_rust",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 112001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d12-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 5456,
+  "y": 2096,
+  "w": 1008,
+  "h": 1104
+ },
+ "label": "MILITARY BASE",
+ "label_at": {
+  "x": 414,
+  "y": 34
+ },
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0,
+   "y": 0,
+   "w": 1008,
+   "h": 1104,
+   "depth": 0.9,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "asphalt",
+   "x": 112,
+   "y": 112,
+   "w": 848,
+   "h": 832,
+   "depth": 0.92
+  },
+  {
+   "surface": "asphalt",
+   "x": 48,
+   "y": 352,
+   "w": 64,
+   "h": 576,
+   "depth": 0.93
+  },
+  {
+   "surface": "asphalt",
+   "x": 48,
+   "y": 192,
+   "w": 128,
+   "h": 96,
+   "depth": 0.93
+  },
+  {
+   "surface": "sand",
+   "x": 144,
+   "y": 688,
+   "w": 256,
+   "h": 208,
+   "depth": 1.0
+  },
+  {
+   "surface": "sidewalk",
+   "x": 128,
+   "y": 368,
+   "w": 800,
+   "h": 48,
+   "depth": 1.05
+  },
+  {
+   "surface": "sidewalk",
+   "x": 112,
+   "y": 288,
+   "w": 48,
+   "h": 128,
+   "depth": 1.05
+  },
+  {
+   "surface": "sidewalk",
+   "x": 704,
+   "y": 400,
+   "w": 48,
+   "h": 320,
+   "depth": 1.05
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 976,
+   "h": 1072,
+   "density": {
+    "building_shell": "light",
+    "barrier": "dense",
+    "vehicle": "medium",
+    "decor_small": "medium"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.military.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

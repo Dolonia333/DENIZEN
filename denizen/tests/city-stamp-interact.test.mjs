@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
 
-const HANDLED = ['sit', 'read', 'shop', 'play', 'enter'];
+const HANDLED = ['sit', 'read', 'shop', 'play', 'enter', 'fish', 'dig', 'vend'];
 
 test('full-world.js handles every interact verb the compiler emits', () => {
   const src = readFileSync(join(root, 'src', 'full-world.js'), 'utf8');
