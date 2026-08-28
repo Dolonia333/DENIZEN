@@ -185,6 +185,9 @@ const state = {
   seated: null,
   worldW: WORLD_W,
   worldH: WORLD_H,
+  todVariants: null,
+  todSwaps: [],
+  todPhase: null,
 };
 
 export function buildFullWorld(scene) {
@@ -197,6 +200,7 @@ export function buildFullWorld(scene) {
   // labels. Missing file → empty plan, world builds as before.
   // Always fetch the current plan — it changes far more often than code
   scene.load.json('fw_cityplan', `data/city-plan.json?t=${Date.now()}`);
+  scene.load.json('fw_tod_variants', 'data/limezu-visual-catalog/day-night-variants.json?v=fw1');
 
   // W6-C: packed stamp atlas (scripts/build-ext-atlas.py). Replaces N
   // individual GETs for plan.stamps art with ONE atlas.png + ONE atlas.json —
@@ -603,6 +607,7 @@ const planKey = (p) => 'cp_' + p.replace(/[^a-zA-Z0-9]/g, '_');
 
 function renderCityPlan(scene, plan) {
   if (!plan || (!plan.stamps && !plan.anims && !plan.patches)) return;
+  initTodVariants(scene);
   const toLoad = new Set();
   // W6-C: a stamp already packed in fw_ext_atlas needs no network load at all
   // — only stamps the atlas doesn't cover (new since the last atlas build, or
@@ -613,6 +618,7 @@ function renderCityPlan(scene, plan) {
     if (extAtlasFrameKey(scene, s.img)) { atlasHits += 1; return; }
     atlasFallbacks += 1;
     if (!scene.textures.exists(planKey(s.img))) toLoad.add(JSON.stringify({ t: 'img', p: s.img }));
+    queueTodAsset(toLoad, lookupTodRule(s));
   });
   state._atlasStampHits = atlasHits;
   state._atlasStampFallbacks = atlasFallbacks;
@@ -815,6 +821,123 @@ function renderGround(scene, plan) {
   state._atlasesReleased = true;
 }
 
+// ── Day/night stamp swapping ────────────────────────────────────────────────
+// data/limezu-visual-catalog/day-night-variants.json maps day stamps to night
+// assets (animated lamps, lit campfires, highlight facades, etc.). Driven by
+// DenizenCityTod phase on document.documentElement.dataset.tod.
+
+function initTodVariants(scene) {
+  state.todVariants = scene.cache.json.get('fw_tod_variants') || null;
+  state.todSwaps = [];
+  state.todPhase = null;
+}
+
+function lookupTodRule(stamp) {
+  const v = state.todVariants;
+  if (!v) return null;
+  const img = stamp.img || '';
+  const me = stamp.me || '';
+  if (v.by_img?.[img]) return v.by_img[img];
+  if (v.by_me?.[me]) return v.by_me[me];
+  const base = (img.split('/').pop() || '');
+  for (const [key, rule] of Object.entries(v.by_basename || {})) {
+    if (base.includes(key)) return rule;
+  }
+  return null;
+}
+
+function queueTodAsset(toLoad, rule) {
+  if (!rule) return;
+  if (rule.type === 'anim') {
+    toLoad.add(JSON.stringify({ t: 'sheet', p: rule.sheet, fw: rule.fw || 16, fh: rule.fh || 16 }));
+  } else if (rule.type === 'img' && rule.img) {
+    toLoad.add(JSON.stringify({ t: 'img', p: rule.img }));
+  } else if (rule.type === 'day_override' && rule.day_img) {
+    toLoad.add(JSON.stringify({ t: 'img', p: rule.day_img }));
+  }
+}
+
+function setStampTexture(scene, sp, img) {
+  if (!img || !sp) return;
+  const frameKey = extAtlasFrameKey(scene, img);
+  if (frameKey) sp.setTexture('fw_ext_atlas', frameKey);
+  else {
+    const key = planKey(img);
+    if (scene.textures.exists(key)) sp.setTexture(key);
+  }
+}
+
+function ensureTodAnim(scene, rule, tag) {
+  const key = planKey(rule.sheet);
+  if (!scene.textures.exists(key)) return null;
+  const animKey = `fw_tod_${tag}`;
+  if (!scene.anims.exists(animKey)) {
+    const tex = scene.textures.get(key);
+    const total = Math.max(1, tex.frameTotal - 1);
+    scene.anims.create({
+      key: animKey,
+      frames: scene.anims.generateFrameNumbers(key, { start: 0, end: total - 1 }),
+      frameRate: rule.fps || 6,
+      repeat: -1,
+    });
+  }
+  return animKey;
+}
+
+function registerTodSwap(scene, stamp, daySp, rule, tag) {
+  const entry = { stamp, daySp, rule, nightSp: null, animKey: null };
+  if (rule.type === 'anim') {
+    const key = planKey(rule.sheet);
+    const animKey = ensureTodAnim(scene, rule, tag);
+    if (!animKey) return;
+    entry.animKey = animKey;
+    const nightSp = scene.add.sprite(stamp.x, stamp.y, key, 0);
+    if (stamp.origin === 'tl') nightSp.setOrigin(0, 0);
+    else if (stamp.origin === 'bc') nightSp.setOrigin(0.5, 1);
+    else nightSp.setOrigin(0, 1);
+    if (stamp.scale) nightSp.setScale(stamp.scale);
+    nightSp.setDepth(stamp.depth ?? (stamp.origin === 'tl' ? stamp.y + nightSp.displayHeight : stamp.y));
+    nightSp.setVisible(false);
+    entry.nightSp = nightSp;
+  }
+  state.todSwaps.push(entry);
+}
+
+function applyTodPhase(scene, phase) {
+  if (!state.todVariants || state.todPhase === phase) return;
+  const lit = (state.todVariants.lit_phases || []).includes(phase);
+  state.todPhase = phase;
+  state.todSwaps.forEach((e) => {
+    const { stamp, daySp, rule, nightSp } = e;
+    if (rule.type === 'anim') {
+      if (lit) {
+        daySp.setVisible(false);
+        if (nightSp) {
+          nightSp.setVisible(true);
+          if (e.animKey) nightSp.play(e.animKey, true);
+        }
+      } else {
+        daySp.setVisible(true);
+        if (nightSp) {
+          nightSp.setVisible(false);
+          nightSp.anims?.stop();
+        }
+      }
+    } else if (rule.type === 'img') {
+      setStampTexture(scene, daySp, lit ? rule.img : stamp.img);
+    } else if (rule.type === 'day_override') {
+      setStampTexture(scene, daySp, lit ? stamp.img : rule.day_img);
+    }
+  });
+}
+
+function pollTodPhase(scene) {
+  const phase = document.documentElement?.dataset?.tod
+    || document.getElementById('denizen-night-city')?.dataset?.tod
+    || 'day';
+  applyTodPhase(scene, phase);
+}
+
 function placeCityPlan(scene, plan) {
   // District signs double as sign-post copy for `interact:"read"` stamps.
   state.planLabels = plan.labels || [];
@@ -851,6 +974,7 @@ function placeCityPlan(scene, plan) {
     }
   });
   // patches + roads already painted in renderGround() (first pass).
+  let todTag = 0;
   (plan.stamps || []).forEach((s) => {
     // W6-C: draw straight from the packed atlas frame when this stamp's img
     // was baked into it; otherwise fall back to the individually-loaded key.
@@ -871,6 +995,8 @@ function placeCityPlan(scene, plan) {
       state.solids.push({ x: s.x + (s.solid.dx || 0), y: s.y + (s.solid.dy || 0), w: s.solid.w, h: s.solid.h });
     }
     if (s.interact) registerInteractable(s, img);
+    const todRule = lookupTodRule(s);
+    if (todRule) registerTodSwap(scene, s, img, todRule, todTag++);
   });
   (plan.anims || []).forEach((a, i) => {
     const key = planKey(a.sheet);
@@ -953,6 +1079,10 @@ function placeCityPlan(scene, plan) {
     state.portals.push(portal);
   });
   indexInteractables();
+  pollTodPhase(scene);
+  if (state.todSwaps.length) {
+    console.log('[FullWorld] TOD swaps:', state.todSwaps.length, 'stamps with day/night variants');
+  }
   console.log('[FullWorld] city plan placed:', (plan.stamps || []).length, 'stamps,',
     (plan.anims || []).length, 'anims,', (plan.portals || []).length, 'portals,',
     state.interactables.length, 'interactables');
@@ -1901,6 +2031,8 @@ function tick(scene, dt) {
   const p = state.player;
   if (!p || !p.active) return;
   const step = Math.min(dt, 50) / 1000;
+
+  pollTodPhase(scene);
 
   // Cheap: bails immediately unless the camera crossed a chunk boundary.
   updateChunkCulling(scene, false);
