@@ -198,6 +198,14 @@ export function buildFullWorld(scene) {
   // Always fetch the current plan — it changes far more often than code
   scene.load.json('fw_cityplan', `data/city-plan.json?t=${Date.now()}`);
 
+  // W6-C: packed stamp atlas (scripts/build-ext-atlas.py). Replaces N
+  // individual GETs for plan.stamps art with ONE atlas.png + ONE atlas.json —
+  // debug-disable with ?world=full&atlas=0 to fall back to per-stamp loads.
+  if (extAtlasEnabled()) {
+    scene.load.json('fw_ext_atlas_json', `assets/limezu/ext-atlas/atlas.json?v=${bust}`);
+    scene.load.image('fw_ext_atlas', `assets/limezu/ext-atlas/atlas.png?v=${bust}`);
+  }
+
   RoomTileRenderer.preload(scene);
   scene.load.json('fw_blueprint', `data/full-world-blueprint.json?v=${bust}`);
   scene.load.json('fw_rbtiles', `data/room-builder-tiles.json?v=${bust}`);
@@ -256,6 +264,66 @@ export function buildFullWorld(scene) {
 }
 
 // ── Build ───────────────────────────────────────────────────────────────────
+
+/** `?world=full&atlas=0` disables the packed stamp atlas for debugging. */
+function extAtlasEnabled() {
+  try {
+    return new URLSearchParams(window.location.search).get('atlas') !== '0';
+  } catch (_) {
+    return true;
+  }
+}
+
+/**
+ * Register every packed frame from assets/limezu/ext-atlas/atlas.json as a
+ * named sub-frame of the single `fw_ext_atlas` texture (Phaser's normal
+ * texture-atlas mechanism — no extra canvases, no extra GPU textures). Frame
+ * names reuse planKey() so lookups match the individually-loaded fallback
+ * texture keys 1:1.
+ */
+function setupExtAtlas(scene) {
+  if (state._atlasSetupDone) return;
+  state._atlasSetupDone = true;
+  state._atlasEnabled = false;
+  if (!extAtlasEnabled()) {
+    console.log('[FullWorld] ext-atlas: disabled via ?atlas=0 — stamps will load individually');
+    return;
+  }
+  if (!scene.textures.exists('fw_ext_atlas')) {
+    console.warn('[FullWorld] ext-atlas: atlas.png failed to load — falling back to individual stamp loads');
+    return;
+  }
+  const manifest = scene.cache.json.get('fw_ext_atlas_json');
+  const frames = manifest?.frames;
+  if (!frames) {
+    console.warn('[FullWorld] ext-atlas: atlas.json missing/invalid — falling back to individual stamp loads');
+    return;
+  }
+  const tex = scene.textures.get('fw_ext_atlas');
+  let registered = 0;
+  let skippedOtherPage = 0;
+  Object.entries(frames).forEach(([img, f]) => {
+    // Multi-page atlases (image set grew past --max-size) are a future
+    // follow-up: only page 0, loaded as `fw_ext_atlas`, is wired here.
+    if (f.page) { skippedOtherPage += 1; return; }
+    const key = planKey(img);
+    if (!tex.has(key)) { tex.add(key, 0, f.x, f.y, f.w, f.h); registered += 1; }
+  });
+  state._atlasEnabled = true;
+  state._atlasFrameCount = registered;
+  console.log(
+    `[FullWorld] ext-atlas: ready — ${registered} frame(s) from assets/limezu/ext-atlas/atlas.png` +
+    (skippedOtherPage ? ` (${skippedOtherPage} on unloaded extra page(s), will fall back)` : ''),
+  );
+}
+
+/** The atlas frame key for `img` (via planKey), or null if not packed / atlas off. */
+function extAtlasFrameKey(scene, img) {
+  if (!state._atlasEnabled) return null;
+  const key = planKey(img);
+  const tex = scene.textures.exists('fw_ext_atlas') ? scene.textures.get('fw_ext_atlas') : null;
+  return tex && tex.has(key) ? key : null;
+}
 
 function cropTex(scene, key, rectName) {
   if (scene.textures.exists(key)) return key;
@@ -505,6 +573,7 @@ function build(scene) {
   scene.events.on('update', (t, dt) => tick(scene, dt));
 
   // 6 ── City plan districts (second load pass for its referenced art)
+  setupExtAtlas(scene);
   renderCityPlan(scene, plan);
   const budget = textureBudget(scene);
   console.log(
@@ -535,9 +604,25 @@ const planKey = (p) => 'cp_' + p.replace(/[^a-zA-Z0-9]/g, '_');
 function renderCityPlan(scene, plan) {
   if (!plan || (!plan.stamps && !plan.anims && !plan.patches)) return;
   const toLoad = new Set();
+  // W6-C: a stamp already packed in fw_ext_atlas needs no network load at all
+  // — only stamps the atlas doesn't cover (new since the last atlas build, or
+  // atlas disabled/failed) fall back to an individual scene.load.image.
+  let atlasHits = 0;
+  let atlasFallbacks = 0;
   (plan.stamps || []).forEach((s) => {
+    if (extAtlasFrameKey(scene, s.img)) { atlasHits += 1; return; }
+    atlasFallbacks += 1;
     if (!scene.textures.exists(planKey(s.img))) toLoad.add(JSON.stringify({ t: 'img', p: s.img }));
   });
+  state._atlasStampHits = atlasHits;
+  state._atlasStampFallbacks = atlasFallbacks;
+  const stampTotal = atlasHits + atlasFallbacks;
+  const hitPct = stampTotal ? Math.round((atlasHits / stampTotal) * 100) : 0;
+  console.log(
+    `[FullWorld] ext-atlas: ${atlasHits}/${stampTotal} stamp refs (${hitPct}%) served from the atlas — `
+    + `${atlasFallbacks} stamp refs fell back, ${toLoad.size} actual individual GET(s) queued `
+    + `(atlas ${state._atlasEnabled ? 'on' : 'off'})`,
+  );
   (plan.anims || []).forEach((a) => {
     if (!scene.textures.exists(planKey(a.sheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: a.sheet, fw: a.fw || 16, fh: a.fh || 16 }));
   });
@@ -767,9 +852,12 @@ function placeCityPlan(scene, plan) {
   });
   // patches + roads already painted in renderGround() (first pass).
   (plan.stamps || []).forEach((s) => {
-    const key = planKey(s.img);
-    if (!scene.textures.exists(key)) return;
-    const img = scene.add.image(s.x, s.y, key);
+    // W6-C: draw straight from the packed atlas frame when this stamp's img
+    // was baked into it; otherwise fall back to the individually-loaded key.
+    const frameKey = extAtlasFrameKey(scene, s.img);
+    const key = frameKey ? 'fw_ext_atlas' : planKey(s.img);
+    if (!frameKey && !scene.textures.exists(key)) return;
+    const img = frameKey ? scene.add.image(s.x, s.y, key, frameKey) : scene.add.image(s.x, s.y, key);
     if (s.origin === 'tl') img.setOrigin(0, 0);
     else if (s.origin === 'bc') img.setOrigin(0.5, 1);
     else img.setOrigin(0, 1); // bl default: baseline placement

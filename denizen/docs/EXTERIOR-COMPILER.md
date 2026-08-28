@@ -648,6 +648,56 @@ defects: none
 
 ---
 
+## Load-time atlas (W4-B / W6-C)
+
+`scripts/build-ext-atlas.py` packs every unique Singles PNG referenced by
+`data/city-plan.json` stamps into one sheet:
+
+```bash
+python3 scripts/build-ext-atlas.py
+#   964 images -> 1 atlas page(s)
+#     page 0: atlas.png (4094x1210)
+#   HTTP requests: 964 singles -> 1 atlas page(s), 963 fewer requests
+```
+
+Output lands in `assets/limezu/ext-atlas/`:
+
+- `atlas.png` — every packed stamp PNG on one (or more, past `--max-size`) page(s).
+- `atlas.json` — frame map: `frames["ext/singles/…png"] = {x, y, w, h, id?, page?}`,
+  plus `pages[]` metadata. `page` is only present once a plan outgrows a single
+  4096×4096 page (not the case today — 964 images fit on one 4094×1210 page).
+
+**Wired into `src/full-world.js`** (W6-C): `buildFullWorld()` loads `atlas.json`
++ `atlas.png` as a normal Phaser image (`fw_ext_atlas`) alongside the rest of the
+first-pass assets. Once loaded, `setupExtAtlas()` registers every page-0 frame as
+a named sub-frame of that one texture via `texture.add(planKey(img), 0, x, y, w, h)`
+— Phaser's native texture-atlas mechanism, so a stamp draws with
+`scene.add.image(x, y, 'fw_ext_atlas', frameKey)` instead of its own texture.
+`renderCityPlan()` then skips queuing an individual `scene.load.image()` for any
+stamp whose `img` the atlas already covers, and logs the hit rate:
+
+```
+[FullWorld] ext-atlas: ready — 964 frame(s) from assets/limezu/ext-atlas/atlas.png
+[FullWorld] ext-atlas: 1764/1764 stamp refs (100%) served from the atlas — 0 stamp refs
+fell back, 0 actual individual GET(s) queued (atlas on)
+```
+
+Any stamp added after the last atlas build (or any run with the atlas
+missing/failed) automatically falls back to its own individual
+`scene.load.image()` — the atlas is a pure load-time optimization, never a hard
+dependency. **Re-run `build-ext-atlas.py` after merging plan changes** that add
+new `img` references, or the hit rate drifts down toward the fallback path.
+
+Debug: append `?world=full&atlas=0` to disable the atlas entirely (every stamp
+falls back to an individual load) — useful for A/B-ing load time or isolating an
+atlas-only rendering bug.
+
+Multi-page atlases (image set outgrows one 4096×4096 sheet) are not wired yet —
+`setupExtAtlas()` only loads/registers page 0; frames on any later page fall
+back to individual loads until a second `fw_ext_atlas_1`-style texture is added.
+
+---
+
 ## What is left
 
 The pipeline, validation, emitter and QA contract are settled; every pass is a single
