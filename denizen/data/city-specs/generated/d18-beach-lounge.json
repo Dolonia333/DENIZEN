@@ -49,6 +49,7 @@
    "C_landmarks": {
     "placed": 3,
     "groups": 0,
+    "group_stamps": 0,
     "pending": 0
    },
    "D_groups": {
@@ -130,12 +131,12 @@
     }
    },
    "F_canopy": {
-    "placed": 2,
+    "placed": 6,
     "by_slot": {
      "lounge": {
-      "placed": 2,
-      "want": 4,
-      "attempts": 62,
+      "placed": 6,
+      "want": 6,
+      "attempts": 12,
       "pool": 4
      }
     },
@@ -169,7 +170,7 @@
     "anims": 2,
     "animBands": 1,
     "interactions": {
-     "sit": 13,
+     "sit": 16,
      "shop": 1,
      "read": 1,
      "play": 1
@@ -184,9 +185,9 @@
    "free_ratio": 0.547
   },
   "coverage": {
-   "stamps": 47,
-   "unique_me": 37,
-   "unique_singles": 47,
+   "stamps": 51,
+   "unique_me": 39,
+   "unique_singles": 50,
    "max_stamps": 90,
    "target_singles": 45,
    "target_met": true
@@ -249,7 +250,7 @@
   },
   {
    "me": "me.beach.volley_net",
-   "prefer": "21_Beach_16x16_Beach_Volley_Net_Left.png",
+   "exs": "exs.21_beach.beach_beach_volley_net_left",
    "x": 3408,
    "y": 4928,
    "origin": "tl",
@@ -258,14 +259,14 @@
   },
   {
    "me": "me.beach.volley_net",
-   "prefer": "21_Beach_16x16_Beach_Volley_Net_Middle_Modular.png",
+   "exs": "exs.21_beach.beach_beach_volley_net_middle_modular",
    "x": 3456,
    "y": 4928,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_net",
-   "prefer": "21_Beach_16x16_Beach_Volley_Net_Right.png",
+   "exs": "exs.21_beach.beach_beach_volley_net_right",
    "x": 3488,
    "y": 4928,
    "origin": "tl",
@@ -273,63 +274,63 @@
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Left_Up.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_left_up",
    "x": 3440,
    "y": 4976,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Left_Middle_Modular.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_left_middle_modular",
    "x": 3440,
    "y": 4992,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Left_Down.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_left_down",
    "x": 3440,
    "y": 5008,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Middle_Up_Modular.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_middle_up_modular",
    "x": 3456,
    "y": 4976,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Middle_Right_Modular.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_middle_right_modular",
    "x": 3472,
    "y": 4992,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Middle_Down_Modular.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_middle_down_modular",
    "x": 3456,
    "y": 5008,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Right_Up.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_right_up",
    "x": 3472,
    "y": 4976,
    "origin": "tl"
   },
   {
    "me": "me.beach.volley_court_lines",
-   "prefer": "21_Beach_16x16_Beach_Volley_Field_Line_Right_Down.png",
+   "exs": "exs.21_beach.beach_beach_volley_field_line_right_down",
    "x": 3472,
    "y": 5008,
    "origin": "tl"
   },
   {
    "me": "me.beach.ball_volleyball",
-   "prefer": "21_Beach_16x16_Ball.png",
+   "exs": "exs.21_beach.beach_ball",
    "x": 3456,
    "y": 4992,
    "origin": "tl"
@@ -545,19 +546,52 @@
    "origin": "bc"
   },
   {
+   "me": "me.beach.palm_tree",
+   "x": 3352,
+   "y": 4976,
+   "origin": "bc",
+   "depth": 4982.0
+  },
+  {
+   "me": "me.beach.umbrella_blue_open",
+   "prefer": "21_Beach_16x16_Blue_Beach_Umbrella_Opened.png",
+   "x": 3480,
+   "y": 4992,
+   "origin": "bc",
+   "depth": 4998.0,
+   "interact": "sit"
+  },
+  {
    "me": "me.beach.umbrella_green_open",
-   "x": 3144,
+   "x": 3160,
+   "y": 4960,
+   "origin": "bc",
+   "depth": 4966.0,
+   "interact": "sit"
+  },
+  {
+   "me": "me.beach.umbrella_lightblue_open",
+   "x": 3448,
    "y": 4928,
    "origin": "bc",
    "depth": 4934.0,
    "interact": "sit"
   },
   {
-   "me": "me.beach.umbrella_lightblue_open",
-   "x": 3384,
-   "y": 4960,
+   "me": "me.beach.umbrella_blue_open",
+   "prefer": "21_Beach_16x16_Yellow_Beach_Umbrella_Opened.png",
+   "x": 3432,
+   "y": 5008,
    "origin": "bc",
-   "depth": 4966.0,
+   "depth": 5014.0,
+   "interact": "sit"
+  },
+  {
+   "me": "me.beach.umbrella_lightblue_open",
+   "x": 3192,
+   "y": 4880,
+   "origin": "bc",
+   "depth": 4886.0,
    "interact": "sit"
   },
   {

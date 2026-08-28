@@ -10,14 +10,20 @@ Spec vocabulary (biome / role / slot / density / palette / interact names) is
 owned by data/limezu-visual-catalog/placement-rules.json — this script is its
 consumer and validates every spec against it.
 
-This is the W0-D scaffold: the spec loader, rules-aware validator, catalog
-footprint oracle, occupancy grid with surface map, slot resolution, pass
-pipeline and fragment emitter are REAL. The fill passes C-G are registered
-no-op hooks (see TODO markers) so the CLI runs end to end today and W2-A can
-land placement logic one pass at a time without touching the plumbing.
+All eight passes are live (W2-A): ground and skeleton lay the surface map and
+the slot cell sets, landmarks and group recipes claim the big inflexible
+footprints, then props / canopy / detail scatter into what is left at the
+spec's per-role density, and life wires anims plus the `interact` verbs onto
+the stamps the earlier passes chose.
 
-Stamps are emitted as catalog ids (`me` / `prefer`), never as `img` paths —
-`merge-city-plan.py` stays the single place where ids resolve to PNGs.
+Nothing is placed by eye and nothing is placed blind: every candidate is
+filtered through the rules (role x surface x biome x palette), every position is
+tested against the occupancy grid, and the accept/reject overlap metric is the
+same one check-city-plan.py flags — so a compiled district is clean because it
+was never allowed to be dirty.
+
+Stamps are emitted as catalog ids (`me` / `exs` / `prefer`), never as `img`
+paths — `merge-city-plan.py` stays the single place where ids resolve to PNGs.
 """
 
 from __future__ import annotations
@@ -856,8 +862,15 @@ class Ctx:
              row: dict | None = None, primary: bool = True) -> dict:
         """Append one stamp (catalog id only — never an `img` path) and remember
         what it was, for pass H and the coverage stats."""
-        stamp: dict = {"me": me} if me else {"exs": exs}
-        if prefer and me:
+        stamp: dict = {}
+        if me:
+            stamp["me"] = me
+        # A recipe piece names an exact Single, and some of those `me.*` roll-ups
+        # are not in the placement index at all — carry the exs so the merge can
+        # always resolve the stamp. `prefer` is then redundant.
+        if exs and self.cat.knows(exs=exs):
+            stamp["exs"] = exs
+        elif prefer and me:
             stamp["prefer"] = prefer
         stamp.update({"x": x, "y": y, "origin": origin})
         if solid:
@@ -1032,16 +1045,28 @@ def anchor_point(occ: Occupancy, cell: int, origin: str, align: str,
     return (px, py)
 
 
+def ground_rect(rect, narrow: bool = False) -> tuple[int, int, int, int]:
+    """The ground a stamp stands on.
+
+    For a solid that is its collider band, which must match the runtime's
+    collider exactly. For a non-solid overhead piece it is just the post tile:
+    a parasol has one pole, and its shade is *supposed* to overhang the loungers.
+    """
+    x, y, w, h = collider_rect(rect)
+    if narrow and w > TILE:
+        return (x + (w - TILE) // 2, y, TILE, h)
+    return (x, y, w, h)
+
+
 def fits(ctx: Ctx, rect, *, solid: bool, blocked: int = RESERVED | SOLID,
-         overlap: float = OVERLAP_REJECT) -> bool:
+         overlap: float = OVERLAP_REJECT, narrow: bool = False) -> bool:
     """The one accept/reject test every fill pass shares.
 
-    What must be free is the GROUND the sprite stands on, not the whole PNG: a
-    palm's canopy and a parasol's shade are supposed to overhang the props under
-    them. Overlap, on the other hand, is measured on the full sprite rect for
-    solids, because that is the pair check-city-plan.py flags at 35%.
+    What must be free is the ground the sprite stands on, not the whole PNG.
+    Overlap, on the other hand, is measured on the full sprite rect for solids,
+    because that is the pair check-city-plan.py flags at 35%.
     """
-    ground = collider_rect(rect)
+    ground = ground_rect(rect, narrow)
     if not (in_world(rect) and in_grid(ctx.occ, ground)):
         return False
     if not ctx.occ.is_free(ground, blocked):
@@ -1065,13 +1090,18 @@ def slot_cells_for_role(ctx: Ctx, slot: dict, role: str) -> dict[str, list[int]]
     Unwalkable surfaces stay in play here (that is the only way a water_prop can
     reach the sea), but only for roles the surface's `roles_allowed` admits.
     """
+    # An overhead role is allowed to stand over ground dressing — that is the
+    # whole point of a parasol next to a towel.
+    overhead = ctx.role_rule(role).get("layer") == "overhead"
     out: dict[str, list[int]] = {}
     for i in slot["all"]:
         srf = ctx.occ.surface[i]
         if not srf or not ctx.pool.surface_allows(srf, role):
             continue
         walkable = ctx.surface_rule(srf).get("walkable") is not False
-        blocked = (RESERVED | SOLID | DECOR) if walkable else (SOLID | DECOR)
+        blocked = SOLID if overhead else (SOLID | DECOR)
+        if walkable:
+            blocked |= RESERVED
         if ctx.occ.flags[i] & blocked:
             continue
         out.setdefault(srf, []).append(i)
@@ -1134,6 +1164,7 @@ def scatter(ctx: Ctx, pass_letter: str, slot_name: str, role: str, level: str,
     origin = rule.get("anchor") or (ctx.rules.get("defaults") or {}).get("anchor", "bl")
     align = rule.get("align") or (ctx.rules.get("defaults") or {}).get("align", "tile16")
     is_solid = role_is_solid(rule) if solid is None else solid
+    overhead = not is_solid and rule.get("layer") == "overhead"
     key = f"{slot_name}:{role}"
     order = {srf: sorted(rows, key=lambda r: (ctx.used_me.get(r["me"], 0),
                                               rng.random(), r["me"]))
@@ -1161,13 +1192,18 @@ def scatter(ctx: Ctx, pass_letter: str, slot_name: str, role: str, level: str,
         wet = ctx.surface_rule(srf).get("walkable") is False
         blocked = (SOLID | DECOR) if wet else (RESERVED | SOLID)
         if not (spaced(ctx, key, px, py, spacing)
-                and fits(ctx, rect, solid=is_solid, blocked=blocked)):
+                and fits(ctx, rect, solid=is_solid, blocked=blocked,
+                         narrow=overhead)):
             continue
-        cost = len(list(ctx.occ._cells(collider_rect(rect) if is_solid else rect)))
+        claim_flag = SOLID if is_solid else flag
+        claim = collider_rect(rect) if is_solid else rect
+        # Only a claim that occupies a cell spends the walkability budget: a
+        # canopy's CLEAR halo costs nothing, because the tile stays walkable.
+        cost = (len(list(ctx.occ._cells(claim)))
+                if claim_flag & (SOLID | DECOR) else 0)
         if cost > ctx.cells_left() or (is_solid and cost > ctx.solid_cells_left()):
             break
-        ctx.occ.claim_stamp(rect, SOLID if is_solid else flag,
-                            halo=TILE if is_solid else 0)
+        ctx.occ.claim_stamp(rect, claim_flag, halo=TILE if is_solid else 0)
         ctx.emit(me=me_id, prefer=prefer, x=px, y=py, origin=origin, role=role,
                  solid=is_solid, depth=depth_for(rule, rect), row=row)
         ctx.anchors.setdefault(key, []).append((px, py))
@@ -1208,7 +1244,7 @@ def pass_c_landmarks(ctx: Ctx) -> dict:
         ranked.append((-(size[0] * size[1]), i, lm, size))
     ranked.sort()
 
-    placed = groups = 0
+    placed = groups = group_stamps = 0
     rejected: list[str] = []
     for _, _, lm, size in ranked:
         if ctx.stamps_left() <= 0:
@@ -1223,7 +1259,7 @@ def pass_c_landmarks(ctx: Ctx) -> dict:
             n = place_group(ctx, lm["grp"], recipe, ax, ay,
                             interact=lm.get("interact"))
             if n:
-                groups, placed = groups + 1, placed + n
+                groups, group_stamps = groups + 1, group_stamps + n
             else:
                 rejected.append(f"{lm['grp']} @({ax},{ay}): blocked")
             continue
@@ -1264,7 +1300,8 @@ def pass_c_landmarks(ctx: Ctx) -> dict:
                  interact=lm.get("interact"), depth=depth_for(rule, rect), row=row)
         placed += 1
 
-    stats = {"placed": placed, "groups": groups, "pending": len(entries) - placed - groups}
+    stats = {"placed": placed, "groups": groups, "group_stamps": group_stamps,
+             "pending": len(entries) - placed - groups}
     if rejected:
         stats["rejected"] = rejected[:10]
     return stats
@@ -1307,9 +1344,9 @@ def pass_d_groups(ctx: Ctx) -> dict:
     #1 (stamp collage instead of composed scenes) and coverage tier D (fragment
     Singles must never be stamped solo).
 
-    Placement is W2-A's job. This pass currently only PRE-VALIDATES each recipe
-    so the handoff cannot fail on data problems: every piece must resolve in the
-    catalog and every offset must fit the declared footprint.
+    Each recipe is pre-validated first (every piece resolvable, every offset
+    inside the declared footprint), then `count` anchors are sampled from the
+    named slot's free cells until the union footprint lands.
     """
     wanted = groups = stamps = checked = 0
     problems: list[str] = []
@@ -1355,7 +1392,9 @@ def recipe_problems(ctx: Ctx, grp_id: str, recipe: dict) -> list[str]:
     problems: list[str] = []
     fp = recipe.get("footprint_tiles") or {}
     for piece in recipe.get("pieces") or []:
-        if not (piece_size(ctx, piece) and (piece.get("me") or piece.get("exs"))):
+        if not (piece_size(ctx, piece)
+                and (ctx.cat.knows(exs=piece.get("exs"))
+                     or ctx.cat.knows(me=piece.get("me")))):
             problems.append(f"{grp_id}:{piece.get('role')} unresolvable")
         dx, dy = piece.get("dx", 0), piece.get("dy", 0)
         pw = ((piece.get("w") or TILE) + TILE - 1) // TILE
@@ -1364,6 +1403,21 @@ def recipe_problems(ctx: Ctx, grp_id: str, recipe: dict) -> list[str]:
             problems.append(f"{grp_id}:{piece.get('role')} offset ({dx},{dy}) "
                             f"escapes footprint {fp.get('w')}x{fp.get('h')} tiles")
     return problems
+
+
+def surface_alias(rules: dict, name: str | None) -> str | None:
+    """A recipe's `surface` is free text from the registry ("ground", "deck").
+    Fold it onto one of the five real surfaces through the rules' own
+    `registry_aliases`; unknown names mean "no constraint", never "reject"."""
+    if not name:
+        return None
+    surfaces = rules.get("surfaces") or {}
+    if name in surfaces:
+        return name
+    for key, spec in surfaces.items():
+        if not key.startswith("_") and name in (spec.get("registry_aliases") or ()):
+            return key
+    return None
 
 
 def piece_size(ctx: Ctx, piece: dict) -> tuple[int, int] | None:
@@ -1406,8 +1460,10 @@ def place_group(ctx: Ctx, grp_id: str, recipe: dict, ax: int, ay: int,
     # Circulation is absolute: a group may not straddle a keep_clear or a lane.
     if not ctx.occ.is_free(union, RESERVED):
         return 0
-    want_surface = recipe.get("surface")
+    want_surface = surface_alias(ctx.rules, recipe.get("surface"))
     if want_surface:
+        # Ragged edges are fine (a campfire set may spill one tile onto sand),
+        # a wholesale surface mismatch is not.
         under = [ctx.occ.surface[i] for i in ctx.occ._cells(union)]
         if sum(1 for s in under if s == want_surface) < 0.8 * len(under):
             return 0
@@ -1425,7 +1481,7 @@ def place_group(ctx: Ctx, grp_id: str, recipe: dict, ax: int, ay: int,
         # Pieces overlap each OTHER by design (that is what makes a scene), so a
         # piece is only tested against what earlier passes claimed.
         if not fits(ctx, rect, solid=solid,
-                    blocked=RESERVED | SOLID if solid else RESERVED):
+                    blocked=(RESERVED | SOLID) if solid else RESERVED):
             return 0
         planned.append((piece, px, py, origin, rect, solid))
 
@@ -1695,6 +1751,26 @@ def qa_plan(frag: dict, catalog: Catalog) -> tuple[dict, list[str]]:
 
 # ── emit ─────────────────────────────────────────────────────────────────────
 
+def select_passes(arg: str) -> tuple[set[str], list[str]]:
+    """Resolve a `--passes` list to real pass keys, accepting the bare letter as
+    a shorthand ("C" for "C_landmarks"). An unrecognised name is returned rather
+    than ignored: silently compiling an empty fragment off a typo is worse than
+    refusing to compile at all."""
+    picked: set[str] = set()
+    unknown: list[str] = []
+    for raw in arg.split(","):
+        name = raw.strip()
+        if not name:
+            continue
+        match = [k for k in PASS_KEYS
+                 if k == name or k.split("_")[0] == name.upper()]
+        if match:
+            picked.update(match)
+        else:
+            unknown.append(name)
+    return picked, unknown
+
+
 def compile_spec(spec: dict, rules: dict, catalog: Catalog, seed: int,
                  only: set[str] | None = None, verbose: bool = False) -> tuple[dict, Ctx]:
     ctx = Ctx(spec, rules, catalog, seed, verbose=verbose)
@@ -1785,7 +1861,13 @@ def main() -> int:
         return 0
 
     seed = args.seed if args.seed is not None else (spec.get("compiler") or {}).get("seed", 0)
-    only = {p.strip() for p in args.passes.split(",")} if args.passes else None
+    only = None
+    if args.passes:
+        only, unknown = select_passes(args.passes)
+        if unknown:
+            print(f"error: --passes {', '.join(unknown)} — pick from "
+                  f"{', '.join(PASS_KEYS)}", file=sys.stderr)
+            return 2
     frag, ctx = compile_spec(spec, rules, catalog, seed, only=only, verbose=args.verbose)
 
     counts = {k: len(frag[k]) for k in FRAGMENT_LISTS if frag[k]}
@@ -1799,8 +1881,9 @@ def main() -> int:
     todo = [k for k, v in ctx.stats.items() if v.get("todo")]
     if todo:
         print(f"stub passes (no fill logic yet): {', '.join(todo)}")
-    for breach in budget_breaches(ctx, frag):
-        print(f"warn: budget {breach}")
+    if not only:                 # a pass subset is a debug run, not a district
+        for breach in budget_breaches(ctx, frag):
+            print(f"warn: budget {breach}")
     if ctx.cat.misses:
         print(f"catalog misses: {len(set(ctx.cat.misses))}")
 

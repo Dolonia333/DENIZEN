@@ -121,7 +121,7 @@
     "water_prop": "medium",
     "vegetation": "sparse"
    },
-   "_doc": "shells, starfish, sea rocks, a float. Derived from the sand/water boundary — pass B band derivation is still TODO, so this slot resolves empty today."
+   "_doc": "shells, starfish, sea rocks, a float. Cells are derived by pass B from the sand/water boundary, so this slot follows the waterline wherever the water patch is moved to."
   }
  ],
  "landmarks": [
