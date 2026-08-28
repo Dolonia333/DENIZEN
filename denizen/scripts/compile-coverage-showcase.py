@@ -530,7 +530,7 @@ def build_fragment(placed: list[dict], zones: list[dict], biomes: dict,
     }
 
 
-def self_check(stamps: list[dict], placed: list[dict], world_w: int, world_h: int) -> list[str]:
+def self_check(placed: list[dict], world_w: int, world_h: int) -> list[str]:
     """Catch OVERLAP / OFFWORLD before check-city-plan.py does."""
     problems = []
     rects = [(it["me"], it["rect"], it["solid"]) for it in placed]
@@ -710,7 +710,7 @@ def main() -> int:
             zones.extend(micro)
 
     fragment = build_fragment(placed, zones, biomes, before, args)
-    problems = self_check(fragment["stamps"], placed, world_w, world_h)
+    problems = self_check(placed, world_w, world_h)
     if problems:
         print(f"SELF-CHECK FAILED ({len(problems)}):")
         for p in problems[:20]:
