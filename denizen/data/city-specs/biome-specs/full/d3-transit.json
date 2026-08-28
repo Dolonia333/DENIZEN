@@ -1,0 +1,121 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d3-station.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d3-transit.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d3-compiled",
+ "district": "D3 Station Square",
+ "biome": "transit",
+ "palette": "neutral_urban",
+ "palette_secondary": "civic_blue",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 103001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d3-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 5200,
+  "y": 1600,
+  "w": 896,
+  "h": 496
+ },
+ "label": "STATION SQUARE",
+ "label_at": {
+  "x": 360,
+  "y": 264
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 896,
+   "h": 496,
+   "depth": 0.9,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "asphalt",
+   "x": 576,
+   "y": 0,
+   "w": 320,
+   "h": 176,
+   "depth": 0.9
+  },
+  {
+   "surface": "grass",
+   "x": 16,
+   "y": 16,
+   "w": 240,
+   "h": 112,
+   "depth": 0.9
+  },
+  {
+   "surface": "grass",
+   "x": 16,
+   "y": 240,
+   "w": 64,
+   "h": 96,
+   "depth": 0.9
+  },
+  {
+   "surface": "grass",
+   "x": 816,
+   "y": 240,
+   "w": 64,
+   "h": 112,
+   "depth": 0.9
+  },
+  {
+   "surface": "grass",
+   "x": 352,
+   "y": 384,
+   "w": 48,
+   "h": 48,
+   "depth": 0.9
+  },
+  {
+   "surface": "grass",
+   "x": 496,
+   "y": 384,
+   "w": 48,
+   "h": 48,
+   "depth": 0.9
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 864,
+   "h": 464,
+   "density": {
+    "infra": "dense",
+    "street_furn": "dense",
+    "signage": "dense",
+    "vehicle": "light"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.transit.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

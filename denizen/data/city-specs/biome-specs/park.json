@@ -1,0 +1,169 @@
+{
+ "_doc": "W3-C park biome spec — a 400x320 garden pocket inside D7 Grand Park & Gardens' own bbox, in an empty grass area south of the fountain/statue cluster (D7 bbox is 2200,3200-3600,4800; this pocket sits at 2688-3088,3744-4064, verified free of every existing D7 patch/stamp/road). No grp.garden.* / grp.park.* recipes exist yet in data/limezu-visual-catalog/groups/, so this spec carries no groups[] — see docs/EXTERIOR-COMPILER.md and W1-C. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/park.json -v.",
+ "schema": "exterior-district-spec/1",
+ "id": "d23-park-pocket",
+ "district": "D23 Garden Grove Pocket",
+ "biome": "park",
+ "palette": "verdant",
+ "palette_secondary": "pastel_suburb",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 23071,
+  "coords": "local",
+  "out": "data/city-specs/generated/d23-park-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox."
+ },
+ "bbox": {
+  "x": 2688,
+  "y": 3744,
+  "w": 400,
+  "h": 320
+ },
+ "label": "GARDEN GROVE",
+ "label_at": {
+  "x": 200,
+  "y": 12
+ },
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0,
+   "y": 0,
+   "w": 400,
+   "h": 320,
+   "depth": 0.9,
+   "_doc": "lawn covers the WHOLE bbox first; D7's own grass patch already paints this area too, so the overlap is harmless (check-city-plan.py does not flag patch overlap, only stamp OVERLAP/ROADBLOCK)"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "garden_walk",
+   "x": 0,
+   "y": 144,
+   "w": 400,
+   "h": 32,
+   "depth": 0.87,
+   "_doc": "a garden path crossing the pocket east-west, splitting it into two flower-bed lawns"
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "north_beds",
+   "x": 0,
+   "y": 0,
+   "w": 400,
+   "h": 144,
+   "density": {
+    "vegetation": "packed",
+    "decor_small": "medium",
+    "furniture_ext": "light"
+   },
+   "_doc": "packed vegetation per placement-rules.biomes.park.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "garden_walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "light",
+    "signage": "light",
+    "vegetation": "light"
+   },
+   "_doc": "benches and a sign along the crossing path"
+  },
+  {
+   "slot": "interior_fill",
+   "name": "south_beds",
+   "x": 0,
+   "y": 176,
+   "w": 400,
+   "h": 144,
+   "density": {
+    "vegetation": "packed",
+    "decor_small": "medium",
+    "play_sport": "light"
+   },
+   "_doc": "packed vegetation, matching north_beds"
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.garden.hedge_arch",
+   "at": {
+    "x": 24,
+    "y": 168
+   },
+   "anchor": "bc",
+   "solid": false,
+   "_doc": "a topiary arch framing the west end of the crossing path"
+  },
+  {
+   "me": "me.garden.statue_angel_standing",
+   "at": {
+    "x": 340,
+    "y": 300
+   },
+   "anchor": "bc",
+   "solid": true,
+   "_doc": "centerpiece statue in the south beds"
+  }
+ ],
+ "interactions": {
+  "sit": "auto"
+ },
+ "anims": [
+  {
+   "sheet": "ext/animated/Garden_Fountain_1_16x16.png",
+   "fw": 32,
+   "fh": 48,
+   "at": {
+    "x": 100,
+    "y": 100
+   },
+   "fps": 5
+  }
+ ],
+ "constraints": {
+  "keep_clear": [
+   {
+    "x": 0,
+    "y": 144,
+    "w": 24,
+    "h": 32,
+    "why": "west path entrance stays walkable through the hedge arch"
+   }
+  ],
+  "max_stamps": 100,
+  "coverage_target_singles": 35,
+  "max_solid_cell_ratio": 0.3,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "25x20 tiles = 500 cells."
+ },
+ "passes": {
+  "A_ground": {
+   "enabled": true
+  },
+  "B_skeleton": {
+   "enabled": true
+  },
+  "C_landmarks": {
+   "enabled": true
+  },
+  "D_groups": {
+   "enabled": true
+  },
+  "E_props": {
+   "enabled": true
+  },
+  "F_canopy": {
+   "enabled": true
+  },
+  "G_detail": {
+   "enabled": true
+  },
+  "H_life": {
+   "enabled": true
+  }
+ }
+}

@@ -1,0 +1,89 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d14-farm.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d14-rural.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d14-compiled",
+ "district": "D14 Farm",
+ "biome": "rural",
+ "palette": "warm_autumn",
+ "palette_secondary": "verdant",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 114001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d14-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 240,
+  "y": 704,
+  "w": 688,
+  "h": 384
+ },
+ "label": "SUNRISE FARM",
+ "label_at": {
+  "x": 310,
+  "y": 16
+ },
+ "surfaces": [
+  {
+   "surface": "sand",
+   "x": 0,
+   "y": 0,
+   "w": 688,
+   "h": 336,
+   "depth": 0.9,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "sand",
+   "x": 0,
+   "y": 336,
+   "w": 224,
+   "h": 48,
+   "depth": 0.9
+  },
+  {
+   "surface": "sand",
+   "x": 80,
+   "y": 96,
+   "w": 32,
+   "h": 80,
+   "depth": 0.9
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 656,
+   "h": 352,
+   "density": {
+    "vegetation": "dense",
+    "barrier": "dense",
+    "building_shell": "sparse",
+    "decor_small": "light"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.rural.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

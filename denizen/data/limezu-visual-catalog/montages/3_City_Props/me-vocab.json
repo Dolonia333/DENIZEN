@@ -1,0 +1,2138 @@
+{
+  "sheet": "3_City_Props",
+  "labels": [
+    {
+      "id": "me.city_props.sign_warning_triangle_set",
+      "name": "Warning triangle traffic signs (red border)",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_warning_yellow_set",
+      "name": "Yellow diamond/triangle hazard signs",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_no_entry",
+      "name": "No-entry circular signs",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_mandatory_arrow_set",
+      "name": "Blue mandatory direction arrow signs",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_parking_p",
+      "name": "Blue parking P signs",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_street_name_stack",
+      "name": "Street-name / direction blade stacks",
+      "y_hint": [
+        80,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.sign_info_board_set",
+      "name": "Info / notice board signs on short posts",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_hydrant_marker",
+      "name": "Hydrant location marker sign",
+      "y_hint": [
+        400,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.lamp_ornate_double",
+      "name": "Ornate double-arm park street lamp",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.lamp_modern_square",
+      "name": "Modern square-head street lamp",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.lamp_cobra_double",
+      "name": "Double-arm cobra street lamp",
+      "y_hint": [
+        350,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.lamp_globe_bollard",
+      "name": "Globe-top decorative lamp bollard",
+      "y_hint": [
+        600,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.bench_wood_front",
+      "name": "Wooden park bench front view",
+      "y_hint": [
+        0,
+        90
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.bench_wood_side",
+      "name": "Wooden park bench side / angled",
+      "y_hint": [
+        0,
+        90
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.fence_metal_picket",
+      "name": "Dark metal picket fence segments",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.barrier_chain_post",
+      "name": "Chain/rope barrier between posts",
+      "y_hint": [
+        520,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.playground_slide",
+      "name": "Playground slide on grass",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.playground_swings",
+      "name": "Playground swing set on grass",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.grass_patch_play",
+      "name": "Grass patch / play-surface tile",
+      "y_hint": [
+        80,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.cart_candy_pink",
+      "name": "Pink-awning candy / snack cart",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.cart_food_red_awning",
+      "name": "Red-awning street food cart",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.phone_booth_closed",
+      "name": "Red telephone booth closed",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.phone_booth_open",
+      "name": "Red telephone booth door open",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.atm_standalone",
+      "name": "Standalone ATM / banking kiosk",
+      "y_hint": [
+        400,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.parking_meter",
+      "name": "Parking meter single and dual",
+      "y_hint": [
+        220,
+        340
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.mailbox_pillar",
+      "name": "Street mailbox / pillar box",
+      "y_hint": [
+        400,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.fountain_tiered",
+      "name": "Tiered stone water fountain",
+      "y_hint": [
+        350,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.drinking_fountain",
+      "name": "Drinking fountain",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.traffic_light_vertical_states",
+      "name": "Vertical traffic light heads by color state",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_light_arm_early",
+      "name": "Early horizontal traffic-light arm pole",
+      "y_hint": [
+        100,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.barrier_sawhorse_striped",
+      "name": "Red-white striped sawhorse barriers",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.bollard_pedestrian_set",
+      "name": "Pedestrian barrier posts / bollards",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.stake_marker",
+      "name": "Grey and yellow marker stakes",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.dumpster_green_closed",
+      "name": "Green dumpster closed",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.dumpster_green_open_full",
+      "name": "Green dumpster open overflowing",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_can_green_barrel",
+      "name": "Green wheeled/barrel trash cans",
+      "y_hint": [
+        220,
+        340
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_metal_round",
+      "name": "Round metal trash cans",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_color_variants",
+      "name": "Color trash cans blue/black/green/small",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_bags_loose",
+      "name": "Loose black trash bags",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.litter_pile_small",
+      "name": "Small litter / debris piles",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.barrels_stacked_colored",
+      "name": "Stacked blue and green metal barrels",
+      "y_hint": [
+        400,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.hydrant_red",
+      "name": "Red fire hydrant",
+      "y_hint": [
+        400,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.planter_wood_flowers",
+      "name": "Wooden flower box planters",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.planter_oval_stone",
+      "name": "Oval stone planter / bench bases",
+      "y_hint": [
+        240,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.planter_hedge_rect",
+      "name": "Rectangular hedge in stone planter",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.tree_round_canopy",
+      "name": "Round-canopy deciduous trees",
+      "y_hint": [
+        350,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.tree_cypress",
+      "name": "Tall cypress / flame trees",
+      "y_hint": [
+        350,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.tree_in_square_planter",
+      "name": "Small trees in square planters",
+      "y_hint": [
+        240,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.shrub_and_bush_set",
+      "name": "Shrubs, bushes, and flower clumps",
+      "y_hint": [
+        100,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.pot_small",
+      "name": "Small pots",
+      "y_hint": [
+        240,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.hedge_tileable",
+      "name": "Tileable tall hedge segments",
+      "y_hint": [
+        500,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.grass_tufts_mixed",
+      "name": "Grass tufts and groundcover tiles",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.electric_pole_set",
+      "name": "Utility / electric poles with crossarms",
+      "y_hint": [
+        350,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.manhole_covers",
+      "name": "Manhole covers",
+      "y_hint": [
+        120,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.grate_utility",
+      "name": "Square utility / sewer grates",
+      "y_hint": [
+        220,
+        340
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.billboard_hungry_burger",
+      "name": "Are You Hungry burger billboard posters",
+      "y_hint": [
+        480,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.billboard_blank_wide",
+      "name": "Blank white wide billboard",
+      "y_hint": [
+        480,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.billboard_car_sale",
+      "name": "Car sale / parking availability board",
+      "y_hint": [
+        480,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.billboard_set_extra",
+      "name": "Additional billboard variants",
+      "y_hint": [
+        480,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.clothesline_colored",
+      "name": "Clothesline with colored laundry",
+      "y_hint": [
+        520,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.clothesline_white_sheets",
+      "name": "Clothesline with white sheets",
+      "y_hint": [
+        520,
+        740
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.hanging_clothes_singles",
+      "name": "Individual hanging garment sprites",
+      "y_hint": [
+        640,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.parking_entrance_single_p",
+      "name": "Single-lane parking entrance with P signs",
+      "y_hint": [
+        640,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.parking_entrance_double",
+      "name": "Double-lane parking entrance mixed signs",
+      "y_hint": [
+        640,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.parking_exit_no_entry",
+      "name": "Single-lane parking exit no-entry",
+      "y_hint": [
+        640,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.wind_turbine",
+      "name": "Wind turbine with red-tipped blades",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.electric_box_warning",
+      "name": "Electrical transformer boxes with warnings",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.power_house",
+      "name": "Industrial power / substation building",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.water_tower_complete",
+      "name": "Water tower complete with legs",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.water_tower_tank_only",
+      "name": "Water tower tank-only piece",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.water_tower_base_only",
+      "name": "Water tower platform base only",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.railing_circular_metal",
+      "name": "Curved circular metal railing",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.container_tan_side",
+      "name": "Tan shipping container side view",
+      "y_hint": [
+        80,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.container_tan_end",
+      "name": "Tan shipping container end doors",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.container_blue_side",
+      "name": "Blue shipping container side view",
+      "y_hint": [
+        150,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.container_blue_end",
+      "name": "Blue shipping container end doors",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.container_modular_pieces",
+      "name": "Modular shipping container segments",
+      "y_hint": [
+        350,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.container_house",
+      "name": "Converted container house",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.tires_pair_and_pile",
+      "name": "Tires pair and tire mound",
+      "y_hint": [
+        100,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.pallets_and_crates",
+      "name": "Wooden pallets and open crates",
+      "y_hint": [
+        100,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.cable_spools",
+      "name": "Cable / wire spools",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.pipes_and_hooks",
+      "name": "Metal pipes elbows and hooks",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.barrels_metal_yard",
+      "name": "Weathered metal drums yard set",
+      "y_hint": [
+        180,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.barrels_toxic_green",
+      "name": "Toxic green sludge barrels",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.danger_sign_set",
+      "name": "Hazard / danger yard signs",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.junk_piles_large",
+      "name": "Large junk / trash mounds",
+      "y_hint": [
+        80,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.scrap_metal_pieces",
+      "name": "Scrap metal and rubble pieces",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.broken_ladder",
+      "name": "Broken / wooden ladder",
+      "y_hint": [
+        180,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.car_wreck_grey",
+      "name": "Wrecked grey hatchback",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.car_wreck_teal",
+      "name": "Wrecked teal hatchback",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.car_wreck_orange",
+      "name": "Wrecked orange hatchback",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.car_wreck_stacked",
+      "name": "Stacked wrecked cars",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.car_wreck_upside_down",
+      "name": "Upside-down wrecked cars",
+      "y_hint": [
+        250,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.car_wreck_on_side",
+      "name": "Wrecked cars on side",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.site_office_beige",
+      "name": "Beige portable site office",
+      "y_hint": [
+        250,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.junk_shack",
+      "name": "Corrugated junk shack",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.fence_corrugated",
+      "name": "Corrugated metal fence segment",
+      "y_hint": [
+        280,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.security_booth_orange",
+      "name": "Security booth orange stripe",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.security_booth_blue",
+      "name": "Security booth blue stripe with siren",
+      "y_hint": [
+        500,
+        650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.stop_barrier_down",
+      "name": "Parking stop-arm barrier lowered",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.stop_barrier_up",
+      "name": "Parking stop-arm barrier raised",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.bollard_security_yellow",
+      "name": "Security bollards grey and yellow",
+      "y_hint": [
+        380,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.hvac_units",
+      "name": "HVAC / AC rooftop units",
+      "y_hint": [
+        500,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.satellite_dish",
+      "name": "Satellite dish on pedestal",
+      "y_hint": [
+        500,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.solar_panel",
+      "name": "Tilted blue solar panel",
+      "y_hint": [
+        500,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.structure_roof_lights",
+      "name": "Roof warning lights yellow/red",
+      "y_hint": [
+        500,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.dumpster_green_side",
+      "name": "Green dumpster side profiles",
+      "y_hint": [
+        550,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_truck_green_side",
+      "name": "Green garbage truck side",
+      "y_hint": [
+        550,
+        750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_truck_green_front",
+      "name": "Green garbage truck front",
+      "y_hint": [
+        550,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_truck_green_rear",
+      "name": "Green garbage truck rear",
+      "y_hint": [
+        550,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.litter_cans_bottles",
+      "name": "Scattered cans bottles cardboard litter",
+      "y_hint": [
+        580,
+        750
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.dumpster_blue_states",
+      "name": "Blue dumpsters closed/open/full",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_cans_metal_band2",
+      "name": "Metal trash cans and bag piles",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.propane_tanks",
+      "name": "Rusty propane tanks",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_truck_orange_side",
+      "name": "Orange garbage truck side",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_truck_orange_front",
+      "name": "Orange garbage truck front",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_truck_orange_rear",
+      "name": "Orange garbage truck rear/top",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.ev_charging_station",
+      "name": "EV charging stations",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.kiosk_terminal_grey",
+      "name": "Grey street terminal / ticket ATM",
+      "y_hint": [
+        80,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_light_pole_tall_set",
+      "name": "Tall traffic poles with signal heads",
+      "y_hint": [
+        40,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.bollard_striped_safety",
+      "name": "Black and red-white striped bollards",
+      "y_hint": [
+        120,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.bike_rack_rail",
+      "name": "Metal bike-rack / short railing barriers",
+      "y_hint": [
+        120,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.sign_new_regulatory_grid",
+      "name": "New traffic-sign regulatory grid",
+      "y_hint": [
+        150,
+        450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_new_warning_white",
+      "name": "White warning triangles multi-facing",
+      "y_hint": [
+        200,
+        500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_new_warning_yellow",
+      "name": "Yellow warning triangles multi-facing",
+      "y_hint": [
+        250,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_yield_inverted",
+      "name": "Yield / priority inverted triangles",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_modular_pieces",
+      "name": "Modular traffic-sign plate pieces",
+      "y_hint": [
+        350,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.cone_orange_set",
+      "name": "Orange traffic cones upright and fallen",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.traffic_barrier_no_entry",
+      "name": "Heavy barriers with no-entry signs",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_barrier_plain",
+      "name": "Plain striped sawhorse barriers",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_mast_cantilever_right",
+      "name": "Cantilever traffic mast arm right",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_mast_cantilever_left",
+      "name": "Cantilever traffic mast arm left",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_mast_diagonal",
+      "name": "Angled diagonal traffic support poles",
+      "y_hint": [
+        420,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_sign_arrow_blue_red",
+      "name": "Blue and red arrow plates for masts",
+      "y_hint": [
+        400,
+        650
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.traffic_light_horizontal_states",
+      "name": "Horizontal traffic light modules by state",
+      "y_hint": [
+        400,
+        650
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.traffic_light_vertical_modules",
+      "name": "Vertical traffic light modules by state",
+      "y_hint": [
+        400,
+        650
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.pedestrian_button_box",
+      "name": "Pedestrian button / signal control boxes",
+      "y_hint": [
+        550,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.traffic_mast_examples_assembled",
+      "name": "Assembled traffic mast examples with signs",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.bridge_pillar_concrete",
+      "name": "Thick concrete bridge / overpass pillars",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.railing_diagonal_slatted",
+      "name": "Diagonal slatted concrete ramp railing",
+      "y_hint": [
+        100,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.platform_pavement_modular",
+      "name": "Modular pavement / planter base tiles",
+      "y_hint": [
+        180,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.stairs_diagonal_blue_rail",
+      "name": "Diagonal stairs with blue railing",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.stairs_example_narrow",
+      "name": "EXAMPLE narrow stairs assembly",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.curb_corner_pieces",
+      "name": "Concrete curb / wall corner pieces",
+      "y_hint": [
+        280,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.bollard_globe_metal",
+      "name": "Globe-cap metal bollard posts",
+      "y_hint": [
+        350,
+        550
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.stairs_grand_modular",
+      "name": "Grand modular public staircase kit",
+      "y_hint": [
+        350,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.water_hex_tiles",
+      "name": "Blue hexagonal water / pool tiles",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.steps_small_stone",
+      "name": "Small stone step / curb strips",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.road_asphalt_dashed_ns",
+      "name": "Asphalt road strip dashed center N-S",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.road_asphalt_dashed_diagonal",
+      "name": "Asphalt tiles with diagonal dashed lines",
+      "y_hint": [
+        550,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.overpass_road_segments",
+      "name": "Elevated overpass road with guardrail",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.sidewalk_corner_tiles",
+      "name": "Sidewalk curb corner tiles",
+      "y_hint": [
+        550,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.stairs_front_platform",
+      "name": "Front-facing concrete stairs to platform",
+      "y_hint": [
+        650,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.wires_overhead",
+      "name": "Overhead / hanging wire segments",
+      "y_hint": [
+        550,
+        680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.posters_wall_set",
+      "name": "Wall posters and flyers",
+      "y_hint": [
+        550,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.paper_trash_ground",
+      "name": "Crumpled paper ground trash",
+      "y_hint": [
+        550,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.brake_marks",
+      "name": "Asphalt brake / skid marks",
+      "y_hint": [
+        550,
+        750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.platform_elevated_corners",
+      "name": "Elevated stone platform corners",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.platform_elevated_straight",
+      "name": "Elevated walkway straight segments",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.platform_stairs_integrated",
+      "name": "Platform stairs descending",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.bridge_ornament_underside",
+      "name": "Decorative bridge underside ornament",
+      "y_hint": [
+        40,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_open",
+      "name": "Mushroom kiosk open window",
+      "y_hint": [
+        100,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_flag",
+      "name": "Mushroom kiosk with heart flag",
+      "y_hint": [
+        100,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_shutter",
+      "name": "Mushroom kiosk shutter closed",
+      "y_hint": [
+        200,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_mushroom_props",
+      "name": "Mushroom kiosk accessory props",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_full",
+      "name": "Ice-cream / cupcake swirl kiosk",
+      "y_hint": [
+        100,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_roof_only",
+      "name": "Ice-cream swirl roof piece",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_shutter",
+      "name": "Ice-cream kiosk shutter / hollow bases",
+      "y_hint": [
+        250,
+        450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_coffee_cup_full",
+      "name": "Coffee-cup kiosk COFFEE AND TEA",
+      "y_hint": [
+        150,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_coffee_modular",
+      "name": "Coffee kiosk modular lid/body/shutter",
+      "y_hint": [
+        250,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_infopoint",
+      "name": "Round info-point / small circular kiosk",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_interior_counter",
+      "name": "Kiosk interior counter with NPC/register",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.sign_heart_aframe",
+      "name": "Heart A-frame sandwich boards",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_heart_pedestal",
+      "name": "Heart circular pedestal signs",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.flag_heart_pennant",
+      "name": "Heart pennant flags",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.drone_quadcopter",
+      "name": "Quadcopter drones",
+      "y_hint": [
+        400,
+        512
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.drone_controller",
+      "name": "Drone / handheld controllers",
+      "y_hint": [
+        400,
+        512
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.pigeon",
+      "name": "Pigeon sprites",
+      "y_hint": [
+        200,
+        500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.pole_plain",
+      "name": "Plain grey pole",
+      "y_hint": [
+        100,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.sign_generic_plate",
+      "name": "Generic blank sign plate",
+      "y_hint": [
+        500,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.tree_round_large",
+      "name": "Large round-canopy deciduous tree",
+      "y_hint": [
+        350,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.tree_round_medium",
+      "name": "Medium round-canopy deciduous tree",
+      "y_hint": [
+        350,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.tree_sapling_bare",
+      "name": "Bare sapling / thin branch stalks",
+      "y_hint": [
+        400,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.tree_planter_stump_only",
+      "name": "Square planter with stump only",
+      "y_hint": [
+        500,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.bush_round_solid",
+      "name": "Solid round green bush",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.bush_with_yellow_flower",
+      "name": "Bush with yellow flower accent",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.flowers_scatter_white_yellow",
+      "name": "Scatter white and yellow flower sprites",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.planter_wood_pink",
+      "name": "Wooden planter pink flowers",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.planter_wood_orange",
+      "name": "Wooden planter orange/red flowers",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.planter_wood_white",
+      "name": "Wooden planter white flowers",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.planter_long_mixed_flowers",
+      "name": "Long stone planter mixed flowers and hedge",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.lamp_cobra_arm_left",
+      "name": "Detached cobra lamp arm left",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.lamp_cobra_arm_right",
+      "name": "Detached cobra lamp arm right",
+      "y_hint": [
+        350,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.bench_variants_set",
+      "name": "Additional bench angle variants",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.trash_can_blue_closed",
+      "name": "Blue trash can closed",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_blue_open",
+      "name": "Blue trash can open empty/full",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_black_closed",
+      "name": "Black trash can closed",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_black_open",
+      "name": "Black trash can open empty/full",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_green_closed",
+      "name": "Green trash can closed",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_green_open",
+      "name": "Green trash can open empty/full",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_can_small_set",
+      "name": "Small trash cans empty/full/closed",
+      "y_hint": [
+        400,
+        540
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trashbin_street_set",
+      "name": "Street trashbin style variants",
+      "y_hint": [
+        220,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.dumpster_blue_closed",
+      "name": "Blue dumpster closed",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.dumpster_blue_ajar",
+      "name": "Blue dumpster lid ajar",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.dumpster_blue_open_full",
+      "name": "Blue dumpster open full",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.phone_booth_cap_icon",
+      "name": "Telephone booth roof cap with phone icon",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.cart_candies_extra",
+      "name": "Additional candy cart stock variants",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.poster_hungry_wall",
+      "name": "Wall-mount Are You Hungry posters",
+      "y_hint": [
+        480,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sheet_hanging_pink_center",
+      "name": "Hanging sheet pink center circle",
+      "y_hint": [
+        640,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.sheet_hanging_blue_center",
+      "name": "Hanging sheet blue center circle",
+      "y_hint": [
+        640,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.debris_framed_picture",
+      "name": "Debris framed picture prop",
+      "y_hint": [
+        80,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sack_brown",
+      "name": "Brown sack / bag of material",
+      "y_hint": [
+        80,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.holes_ground_set",
+      "name": "Ground holes / crater tiles",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.brick_rubble_set",
+      "name": "Brick rubble pieces",
+      "y_hint": [
+        150,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.trash_pile_modular",
+      "name": "Modular trash pile segments",
+      "y_hint": [
+        100,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.small_trash_pile",
+      "name": "Small trash pile clusters",
+      "y_hint": [
+        550,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.security_booth_light_pole",
+      "name": "Security booth light pole accessory",
+      "y_hint": [
+        500,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.security_booth_yellow_lights",
+      "name": "Security booth yellow indicator lights",
+      "y_hint": [
+        500,
+        620
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.traffic_light_new_front",
+      "name": "New traffic light front assemblies",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_light_new_diagonal",
+      "name": "New traffic light diagonal assemblies",
+      "y_hint": [
+        400,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_light_new_back",
+      "name": "New traffic light back assemblies",
+      "y_hint": [
+        500,
+        750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.traffic_lights_off",
+      "name": "Traffic lights all-off frontal",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.water_tower_short",
+      "name": "Shorter water tower variant",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_icecream_giant_cone",
+      "name": "Giant waffle-cone ice-cream kiosk version",
+      "y_hint": [
+        100,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.kiosk_infopoint_shutter",
+      "name": "Info-point kiosk shutter closed",
+      "y_hint": [
+        250,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.lamp_kiosk_globe",
+      "name": "Small globe lamp near kiosks",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.cafe_table_heart",
+      "name": "Cafe pedestal tables with heart",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.stairs_vertical_rail_left",
+      "name": "Vertical stairs blue rail left",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.stairs_vertical_rail_right",
+      "name": "Vertical stairs blue rail right",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.platform_landing_wide",
+      "name": "Wide stone landing / platform slab",
+      "y_hint": [
+        350,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.utility_wall_boxes",
+      "name": "Wall-mounted utility / junction boxes",
+      "y_hint": [
+        550,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.pedestrian_barrier_modular",
+      "name": "Modular pedestrian barrier left/mid/right",
+      "y_hint": [
+        200,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.gate_wood_double",
+      "name": "Wooden slat double gate / fence doors",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_props.pile_salt_sand",
+      "name": "Conical salt/sand utility piles",
+      "y_hint": [
+        400,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.atm_blue_thin",
+      "name": "Thin blue pedestal ATM / ticket unit",
+      "y_hint": [
+        500,
+        620
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.sign_classic_set",
+      "name": "Classic traffic sign set (older style)",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_props.litter_food_packaging",
+      "name": "Food packaging litter milk/pizza/juice",
+      "y_hint": [
+        580,
+        750
+      ],
+      "multi_tile": false
+    }
+  ]
+}

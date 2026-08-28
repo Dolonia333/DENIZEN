@@ -85,6 +85,56 @@ complete_cursor_work({
 })
 ```
 
+## Row template (`data/cursor-bridge-queue.jsonl`)
+
+The queue file is line-delimited JSON — one full row per line, written by
+`toolEnqueueCursorWork` / mutated in place by `claim_cursor_work` and
+`complete_cursor_work` (`src/denizen-mcp-cursor-tools.js`). This is the exact
+persisted shape (not the tool-call args above — the args become a subset of
+this row):
+
+```json
+{
+  "id": "cwr_<16 hex chars>",
+  "org_id": "org_...",
+  "org_slug": "acme",
+  "npc_key": "abby",
+  "session_id": null,
+  "member_id": null,
+  "title": "Fix LM Studio AggregateError on NAS",
+  "description": "Full context: files, error logs, acceptance criteria",
+  "files": ["denizen/src/lm-studio-router.js"],
+  "priority": "normal",
+  "kind": "bugfix",
+  "status": "pending",
+  "created_at": "2026-08-28T02:00:00.000Z",
+  "updated_at": "2026-08-28T02:00:00.000Z",
+  "claimed_by": null,
+  "claimed_at": null,
+  "completed_at": null,
+  "result": null
+}
+```
+
+`status` transitions `pending -> in_progress -> done|failed`; `claimed_by` /
+`claimed_at` are set by `claim_cursor_work`, `completed_at` + `result`
+(`{ok, summary, files_changed, pr_url, completed_by}`) by
+`complete_cursor_work`. `priority` is one of `low | normal | high | urgent`
+(rank order used by `list_cursor_work`'s sort).
+
+`data/cursor-bridge-queue.jsonl` itself is created empty by
+`ensureQueueFile()` the first time the server touches it, and normally lives
+on the NAS volume in production (see the Files table below), not in this
+repo — so a fresh checkout won't have one until Wave 5's MCP bridge writes
+the first real row. It carries a single `status: "template"` row (this exact
+shape, ignored by `list_cursor_work`'s default `pending` filter, visible with
+`status: "all"`) pointing at the Wave 5 prep artifacts
+(`data/city-specs/npc-patrol-routes.json`,
+`data/limezu-visual-catalog/montage-qa-report.json`,
+`assets/limezu/_asset-catalog-enriched.json`) so the first connected session
+has a concrete example to read before enqueuing real work — see
+`data/city-specs/EXTERIOR-PLACEMENT-BRAIN-PLAN.md` Wave 5.
+
 ## Security
 
 - Same scope/audit model as Phase 4 — destructive work stays behind `skills` + `coding-agent` skill gate inside Denizen.

@@ -1,0 +1,15 @@
+{
+  "sheet": "9_Shopping_Center_and_Markets",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.shopping.cart_corral_2",
+    "2": "me.shopping.cart_corral_3",
+    "3": "me.shopping.cart_corral_1",
+    "4": "me.shopping.store_tan_flat_shadow",
+    "5": "me.shopping.store_tan_bay_shadow",
+    "6": "me.shopping.store_green_flat_shadow",
+    "7": "me.shopping.store_green_bay_shadow",
+    "8": "me.shopping.store_blue_flat_shadow",
+    "9": "me.shopping.store_blue_bay_shadow"
+  }
+}

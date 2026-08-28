@@ -1,0 +1,124 @@
+{
+ "_doc": "COMPILER POCKET spec — a 320x240 sand cove west of the d18-beach-lounge pocket (which starts x=3120), further extending the shoreline west, still below D7 park (bbox ends y=4800; this pocket starts y=4816) and clear of D8 Beach & Boardwalk's own bbox (starts x=3600). Verified empty ground: no patch/stamp/solid/road of any existing d*.json (including generated/d18-beach-lounge.json) falls inside this pocket's rect. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/beach-shore.json -v --qa",
+ "schema": "exterior-district-spec/1",
+ "id": "d19-beach-shore-pocket",
+ "district": "D19 Beach Shore Pocket",
+ "biome": "beach",
+ "palette": "coastal",
+ "palette_secondary": "festive_market",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 51234,
+  "coords": "local",
+  "out": "data/city-specs/generated/d19-beach-shore-pocket.json"
+ },
+
+ "bbox": { "x": 2752, "y": 4816, "w": 320, "h": 240 },
+ "label": "SHORE COVE",
+ "label_at": { "x": 160, "y": 16 },
+
+ "surfaces": [
+  {
+   "surface": "sand",
+   "x": 0, "y": 0, "w": 320, "h": 240,
+   "depth": 0.92,
+   "_doc": "sand shelf covers the WHOLE bbox, same pattern as d18-beach-lounge"
+  },
+  {
+   "surface": "water",
+   "x": 0, "y": 208, "w": 320, "h": 32,
+   "depth": 0.95,
+   "shore": "top",
+   "anim": "ext/animated/_water_fill_16x16.png",
+   "fw": 64, "fh": 64, "fps": 5,
+   "_doc": "thin waterline along the south edge so the cove reads as coast, a gap short of d18's own waterline"
+  }
+ ],
+
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "cove",
+   "x": 16, "y": 16, "w": 288, "h": 176,
+   "density": {
+    "furniture_ext": "dense",
+    "canopy": "dense",
+    "vegetation": "medium",
+    "decor_small": "dense"
+   },
+   "_doc": "beach biome's own density profile, scaled to the small pocket"
+  },
+  {
+   "slot": "shore_line",
+   "name": "wet_sand",
+   "between": ["sand", "water"],
+   "band_px": 32,
+   "density": {
+    "decor_small": "dense",
+    "water_prop": "medium",
+    "vegetation": "sparse"
+   }
+  }
+ ],
+
+ "landmarks": [
+  {
+   "me": "me.beach.sign_direction_small",
+   "at": { "x": 32, "y": 32 },
+   "anchor": "bc",
+   "solid": true,
+   "interact": "read",
+   "_doc": "small direction sign in the NW corner, pointing back toward D18's lounge"
+  }
+ ],
+
+ "groups": [
+  {
+   "grp": "grp.beach.ship_bar",
+   "slot": "cove",
+   "count": 1,
+   "interact": "shop",
+   "_doc": "hero ship-hull bar building + counters + stool + service table, 112x160px"
+  },
+  {
+   "grp": "grp.beach.umbrella_towel_spot",
+   "slot": "cove",
+   "count": 2,
+   "_doc": "two open-parasol + towel + toy leisure spots scattered across the sand"
+  }
+ ],
+
+ "interactions": {
+  "sit": "auto",
+  "shop": ["grp.beach.ship_bar"],
+  "read": ["me.beach.sign_direction_small"]
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Beach_Seagull_Idle_Right_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 64, "y": 176 }, "fps": 4 },
+  { "sheet": "ext/animated/Crabs_16x16.png", "fw": 64, "fh": 64,
+    "at": { "x": 220, "y": 220 }, "fps": 5 }
+ ],
+
+ "constraints": {
+  "max_stamps": 70,
+  "coverage_target_singles": 30,
+  "max_solid_cell_ratio": 0.3,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "320x240 pocket is 20x15 = 300 cells, roughly two-thirds the area of d18-beach-lounge's 450-cell pocket"
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": { "enabled": true },
+  "F_canopy": { "enabled": true },
+  "G_detail": { "enabled": true },
+  "H_life": { "enabled": true }
+ }
+}

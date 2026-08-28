@@ -1,0 +1,1670 @@
+{
+  "sheet": "11_Camping",
+  "labels": [
+    {
+      "id": "me.camping.terrain_water_grass_edge",
+      "name": "Grass\u2013water shoreline autotile",
+      "y_hint": [
+        0,
+        130
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.terrain_dirt_grass_patch",
+      "name": "Dirt path / dirt-in-grass patches",
+      "y_hint": [
+        0,
+        130
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.lily_pad_cluster",
+      "name": "Lily pads and aquatic plants",
+      "y_hint": [
+        40,
+        150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.beach_ball_multicolor",
+      "name": "Floating beach balls",
+      "y_hint": [
+        40,
+        150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.foliage_canopy_segment",
+      "name": "Loose green canopy/bush segments",
+      "y_hint": [
+        0,
+        110
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sign_gateway",
+      "name": "Camping gateway overhead sign",
+      "y_hint": [
+        80,
+        230
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.signboard_notice",
+      "name": "Wooden bulletin boards",
+      "y_hint": [
+        100,
+        290
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sign_arrow",
+      "name": "Directional arrow signs",
+      "y_hint": [
+        100,
+        310
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sign_bridge",
+      "name": "BRIDGE text sign",
+      "y_hint": [
+        100,
+        310
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sign_blank_placard",
+      "name": "Blank / notice wooden placards",
+      "y_hint": [
+        100,
+        310
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.mobile_house_big",
+      "name": "Large mobile home / trailer",
+      "y_hint": [
+        120,
+        330
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.mobile_house_medium",
+      "name": "Medium camper / RV body",
+      "y_hint": [
+        140,
+        350
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.mobile_house_small",
+      "name": "Small cabin / mini trailer",
+      "y_hint": [
+        160,
+        370
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rv_topdown",
+      "name": "RV top-down view",
+      "y_hint": [
+        180,
+        370
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rv_side_left",
+      "name": "RV side profile facing left",
+      "y_hint": [
+        180,
+        390
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rv_side_right",
+      "name": "RV side profile facing right",
+      "y_hint": [
+        180,
+        390
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tent_blue_front",
+      "name": "Blue A-frame tent front",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tent_blue_side",
+      "name": "Blue A-frame tent side",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tent_green_front",
+      "name": "Green A-frame tent front",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tent_green_side",
+      "name": "Green A-frame tent side",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tent_tan_front",
+      "name": "Tan A-frame tent front",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tent_tan_side",
+      "name": "Tan A-frame tent side",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.pier_deck_straight",
+      "name": "Pier straight deck tiles",
+      "y_hint": [
+        220,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.pier_deck_corner",
+      "name": "Pier corner / edge tiles",
+      "y_hint": [
+        220,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.pier_deck_wide",
+      "name": "Pier wide platform tiles",
+      "y_hint": [
+        220,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.pier_stairs",
+      "name": "Pier stairs into water",
+      "y_hint": [
+        240,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.pier_bridge",
+      "name": "Pier bridge segments",
+      "y_hint": [
+        260,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.pier_pole",
+      "name": "Pier posts / pilings",
+      "y_hint": [
+        260,
+        500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.life_buoy",
+      "name": "Life buoy on post",
+      "y_hint": [
+        260,
+        500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.buoy_floating",
+      "name": "Floating marker buoys",
+      "y_hint": [
+        260,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.motorboat_n",
+      "name": "Motorboat facing north",
+      "y_hint": [
+        280,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.motorboat_s",
+      "name": "Motorboat facing south",
+      "y_hint": [
+        280,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.motorboat_e",
+      "name": "Motorboat facing east",
+      "y_hint": [
+        280,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.motorboat_w",
+      "name": "Motorboat facing west",
+      "y_hint": [
+        280,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.motorboat_fishing",
+      "name": "Motorboat with fishing rods",
+      "y_hint": [
+        300,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rowboat_empty",
+      "name": "Empty wooden rowboat",
+      "y_hint": [
+        300,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rowboat_seated",
+      "name": "Rowboat with seats",
+      "y_hint": [
+        300,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.fishing_boat",
+      "name": "Large fishing boat with gear",
+      "y_hint": [
+        320,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.canoe",
+      "name": "Long wooden canoe",
+      "y_hint": [
+        300,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.fishing_spot",
+      "name": "Fishing rods / spots",
+      "y_hint": [
+        340,
+        580
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.fish_crate",
+      "name": "Fish crates",
+      "y_hint": [
+        360,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.fish_bucket",
+      "name": "Fish buckets",
+      "y_hint": [
+        360,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.pier_crates",
+      "name": "Pier wooden crates",
+      "y_hint": [
+        360,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.pier_barrel",
+      "name": "Pier barrels",
+      "y_hint": [
+        360,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.pier_bin",
+      "name": "Pier trash/storage bin",
+      "y_hint": [
+        360,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.pier_clothes",
+      "name": "Clothes on pier line",
+      "y_hint": [
+        360,
+        620
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.pier_props_misc",
+      "name": "Assorted pier small props",
+      "y_hint": [
+        360,
+        620
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.rope",
+      "name": "Coiled rope",
+      "y_hint": [
+        380,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tire",
+      "name": "Dock tire bumper",
+      "y_hint": [
+        380,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.floating_wood",
+      "name": "Floating wood planks",
+      "y_hint": [
+        380,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.wood_board",
+      "name": "Loose wood boards",
+      "y_hint": [
+        380,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.chair_blue",
+      "name": "Blue folding camp chairs",
+      "y_hint": [
+        400,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.chair_green",
+      "name": "Green folding camp chairs",
+      "y_hint": [
+        400,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.chair_red",
+      "name": "Red folding camp chairs",
+      "y_hint": [
+        400,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.chair_grey",
+      "name": "Grey folding camp chairs",
+      "y_hint": [
+        400,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.armchair",
+      "name": "Camp armchairs",
+      "y_hint": [
+        400,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.benched_table_empty",
+      "name": "Empty picnic benched table",
+      "y_hint": [
+        420,
+        660
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.benched_table_set",
+      "name": "Picnic table with food",
+      "y_hint": [
+        420,
+        660
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.table_wood",
+      "name": "Camp wood tables",
+      "y_hint": [
+        420,
+        660
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tiny_table",
+      "name": "Tiny side tables",
+      "y_hint": [
+        420,
+        660
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.cut_wood_bench",
+      "name": "Log seating benches",
+      "y_hint": [
+        440,
+        660
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.backpack_red",
+      "name": "Red backpacks",
+      "y_hint": [
+        440,
+        660
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.backpack_green",
+      "name": "Green backpacks",
+      "y_hint": [
+        440,
+        660
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.backpack_blue",
+      "name": "Blue backpacks",
+      "y_hint": [
+        440,
+        660
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sleeping_bag_blue",
+      "name": "Blue sleeping bags",
+      "y_hint": [
+        460,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sleeping_bag_green",
+      "name": "Green sleeping bags",
+      "y_hint": [
+        460,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sleeping_bag_pink",
+      "name": "Pink sleeping bags",
+      "y_hint": [
+        460,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.campfire_unlit",
+      "name": "Unlit campfire wood pile",
+      "y_hint": [
+        480,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.campfire_lit_small",
+      "name": "Small lit campfire",
+      "y_hint": [
+        480,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.campfire_lit_large",
+      "name": "Large lit campfire",
+      "y_hint": [
+        480,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.campfire_marshmallow",
+      "name": "Campfire with marshmallows",
+      "y_hint": [
+        480,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.hanging_cooking_pot",
+      "name": "Tripod hanging cooking pot",
+      "y_hint": [
+        480,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.barbecue",
+      "name": "Barbecue grill",
+      "y_hint": [
+        500,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.electric_plate",
+      "name": "Electric hot plate / stove",
+      "y_hint": [
+        500,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.lantern_lit",
+      "name": "Lit camp lantern",
+      "y_hint": [
+        500,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.lantern_unlit",
+      "name": "Unlit camp lantern",
+      "y_hint": [
+        500,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.plate_food",
+      "name": "Food plates",
+      "y_hint": [
+        520,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.bottle",
+      "name": "Drink bottles",
+      "y_hint": [
+        520,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.basket",
+      "name": "Picnic baskets",
+      "y_hint": [
+        520,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.cooler_red",
+      "name": "Red cooler / bucket",
+      "y_hint": [
+        520,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.cooler_blue",
+      "name": "Blue cooler / bucket",
+      "y_hint": [
+        520,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.cooler_green",
+      "name": "Green cooler / bucket",
+      "y_hint": [
+        520,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.apples",
+      "name": "Apple piles",
+      "y_hint": [
+        540,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.cut_wood",
+      "name": "Cut firewood piles",
+      "y_hint": [
+        540,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.stump",
+      "name": "Tree stumps",
+      "y_hint": [
+        540,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.rock",
+      "name": "Rock clusters",
+      "y_hint": [
+        560,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.mushrooms",
+      "name": "Mushroom clusters",
+      "y_hint": [
+        560,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.moss",
+      "name": "Moss patches",
+      "y_hint": [
+        560,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sprout",
+      "name": "Small sprouts",
+      "y_hint": [
+        560,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.pine_cone",
+      "name": "Pine cone",
+      "y_hint": [
+        560,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.binoculars",
+      "name": "Binoculars",
+      "y_hint": [
+        580,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_wall_modular",
+      "name": "Tree-wall / shed wall modulars",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.planter_box_empty",
+      "name": "Wooden planter trough empty/dirt",
+      "y_hint": [
+        768,
+        940
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.planter_box_produce",
+      "name": "Wooden planter with produce",
+      "y_hint": [
+        768,
+        940
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_leafy_full",
+      "name": "Green leafy full trees",
+      "y_hint": [
+        800,
+        1250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_leafy_top",
+      "name": "Green leafy canopy top segments",
+      "y_hint": [
+        800,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_leafy_mid",
+      "name": "Green leafy mid trunk/foliage segments",
+      "y_hint": [
+        800,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_leafy_base",
+      "name": "Green leafy base/trunk segments",
+      "y_hint": [
+        800,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_fruit_full",
+      "name": "Green fruit trees full",
+      "y_hint": [
+        850,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_fruit_segment",
+      "name": "Green fruit tree segments",
+      "y_hint": [
+        850,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_conical_small",
+      "name": "Green conical pine small",
+      "y_hint": [
+        850,
+        1200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_green_conical_medium",
+      "name": "Green conical pine medium",
+      "y_hint": [
+        850,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_conical_tall",
+      "name": "Green conical pine tall",
+      "y_hint": [
+        850,
+        1350
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_thin",
+      "name": "Green tall thin trees",
+      "y_hint": [
+        850,
+        1350
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_sapling",
+      "name": "Green saplings",
+      "y_hint": [
+        900,
+        1250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.bush_green_plain",
+      "name": "Green plain bushes",
+      "y_hint": [
+        900,
+        1350
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.bush_green_berry",
+      "name": "Green bushes with berries",
+      "y_hint": [
+        900,
+        1350
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.hedge_low",
+      "name": "Low hedge border segments",
+      "y_hint": [
+        900,
+        1150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.flower_red",
+      "name": "Red flower patches",
+      "y_hint": [
+        900,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.flower_yellow",
+      "name": "Yellow flower patches",
+      "y_hint": [
+        900,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.flower_white",
+      "name": "White flower patches",
+      "y_hint": [
+        900,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.flower_blue_pink",
+      "name": "Blue/pink flower patches",
+      "y_hint": [
+        900,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.flower_potted",
+      "name": "Small potted flowers",
+      "y_hint": [
+        920,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.log_fallen",
+      "name": "Fallen logs",
+      "y_hint": [
+        950,
+        1250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_dead_large",
+      "name": "Large dead leafless trees",
+      "y_hint": [
+        1000,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_dead_medium",
+      "name": "Medium dead leafless trees",
+      "y_hint": [
+        1000,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_dead_small",
+      "name": "Small dead leafless trees",
+      "y_hint": [
+        1050,
+        1450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_dead_stick",
+      "name": "Dead branch sticks",
+      "y_hint": [
+        1050,
+        1450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_orange_leafy_full",
+      "name": "Orange autumn leafy full trees",
+      "y_hint": [
+        1100,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_orange_leafy_segment",
+      "name": "Orange autumn tree segments",
+      "y_hint": [
+        1100,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_orange_fruit",
+      "name": "Orange autumn fruit trees",
+      "y_hint": [
+        1150,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_orange_conical",
+      "name": "Orange autumn conical trees",
+      "y_hint": [
+        1150,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_orange_sapling",
+      "name": "Orange autumn saplings",
+      "y_hint": [
+        1200,
+        1536
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.bush_orange",
+      "name": "Orange autumn bushes",
+      "y_hint": [
+        1200,
+        1536
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_props_leaves",
+      "name": "Fallen leaf / debris props",
+      "y_hint": [
+        1000,
+        1500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_props_twigs",
+      "name": "Twig / wood debris props",
+      "y_hint": [
+        1000,
+        1500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_red_tall_top",
+      "name": "Red/pink tall tree crown segments",
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_red_tall_trunk",
+      "name": "Red/pink tall tree trunk segments",
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_bushy_large",
+      "name": "Large green bushy trees",
+      "y_hint": [
+        1600,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_bushy_segment",
+      "name": "Large green bushy segments",
+      "y_hint": [
+        1600,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_round_medium",
+      "name": "Green round medium trees",
+      "y_hint": [
+        1650,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_fruit_band2",
+      "name": "Green fruit trees (band2)",
+      "y_hint": [
+        1650,
+        2150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_conical_band2",
+      "name": "Green conical trees (band2)",
+      "y_hint": [
+        1700,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_green_thin_band2",
+      "name": "Green thin stacked trees (band2)",
+      "y_hint": [
+        1700,
+        2250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_orange_bushy_large",
+      "name": "Large orange bushy trees",
+      "y_hint": [
+        1536,
+        1900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_orange_bushy_segment",
+      "name": "Large orange bushy segments",
+      "y_hint": [
+        1536,
+        1950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_yellow_leafy_full",
+      "name": "Yellow/gold leafy full trees",
+      "y_hint": [
+        1900,
+        2304
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_yellow_leafy_segment",
+      "name": "Yellow/gold tree segments",
+      "y_hint": [
+        1900,
+        2304
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_yellow_fruit",
+      "name": "Yellow autumn fruit trees",
+      "y_hint": [
+        1950,
+        2304
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_yellow_conical",
+      "name": "Yellow autumn conical trees",
+      "y_hint": [
+        1950,
+        2304
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_yellow_sapling",
+      "name": "Yellow autumn saplings",
+      "y_hint": [
+        2000,
+        2304
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.bush_yellow",
+      "name": "Yellow autumn bushes",
+      "y_hint": [
+        2000,
+        2304
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_teal_leafy",
+      "name": "Teal cool-green leafy trees",
+      "y_hint": [
+        1750,
+        2150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_teal_conical",
+      "name": "Teal cool conical trees",
+      "y_hint": [
+        1750,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_pine_tiered_green_small",
+      "name": "Tiered green pine small",
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tree_pine_tiered_green_medium",
+      "name": "Tiered green pine medium",
+      "y_hint": [
+        2304,
+        2620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_pine_tiered_green_tall",
+      "name": "Tiered green pine tall",
+      "y_hint": [
+        2304,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_pine_tiered_brown",
+      "name": "Tiered brown autumn pines",
+      "y_hint": [
+        2304,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_bushy_cluster_green",
+      "name": "Green bushy forest cluster",
+      "y_hint": [
+        2350,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_bushy_cluster_orange",
+      "name": "Orange bushy forest cluster",
+      "y_hint": [
+        2350,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_bushy_individual_green",
+      "name": "Individual green bushy trees S/M/L",
+      "y_hint": [
+        2380,
+        2700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_bushy_individual_orange",
+      "name": "Individual orange bushy trees S/M/L",
+      "y_hint": [
+        2380,
+        2700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_fruit_bushy_green",
+      "name": "Green fruiting bushy trees",
+      "y_hint": [
+        2380,
+        2700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_beehive_green",
+      "name": "Green beehive conical trees",
+      "y_hint": [
+        2400,
+        2720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_beehive_brown",
+      "name": "Brown beehive conical trees",
+      "y_hint": [
+        2400,
+        2720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_fruit_modular_trunk",
+      "name": "Modular fruit-tree trunks",
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.tree_fruit_modular_canopy",
+      "name": "Modular fruiting canopy clusters",
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.forest_dense_tile",
+      "name": "Dense forest 3\u00d73 backdrop tiles",
+      "y_hint": [
+        2450,
+        2720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.sapling_green_small",
+      "name": "Small green saplings/bushes",
+      "y_hint": [
+        2480,
+        2720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.water_pond_edge",
+      "name": "Pond shoreline edge tiles",
+      "y_hint": [
+        2550,
+        2820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.water_pond_center",
+      "name": "Pond water center / island tiles",
+      "y_hint": [
+        2550,
+        2820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.water_lilypad_plain",
+      "name": "Plain lily pads",
+      "y_hint": [
+        2580,
+        2840
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.water_lilypad_flower",
+      "name": "Lily pads with white flowers",
+      "y_hint": [
+        2580,
+        2840
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.water_reeds",
+      "name": "Reeds / cattails",
+      "y_hint": [
+        2580,
+        2860
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.water_duckweed",
+      "name": "Floating duckweed clusters",
+      "y_hint": [
+        2600,
+        2840
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.water_stepping_stone",
+      "name": "Water stepping stones",
+      "y_hint": [
+        2600,
+        2860
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.cliff_rock_face",
+      "name": "Rocky cliff face tiles",
+      "y_hint": [
+        2620,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.cliff_grass_edge",
+      "name": "Cliff grassy top edges",
+      "y_hint": [
+        2620,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.waterfall_source",
+      "name": "Waterfall source / top tiles",
+      "y_hint": [
+        2650,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.waterfall_mid",
+      "name": "Waterfall mid flow tiles",
+      "y_hint": [
+        2650,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.waterfall_splash",
+      "name": "Waterfall splash / base tiles",
+      "y_hint": [
+        2650,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.standing_stone_dry",
+      "name": "Standing monolith stones (dry)",
+      "y_hint": [
+        2650,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.standing_stone_water",
+      "name": "Standing stones with water base",
+      "y_hint": [
+        2650,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.rocks_small",
+      "name": "Small rock / pebble clusters",
+      "y_hint": [
+        2680,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.cave_pipe_entrance",
+      "name": "Cave / pipe rock entrance",
+      "y_hint": [
+        2700,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rope_bridge_horizontal",
+      "name": "Rope bridge horizontal segments",
+      "y_hint": [
+        2700,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rope_bridge_vertical",
+      "name": "Rope bridge vertical / approach",
+      "y_hint": [
+        2700,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.ladder_wood",
+      "name": "Wooden ladder sections",
+      "y_hint": [
+        2720,
+        2896
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.camping.rope_fence_post",
+      "name": "Rope fence posts",
+      "y_hint": [
+        2720,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sign_circle_red",
+      "name": "Red circular trail signs",
+      "y_hint": [
+        2750,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.sign_circle_blue",
+      "name": "Blue circular trail signs",
+      "y_hint": [
+        2750,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.wood_post_stump",
+      "name": "Cut wood posts / stakes",
+      "y_hint": [
+        2750,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.tall_grass_bamboo",
+      "name": "Tall grass / bamboo stalks",
+      "y_hint": [
+        2780,
+        2896
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.ground_rocky_tile",
+      "name": "Rocky ground texture tiles",
+      "y_hint": [
+        2650,
+        2860
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.camping.ground_grass_tall_strip",
+      "name": "Tall grass ground strips",
+      "y_hint": [
+        2780,
+        2896
+      ],
+      "multi_tile": true
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "grp.subway.platform_bench_row",
+  "name": "Platform waiting bench row (three-seat bench + two-seat bench + potted plant)",
+  "biome": "subway",
+  "category": "furniture",
+  "surface": "ground",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.subway.bench_green",
+    "me.subway.plant_vase"
+  ],
+  "footprint_tiles": {
+    "w": 6,
+    "h": 2
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; benches face south into the platform with the plant standing at one end."
+  },
+  "offset_basis_summary": "Three_Seats_Green_Bench_Frontal_1 and Two_Seats_Green_Bench_Frontal_1 sit in the same row of the 20_Subway_and_Train_Station sheet (y304, x320/352), so their offsets are sheet_relative. Plant_Vase_1 lives in an unrelated sheet region, so its position at the end of the row is hand-authored.",
+  "pieces": [
+    {
+      "role": "bench_three_seat",
+      "me": "me.subway.bench_green",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_three_seats_green_bench_frontal_1",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_1.png",
+      "dx": 2,
+      "dy": 0,
+      "w": 48,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south",
+      "interact": "sit"
+    },
+    {
+      "role": "bench_two_seat",
+      "me": "me.subway.bench_green",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_two_seats_green_bench_frontal_1",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Two_Seats_Green_Bench_Frontal_1.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 32,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south",
+      "interact": "sit"
+    },
+    {
+      "role": "potted_plant",
+      "me": "me.subway.plant_vase",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_plant_vase_1",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
+      "dx": 5,
+      "dy": 0,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any",
+      "notes": "Placed past the end of the three-seat bench, out of the seating footprint. Footprint widened 5->6 tiles and dx 4->5 (bugfix: the old dx=4 placed the plant's 16x32 rect on top of the three-seat bench's own 48x16 rect at x64-80, a 50% solid/solid overlap that check-city-plan.py OVERLAP flags — dx=5 clears the bench row's x32-80 span entirely)."
+    }
+  ],
+  "variants": {
+    "bench_color": "Swap me.subway.bench_green for bench_grey/bench_black (same relative frontal_1/frontal_2 layout on their own sheet rows).",
+    "row_length": "Chain additional two-seat/three-seat frontal benches to lengthen the row."
+  },
+  "interact": "sit",
+  "notes": "Sheet-relative bench pair (both frontal_1 variants share the same y=304 row) dressed with a hand-placed potted plant to close off the row end, matching how these props read on a real platform."
+}

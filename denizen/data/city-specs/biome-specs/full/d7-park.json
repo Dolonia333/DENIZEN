@@ -1,0 +1,144 @@
+{
+ "_doc": "W6-B FULL DISTRICT spec — replaces D7's hand-stamped exterior with a compiler-generated fragment covering the district's ENTIRE bbox. bbox matches the hand district's own declared bbox almost exactly (2200,3200,1400,1600 declared vs. 2208,3200,1408,1600 actual patch/stamp extent — an 8px rounding, same story as D6). Starts at x=2208 so it stays clear of D6's corrected full-bbox spec (which ends at x=2192). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d7-park.json --qa -v. Merge with scripts/merge-city-plan.py --compiler-replaces.",
+ "schema": "exterior-district-spec/1",
+ "id": "d7-compiled",
+ "district": "D7 Grand Park & Gardens (full compiler replacement)",
+ "biome": "park",
+ "palette": "verdant",
+ "palette_secondary": "pastel_suburb",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 70001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d7-compiled.json",
+  "full_bbox": true,
+  "_doc": "coords 'local': every rect/point below is relative to bbox (2208,3200)."
+ },
+
+ "bbox": { "x": 2208, "y": 3200, "w": 1408, "h": 1600 },
+ "label": "GRAND PARK",
+ "label_at": { "x": 612, "y": 30 },
+
+ "surfaces": [
+  { "surface": "grass", "x": 0, "y": 0, "w": 1408, "h": 1600, "depth": 0.9,
+    "_doc": "the lawn covers the WHOLE bbox first" },
+  { "surface": "sidewalk", "name": "east_walk", "x": 656, "y": 0, "w": 48, "h": 1600, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "south_walk", "x": 0, "y": 624, "w": 1408, "h": 48, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "fountain_plaza", "x": 560, "y": 160, "w": 240, "h": 224, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "fountain_walk_a", "x": 800, "y": 320, "w": 304, "h": 48, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "fountain_walk_b", "x": 1088, "y": 288, "w": 96, "h": 96, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "south_plaza_walk", "x": 704, "y": 816, "w": 432, "h": 48, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "south_plaza_stub", "x": 704, "y": 1088, "w": 64, "h": 48, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "grove_walk", "x": 416, "y": 672, "w": 48, "h": 224, "depth": 0.9 },
+  { "surface": "asphalt", "name": "sport_court", "x": 1120, "y": 704, "w": 224, "h": 224, "depth": 0.9,
+    "_doc": "hardcourt slab, mirrors the hand district's Basketball_Court_2 + nets" },
+  { "surface": "sand", "name": "waterfall_bed", "x": 352, "y": 896, "w": 160, "h": 128, "depth": 0.92 }
+ ],
+
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "north_lawn",
+   "x": 0, "y": 0, "w": 1408, "h": 624,
+   "density": { "vegetation": "packed", "furniture_ext": "medium", "play_sport": "medium", "decor_small": "medium" },
+   "_doc": "matches placement-rules.biomes.park.density exactly"
+  },
+  {
+   "slot": "interior_fill",
+   "name": "south_lawn",
+   "x": 0, "y": 672, "w": 1408, "h": 928,
+   "density": { "vegetation": "packed", "furniture_ext": "medium", "play_sport": "medium", "decor_small": "medium" }
+  },
+  {
+   "slot": "path_edge",
+   "name": "east_walk_edge",
+   "surface": "sidewalk",
+   "density": { "street_furn": "medium", "signage": "light", "vegetation": "light" }
+  },
+  {
+   "slot": "plaza",
+   "name": "fountain_garden",
+   "x": 560, "y": 160, "w": 528, "h": 224,
+   "density": { "furniture_ext": "medium", "vegetation": "medium", "decor_small": "dense", "npc_anchor": "light" },
+   "_doc": "the formal garden around the fountain/pergola/angel-statue cluster"
+  },
+  {
+   "slot": "plaza",
+   "name": "sport_yard",
+   "x": 1088, "y": 672, "w": 288, "h": 288,
+   "density": { "play_sport": "medium", "furniture_ext": "light", "npc_anchor": "light" },
+   "_doc": "basketball court + bleachers + stadium lights"
+  }
+ ],
+
+ "landmarks": [
+  { "me": "me.garden.hedge_arch", "at": { "x": 24, "y": 176 }, "anchor": "bc", "solid": false,
+    "_doc": "topiary arch framing the west entrance to the fountain garden, same role it plays in the D23 pocket" },
+  { "me": "me.garden.pergola_structure", "at": { "x": 700, "y": 300 }, "anchor": "bl", "solid": true },
+  { "me": "me.garden.pergola_roof", "at": { "x": 700, "y": 236 }, "anchor": "bl", "solid": false },
+  { "me": "me.garden.statue_angel_standing", "at": { "x": 660, "y": 372 }, "anchor": "bc", "solid": true,
+    "_doc": "centerpiece statue, mirrors the hand district's Angel_Statue_1" },
+  { "me": "me.garden.wood_storage_brown", "at": { "x": 130, "y": 1180 }, "anchor": "bl", "solid": true,
+    "interact": "enter", "_doc": "park tool shed tucked into the SW grove" },
+  { "me": "me.school.court_basketball_clean", "at": { "x": 1136, "y": 928 }, "anchor": "bl", "solid": false,
+    "role": "play_sport", "interact": "play",
+    "_doc": "mirrors the hand district's Basketball_Court_2" },
+  { "me": "me.school.field_soccer", "at": { "x": 752, "y": 1372 }, "anchor": "bl", "solid": false,
+    "role": "play_sport", "interact": "play",
+    "_doc": "mirrors the hand district's Soccer_Court_2" },
+  { "me": "me.school.bleachers_front", "at": { "x": 1080, "y": 928 }, "anchor": "bl", "solid": true },
+  { "me": "me.school.stadium_light_cluster", "at": { "x": 1088, "y": 736 }, "anchor": "bl", "solid": true },
+  { "me": "me.school.stadium_light_cluster", "at": { "x": 1336, "y": 736 }, "anchor": "bl", "solid": true },
+  { "me": "me.school.playground_swing_set", "at": { "x": 220, "y": 720 }, "anchor": "bl", "solid": true, "interact": "play" },
+  { "me": "me.school.playground_slide_single", "at": { "x": 280, "y": 720 }, "anchor": "bl", "solid": true, "interact": "play" }
+ ],
+
+ "interactions": {
+  "sit": "auto",
+  "play": ["me.school.court_basketball_clean", "me.school.field_soccer",
+           "me.school.playground_swing_set", "me.school.playground_slide_single"],
+  "enter": ["me.garden.wood_storage_brown"]
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Garden_Fountain_5_16x16.png", "fw": 64, "fh": 80, "at": { "x": 644, "y": 220 }, "fps": 6 },
+  { "sheet": "ext/animated/Garden_Fountain_3_16x16.png", "fw": 48, "fh": 96, "at": { "x": 972, "y": 120 }, "fps": 6 },
+  { "sheet": "ext/animated/Waterfall_16x16.png", "fw": 48, "fh": 48, "at": { "x": 272, "y": 700 }, "fps": 6 },
+  { "sheet": "ext/animated/Waterfall_Drain_Tube_16x16.png", "fw": 32, "fh": 64, "at": { "x": 372, "y": 740 }, "fps": 6 },
+  { "sheet": "ext/animated/Drinking_Fountain_1_loop_3-6.png", "fw": 32, "fh": 48, "at": { "x": 362, "y": 886 }, "fps": 5 }
+ ],
+
+ "constraints": {
+  "max_stamps": 400,
+  "coverage_target_singles": 140,
+  "max_solid_cell_ratio": 0.24,
+  "min_free_cell_ratio": 0.45,
+  "_doc": "1408x1600 = 88x100 tiles = 8800 cells; park wants vegetation packed across a big lawn."
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": { "enabled": true },
+  "F_canopy": { "enabled": true },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.garden.small_pink_flower",
+    "me.garden.small_red_flower",
+    "me.garden.small_light_blue_flower",
+    "me.garden.medium_sunflower",
+    "me.garden.big_sprout_vase",
+    "me.garden.birdhouse_big_blue",
+    "me.school.ball_soccer",
+    "me.school.ball_basketball",
+    "me.villa.stump_1"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}

@@ -1,0 +1,1184 @@
+{
+  "sheet": "2_City_Terrains",
+  "labels": [
+    {
+      "id": "me.city_terrains.sidewalk_beige_fill",
+      "name": "Warm beige / cream sidewalk tiles fill",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_straight",
+      "name": "Sidewalk beige straight curb",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_outer_corner",
+      "name": "Sidewalk beige outer curb corner",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_inner_corner",
+      "name": "Sidewalk beige inner curb corner",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_curve",
+      "name": "Sidewalk beige curved curb",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_fill",
+      "name": "Warm light-grey sidewalk tiles fill",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_straight",
+      "name": "Sidewalk warm_grey straight curb",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_outer_corner",
+      "name": "Sidewalk warm_grey outer curb corner",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_inner_corner",
+      "name": "Sidewalk warm_grey inner curb corner",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_warm_grey_curb_curve",
+      "name": "Sidewalk warm_grey curved curb",
+      "y_hint": [
+        0,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_fill",
+      "name": "Cool off-white / grey sidewalk tiles fill",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_straight",
+      "name": "Sidewalk cool_grey straight curb",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_outer_corner",
+      "name": "Sidewalk cool_grey outer curb corner",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_inner_corner",
+      "name": "Sidewalk cool_grey inner curb corner",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_curve",
+      "name": "Sidewalk cool_grey curved curb",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_fill",
+      "name": "Neutral medium-grey sidewalk tiles fill",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_straight",
+      "name": "Sidewalk neutral_grey straight curb",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_outer_corner",
+      "name": "Sidewalk neutral_grey outer curb corner",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_inner_corner",
+      "name": "Sidewalk neutral_grey inner curb corner",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_neutral_grey_curb_curve",
+      "name": "Sidewalk neutral_grey curved curb",
+      "y_hint": [
+        200,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_fill",
+      "name": "Bluish slate sidewalk tiles fill",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_straight",
+      "name": "Sidewalk slate straight curb",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_outer_corner",
+      "name": "Sidewalk slate outer curb corner",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_inner_corner",
+      "name": "Sidewalk slate inner curb corner",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_curve",
+      "name": "Sidewalk slate curved curb",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_fill",
+      "name": "Dark charcoal sidewalk tiles fill",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_straight",
+      "name": "Sidewalk charcoal straight curb",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_outer_corner",
+      "name": "Sidewalk charcoal outer curb corner",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_inner_corner",
+      "name": "Sidewalk charcoal inner curb corner",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_curve",
+      "name": "Sidewalk charcoal curved curb",
+      "y_hint": [
+        400,
+        780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.asphalt_fill",
+      "name": "Asphalt road fill tiles",
+      "y_hint": [
+        0,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_corner",
+      "name": "Asphalt white line corner pieces",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_straight",
+      "name": "Asphalt white line straight segments",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_dashed",
+      "name": "Asphalt white dashed lane lines",
+      "y_hint": [
+        0,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.asphalt_line_t_junction",
+      "name": "Asphalt T-junction line markers",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.bus_lane_horizontal",
+      "name": "BUS lane marking horizontal",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.bus_lane_vertical",
+      "name": "BUS lane marking vertical",
+      "y_hint": [
+        40,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.bus_lane_layout",
+      "name": "BUS lane composite layout strip",
+      "y_hint": [
+        40,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.crosswalk_zebra_h",
+      "name": "Zebra crosswalk horizontal",
+      "y_hint": [
+        40,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.crosswalk_zebra_v",
+      "name": "Zebra crosswalk vertical",
+      "y_hint": [
+        40,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.crosswalk_corner",
+      "name": "Crosswalk L / corner join",
+      "y_hint": [
+        40,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.crosswalk_t",
+      "name": "Crosswalk T-junction",
+      "y_hint": [
+        40,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_spot_p_h",
+      "name": "Parking space with P icon horizontal",
+      "y_hint": [
+        120,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_spot_p_v",
+      "name": "Parking space with P icon vertical",
+      "y_hint": [
+        120,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_spot_outline",
+      "name": "Empty parking stall outline",
+      "y_hint": [
+        120,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_row_triple",
+      "name": "Triple parking bay strip",
+      "y_hint": [
+        120,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.stairs_concrete",
+      "name": "Concrete stairs",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.roundabout_road",
+      "name": "Roundabout circular asphalt road",
+      "y_hint": [
+        200,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.roundabout_island",
+      "name": "Roundabout center island",
+      "y_hint": [
+        280,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.roundabout_sign",
+      "name": "Blue roundabout direction sign",
+      "y_hint": [
+        300,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.roundabout_layout",
+      "name": "Full roundabout + sidewalk plaza layout",
+      "y_hint": [
+        200,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.median_island_pill",
+      "name": "Pill-shaped median / sidewalk island",
+      "y_hint": [
+        300,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.curb_driveway_slope",
+      "name": "Driveway / ramp curb slope",
+      "y_hint": [
+        200,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_decorative_inset",
+      "name": "Decorative inset sidewalk tile 2x2",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.layout_bus_parking_roundabout",
+      "name": "Composite road layout (bus/parking/roundabout)",
+      "y_hint": [
+        768,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.arrow_straight",
+      "name": "Road arrow straight",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.arrow_left",
+      "name": "Road arrow left turn",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.arrow_right",
+      "name": "Road arrow right turn",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.arrow_uturn",
+      "name": "Road arrow U-turn",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.arrow_straight_left",
+      "name": "Road arrow straight+left combo",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.arrow_straight_right",
+      "name": "Road arrow straight+right combo",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.arrow_double_head",
+      "name": "Road arrow double-headed",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.text_stop_vertical",
+      "name": "STOP text marking vertical",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_stop_horizontal",
+      "name": "STOP text marking horizontal",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_exit_vertical",
+      "name": "EXIT text marking vertical",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_exit_horizontal",
+      "name": "EXIT text marking horizontal",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_turn_vertical",
+      "name": "TURN text marking vertical",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_turn_horizontal",
+      "name": "TURN text marking horizontal",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.marking_p_icon",
+      "name": "Standalone parking P icon",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.marking_line_short",
+      "name": "Short white line / dash segments",
+      "y_hint": [
+        1120,
+        1300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.marking_ladder_zone",
+      "name": "Ladder / loading-zone bar markings",
+      "y_hint": [
+        1120,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_lot_example_2x2",
+      "name": "Parking lot example 2x2 module",
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_lot_example_2x3",
+      "name": "Parking lot example 2x3 module",
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_lot_aisle",
+      "name": "Parking lot drive aisle between rows",
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_p_upright",
+      "name": "Parking P facing upright",
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.parking_p_inverted",
+      "name": "Parking P facing inverted",
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.parking_overlay_mask",
+      "name": "Parking lines/symbols mask overlay",
+      "y_hint": [
+        1280,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.parking_arrow_lot",
+      "name": "Parking lot navigation arrow",
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.ev_charging_spot",
+      "name": "EV charging parking stall",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.ev_icon_tile",
+      "name": "EV charging icon square",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.hatching_green_diagonal",
+      "name": "Green diagonal hazard hatching",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.ev_hatched_stall",
+      "name": "EV / restricted hatched stall",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.handicap_parking_green",
+      "name": "Accessible / handicap parking marker",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.loading_zone_hatch",
+      "name": "Loading / no-park green hatch zone",
+      "y_hint": [
+        1420,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.brand_logo_hatched",
+      "name": "LimeZu logo tile on green hatching",
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.brand_logo_framed",
+      "name": "LimeZu logo tile in green frame",
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.brand_action_hatched",
+      "name": "Action / figure icon on green hatching",
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.brand_action_framed",
+      "name": "Action / figure icon framed",
+      "y_hint": [
+        1536,
+        1648
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_n",
+      "name": "Sidewalk beige curb north",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_n",
+      "name": "Sidewalk cool_grey curb north",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_n",
+      "name": "Sidewalk slate curb north",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_n",
+      "name": "Sidewalk charcoal curb north",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_s",
+      "name": "Sidewalk beige curb south",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_s",
+      "name": "Sidewalk cool_grey curb south",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_s",
+      "name": "Sidewalk slate curb south",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_s",
+      "name": "Sidewalk charcoal curb south",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_e",
+      "name": "Sidewalk beige curb east",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_e",
+      "name": "Sidewalk cool_grey curb east",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_e",
+      "name": "Sidewalk slate curb east",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_e",
+      "name": "Sidewalk charcoal curb east",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_beige_curb_w",
+      "name": "Sidewalk beige curb west",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_cool_grey_curb_w",
+      "name": "Sidewalk cool_grey curb west",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_slate_curb_w",
+      "name": "Sidewalk slate curb west",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_charcoal_curb_w",
+      "name": "Sidewalk charcoal curb west",
+      "y_hint": [
+        0,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.asphalt_fill_variation",
+      "name": "Asphalt fill micro-variations",
+      "y_hint": [
+        0,
+        768
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.crosswalk_segment_single",
+      "name": "Single zebra bar segment",
+      "y_hint": [
+        40,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.parking_stall_corner",
+      "name": "Parking bay corner marker",
+      "y_hint": [
+        120,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.parking_stall_divider",
+      "name": "Parking bay divider line",
+      "y_hint": [
+        120,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.roundabout_dashed_ring",
+      "name": "Roundabout dashed ring marking",
+      "y_hint": [
+        200,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.sidewalk_to_asphalt_transition",
+      "name": "Sidewalk-to-asphalt transition tile",
+      "y_hint": [
+        100,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.island_circular_small",
+      "name": "Small circular concrete island",
+      "y_hint": [
+        280,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.stairs_wide",
+      "name": "Wide concrete stair flight",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.stairs_narrow",
+      "name": "Narrow concrete stair flight",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.bus_lane_border_yellow",
+      "name": "BUS lane yellow border lines",
+      "y_hint": [
+        40,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.arrow_parking_lot_left",
+      "name": "Parking lot left flow arrow",
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.arrow_parking_lot_right",
+      "name": "Parking lot right flow arrow",
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.text_stop_down",
+      "name": "STOP text facing down",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_exit_down",
+      "name": "EXIT text facing down",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_turn_down",
+      "name": "TURN text facing down",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_stop_left",
+      "name": "STOP text facing left",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_exit_left",
+      "name": "EXIT text facing left",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_turn_left",
+      "name": "TURN text facing left",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_stop_right",
+      "name": "STOP text facing right",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_exit_right",
+      "name": "EXIT text facing right",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.text_turn_right",
+      "name": "TURN text facing right",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.ev_stall_border_green",
+      "name": "EV stall green border frame",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.hatching_green_single",
+      "name": "Single green hatch tile",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.layout_culdesac",
+      "name": "Cul-de-sac / dead-end circular layout",
+      "y_hint": [
+        200,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.city_terrains.curb_connector_t",
+      "name": "Curb T-connector piece",
+      "y_hint": [
+        0,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.curb_connector_cross",
+      "name": "Curb cross connector",
+      "y_hint": [
+        0,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.city_terrains.sidewalk_plaza_grid",
+      "name": "Large sidewalk plaza grid around roundabout",
+      "y_hint": [
+        200,
+        720
+      ],
+      "multi_tile": true
+    }
+  ]
+}

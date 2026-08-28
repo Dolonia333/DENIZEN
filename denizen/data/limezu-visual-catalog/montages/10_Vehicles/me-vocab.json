@@ -1,0 +1,2516 @@
+{
+  "sheet": "10_Vehicles",
+  "labels": [
+    {
+      "id": "me.vehicles.compact_blue_east",
+      "name": "Blue compact hatchback facing east",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_blue_west",
+      "name": "Blue compact hatchback facing west",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_blue_south",
+      "name": "Blue compact hatchback facing south",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_blue_north",
+      "name": "Blue compact hatchback facing north",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_east",
+      "name": "Dark green compact hatchback facing east",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_west",
+      "name": "Dark green compact hatchback facing west",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_south",
+      "name": "Dark green compact hatchback facing south",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_north",
+      "name": "Dark green compact hatchback facing north",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_emerald_east",
+      "name": "Emerald compact hatchback facing east",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_emerald_west",
+      "name": "Emerald compact hatchback facing west",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_emerald_south",
+      "name": "Emerald compact hatchback facing south",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_emerald_north",
+      "name": "Emerald compact hatchback facing north",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_red_east",
+      "name": "Red compact hatchback facing east",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_red_west",
+      "name": "Red compact hatchback facing west",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_red_south",
+      "name": "Red compact hatchback facing south",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_red_north",
+      "name": "Red compact hatchback facing north",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_orange_east",
+      "name": "Orange compact hatchback facing east",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_orange_west",
+      "name": "Orange compact hatchback facing west",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_orange_south",
+      "name": "Orange compact hatchback facing south",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_orange_north",
+      "name": "Orange compact hatchback facing north",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_grey_east",
+      "name": "Grey compact hatchback facing east",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_grey_west",
+      "name": "Grey compact hatchback facing west",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_grey_south",
+      "name": "Grey compact hatchback facing south",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.compact_grey_north",
+      "name": "Grey compact hatchback facing north",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.rowboat_docked_north",
+      "name": "Wooden rowboat docked north half",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.rowboat_docked_west",
+      "name": "Wooden rowboat docked west",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.rowboat_stern_north",
+      "name": "Wooden rowboat stern north",
+      "y_hint": [
+        60,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.dinghy_orange_north",
+      "name": "Orange inflatable dinghy north",
+      "y_hint": [
+        100,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.motorboat_white_east",
+      "name": "White motorboat / skiff east",
+      "y_hint": [
+        40,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.motorboat_white_west",
+      "name": "White motorboat / skiff west",
+      "y_hint": [
+        100,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.motorboat_fishing_west",
+      "name": "Grey fishing motorboat west",
+      "y_hint": [
+        180,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.motorboat_fishing_east",
+      "name": "Grey fishing motorboat east",
+      "y_hint": [
+        240,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.fishing_boat_wood_west",
+      "name": "Large wooden fishing boat west",
+      "y_hint": [
+        260,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.fishing_boat_wood_east",
+      "name": "Large wooden fishing boat east",
+      "y_hint": [
+        320,
+        440
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_yellow_east",
+      "name": "Yellow school bus facing east",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_yellow_west",
+      "name": "Yellow school bus facing west",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_yellow_south",
+      "name": "Yellow school bus facing south",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_yellow_north",
+      "name": "Yellow school bus facing north",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_pink_east",
+      "name": "Pink bus facing east",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_pink_west",
+      "name": "Pink bus facing west",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_pink_south",
+      "name": "Pink bus facing south",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_pink_north",
+      "name": "Pink bus facing north",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_cyan_east",
+      "name": "Cyan / light-blue bus facing east",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_cyan_west",
+      "name": "Cyan / light-blue bus facing west",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_cyan_south",
+      "name": "Cyan / light-blue bus facing south",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_cyan_north",
+      "name": "Cyan / light-blue bus facing north",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_brown_east",
+      "name": "Brown bus with green stripe facing east",
+      "y_hint": [
+        420,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_brown_west",
+      "name": "Brown bus with green stripe facing west",
+      "y_hint": [
+        420,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_brown_south",
+      "name": "Brown bus with green stripe facing south",
+      "y_hint": [
+        420,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_brown_north",
+      "name": "Brown bus with green stripe facing north",
+      "y_hint": [
+        420,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_grey_east",
+      "name": "Grey / taupe bus facing east",
+      "y_hint": [
+        480,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_grey_west",
+      "name": "Grey / taupe bus facing west",
+      "y_hint": [
+        480,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_grey_south",
+      "name": "Grey / taupe bus facing south",
+      "y_hint": [
+        480,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_grey_north",
+      "name": "Grey / taupe bus facing north",
+      "y_hint": [
+        480,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_yellow_door_east",
+      "name": "Yellow school bus door-side facing east",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_yellow_door_west",
+      "name": "Yellow school bus door-side facing west",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_shelter_front_a",
+      "name": "Bus shelter front A",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_shelter_front_b",
+      "name": "Bus shelter front B",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_shelter_side",
+      "name": "Bus shelter side",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_shelter_rear",
+      "name": "Bus shelter rear",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_1",
+      "name": "Bus stop sign 1",
+      "y_hint": [
+        420,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_2",
+      "name": "Bus stop sign 2",
+      "y_hint": [
+        420,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_3",
+      "name": "Bus stop sign 3",
+      "y_hint": [
+        420,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_4",
+      "name": "Bus stop sign 4",
+      "y_hint": [
+        420,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ambulance_east",
+      "name": "Ambulance 112 facing east",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.ambulance_west",
+      "name": "Ambulance 112 facing west",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.ambulance_south",
+      "name": "Ambulance 112 facing south",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.ambulance_north",
+      "name": "Ambulance 112 facing north",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_open_east",
+      "name": "Hot dog food truck open facing east",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_closed_east",
+      "name": "Hot dog food truck closed facing east",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_open_west",
+      "name": "Hot dog food truck open facing west",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_closed_west",
+      "name": "Hot dog food truck closed facing west",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hot_dog_umbrella",
+      "name": "Hot dog stand red/yellow umbrella",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.hot_dog_table_stools",
+      "name": "Oval table with red stools",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hot_dog_vendor",
+      "name": "Hot dog vendor character",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.hot_dog_counter_open",
+      "name": "Hot dog counter interior open",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hot_dog_shutter",
+      "name": "Hot dog rolling shutter",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_east",
+      "name": "Camper / RV facing east",
+      "y_hint": [
+        768,
+        980
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_west",
+      "name": "Camper / RV facing west",
+      "y_hint": [
+        768,
+        980
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_south",
+      "name": "Camper / RV facing south",
+      "y_hint": [
+        768,
+        980
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_north",
+      "name": "Camper / RV facing north",
+      "y_hint": [
+        768,
+        980
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_awning_blue_white_east",
+      "name": "Camper with blue/white awning facing east",
+      "y_hint": [
+        880,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_awning_yellow_white_east",
+      "name": "Camper with yellow/white awning facing east",
+      "y_hint": [
+        880,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_awning_tan_east",
+      "name": "Camper with tan awning facing east",
+      "y_hint": [
+        880,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_awning_blue_white_west",
+      "name": "Camper with blue/white awning facing west",
+      "y_hint": [
+        880,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_awning_yellow_white_west",
+      "name": "Camper with yellow/white awning facing west",
+      "y_hint": [
+        880,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.camper_awning_tan_west",
+      "name": "Camper with tan awning facing west",
+      "y_hint": [
+        880,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.tacos_truck_open_east",
+      "name": "Tacos food truck open facing east",
+      "y_hint": [
+        920,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.tacos_truck_closed_east",
+      "name": "Tacos food truck closed facing east",
+      "y_hint": [
+        920,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.tacos_truck_open_west",
+      "name": "Tacos food truck open facing west",
+      "y_hint": [
+        920,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.tacos_truck_closed_west",
+      "name": "Tacos food truck closed facing west",
+      "y_hint": [
+        920,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.tacos_truck_prop_taco",
+      "name": "Giant taco roof mascot prop",
+      "y_hint": [
+        920,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.tacos_vendor",
+      "name": "Tacos truck vendor",
+      "y_hint": [
+        960,
+        1100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_open_east",
+      "name": "Ice cream truck open facing east",
+      "y_hint": [
+        980,
+        1160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_closed_east",
+      "name": "Ice cream truck closed facing east",
+      "y_hint": [
+        980,
+        1160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_open_west",
+      "name": "Ice cream truck open facing west",
+      "y_hint": [
+        980,
+        1160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_closed_west",
+      "name": "Ice cream truck closed facing west",
+      "y_hint": [
+        980,
+        1160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_1",
+      "name": "Ice cream prop strawberry cone",
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_2",
+      "name": "Ice cream prop mint cone",
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_3",
+      "name": "Ice cream prop fallen cone a",
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_4",
+      "name": "Ice cream prop fallen cone b",
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_5",
+      "name": "Ice cream prop fallen cone c",
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_6",
+      "name": "Ice cream prop fallen cone d",
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ice_cream_vendor",
+      "name": "Ice cream truck vendor",
+      "y_hint": [
+        1020,
+        1160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_open_east",
+      "name": "Pizza tuk-tuk open facing east",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_closed_east",
+      "name": "Pizza tuk-tuk closed facing east",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_open_west",
+      "name": "Pizza tuk-tuk open facing west",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_closed_west",
+      "name": "Pizza tuk-tuk closed facing west",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_prop_sign",
+      "name": "Pizza roof sign prop",
+      "y_hint": [
+        1100,
+        1240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.pizza_vendor",
+      "name": "Pizza tuk-tuk vendor",
+      "y_hint": [
+        1120,
+        1260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.fruit_cart_umbrella",
+      "name": "Fruit/veg cart with multicolor umbrella",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.fruit_cart_empty",
+      "name": "Empty produce cart with umbrella",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.flowers_cart",
+      "name": "Flower cart with umbrella",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_cart_tan",
+      "name": "Street food stall tan awning",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_cart_red",
+      "name": "Street food stall red/white awning",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_cart_pink",
+      "name": "Street food stall pink/white awning",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_1",
+      "name": "Street food dining table 1",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_2",
+      "name": "Street food dining table 2",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_3",
+      "name": "Street food dining table 3",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_4",
+      "name": "Street food dining table 4",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_5",
+      "name": "Street food dining table 5",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_6",
+      "name": "Street food dining table 6",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_7",
+      "name": "Street food dining table 7",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_8",
+      "name": "Street food dining table 8",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_9",
+      "name": "Street food dining table 9",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_table_10",
+      "name": "Street food dining table 10",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_food_chair",
+      "name": "Street food chair",
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.street_food_sign_1",
+      "name": "Street food chalkboard sign 1",
+      "y_hint": [
+        1120,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.street_food_sign_2",
+      "name": "Street food chalkboard sign 2",
+      "y_hint": [
+        1120,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_building",
+      "name": "Gas station convenience store",
+      "y_hint": [
+        1280,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_canopy_a",
+      "name": "Gas station canopy A",
+      "y_hint": [
+        1200,
+        1420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_canopy_b",
+      "name": "Gas station canopy B",
+      "y_hint": [
+        1220,
+        1440
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_petrol_pump",
+      "name": "Petrol pump island unit",
+      "y_hint": [
+        1220,
+        1400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_1",
+      "name": "Gas pump prop 1",
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_2",
+      "name": "Gas pump prop 2",
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_3",
+      "name": "Gas pump prop 3",
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_4",
+      "name": "Gas pump prop 4",
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_5",
+      "name": "Gas pump prop 5",
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_6",
+      "name": "Gas pump prop 6",
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_7",
+      "name": "Gas pump prop 7",
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_1",
+      "name": "Gas price signboard 1",
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_2",
+      "name": "Gas price signboard 2",
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_3",
+      "name": "Gas price signboard 3",
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_4",
+      "name": "Gas price signboard 4",
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_1",
+      "name": "Gas price digit sprite 1",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_2",
+      "name": "Gas price digit sprite 2",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_3",
+      "name": "Gas price digit sprite 3",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_4",
+      "name": "Gas price digit sprite 4",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_5",
+      "name": "Gas price digit sprite 5",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_6",
+      "name": "Gas price digit sprite 6",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_7",
+      "name": "Gas price digit sprite 7",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_8",
+      "name": "Gas price digit sprite 8",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_9",
+      "name": "Gas price digit sprite 9",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_10",
+      "name": "Gas price digit sprite 10",
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_prop_1",
+      "name": "Gas station misc prop 1",
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_prop_2",
+      "name": "Gas station misc prop 2",
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_prop_3",
+      "name": "Gas station misc prop 3",
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_ac_unit",
+      "name": "Gas station AC unit",
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_doormat_1",
+      "name": "Gas station doormat 1",
+      "y_hint": [
+        1350,
+        1520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.gas_station_doormat_2",
+      "name": "Gas station doormat 2",
+      "y_hint": [
+        1350,
+        1520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.helicopter_utility_east",
+      "name": "Utility helicopter facing east",
+      "y_hint": [
+        1320,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.helicopter_medical_east",
+      "name": "Medical helicopter facing east",
+      "y_hint": [
+        1320,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_1",
+      "name": "Helicopter / helipad prop 1",
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_2",
+      "name": "Helicopter / helipad prop 2",
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_3",
+      "name": "Helicopter / helipad prop 3",
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_4",
+      "name": "Helicopter / helipad prop 4",
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_5",
+      "name": "Helicopter / helipad prop 5",
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_6",
+      "name": "Helicopter / helipad prop 6",
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.helipad_corner",
+      "name": "Helipad corner with rail and lights",
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.public_phone_1",
+      "name": "Public payphone 1",
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.public_phone_2",
+      "name": "Public payphone 2",
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.street_sign_no_entry",
+      "name": "No-entry / circular street sign",
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.street_sign_info_blue",
+      "name": "Blue info / parking street sign",
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.street_sign_heli",
+      "name": "Helicopter zone street sign",
+      "y_hint": [
+        1300,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.street_sign_heli_board",
+      "name": "Helicopter info board",
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.gas_pump_island_topdown",
+      "name": "Gas pump island under canopy top-down",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.car_wash",
+      "name": "Car wash entrance building",
+      "y_hint": [
+        1536,
+        1700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.helipad_full",
+      "name": "Full helipad with H marking",
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.car_icon_teal",
+      "name": "Mini car UI icon Teal",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.car_icon_blue",
+      "name": "Mini car UI icon Blue",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.car_icon_red",
+      "name": "Mini car UI icon Red",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.car_icon_orange",
+      "name": "Mini car UI icon Orange",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.car_icon_light_blue",
+      "name": "Mini car UI icon Light blue",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.car_icon_grey",
+      "name": "Mini car UI icon Grey",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ui_arrow_down",
+      "name": "UI arrow down",
+      "y_hint": [
+        1600,
+        1700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.ui_arrow_left",
+      "name": "UI arrow left",
+      "y_hint": [
+        1600,
+        1700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.vehicles.sedan_silver_east",
+      "name": "Silver / light grey sedan facing east",
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_silver_west",
+      "name": "Silver / light grey sedan facing west",
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_silver_south",
+      "name": "Silver / light grey sedan facing south",
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_silver_north",
+      "name": "Silver / light grey sedan facing north",
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_green_east",
+      "name": "Green / mint sedan facing east",
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_green_west",
+      "name": "Green / mint sedan facing west",
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_green_south",
+      "name": "Green / mint sedan facing south",
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_green_north",
+      "name": "Green / mint sedan facing north",
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_east",
+      "name": "Lavender / pale purple sedan facing east",
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_west",
+      "name": "Lavender / pale purple sedan facing west",
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_south",
+      "name": "Lavender / pale purple sedan facing south",
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_north",
+      "name": "Lavender / pale purple sedan facing north",
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_teal_east",
+      "name": "Teal / aqua sedan facing east",
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_teal_west",
+      "name": "Teal / aqua sedan facing west",
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_teal_south",
+      "name": "Teal / aqua sedan facing south",
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_teal_north",
+      "name": "Teal / aqua sedan facing north",
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_east",
+      "name": "Yellow sedan facing east",
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_west",
+      "name": "Yellow sedan facing west",
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_south",
+      "name": "Yellow sedan facing south",
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_north",
+      "name": "Yellow sedan facing north",
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_tan_east",
+      "name": "Tan / beige sedan facing east",
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_tan_west",
+      "name": "Tan / beige sedan facing west",
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_tan_south",
+      "name": "Tan / beige sedan facing south",
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_tan_north",
+      "name": "Tan / beige sedan facing north",
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_white_east",
+      "name": "White sedan facing east",
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_white_west",
+      "name": "White sedan facing west",
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_white_south",
+      "name": "White sedan facing south",
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_white_north",
+      "name": "White sedan facing north",
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_east",
+      "name": "Dark slate grey sedan (model B) facing east",
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_west",
+      "name": "Dark slate grey sedan (model B) facing west",
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_south",
+      "name": "Dark slate grey sedan (model B) facing south",
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_north",
+      "name": "Dark slate grey sedan (model B) facing north",
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_east",
+      "name": "Teal with purple stripe sedan (model B) facing east",
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_west",
+      "name": "Teal with purple stripe sedan (model B) facing west",
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_south",
+      "name": "Teal with purple stripe sedan (model B) facing south",
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_north",
+      "name": "Teal with purple stripe sedan (model B) facing north",
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_east",
+      "name": "Purple sedan (model B) facing east",
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_west",
+      "name": "Purple sedan (model B) facing west",
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_south",
+      "name": "Purple sedan (model B) facing south",
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_north",
+      "name": "Purple sedan (model B) facing north",
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_east",
+      "name": "Dark / forest green sedan (model B) facing east",
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_west",
+      "name": "Dark / forest green sedan (model B) facing west",
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_south",
+      "name": "Dark / forest green sedan (model B) facing south",
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_north",
+      "name": "Dark / forest green sedan (model B) facing north",
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_east",
+      "name": "Yellow sedan (model B) facing east",
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_west",
+      "name": "Yellow sedan (model B) facing west",
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_south",
+      "name": "Yellow sedan (model B) facing south",
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_north",
+      "name": "Yellow sedan (model B) facing north",
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_east",
+      "name": "Tan / beige sedan (model B) facing east",
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_west",
+      "name": "Tan / beige sedan (model B) facing west",
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_south",
+      "name": "Tan / beige sedan (model B) facing south",
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_north",
+      "name": "Tan / beige sedan (model B) facing north",
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_east",
+      "name": "White sedan (model B) facing east",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_west",
+      "name": "White sedan (model B) facing west",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_south",
+      "name": "White sedan (model B) facing south",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_north",
+      "name": "White sedan (model B) facing north",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hatchback_white_east",
+      "name": "White hatchback facing east",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hatchback_white_west",
+      "name": "White hatchback facing west",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hatchback_white_south",
+      "name": "White hatchback facing south",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.hatchback_white_north",
+      "name": "White hatchback facing north",
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_cyan_east",
+      "name": "Cyan / light blue sports coupe facing east",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_cyan_west",
+      "name": "Cyan / light blue sports coupe facing west",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_cyan_south",
+      "name": "Cyan / light blue sports coupe facing south",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_cyan_north",
+      "name": "Cyan / light blue sports coupe facing north",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_lime_east",
+      "name": "Lime green sports coupe facing east",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_lime_west",
+      "name": "Lime green sports coupe facing west",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_lime_south",
+      "name": "Lime green sports coupe facing south",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_lime_north",
+      "name": "Lime green sports coupe facing north",
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_teal_east",
+      "name": "Dark teal / slate blue sports coupe facing east",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_teal_west",
+      "name": "Dark teal / slate blue sports coupe facing west",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_teal_south",
+      "name": "Dark teal / slate blue sports coupe facing south",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_teal_north",
+      "name": "Dark teal / slate blue sports coupe facing north",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_red_east",
+      "name": "Red sports coupe facing east",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_red_west",
+      "name": "Red sports coupe facing west",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_red_south",
+      "name": "Red sports coupe facing south",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_red_north",
+      "name": "Red sports coupe facing north",
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_white_east",
+      "name": "White sports coupe facing east",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_white_west",
+      "name": "White sports coupe facing west",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_white_south",
+      "name": "White sports coupe facing south",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_white_north",
+      "name": "White sports coupe facing north",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_orange_east",
+      "name": "Orange sports coupe facing east",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_orange_west",
+      "name": "Orange sports coupe facing west",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_orange_south",
+      "name": "Orange sports coupe facing south",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.sport_orange_north",
+      "name": "Orange sports coupe facing north",
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_straight_vertical",
+      "name": "Tire skid straight vertical",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_straight_horizontal",
+      "name": "Tire skid straight horizontal",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_corner_ne",
+      "name": "Tire skid L-corner NE",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_corner_nw",
+      "name": "Tire skid L-corner NW",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_corner_se",
+      "name": "Tire skid L-corner SE",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_corner_sw",
+      "name": "Tire skid L-corner SW",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_curve_s_a",
+      "name": "Tire skid S-curve A",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_curve_s_b",
+      "name": "Tire skid S-curve B",
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.vehicles.skid_demo_yellow_car",
+      "name": "Yellow sedan with motion/skid demo",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    }
+  ]
+}

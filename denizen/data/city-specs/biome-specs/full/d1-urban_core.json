@@ -1,0 +1,89 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d1-mainstreet.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d1-urban_core.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d1-compiled",
+ "district": "D1 Main Street Retail (avenue extension)",
+ "biome": "urban_core",
+ "palette": "neutral_urban",
+ "palette_secondary": "warm_autumn",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 101001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d1-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 4096,
+  "y": 1600,
+  "w": 1008,
+  "h": 512
+ },
+ "label": "MAIN STREET RETAIL",
+ "label_at": {
+  "x": 464,
+  "y": 16
+ },
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0,
+   "y": 0,
+   "w": 1008,
+   "h": 512,
+   "depth": 0.9,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 32,
+   "w": 1008,
+   "h": 240,
+   "depth": 0.9
+  },
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 352,
+   "w": 1008,
+   "h": 160,
+   "depth": 0.9
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 976,
+   "h": 480,
+   "density": {
+    "building_shell": "packed",
+    "street_furn": "dense",
+    "vegetation": "sparse",
+    "decor_small": "medium"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.urban_core.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

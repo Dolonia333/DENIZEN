@@ -1,0 +1,1115 @@
+{
+  "sheet": "14_Swimming_Pool",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.pool.edge_tile_set",
+      "name": "Pool edge tile set (straights, outer/inner corners)",
+      "category": "terrain",
+      "tags": [
+        "pool",
+        "edge",
+        "tile",
+        "deck",
+        "corner"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "White/teal perimeter tiles for pool outline; modular 16px pieces clustered top-left"
+    },
+    {
+      "id": "me.pool.water_tile_fill",
+      "name": "Pool water fill tiles",
+      "category": "terrain",
+      "tags": [
+        "pool",
+        "water",
+        "fill",
+        "ripple"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Bright blue water squares; some with light ripple highlights"
+    },
+    {
+      "id": "me.pool.deep_wall_panel",
+      "name": "Deep pool wall / glass wall segments",
+      "category": "infra",
+      "tags": [
+        "pool",
+        "wall",
+        "depth",
+        "glass"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical wall segments for multi-level pool sides"
+    },
+    {
+      "id": "me.pool.stairs_front",
+      "name": "Pool stairs into water (front)",
+      "category": "infra",
+      "tags": [
+        "pool",
+        "stairs",
+        "entrance"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Built-in tiled steps facing viewer"
+    },
+    {
+      "id": "me.pool.stairs_side",
+      "name": "Pool stairs into water (side)",
+      "category": "infra",
+      "tags": [
+        "pool",
+        "stairs",
+        "entrance"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side-facing stair cluster"
+    },
+    {
+      "id": "me.pool.ladder_rail_front",
+      "name": "Pool ladder handrails (front)",
+      "category": "infra",
+      "tags": [
+        "pool",
+        "ladder",
+        "rail",
+        "metal",
+        "exit"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        260
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Paired stainless rails at pool edge"
+    },
+    {
+      "id": "me.pool.ladder_rail_side",
+      "name": "Pool ladder handrails (side)",
+      "category": "infra",
+      "tags": [
+        "pool",
+        "ladder",
+        "rail",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        280
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Profile/curved side rails"
+    },
+    {
+      "id": "me.pool.ladder_rail_angled",
+      "name": "Pool ladder handrails (angled)",
+      "category": "infra",
+      "tags": [
+        "pool",
+        "ladder",
+        "rail",
+        "diagonal"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        280
+      ],
+      "surface": "ground",
+      "facing": "southeast",
+      "multi_tile": true,
+      "notes": "Rails for angled pool corners"
+    },
+    {
+      "id": "me.pool.diving_board",
+      "name": "Diving board",
+      "category": "infra",
+      "tags": [
+        "pool",
+        "diving",
+        "board"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        160
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "White board with blue tip and metal base"
+    },
+    {
+      "id": "me.pool.umbrella_cyan_white",
+      "name": "Patio umbrella cyan/white stripes",
+      "category": "furniture",
+      "tags": [
+        "umbrella",
+        "shade",
+        "patio",
+        "striped"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-down round canopy; pole + circular base"
+    },
+    {
+      "id": "me.pool.umbrella_orange_white",
+      "name": "Patio umbrella orange/white stripes",
+      "category": "furniture",
+      "tags": [
+        "umbrella",
+        "shade",
+        "patio",
+        "striped",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same form as cyan variant"
+    },
+    {
+      "id": "me.pool.umbrella_green_white",
+      "name": "Patio umbrella green/white stripes",
+      "category": "furniture",
+      "tags": [
+        "umbrella",
+        "shade",
+        "patio",
+        "striped",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Lime/green striped canopy"
+    },
+    {
+      "id": "me.pool.umbrella_blue_white",
+      "name": "Patio umbrella sky-blue/white stripes",
+      "category": "furniture",
+      "tags": [
+        "umbrella",
+        "shade",
+        "patio",
+        "striped",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Deeper sky-blue stripe variant"
+    },
+    {
+      "id": "me.pool.umbrella_with_table",
+      "name": "Umbrella with drink table underneath",
+      "category": "furniture",
+      "tags": [
+        "umbrella",
+        "table",
+        "drinks",
+        "patio"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        140
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Umbrella variants that include small table/bottles under canopy"
+    },
+    {
+      "id": "me.pool.umbrella_folded",
+      "name": "Folded patio umbrella",
+      "category": "furniture",
+      "tags": [
+        "umbrella",
+        "folded",
+        "closed"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        140
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Closed/side-view parasol sprites"
+    },
+    {
+      "id": "me.pool.beach_chair_orange",
+      "name": "Folding beach chair orange fabric",
+      "category": "furniture",
+      "tags": [
+        "chair",
+        "beach",
+        "folding",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Small wooden-frame folding chair; multiple facings on sheet"
+    },
+    {
+      "id": "me.pool.beach_chair_red",
+      "name": "Folding beach chair red fabric",
+      "category": "furniture",
+      "tags": [
+        "chair",
+        "beach",
+        "folding",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Red fabric folding chair variants"
+    },
+    {
+      "id": "me.pool.beach_chair_striped",
+      "name": "Folding beach chair striped",
+      "category": "furniture",
+      "tags": [
+        "chair",
+        "beach",
+        "folding",
+        "striped"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        120
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Red/yellow striped folding chairs"
+    },
+    {
+      "id": "me.pool.sunbed_green_side",
+      "name": "Cushioned lounge sunbed green (side)",
+      "category": "furniture",
+      "tags": [
+        "sunbed",
+        "lounge",
+        "green",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Long metal-frame lounger; left/right facings"
+    },
+    {
+      "id": "me.pool.sunbed_yellow_side",
+      "name": "Cushioned lounge sunbed yellow (side)",
+      "category": "furniture",
+      "tags": [
+        "sunbed",
+        "lounge",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Yellow cushion side loungers"
+    },
+    {
+      "id": "me.pool.sunbed_blue_side",
+      "name": "Cushioned lounge sunbed blue (side)",
+      "category": "furniture",
+      "tags": [
+        "sunbed",
+        "lounge",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        180
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Light-blue cushion side loungers"
+    },
+    {
+      "id": "me.pool.sunbed_orange_side",
+      "name": "Cushioned lounge sunbed orange (side)",
+      "category": "furniture",
+      "tags": [
+        "sunbed",
+        "lounge",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        180
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Orange cushion side loungers"
+    },
+    {
+      "id": "me.pool.sunbed_topdown",
+      "name": "Lounge sunbed top-down variants",
+      "category": "furniture",
+      "tags": [
+        "sunbed",
+        "lounge",
+        "topdown",
+        "green",
+        "orange",
+        "blue",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical top-down loungers in multiple cushion colors"
+    },
+    {
+      "id": "me.pool.wooden_lounger",
+      "name": "Wooden slatted lounger",
+      "category": "furniture",
+      "tags": [
+        "sunbed",
+        "wood",
+        "lounge"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Natural wood-slat pool loungers mid/lower sheet"
+    },
+    {
+      "id": "me.pool.lifeguard_chair_metal",
+      "name": "Lifeguard chair metal",
+      "category": "furniture",
+      "tags": [
+        "lifeguard",
+        "chair",
+        "tall",
+        "metal",
+        "safety"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Elevated silver/white metal chair with ladder"
+    },
+    {
+      "id": "me.pool.lifeguard_chair_wood",
+      "name": "Lifeguard chair wood",
+      "category": "furniture",
+      "tags": [
+        "lifeguard",
+        "chair",
+        "tall",
+        "wood",
+        "safety"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Elevated tan wood lifeguard chair"
+    },
+    {
+      "id": "me.pool.lifeguard_chair_metal_umbrella",
+      "name": "Lifeguard chair metal with umbrella",
+      "category": "furniture",
+      "tags": [
+        "lifeguard",
+        "chair",
+        "umbrella",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Metal lifeguard seat with orange/white umbrella"
+    },
+    {
+      "id": "me.pool.lifeguard_chair_wood_umbrella",
+      "name": "Lifeguard chair wood with umbrella",
+      "category": "furniture",
+      "tags": [
+        "lifeguard",
+        "chair",
+        "umbrella",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wood lifeguard seat with red/white umbrella"
+    },
+    {
+      "id": "me.pool.locker_numbers_1_5",
+      "name": "Lane/locker number plaques 1–5",
+      "category": "sign",
+      "tags": [
+        "number",
+        "lane",
+        "locker",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        140
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue squares with white numerals 1 through 5"
+    },
+    {
+      "id": "me.pool.starting_block_set",
+      "name": "Swim starting blocks numbered 1–5",
+      "category": "infra",
+      "tags": [
+        "starting_block",
+        "lane",
+        "race",
+        "pool"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White block platforms with blue numbered plates; facing pairs"
+    },
+    {
+      "id": "me.pool.wooden_shelf_bottles",
+      "name": "Wooden shelf / drink cart with bottles",
+      "category": "furniture",
+      "tags": [
+        "shelf",
+        "cart",
+        "drinks",
+        "bar",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        140
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small wooden stand/cart stocked with bottles"
+    },
+    {
+      "id": "me.pool.tiny_table",
+      "name": "Tiny wooden poolside table",
+      "category": "furniture",
+      "tags": [
+        "table",
+        "wood",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        160
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wooden_Tiny_Table singles; drink stands beside loungers"
+    },
+    {
+      "id": "me.pool.float_dragon",
+      "name": "Green dragon inflatable float",
+      "category": "prop",
+      "tags": [
+        "float",
+        "inflatable",
+        "dragon",
+        "toy",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        280
+      ],
+      "surface": "water",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Animal tube with horns/spikes; side/front/back views"
+    },
+    {
+      "id": "me.pool.float_flamingo",
+      "name": "Pink flamingo inflatable float",
+      "category": "prop",
+      "tags": [
+        "float",
+        "inflatable",
+        "flamingo",
+        "toy",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        280
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Classic flamingo ring float"
+    },
+    {
+      "id": "me.pool.float_donut",
+      "name": "Donut inflatable float with sprinkles",
+      "category": "prop",
+      "tags": [
+        "float",
+        "inflatable",
+        "donut",
+        "sprinkles",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        300
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pink frosting donut tube; whole and bitten variants"
+    },
+    {
+      "id": "me.pool.float_ring_green",
+      "name": "Green spotted inner-tube float",
+      "category": "prop",
+      "tags": [
+        "float",
+        "ring",
+        "tube",
+        "green",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        300
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Circular green tube with orange/yellow spots"
+    },
+    {
+      "id": "me.pool.float_ring_pink",
+      "name": "Pink plain inner-tube float",
+      "category": "prop",
+      "tags": [
+        "float",
+        "ring",
+        "tube",
+        "pink",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        300
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Thin pink ring float"
+    },
+    {
+      "id": "me.pool.float_popsicle_red",
+      "name": "Popsicle inflatable float red",
+      "category": "prop",
+      "tags": [
+        "float",
+        "popsicle",
+        "inflatable",
+        "red",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Rectangular popsicle float; whole and bitten"
+    },
+    {
+      "id": "me.pool.float_popsicle_blue",
+      "name": "Popsicle inflatable float blue",
+      "category": "prop",
+      "tags": [
+        "float",
+        "popsicle",
+        "inflatable",
+        "blue",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Blue popsicle float variants"
+    },
+    {
+      "id": "me.pool.float_popsicle_yellow",
+      "name": "Popsicle inflatable float yellow",
+      "category": "prop",
+      "tags": [
+        "float",
+        "popsicle",
+        "inflatable",
+        "yellow",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Yellow popsicle float variants"
+    },
+    {
+      "id": "me.pool.beach_ball_red_green",
+      "name": "Beach ball red/white/green",
+      "category": "prop",
+      "tags": [
+        "beach_ball",
+        "ball",
+        "toy"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        260
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Segmented ball; ground and floating (ripple) versions"
+    },
+    {
+      "id": "me.pool.beach_ball_red_blue",
+      "name": "Beach ball red/white/blue",
+      "category": "prop",
+      "tags": [
+        "beach_ball",
+        "ball",
+        "toy"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        260
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Classic red-white-blue segments"
+    },
+    {
+      "id": "me.pool.beach_ball_pastel",
+      "name": "Beach ball pastel pink/blue/white",
+      "category": "prop",
+      "tags": [
+        "beach_ball",
+        "ball",
+        "toy",
+        "pastel"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        260
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Softer pastel stripe ball"
+    },
+    {
+      "id": "me.pool.pool_mat_lilo",
+      "name": "Pool mat / lilo float",
+      "category": "prop",
+      "tags": [
+        "mat",
+        "lilo",
+        "float",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        320
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Long rectangular floating mats (red/blue/orange) if present mid-sheet"
+    },
+    {
+      "id": "me.pool.lane_divider_blue",
+      "name": "Lane divider rope blue buoys",
+      "category": "infra",
+      "tags": [
+        "lane",
+        "divider",
+        "buoy",
+        "rope",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        360
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Long string of light-blue lane buoys"
+    },
+    {
+      "id": "me.pool.lane_divider_red_white",
+      "name": "Lane divider rope red/white buoys",
+      "category": "infra",
+      "tags": [
+        "lane",
+        "divider",
+        "buoy",
+        "rope",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        370
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternating red/white lane rope"
+    },
+    {
+      "id": "me.pool.buoy_single",
+      "name": "Single lane buoy pieces",
+      "category": "prop",
+      "tags": [
+        "buoy",
+        "lane",
+        "water"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        370
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Individual buoy singles for custom lane ropes"
+    },
+    {
+      "id": "me.pool.lifebuoy_mounted",
+      "name": "Lifebuoy on holder post",
+      "category": "prop",
+      "tags": [
+        "lifebuoy",
+        "safety",
+        "ring",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Orange/white life ring on wooden/metal post"
+    },
+    {
+      "id": "me.pool.lifebuoy_loose",
+      "name": "Lifebuoy ring loose",
+      "category": "prop",
+      "tags": [
+        "lifebuoy",
+        "safety",
+        "ring",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Standalone life ring without tall post"
+    },
+    {
+      "id": "me.pool.water_slide",
+      "name": "Spiral water slide with stairs",
+      "category": "infra",
+      "tags": [
+        "slide",
+        "water",
+        "stairs",
+        "recreation"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        496
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large light-blue winding slide with ladder/platform; bottom of sheet"
+    },
+    {
+      "id": "me.pool.palm_tree",
+      "name": "Palm tree on grass patch",
+      "category": "nature",
+      "tags": [
+        "palm",
+        "tree",
+        "tropical",
+        "plant"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        496
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown trunk, green fronds, circular grass base; duplicates on sheet"
+    },
+    {
+      "id": "me.pool.sun_hat",
+      "name": "Straw sun hat with ribbon",
+      "category": "decor",
+      "tags": [
+        "hat",
+        "sun",
+        "beach",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wide-brim straw hats with orange/red ribbon accents if present"
+    },
+    {
+      "id": "me.pool.shower_pole",
+      "name": "Outdoor shower / stanchion pole",
+      "category": "infra",
+      "tags": [
+        "shower",
+        "pole",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        380
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical metal poles near pool deck"
+    },
+    {
+      "id": "me.pool.edge_tile_set_alt",
+      "name": "Pool edge tile set alternate depth/style",
+      "category": "terrain",
+      "tags": [
+        "pool",
+        "edge",
+        "tile",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        240
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Pool_2_* modular family; alternate edge/corner/depth pieces"
+    },
+    {
+      "id": "me.pool.umbrella_shadow_variants",
+      "name": "Patio umbrellas with baked ground shadow",
+      "category": "furniture",
+      "tags": [
+        "umbrella",
+        "shade",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Umbrella_5–8 shadow counterparts of cyan/orange/green/blue canopies"
+    }
+  ],
+  "row_guide": "Top-left: modular pool edge/water/stairs/ladder tiles. Top-center: striped umbrellas (+table variants) and folding beach chairs. Top-right: cushioned sunbeds, lifeguard chairs, numbered plaques, wooden drink shelf. Mid: dragon/flamingo/donut/ring floats, beach balls, popsicle floats. Mid-lower: lane ropes, lifebuoys, starting blocks. Bottom: spiral water slide and twin palm trees."
+}

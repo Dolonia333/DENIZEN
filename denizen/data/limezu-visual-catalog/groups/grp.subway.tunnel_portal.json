@@ -1,0 +1,89 @@
+{
+  "id": "grp.subway.tunnel_portal",
+  "name": "Rail tunnel portal (single-arch cornice + shadow banding + brown rail shadow)",
+  "biome": "subway",
+  "category": "infra",
+  "surface": "ground",
+  "facing": "east",
+  "solid": true,
+  "source_me_ids": [
+    "me.subway.tunnel_single",
+    "me.subway.pillar_big"
+  ],
+  "footprint_tiles": {
+    "w": 7,
+    "h": 10
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the shadow band forms the dark tunnel mouth, the rail shadow marks track level below it, the cornice caps the opening at the bottom of this sheet band, and a support pillar stands beside the mouth."
+  },
+  "offset_basis_summary": "Single_Tunnel_Shadow_1, Single_Tunnel_Brown_Rail_Shadow and Single_Tunnel_Cornice all sit in the same contiguous band of the 20_Subway_and_Train_Station sheet (x0-112, y2352-2464), so those three offsets are sheet_relative from a shared origin at the band's true top-left (0,2352) -- note the sheet's vertical sprite order (shadow, then rail-shadow, then cornice) does not necessarily match final on-screen stacking, since sheet rows commonly hold alternate render layers rather than a literal vertical cross-section. Big_Pillar lives in an unrelated sheet region, so its placement beside the tunnel mouth is hand-authored.",
+  "pieces": [
+    {
+      "role": "shadow_band",
+      "me": "me.subway.tunnel_single",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_single_tunnel_shadow_1",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Single_Tunnel_Shadow_1.png",
+      "dx": 1,
+      "dy": 0,
+      "w": 64,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any",
+      "notes": "Dark tunnel-mouth overlay; top of the sheet band (origin row)."
+    },
+    {
+      "role": "rail_shadow",
+      "me": "me.subway.tunnel_single",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_single_tunnel_brown_rail_shadow",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Single_Tunnel_Brown_Rail_Shadow.png",
+      "dx": 3,
+      "dy": 4,
+      "w": 32,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any",
+      "notes": "Track-level shadow strip, 4 tiles below shadow_band on the sheet."
+    },
+    {
+      "role": "cornice",
+      "me": "me.subway.tunnel_single",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_single_tunnel_cornice",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Single_Tunnel_Cornice.png",
+      "dx": 0,
+      "dy": 5,
+      "w": 96,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "east",
+      "notes": "Portal frame / cornice cap spanning the full tunnel width; 5 tiles below shadow_band on the sheet."
+    },
+    {
+      "role": "entrance_pillar",
+      "me": "me.subway.pillar_big",
+      "exs": "exs.20_subway_and_train_station.subway_and_train_station_big_pillar",
+      "basename": "ME_Singles_Subway_and_Train_Station_16x16_Big_Pillar.png",
+      "dx": 6,
+      "dy": 5,
+      "w": 16,
+      "h": 80,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any",
+      "notes": "Structural column beside the tunnel mouth, matching the pillar role used in grp.subway.station_stairs."
+    }
+  ],
+  "variants": {
+    "tunnel_width": "Swap me.subway.tunnel_single for me.subway.tunnel_double for a two-track portal (double_tunnel_cornice etc. follow the same sheet-relative band, shifted down to y2544+)."
+  },
+  "interact": "traverse",
+  "notes": "Sheet-relative tunnel-portal band (shadow + rail-shadow + cornice all co-located on the sheet) closed off with a hand-placed structural pillar borrowed from the station_stairs vocabulary."
+}

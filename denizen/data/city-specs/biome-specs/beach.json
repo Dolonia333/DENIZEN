@@ -1,0 +1,262 @@
+{
+ "_doc": "EXAMPLE exterior district compiler spec — a 400x280 sand lounge pocket on the west shore, below D7 park and west of D8's boardwalk. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/beach.json. Vocabulary (biome / surface / slot / role / density / palette / interact) comes from data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md",
+ "schema": "exterior-district-spec/1",
+ "id": "d18-beach-lounge",
+ "district": "D18 Beach Lounge Pocket",
+ "biome": "beach",
+ "palette": "coastal",
+ "palette_secondary": "festive_market",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 21084,
+  "coords": "local",
+  "out": "data/city-specs/generated/d18-beach-lounge.json",
+  "_doc": "coords 'local' = every rect/point below is relative to bbox, so the whole pocket relocates by editing bbox alone (see EXTERIOR-MISTAKES.md #4, stale bbox after relocate). 'world' is the default for districts authored in absolute coordinates."
+ },
+ "bbox": {
+  "x": 3120,
+  "y": 4816,
+  "w": 400,
+  "h": 280
+ },
+ "label": "SAND LOUNGE",
+ "label_at": {
+  "x": 200,
+  "y": 24
+ },
+ "surfaces": [
+  {
+   "surface": "sand",
+   "x": 0,
+   "y": 0,
+   "w": 400,
+   "h": 280,
+   "depth": 0.92,
+   "_doc": "the sand shelf covers the WHOLE bbox: pass A snaps sizes up to the tile grid, and any surface that stops short of the bbox edge leaves a sliver of bare world grass (see structure-grammar.md)"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "promenade",
+   "x": 0,
+   "y": 0,
+   "w": 400,
+   "h": 32,
+   "depth": 0.91,
+   "_doc": "paved approach along the north edge, down from the park"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "access_ramp",
+   "x": 176,
+   "y": 32,
+   "w": 48,
+   "h": 96,
+   "depth": 0.91,
+   "_doc": "ramp off the promenade onto the sand"
+  },
+  {
+   "surface": "water",
+   "x": 0,
+   "y": 256,
+   "w": 400,
+   "h": 24,
+   "depth": 0.96,
+   "anim": "ext/animated/_water_fill_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "fps": 5,
+   "shore": "top",
+   "_doc": "thin waterline so the pocket reads as coast. Not paintable — pass A reserves it, pass H emits it as an animBand. D8's open sea sits east of x=3600."
+  }
+ ],
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "promenade_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   },
+   "_doc": "benches / bins / a direction pole along the paved strip; nothing tall that blocks the view south"
+  },
+  {
+   "slot": "interior_fill",
+   "name": "lounge",
+   "x": 16,
+   "y": 48,
+   "w": 368,
+   "h": 144,
+   "density": {
+    "furniture_ext": "dense",
+    "canopy": "dense",
+    "vegetation": "medium",
+    "decor_small": "dense"
+   },
+   "_doc": "the heart of the pocket: loungers, towels, parasols, palms"
+  },
+  {
+   "slot": "plaza",
+   "name": "court",
+   "x": 240,
+   "y": 120,
+   "w": 144,
+   "h": 96,
+   "density": {
+    "play_sport": "medium",
+    "npc_anchor": "medium"
+   }
+  },
+  {
+   "slot": "shore_line",
+   "name": "wet_sand",
+   "between": [
+    "sand",
+    "water"
+   ],
+   "density": {
+    "decor_small": "dense",
+    "water_prop": "medium",
+    "vegetation": "sparse"
+   },
+   "_doc": "shells, starfish, sea rocks, a float. Cells are derived by pass B from the sand/water boundary, so this slot follows the waterline wherever the water patch is moved to."
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.beach.bamboo_bar_sand",
+   "at": {
+    "x": 72,
+    "y": 128
+   },
+   "anchor": "bc",
+   "pin": true,
+   "solid": true,
+   "interact": "shop",
+   "_doc": "hero anchor; grp.beach.bamboo_bar will dress it with stools + drinks table once W1-C lands"
+  },
+  {
+   "me": "me.pool.lifeguard_chair_wood",
+   "at": {
+    "x": 344,
+    "y": 232
+   },
+   "anchor": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.beach.sign_direction_big",
+   "at": {
+    "x": 200,
+    "y": 28
+   },
+   "anchor": "bc",
+   "solid": true,
+   "interact": "read"
+  }
+ ],
+ "groups": [
+  {
+   "grp": "grp.beach.volley_court",
+   "slot": "court",
+   "count": 1,
+   "interact": "play",
+   "_doc": "recipe from data/limezu-visual-catalog/groups/ (W0-C): 12 pieces at tile offsets from the net's top-left. Never stamp me.beach.volley_net or the modular court-line tiles solo."
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "shop": [
+   "me.beach.bamboo_bar_sand"
+  ],
+  "read": [
+   "me.beach.sign_direction_big"
+  ],
+  "play": [
+   "grp.beach.volley_court"
+  ]
+ },
+ "anims": [
+  {
+   "sheet": "ext/animated/Beach_Seagull_Idle_Left_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "at": {
+    "x": 96,
+    "y": 208
+   },
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Crabs_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "at": {
+    "x": 280,
+    "y": 248
+   },
+   "fps": 5
+  }
+ ],
+ "constraints": {
+  "keep_clear": [
+   {
+    "x": 176,
+    "y": 32,
+    "w": 48,
+    "h": 232,
+    "why": "beach access corridor promenade -> waterline, must stay walkable"
+   }
+  ],
+  "max_stamps": 90,
+  "coverage_target_singles": 45,
+  "max_solid_cell_ratio": 0.28,
+  "min_free_cell_ratio": 0.45,
+  "_doc": "walkability + coverage guards. A 400x280 pocket is 25x18 = 450 cells."
+ },
+ "passes": {
+  "A_ground": {
+   "enabled": true
+  },
+  "B_skeleton": {
+   "enabled": true
+  },
+  "C_landmarks": {
+   "enabled": true
+  },
+  "D_groups": {
+   "enabled": true
+  },
+  "E_props": {
+   "enabled": true,
+   "themes": [
+    "21_Beach",
+    "14_Swimming_Pool"
+   ]
+  },
+  "F_canopy": {
+   "enabled": true,
+   "candidates": [
+    "me.beach.palm_tree",
+    "me.beach.umbrella_blue_open",
+    "me.beach.umbrella_lightblue_open",
+    "me.beach.umbrella_green_open"
+   ]
+  },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.beach.shells_gold",
+    "me.beach.shells_pink_grey",
+    "me.beach.starfish",
+    "me.beach.sand_hole",
+    "me.beach.terrain_sand_mound_small"
+   ]
+  },
+  "H_life": {
+   "enabled": true
+  }
+ }
+}

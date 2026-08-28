@@ -1,0 +1,473 @@
+{
+  "sheet": "6_Garage_Sales",
+  "labels": [
+    {
+      "id": "me.garage_sales.facade_yellow_wide",
+      "name": "Yellow brick facade wide multi-story",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.facade_yellow_narrow",
+      "name": "Yellow brick facade narrow strip",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.facade_yellow_roofline",
+      "name": "Yellow facade roofline section",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.door_yellow_double",
+      "name": "Yellow facade double glass door",
+      "y_hint": [
+        240,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.door_yellow_alt",
+      "name": "Yellow facade door alternate",
+      "y_hint": [
+        250,
+        370
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.facade_grey_wide",
+      "name": "Grey brick facade wide multi-story",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.facade_grey_narrow",
+      "name": "Grey brick facade narrow strip",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.facade_grey_roofline",
+      "name": "Grey facade roofline section",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.door_grey_double",
+      "name": "Grey facade double glass door",
+      "y_hint": [
+        240,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.door_grey_alt",
+      "name": "Grey facade door alternate",
+      "y_hint": [
+        250,
+        370
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.roof_window_a",
+      "name": "Roof / attic window A",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.roof_window_b",
+      "name": "Roof / attic window B",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.roof_window_c",
+      "name": "Roof / attic window C",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.shutter_closed",
+      "name": "Garage shutter fully closed",
+      "y_hint": [
+        320,
+        460
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.shutter_partial",
+      "name": "Garage shutter partially open",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.shutter_open_storage",
+      "name": "Garage shutter open with shelves",
+      "y_hint": [
+        340,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.shutter_graffiti",
+      "name": "Garage shutter with graffiti",
+      "y_hint": [
+        320,
+        460
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.ac_unit_clean",
+      "name": "Wall AC unit clean",
+      "y_hint": [
+        280,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.ac_unit_weedy",
+      "name": "Wall AC unit with weeds",
+      "y_hint": [
+        280,
+        390
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.ac_unit_large",
+      "name": "Wall AC unit large",
+      "y_hint": [
+        280,
+        390
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.antenna_dish_left",
+      "name": "Satellite dish facing left",
+      "y_hint": [
+        300,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.antenna_dish_right",
+      "name": "Satellite dish facing right",
+      "y_hint": [
+        300,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.antenna_array",
+      "name": "Multi-dish antenna array",
+      "y_hint": [
+        300,
+        430
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.security_camera",
+      "name": "Wall security camera",
+      "y_hint": [
+        300,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.meter_panel",
+      "name": "Utility meter / panel box",
+      "y_hint": [
+        280,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.hanging_sign_green",
+      "name": "Hanging shop sign green",
+      "y_hint": [
+        280,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.hanging_sign_red",
+      "name": "Hanging shop sign red",
+      "y_hint": [
+        280,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.hanging_sign_blue",
+      "name": "Hanging shop sign blue",
+      "y_hint": [
+        280,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.hanging_sign_white",
+      "name": "Hanging shop sign white",
+      "y_hint": [
+        280,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.hanging_sign_orange",
+      "name": "Hanging shop sign orange",
+      "y_hint": [
+        280,
+        390
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.hanging_sign_black",
+      "name": "Hanging shop sign black",
+      "y_hint": [
+        280,
+        390
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.signboard_garage_sales",
+      "name": "GARAGE SALES wooden signboard",
+      "y_hint": [
+        430,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.graffiti_monster",
+      "name": "Graffiti monster head",
+      "y_hint": [
+        430,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.graffiti_rat",
+      "name": "Graffiti rat character",
+      "y_hint": [
+        440,
+        530
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.graffiti_wolf",
+      "name": "Graffiti wolf / animal head",
+      "y_hint": [
+        430,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.graffiti_reset",
+      "name": "Graffiti tag RESET",
+      "y_hint": [
+        440,
+        540
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.graffiti_lime",
+      "name": "Graffiti tag LIME",
+      "y_hint": [
+        440,
+        540
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.graffiti_ast",
+      "name": "Graffiti tag AST",
+      "y_hint": [
+        440,
+        540
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.graffiti_misc",
+      "name": "Graffiti misc tags set",
+      "y_hint": [
+        430,
+        550
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.table_empty",
+      "name": "Garage-sale wooden table empty",
+      "y_hint": [
+        500,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.table_with_boxes",
+      "name": "Table laden with boxes",
+      "y_hint": [
+        500,
+        590
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.table_with_goods",
+      "name": "Table with books and housewares",
+      "y_hint": [
+        500,
+        590
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.box_closed_single",
+      "name": "Cardboard box closed single",
+      "y_hint": [
+        480,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.box_stack_two",
+      "name": "Cardboard boxes stack of two",
+      "y_hint": [
+        480,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.box_stack_three",
+      "name": "Cardboard boxes stack of three",
+      "y_hint": [
+        470,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.box_open_filled",
+      "name": "Open box filled with goods",
+      "y_hint": [
+        490,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.box_open_empty",
+      "name": "Open box empty",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.crate_metal_lime",
+      "name": "Metal crate stack with LIME graffiti",
+      "y_hint": [
+        450,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.tarp_blue",
+      "name": "Blue patterned tarp / rug",
+      "y_hint": [
+        540,
+        608
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.tarp_red",
+      "name": "Red patterned tarp / rug",
+      "y_hint": [
+        540,
+        608
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.garage_sales.cloth_stack_blue",
+      "name": "Folded cloth / blanket stack blue",
+      "y_hint": [
+        540,
+        608
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.garage_sales.cloth_stack_brown",
+      "name": "Folded cloth / blanket stack brown",
+      "y_hint": [
+        540,
+        608
+      ],
+      "multi_tile": false
+    }
+  ]
+}

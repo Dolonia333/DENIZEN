@@ -1,0 +1,23 @@
+{
+  "sheet": "14_Swimming_Pool",
+  "source": "assets/limezu/ext/themes/14_Swimming_Pool.png",
+  "size": [
+    512,
+    496
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/14_Swimming_Pool/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 496,
+      "path": "data/limezu-visual-catalog/sheets/14_Swimming_Pool/band_00_y0-496.jpg",
+      "px_size": [
+        1024,
+        992
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/14_swimming_pool",
+  "singles_count": 179
+}

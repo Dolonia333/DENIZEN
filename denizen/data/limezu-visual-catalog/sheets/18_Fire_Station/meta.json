@@ -1,0 +1,23 @@
+{
+  "sheet": "18_Fire_Station",
+  "source": "assets/limezu/ext/themes/18_Fire_Station.png",
+  "size": [
+    528,
+    480
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/18_Fire_Station/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 480,
+      "path": "data/limezu-visual-catalog/sheets/18_Fire_Station/band_00_y0-480.jpg",
+      "px_size": [
+        1056,
+        960
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/18_fire_station",
+  "singles_count": 42
+}

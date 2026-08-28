@@ -1,0 +1,23 @@
+{
+  "sheet": "6_Garage_Sales",
+  "source": "assets/limezu/ext/themes/6_Garage_Sales.png",
+  "size": [
+    512,
+    608
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/6_Garage_Sales/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 608,
+      "path": "data/limezu-visual-catalog/sheets/6_Garage_Sales/band_00_y0-608.jpg",
+      "px_size": [
+        1024,
+        1216
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/6_garage_sales",
+  "singles_count": 95
+}

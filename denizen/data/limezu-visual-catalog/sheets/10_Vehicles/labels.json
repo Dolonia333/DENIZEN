@@ -1,0 +1,5708 @@
+{
+  "sheet": "10_Vehicles",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.vehicles.compact_blue_east",
+      "name": "Blue compact hatchback facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "blue",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "sky-blue compact hatchback; side profile facing right. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_blue_west",
+      "name": "Blue compact hatchback facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "blue",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "sky-blue compact hatchback; side profile facing left. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_blue_south",
+      "name": "Blue compact hatchback facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "blue",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "sky-blue compact hatchback; front / top-down facing down. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_blue_north",
+      "name": "Blue compact hatchback facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "blue",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "sky-blue compact hatchback; rear / top-down facing up. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_east",
+      "name": "Dark green compact hatchback facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "dark_green",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "dark teal-green compact hatchback; side profile facing right. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_west",
+      "name": "Dark green compact hatchback facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "dark_green",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "dark teal-green compact hatchback; side profile facing left. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_south",
+      "name": "Dark green compact hatchback facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "dark_green",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "dark teal-green compact hatchback; front / top-down facing down. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_dark_green_north",
+      "name": "Dark green compact hatchback facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "dark_green",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "dark teal-green compact hatchback; rear / top-down facing up. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_emerald_east",
+      "name": "Emerald compact hatchback facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "emerald",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "bright emerald compact hatchback; side profile facing right. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_emerald_west",
+      "name": "Emerald compact hatchback facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "emerald",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "bright emerald compact hatchback; side profile facing left. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_emerald_south",
+      "name": "Emerald compact hatchback facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "emerald",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "bright emerald compact hatchback; front / top-down facing down. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_emerald_north",
+      "name": "Emerald compact hatchback facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "emerald",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "bright emerald compact hatchback; rear / top-down facing up. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_red_east",
+      "name": "Red compact hatchback facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "red",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "red compact hatchback; side profile facing right. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_red_west",
+      "name": "Red compact hatchback facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "red",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "red compact hatchback; side profile facing left. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_red_south",
+      "name": "Red compact hatchback facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "red",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "red compact hatchback; front / top-down facing down. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_red_north",
+      "name": "Red compact hatchback facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "red",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "red compact hatchback; rear / top-down facing up. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_orange_east",
+      "name": "Orange compact hatchback facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "orange",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "orange-red compact hatchback; side profile facing right. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_orange_west",
+      "name": "Orange compact hatchback facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "orange",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "orange-red compact hatchback; side profile facing left. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_orange_south",
+      "name": "Orange compact hatchback facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "orange",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "orange-red compact hatchback; front / top-down facing down. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_orange_north",
+      "name": "Orange compact hatchback facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "orange",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "orange-red compact hatchback; rear / top-down facing up. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_grey_east",
+      "name": "Grey compact hatchback facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "grey",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "light grey compact hatchback; side profile facing right. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_grey_west",
+      "name": "Grey compact hatchback facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "grey",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "light grey compact hatchback; side profile facing left. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_grey_south",
+      "name": "Grey compact hatchback facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "grey",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "light grey compact hatchback; front / top-down facing down. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.compact_grey_north",
+      "name": "Grey compact hatchback facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "compact",
+        "hatchback",
+        "grey",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "light grey compact hatchback; rear / top-down facing up. Singles Car_* map 1-6."
+    },
+    {
+      "id": "me.vehicles.rowboat_docked_north",
+      "name": "Wooden rowboat docked north half",
+      "category": "vehicle",
+      "tags": [
+        "rowboat",
+        "wood",
+        "dock",
+        "pier",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "water",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Front half tied to pier post"
+    },
+    {
+      "id": "me.vehicles.rowboat_docked_west",
+      "name": "Wooden rowboat docked west",
+      "category": "vehicle",
+      "tags": [
+        "rowboat",
+        "wood",
+        "dock",
+        "pier",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "water",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Side docked to pier post"
+    },
+    {
+      "id": "me.vehicles.rowboat_stern_north",
+      "name": "Wooden rowboat stern north",
+      "category": "vehicle",
+      "tags": [
+        "rowboat",
+        "wood",
+        "modular",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        140
+      ],
+      "surface": "water",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Stern/back half tile"
+    },
+    {
+      "id": "me.vehicles.dinghy_orange_north",
+      "name": "Orange inflatable dinghy north",
+      "category": "vehicle",
+      "tags": [
+        "dinghy",
+        "inflatable",
+        "orange",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        180
+      ],
+      "surface": "water",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Orange raft with wooden slats"
+    },
+    {
+      "id": "me.vehicles.motorboat_white_east",
+      "name": "White motorboat / skiff east",
+      "category": "vehicle",
+      "tags": [
+        "motorboat",
+        "skiff",
+        "white",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        120
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Plain white hull grey interior"
+    },
+    {
+      "id": "me.vehicles.motorboat_white_west",
+      "name": "White motorboat / skiff west",
+      "category": "vehicle",
+      "tags": [
+        "motorboat",
+        "skiff",
+        "white",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        180
+      ],
+      "surface": "water",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Plain white skiff facing left"
+    },
+    {
+      "id": "me.vehicles.motorboat_fishing_west",
+      "name": "Grey fishing motorboat west",
+      "category": "vehicle",
+      "tags": [
+        "motorboat",
+        "fishing",
+        "rods",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        280
+      ],
+      "surface": "water",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Utility boat with fishing rods"
+    },
+    {
+      "id": "me.vehicles.motorboat_fishing_east",
+      "name": "Grey fishing motorboat east",
+      "category": "vehicle",
+      "tags": [
+        "motorboat",
+        "fishing",
+        "rods",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        340
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Utility boat with fishing rods"
+    },
+    {
+      "id": "me.vehicles.fishing_boat_wood_west",
+      "name": "Large wooden fishing boat west",
+      "category": "vehicle",
+      "tags": [
+        "fishing",
+        "rowboat",
+        "net",
+        "oars",
+        "wood",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        380
+      ],
+      "surface": "water",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Oars, buckets, blue net on crane pole"
+    },
+    {
+      "id": "me.vehicles.fishing_boat_wood_east",
+      "name": "Large wooden fishing boat east",
+      "category": "vehicle",
+      "tags": [
+        "fishing",
+        "rowboat",
+        "net",
+        "oars",
+        "wood",
+        "watercraft"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        440
+      ],
+      "surface": "water",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Mirrored large fishing boat with net"
+    },
+    {
+      "id": "me.vehicles.bus_yellow_east",
+      "name": "Yellow school bus facing east",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "yellow",
+        "east",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "classic yellow transit/school bus; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.bus_yellow_west",
+      "name": "Yellow school bus facing west",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "yellow",
+        "west",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "classic yellow transit/school bus; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.bus_yellow_south",
+      "name": "Yellow school bus facing south",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "yellow",
+        "south",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "classic yellow transit/school bus; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.bus_yellow_north",
+      "name": "Yellow school bus facing north",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "yellow",
+        "north",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "classic yellow transit/school bus; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.bus_pink_east",
+      "name": "Pink bus facing east",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "pink",
+        "east",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "pink city bus; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.bus_pink_west",
+      "name": "Pink bus facing west",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "pink",
+        "west",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "pink city bus; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.bus_pink_south",
+      "name": "Pink bus facing south",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "pink",
+        "south",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "pink city bus; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.bus_pink_north",
+      "name": "Pink bus facing north",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "pink",
+        "north",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        480
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "pink city bus; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.bus_cyan_east",
+      "name": "Cyan / light-blue bus facing east",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "cyan",
+        "east",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "cyan transit bus; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.bus_cyan_west",
+      "name": "Cyan / light-blue bus facing west",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "cyan",
+        "west",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "cyan transit bus; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.bus_cyan_south",
+      "name": "Cyan / light-blue bus facing south",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "cyan",
+        "south",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "cyan transit bus; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.bus_cyan_north",
+      "name": "Cyan / light-blue bus facing north",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "cyan",
+        "north",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "cyan transit bus; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.bus_brown_east",
+      "name": "Brown bus with green stripe facing east",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "brown",
+        "east",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        580
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "brown/orange body green rocker stripe; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.bus_brown_west",
+      "name": "Brown bus with green stripe facing west",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "brown",
+        "west",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        580
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "brown/orange body green rocker stripe; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.bus_brown_south",
+      "name": "Brown bus with green stripe facing south",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "brown",
+        "south",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        580
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "brown/orange body green rocker stripe; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.bus_brown_north",
+      "name": "Brown bus with green stripe facing north",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "brown",
+        "north",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        580
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "brown/orange body green rocker stripe; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.bus_grey_east",
+      "name": "Grey / taupe bus facing east",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "grey",
+        "east",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "muted grey transit bus; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.bus_grey_west",
+      "name": "Grey / taupe bus facing west",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "grey",
+        "west",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "muted grey transit bus; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.bus_grey_south",
+      "name": "Grey / taupe bus facing south",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "grey",
+        "south",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "muted grey transit bus; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.bus_grey_north",
+      "name": "Grey / taupe bus facing north",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "grey",
+        "north",
+        "multi_tile"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        640
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "muted grey transit bus; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.bus_yellow_door_east",
+      "name": "Yellow school bus door-side facing east",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "yellow",
+        "door",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Passenger-door side profile (vs window-only side)"
+    },
+    {
+      "id": "me.vehicles.bus_yellow_door_west",
+      "name": "Yellow school bus door-side facing west",
+      "category": "vehicle",
+      "tags": [
+        "bus",
+        "transit",
+        "yellow",
+        "door",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Passenger-door side profile (vs window-only side)"
+    },
+    {
+      "id": "me.vehicles.bus_shelter_front_a",
+      "name": "Bus shelter front A",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "shelter",
+        "transit"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Glass back, brown slanted roof, front view"
+    },
+    {
+      "id": "me.vehicles.bus_shelter_front_b",
+      "name": "Bus shelter front B",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "shelter",
+        "transit"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Second front shelter variant"
+    },
+    {
+      "id": "me.vehicles.bus_shelter_side",
+      "name": "Bus shelter side",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "shelter",
+        "transit"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile of glass shelter"
+    },
+    {
+      "id": "me.vehicles.bus_shelter_rear",
+      "name": "Bus shelter rear",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "shelter",
+        "transit"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Rear of shelter"
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_1",
+      "name": "Bus stop sign 1",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "sign",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red/white bus icon on grey pole"
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_2",
+      "name": "Bus stop sign 2",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "sign",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red/white bus icon on grey pole"
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_3",
+      "name": "Bus stop sign 3",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "sign",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Red/white bus icon on grey pole"
+    },
+    {
+      "id": "me.vehicles.bus_stop_sign_4",
+      "name": "Bus stop sign 4",
+      "category": "prop",
+      "tags": [
+        "bus_stop",
+        "sign",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        560
+      ],
+      "surface": "sidewalk",
+      "facing": "west",
+      "multi_tile": false,
+      "notes": "Red/white bus icon on grey pole"
+    },
+    {
+      "id": "me.vehicles.ambulance_east",
+      "name": "Ambulance 112 facing east",
+      "category": "vehicle",
+      "tags": [
+        "ambulance",
+        "emergency",
+        "medical",
+        "112",
+        "east"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "White van red stripe, red cross, roof lights; side profile facing right. Duplicate tile halves in singles."
+    },
+    {
+      "id": "me.vehicles.ambulance_west",
+      "name": "Ambulance 112 facing west",
+      "category": "vehicle",
+      "tags": [
+        "ambulance",
+        "emergency",
+        "medical",
+        "112",
+        "west"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "White van red stripe, red cross, roof lights; side profile facing left. Duplicate tile halves in singles."
+    },
+    {
+      "id": "me.vehicles.ambulance_south",
+      "name": "Ambulance 112 facing south",
+      "category": "vehicle",
+      "tags": [
+        "ambulance",
+        "emergency",
+        "medical",
+        "112",
+        "south"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White van red stripe, red cross, roof lights; front / top-down facing down. Duplicate tile halves in singles."
+    },
+    {
+      "id": "me.vehicles.ambulance_north",
+      "name": "Ambulance 112 facing north",
+      "category": "vehicle",
+      "tags": [
+        "ambulance",
+        "emergency",
+        "medical",
+        "112",
+        "north"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "White van red stripe, red cross, roof lights; rear / top-down facing up. Duplicate tile halves in singles."
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_open_east",
+      "name": "Hot dog food truck open facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "hot_dog",
+        "truck",
+        "open",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Grey truck, Hot Dogs banner, red/yellow umbrella on some variants"
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_closed_east",
+      "name": "Hot dog food truck closed facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "hot_dog",
+        "truck",
+        "closed",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Serving shutter closed"
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_open_west",
+      "name": "Hot dog food truck open facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "hot_dog",
+        "truck",
+        "open",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Grey truck, Hot Dogs banner, red/yellow umbrella on some variants"
+    },
+    {
+      "id": "me.vehicles.hot_dog_truck_closed_west",
+      "name": "Hot dog food truck closed facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "hot_dog",
+        "truck",
+        "closed",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Serving shutter closed"
+    },
+    {
+      "id": "me.vehicles.hot_dog_umbrella",
+      "name": "Hot dog stand red/yellow umbrella",
+      "category": "prop",
+      "tags": [
+        "umbrella",
+        "hot_dog"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Standalone striped umbrella"
+    },
+    {
+      "id": "me.vehicles.hot_dog_table_stools",
+      "name": "Oval table with red stools",
+      "category": "prop",
+      "tags": [
+        "table",
+        "stool",
+        "dining"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small seating set"
+    },
+    {
+      "id": "me.vehicles.hot_dog_vendor",
+      "name": "Hot dog vendor character",
+      "category": "npc",
+      "tags": [
+        "vendor",
+        "character",
+        "hot_dog"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown hair, purple shirt behind counter"
+    },
+    {
+      "id": "me.vehicles.hot_dog_counter_open",
+      "name": "Hot dog counter interior open",
+      "category": "prop",
+      "tags": [
+        "counter",
+        "condiments",
+        "hot_dog"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ketchup/mustard bottles on counter"
+    },
+    {
+      "id": "me.vehicles.hot_dog_shutter",
+      "name": "Hot dog rolling shutter",
+      "category": "prop",
+      "tags": [
+        "shutter",
+        "closed"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Metal shutter segment"
+    },
+    {
+      "id": "me.vehicles.camper_east",
+      "name": "Camper / RV facing east",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "trailer",
+        "motorhome",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        980
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "White/grey body orange stripe, roof AC/spare tire; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.camper_west",
+      "name": "Camper / RV facing west",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "trailer",
+        "motorhome",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        980
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "White/grey body orange stripe, roof AC/spare tire; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.camper_south",
+      "name": "Camper / RV facing south",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "trailer",
+        "motorhome",
+        "south"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        980
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White/grey body orange stripe, roof AC/spare tire; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.camper_north",
+      "name": "Camper / RV facing north",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "trailer",
+        "motorhome",
+        "north"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        980
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "White/grey body orange stripe, roof AC/spare tire; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.camper_awning_blue_white_east",
+      "name": "Camper with blue/white awning facing east",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "awning",
+        "blue_white",
+        "east",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Extended side awning variant"
+    },
+    {
+      "id": "me.vehicles.camper_awning_yellow_white_east",
+      "name": "Camper with yellow/white awning facing east",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "awning",
+        "yellow_white",
+        "east",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Extended side awning variant"
+    },
+    {
+      "id": "me.vehicles.camper_awning_tan_east",
+      "name": "Camper with tan awning facing east",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "awning",
+        "tan",
+        "east",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Extended side awning variant"
+    },
+    {
+      "id": "me.vehicles.camper_awning_blue_white_west",
+      "name": "Camper with blue/white awning facing west",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "awning",
+        "blue_white",
+        "west",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Extended side awning variant"
+    },
+    {
+      "id": "me.vehicles.camper_awning_yellow_white_west",
+      "name": "Camper with yellow/white awning facing west",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "awning",
+        "yellow_white",
+        "west",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Extended side awning variant"
+    },
+    {
+      "id": "me.vehicles.camper_awning_tan_west",
+      "name": "Camper with tan awning facing west",
+      "category": "vehicle",
+      "tags": [
+        "camper",
+        "rv",
+        "awning",
+        "tan",
+        "west",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Extended side awning variant"
+    },
+    {
+      "id": "me.vehicles.tacos_truck_open_east",
+      "name": "Tacos food truck open facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "tacos",
+        "truck",
+        "yellow",
+        "open",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Yellow body green trim, giant taco roof mascot"
+    },
+    {
+      "id": "me.vehicles.tacos_truck_closed_east",
+      "name": "Tacos food truck closed facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "tacos",
+        "truck",
+        "yellow",
+        "closed",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Yellow body green trim, giant taco roof mascot"
+    },
+    {
+      "id": "me.vehicles.tacos_truck_open_west",
+      "name": "Tacos food truck open facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "tacos",
+        "truck",
+        "yellow",
+        "open",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Yellow body green trim, giant taco roof mascot"
+    },
+    {
+      "id": "me.vehicles.tacos_truck_closed_west",
+      "name": "Tacos food truck closed facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "tacos",
+        "truck",
+        "yellow",
+        "closed",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Yellow body green trim, giant taco roof mascot"
+    },
+    {
+      "id": "me.vehicles.tacos_truck_prop_taco",
+      "name": "Giant taco roof mascot prop",
+      "category": "prop",
+      "tags": [
+        "taco",
+        "mascot",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1050
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Standalone taco sculpture"
+    },
+    {
+      "id": "me.vehicles.tacos_vendor",
+      "name": "Tacos truck vendor",
+      "category": "npc",
+      "tags": [
+        "vendor",
+        "character",
+        "tacos"
+      ],
+      "band": 1,
+      "y_hint": [
+        960,
+        1100
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Vendor at taco window"
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_open_east",
+      "name": "Ice cream truck open facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "ice_cream",
+        "truck",
+        "pink",
+        "open",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1160
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Pink/teal truck with giant cone mascot on roof"
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_closed_east",
+      "name": "Ice cream truck closed facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "ice_cream",
+        "truck",
+        "pink",
+        "closed",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1160
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Pink/teal truck with giant cone mascot on roof"
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_open_west",
+      "name": "Ice cream truck open facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "ice_cream",
+        "truck",
+        "pink",
+        "open",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1160
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Pink/teal truck with giant cone mascot on roof"
+    },
+    {
+      "id": "me.vehicles.ice_cream_truck_closed_west",
+      "name": "Ice cream truck closed facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "ice_cream",
+        "truck",
+        "pink",
+        "closed",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1160
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Pink/teal truck with giant cone mascot on roof"
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_1",
+      "name": "Ice cream prop strawberry cone",
+      "category": "prop",
+      "tags": [
+        "ice_cream",
+        "prop",
+        "cone"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cone/poster/fallen ice cream prop"
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_2",
+      "name": "Ice cream prop mint cone",
+      "category": "prop",
+      "tags": [
+        "ice_cream",
+        "prop",
+        "cone"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cone/poster/fallen ice cream prop"
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_3",
+      "name": "Ice cream prop fallen cone a",
+      "category": "prop",
+      "tags": [
+        "ice_cream",
+        "prop",
+        "cone"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cone/poster/fallen ice cream prop"
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_4",
+      "name": "Ice cream prop fallen cone b",
+      "category": "prop",
+      "tags": [
+        "ice_cream",
+        "prop",
+        "cone"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cone/poster/fallen ice cream prop"
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_5",
+      "name": "Ice cream prop fallen cone c",
+      "category": "prop",
+      "tags": [
+        "ice_cream",
+        "prop",
+        "cone"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cone/poster/fallen ice cream prop"
+    },
+    {
+      "id": "me.vehicles.ice_cream_prop_6",
+      "name": "Ice cream prop fallen cone d",
+      "category": "prop",
+      "tags": [
+        "ice_cream",
+        "prop",
+        "cone"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cone/poster/fallen ice cream prop"
+    },
+    {
+      "id": "me.vehicles.ice_cream_vendor",
+      "name": "Ice cream truck vendor",
+      "category": "npc",
+      "tags": [
+        "vendor",
+        "character",
+        "ice_cream"
+      ],
+      "band": 1,
+      "y_hint": [
+        1020,
+        1160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Vendor at ice cream window"
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_open_east",
+      "name": "Pizza tuk-tuk open facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "pizza",
+        "tuk_tuk",
+        "trailer",
+        "open",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Red/cream body with giant pizza roof sign"
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_closed_east",
+      "name": "Pizza tuk-tuk closed facing east",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "pizza",
+        "tuk_tuk",
+        "trailer",
+        "closed",
+        "east"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Red/cream body with giant pizza roof sign"
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_open_west",
+      "name": "Pizza tuk-tuk open facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "pizza",
+        "tuk_tuk",
+        "trailer",
+        "open",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Red/cream body with giant pizza roof sign"
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_closed_west",
+      "name": "Pizza tuk-tuk closed facing west",
+      "category": "vehicle",
+      "tags": [
+        "food_truck",
+        "pizza",
+        "tuk_tuk",
+        "trailer",
+        "closed",
+        "west"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Red/cream body with giant pizza roof sign"
+    },
+    {
+      "id": "me.vehicles.pizza_tuk_tuk_prop_sign",
+      "name": "Pizza roof sign prop",
+      "category": "prop",
+      "tags": [
+        "pizza",
+        "sign",
+        "mascot"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1240
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Circular pizza sign"
+    },
+    {
+      "id": "me.vehicles.pizza_vendor",
+      "name": "Pizza tuk-tuk vendor",
+      "category": "npc",
+      "tags": [
+        "vendor",
+        "character",
+        "pizza"
+      ],
+      "band": 1,
+      "y_hint": [
+        1120,
+        1260
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Vendor at pizza window"
+    },
+    {
+      "id": "me.vehicles.fruit_cart_umbrella",
+      "name": "Fruit/veg cart with multicolor umbrella",
+      "category": "prop",
+      "tags": [
+        "cart",
+        "fruit",
+        "vegetable",
+        "umbrella",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stocked produce under rainbow umbrella"
+    },
+    {
+      "id": "me.vehicles.fruit_cart_empty",
+      "name": "Empty produce cart with umbrella",
+      "category": "prop",
+      "tags": [
+        "cart",
+        "empty",
+        "umbrella",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Empty wooden cart"
+    },
+    {
+      "id": "me.vehicles.flowers_cart",
+      "name": "Flower cart with umbrella",
+      "category": "prop",
+      "tags": [
+        "cart",
+        "flowers",
+        "umbrella",
+        "trailer"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Potted flowers red/blue/yellow"
+    },
+    {
+      "id": "me.vehicles.street_food_cart_tan",
+      "name": "Street food stall tan awning",
+      "category": "prop",
+      "tags": [
+        "stall",
+        "awning",
+        "tan",
+        "market"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden stall tan/brown stripes"
+    },
+    {
+      "id": "me.vehicles.street_food_cart_red",
+      "name": "Street food stall red/white awning",
+      "category": "prop",
+      "tags": [
+        "stall",
+        "awning",
+        "red",
+        "market"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stocked bread/pastries"
+    },
+    {
+      "id": "me.vehicles.street_food_cart_pink",
+      "name": "Street food stall pink/white awning",
+      "category": "prop",
+      "tags": [
+        "stall",
+        "awning",
+        "pink",
+        "market"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flowers/jars stocked"
+    },
+    {
+      "id": "me.vehicles.street_food_table_1",
+      "name": "Street food dining table 1",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_2",
+      "name": "Street food dining table 2",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_3",
+      "name": "Street food dining table 3",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_4",
+      "name": "Street food dining table 4",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_5",
+      "name": "Street food dining table 5",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_6",
+      "name": "Street food dining table 6",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_7",
+      "name": "Street food dining table 7",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_8",
+      "name": "Street food dining table 8",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_9",
+      "name": "Street food dining table 9",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_table_10",
+      "name": "Street food dining table 10",
+      "category": "prop",
+      "tags": [
+        "table",
+        "dining",
+        "food",
+        "street_food"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Picnic/dining table with plated food variants"
+    },
+    {
+      "id": "me.vehicles.street_food_chair",
+      "name": "Street food chair",
+      "category": "prop",
+      "tags": [
+        "chair",
+        "dining"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1380
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small dining chair"
+    },
+    {
+      "id": "me.vehicles.street_food_sign_1",
+      "name": "Street food chalkboard sign 1",
+      "category": "prop",
+      "tags": [
+        "sign",
+        "chalkboard",
+        "menu"
+      ],
+      "band": 1,
+      "y_hint": [
+        1120,
+        1280
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "A-frame menu board"
+    },
+    {
+      "id": "me.vehicles.street_food_sign_2",
+      "name": "Street food chalkboard sign 2",
+      "category": "prop",
+      "tags": [
+        "sign",
+        "chalkboard",
+        "menu"
+      ],
+      "band": 1,
+      "y_hint": [
+        1120,
+        1280
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "A-frame menu board"
+    },
+    {
+      "id": "me.vehicles.gas_station_building",
+      "name": "Gas station convenience store",
+      "category": "building",
+      "tags": [
+        "gas_station",
+        "store",
+        "retail"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1520
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey roof red trim, glass doors/windows"
+    },
+    {
+      "id": "me.vehicles.gas_station_canopy_a",
+      "name": "Gas station canopy A",
+      "category": "building",
+      "tags": [
+        "gas_station",
+        "canopy"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White flat roof red border over pumps"
+    },
+    {
+      "id": "me.vehicles.gas_station_canopy_b",
+      "name": "Gas station canopy B",
+      "category": "building",
+      "tags": [
+        "gas_station",
+        "canopy"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1440
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Second canopy span"
+    },
+    {
+      "id": "me.vehicles.gas_station_petrol_pump",
+      "name": "Petrol pump island unit",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "fuel"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1400
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey/red pump with hose"
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_1",
+      "name": "Gas pump prop 1",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pump panel/hose/nozzle detail"
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_2",
+      "name": "Gas pump prop 2",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pump panel/hose/nozzle detail"
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_3",
+      "name": "Gas pump prop 3",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pump panel/hose/nozzle detail"
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_4",
+      "name": "Gas pump prop 4",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pump panel/hose/nozzle detail"
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_5",
+      "name": "Gas pump prop 5",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pump panel/hose/nozzle detail"
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_6",
+      "name": "Gas pump prop 6",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pump panel/hose/nozzle detail"
+    },
+    {
+      "id": "me.vehicles.gas_station_pump_prop_7",
+      "name": "Gas pump prop 7",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1420
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pump panel/hose/nozzle detail"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_1",
+      "name": "Gas price signboard 1",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "sign",
+        "price"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall red pylon / digital price panel"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_2",
+      "name": "Gas price signboard 2",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "sign",
+        "price"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall red pylon / digital price panel"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_3",
+      "name": "Gas price signboard 3",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "sign",
+        "price"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall red pylon / digital price panel"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_signboard_4",
+      "name": "Gas price signboard 4",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "sign",
+        "price"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall red pylon / digital price panel"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_1",
+      "name": "Gas price digit sprite 1",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_2",
+      "name": "Gas price digit sprite 2",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_3",
+      "name": "Gas price digit sprite 3",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_4",
+      "name": "Gas price digit sprite 4",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_5",
+      "name": "Gas price digit sprite 5",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_6",
+      "name": "Gas price digit sprite 6",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_7",
+      "name": "Gas price digit sprite 7",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_8",
+      "name": "Gas price digit sprite 8",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_9",
+      "name": "Gas price digit sprite 9",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_price_digit_10",
+      "name": "Gas price digit sprite 10",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "digit",
+        "price",
+        "ui"
+      ],
+      "band": 1,
+      "y_hint": [
+        1240,
+        1400
+      ],
+      "surface": "sign",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green/red digital numeral 0-9 set"
+    },
+    {
+      "id": "me.vehicles.gas_station_prop_1",
+      "name": "Gas station misc prop 1",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "AC unit/doormat/accessory"
+    },
+    {
+      "id": "me.vehicles.gas_station_prop_2",
+      "name": "Gas station misc prop 2",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "AC unit/doormat/accessory"
+    },
+    {
+      "id": "me.vehicles.gas_station_prop_3",
+      "name": "Gas station misc prop 3",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1480
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "AC unit/doormat/accessory"
+    },
+    {
+      "id": "me.vehicles.gas_station_ac_unit",
+      "name": "Gas station AC unit",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "hvac",
+        "ac"
+      ],
+      "band": 1,
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Rooftop air conditioner"
+    },
+    {
+      "id": "me.vehicles.gas_station_doormat_1",
+      "name": "Gas station doormat 1",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "doormat"
+      ],
+      "band": 1,
+      "y_hint": [
+        1350,
+        1520
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Entrance mat"
+    },
+    {
+      "id": "me.vehicles.gas_station_doormat_2",
+      "name": "Gas station doormat 2",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "doormat"
+      ],
+      "band": 1,
+      "y_hint": [
+        1350,
+        1520
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Entrance mat"
+    },
+    {
+      "id": "me.vehicles.helicopter_utility_east",
+      "name": "Utility helicopter facing east",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "utility"
+      ],
+      "band": 1,
+      "y_hint": [
+        1320,
+        1520
+      ],
+      "surface": "helipad",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Grey 4-blade transport/utility heli"
+    },
+    {
+      "id": "me.vehicles.helicopter_medical_east",
+      "name": "Medical helicopter facing east",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "medical",
+        "emergency",
+        "red_cross"
+      ],
+      "band": 1,
+      "y_hint": [
+        1320,
+        1520
+      ],
+      "surface": "helipad",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Grey heli with red cross on fuselage and tail"
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_1",
+      "name": "Helicopter / helipad prop 1",
+      "category": "prop",
+      "tags": [
+        "helicopter",
+        "helipad",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Railing light / pad corner / accessory"
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_2",
+      "name": "Helicopter / helipad prop 2",
+      "category": "prop",
+      "tags": [
+        "helicopter",
+        "helipad",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Railing light / pad corner / accessory"
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_3",
+      "name": "Helicopter / helipad prop 3",
+      "category": "prop",
+      "tags": [
+        "helicopter",
+        "helipad",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Railing light / pad corner / accessory"
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_4",
+      "name": "Helicopter / helipad prop 4",
+      "category": "prop",
+      "tags": [
+        "helicopter",
+        "helipad",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Railing light / pad corner / accessory"
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_5",
+      "name": "Helicopter / helipad prop 5",
+      "category": "prop",
+      "tags": [
+        "helicopter",
+        "helipad",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Railing light / pad corner / accessory"
+    },
+    {
+      "id": "me.vehicles.helicopter_prop_6",
+      "name": "Helicopter / helipad prop 6",
+      "category": "prop",
+      "tags": [
+        "helicopter",
+        "helipad",
+        "prop"
+      ],
+      "band": 1,
+      "y_hint": [
+        1380,
+        1530
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Railing light / pad corner / accessory"
+    },
+    {
+      "id": "me.vehicles.helipad_corner",
+      "name": "Helipad corner with rail and lights",
+      "category": "building",
+      "tags": [
+        "helipad",
+        "infrastructure"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1536
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Raised metal pad corner segment"
+    },
+    {
+      "id": "me.vehicles.public_phone_1",
+      "name": "Public payphone 1",
+      "category": "prop",
+      "tags": [
+        "phone",
+        "payphone",
+        "street"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue/red hooded payphone booth"
+    },
+    {
+      "id": "me.vehicles.public_phone_2",
+      "name": "Public payphone 2",
+      "category": "prop",
+      "tags": [
+        "phone",
+        "payphone",
+        "street"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue/red hooded payphone booth"
+    },
+    {
+      "id": "me.vehicles.street_sign_no_entry",
+      "name": "No-entry / circular street sign",
+      "category": "prop",
+      "tags": [
+        "sign",
+        "street",
+        "no_entry"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red circular pole sign"
+    },
+    {
+      "id": "me.vehicles.street_sign_info_blue",
+      "name": "Blue info / parking street sign",
+      "category": "prop",
+      "tags": [
+        "sign",
+        "street",
+        "info"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1450
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue square pole sign"
+    },
+    {
+      "id": "me.vehicles.street_sign_heli",
+      "name": "Helicopter zone street sign",
+      "category": "prop",
+      "tags": [
+        "sign",
+        "street",
+        "helicopter"
+      ],
+      "band": 1,
+      "y_hint": [
+        1300,
+        1480
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue heli icon sign"
+    },
+    {
+      "id": "me.vehicles.street_sign_heli_board",
+      "name": "Helicopter info board",
+      "category": "prop",
+      "tags": [
+        "sign",
+        "board",
+        "helicopter",
+        "warning"
+      ],
+      "band": 1,
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Yellow-header helipad info/map board"
+    },
+    {
+      "id": "me.vehicles.gas_pump_island_topdown",
+      "name": "Gas pump island under canopy top-down",
+      "category": "prop",
+      "tags": [
+        "gas_station",
+        "pump",
+        "canopy",
+        "topdown"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "concrete",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Two pumps red/grey under canopy"
+    },
+    {
+      "id": "me.vehicles.car_wash",
+      "name": "Car wash entrance building",
+      "category": "building",
+      "tags": [
+        "car_wash",
+        "building",
+        "service"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1700
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue CAR WASH sign, red roof trim, bay entrance"
+    },
+    {
+      "id": "me.vehicles.helipad_full",
+      "name": "Full helipad with H marking",
+      "category": "building",
+      "tags": [
+        "helipad",
+        "infrastructure",
+        "H"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "surface": "helipad",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Raised pad, yellow H in circle, stairs, rail lights"
+    },
+    {
+      "id": "me.vehicles.car_icon_teal",
+      "name": "Mini car UI icon Teal",
+      "category": "prop",
+      "tags": [
+        "icon",
+        "ui",
+        "car",
+        "teal",
+        "minimap"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "ui",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny top-down car glyph for UI/minimap"
+    },
+    {
+      "id": "me.vehicles.car_icon_blue",
+      "name": "Mini car UI icon Blue",
+      "category": "prop",
+      "tags": [
+        "icon",
+        "ui",
+        "car",
+        "blue",
+        "minimap"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "ui",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny top-down car glyph for UI/minimap"
+    },
+    {
+      "id": "me.vehicles.car_icon_red",
+      "name": "Mini car UI icon Red",
+      "category": "prop",
+      "tags": [
+        "icon",
+        "ui",
+        "car",
+        "red",
+        "minimap"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "ui",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny top-down car glyph for UI/minimap"
+    },
+    {
+      "id": "me.vehicles.car_icon_orange",
+      "name": "Mini car UI icon Orange",
+      "category": "prop",
+      "tags": [
+        "icon",
+        "ui",
+        "car",
+        "orange",
+        "minimap"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "ui",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny top-down car glyph for UI/minimap"
+    },
+    {
+      "id": "me.vehicles.car_icon_light_blue",
+      "name": "Mini car UI icon Light blue",
+      "category": "prop",
+      "tags": [
+        "icon",
+        "ui",
+        "car",
+        "light_blue",
+        "minimap"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "ui",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny top-down car glyph for UI/minimap"
+    },
+    {
+      "id": "me.vehicles.car_icon_grey",
+      "name": "Mini car UI icon Grey",
+      "category": "prop",
+      "tags": [
+        "icon",
+        "ui",
+        "car",
+        "grey",
+        "minimap"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "ui",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny top-down car glyph for UI/minimap"
+    },
+    {
+      "id": "me.vehicles.ui_arrow_down",
+      "name": "UI arrow down",
+      "category": "prop",
+      "tags": [
+        "ui",
+        "arrow"
+      ],
+      "band": 2,
+      "y_hint": [
+        1600,
+        1700
+      ],
+      "surface": "ui",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "White down arrow"
+    },
+    {
+      "id": "me.vehicles.ui_arrow_left",
+      "name": "UI arrow left",
+      "category": "prop",
+      "tags": [
+        "ui",
+        "arrow"
+      ],
+      "band": 2,
+      "y_hint": [
+        1600,
+        1700
+      ],
+      "surface": "ui",
+      "facing": "west",
+      "multi_tile": false,
+      "notes": "White left arrow"
+    },
+    {
+      "id": "me.vehicles.sedan_silver_east",
+      "name": "Silver / light grey sedan facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "silver",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_silver_west",
+      "name": "Silver / light grey sedan facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "silver",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_silver_south",
+      "name": "Silver / light grey sedan facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "silver",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sedan model A; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_silver_north",
+      "name": "Silver / light grey sedan facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "silver",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1820
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Sedan model A; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_green_east",
+      "name": "Green / mint sedan facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "green",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_green_west",
+      "name": "Green / mint sedan facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "green",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_green_south",
+      "name": "Green / mint sedan facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "green",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sedan model A; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_green_north",
+      "name": "Green / mint sedan facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "green",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1860
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Sedan model A; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_east",
+      "name": "Lavender / pale purple sedan facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "lavender",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_west",
+      "name": "Lavender / pale purple sedan facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "lavender",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_south",
+      "name": "Lavender / pale purple sedan facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "lavender",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sedan model A; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_lavender_north",
+      "name": "Lavender / pale purple sedan facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "lavender",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1920
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Sedan model A; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_teal_east",
+      "name": "Teal / aqua sedan facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "teal",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_teal_west",
+      "name": "Teal / aqua sedan facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "teal",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_teal_south",
+      "name": "Teal / aqua sedan facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "teal",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sedan model A; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_teal_north",
+      "name": "Teal / aqua sedan facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "teal",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1780,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Sedan model A; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_east",
+      "name": "Yellow sedan facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "yellow",
+        "east",
+        "stripes"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing right; white racing stripes on hood/roof"
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_west",
+      "name": "Yellow sedan facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "yellow",
+        "west",
+        "stripes"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing left; white racing stripes on hood/roof"
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_south",
+      "name": "Yellow sedan facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "yellow",
+        "south",
+        "stripes"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sedan model A; front / top-down facing down; white racing stripes on hood/roof"
+    },
+    {
+      "id": "me.vehicles.sedan_yellow_north",
+      "name": "Yellow sedan facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "yellow",
+        "north",
+        "stripes"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2040
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Sedan model A; rear / top-down facing up; white racing stripes on hood/roof"
+    },
+    {
+      "id": "me.vehicles.sedan_tan_east",
+      "name": "Tan / beige sedan facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "tan",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_tan_west",
+      "name": "Tan / beige sedan facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "tan",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_tan_south",
+      "name": "Tan / beige sedan facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "tan",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sedan model A; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_tan_north",
+      "name": "Tan / beige sedan facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "tan",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Sedan model A; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_white_east",
+      "name": "White sedan facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "white",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_white_west",
+      "name": "White sedan facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "white",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Sedan model A; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_white_south",
+      "name": "White sedan facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "white",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sedan model A; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_white_north",
+      "name": "White sedan facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "white",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Sedan model A; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_east",
+      "name": "Dark slate grey sedan (model B) facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "slate",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_west",
+      "name": "Dark slate grey sedan (model B) facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "slate",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_south",
+      "name": "Dark slate grey sedan (model B) facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "slate",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_b_slate_north",
+      "name": "Dark slate grey sedan (model B) facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "slate",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1840
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_east",
+      "name": "Teal with purple stripe sedan (model B) facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "teal_stripe",
+        "east",
+        "stripe",
+        "two_tone"
+      ],
+      "band": 2,
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_west",
+      "name": "Teal with purple stripe sedan (model B) facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "teal_stripe",
+        "west",
+        "stripe",
+        "two_tone"
+      ],
+      "band": 2,
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_south",
+      "name": "Teal with purple stripe sedan (model B) facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "teal_stripe",
+        "south",
+        "stripe",
+        "two_tone"
+      ],
+      "band": 2,
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_b_teal_stripe_north",
+      "name": "Teal with purple stripe sedan (model B) facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "teal_stripe",
+        "north",
+        "stripe",
+        "two_tone"
+      ],
+      "band": 2,
+      "y_hint": [
+        1720,
+        1880
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_east",
+      "name": "Purple sedan (model B) facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "purple",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_west",
+      "name": "Purple sedan (model B) facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "purple",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_south",
+      "name": "Purple sedan (model B) facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "purple",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_b_purple_north",
+      "name": "Purple sedan (model B) facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "purple",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        1960
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_east",
+      "name": "Dark / forest green sedan (model B) facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "dark_green",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_west",
+      "name": "Dark / forest green sedan (model B) facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "dark_green",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_south",
+      "name": "Dark / forest green sedan (model B) facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "dark_green",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_b_dark_green_north",
+      "name": "Dark / forest green sedan (model B) facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "dark_green",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1840,
+        2000
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_east",
+      "name": "Yellow sedan (model B) facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "yellow",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_west",
+      "name": "Yellow sedan (model B) facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "yellow",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_south",
+      "name": "Yellow sedan (model B) facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "yellow",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_b_yellow_north",
+      "name": "Yellow sedan (model B) facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "yellow",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2060
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_east",
+      "name": "Tan / beige sedan (model B) facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "tan",
+        "east"
+      ],
+      "band": 2,
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_west",
+      "name": "Tan / beige sedan (model B) facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "tan",
+        "west"
+      ],
+      "band": 2,
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_south",
+      "name": "Tan / beige sedan (model B) facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "tan",
+        "south"
+      ],
+      "band": 2,
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_b_tan_north",
+      "name": "Tan / beige sedan (model B) facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "tan",
+        "north"
+      ],
+      "band": 2,
+      "y_hint": [
+        1960,
+        2120
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_east",
+      "name": "White sedan (model B) facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "white",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_west",
+      "name": "White sedan (model B) facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "white",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_south",
+      "name": "White sedan (model B) facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "white",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sedan_b_white_north",
+      "name": "White sedan (model B) facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "model_b",
+        "white",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Alternate sedan body / roofline; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.hatchback_white_east",
+      "name": "White hatchback facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "hatchback",
+        "white",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Compact white hatchback / crossover; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.hatchback_white_west",
+      "name": "White hatchback facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "hatchback",
+        "white",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Compact white hatchback / crossover; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.hatchback_white_south",
+      "name": "White hatchback facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "hatchback",
+        "white",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Compact white hatchback / crossover; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.hatchback_white_north",
+      "name": "White hatchback facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "hatchback",
+        "white",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Compact white hatchback / crossover; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sport_cyan_east",
+      "name": "Cyan / light blue sports coupe facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "cyan",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sport_cyan_west",
+      "name": "Cyan / light blue sports coupe facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "cyan",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sport_cyan_south",
+      "name": "Cyan / light blue sports coupe facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "cyan",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sport_cyan_north",
+      "name": "Cyan / light blue sports coupe facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "cyan",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sport_lime_east",
+      "name": "Lime green sports coupe facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "lime",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sport_lime_west",
+      "name": "Lime green sports coupe facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "lime",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sport_lime_south",
+      "name": "Lime green sports coupe facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "lime",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sport_lime_north",
+      "name": "Lime green sports coupe facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "lime",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2550
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sport_teal_east",
+      "name": "Dark teal / slate blue sports coupe facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "teal",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sport_teal_west",
+      "name": "Dark teal / slate blue sports coupe facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "teal",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sport_teal_south",
+      "name": "Dark teal / slate blue sports coupe facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "teal",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sport_teal_north",
+      "name": "Dark teal / slate blue sports coupe facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "teal",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sport_red_east",
+      "name": "Red sports coupe facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "red",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sport_red_west",
+      "name": "Red sports coupe facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "red",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sport_red_south",
+      "name": "Red sports coupe facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "red",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sport_red_north",
+      "name": "Red sports coupe facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "red",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2600
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sport_white_east",
+      "name": "White sports coupe facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "white",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sport_white_west",
+      "name": "White sports coupe facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "white",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sport_white_south",
+      "name": "White sports coupe facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "white",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sport_white_north",
+      "name": "White sports coupe facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "white",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.sport_orange_east",
+      "name": "Orange sports coupe facing east",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "orange",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing right"
+    },
+    {
+      "id": "me.vehicles.sport_orange_west",
+      "name": "Orange sports coupe facing west",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "orange",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; side profile facing left"
+    },
+    {
+      "id": "me.vehicles.sport_orange_south",
+      "name": "Orange sports coupe facing south",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "orange",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; front / top-down facing down"
+    },
+    {
+      "id": "me.vehicles.sport_orange_north",
+      "name": "Orange sports coupe facing north",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sports",
+        "coupe",
+        "spoiler",
+        "orange",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2680
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Low-slung sports car with rear spoiler; rear / top-down facing up"
+    },
+    {
+      "id": "me.vehicles.skid_straight_vertical",
+      "name": "Tire skid straight vertical",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_straight_horizontal",
+      "name": "Tire skid straight horizontal",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_corner_ne",
+      "name": "Tire skid L-corner NE",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_corner_nw",
+      "name": "Tire skid L-corner NW",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_corner_se",
+      "name": "Tire skid L-corner SE",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_corner_sw",
+      "name": "Tire skid L-corner SW",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_curve_s_a",
+      "name": "Tire skid S-curve A",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_curve_s_b",
+      "name": "Tire skid S-curve B",
+      "category": "decal",
+      "tags": [
+        "skid",
+        "tire",
+        "road",
+        "decal"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark tire track decal for road FX"
+    },
+    {
+      "id": "me.vehicles.skid_demo_yellow_car",
+      "name": "Yellow sedan with motion/skid demo",
+      "category": "vehicle",
+      "tags": [
+        "car",
+        "sedan",
+        "yellow",
+        "skid",
+        "motion",
+        "demo"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Yellow striped car on road patch with white motion/skid lines and arrow cue"
+    }
+  ],
+  "row_guide": "Band0 (y0\u2013768): compact hatchbacks \u00d76 colors (blue, dark green, emerald, red, orange, grey) \u00d74 facings; boats (docked rowboat parts, orange dinghy, white skiff, fishing motorboat, large wooden fishing boat); buses \u00d75 colors (yellow including door-side, pink, cyan, brown+green stripe, grey) \u00d74 facings; bus shelters + stop signs; ambulance 112 \u00d74 facings. Band1 (y768\u20131536): hot-dog food truck + props/vendor; camper/RV \u00b1 awnings (trailer-like); tacos truck, ice-cream truck, pizza tuk-tuk; fruit/flower carts & market stalls; street-food tables; gas station building/canopies/pumps/price digits; utility+medical helicopters; helipad corner; payphones & street signs. Band2 (y1536\u20132304): gas island top-down, car wash, full helipad H, 6 mini car icons + UI arrows; sedan grids (silver/green/lavender/teal/yellow-stripe/tan + model-B slate/teal-stripe/purple/dark-green/yellow/tan) \u00d74 facings; tire skid decals + yellow motion demo. Band3 (y2304\u20132688): white sedan + white hatchback; sports coupes \u00d76 colors (cyan, lime, teal, red, white, orange) \u00d74 facings. No bikes/motorcycles, pickup/cargo trucks, or cargo trailers on this sheet (see meta.*_none)."
+}

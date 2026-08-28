@@ -113,8 +113,8 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_1.png",
-   "x": 4412,
-   "y": 1820,
+   "x": 4280,
+   "y": 1900,
    "origin": "bl",
    "solid": true
   },
@@ -155,7 +155,7 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png",
-   "x": 4816,
+   "x": 4880,
    "y": 1866,
    "origin": "bl",
    "solid": true

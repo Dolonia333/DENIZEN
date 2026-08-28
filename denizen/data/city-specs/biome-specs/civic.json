@@ -1,0 +1,192 @@
+{
+ "_doc": "W3-C civic biome spec — a 400x304 civic annex pocket west of D5's Civic Safety Campus (D5 bbox starts x=3300; this pocket sits at x=2880-3280, clear of D5, D4-foodmarket and D15-downtown). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/civic.json -v. Vocabulary (biome / surface / slot / role / density / palette / interact) comes from data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md",
+ "schema": "exterior-district-spec/1",
+ "id": "d22-civic-pocket",
+ "district": "D22 Civic Annex Pocket",
+ "biome": "civic",
+ "palette": "civic_blue",
+ "palette_secondary": "neutral_urban",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 22091,
+  "coords": "local",
+  "out": "data/city-specs/generated/d22-civic-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox."
+ },
+ "bbox": {
+  "x": 2880,
+  "y": 1968,
+  "w": 400,
+  "h": 304
+ },
+ "label": "CIVIC ANNEX",
+ "label_at": {
+  "x": 200,
+  "y": 12
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 400,
+   "h": 304,
+   "depth": 0.87,
+   "_doc": "the plaza pavement covers the WHOLE bbox first, per structure-grammar.md pass A convention"
+  },
+  {
+   "surface": "grass",
+   "name": "commons_lawn",
+   "x": 0,
+   "y": 224,
+   "w": 400,
+   "h": 80,
+   "depth": 0.9,
+   "_doc": "landscaped lawn border along the south edge"
+  },
+  {
+   "surface": "asphalt",
+   "name": "cruiser_apron",
+   "x": 16,
+   "y": 16,
+   "w": 144,
+   "h": 112,
+   "depth": 1.1,
+   "_doc": "vehicle bay in the NW corner for the civic vehicle role (cruisers/ambulance)"
+  }
+ ],
+ "slots": [
+  {
+   "slot": "parking_bay",
+   "name": "annex_bay",
+   "x": 16,
+   "y": 16,
+   "w": 144,
+   "h": 112,
+   "density": {
+    "vehicle": "dense",
+    "decor_small": "medium"
+   },
+   "_doc": "cruisers/ambulance parked on the apron"
+  },
+  {
+   "slot": "plaza",
+   "name": "annex_plaza",
+   "x": 176,
+   "y": 16,
+   "w": 208,
+   "h": 192,
+   "density": {
+    "street_furn": "dense",
+    "signage": "medium",
+    "npc_anchor": "light",
+    "furniture_ext": "medium",
+    "vegetation": "light"
+   },
+   "_doc": "the open institutional square east of the vehicle bay"
+  },
+  {
+   "slot": "interior_fill",
+   "name": "commons_lawn",
+   "x": 0,
+   "y": 224,
+   "w": 400,
+   "h": 80,
+   "density": {
+    "vegetation": "medium",
+    "decor_small": "medium",
+    "furniture_ext": "light"
+   },
+   "_doc": "the landscaped lawn strip on the commons_lawn grass patch"
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.school.clock_tower",
+   "at": {
+    "x": 136,
+    "y": 240
+   },
+   "anchor": "bl",
+   "pin": true,
+   "solid": true,
+   "interact": "enter",
+   "_doc": "hero anchor; a civic clock tower shared between the school and safety-campus kits"
+  },
+  {
+   "me": "me.police.box_front",
+   "at": {
+    "x": 300,
+    "y": 140
+   },
+   "anchor": "bc",
+   "solid": true,
+   "interact": "shop",
+   "_doc": "police kiosk in the plaza, backs onto the vehicle bay"
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "enter": [
+   "me.school.clock_tower"
+  ],
+  "shop": [
+   "me.police.box_front"
+  ]
+ },
+ "anims": [
+  {
+   "sheet": "ext/animated/Spotlight_1_16x16.png",
+   "fw": 32,
+   "fh": 48,
+   "at": {
+    "x": 60,
+    "y": 96
+   },
+   "fps": 6
+  }
+ ],
+ "constraints": {
+  "keep_clear": [
+   {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 304,
+    "why": "west margin stays walkable so the plaza is not boxed in against the bbox edge"
+   }
+  ],
+  "max_stamps": 80,
+  "coverage_target_singles": 28,
+  "max_solid_cell_ratio": 0.32,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "25x19 tiles = 475 cells."
+ },
+ "passes": {
+  "A_ground": {
+   "enabled": true
+  },
+  "B_skeleton": {
+   "enabled": true
+  },
+  "C_landmarks": {
+   "enabled": true
+  },
+  "D_groups": {
+   "enabled": true
+  },
+  "E_props": {
+   "enabled": true
+  },
+  "F_canopy": {
+   "enabled": true
+  },
+  "G_detail": {
+   "enabled": true
+  },
+  "H_life": {
+   "enabled": true
+  }
+ }
+}

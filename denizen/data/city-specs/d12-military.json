@@ -426,24 +426,24 @@
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 6100,
-   "y": 2870,
+   "x": 6200,
+   "y": 2400,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
    "x": 5942,
    "y": 2864,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 6212,
-   "y": 2876,
+   "x": 6400,
+   "y": 2750,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",

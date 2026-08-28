@@ -57,6 +57,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | NPCs/AI | [SOUL_REFLECTION.md](SOUL_REFLECTION.md) | on GitHub | SOUL reflection and proposal loop lifecycle |
 | World/Assets | [FULL_WORLD.md](FULL_WORLD.md) | new/local | Multi-zone LimeZu world composition guide |
 | World/Assets | [LIMEZU_PLACEMENT.md](LIMEZU_PLACEMENT.md) | new/local | Practical placement rules for LimeZu packs |
+| World/Assets | [EXTERIOR-COMPILER.md](EXTERIOR-COMPILER.md) | new/local | Exterior district compiler — spec format, passes A–H, merge integration |
 | World/Assets | [SPRITE_FIX_GUIDE.md](SPRITE_FIX_GUIDE.md) | new/local | Sprite artifact diagnosis and correction playbook |
 | World/Assets | [ANIMATION_FORGE.md](ANIMATION_FORGE.md) | on GitHub | Animation proposal workflow and review process |
 | World/Assets | [PATHFINDING.md](PATHFINDING.md) | on GitHub | A* pathing internals and stuck recovery |

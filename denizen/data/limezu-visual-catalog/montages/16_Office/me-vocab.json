@@ -1,0 +1,599 @@
+{
+  "sheet": "16_Office",
+  "labels": [
+    {
+      "id": "me.office_ext.building_generic_corp",
+      "name": "G-NERIC CORP office building",
+      "y_hint": [
+        900,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.building_lime_corp",
+      "name": "LIME CORP office building with fire escape",
+      "y_hint": [
+        1000,
+        1500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.sign_lime_corp",
+      "name": "LIME CORP wall sign",
+      "y_hint": [
+        280,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.sign_generic_corp",
+      "name": "G-NERIC CORP wall sign",
+      "y_hint": [
+        300,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.satellite_dish",
+      "name": "Rooftop satellite dish",
+      "y_hint": [
+        250,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.solar_panel",
+      "name": "Rooftop solar panel",
+      "y_hint": [
+        300,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.roof_access_cabin",
+      "name": "Rooftop access cabin/door",
+      "y_hint": [
+        320,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.air_duct_1",
+      "name": "Rooftop air duct 1",
+      "y_hint": [
+        340,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.air_duct_2",
+      "name": "Rooftop air duct 2",
+      "y_hint": [
+        340,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.air_duct_3",
+      "name": "Rooftop air duct 3",
+      "y_hint": [
+        340,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.roof_prop_1",
+      "name": "Rooftop utility box 1",
+      "y_hint": [
+        360,
+        440
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.roof_prop_2",
+      "name": "Rooftop utility box 2",
+      "y_hint": [
+        360,
+        440
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.roof_prop_3",
+      "name": "Rooftop utility box 3",
+      "y_hint": [
+        360,
+        440
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.roof_stairs",
+      "name": "Rooftop stair hatch",
+      "y_hint": [
+        1100,
+        1250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.roof_stairs_left",
+      "name": "Rooftop stair hatch left variant",
+      "y_hint": [
+        1100,
+        1250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.roof_left",
+      "name": "Flat roof left cap",
+      "y_hint": [
+        900,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.roof_middle",
+      "name": "Flat roof middle modular",
+      "y_hint": [
+        900,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.roof_right",
+      "name": "Flat roof right cap",
+      "y_hint": [
+        900,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.glass_curtain_large",
+      "name": "Large lobby glass curtain panels",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_left",
+      "name": "Dark grey facade left edge",
+      "y_hint": [
+        0,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_middle",
+      "name": "Dark grey facade middle modular",
+      "y_hint": [
+        0,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_right",
+      "name": "Dark grey facade right edge",
+      "y_hint": [
+        0,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_dark_grey_window",
+      "name": "Dark grey facade window modular insert",
+      "y_hint": [
+        0,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_dark_grey_row",
+      "name": "Dark grey window L/M/R row set",
+      "y_hint": [
+        20,
+        270
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_shutter_dark_grey",
+      "name": "Dark grey window with shutter/AC",
+      "y_hint": [
+        40,
+        290
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.balcony_dark_grey_front",
+      "name": "Dark grey front balcony modules",
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.balcony_dark_grey_sides",
+      "name": "Dark grey side/middle balcony modules",
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_bottom_dark_grey",
+      "name": "Dark grey bottom diagonal footing",
+      "y_hint": [
+        500,
+        750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_mid_dark_grey",
+      "name": "Dark grey mid diagonal wall strip",
+      "y_hint": [
+        200,
+        450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_roof_dark_grey",
+      "name": "Dark grey roof diagonal cornice",
+      "y_hint": [
+        180,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_left",
+      "name": "Light grey facade left edge",
+      "y_hint": [
+        150,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_middle",
+      "name": "Light grey facade middle modular",
+      "y_hint": [
+        150,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_right",
+      "name": "Light grey facade right edge",
+      "y_hint": [
+        150,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_light_grey_window",
+      "name": "Light grey facade window modular insert",
+      "y_hint": [
+        150,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_light_grey_row",
+      "name": "Light grey window L/M/R row set",
+      "y_hint": [
+        170,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_shutter_light_grey",
+      "name": "Light grey window with shutter/AC",
+      "y_hint": [
+        190,
+        440
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.balcony_light_grey_front",
+      "name": "Light grey front balcony modules",
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.balcony_light_grey_sides",
+      "name": "Light grey side/middle balcony modules",
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_bottom_light_grey",
+      "name": "Light/mid grey shared bottom diagonal footing",
+      "y_hint": [
+        500,
+        750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_mid_light_grey",
+      "name": "Light/mid grey shared mid diagonal wall strip",
+      "y_hint": [
+        200,
+        450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_roof_light_grey",
+      "name": "Light/mid grey shared roof diagonal cornice",
+      "y_hint": [
+        180,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_left",
+      "name": "Mid grey facade left edge",
+      "y_hint": [
+        300,
+        550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_middle",
+      "name": "Mid grey facade middle modular",
+      "y_hint": [
+        300,
+        550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_right",
+      "name": "Mid grey facade right edge",
+      "y_hint": [
+        300,
+        550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_mid_grey_window",
+      "name": "Mid grey facade window modular insert",
+      "y_hint": [
+        300,
+        550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_mid_grey_row",
+      "name": "Mid grey window L/M/R row set",
+      "y_hint": [
+        320,
+        570
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_shutter_mid_grey",
+      "name": "Mid grey window with shutter/AC",
+      "y_hint": [
+        340,
+        590
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.balcony_mid_grey_front",
+      "name": "Mid grey front balcony modules",
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.balcony_mid_grey_sides",
+      "name": "Mid grey side/middle balcony modules",
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_left",
+      "name": "Blue-grey facade left edge",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_middle",
+      "name": "Blue-grey facade middle modular",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_right",
+      "name": "Blue-grey facade right edge",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.facade_blue_grey_window",
+      "name": "Blue-grey facade window modular insert",
+      "y_hint": [
+        400,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_blue_grey_row",
+      "name": "Blue-grey window L/M/R row set",
+      "y_hint": [
+        420,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.window_shutter_blue_grey",
+      "name": "Blue-grey window with shutter/AC",
+      "y_hint": [
+        440,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.office_ext.balcony_blue_grey_front",
+      "name": "Blue-grey front balcony modules",
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.balcony_blue_grey_sides",
+      "name": "Blue-grey side/middle balcony modules",
+      "y_hint": [
+        1180,
+        1480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_bottom_blue_grey",
+      "name": "Blue-grey bottom diagonal footing",
+      "y_hint": [
+        500,
+        750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_mid_blue_grey",
+      "name": "Blue-grey mid diagonal wall strip",
+      "y_hint": [
+        200,
+        450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.diagonal_roof_blue_grey",
+      "name": "Blue-grey roof diagonal cornice",
+      "y_hint": [
+        180,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.balcony_window_left",
+      "name": "Balcony window left",
+      "y_hint": [
+        1200,
+        1400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.balcony_window_middle",
+      "name": "Balcony window middle modular",
+      "y_hint": [
+        1200,
+        1400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.balcony_window_right",
+      "name": "Balcony window right",
+      "y_hint": [
+        1200,
+        1400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.satellite_dish_band1",
+      "name": "Satellite dishes near example buildings",
+      "y_hint": [
+        1050,
+        1200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.solar_panel_band1",
+      "name": "Solar panels near example buildings",
+      "y_hint": [
+        1050,
+        1200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.office_ext.hvac_cluster_band1",
+      "name": "HVAC/vent cluster near example buildings",
+      "y_hint": [
+        1080,
+        1250
+      ],
+      "multi_tile": true
+    }
+  ]
+}

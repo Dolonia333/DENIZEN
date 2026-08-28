@@ -1,0 +1,500 @@
+{
+  "sheet": "14_Swimming_Pool",
+  "labels": [
+    {
+      "id": "me.pool.edge_tile_set",
+      "name": "Pool edge tile set (straights, outer/inner corners)",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.water_tile_fill",
+      "name": "Pool water fill tiles",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.deep_wall_panel",
+      "name": "Deep pool wall / glass wall segments",
+      "y_hint": [
+        80,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.stairs_front",
+      "name": "Pool stairs into water (front)",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.stairs_side",
+      "name": "Pool stairs into water (side)",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.ladder_rail_front",
+      "name": "Pool ladder handrails (front)",
+      "y_hint": [
+        120,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.ladder_rail_side",
+      "name": "Pool ladder handrails (side)",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.ladder_rail_angled",
+      "name": "Pool ladder handrails (angled)",
+      "y_hint": [
+        140,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.diving_board",
+      "name": "Diving board",
+      "y_hint": [
+        60,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.umbrella_cyan_white",
+      "name": "Patio umbrella cyan/white stripes",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.umbrella_orange_white",
+      "name": "Patio umbrella orange/white stripes",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.umbrella_green_white",
+      "name": "Patio umbrella green/white stripes",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.umbrella_blue_white",
+      "name": "Patio umbrella sky-blue/white stripes",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.umbrella_with_table",
+      "name": "Umbrella with drink table underneath",
+      "y_hint": [
+        20,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.umbrella_folded",
+      "name": "Folded patio umbrella",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.beach_chair_orange",
+      "name": "Folding beach chair orange fabric",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.beach_chair_red",
+      "name": "Folding beach chair red fabric",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.beach_chair_striped",
+      "name": "Folding beach chair striped",
+      "y_hint": [
+        20,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.sunbed_green_side",
+      "name": "Cushioned lounge sunbed green (side)",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.sunbed_yellow_side",
+      "name": "Cushioned lounge sunbed yellow (side)",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.sunbed_blue_side",
+      "name": "Cushioned lounge sunbed blue (side)",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.sunbed_orange_side",
+      "name": "Cushioned lounge sunbed orange (side)",
+      "y_hint": [
+        60,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.sunbed_topdown",
+      "name": "Lounge sunbed top-down variants",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.wooden_lounger",
+      "name": "Wooden slatted lounger",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.lifeguard_chair_metal",
+      "name": "Lifeguard chair metal",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.lifeguard_chair_wood",
+      "name": "Lifeguard chair wood",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.lifeguard_chair_metal_umbrella",
+      "name": "Lifeguard chair metal with umbrella",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.lifeguard_chair_wood_umbrella",
+      "name": "Lifeguard chair wood with umbrella",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.locker_numbers_1_5",
+      "name": "Lane/locker number plaques 1\u20135",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.starting_block_set",
+      "name": "Swim starting blocks numbered 1\u20135",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.wooden_shelf_bottles",
+      "name": "Wooden shelf / drink cart with bottles",
+      "y_hint": [
+        20,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.tiny_table",
+      "name": "Tiny wooden poolside table",
+      "y_hint": [
+        60,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.float_dragon",
+      "name": "Green dragon inflatable float",
+      "y_hint": [
+        160,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.float_flamingo",
+      "name": "Pink flamingo inflatable float",
+      "y_hint": [
+        160,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.float_donut",
+      "name": "Donut inflatable float with sprinkles",
+      "y_hint": [
+        180,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.float_ring_green",
+      "name": "Green spotted inner-tube float",
+      "y_hint": [
+        180,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.float_ring_pink",
+      "name": "Pink plain inner-tube float",
+      "y_hint": [
+        180,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.float_popsicle_red",
+      "name": "Popsicle inflatable float red",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.float_popsicle_blue",
+      "name": "Popsicle inflatable float blue",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.float_popsicle_yellow",
+      "name": "Popsicle inflatable float yellow",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.beach_ball_red_green",
+      "name": "Beach ball red/white/green",
+      "y_hint": [
+        140,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.beach_ball_red_blue",
+      "name": "Beach ball red/white/blue",
+      "y_hint": [
+        140,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.beach_ball_pastel",
+      "name": "Beach ball pastel pink/blue/white",
+      "y_hint": [
+        140,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.pool_mat_lilo",
+      "name": "Pool mat / lilo float",
+      "y_hint": [
+        220,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.lane_divider_blue",
+      "name": "Lane divider rope blue buoys",
+      "y_hint": [
+        240,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.lane_divider_red_white",
+      "name": "Lane divider rope red/white buoys",
+      "y_hint": [
+        250,
+        370
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.buoy_single",
+      "name": "Single lane buoy pieces",
+      "y_hint": [
+        250,
+        370
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.lifebuoy_mounted",
+      "name": "Lifebuoy on holder post",
+      "y_hint": [
+        280,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.lifebuoy_loose",
+      "name": "Lifebuoy ring loose",
+      "y_hint": [
+        280,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.water_slide",
+      "name": "Spiral water slide with stairs",
+      "y_hint": [
+        320,
+        496
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.palm_tree",
+      "name": "Palm tree on grass patch",
+      "y_hint": [
+        360,
+        496
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.sun_hat",
+      "name": "Straw sun hat with ribbon",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.pool.shower_pole",
+      "name": "Outdoor shower / stanchion pole",
+      "y_hint": [
+        260,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.edge_tile_set_alt",
+      "name": "Pool edge tile set alternate depth/style",
+      "y_hint": [
+        80,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.pool.umbrella_shadow_variants",
+      "name": "Patio umbrellas with baked ground shadow",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    }
+  ]
+}

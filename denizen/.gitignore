@@ -81,3 +81,10 @@ discord-bot/scripts/_*
 # Rendered dossier artifacts — regenerate from docs/TECHNICAL_DOSSIER.md
 reports/dossiers/*.pdf
 reports/dossiers/denizen-technical-dossier-v*.html
+
+# Regenerable vision-band previews (labels JSON are tracked)
+data/limezu-visual-catalog/sheets/**/*.jpg
+data/limezu-visual-catalog/sheets/**/*.png
+# Regenerable Singles montages (index.json + vision-links.json are tracked)
+data/limezu-visual-catalog/montages/**/*.png
+data/limezu-visual-catalog/montages/**/*.jpg

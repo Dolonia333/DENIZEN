@@ -1,0 +1,357 @@
+{
+  "generated_at": "2026-08-27T20:52:28.719581Z",
+  "pack": "limezu_modern_exteriors",
+  "single_count": 6224,
+  "sheet_count": 24,
+  "match_status": {
+    "unique": 4471,
+    "multi": 1056,
+    "unmatched": 697
+  },
+  "vision_linked": 6224,
+  "aligned_16_all": true,
+  "top_sizes": [
+    [
+      "16x16",
+      1858
+    ],
+    [
+      "16x32",
+      834
+    ],
+    [
+      "32x32",
+      591
+    ],
+    [
+      "16x48",
+      282
+    ],
+    [
+      "32x48",
+      260
+    ],
+    [
+      "32x16",
+      224
+    ],
+    [
+      "48x48",
+      158
+    ],
+    [
+      "48x32",
+      149
+    ],
+    [
+      "64x64",
+      145
+    ],
+    [
+      "32x64",
+      117
+    ],
+    [
+      "16x64",
+      93
+    ],
+    [
+      "64x48",
+      81
+    ],
+    [
+      "64x32",
+      79
+    ],
+    [
+      "48x64",
+      76
+    ],
+    [
+      "48x80",
+      72
+    ],
+    [
+      "112x64",
+      70
+    ],
+    [
+      "80x48",
+      69
+    ],
+    [
+      "64x80",
+      67
+    ],
+    [
+      "112x48",
+      56
+    ],
+    [
+      "112x96",
+      54
+    ]
+  ],
+  "by_sheet": {
+    "1_Terrains_and_Fences": {
+      "sheet": "1_Terrains_and_Fences",
+      "theme_folder": "1_terrains_and_fences",
+      "singles": 462,
+      "unique_match": 288,
+      "multi_match": 130,
+      "unmatched": 44,
+      "vision_linked": 462,
+      "elapsed_s": 4.09
+    },
+    "2_City_Terrains": {
+      "sheet": "2_City_Terrains",
+      "theme_folder": "2_city_terrains",
+      "singles": 351,
+      "unique_match": 159,
+      "multi_match": 135,
+      "unmatched": 57,
+      "vision_linked": 351,
+      "elapsed_s": 10.89
+    },
+    "3_City_Props": {
+      "sheet": "3_City_Props",
+      "theme_folder": "3_city_props",
+      "singles": 715,
+      "unique_match": 585,
+      "multi_match": 68,
+      "unmatched": 62,
+      "vision_linked": 714,
+      "elapsed_s": 24.61
+    },
+    "4_Generic_Buildings": {
+      "sheet": "4_Generic_Buildings",
+      "theme_folder": "4_generic_building",
+      "singles": 180,
+      "unique_match": 102,
+      "multi_match": 66,
+      "unmatched": 12,
+      "vision_linked": 61,
+      "elapsed_s": 9.81
+    },
+    "5_Floor_Modular_Buildings": {
+      "sheet": "5_Floor_Modular_Buildings",
+      "theme_folder": "5_floor_modular_building",
+      "singles": 343,
+      "unique_match": 186,
+      "multi_match": 58,
+      "unmatched": 99,
+      "vision_linked": 343,
+      "elapsed_s": 12.14
+    },
+    "6_Garage_Sales": {
+      "sheet": "6_Garage_Sales",
+      "theme_folder": "6_garage_sales",
+      "singles": 95,
+      "unique_match": 85,
+      "multi_match": 2,
+      "unmatched": 8,
+      "vision_linked": 75,
+      "elapsed_s": 0.63
+    },
+    "7_Villas": {
+      "sheet": "7_Villas",
+      "theme_folder": "7_villas",
+      "singles": 194,
+      "unique_match": 175,
+      "multi_match": 7,
+      "unmatched": 12,
+      "vision_linked": 194,
+      "elapsed_s": 2.65
+    },
+    "8_Worksite": {
+      "sheet": "8_Worksite",
+      "theme_folder": "8_worksite",
+      "singles": 71,
+      "unique_match": 59,
+      "multi_match": 8,
+      "unmatched": 4,
+      "vision_linked": 55,
+      "elapsed_s": 0.3
+    },
+    "9_Shopping_Center_and_Markets": {
+      "sheet": "9_Shopping_Center_and_Markets",
+      "theme_folder": "9_shopping_center_and_markets",
+      "singles": 57,
+      "unique_match": 45,
+      "multi_match": 0,
+      "unmatched": 12,
+      "vision_linked": 54,
+      "elapsed_s": 7.55
+    },
+    "10_Vehicles": {
+      "sheet": "10_Vehicles",
+      "theme_folder": "10_vehicles",
+      "singles": 273,
+      "unique_match": 234,
+      "multi_match": 19,
+      "unmatched": 20,
+      "vision_linked": 273,
+      "elapsed_s": 12.75
+    },
+    "11_Camping": {
+      "sheet": "11_Camping",
+      "theme_folder": "11_camping",
+      "singles": 693,
+      "unique_match": 358,
+      "multi_match": 10,
+      "unmatched": 325,
+      "vision_linked": 693,
+      "elapsed_s": 28.64
+    },
+    "12_Hotel_and_Hospital": {
+      "sheet": "12_Hotel_and_Hospital",
+      "theme_folder": "12_hotel_and_hospital",
+      "singles": 41,
+      "unique_match": 38,
+      "multi_match": 0,
+      "unmatched": 3,
+      "vision_linked": 28,
+      "elapsed_s": 1.2
+    },
+    "13_School": {
+      "sheet": "13_School",
+      "theme_folder": "13_school",
+      "singles": 125,
+      "unique_match": 98,
+      "multi_match": 18,
+      "unmatched": 9,
+      "vision_linked": 121,
+      "elapsed_s": 2.05
+    },
+    "14_Swimming_Pool": {
+      "sheet": "14_Swimming_Pool",
+      "theme_folder": "14_swimming_pool",
+      "singles": 179,
+      "unique_match": 151,
+      "multi_match": 21,
+      "unmatched": 7,
+      "vision_linked": 57,
+      "elapsed_s": 1.46
+    },
+    "15_Police_Station": {
+      "sheet": "15_Police_Station",
+      "theme_folder": "15_police_station",
+      "singles": 37,
+      "unique_match": 34,
+      "multi_match": 3,
+      "unmatched": 0,
+      "vision_linked": 34,
+      "elapsed_s": 1.42
+    },
+    "16_Office": {
+      "sheet": "16_Office",
+      "theme_folder": "16_office",
+      "singles": 117,
+      "unique_match": 85,
+      "multi_match": 31,
+      "unmatched": 1,
+      "vision_linked": 117,
+      "elapsed_s": 5.81
+    },
+    "17_Garden": {
+      "sheet": "17_Garden",
+      "theme_folder": "17_garden",
+      "singles": 570,
+      "unique_match": 393,
+      "multi_match": 172,
+      "unmatched": 5,
+      "vision_linked": 570,
+      "elapsed_s": 18.26
+    },
+    "18_Fire_Station": {
+      "sheet": "18_Fire_Station",
+      "theme_folder": "18_fire_station",
+      "singles": 42,
+      "unique_match": 26,
+      "multi_match": 15,
+      "unmatched": 1,
+      "vision_linked": 35,
+      "elapsed_s": 0.52
+    },
+    "19_Graveyard": {
+      "sheet": "19_Graveyard",
+      "theme_folder": "19_graveyard",
+      "singles": 217,
+      "unique_match": 205,
+      "multi_match": 12,
+      "unmatched": 0,
+      "vision_linked": 217,
+      "elapsed_s": 2.59
+    },
+    "20_Subway_and_Train_Station": {
+      "sheet": "20_Subway_and_Train_Station",
+      "theme_folder": "20_subway_and_train_station",
+      "singles": 582,
+      "unique_match": 454,
+      "multi_match": 124,
+      "unmatched": 4,
+      "vision_linked": 579,
+      "elapsed_s": 22.33
+    },
+    "21_Beach": {
+      "sheet": "21_Beach",
+      "theme_folder": "21_beach",
+      "singles": 316,
+      "unique_match": 284,
+      "multi_match": 32,
+      "unmatched": 0,
+      "vision_linked": 316,
+      "elapsed_s": 6.59
+    },
+    "22_Post_Office": {
+      "sheet": "22_Post_Office",
+      "theme_folder": "22_post_office",
+      "singles": 44,
+      "unique_match": 42,
+      "multi_match": 2,
+      "unmatched": 0,
+      "vision_linked": 38,
+      "elapsed_s": 0.39
+    },
+    "23_MIlitary_Base": {
+      "sheet": "23_MIlitary_Base",
+      "theme_folder": "23_military_base",
+      "singles": 305,
+      "unique_match": 226,
+      "multi_match": 75,
+      "unmatched": 4,
+      "vision_linked": 303,
+      "elapsed_s": 13.14
+    },
+    "24_Additional_Houses": {
+      "sheet": "24_Additional_Houses",
+      "theme_folder": "24_additional_houses",
+      "singles": 215,
+      "unique_match": 159,
+      "multi_match": 48,
+      "unmatched": 8,
+      "vision_linked": 215,
+      "elapsed_s": 19.76
+    }
+  },
+  "elapsed_s": 210.06,
+  "outputs": {
+    "jsonl": "data/limezu-visual-catalog/ext-singles-pixelperfect.jsonl",
+    "summary": "data/limezu-visual-catalog/ext-singles-pixelperfect-summary.json"
+  },
+  "notes": "Singles PNGs are LimeZu's official pixel-perfect cutouts. sheet_matches are exact RGB placements of the full single canvas (including transparent padding) on the theme contact sheet.",
+  "vision_link_threshold": "strict_object_tokens_v2",
+  "matched_exact": 5527,
+  "match_rate": 0.888,
+  "content_bbox_all": 6224,
+  "link_confidence": {
+    "high": 4696,
+    "medium": 300,
+    "vision": 1228
+  },
+  "link_source": {
+    "spatial_filename": 4996,
+    "vision": 1228
+  },
+  "me_ids_with_singles": 1295
+}

@@ -1,0 +1,158 @@
+{
+  "id": "grp.worksite.fenced_perimeter",
+  "name": "Construction site fenced perimeter (keypad gate + mesh fence run + hard-hat sign)",
+  "biome": "worksite",
+  "category": "infra",
+  "surface": "asphalt",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.worksite.fence_gate_keypad",
+    "me.worksite.fence_panel_hardhat"
+  ],
+  "footprint_tiles": {
+    "w": 7,
+    "h": 4
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the gate sits at the left with fence panels running right and the hard-hat sign hanging mid-run."
+  },
+  "offset_basis_summary": "Door_1_1/Door_1_2 (gate) and Fence_1/2 panel columns 1-3 plus Sign_2 are all packed into one contiguous block of the 8_Worksite sheet (x0-112, y96-176), so every offset here is read directly from sheet_x/sheet_y with origin snapped to (0,96).",
+  "pieces": [
+    {
+      "role": "gate_left_leaf",
+      "me": "me.worksite.fence_gate_keypad",
+      "exs": "exs.8_worksite.worksite_door_1_1",
+      "basename": "ME_Singles_Worksite_16x16_Door_1_1.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 48,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south",
+      "interact": "unlock"
+    },
+    {
+      "role": "gate_right_leaf",
+      "me": "me.worksite.fence_gate_keypad",
+      "exs": "exs.8_worksite.worksite_door_1_2",
+      "basename": "ME_Singles_Worksite_16x16_Door_1_2.png",
+      "dx": 4,
+      "dy": 0,
+      "w": 48,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    },
+    {
+      "role": "fence_run_a1",
+      "me": "me.worksite.fence_panel_hardhat",
+      "exs": "exs.8_worksite.worksite_fence_2_1",
+      "basename": "ME_Singles_Worksite_16x16_Fence_2_1.png",
+      "dx": 0,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "fence_run_a2",
+      "me": "me.worksite.fence_panel_hardhat",
+      "exs": "exs.8_worksite.worksite_fence_2_2",
+      "basename": "ME_Singles_Worksite_16x16_Fence_2_2.png",
+      "dx": 1,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "fence_run_a3",
+      "me": "me.worksite.fence_panel_hardhat",
+      "exs": "exs.8_worksite.worksite_fence_2_3",
+      "basename": "ME_Singles_Worksite_16x16_Fence_2_3.png",
+      "dx": 2,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "hardhat_sign",
+      "me": "me.worksite.fence_panel_hardhat",
+      "exs": "exs.8_worksite.worksite_sign_2",
+      "basename": "ME_Singles_Worksite_16x16_Sign_2.png",
+      "dx": 3,
+      "dy": 2,
+      "w": 16,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any",
+      "notes": "Hard-hat-required sign hanging on the fence between the two panel runs."
+    },
+    {
+      "role": "fence_run_b1",
+      "me": "me.worksite.fence_panel_hardhat",
+      "exs": "exs.8_worksite.worksite_fence_1_1",
+      "basename": "ME_Singles_Worksite_16x16_Fence_1_1.png",
+      "dx": 4,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "fence_run_b2",
+      "me": "me.worksite.fence_panel_hardhat",
+      "exs": "exs.8_worksite.worksite_fence_1_2",
+      "basename": "ME_Singles_Worksite_16x16_Fence_1_2.png",
+      "dx": 5,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "fence_run_b3",
+      "me": "me.worksite.fence_panel_hardhat",
+      "exs": "exs.8_worksite.worksite_fence_1_3",
+      "basename": "ME_Singles_Worksite_16x16_Fence_1_3.png",
+      "dx": 6,
+      "dy": 2,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    }
+  ],
+  "variants": {
+    "run_length": "Chain more fence_1_*/fence_2_* modular panels on either side to extend the perimeter.",
+    "gate_optional": "Drop the gate leaves and start straight from a fence run for a solid (non-passable) boundary segment."
+  },
+  "interact": "unlock",
+  "notes": "Fully sheet-relative fence+gate cluster: the keypad gate, both fence-panel color runs and the hard-hat warning sign occupy one packed rectangle of the 8_Worksite sheet, so this grp reproduces that exact block as a ready-made perimeter segment."
+}

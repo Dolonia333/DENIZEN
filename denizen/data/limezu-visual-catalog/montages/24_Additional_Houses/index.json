@@ -1,0 +1,27 @@
+{
+  "sheet": "24_Additional_Houses",
+  "cells": {
+    "1": {
+      "n": 1,
+      "id": "exs.24_additional_houses.additional_houses_modern_house",
+      "basename": "24_Additional_Houses_Modern_House_16x16.png",
+      "path": "assets/limezu/ext/singles/24_additional_houses/24_Additional_Houses_Modern_House_16x16.png",
+      "w": 368,
+      "h": 224,
+      "sheet_x": null,
+      "sheet_y": null,
+      "match_status": "unmatched",
+      "prior_me_id": "me.houses.country_house",
+      "prior_score": 5.5,
+      "mosaic": 0
+    }
+  },
+  "mosaics": [
+    {
+      "index": 0,
+      "path": "data/limezu-visual-catalog/montages/24_Additional_Houses/mosaic_00.png",
+      "start": 1,
+      "count": 1
+    }
+  ]
+}

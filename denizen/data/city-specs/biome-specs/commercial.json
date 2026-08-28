@@ -1,0 +1,102 @@
+{
+ "_doc": "W3-B exterior district compiler spec — a 480x320 commercial pocket immediately north of D2 Shopping Center (D2 bbox x0/y0/x1/y1 4100,900,5100,1550 — its own patches start at world y=960). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/commercial.json -v. Vocabulary comes from data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md. Verified empty ground: no patch, road or stamp of any district (hand-authored or d00-structure) falls in this bbox, so it reads as brand-new plaza frontage for D2 rather than a collage on top of it.",
+ "schema": "exterior-district-spec/1",
+ "id": "d21-commercial-pocket",
+ "district": "D21 Commercial Plaza Pocket (Shopping Center north forecourt)",
+ "biome": "commercial",
+ "palette": "festive_market",
+ "palette_secondary": "neutral_urban",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 21481,
+  "coords": "local",
+  "out": "data/city-specs/generated/d21-commercial-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox, so relocating the pocket is a one-line bbox edit (EXTERIOR-MISTAKES.md #4)."
+ },
+ "bbox": {
+  "x": 4096,
+  "y": 576,
+  "w": 480,
+  "h": 320
+ },
+ "label": "MARKET FORECOURT",
+ "label_at": {
+  "x": 240,
+  "y": 24
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 480,
+   "h": 256,
+   "depth": 0.87,
+   "_doc": "the paved plaza floor: stalls, awnings and shoppers stand here."
+  },
+  {
+   "surface": "asphalt",
+   "name": "service_lane",
+   "x": 0,
+   "y": 256,
+   "w": 480,
+   "h": 64,
+   "depth": 1.1,
+   "_doc": "a narrow delivery lane along the south edge, mirroring D2/D4's own back-of-house asphalt strips, and the seam this pocket will share with D2's forecourt when the two are joined."
+  }
+ ],
+ "slots": [
+  {
+   "slot": "plaza",
+   "name": "market_plaza",
+   "x": 0,
+   "y": 0,
+   "w": 480,
+   "h": 256,
+   "density": {
+    "canopy": "dense",
+    "signage": "dense",
+    "npc_anchor": "medium",
+    "furniture_ext": "medium"
+   },
+   "_doc": "canopy/signage run through pass F/G regardless of the plaza archetype's own role list (they scatter per-slot density directly); npc_anchor is a meta role — it validates and reserves the vocabulary slot but the compiler does not yet emit `npcs` entries for it (W4-A TODO, see EXTERIOR-COMPILER.md pass E notes), so 0 stamps from it is expected today. furniture_ext (market tables/benches) matches commercial's own biome density baseline (placement-rules.json biomes.commercial.density)."
+  }
+ ],
+ "interactions": {
+  "read": "auto",
+  "sit": "auto",
+  "shop": "auto"
+ },
+ "constraints": {
+  "max_stamps": 70,
+  "coverage_target_singles": 28,
+  "_doc": "480x320 pocket = 30x20 = 600 cells. coverage_target_singles is deliberately modest: the festive_market-affinity canopy/signage pool for commercial is small once placement-index gaps are subtracted (several me.shopping.*/me.generic_building.awning_* ids from the enrichment are not yet in placement-index.json — see the spec-level _doc and the W3-B compile report)."
+ },
+ "passes": {
+  "A_ground": {
+   "enabled": true
+  },
+  "B_skeleton": {
+   "enabled": true
+  },
+  "C_landmarks": {
+   "enabled": true
+  },
+  "D_groups": {
+   "enabled": true
+  },
+  "E_props": {
+   "enabled": true
+  },
+  "F_canopy": {
+   "enabled": true
+  },
+  "G_detail": {
+   "enabled": true
+  },
+  "H_life": {
+   "enabled": true
+  }
+ }
+}

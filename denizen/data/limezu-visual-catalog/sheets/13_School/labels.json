@@ -1,0 +1,1353 @@
+{
+  "sheet": "13_School",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.school.building_main",
+      "name": "Main school building facade",
+      "category": "building",
+      "tags": [
+        "school",
+        "building",
+        "facade",
+        "roof",
+        "brick",
+        "doors",
+        "windows"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Two-story beige/brick school with red gabled roof, twin green arched double doors, front plaza steps and benches"
+    },
+    {
+      "id": "me.school.clock_tower",
+      "name": "Clock tower",
+      "category": "building",
+      "tags": [
+        "school",
+        "tower",
+        "clock",
+        "brick",
+        "roof"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall red-brick clock tower with red roof and analog clock face"
+    },
+    {
+      "id": "me.school.clock_face",
+      "name": "Standalone clock face tile",
+      "category": "decor",
+      "tags": [
+        "school",
+        "clock",
+        "face",
+        "prop"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        260
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Circular clock dial sprite separate from tower"
+    },
+    {
+      "id": "me.school.wall_modular_set",
+      "name": "School wall / roof modular corridor strips",
+      "category": "building",
+      "tags": [
+        "school",
+        "wall",
+        "modular",
+        "roof",
+        "brick",
+        "corridor"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Corridor_Modular strips: roof eaves, beige walls, brick bases, window bay"
+    },
+    {
+      "id": "me.school.entrance_ramp",
+      "name": "School entrance zigzag ramp / stairs",
+      "category": "infra",
+      "tags": [
+        "school",
+        "stairs",
+        "ramp",
+        "railing",
+        "entrance"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Concrete zigzag stairs with red side panels / railings"
+    },
+    {
+      "id": "me.school.railing",
+      "name": "School yard metal railing segment",
+      "category": "infra",
+      "tags": [
+        "school",
+        "railing",
+        "fence",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Short dark railing piece near ramp cluster"
+    },
+    {
+      "id": "me.school.flagpole_blue",
+      "name": "Flagpole with blue flag",
+      "category": "prop",
+      "tags": [
+        "school",
+        "flag",
+        "flagpole",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue flag with gold emblem on shared stone base"
+    },
+    {
+      "id": "me.school.flagpole_red",
+      "name": "Flagpole with red/orange flag",
+      "category": "prop",
+      "tags": [
+        "school",
+        "flag",
+        "flagpole",
+        "red",
+        "orange"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red/orange flag on shared stone base with blue flagpole"
+    },
+    {
+      "id": "me.school.bench_plaza",
+      "name": "School plaza bench set",
+      "category": "furniture",
+      "tags": [
+        "school",
+        "bench",
+        "seating",
+        "plaza"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        280
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey benches on school front platform (Bench_1\u20135 family)"
+    },
+    {
+      "id": "me.school.court_basketball_clean",
+      "name": "Basketball court clean full markings",
+      "category": "terrain",
+      "tags": [
+        "school",
+        "basketball",
+        "court",
+        "lines",
+        "concrete",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grey court with white three-point arcs, keys, center circle \u2014 clean variant"
+    },
+    {
+      "id": "me.school.court_basketball_overgrown",
+      "name": "Basketball court overgrown / cracked",
+      "category": "terrain",
+      "tags": [
+        "school",
+        "basketball",
+        "court",
+        "lines",
+        "concrete",
+        "overgrown",
+        "moss",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        760
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Same court lines with grass tufts in cracks and along edges"
+    },
+    {
+      "id": "me.school.court_basketball_half_a",
+      "name": "Basketball half-court / section A",
+      "category": "terrain",
+      "tags": [
+        "school",
+        "basketball",
+        "court",
+        "lines",
+        "half",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Partial court tiles Basketball_Court variants for composing larger pads"
+    },
+    {
+      "id": "me.school.court_basketball_half_b",
+      "name": "Basketball half-court / section B",
+      "category": "terrain",
+      "tags": [
+        "school",
+        "basketball",
+        "court",
+        "lines",
+        "half",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Alternate half/section markings"
+    },
+    {
+      "id": "me.school.hoop_basketball_front",
+      "name": "Basketball hoop front / backboard",
+      "category": "prop",
+      "tags": [
+        "school",
+        "basketball",
+        "hoop",
+        "net",
+        "backboard",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        680
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Backboard, orange rim, white net facing viewer"
+    },
+    {
+      "id": "me.school.hoop_basketball_side",
+      "name": "Basketball hoop side profile",
+      "category": "prop",
+      "tags": [
+        "school",
+        "basketball",
+        "hoop",
+        "pole",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        680
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": false,
+      "notes": "Side view of pole and rim"
+    },
+    {
+      "id": "me.school.hoop_basketball_angled",
+      "name": "Basketball hoop angled / alternate",
+      "category": "prop",
+      "tags": [
+        "school",
+        "basketball",
+        "hoop",
+        "net",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Additional Basketball_Net facing variants in band 1"
+    },
+    {
+      "id": "me.school.ball_basketball",
+      "name": "Basketball ball sprites",
+      "category": "prop",
+      "tags": [
+        "school",
+        "basketball",
+        "ball",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        680
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small orange basketballs (Ball_1\u20132)"
+    },
+    {
+      "id": "me.school.stadium_light_single",
+      "name": "Stadium floodlight single head",
+      "category": "infra",
+      "tags": [
+        "school",
+        "stadium",
+        "light",
+        "floodlight",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tall grey pole with light array"
+    },
+    {
+      "id": "me.school.stadium_light_cluster",
+      "name": "Stadium floodlight multi-head cluster",
+      "category": "infra",
+      "tags": [
+        "school",
+        "stadium",
+        "light",
+        "floodlight",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stadium_Light_1\u20134 variants with multiple fixtures"
+    },
+    {
+      "id": "me.school.bleachers_front",
+      "name": "Wooden bleachers front view",
+      "category": "furniture",
+      "tags": [
+        "school",
+        "bleachers",
+        "stands",
+        "seating",
+        "wood",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tiered wooden spectator stands facing south"
+    },
+    {
+      "id": "me.school.bleachers_side",
+      "name": "Wooden bleachers side / modular",
+      "category": "furniture",
+      "tags": [
+        "school",
+        "bleachers",
+        "stands",
+        "seating",
+        "wood",
+        "modular",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        100,
+        300
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile and modular bleacher segments (Stands_1\u20133)"
+    },
+    {
+      "id": "me.school.playground_slide_double",
+      "name": "Double blue slide play unit",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "slide",
+        "blue",
+        "red",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Play structure with twin blue slides and red roofs"
+    },
+    {
+      "id": "me.school.playground_swing_set",
+      "name": "Swing set",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "swing",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        220,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red/blue frame with hanging yellow swings"
+    },
+    {
+      "id": "me.school.playground_rings",
+      "name": "Gymnastics rings / hanging rings",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "rings",
+        "climb",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        220,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue frame with red hanging rings"
+    },
+    {
+      "id": "me.school.playground_fort_large_a",
+      "name": "Large playground fort A",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "fort",
+        "castle",
+        "slide",
+        "roof",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        280,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Multi-level wooden fort with red peaked roofs, ladders, blue slide"
+    },
+    {
+      "id": "me.school.playground_fort_large_b",
+      "name": "Large playground fort B",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "fort",
+        "castle",
+        "slide",
+        "roof",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        300,
+        540
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Second large play tower/complex variant"
+    },
+    {
+      "id": "me.school.playground_bridge_arch",
+      "name": "Playground arched bridge",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "bridge",
+        "arch",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        320,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small blue/yellow arched bridge pieces"
+    },
+    {
+      "id": "me.school.playground_monkey_bars",
+      "name": "Monkey bars / climbing frame",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "monkey_bars",
+        "climb",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        240,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal climbing bars / activity frame"
+    },
+    {
+      "id": "me.school.playground_climbing_unit",
+      "name": "Climbing unit with net / obstacles",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "climb",
+        "net",
+        "obstacle",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        260,
+        440
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small colorful climbing obstacle cluster"
+    },
+    {
+      "id": "me.school.field_soccer",
+      "name": "Soccer field full markings",
+      "category": "terrain",
+      "tags": [
+        "school",
+        "soccer",
+        "football",
+        "field",
+        "grass",
+        "lines",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        520
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Green pitch with boundary, center circle, penalty boxes (Soccer_Court)"
+    },
+    {
+      "id": "me.school.field_soccer_striped",
+      "name": "Soccer field striped turf variant",
+      "category": "terrain",
+      "tags": [
+        "school",
+        "soccer",
+        "football",
+        "field",
+        "grass",
+        "striped",
+        "lines",
+        "sports"
+      ],
+      "band": 2,
+      "y_hint": [
+        80,
+        320
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Alternating light/dark green striped pitch with full white lines"
+    },
+    {
+      "id": "me.school.goal_soccer_front",
+      "name": "Soccer goal front / 3-4 view",
+      "category": "prop",
+      "tags": [
+        "school",
+        "soccer",
+        "goal",
+        "net",
+        "orange",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Orange-and-white striped posts with white netting facing field"
+    },
+    {
+      "id": "me.school.goal_soccer_back",
+      "name": "Soccer goal rear / side view",
+      "category": "prop",
+      "tags": [
+        "school",
+        "soccer",
+        "goal",
+        "net",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "grass",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Rear/side netting angles for field ends"
+    },
+    {
+      "id": "me.school.goal_soccer_white",
+      "name": "Soccer goal white frame variant",
+      "category": "prop",
+      "tags": [
+        "school",
+        "soccer",
+        "goal",
+        "net",
+        "white",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        400,
+        580
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "All-white smaller goals if present near orange set"
+    },
+    {
+      "id": "me.school.ball_soccer",
+      "name": "Soccer ball sprites",
+      "category": "prop",
+      "tags": [
+        "school",
+        "soccer",
+        "ball",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        420,
+        560
+      ],
+      "surface": "grass",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Soccer_Ball_1\u20133 near goals"
+    },
+    {
+      "id": "me.school.tube_tunnel_yellow",
+      "name": "Modular tube tunnel yellow set",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "tube",
+        "tunnel",
+        "yellow",
+        "modular",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        480,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Yellow straights, elbows, T/cross junctions, end caps (Tube_Modular_1_*)"
+    },
+    {
+      "id": "me.school.tube_tunnel_blue",
+      "name": "Modular tube tunnel blue set",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "tube",
+        "tunnel",
+        "blue",
+        "modular",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue tube modular family (Tube_Modular_2_*)"
+    },
+    {
+      "id": "me.school.tube_tunnel_red",
+      "name": "Modular tube tunnel red set",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "tube",
+        "tunnel",
+        "red",
+        "modular",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        520,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red tube modular family (Tube_Modular_3_*)"
+    },
+    {
+      "id": "me.school.gym_vault_boxes",
+      "name": "Vaulting / step boxes",
+      "category": "prop",
+      "tags": [
+        "school",
+        "gym",
+        "vault",
+        "box",
+        "pe",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        560,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue padded and wooden vaulting boxes of varying heights"
+    },
+    {
+      "id": "me.school.gym_horizontal_bars",
+      "name": "Horizontal / pull-up bars",
+      "category": "prop",
+      "tags": [
+        "school",
+        "gym",
+        "bars",
+        "pullup",
+        "pe",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        560,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Metal bars on wooden posts at different heights"
+    },
+    {
+      "id": "me.school.gym_equipment_rack",
+      "name": "Ball / equipment storage rack",
+      "category": "prop",
+      "tags": [
+        "school",
+        "gym",
+        "rack",
+        "balls",
+        "storage",
+        "pe"
+      ],
+      "band": 1,
+      "y_hint": [
+        580,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wooden shelves with colorful balls and gear"
+    },
+    {
+      "id": "me.school.gym_hula_hoops",
+      "name": "Hula hoop stacks",
+      "category": "prop",
+      "tags": [
+        "school",
+        "gym",
+        "hula",
+        "hoop",
+        "pe",
+        "colorful"
+      ],
+      "band": 1,
+      "y_hint": [
+        600,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Stacked blue/yellow/green/red hoops"
+    },
+    {
+      "id": "me.school.gym_mats",
+      "name": "Gym mats flat and folded",
+      "category": "prop",
+      "tags": [
+        "school",
+        "gym",
+        "mat",
+        "pe",
+        "blue"
+      ],
+      "band": 1,
+      "y_hint": [
+        600,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue exercise mats"
+    },
+    {
+      "id": "me.school.gym_hurdles",
+      "name": "Wooden hurdles / low obstacles",
+      "category": "prop",
+      "tags": [
+        "school",
+        "gym",
+        "hurdle",
+        "obstacle",
+        "pe",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        600,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Low wooden hurdles and balance beams"
+    },
+    {
+      "id": "me.school.sandbox",
+      "name": "Sandbox / play pit",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "sandbox",
+        "sand",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        620,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wooden-framed sand pit with toys"
+    },
+    {
+      "id": "me.school.climbing_wall",
+      "name": "Climbing wall with handholds",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "climb",
+        "wall",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        620,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Standalone wooden climbing wall with colorful holds"
+    },
+    {
+      "id": "me.school.pe_cones_balls",
+      "name": "PE cones and loose sports balls",
+      "category": "prop",
+      "tags": [
+        "school",
+        "pe",
+        "cone",
+        "ball",
+        "sports",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        640,
+        768
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Traffic cones and scattered colorful balls near gym props"
+    },
+    {
+      "id": "me.school.playground_bridge_set",
+      "name": "Playground wooden bridge with bead panel",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "bridge",
+        "beads",
+        "ladder",
+        "yard"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden platform: blue stairs, red rail bridge, colorful bead-wire play panel on grass pad"
+    },
+    {
+      "id": "me.school.playground_bridge_segment",
+      "name": "Playground bridge segment only",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "bridge",
+        "modular",
+        "yard"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Standalone bridge between blue ladders"
+    },
+    {
+      "id": "me.school.playground_platform_rail",
+      "name": "Elevated platform with grey railings",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "platform",
+        "railing",
+        "modular",
+        "yard"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Four-post wooden platforms with grey metal rails (pair)"
+    },
+    {
+      "id": "me.school.goal_soccer_left",
+      "name": "Soccer goal facing left",
+      "category": "prop",
+      "tags": [
+        "school",
+        "soccer",
+        "goal",
+        "net",
+        "left",
+        "sports"
+      ],
+      "band": 2,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "grass",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Orange/white goals angled for left field end"
+    },
+    {
+      "id": "me.school.goal_soccer_right",
+      "name": "Soccer goal facing right",
+      "category": "prop",
+      "tags": [
+        "school",
+        "soccer",
+        "goal",
+        "net",
+        "right",
+        "sports"
+      ],
+      "band": 2,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "grass",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Orange/white goals angled for right field end"
+    },
+    {
+      "id": "me.school.playground_slide_single",
+      "name": "Single slide / ladder unit",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "slide",
+        "ladder",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        220,
+        400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Smaller single-slide play piece from School_Yard_Toy set"
+    },
+    {
+      "id": "me.school.playground_see_activity",
+      "name": "Small activity / bead play panels",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "panel",
+        "beads",
+        "activity",
+        "yard"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Colorful bead-wire and activity panels on play structures"
+    },
+    {
+      "id": "me.school.playground_fence",
+      "name": "Playground fence segments",
+      "category": "infra",
+      "tags": [
+        "school",
+        "playground",
+        "fence",
+        "wood",
+        "metal",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        280,
+        480
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Short wooden/metal fence pieces around play areas if present on sheet"
+    },
+    {
+      "id": "me.school.court_line_markings",
+      "name": "Court line marking fragments",
+      "category": "terrain",
+      "tags": [
+        "school",
+        "court",
+        "lines",
+        "basketball",
+        "soccer",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        700
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Reusable white court-line geometry across basketball/soccer pads"
+    },
+    {
+      "id": "me.school.bleachers_bench_low",
+      "name": "Low bench / single-row stand",
+      "category": "furniture",
+      "tags": [
+        "school",
+        "bench",
+        "bleachers",
+        "seating",
+        "sports"
+      ],
+      "band": 1,
+      "y_hint": [
+        120,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Low wooden spectator bench distinct from full bleachers"
+    },
+    {
+      "id": "me.school.goal_soccer_pair_stamp",
+      "name": "Soccer goals placed as field-end pair",
+      "category": "prop",
+      "tags": [
+        "school",
+        "soccer",
+        "goal",
+        "pair",
+        "sports"
+      ],
+      "band": 2,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "grass",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Four goal sprites arranged as two mirrored end-pairs"
+    },
+    {
+      "id": "me.school.tube_tunnel_endcap",
+      "name": "Tube tunnel end-cap openings",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "tube",
+        "tunnel",
+        "endcap",
+        "modular",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Circular open entrances for yellow/blue/red tube systems"
+    },
+    {
+      "id": "me.school.tube_tunnel_junction",
+      "name": "Tube tunnel T and cross junctions",
+      "category": "prop",
+      "tags": [
+        "school",
+        "playground",
+        "tube",
+        "tunnel",
+        "junction",
+        "modular",
+        "yard"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "T-junction and 4-way cross pieces across three colors"
+    },
+    {
+      "id": "me.school.gym_balance_beam",
+      "name": "Balance beam / low beam",
+      "category": "prop",
+      "tags": [
+        "school",
+        "gym",
+        "balance",
+        "beam",
+        "pe",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        600,
+        740
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Low wooden balance beam near hurdles"
+    },
+    {
+      "id": "me.school.pe_jump_rope_bin",
+      "name": "Jump ropes / PE accessory bin",
+      "category": "prop",
+      "tags": [
+        "school",
+        "pe",
+        "rope",
+        "bin",
+        "storage"
+      ],
+      "band": 1,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Skipping ropes and small accessory containers by racks"
+    }
+  ],
+  "row_guide": "Band0 top: main school facade + clock tower + clock face. Mid: wall/corridor modular strips, zigzag entrance ramp, railing, twin flagpoles, plaza benches. Bottom: basketball courts (clean + overgrown + half sections), court line fragments, hoops, balls. Band1 top: stadium floodlights, wooden bleachers (+ low bench), basketball hoops. Mid: playground slides/swings/rings/forts/bridges/monkey bars/climbers/fence; soccer field + goals + balls. Bottom-left: yellow/blue/red modular tube tunnels (straights, junctions, endcaps). Bottom-right: gym vault boxes, bars, racks, hula hoops, mats, hurdles, balance beam, sandbox, climbing wall, PE cones/balls/ropes. Band2: playground bridge/bead set, bridge segment, railed platforms, activity panels; striped soccer pitch; soccer goal left/right pairs."
+}

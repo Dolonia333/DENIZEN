@@ -1,0 +1,1324 @@
+{
+  "version": "0.1.0",
+  "generated_by": "W1-B",
+  "source": {
+    "placement_rules": "data/limezu-visual-catalog/placement-rules.json",
+    "registry": "data/limezu-visual-catalog/registry.jsonl",
+    "ext_singles_pixelperfect": "data/limezu-visual-catalog/ext-singles-pixelperfect.jsonl"
+  },
+  "color_tokens": [
+    "blue",
+    "brown",
+    "green",
+    "sand",
+    "grey",
+    "white",
+    "red",
+    "wood",
+    "orange",
+    "black",
+    "yellow",
+    "ice",
+    "cream",
+    "pink",
+    "gold",
+    "stone",
+    "marble",
+    "purple",
+    "brick",
+    "silver",
+    "emerald",
+    "violet"
+  ],
+  "palettes": {
+    "neutral_urban": {
+      "label": "Neutral urban",
+      "token_weights": {
+        "grey": 1.0,
+        "white": 0.9,
+        "black": 0.8,
+        "stone": 0.8,
+        "silver": 0.7,
+        "brick": 0.6,
+        "blue": 0.5,
+        "cream": 0.4
+      },
+      "avoid": [
+        "pink",
+        "violet",
+        "emerald"
+      ]
+    },
+    "warm_autumn": {
+      "label": "Warm autumn",
+      "token_weights": {
+        "orange": 1.0,
+        "brown": 1.0,
+        "gold": 0.9,
+        "cream": 0.8,
+        "yellow": 0.7,
+        "wood": 0.7,
+        "red": 0.6
+      },
+      "avoid": [
+        "ice",
+        "violet",
+        "silver"
+      ]
+    },
+    "coastal": {
+      "label": "Coastal",
+      "token_weights": {
+        "blue": 1.0,
+        "ice": 1.0,
+        "white": 0.9,
+        "sand": 0.9,
+        "cream": 0.6,
+        "wood": 0.5,
+        "green": 0.4
+      },
+      "avoid": [
+        "black",
+        "brick",
+        "marble"
+      ]
+    },
+    "industrial_rust": {
+      "label": "Industrial rust",
+      "token_weights": {
+        "orange": 1.0,
+        "brown": 0.9,
+        "grey": 0.9,
+        "black": 0.8,
+        "yellow": 0.8,
+        "red": 0.6,
+        "silver": 0.5
+      },
+      "avoid": [
+        "pink",
+        "violet",
+        "marble",
+        "gold"
+      ]
+    },
+    "verdant": {
+      "label": "Verdant",
+      "token_weights": {
+        "green": 1.0,
+        "emerald": 1.0,
+        "wood": 0.8,
+        "brown": 0.7,
+        "stone": 0.5,
+        "white": 0.4
+      },
+      "avoid": [
+        "black",
+        "silver",
+        "violet"
+      ]
+    },
+    "pastel_suburb": {
+      "label": "Pastel suburb",
+      "token_weights": {
+        "cream": 1.0,
+        "pink": 0.9,
+        "yellow": 0.8,
+        "white": 0.8,
+        "blue": 0.7,
+        "ice": 0.6,
+        "wood": 0.5
+      },
+      "avoid": [
+        "black",
+        "grey",
+        "orange"
+      ]
+    },
+    "civic_blue": {
+      "label": "Civic blue",
+      "token_weights": {
+        "blue": 1.0,
+        "white": 0.9,
+        "grey": 0.8,
+        "silver": 0.7,
+        "ice": 0.6,
+        "red": 0.4
+      },
+      "avoid": [
+        "pink",
+        "emerald",
+        "gold"
+      ]
+    },
+    "military_olive": {
+      "label": "Military olive",
+      "token_weights": {
+        "green": 1.0,
+        "brown": 0.9,
+        "grey": 0.8,
+        "black": 0.7,
+        "sand": 0.6
+      },
+      "avoid": [
+        "pink",
+        "violet",
+        "gold",
+        "ice"
+      ]
+    },
+    "somber_stone": {
+      "label": "Somber stone",
+      "token_weights": {
+        "stone": 1.0,
+        "grey": 1.0,
+        "marble": 0.9,
+        "black": 0.8,
+        "white": 0.7,
+        "purple": 0.5,
+        "violet": 0.4
+      },
+      "avoid": [
+        "yellow",
+        "pink",
+        "orange"
+      ]
+    },
+    "festive_market": {
+      "label": "Festive market",
+      "token_weights": {
+        "red": 1.0,
+        "yellow": 1.0,
+        "pink": 0.9,
+        "orange": 0.9,
+        "purple": 0.7,
+        "white": 0.7,
+        "green": 0.6
+      },
+      "avoid": [
+        "grey",
+        "black",
+        "stone"
+      ]
+    },
+    "night_neon": {
+      "label": "Night neon",
+      "token_weights": {
+        "violet": 1.0,
+        "purple": 1.0,
+        "pink": 0.9,
+        "blue": 0.8,
+        "black": 0.8,
+        "white": 0.6
+      },
+      "avoid": [
+        "brown",
+        "sand",
+        "cream"
+      ],
+      "notes": "Only for lit signage / late-night blocks; never the base palette of a whole district."
+    }
+  },
+  "token_to_palettes": {
+    "blue": [
+      {
+        "palette": "civic_blue",
+        "weight": 1.0
+      },
+      {
+        "palette": "coastal",
+        "weight": 1.0
+      },
+      {
+        "palette": "night_neon",
+        "weight": 0.8
+      },
+      {
+        "palette": "pastel_suburb",
+        "weight": 0.7
+      },
+      {
+        "palette": "neutral_urban",
+        "weight": 0.5
+      }
+    ],
+    "brown": [
+      {
+        "palette": "warm_autumn",
+        "weight": 1.0
+      },
+      {
+        "palette": "industrial_rust",
+        "weight": 0.9
+      },
+      {
+        "palette": "military_olive",
+        "weight": 0.9
+      },
+      {
+        "palette": "verdant",
+        "weight": 0.7
+      }
+    ],
+    "green": [
+      {
+        "palette": "military_olive",
+        "weight": 1.0
+      },
+      {
+        "palette": "verdant",
+        "weight": 1.0
+      },
+      {
+        "palette": "festive_market",
+        "weight": 0.6
+      },
+      {
+        "palette": "coastal",
+        "weight": 0.4
+      }
+    ],
+    "sand": [
+      {
+        "palette": "coastal",
+        "weight": 0.9
+      },
+      {
+        "palette": "military_olive",
+        "weight": 0.6
+      }
+    ],
+    "grey": [
+      {
+        "palette": "neutral_urban",
+        "weight": 1.0
+      },
+      {
+        "palette": "somber_stone",
+        "weight": 1.0
+      },
+      {
+        "palette": "industrial_rust",
+        "weight": 0.9
+      },
+      {
+        "palette": "civic_blue",
+        "weight": 0.8
+      },
+      {
+        "palette": "military_olive",
+        "weight": 0.8
+      }
+    ],
+    "white": [
+      {
+        "palette": "civic_blue",
+        "weight": 0.9
+      },
+      {
+        "palette": "coastal",
+        "weight": 0.9
+      },
+      {
+        "palette": "neutral_urban",
+        "weight": 0.9
+      },
+      {
+        "palette": "pastel_suburb",
+        "weight": 0.8
+      },
+      {
+        "palette": "festive_market",
+        "weight": 0.7
+      },
+      {
+        "palette": "somber_stone",
+        "weight": 0.7
+      },
+      {
+        "palette": "night_neon",
+        "weight": 0.6
+      },
+      {
+        "palette": "verdant",
+        "weight": 0.4
+      }
+    ],
+    "red": [
+      {
+        "palette": "festive_market",
+        "weight": 1.0
+      },
+      {
+        "palette": "industrial_rust",
+        "weight": 0.6
+      },
+      {
+        "palette": "warm_autumn",
+        "weight": 0.6
+      },
+      {
+        "palette": "civic_blue",
+        "weight": 0.4
+      }
+    ],
+    "wood": [
+      {
+        "palette": "verdant",
+        "weight": 0.8
+      },
+      {
+        "palette": "warm_autumn",
+        "weight": 0.7
+      },
+      {
+        "palette": "coastal",
+        "weight": 0.5
+      },
+      {
+        "palette": "pastel_suburb",
+        "weight": 0.5
+      }
+    ],
+    "orange": [
+      {
+        "palette": "industrial_rust",
+        "weight": 1.0
+      },
+      {
+        "palette": "warm_autumn",
+        "weight": 1.0
+      },
+      {
+        "palette": "festive_market",
+        "weight": 0.9
+      }
+    ],
+    "black": [
+      {
+        "palette": "industrial_rust",
+        "weight": 0.8
+      },
+      {
+        "palette": "neutral_urban",
+        "weight": 0.8
+      },
+      {
+        "palette": "night_neon",
+        "weight": 0.8
+      },
+      {
+        "palette": "somber_stone",
+        "weight": 0.8
+      },
+      {
+        "palette": "military_olive",
+        "weight": 0.7
+      }
+    ],
+    "yellow": [
+      {
+        "palette": "festive_market",
+        "weight": 1.0
+      },
+      {
+        "palette": "industrial_rust",
+        "weight": 0.8
+      },
+      {
+        "palette": "pastel_suburb",
+        "weight": 0.8
+      },
+      {
+        "palette": "warm_autumn",
+        "weight": 0.7
+      }
+    ],
+    "ice": [
+      {
+        "palette": "coastal",
+        "weight": 1.0
+      },
+      {
+        "palette": "civic_blue",
+        "weight": 0.6
+      },
+      {
+        "palette": "pastel_suburb",
+        "weight": 0.6
+      }
+    ],
+    "cream": [
+      {
+        "palette": "pastel_suburb",
+        "weight": 1.0
+      },
+      {
+        "palette": "warm_autumn",
+        "weight": 0.8
+      },
+      {
+        "palette": "coastal",
+        "weight": 0.6
+      },
+      {
+        "palette": "neutral_urban",
+        "weight": 0.4
+      }
+    ],
+    "pink": [
+      {
+        "palette": "festive_market",
+        "weight": 0.9
+      },
+      {
+        "palette": "night_neon",
+        "weight": 0.9
+      },
+      {
+        "palette": "pastel_suburb",
+        "weight": 0.9
+      }
+    ],
+    "gold": [
+      {
+        "palette": "warm_autumn",
+        "weight": 0.9
+      }
+    ],
+    "stone": [
+      {
+        "palette": "somber_stone",
+        "weight": 1.0
+      },
+      {
+        "palette": "neutral_urban",
+        "weight": 0.8
+      },
+      {
+        "palette": "verdant",
+        "weight": 0.5
+      }
+    ],
+    "marble": [
+      {
+        "palette": "somber_stone",
+        "weight": 0.9
+      }
+    ],
+    "purple": [
+      {
+        "palette": "night_neon",
+        "weight": 1.0
+      },
+      {
+        "palette": "festive_market",
+        "weight": 0.7
+      },
+      {
+        "palette": "somber_stone",
+        "weight": 0.5
+      }
+    ],
+    "brick": [
+      {
+        "palette": "neutral_urban",
+        "weight": 0.6
+      }
+    ],
+    "silver": [
+      {
+        "palette": "civic_blue",
+        "weight": 0.7
+      },
+      {
+        "palette": "neutral_urban",
+        "weight": 0.7
+      },
+      {
+        "palette": "industrial_rust",
+        "weight": 0.5
+      }
+    ],
+    "emerald": [
+      {
+        "palette": "verdant",
+        "weight": 1.0
+      }
+    ],
+    "violet": [
+      {
+        "palette": "night_neon",
+        "weight": 1.0
+      },
+      {
+        "palette": "somber_stone",
+        "weight": 0.4
+      }
+    ]
+  },
+  "variant_families": {
+    "me.vehicles.compact_*": {
+      "base": "me.vehicles.compact",
+      "color_axis": [
+        "blue",
+        "dark_green",
+        "emerald",
+        "grey",
+        "orange",
+        "red"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "dark_green": [
+          "military_olive",
+          "verdant"
+        ],
+        "emerald": [
+          "verdant"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.garage_sales.hanging_sign_*": {
+      "base": "me.garage_sales.hanging_sign",
+      "color_axis": [
+        "black",
+        "blue",
+        "green",
+        "orange",
+        "red",
+        "white"
+      ],
+      "palette_by_color": {
+        "black": [
+          "industrial_rust",
+          "neutral_urban",
+          "night_neon",
+          "somber_stone"
+        ],
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ]
+      }
+    },
+    "me.garden.tool_watering_can_*": {
+      "base": "me.garden.tool_watering_can",
+      "color_axis": [
+        "blue",
+        "green",
+        "grey",
+        "red",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.subway.example_train_*": {
+      "base": "me.subway.example_train",
+      "color_axis": [
+        "blue",
+        "green",
+        "grey",
+        "orange",
+        "white"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ]
+      }
+    },
+    "me.vehicles.car_icon_*": {
+      "base": "me.vehicles.car_icon",
+      "color_axis": [
+        "blue",
+        "grey",
+        "light_blue",
+        "orange",
+        "red"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "light_blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.vehicles.bus_*": {
+      "base": "me.vehicles.bus",
+      "color_axis": [
+        "brown",
+        "grey",
+        "pink",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "brown": [
+          "warm_autumn"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "pink": [
+          "festive_market",
+          "night_neon",
+          "pastel_suburb"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.vehicles.sedan_*": {
+      "base": "me.vehicles.sedan",
+      "color_axis": [
+        "green",
+        "silver",
+        "white",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "silver": [
+          "civic_blue",
+          "neutral_urban"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.vehicles.sedan_b_*": {
+      "base": "me.vehicles.sedan_b",
+      "color_axis": [
+        "dark_green",
+        "purple",
+        "white",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "dark_green": [
+          "military_olive",
+          "verdant"
+        ],
+        "purple": [
+          "night_neon"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.beach.bucket_*": {
+      "base": "me.beach.bucket",
+      "color_axis": [
+        "blue",
+        "green",
+        "red",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.beach.shovel_*": {
+      "base": "me.beach.shovel",
+      "color_axis": [
+        "blue",
+        "green",
+        "red",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.camping.chair_*": {
+      "base": "me.camping.chair",
+      "color_axis": [
+        "blue",
+        "green",
+        "grey",
+        "red"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.garden.birdhouse_big_*": {
+      "base": "me.garden.birdhouse_big",
+      "color_axis": [
+        "blue",
+        "brown",
+        "pink",
+        "red"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "brown": [
+          "warm_autumn"
+        ],
+        "pink": [
+          "festive_market",
+          "night_neon",
+          "pastel_suburb"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.garden.birdhouse_little_*": {
+      "base": "me.garden.birdhouse_little",
+      "color_axis": [
+        "blue",
+        "brown",
+        "pink",
+        "red"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "brown": [
+          "warm_autumn"
+        ],
+        "pink": [
+          "festive_market",
+          "night_neon",
+          "pastel_suburb"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.garden.tool_rake_*": {
+      "base": "me.garden.tool_rake",
+      "color_axis": [
+        "blue",
+        "green",
+        "red",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.generic_building.window_flowerbox_*": {
+      "base": "me.generic_building.window_flowerbox",
+      "color_axis": [
+        "blue",
+        "orange",
+        "red",
+        "white"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ]
+      }
+    },
+    "me.vehicles.sport_*": {
+      "base": "me.vehicles.sport",
+      "color_axis": [
+        "orange",
+        "red",
+        "white"
+      ],
+      "palette_by_color": {
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ]
+      }
+    },
+    "me.beach.float_*": {
+      "base": "me.beach.float",
+      "color_axis": [
+        "green",
+        "orange",
+        "red"
+      ],
+      "palette_by_color": {
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.camping.backpack_*": {
+      "base": "me.camping.backpack",
+      "color_axis": [
+        "blue",
+        "green",
+        "red"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.camping.cooler_*": {
+      "base": "me.camping.cooler",
+      "color_axis": [
+        "blue",
+        "green",
+        "red"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.camping.flower_*": {
+      "base": "me.camping.flower",
+      "color_axis": [
+        "red",
+        "white",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "red": [
+          "festive_market"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.camping.sleeping_bag_*": {
+      "base": "me.camping.sleeping_bag",
+      "color_axis": [
+        "blue",
+        "green",
+        "pink"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "pink": [
+          "festive_market",
+          "night_neon",
+          "pastel_suburb"
+        ]
+      }
+    },
+    "me.city_props.planter_wood_*": {
+      "base": "me.city_props.planter_wood",
+      "color_axis": [
+        "orange",
+        "pink",
+        "white"
+      ],
+      "palette_by_color": {
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ],
+        "pink": [
+          "festive_market",
+          "night_neon",
+          "pastel_suburb"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ]
+      }
+    },
+    "me.modular_floors.gun_store_*": {
+      "base": "me.modular_floors.gun_store",
+      "color_axis": [
+        "blue",
+        "grey",
+        "orange"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "orange": [
+          "industrial_rust",
+          "warm_autumn"
+        ]
+      }
+    },
+    "me.police.station_*": {
+      "base": "me.police.station",
+      "color_axis": [
+        "grey",
+        "red",
+        "white"
+      ],
+      "palette_by_color": {
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "white": [
+          "civic_blue",
+          "coastal",
+          "neutral_urban"
+        ]
+      }
+    },
+    "me.pool.float_popsicle_*": {
+      "base": "me.pool.float_popsicle",
+      "color_axis": [
+        "blue",
+        "red",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.school.tube_tunnel_*": {
+      "base": "me.school.tube_tunnel",
+      "color_axis": [
+        "blue",
+        "red",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "red": [
+          "festive_market"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.subway.baggage_*": {
+      "base": "me.subway.baggage",
+      "color_axis": [
+        "black",
+        "brown",
+        "green"
+      ],
+      "palette_by_color": {
+        "black": [
+          "industrial_rust",
+          "neutral_urban",
+          "night_neon",
+          "somber_stone"
+        ],
+        "brown": [
+          "warm_autumn"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ]
+      }
+    },
+    "me.subway.bench_*": {
+      "base": "me.subway.bench",
+      "color_axis": [
+        "black",
+        "green",
+        "grey"
+      ],
+      "palette_by_color": {
+        "black": [
+          "industrial_rust",
+          "neutral_urban",
+          "night_neon",
+          "somber_stone"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ]
+      }
+    },
+    "me.subway.graffiti_fns_*": {
+      "base": "me.subway.graffiti_fns",
+      "color_axis": [
+        "green",
+        "grey",
+        "red"
+      ],
+      "palette_by_color": {
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "grey": [
+          "neutral_urban",
+          "somber_stone"
+        ],
+        "red": [
+          "festive_market"
+        ]
+      }
+    },
+    "me.subway.trolley_*": {
+      "base": "me.subway.trolley",
+      "color_axis": [
+        "blue",
+        "green",
+        "yellow"
+      ],
+      "palette_by_color": {
+        "blue": [
+          "civic_blue",
+          "coastal"
+        ],
+        "green": [
+          "military_olive",
+          "verdant"
+        ],
+        "yellow": [
+          "festive_market"
+        ]
+      }
+    }
+  },
+  "stats": {
+    "tokens_found_in_catalog": 22,
+    "color_tokens_total": 22,
+    "me_total": 2749,
+    "me_with_color_token": 1201,
+    "exs_total": 6224,
+    "exs_with_color_token": 1003,
+    "variant_families_detected": 73,
+    "variant_families_emitted": 30
+  }
+}

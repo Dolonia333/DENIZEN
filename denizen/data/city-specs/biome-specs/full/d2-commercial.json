@@ -1,0 +1,97 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d2-shopping.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d2-commercial.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d2-compiled",
+ "district": "D2 Shopping Center",
+ "biome": "commercial",
+ "palette": "festive_market",
+ "palette_secondary": "warm_autumn",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 102001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d2-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 4128,
+  "y": 960,
+  "w": 944,
+  "h": 528
+ },
+ "label": "SHOPPING CENTER",
+ "label_at": {
+  "x": 352,
+  "y": 16
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 944,
+   "h": 496,
+   "depth": 0.9,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "asphalt",
+   "x": 16,
+   "y": 304,
+   "w": 720,
+   "h": 192,
+   "depth": 0.93
+  },
+  {
+   "surface": "asphalt",
+   "x": 256,
+   "y": 496,
+   "w": 96,
+   "h": 32,
+   "depth": 0.93
+  },
+  {
+   "surface": "grass",
+   "x": 768,
+   "y": 0,
+   "w": 160,
+   "h": 144,
+   "depth": 0.95
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 912,
+   "h": 496,
+   "density": {
+    "building_shell": "dense",
+    "canopy": "dense",
+    "furniture_ext": "medium",
+    "decor_small": "dense"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.commercial.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

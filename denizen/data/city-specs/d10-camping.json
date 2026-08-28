@@ -126,22 +126,22 @@
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_103.png",
-   "x": 3004,
-   "y": 386,
+   "x": 3200,
+   "y": 300,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_159.png",
-   "x": 3054,
-   "y": 406,
+   "x": 2800,
+   "y": 600,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_164.png",
-   "x": 3105,
-   "y": 386,
+   "x": 3300,
+   "y": 300,
    "origin": "bl",
    "solid": true
   },

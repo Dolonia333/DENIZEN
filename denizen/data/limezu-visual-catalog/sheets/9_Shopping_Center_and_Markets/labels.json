@@ -1,0 +1,1232 @@
+{
+  "sheet": "9_Shopping_Center_and_Markets",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.shopping.mall_facade",
+      "name": "Shopping center main facade",
+      "category": "building",
+      "tags": [
+        "mall",
+        "retail",
+        "facade",
+        "glass",
+        "red",
+        "brick",
+        "roof",
+        "multi_story"
+      ],
+      "band": 0,
+      "y_hint": [
+        45,
+        250
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large complete mall stamp (corrugated roof, white brick ads wall with NEW/apple posters, red ground floor with dual glass entrances). Singles: Mall_1."
+    },
+    {
+      "id": "me.shopping.sign_shopping_center",
+      "name": "SHOPPING CENTER signboard",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "mall",
+        "freestanding",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        64,
+        96
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White framed sign on posts with tulip icon. Singles: Mall_Signboard_1."
+    },
+    {
+      "id": "me.shopping.sign_mall",
+      "name": "Mall logo signboard",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "mall",
+        "logo",
+        "dark"
+      ],
+      "band": 0,
+      "y_hint": [
+        112,
+        144
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark sign reading Mall with circular M logos. Singles: Mall_Signboard_2."
+    },
+    {
+      "id": "me.shopping.sign_planet",
+      "name": "PLANET store signboard",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "retail",
+        "planet",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        192
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White sign with red border and ringed-planet icon. Singles: Mall_Signboard_3."
+    },
+    {
+      "id": "me.shopping.mall_sale_window_wide",
+      "name": "Mall SALE glass window wide",
+      "category": "building",
+      "tags": [
+        "mall",
+        "glass",
+        "sale",
+        "window",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Storefront glass pane with red SALE sticker. Singles: Mall_Props_1."
+    },
+    {
+      "id": "me.shopping.mall_sale_window_narrow",
+      "name": "Mall SALE glass window narrow",
+      "category": "building",
+      "tags": [
+        "mall",
+        "glass",
+        "sale",
+        "window",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrower SALE glass door/window segment. Singles: Mall_Props_2."
+    },
+    {
+      "id": "me.shopping.sale_rack_stocked",
+      "name": "Vertical SALE display rack stocked",
+      "category": "prop",
+      "tags": [
+        "sale",
+        "rack",
+        "retail",
+        "display"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall shelf unit with goods and SALE header. Singles: Mall_Props_3. Partial-width prop."
+    },
+    {
+      "id": "me.shopping.sale_rack_empty",
+      "name": "Vertical SALE display rack empty",
+      "category": "prop",
+      "tags": [
+        "sale",
+        "rack",
+        "retail",
+        "display",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Empty SALE rack variant. Singles: Mall_Props_4."
+    },
+    {
+      "id": "me.shopping.billboard_blank",
+      "name": "Blank wall billboard",
+      "category": "sign",
+      "tags": [
+        "billboard",
+        "advertising",
+        "blank",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        340
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large blank white ad panel on brick base. Singles: Mall_Props_5."
+    },
+    {
+      "id": "me.shopping.billboard_your_ad_here",
+      "name": "YOUR AD HERE billboard",
+      "category": "sign",
+      "tags": [
+        "billboard",
+        "advertising",
+        "placeholder"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        340
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same frame with YOUR AD HERE text. Singles: Mall_Props_6."
+    },
+    {
+      "id": "me.shopping.hvac_wall_slice_a",
+      "name": "Mall HVAC wall slice A",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "vent",
+        "rooftop",
+        "side"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        380
+      ],
+      "surface": "any",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side-view stacked fan/vent wall strip. Singles: Mall_Props_7. Partial elevation cutout."
+    },
+    {
+      "id": "me.shopping.hvac_wall_slice_b",
+      "name": "Mall HVAC wall slice B",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "vent",
+        "rooftop",
+        "side",
+        "pipes"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        380
+      ],
+      "surface": "any",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Opposite/variant HVAC wall strip with pipes. Singles: Mall_Props_8."
+    },
+    {
+      "id": "me.shopping.mall_door_awning_a",
+      "name": "Red mall door with awning A",
+      "category": "building",
+      "tags": [
+        "mall",
+        "door",
+        "awning",
+        "red",
+        "glass",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red facade module: double glass doors under scalloped grey awning + side window. Singles: Mall_Door_1."
+    },
+    {
+      "id": "me.shopping.mall_door_awning_b",
+      "name": "Red mall door with awning B",
+      "category": "building",
+      "tags": [
+        "mall",
+        "door",
+        "awning",
+        "red",
+        "glass",
+        "modular",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        250,
+        320
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Near-duplicate of awning door (shadow/lighting variant). Singles: Mall_Door_2."
+    },
+    {
+      "id": "me.shopping.mall_door_no_awning",
+      "name": "Red mall door no awning",
+      "category": "building",
+      "tags": [
+        "mall",
+        "door",
+        "red",
+        "glass",
+        "modular",
+        "no_entry"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        340
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red double doors with no-entry icons, no awning, one side window. Singles: Mall_Door_3."
+    },
+    {
+      "id": "me.shopping.mall_door_no_awning_wide",
+      "name": "Red mall door no awning wide",
+      "category": "building",
+      "tags": [
+        "mall",
+        "door",
+        "red",
+        "glass",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        340
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wider no-awning module with windows both sides. Singles: Mall_Door_4."
+    },
+    {
+      "id": "me.shopping.mall_door_awning_icons_a",
+      "name": "Red mall door awning with icons A",
+      "category": "building",
+      "tags": [
+        "mall",
+        "door",
+        "awning",
+        "red",
+        "glass",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Awning + no-entry door icons combo. Singles: Mall_Door_5."
+    },
+    {
+      "id": "me.shopping.mall_door_awning_icons_b",
+      "name": "Red mall door awning with icons B",
+      "category": "building",
+      "tags": [
+        "mall",
+        "door",
+        "awning",
+        "red",
+        "glass",
+        "modular",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        360
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow/lighting variant of awning+icons door. Singles: Mall_Door_6."
+    },
+    {
+      "id": "me.shopping.cart_corral_1",
+      "name": "Shopping cart corral 1",
+      "category": "prop",
+      "tags": [
+        "carts",
+        "corral",
+        "parking",
+        "metal",
+        "glass"
+      ],
+      "band": 0,
+      "y_hint": [
+        290,
+        370
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Metal/glass cart return bay, no floor insert; blue/red lead carts. Singles: Shopping_Carts_1."
+    },
+    {
+      "id": "me.shopping.cart_corral_2",
+      "name": "Shopping cart corral with floor",
+      "category": "prop",
+      "tags": [
+        "carts",
+        "corral",
+        "parking",
+        "metal",
+        "glass",
+        "floor"
+      ],
+      "band": 0,
+      "y_hint": [
+        290,
+        370
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same frame with tan tiled floor and apron step. Singles: Shopping_Carts_2."
+    },
+    {
+      "id": "me.shopping.cart_corral_3",
+      "name": "Shopping cart corral 3",
+      "category": "prop",
+      "tags": [
+        "carts",
+        "corral",
+        "parking",
+        "metal",
+        "glass"
+      ],
+      "band": 0,
+      "y_hint": [
+        290,
+        370
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Cart color/row arrangement swapped. Singles: Shopping_Carts_3."
+    },
+    {
+      "id": "me.shopping.ac_stack_east",
+      "name": "Tall AC stack facing east",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "ac",
+        "rooftop",
+        "exhaust"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        400
+      ],
+      "surface": "any",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Tall profile HVAC with slanted exhaust right. Singles: Air_Conditioner_Unit_1."
+    },
+    {
+      "id": "me.shopping.ac_stack_west",
+      "name": "Tall AC stack facing west",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "ac",
+        "rooftop",
+        "exhaust"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        400
+      ],
+      "surface": "any",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Mirror tall HVAC stack. Singles: Air_Conditioner_Unit_2."
+    },
+    {
+      "id": "me.shopping.ac_fan_single",
+      "name": "Rooftop AC fan unit",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "ac",
+        "rooftop",
+        "fan"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        400
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Single square rooftop fan box (~2 tiles). Singles: Air_Conditioner_Unit_3."
+    },
+    {
+      "id": "me.shopping.ac_fan_double",
+      "name": "Rooftop AC double fan unit",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "ac",
+        "rooftop",
+        "fan"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        400
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Two fans side-by-side with pipe stubs. Singles: Air_Conditioner_Unit_4."
+    },
+    {
+      "id": "me.shopping.ac_vent_round",
+      "name": "Small round grill vent",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "vent",
+        "rooftop"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        400
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "1x1 circular fan grill. Singles: Air_Conditioner_Unit_5."
+    },
+    {
+      "id": "me.shopping.ac_vent_slats",
+      "name": "Small slatted vent",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "vent",
+        "rooftop"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        400
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "1x1 vertical-slat vent. Singles: Air_Conditioner_Unit_6."
+    },
+    {
+      "id": "me.shopping.store_green_flat",
+      "name": "STORE facade green flat window",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "green",
+        "awning",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow STORE stall, green upper, green/white awning, flat window. Singles: Market_Small_1 (shadow twin Market_Small_2)."
+    },
+    {
+      "id": "me.shopping.store_green_flat_shadow",
+      "name": "STORE facade green flat shadow",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "green",
+        "awning",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow/lighting variant of green flat STORE. Singles: Market_Small_2."
+    },
+    {
+      "id": "me.shopping.store_green_bay",
+      "name": "STORE facade green bay window",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "green",
+        "awning",
+        "bay_window"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Green STORE with protruding bay window. Singles: Market_Small_3 (shadow twin Market_Small_4)."
+    },
+    {
+      "id": "me.shopping.store_green_bay_shadow",
+      "name": "STORE facade green bay shadow",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "green",
+        "bay_window",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow variant of green bay STORE. Singles: Market_Small_4."
+    },
+    {
+      "id": "me.shopping.store_blue_flat",
+      "name": "STORE facade blue/yellow flat",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "blue",
+        "yellow",
+        "awning"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue lower / gold upper STORE, yellow/white awning, flat window. Singles: Market_Small_5 (twin 6)."
+    },
+    {
+      "id": "me.shopping.store_blue_flat_shadow",
+      "name": "STORE facade blue/yellow flat shadow",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "blue",
+        "yellow",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Small_6."
+    },
+    {
+      "id": "me.shopping.store_blue_bay",
+      "name": "STORE facade blue/yellow bay",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "blue",
+        "yellow",
+        "bay_window"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue/yellow STORE with bay window. Singles: Market_Small_7 (twin 8)."
+    },
+    {
+      "id": "me.shopping.store_blue_bay_shadow",
+      "name": "STORE facade blue/yellow bay shadow",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "blue",
+        "yellow",
+        "bay_window",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Small_8."
+    },
+    {
+      "id": "me.shopping.store_tan_flat",
+      "name": "STORE facade tan/brown flat",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "tan",
+        "brown",
+        "awning"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan upper / brown lower STORE, brown/white awning. Singles: Market_Small_9 (twin 10)."
+    },
+    {
+      "id": "me.shopping.store_tan_flat_shadow",
+      "name": "STORE facade tan/brown flat shadow",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "tan",
+        "brown",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Small_10."
+    },
+    {
+      "id": "me.shopping.store_tan_bay",
+      "name": "STORE facade tan/brown bay",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "tan",
+        "brown",
+        "bay_window"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan/brown STORE with bay window. Singles: Market_Small_11 (twin 12)."
+    },
+    {
+      "id": "me.shopping.store_tan_bay_shadow",
+      "name": "STORE facade tan/brown bay shadow",
+      "category": "building",
+      "tags": [
+        "store",
+        "retail",
+        "tan",
+        "brown",
+        "bay_window",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        406,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Small_12."
+    },
+    {
+      "id": "me.shopping.store_base_cutouts",
+      "name": "STORE foundation window cutouts",
+      "category": "building",
+      "tags": [
+        "cutout",
+        "foundation",
+        "partial",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        544
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small door/window base fragments under STORE row; partial tiles for street-level layering."
+    },
+    {
+      "id": "me.shopping.market_green_flat",
+      "name": "MARKET medium green flat",
+      "category": "building",
+      "tags": [
+        "market",
+        "retail",
+        "green",
+        "awning",
+        "facade"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wider MARKET with tall green upper panel, flat windows, green/white awnings. Singles: Market_Medium_1 (twin 2)."
+    },
+    {
+      "id": "me.shopping.market_green_flat_shadow",
+      "name": "MARKET medium green flat shadow",
+      "category": "building",
+      "tags": [
+        "market",
+        "green",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Medium_2."
+    },
+    {
+      "id": "me.shopping.market_green_bay",
+      "name": "MARKET medium green bay",
+      "category": "building",
+      "tags": [
+        "market",
+        "green",
+        "bay_window",
+        "awning"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Green MARKET with bay windows. Singles: Market_Medium_3 (twin 4)."
+    },
+    {
+      "id": "me.shopping.market_green_bay_shadow",
+      "name": "MARKET medium green bay shadow",
+      "category": "building",
+      "tags": [
+        "market",
+        "green",
+        "bay_window",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Medium_4."
+    },
+    {
+      "id": "me.shopping.market_blue_flat",
+      "name": "MARKET medium blue/gold flat",
+      "category": "building",
+      "tags": [
+        "market",
+        "blue",
+        "yellow",
+        "awning"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue MARKET, gold upper panel, orange/white awnings. Singles: Market_Medium_5 (twin 6)."
+    },
+    {
+      "id": "me.shopping.market_blue_flat_shadow",
+      "name": "MARKET medium blue/gold flat shadow",
+      "category": "building",
+      "tags": [
+        "market",
+        "blue",
+        "yellow",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Medium_6."
+    },
+    {
+      "id": "me.shopping.market_blue_bay",
+      "name": "MARKET medium blue/gold bay",
+      "category": "building",
+      "tags": [
+        "market",
+        "blue",
+        "yellow",
+        "bay_window"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue/gold MARKET bay variant. Singles: Market_Medium_7 (twin 8)."
+    },
+    {
+      "id": "me.shopping.market_blue_bay_shadow",
+      "name": "MARKET medium blue/gold bay shadow",
+      "category": "building",
+      "tags": [
+        "market",
+        "blue",
+        "yellow",
+        "bay_window",
+        "shadow"
+      ],
+      "band": 0,
+      "y_hint": [
+        549,
+        704
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Medium_8."
+    },
+    {
+      "id": "me.shopping.market_tan_flat",
+      "name": "MARKET medium tan flat",
+      "category": "building",
+      "tags": [
+        "market",
+        "tan",
+        "brown",
+        "awning"
+      ],
+      "band": 1,
+      "y_hint": [
+        901,
+        1056
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan/brown single-story MARKET with tall parapet, red/white awnings. Singles: Market_Medium_9 (twin 10)."
+    },
+    {
+      "id": "me.shopping.market_tan_flat_shadow",
+      "name": "MARKET medium tan flat shadow",
+      "category": "building",
+      "tags": [
+        "market",
+        "tan",
+        "brown",
+        "shadow"
+      ],
+      "band": 1,
+      "y_hint": [
+        901,
+        1056
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Medium_10."
+    },
+    {
+      "id": "me.shopping.market_tan_bay",
+      "name": "MARKET medium tan bay",
+      "category": "building",
+      "tags": [
+        "market",
+        "tan",
+        "brown",
+        "bay_window"
+      ],
+      "band": 1,
+      "y_hint": [
+        901,
+        1056
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan MARKET bay variant. Singles: Market_Medium_11 (twin 12)."
+    },
+    {
+      "id": "me.shopping.market_tan_bay_shadow",
+      "name": "MARKET medium tan bay shadow",
+      "category": "building",
+      "tags": [
+        "market",
+        "tan",
+        "brown",
+        "bay_window",
+        "shadow"
+      ],
+      "band": 1,
+      "y_hint": [
+        901,
+        1056
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shadow twin. Singles: Market_Medium_12."
+    },
+    {
+      "id": "me.shopping.market_base_cutouts",
+      "name": "MARKET foundation window cutouts",
+      "category": "building",
+      "tags": [
+        "cutout",
+        "foundation",
+        "partial",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1030,
+        1088
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Detached basement/street window fragments under tan MARKET row; partial tiles."
+    },
+    {
+      "id": "me.shopping.market_big_green_flat",
+      "name": "MARKET two-story green/pink flat",
+      "category": "building",
+      "tags": [
+        "market",
+        "two_story",
+        "green",
+        "pink",
+        "awning"
+      ],
+      "band": 0,
+      "y_hint": [
+        711,
+        896
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall MARKET: pink walls, green roof/awnings, flat windows both floors. Spans band 0\u21921. Singles: Market_Big_1."
+    },
+    {
+      "id": "me.shopping.market_big_green_bay",
+      "name": "MARKET two-story green/pink bay",
+      "category": "building",
+      "tags": [
+        "market",
+        "two_story",
+        "green",
+        "pink",
+        "bay_window"
+      ],
+      "band": 0,
+      "y_hint": [
+        711,
+        896
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same palette with ground-floor bay windows. Singles: Market_Big_2."
+    },
+    {
+      "id": "me.shopping.market_big_blue_flat",
+      "name": "MARKET two-story blue/gold flat",
+      "category": "building",
+      "tags": [
+        "market",
+        "two_story",
+        "blue",
+        "yellow",
+        "awning"
+      ],
+      "band": 0,
+      "y_hint": [
+        711,
+        896
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue walls, gold roof, yellow/white awnings, flat windows. Singles: Market_Big_3."
+    },
+    {
+      "id": "me.shopping.market_big_blue_bay",
+      "name": "MARKET two-story blue/gold bay",
+      "category": "building",
+      "tags": [
+        "market",
+        "two_story",
+        "blue",
+        "yellow",
+        "bay_window"
+      ],
+      "band": 0,
+      "y_hint": [
+        711,
+        896
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue/gold two-story with bay windows. Singles: Market_Big_4."
+    },
+    {
+      "id": "me.shopping.market_big_tan_flat",
+      "name": "MARKET two-story tan/brown flat",
+      "category": "building",
+      "tags": [
+        "market",
+        "two_story",
+        "tan",
+        "brown",
+        "awning"
+      ],
+      "band": 1,
+      "y_hint": [
+        903,
+        1088
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown walls, tan roof, red/white awnings, flat windows both floors. Singles: Market_Big_5."
+    },
+    {
+      "id": "me.shopping.market_big_tan_bay",
+      "name": "MARKET two-story tan/brown bay",
+      "category": "building",
+      "tags": [
+        "market",
+        "two_story",
+        "tan",
+        "brown",
+        "bay_window"
+      ],
+      "band": 1,
+      "y_hint": [
+        903,
+        1088
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan/brown two-story bay variant. Singles: Market_Big_6."
+    }
+  ],
+  "row_guide": "Band0 top: large mall facade + SHOPPING CENTER/Mall/PLANET signs; mid: SALE glass, billboards, red modular mall doors/awnings, cart corrals, HVAC cluster; then STORE stalls (green/blue/tan \u00d7 flat/bay); then medium MARKET facades (green/blue). Band0\u21921: tall two-story MARKET (green/blue). Band1: tan medium MARKETs + tan two-story MARKETs and foundation cutout strips."
+}

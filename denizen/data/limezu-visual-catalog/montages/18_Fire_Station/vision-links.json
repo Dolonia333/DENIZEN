@@ -1,0 +1,17 @@
+{
+  "sheet": "18_Fire_Station",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.fire_station.building_main",
+    "2": "me.fire_station.water_puddle_medium",
+    "3": "me.fire_station.water_puddle_medium",
+    "4": "me.fire_station.hose_corner",
+    "5": "me.fire_station.hose_corner",
+    "6": "me.fire_station.water_puddle_large",
+    "7": "me.fire_station.water_puddle_large",
+    "8": "me.fire_station.water_puddle_small",
+    "9": "me.fire_station.water_puddle_small",
+    "10": "me.fire_station.hose_corner",
+    "11": "me.fire_station.hose_corner"
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "id": "grp.worksite.equipment_depot",
+  "name": "Heavy equipment depot row (light towers + scissor lift + excavator pair + portable toilets)",
+  "biome": "worksite",
+  "category": "prop",
+  "surface": "asphalt",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.worksite.light_tower_b",
+    "me.worksite.scissor_lift_lowered",
+    "me.worksite.excavator_yellow",
+    "me.worksite.portable_toilet_red_closed"
+  ],
+  "footprint_tiles": {
+    "w": 31,
+    "h": 6
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; equipment is parked left-to-right in a single depot row along the top band of the 8_Worksite sheet."
+  },
+  "offset_basis_summary": "Light_Tower_1/2, Scissor_Lifter_1/2, Excavator_1/2 and Portable_Toilet_1/2 form one continuous parked-equipment row across the top of the 8_Worksite sheet (x0-512, y0-96), so every offset is read directly from sheet_x/sheet_y with origin (0,0).",
+  "pieces": [
+    {
+      "role": "light_tower_1",
+      "me": "me.worksite.light_tower_b",
+      "exs": "exs.8_worksite.worksite_light_tower_1",
+      "basename": "ME_Singles_Worksite_16x16_Light_Tower_1.png",
+      "dx": 0,
+      "dy": 1,
+      "w": 64,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "light_tower_2",
+      "me": "me.worksite.light_tower_b",
+      "exs": "exs.8_worksite.worksite_light_tower_2",
+      "basename": "ME_Singles_Worksite_16x16_Light_Tower_2.png",
+      "dx": 4,
+      "dy": 1,
+      "w": 64,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "scissor_lift_2",
+      "me": "me.worksite.scissor_lift_lowered",
+      "exs": "exs.8_worksite.worksite_scissor_lifter_2",
+      "basename": "ME_Singles_Worksite_16x16_Scissor_Lifter_2.png",
+      "dx": 8,
+      "dy": 0,
+      "w": 48,
+      "h": 80,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    },
+    {
+      "role": "scissor_lift_1",
+      "me": "me.worksite.scissor_lift_lowered",
+      "exs": "exs.8_worksite.worksite_scissor_lifter_1",
+      "basename": "ME_Singles_Worksite_16x16_Scissor_Lifter_1.png",
+      "dx": 11,
+      "dy": 1,
+      "w": 48,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    },
+    {
+      "role": "excavator_left",
+      "me": "me.worksite.excavator_yellow",
+      "exs": "exs.8_worksite.worksite_excavator_1",
+      "basename": "ME_Singles_Worksite_16x16_Excavator_1.png",
+      "dx": 14,
+      "dy": 0,
+      "w": 48,
+      "h": 96,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "east"
+    },
+    {
+      "role": "excavator_right",
+      "me": "me.worksite.excavator_yellow",
+      "exs": "exs.8_worksite.worksite_excavator_2",
+      "basename": "ME_Singles_Worksite_16x16_Excavator_2.png",
+      "dx": 17,
+      "dy": 0,
+      "w": 48,
+      "h": 96,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "east"
+    },
+    {
+      "role": "portable_toilet_1",
+      "me": "me.worksite.portable_toilet_red_closed",
+      "exs": "exs.8_worksite.worksite_portable_toilet_1",
+      "basename": "ME_Singles_Worksite_16x16_Portable_Toilet_1.png",
+      "dx": 28,
+      "dy": 0,
+      "w": 32,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    },
+    {
+      "role": "portable_toilet_2",
+      "me": "me.worksite.portable_toilet_red_closed",
+      "exs": "exs.8_worksite.worksite_portable_toilet_2",
+      "basename": "ME_Singles_Worksite_16x16_Portable_Toilet_2.png",
+      "dx": 30,
+      "dy": 0,
+      "w": 32,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    }
+  ],
+  "variants": {
+    "subset": "Any contiguous slice of the row (e.g. just the two light towers, or just the excavator pair) may be stamped independently for a smaller depot corner.",
+    "toilet_count": "Portable toilets are optional; drop both for a purely-vehicle depot."
+  },
+  "interact": null,
+  "notes": "Large fully sheet-relative equipment row spanning the top band of the 8_Worksite sheet -- this is a legitimate vehicle/infra depot assembly (not a terrain/sidewalk fill), so its wide footprint is intentional; districts may stamp the whole row or slice a subset via the subset variant."
+}

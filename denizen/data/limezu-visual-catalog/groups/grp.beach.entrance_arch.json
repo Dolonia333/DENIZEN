@@ -1,0 +1,102 @@
+{
+  "id": "grp.beach.entrance_arch",
+  "name": "Beach boardwalk entrance (archway sign + info boards + directional posts)",
+  "biome": "beach",
+  "category": "infra",
+  "surface": "sand",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.beach.sign_arch_beach",
+    "me.beach.info_board_blue",
+    "me.beach.sign_direction_big",
+    "me.beach.sign_direction_small"
+  ],
+  "footprint_tiles": {
+    "w": 10,
+    "h": 4
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the archway spans the entrance with directional posts and info boards flanking it."
+  },
+  "offset_basis_summary": "Beach_Sign, Direction_Pole_Big, Direction_Pole_Small and the two Blue_Cartel info boards all sit in one contiguous band of the 21_Beach sheet (x80-256, y240-304), so all offsets are read directly from sheet_x/sheet_y with origin snapped to (80,240).",
+  "pieces": [
+    {
+      "role": "archway_sign",
+      "me": "me.beach.sign_arch_beach",
+      "exs": "exs.21_beach.beach_beach_sign",
+      "basename": "21_Beach_16x16_Beach_Sign.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 48,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south",
+      "notes": "BEACH entrance archway; walk-under is passable despite solid=true framing posts."
+    },
+    {
+      "role": "direction_post_big",
+      "me": "me.beach.sign_direction_big",
+      "exs": "exs.21_beach.beach_direction_pole_big",
+      "basename": "21_Beach_16x16_Direction_Pole_Big.png",
+      "dx": 5,
+      "dy": 0,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "direction_post_small",
+      "me": "me.beach.sign_direction_small",
+      "exs": "exs.21_beach.beach_direction_pole_small",
+      "basename": "21_Beach_16x16_Direction_Pole_Small.png",
+      "dx": 3,
+      "dy": 1,
+      "w": 32,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "info_board_left",
+      "me": "me.beach.info_board_blue",
+      "exs": "exs.21_beach.beach_blue_cartel_1",
+      "basename": "21_Beach_16x16_Blue_Cartel_1.png",
+      "dx": 7,
+      "dy": 1,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "info_board_right",
+      "me": "me.beach.info_board_blue",
+      "exs": "exs.21_beach.beach_blue_cartel_2",
+      "basename": "21_Beach_16x16_Blue_Cartel_2.png",
+      "dx": 9,
+      "dy": 1,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "any"
+    }
+  ],
+  "variants": {
+    "board_count": "Either info board may be dropped for a lighter entrance; direction posts are interchangeable with sign_direction pointing left/right."
+  },
+  "interact": "traverse",
+  "notes": "Sheet-relative signage cluster: the archway forms the walk-through gate while the direction posts and map boards read naturally as a boardwalk-entrance kiosk beside it, matching their real adjacency on the 21_Beach contact sheet."
+}

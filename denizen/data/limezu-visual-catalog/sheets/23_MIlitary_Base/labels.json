@@ -1,0 +1,2211 @@
+{
+  "sheet": "23_MIlitary_Base",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.military.wall_plain",
+      "name": "Concrete perimeter wall plain segments",
+      "category": "infra",
+      "tags": [
+        "wall",
+        "concrete",
+        "perimeter",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Straight/corner/end concrete wall segments without wire"
+    },
+    {
+      "id": "me.military.wall_barbed",
+      "name": "Concrete wall with barbed wire top",
+      "category": "infra",
+      "tags": [
+        "wall",
+        "concrete",
+        "barbed",
+        "wire",
+        "perimeter"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wall segments with coiled razor wire along top; singles External_Wall_Barbed_Wire_*"
+    },
+    {
+      "id": "me.military.wall_arrow_corner",
+      "name": "Concrete wall corner with directional arrows",
+      "category": "infra",
+      "tags": [
+        "wall",
+        "corner",
+        "arrow",
+        "sign"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Corner pillars with white left/right arrows on top"
+    },
+    {
+      "id": "me.military.wall_modular_parts",
+      "name": "Modular wall pillars and panels",
+      "category": "infra",
+      "tags": [
+        "wall",
+        "modular",
+        "pillar",
+        "panel"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        620
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Labeled modular version: separate pillars + flat panels"
+    },
+    {
+      "id": "me.military.barbed_wire_kit",
+      "name": "Standalone razor/barbed wire segments",
+      "category": "infra",
+      "tags": [
+        "barbed",
+        "wire",
+        "razor",
+        "fence"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Loops, straights, corners; singles Barbed_Wire_1_* / Barbed_Wire_2_*"
+    },
+    {
+      "id": "me.military.warning_signs",
+      "name": "Warning / no-entry sign posts",
+      "category": "sign",
+      "tags": [
+        "warning",
+        "sign",
+        "security",
+        "pole"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        160
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red/white/blue rectangular signs on poles; singles Warning_Sign*"
+    },
+    {
+      "id": "me.military.spotlight_standalone",
+      "name": "Industrial floodlight / spotlight",
+      "category": "prop",
+      "tags": [
+        "spotlight",
+        "floodlight",
+        "light"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        180
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Large grey spotlights; singles Watch_Tower_Light_*"
+    },
+    {
+      "id": "me.military.railing_enclosure",
+      "name": "Square metal railing floor enclosure",
+      "category": "infra",
+      "tags": [
+        "railing",
+        "fence",
+        "platform"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Simple square deck surrounded by dark metal railing"
+    },
+    {
+      "id": "me.military.bunker_entrance_building",
+      "name": "Multi-story bunker / entrance building",
+      "category": "building",
+      "tags": [
+        "bunker",
+        "entrance",
+        "concrete",
+        "stairs"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stairs to door, windowed upper, flat roof; singles Bunker*"
+    },
+    {
+      "id": "me.military.spotlight_platform",
+      "name": "Raised platform with mounted spotlight",
+      "category": "infra",
+      "tags": [
+        "platform",
+        "spotlight",
+        "railing"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Square concrete pad with railings and center spotlight"
+    },
+    {
+      "id": "me.military.watchtower_top",
+      "name": "Watchtower upper deck with windows and light",
+      "category": "building",
+      "tags": [
+        "watchtower",
+        "tower",
+        "spotlight"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Window band + roof railing with spotlight; singles Watch_Tower*"
+    },
+    {
+      "id": "me.military.silo_base",
+      "name": "Large curved silo / tower base section",
+      "category": "building",
+      "tags": [
+        "silo",
+        "tower",
+        "base",
+        "industrial"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide dark curved plated base"
+    },
+    {
+      "id": "me.military.barrier_boom",
+      "name": "Red-white striped boom barrier / gate arm",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "boom",
+        "gate",
+        "checkpoint"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Checkpoint boom gate; singles Barrier*"
+    },
+    {
+      "id": "me.military.wall_pillars_tall",
+      "name": "Tall concrete wall / pillar sections",
+      "category": "infra",
+      "tags": [
+        "wall",
+        "pillar",
+        "concrete"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        980
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Six vertical grey pillar/wall pieces of varying height"
+    },
+    {
+      "id": "me.military.quonset_small_closed",
+      "name": "Small closed Quonset hut",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "quonset",
+        "hut",
+        "closed"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Single-story corrugated curved building closed shutter"
+    },
+    {
+      "id": "me.military.quonset_tall_closed",
+      "name": "Tall closed Quonset hangar",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "quonset",
+        "closed",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Three-band tall hangar closed door; singles Hangar*"
+    },
+    {
+      "id": "me.military.quonset_tall_open",
+      "name": "Tall open Quonset hangar interior",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "quonset",
+        "open",
+        "interior"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Open front with tiled floor and yellow hazard V markings"
+    },
+    {
+      "id": "me.military.quonset_interior_cutaway",
+      "name": "Quonset interior cutaway with console",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "interior",
+        "console",
+        "shelves"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Raised platform, stairs, shelves, computer console"
+    },
+    {
+      "id": "me.military.narrow_tower_building",
+      "name": "Narrow tall building with red door",
+      "category": "building",
+      "tags": [
+        "building",
+        "tower",
+        "narrow",
+        "door"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall rectangular grey structure, small red entrance"
+    },
+    {
+      "id": "me.military.barracks_l_shape",
+      "name": "L-shaped barracks brown roof",
+      "category": "building",
+      "tags": [
+        "barracks",
+        "dormitory",
+        "roof"
+      ],
+      "band": 1,
+      "y_hint": [
+        1000,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey walls brown tile roof double doors; singles Dormitory_*"
+    },
+    {
+      "id": "me.military.barracks_rectangular",
+      "name": "Large rectangular barracks brown roof",
+      "category": "building",
+      "tags": [
+        "barracks",
+        "dormitory",
+        "roof"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Corrugated brown roof multi-window barracks"
+    },
+    {
+      "id": "me.military.barracks_wall_modules",
+      "name": "Barracks wall / door / window modules",
+      "category": "building",
+      "tags": [
+        "barracks",
+        "modular",
+        "wall",
+        "door",
+        "window"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Separate wall sections with windows and double doors"
+    },
+    {
+      "id": "me.military.barracks_roof_modules",
+      "name": "Barracks corrugated roof modules",
+      "category": "building",
+      "tags": [
+        "barracks",
+        "roof",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1350,
+        1520
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown corrugated roof sections including corner"
+    },
+    {
+      "id": "me.military.boom_gate_extended",
+      "name": "Boom gate arm extended",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "boom",
+        "gate"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal red-white boom from base"
+    },
+    {
+      "id": "me.military.boom_gate_segments",
+      "name": "Boom gate broken / short segments",
+      "category": "infra",
+      "tags": [
+        "barrier",
+        "boom",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Shorter boom arm pieces"
+    },
+    {
+      "id": "me.military.streetlight_straight",
+      "name": "Grey metal streetlight pole straight",
+      "category": "prop",
+      "tags": [
+        "light",
+        "streetlight",
+        "pole"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Straight pole lamp; singles Light_Pole_*"
+    },
+    {
+      "id": "me.military.streetlight_bent",
+      "name": "Grey metal streetlight L-bend",
+      "category": "prop",
+      "tags": [
+        "light",
+        "streetlight",
+        "pole",
+        "bent"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "L-shaped light pole"
+    },
+    {
+      "id": "me.military.lockers_numbered",
+      "name": "Numbered hangar lockers N00-N10",
+      "category": "prop",
+      "tags": [
+        "locker",
+        "storage",
+        "numbered"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1380
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "2x6 grid of grey lockers; singles Hangar_Locker / Dormitory_Sign_*"
+    },
+    {
+      "id": "me.military.utility_box",
+      "name": "Grey metal utility / electrical box",
+      "category": "prop",
+      "tags": [
+        "utility",
+        "box",
+        "electrical"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1320
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Standalone metal cabinet"
+    },
+    {
+      "id": "me.military.stairs_walkway",
+      "name": "Metal staircase and railing walkway",
+      "category": "infra",
+      "tags": [
+        "stairs",
+        "walkway",
+        "railing"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Platform with railings and stairs; singles Hangar_Wall_Stairs*"
+    },
+    {
+      "id": "me.military.wooden_fence_low",
+      "name": "Low wooden post-and-rail fence",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Several low wood fence segments"
+    },
+    {
+      "id": "me.military.antenna_mast_base",
+      "name": "Antenna / communication mast base segments",
+      "category": "infra",
+      "tags": [
+        "antenna",
+        "mast",
+        "radio"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1530
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Metal lattice mast lower sections"
+    },
+    {
+      "id": "me.military.dormitory_n05",
+      "name": "Corrugated roof dormitory labeled N-05",
+      "category": "building",
+      "tags": [
+        "dormitory",
+        "barracks",
+        "building",
+        "n05"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1780
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan corrugated roof white walls double door; singles Dormitory_1..4"
+    },
+    {
+      "id": "me.military.bunker_roof_vents",
+      "name": "Square grey bunker with roof vents",
+      "category": "building",
+      "tags": [
+        "bunker",
+        "reinforced",
+        "vents"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Heavy mechanical door, roof pipes/vents"
+    },
+    {
+      "id": "me.military.bunker_flat_roof",
+      "name": "Square grey bunker flat top",
+      "category": "building",
+      "tags": [
+        "bunker",
+        "reinforced",
+        "flat"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flat-top bunker variant"
+    },
+    {
+      "id": "me.military.wall_vent_section",
+      "name": "Long wall section with windows and HVAC",
+      "category": "building",
+      "tags": [
+        "wall",
+        "hvac",
+        "window",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow building section with external vents"
+    },
+    {
+      "id": "me.military.tent_tan_closed",
+      "name": "Tan military tent closed",
+      "category": "building",
+      "tags": [
+        "tent",
+        "tan",
+        "closed",
+        "field"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Peaked canvas tent closed; singles Military_Tent_Brown"
+    },
+    {
+      "id": "me.military.tent_grey_closed",
+      "name": "Grey/black military tent closed",
+      "category": "building",
+      "tags": [
+        "tent",
+        "grey",
+        "closed",
+        "field"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Peaked canvas tent closed; singles Military_Tent_Black"
+    },
+    {
+      "id": "me.military.tent_tan_open",
+      "name": "Tan military tent open interior",
+      "category": "building",
+      "tags": [
+        "tent",
+        "tan",
+        "open",
+        "interior"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Front flaps open empty floor; singles Military_Tent_Interior_Brown"
+    },
+    {
+      "id": "me.military.tent_grey_open",
+      "name": "Grey military tent open interior",
+      "category": "building",
+      "tags": [
+        "tent",
+        "grey",
+        "open",
+        "interior"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Front flaps open; singles Military_Tent_Interior_Black"
+    },
+    {
+      "id": "me.military.sandbag_ring",
+      "name": "Circular sandbag fortification ring",
+      "category": "infra",
+      "tags": [
+        "sandbag",
+        "fortification",
+        "defense"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full circular sandbag emplacement"
+    },
+    {
+      "id": "me.military.sandbag_stacks",
+      "name": "Sandbag stacks and loose pieces",
+      "category": "infra",
+      "tags": [
+        "sandbag",
+        "modular",
+        "pile"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Straight/corner/pile variants; singles Sandbag_*"
+    },
+    {
+      "id": "me.military.tire_stacks",
+      "name": "Stacked tire piles",
+      "category": "prop",
+      "tags": [
+        "tire",
+        "training",
+        "stack"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stacks of dark tires; singles Tires_Pile_* / Tire_*"
+    },
+    {
+      "id": "me.military.training_dummy",
+      "name": "Wooden training dummy on stand",
+      "category": "prop",
+      "tags": [
+        "dummy",
+        "training",
+        "range"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Human-shaped wooden dummies; singles Target_*"
+    },
+    {
+      "id": "me.military.shooting_target",
+      "name": "Shooting range bullseye target",
+      "category": "prop",
+      "tags": [
+        "target",
+        "range",
+        "training"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grey rectangular targets with rings"
+    },
+    {
+      "id": "me.military.soldier_helmet",
+      "name": "Olive combat helmet",
+      "category": "prop",
+      "tags": [
+        "helmet",
+        "gear",
+        "soldier"
+      ],
+      "band": 2,
+      "y_hint": [
+        1950,
+        2050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small olive helmet; singles Soldier_Helmet"
+    },
+    {
+      "id": "me.military.bunk_bed",
+      "name": "Metal bunk bed",
+      "category": "furniture",
+      "tags": [
+        "bed",
+        "bunk",
+        "dorm"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Double-tier bunks; singles Bunk_Bed_*"
+    },
+    {
+      "id": "me.military.single_bed",
+      "name": "Metal single bed",
+      "category": "furniture",
+      "tags": [
+        "bed",
+        "dorm"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Single frame beds; singles Bed_*"
+    },
+    {
+      "id": "me.military.metal_locker",
+      "name": "Tall metal locker",
+      "category": "furniture",
+      "tags": [
+        "locker",
+        "storage"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Vent-slat lockers; singles Military_Tent_Locker_*"
+    },
+    {
+      "id": "me.military.supply_shelf",
+      "name": "Stocked metal supply shelf",
+      "category": "furniture",
+      "tags": [
+        "shelf",
+        "storage",
+        "supplies"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shelves with bottles/cans/boxes; singles Military_Tent_Shelf_*"
+    },
+    {
+      "id": "me.military.footlocker",
+      "name": "Footlocker / supply chest",
+      "category": "furniture",
+      "tags": [
+        "chest",
+        "storage",
+        "footlocker"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Open and closed chests; singles Military_Tent_Box*"
+    },
+    {
+      "id": "me.military.folding_chair",
+      "name": "Grey folding chair",
+      "category": "furniture",
+      "tags": [
+        "chair",
+        "seating"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2220
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Metal folding chairs; singles Military_Tent_Chair_*"
+    },
+    {
+      "id": "me.military.medical_crate",
+      "name": "Medical crate with green cross",
+      "category": "prop",
+      "tags": [
+        "medical",
+        "crate",
+        "supplies"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grey crates green cross; singles Military_Tent_Box_Small_* / Cross_*"
+    },
+    {
+      "id": "me.military.first_aid_kit",
+      "name": "Portable first-aid kit",
+      "category": "prop",
+      "tags": [
+        "medical",
+        "first-aid",
+        "kit"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green and red kits; singles Military_Tent_First_Aid_Kit_*"
+    },
+    {
+      "id": "me.military.medical_supplies_small",
+      "name": "Small bottles vials packets clipboard",
+      "category": "prop",
+      "tags": [
+        "medical",
+        "supplies",
+        "bottle"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Assorted small medical/supply icons; singles Military_Tent_Bottle_*"
+    },
+    {
+      "id": "me.military.antenna_floor_plate",
+      "name": "Floor-plate communication antenna",
+      "category": "infra",
+      "tags": [
+        "antenna",
+        "radio",
+        "comms"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small floor plates with antenna poles"
+    },
+    {
+      "id": "me.military.pipe_l_bend",
+      "name": "Industrial pipe L-bend section",
+      "category": "prop",
+      "tags": [
+        "pipe",
+        "industrial"
+      ],
+      "band": 2,
+      "y_hint": [
+        2150,
+        2280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grey piping L-section"
+    },
+    {
+      "id": "me.military.whiteboard",
+      "name": "Blank whiteboard on stand",
+      "category": "furniture",
+      "tags": [
+        "whiteboard",
+        "planning"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Military_Tent_Whiteboard_Blank"
+    },
+    {
+      "id": "me.military.map_board",
+      "name": "Tactical map board stand",
+      "category": "furniture",
+      "tags": [
+        "map",
+        "planning",
+        "tactical"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Maps with red/blue markings; singles Military_Tent_Whiteboard_1/2"
+    },
+    {
+      "id": "me.military.table_desk",
+      "name": "Command table / desk",
+      "category": "furniture",
+      "tags": [
+        "table",
+        "desk",
+        "command"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tables with/without papers/chairs; singles Military_Tent_Table*"
+    },
+    {
+      "id": "me.military.radio_tower_column",
+      "name": "Radar tower on solid central column",
+      "category": "building",
+      "tags": [
+        "radar",
+        "radio",
+        "tower",
+        "dome"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2650
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White radome on platform over thick column+ladder; singles Radio_Tower"
+    },
+    {
+      "id": "me.military.radio_tower_lattice_frame",
+      "name": "Lattice tower frame with dish antennas",
+      "category": "infra",
+      "tags": [
+        "radar",
+        "lattice",
+        "antenna",
+        "frame"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Rectangular lattice with side dishes; singles Radio_Tower_Structure*"
+    },
+    {
+      "id": "me.military.radio_tower_lattice",
+      "name": "Radar tower on lattice support",
+      "category": "building",
+      "tags": [
+        "radar",
+        "radio",
+        "tower",
+        "dome",
+        "lattice"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2680
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Radome platform on lattice frame"
+    },
+    {
+      "id": "me.military.radio_tower_base",
+      "name": "Square metal tower base platform",
+      "category": "infra",
+      "tags": [
+        "radar",
+        "base",
+        "platform"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Cut-out square foundation; singles Radio_Tower_Base / Floor"
+    },
+    {
+      "id": "me.military.tank_green_east",
+      "name": "Green tank assembled facing east",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "armor",
+        "east"
+      ],
+      "band": 3,
+      "y_hint": [
+        2700,
+        2950
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side profile right; singles Green_Tank_Right_Side"
+    },
+    {
+      "id": "me.military.tank_green_west",
+      "name": "Green tank assembled facing west",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "armor",
+        "west"
+      ],
+      "band": 3,
+      "y_hint": [
+        2700,
+        2950
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "Side profile left; singles Green_Tank_Left_Side"
+    },
+    {
+      "id": "me.military.tank_green_south",
+      "name": "Green tank top-down facing south",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "armor",
+        "south"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        3000
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-down facing down; singles Green_Tank_Front_Side"
+    },
+    {
+      "id": "me.military.tank_green_north",
+      "name": "Green tank top-down facing north",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "armor",
+        "north"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        3000
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Top-down facing up; singles Green_Tank_Back_Side"
+    },
+    {
+      "id": "me.military.tank_green_hull",
+      "name": "Green tank hull without turret",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "hull",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2900,
+        3070
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "Top-down hulls; singles Green_Tank_Base_*"
+    },
+    {
+      "id": "me.military.tank_green_turret",
+      "name": "Green tank turret modular set",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "turret",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2900,
+        3070
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Turrets facing L/D/U/R; singles Green_Tank_Gun_*"
+    },
+    {
+      "id": "me.military.tank_green_chassis_side",
+      "name": "Green tank side chassis modular",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "chassis",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3250
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side-view chassis facing right"
+    },
+    {
+      "id": "me.military.tank_green_turret_set_b",
+      "name": "Green tank turret set (band 4)",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "green",
+        "turret",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3250
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Four cardinal turrets"
+    },
+    {
+      "id": "me.military.tank_tan_east",
+      "name": "Tan/brown tank assembled facing east",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "tan",
+        "brown",
+        "armor",
+        "east"
+      ],
+      "band": 4,
+      "y_hint": [
+        3250,
+        3500
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "singles Brown_Tank_Right_Side"
+    },
+    {
+      "id": "me.military.tank_tan_west",
+      "name": "Tan/brown tank assembled facing west",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "tan",
+        "brown",
+        "armor",
+        "west"
+      ],
+      "band": 4,
+      "y_hint": [
+        3250,
+        3500
+      ],
+      "surface": "asphalt",
+      "facing": "west",
+      "multi_tile": true,
+      "notes": "singles Brown_Tank_Left_Side"
+    },
+    {
+      "id": "me.military.tank_tan_south",
+      "name": "Tan/brown tank top-down facing south",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "tan",
+        "brown",
+        "armor",
+        "south"
+      ],
+      "band": 4,
+      "y_hint": [
+        3300,
+        3550
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Brown_Tank_Front_Side"
+    },
+    {
+      "id": "me.military.tank_tan_north",
+      "name": "Tan/brown tank top-down facing north",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "tan",
+        "brown",
+        "armor",
+        "north"
+      ],
+      "band": 4,
+      "y_hint": [
+        3300,
+        3550
+      ],
+      "surface": "asphalt",
+      "facing": "north",
+      "multi_tile": true,
+      "notes": "singles Brown_Tank_Back_Side"
+    },
+    {
+      "id": "me.military.tank_tan_hull",
+      "name": "Tan tank hull modular",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "tan",
+        "hull",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        3500,
+        3750
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top-down chassis; singles Brown_Tank_Base_*"
+    },
+    {
+      "id": "me.military.tank_tan_turret",
+      "name": "Tan tank turret modular set",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "tan",
+        "turret",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        3500,
+        3840
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Multiple cardinal turret rows; singles Brown_Tank_Gun_*"
+    },
+    {
+      "id": "me.military.tank_tan_chassis_side",
+      "name": "Tan tank side chassis",
+      "category": "vehicle",
+      "tags": [
+        "tank",
+        "tan",
+        "chassis",
+        "modular"
+      ],
+      "band": 4,
+      "y_hint": [
+        3650,
+        3840
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Side-view chassis facing right"
+    },
+    {
+      "id": "me.military.helicopter_side_complete",
+      "name": "Helicopter side profile with rotors",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "side"
+      ],
+      "band": 5,
+      "y_hint": [
+        3840,
+        4100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Complete side view orange #8; singles Helicopter"
+    },
+    {
+      "id": "me.military.helicopter_side_body",
+      "name": "Helicopter side body no main rotor",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "body",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        3840,
+        4100
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Body only; singles Helicopter_Base_Side"
+    },
+    {
+      "id": "me.military.helicopter_top_with_rotor",
+      "name": "Helicopter top-down with rotor",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "top"
+      ],
+      "band": 5,
+      "y_hint": [
+        4050,
+        4300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top view with angled main rotor"
+    },
+    {
+      "id": "me.military.helicopter_top_body",
+      "name": "Helicopter top-down body no rotor",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "body",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4050,
+        4300
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Helicopter_Base_Front/Back"
+    },
+    {
+      "id": "me.military.helicopter_bottom_body",
+      "name": "Helicopter underside body",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "bottom"
+      ],
+      "band": 5,
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Undercarriage view without rotor"
+    },
+    {
+      "id": "me.military.helicopter_bottom_with_rotor",
+      "name": "Helicopter underside with rotor",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "aircraft",
+        "bottom"
+      ],
+      "band": 5,
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Bottom view with rotor attached"
+    },
+    {
+      "id": "me.military.helicopter_main_rotor",
+      "name": "Detached main rotor blades",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "rotor",
+        "blade",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4100,
+        4570
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Orange-tipped dual blades at angles; singles Helicopter_Blade_*"
+    },
+    {
+      "id": "me.military.helicopter_tail_rotor",
+      "name": "Detached tail rotor bits",
+      "category": "vehicle",
+      "tags": [
+        "helicopter",
+        "rotor",
+        "tail",
+        "modular"
+      ],
+      "band": 5,
+      "y_hint": [
+        4150,
+        4570
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny tail rotor components"
+    },
+    {
+      "id": "me.military.mine",
+      "name": "Land mine prop variants",
+      "category": "prop",
+      "tags": [
+        "mine",
+        "explosive",
+        "hazard"
+      ],
+      "band": 5,
+      "y_hint": [
+        4400,
+        4570
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Mine_1/2/3 \u2014 if visible near bottom cluster"
+    },
+    {
+      "id": "me.military.wall_corner_internal",
+      "name": "Concrete wall internal corners",
+      "category": "infra",
+      "tags": [
+        "wall",
+        "corner",
+        "concrete"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        240
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Internal corner pieces all four directions"
+    },
+    {
+      "id": "me.military.wall_pillar",
+      "name": "Concrete wall pillar variants",
+      "category": "infra",
+      "tags": [
+        "wall",
+        "pillar"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        260
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pillar_1/2 and barbed pillars"
+    },
+    {
+      "id": "me.military.watchtower_full",
+      "name": "Complete watchtower assembly",
+      "category": "building",
+      "tags": [
+        "watchtower",
+        "tower",
+        "ladder"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full tower with observation deck; singles Watch_Tower"
+    },
+    {
+      "id": "me.military.watchtower_empty",
+      "name": "Watchtower empty frame",
+      "category": "building",
+      "tags": [
+        "watchtower",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Watch_Tower_Empty"
+    },
+    {
+      "id": "me.military.watchtower_entrance",
+      "name": "Watchtower ground entrance",
+      "category": "building",
+      "tags": [
+        "watchtower",
+        "entrance"
+      ],
+      "band": 0,
+      "y_hint": [
+        350,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Watch_Tower_Entrance"
+    },
+    {
+      "id": "me.military.watchtower_roof_fence",
+      "name": "Watchtower roof with fence",
+      "category": "building",
+      "tags": [
+        "watchtower",
+        "roof",
+        "fence"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        400
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Watch_Tower_Roof / Roof_Fence"
+    },
+    {
+      "id": "me.military.bunker_base_props",
+      "name": "Bunker base antennas pipes trapdoors",
+      "category": "prop",
+      "tags": [
+        "bunker",
+        "antenna",
+        "pipe",
+        "trapdoor"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Bunker_Base_*_Props"
+    },
+    {
+      "id": "me.military.hangar_full",
+      "name": "Complete hangar stamp",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "quonset"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Hangar"
+    },
+    {
+      "id": "me.military.hangar_modular_exterior",
+      "name": "Hangar modular exterior bands",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "modular",
+        "exterior"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Exterior_1/2/3 slices"
+    },
+    {
+      "id": "me.military.hangar_modular_interior",
+      "name": "Hangar modular interior bands",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "modular",
+        "interior"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Interior_1/2/3 with floor markings"
+    },
+    {
+      "id": "me.military.hangar_wall",
+      "name": "Hangar end wall",
+      "category": "building",
+      "tags": [
+        "hangar",
+        "wall"
+      ],
+      "band": 1,
+      "y_hint": [
+        950,
+        1250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Hangar_Wall"
+    },
+    {
+      "id": "me.military.dormitory_fence_1",
+      "name": "Dormitory fence kit style 1",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "dormitory",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Dormitory_Fence_1_*"
+    },
+    {
+      "id": "me.military.dormitory_fence_2",
+      "name": "Dormitory fence kit style 2",
+      "category": "infra",
+      "tags": [
+        "fence",
+        "dormitory",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Dormitory_Fence_2_*"
+    },
+    {
+      "id": "me.military.dormitory_signs",
+      "name": "Dormitory number signs 0-10 + ruined",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "dormitory",
+        "number"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1400
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Dormitory_Sign_*"
+    },
+    {
+      "id": "me.military.dormitory_entrances",
+      "name": "Dormitory single/double door modules",
+      "category": "building",
+      "tags": [
+        "dormitory",
+        "door",
+        "entrance"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1450
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Door and no-door entrance pieces"
+    },
+    {
+      "id": "me.military.tent_table_set",
+      "name": "Tent table with chair and papers",
+      "category": "furniture",
+      "tags": [
+        "table",
+        "chair",
+        "tent"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Table_With_Chair / Table_Paper"
+    },
+    {
+      "id": "me.military.shelf_empty",
+      "name": "Empty metal supply shelves",
+      "category": "furniture",
+      "tags": [
+        "shelf",
+        "empty",
+        "storage"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "singles Military_Tent_Shelf_Empty_*"
+    },
+    {
+      "id": "me.military.sandbag_single",
+      "name": "Single sandbag horizontal/vertical",
+      "category": "infra",
+      "tags": [
+        "sandbag",
+        "single"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Sandbag_Horizontal_Single / Vertical_Single"
+    },
+    {
+      "id": "me.military.tire_single",
+      "name": "Single tire black/brown/grey",
+      "category": "prop",
+      "tags": [
+        "tire",
+        "single"
+      ],
+      "band": 2,
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Tire_*_Single"
+    },
+    {
+      "id": "me.military.target_variants",
+      "name": "Range target variants including downed",
+      "category": "prop",
+      "tags": [
+        "target",
+        "range"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2120
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Target_1..4 and Target_Down"
+    },
+    {
+      "id": "me.military.bunk_stairs",
+      "name": "Bunk bed side stairs",
+      "category": "furniture",
+      "tags": [
+        "stairs",
+        "bunk",
+        "bed"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "singles Stairs_Bunk_Bed_*"
+    },
+    {
+      "id": "me.military.command_console",
+      "name": "Command console with monitors",
+      "category": "furniture",
+      "tags": [
+        "console",
+        "command",
+        "monitor"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Multi-monitor command desks if present near tent props"
+    },
+    {
+      "id": "me.military.server_rack",
+      "name": "Server rack / computer cabinet",
+      "category": "furniture",
+      "tags": [
+        "server",
+        "rack",
+        "computer"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "floor",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall electronics cabinets"
+    },
+    {
+      "id": "me.military.crate_pallet",
+      "name": "Wooden crates and pallets",
+      "category": "prop",
+      "tags": [
+        "crate",
+        "pallet",
+        "logistics"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stacked supply crates near sandbags"
+    },
+    {
+      "id": "me.military.barrel",
+      "name": "Metal supply barrel",
+      "category": "prop",
+      "tags": [
+        "barrel",
+        "drum",
+        "logistics"
+      ],
+      "band": 2,
+      "y_hint": [
+        1880,
+        2100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Olive/grey drums"
+    },
+    {
+      "id": "me.military.flagpole",
+      "name": "Flagpole with red/white flag",
+      "category": "prop",
+      "tags": [
+        "flag",
+        "pole"
+      ],
+      "band": 1,
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Flags near antennas if visible"
+    }
+  ],
+  "row_guide": "Band0 (y0\u2013768): concrete perimeter walls (plain/barbed/arrow corners/modular pillars+panels), standalone razor wire, warning signs, spotlights, railing enclosure, bunker entrance building, spotlight platform, watchtower top, silo/tower base, boom barriers. Band1 (y768\u20131536): Quonset hangars (small/tall closed/open/interior cutaway), narrow red-door tower, L-shaped + rectangular barracks + wall/roof modules, boom gates, streetlights, numbered lockers, utility box, stairs/walkway, wood fence, antenna mast bases. Band2 (y1536\u20132304): dormitory N-05, grey bunkers, wall+HVAC strip, tan/grey tents closed+open, sandbag ring/stacks, tires, training dummies/targets, helmet, bunks/beds, lockers/shelves/footlockers/chairs, medical crates/kits/supplies, antennas, pipes, whiteboard/map boards, desks. Band3 (y2304\u20133072): radio/radar towers (column, lattice frame, lattice+dome, base), green tank assembled E/W/S/N + hulls + turrets. Band4 (y3072\u20133840): green chassis/turret modular extras; tan/brown tanks assembled E/W/S/N + hulls + multi-row turrets + side chassis. Band5 (y3840\u20134575): helicopter side/top/bottom complete+body, detached main/tail rotors, mines."
+}

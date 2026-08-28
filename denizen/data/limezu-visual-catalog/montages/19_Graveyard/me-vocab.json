@@ -1,0 +1,1958 @@
+{
+  "sheet": "19_Graveyard",
+  "labels": [
+    {
+      "id": "me.graveyard.dirt_path_autotile",
+      "name": "Dirt path / grass-to-dirt transition tileset",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.grass_tufts",
+      "name": "Grass tufts",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pebbles_1",
+      "name": "Pebble cluster 1",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pebbles_2",
+      "name": "Pebble cluster 2",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pebbles_3",
+      "name": "Pebble cluster 3",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pebbles_4",
+      "name": "Pebble cluster 4",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.stone_1",
+      "name": "Stone/boulder 1",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.stone_2",
+      "name": "Stone/boulder 2",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.stone_3",
+      "name": "Stone/boulder 3",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.stone_4",
+      "name": "Stone/boulder 4",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.stone_5",
+      "name": "Stone/boulder 5",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.stone_6",
+      "name": "Stone/boulder 6",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.stone_7",
+      "name": "Stone/boulder 7",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.stone_8",
+      "name": "Stone/boulder 8",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.stone_9",
+      "name": "Stone/boulder 9",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.blue_flowers",
+      "name": "Blue flowers single",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.blue_group_flowers",
+      "name": "Blue flower group",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.bordeaux_flowers_pot",
+      "name": "Bordeaux flowers in pot",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.bordeaux_group_flowers",
+      "name": "Bordeaux flower group",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pink_flowers_pot",
+      "name": "Pink flowers in pot",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pink_group_flowers",
+      "name": "Pink flower group",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.red_flowers",
+      "name": "Red flowers",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.red_flowers_pot",
+      "name": "Red flowers in pot",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.red_group_flowers",
+      "name": "Red flower group",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.violet_flowers_pot",
+      "name": "Violet flowers in pot",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.violet_group_flowers",
+      "name": "Violet flower group",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.white_flowers",
+      "name": "White flowers",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.white_group_flowers",
+      "name": "White flower group",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.white_1_flowers_pot",
+      "name": "White flowers pot 1",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.white_2_flowers_pot",
+      "name": "White flowers pot 2",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.multicolor_flowers",
+      "name": "Multicolor flower cluster",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.empty_pot_1",
+      "name": "Empty pot 1",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.empty_pot_2",
+      "name": "Empty pot 2",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.brown_1_mushrooms",
+      "name": "Brown mushrooms 1",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.brown_2_mushrooms",
+      "name": "Brown mushrooms 2",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.brown_3_mushrooms",
+      "name": "Brown mushrooms 3",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.brown_3_little_mushrooms",
+      "name": "Little brown mushrooms",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.red_mushrooms",
+      "name": "Red mushrooms",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_sprout_1",
+      "name": "Little sprout 1",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_sprout_2",
+      "name": "Little sprout 2",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_sprout_3",
+      "name": "Little sprout 3",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_sprout_4",
+      "name": "Little sprout 4",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_sprout_5",
+      "name": "Little sprout 5",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.group_four_leaf_clover_1",
+      "name": "Four-leaf clover group 1",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.group_four_leaf_clover_2",
+      "name": "Four-leaf clover group 2",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.group_four_leaf_clover_3",
+      "name": "Four-leaf clover group 3",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.group_leaf_clover_1",
+      "name": "Leaf clover group 1",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.group_leaf_clover_2",
+      "name": "Leaf clover group 2",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.grey_cross_1",
+      "name": "Grey stone cross headstone 1",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.grey_cross_2",
+      "name": "Grey stone cross headstone 2",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.grey_cross_3",
+      "name": "Grey stone cross headstone 3",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.grey_cross_4",
+      "name": "Grey stone cross headstone 4",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.brown_cross_1",
+      "name": "Brown stone cross headstone 1",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.brown_cross_2",
+      "name": "Brown stone cross headstone 2",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.brown_cross_3",
+      "name": "Brown stone cross headstone 3",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.brown_cross_4",
+      "name": "Brown stone cross headstone 4",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.black_cross_1",
+      "name": "Black stone cross headstone 1",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.black_cross_2",
+      "name": "Black stone cross headstone 2",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.black_cross_3",
+      "name": "Black stone cross headstone 3",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.black_cross_4",
+      "name": "Black stone cross headstone 4",
+      "y_hint": [
+        100,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_cross_1",
+      "name": "Wood twig cross 1",
+      "y_hint": [
+        200,
+        340
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.wood_cross_2",
+      "name": "Wood twig cross 2",
+      "y_hint": [
+        200,
+        340
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.wood_cross_3",
+      "name": "Wood twig cross 3",
+      "y_hint": [
+        200,
+        340
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.wood_large_cross_1",
+      "name": "Large wood cross 1",
+      "y_hint": [
+        200,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_large_cross_2",
+      "name": "Large wood cross 2",
+      "y_hint": [
+        200,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_large_cross_3",
+      "name": "Large wood cross 3",
+      "y_hint": [
+        200,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.small_black_tombstone_1",
+      "name": "small black tombstone 1",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_black_tombstone_2",
+      "name": "small black tombstone 2",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_black_tombstone_3",
+      "name": "small black tombstone 3",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_black_tombstone_4",
+      "name": "small black tombstone 4",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_black_tombstone_5",
+      "name": "small black tombstone 5",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_black_tombstone_6",
+      "name": "small black tombstone 6",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_brown_tombstone_1",
+      "name": "small brown tombstone 1",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_brown_tombstone_2",
+      "name": "small brown tombstone 2",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_brown_tombstone_3",
+      "name": "small brown tombstone 3",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_brown_tombstone_4",
+      "name": "small brown tombstone 4",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_brown_tombstone_5",
+      "name": "small brown tombstone 5",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_brown_tombstone_6",
+      "name": "small brown tombstone 6",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_grey_tombstone_1",
+      "name": "small grey tombstone 1",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_grey_tombstone_2",
+      "name": "small grey tombstone 2",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_grey_tombstone_3",
+      "name": "small grey tombstone 3",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_grey_tombstone_4",
+      "name": "small grey tombstone 4",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_grey_tombstone_5",
+      "name": "small grey tombstone 5",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.long_tombstone_1",
+      "name": "Tall slim long tombstone 1",
+      "y_hint": [
+        140,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_tombstone_2",
+      "name": "Tall slim long tombstone 2",
+      "y_hint": [
+        140,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_brown_tombstone_1",
+      "name": "marble brown tombstone 1",
+      "y_hint": [
+        140,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_brown_coffin_1",
+      "name": "marble brown coffin/sarcophagus 1",
+      "y_hint": [
+        300,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_brown_tombstone_2",
+      "name": "marble brown tombstone 2",
+      "y_hint": [
+        140,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_brown_coffin_2",
+      "name": "marble brown coffin/sarcophagus 2",
+      "y_hint": [
+        300,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_grey_tombstone_1",
+      "name": "marble grey tombstone 1",
+      "y_hint": [
+        140,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_grey_coffin_1",
+      "name": "marble grey coffin/sarcophagus 1",
+      "y_hint": [
+        300,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_grey_tombstone_2",
+      "name": "marble grey tombstone 2",
+      "y_hint": [
+        140,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.marble_grey_coffin_2",
+      "name": "marble grey coffin/sarcophagus 2",
+      "y_hint": [
+        300,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_big",
+      "name": "Big stone gate/arch",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_big_red_orb",
+      "name": "Big stone gate with glowing red orb",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_high",
+      "name": "High stone gate/arch",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_high_red_orb",
+      "name": "High stone gate with glowing red orb",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_medium",
+      "name": "Medium stone gate/arch",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_medium_red_orb",
+      "name": "Medium stone gate with glowing red orb",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_small",
+      "name": "Small stone gate/arch",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.gate_small_red_orb",
+      "name": "Small stone gate with glowing red orb",
+      "y_hint": [
+        120,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_1",
+      "name": "Open dirt grave ditch 1",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_2",
+      "name": "Open dirt grave ditch 2",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_wood_grave",
+      "name": "Dirt ditch with wooden grave cover",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_red_coffin",
+      "name": "Dirt ditch with red coffin",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_red_skull_coffin",
+      "name": "Dirt ditch with red skull coffin",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_silver_coffin",
+      "name": "Dirt ditch with silver coffin",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_silver_skull_coffin",
+      "name": "Dirt ditch with silver skull coffin",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_yellow_coffin",
+      "name": "Dirt ditch with yellow coffin",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.dirt_ditch_yellow_skull_coffin",
+      "name": "Dirt ditch with yellow skull coffin",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.pile_of_dirt",
+      "name": "Small dirt pile",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.big_pile_of_dirt",
+      "name": "Big dirt pile",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.cross_pile_of_dirt",
+      "name": "Dirt pile with wood cross marker",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.shovel",
+      "name": "Shovel standing alone",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.shovel_big_pile_of_dirt",
+      "name": "Big dirt pile with shovel",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.shovel_little_pile_of_dirt",
+      "name": "Little dirt pile with shovel",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.wood_grave_1_brown_1_v1",
+      "name": "Vertical wood grave/coffin style1 brown1 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_1_brown_1_v2",
+      "name": "Vertical wood grave/coffin style1 brown1 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_1_brown_2_v1",
+      "name": "Vertical wood grave/coffin style1 brown2 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_1_brown_2_v2",
+      "name": "Vertical wood grave/coffin style1 brown2 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_1_brown_3_v1",
+      "name": "Vertical wood grave/coffin style1 brown3 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_1_brown_3_v2",
+      "name": "Vertical wood grave/coffin style1 brown3 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_2_brown_1_v1",
+      "name": "Vertical wood grave/coffin style2 brown1 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_2_brown_1_v2",
+      "name": "Vertical wood grave/coffin style2 brown1 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_2_brown_2_v1",
+      "name": "Vertical wood grave/coffin style2 brown2 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_2_brown_2_v2",
+      "name": "Vertical wood grave/coffin style2 brown2 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_2_brown_3_v1",
+      "name": "Vertical wood grave/coffin style2 brown3 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_2_brown_3_v2",
+      "name": "Vertical wood grave/coffin style2 brown3 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_3_brown_1_v1",
+      "name": "Vertical wood grave/coffin style3 brown1 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_3_brown_1_v2",
+      "name": "Vertical wood grave/coffin style3 brown1 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_3_brown_2_v1",
+      "name": "Vertical wood grave/coffin style3 brown2 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_3_brown_2_v2",
+      "name": "Vertical wood grave/coffin style3 brown2 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_3_brown_3_v1",
+      "name": "Vertical wood grave/coffin style3 brown3 v1",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.wood_grave_3_brown_3_v2",
+      "name": "Vertical wood grave/coffin style3 brown3 v2",
+      "y_hint": [
+        180,
+        340
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.big_brown_candle",
+      "name": "Big brown candle",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.big_red_candle",
+      "name": "Big red candle",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.medium_brown_candle",
+      "name": "Medium brown candle",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.medium_red_candle",
+      "name": "Medium red candle",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_brown_candle",
+      "name": "Small brown candle",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.small_red_candle",
+      "name": "Small red candle",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.consumed_candle_1",
+      "name": "Consumed/melted candle 1",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.consumed_candle_2",
+      "name": "Consumed/melted candle 2",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.consumed_candle_3",
+      "name": "Consumed/melted candle 3",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.candle_holder_off",
+      "name": "Candle holder unlit",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.candle_holder_on",
+      "name": "Candle holder lit",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.wall_candle_1",
+      "name": "Wall-mounted candle 1",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.wall_candle_2",
+      "name": "Wall-mounted candle 2",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.wall_candle_holder",
+      "name": "Wall candle holder empty",
+      "y_hint": [
+        220,
+        380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.grace_chapel",
+      "name": "Gothic mausoleum/chapel open doorway",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.grace_chapel_with_gate",
+      "name": "Gothic mausoleum/chapel with iron gate",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.grave_cage",
+      "name": "Iron grave cage / railing enclosure",
+      "y_hint": [
+        280,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.big_tree",
+      "name": "Large gnarled leafless dead tree",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.big_tree_pumpkins",
+      "name": "Large dead tree with hanging jack-o'-lanterns and trunk face",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.medium_tree_1",
+      "name": "Medium leafless dead tree 1",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.medium_tree_2",
+      "name": "Medium leafless dead tree 2",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.medium_tree_3",
+      "name": "Medium leafless dead tree 3",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.small_tree_1",
+      "name": "Small leafless dead tree",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.tree_trunk_pumpkin",
+      "name": "Tree trunk segment with carved glowing face",
+      "y_hint": [
+        380,
+        500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.squared_closed_coffin_1",
+      "name": "Squared stone sarcophagus closed 1",
+      "y_hint": [
+        480,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_closed_coffin_2",
+      "name": "Squared stone sarcophagus closed 2",
+      "y_hint": [
+        480,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_open_coffin",
+      "name": "Squared stone sarcophagus open empty",
+      "y_hint": [
+        480,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_uncovered_coffin_1",
+      "name": "Squared uncovered sarcophagus 1",
+      "y_hint": [
+        480,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_uncovered_coffin_2",
+      "name": "Squared uncovered sarcophagus 2",
+      "y_hint": [
+        480,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_coffin_lid_1",
+      "name": "Squared sarcophagus lid 1",
+      "y_hint": [
+        480,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_coffin_lid_2",
+      "name": "Squared sarcophagus lid 2",
+      "y_hint": [
+        480,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_skeleton_coffin",
+      "name": "Sarcophagus with full skeleton",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_skull_coffin",
+      "name": "Sarcophagus with skull",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_ribcage_coffin",
+      "name": "Sarcophagus with ribcage",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_bones_coffin",
+      "name": "Sarcophagus with bones",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.squared_bones_and_ribcage_coffin",
+      "name": "Sarcophagus with bones and ribcage",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.red_coffin",
+      "name": "Red fancy coffin closed",
+      "y_hint": [
+        540,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.red_skull_coffin",
+      "name": "Red fancy coffin with skull emblem",
+      "y_hint": [
+        540,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.silver_coffin",
+      "name": "Silver fancy coffin closed",
+      "y_hint": [
+        540,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.silver_skull_coffin",
+      "name": "Silver fancy coffin with skull emblem",
+      "y_hint": [
+        540,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.yellow_coffin",
+      "name": "Yellow fancy coffin closed",
+      "y_hint": [
+        540,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.yellow_skull_coffin",
+      "name": "Yellow fancy coffin with skull emblem",
+      "y_hint": [
+        540,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.bones",
+      "name": "Scattered bones pile",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.ribcage_1",
+      "name": "Ribcage remains 1",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.ribcage_2",
+      "name": "Ribcage remains 2",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.skeleton",
+      "name": "Full skeleton lying/reclining",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.skull",
+      "name": "Human skull",
+      "y_hint": [
+        500,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.crow_back",
+      "name": "Crow facing back",
+      "y_hint": [
+        520,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.crow_front",
+      "name": "Crow facing front",
+      "y_hint": [
+        520,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.crow_left",
+      "name": "Crow facing left",
+      "y_hint": [
+        520,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.crow_right",
+      "name": "Crow facing right",
+      "y_hint": [
+        520,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.big_pumpkin_1",
+      "name": "Big jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.big_pumpkin_2",
+      "name": "Big jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.big_yellow_lights_pumpkin_1",
+      "name": "Big glowing yellow jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.big_yellow_lights_pumpkin_2",
+      "name": "Big glowing yellow jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.medium_pumpkin_1",
+      "name": "Medium jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.medium_pumpkin_2",
+      "name": "Medium jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.medium_yellow_lights_pumpkin_1",
+      "name": "Medium glowing jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.medium_yellow_lights_pumpkin_2",
+      "name": "Medium glowing jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_pumpkin_1",
+      "name": "Little jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_pumpkin_2",
+      "name": "Little jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_blood_pumpkin",
+      "name": "Little blood/red jack-o'-lantern",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_yellow_lights_pumpkin_1",
+      "name": "Little glowing jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.little_yellow_lights_pumpkin_2",
+      "name": "Little glowing jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.long_pumpkin_1",
+      "name": "Long jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_pumpkin_2",
+      "name": "Long jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_pumpkin_3",
+      "name": "Long jack-o'-lantern 3",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_pumpkin_4",
+      "name": "Long jack-o'-lantern 4",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_blood_pumpkin_1",
+      "name": "Long blood jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_blood_pumpkin_2",
+      "name": "Long blood jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_yellow_lights_pumpkin_1",
+      "name": "Long glowing jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_yellow_lights_pumpkin_2",
+      "name": "Long glowing jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_yellow_lights_pumpkin_3",
+      "name": "Long glowing jack-o'-lantern 3",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.long_yellow_lights_pumpkin_4",
+      "name": "Long glowing jack-o'-lantern 4",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.graveyard.medium_blood_pumpkin_1",
+      "name": "Medium blood jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.medium_blood_pumpkin_2",
+      "name": "Medium blood jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.tiny_pumpkin_1",
+      "name": "Tiny jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.tiny_pumpkin_3",
+      "name": "Tiny jack-o'-lantern 3",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.tiny_blood_pumpkin",
+      "name": "Tiny blood jack-o'-lantern",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.tiny_yellow_lights_pumpkin_1",
+      "name": "Tiny glowing jack-o'-lantern 1",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.tiny_yellow_lights_pumpkin_2",
+      "name": "Tiny glowing jack-o'-lantern 2",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pumpkin_branch_left",
+      "name": "Pumpkin hanging on branch left",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.graveyard.pumpkin_branch_right",
+      "name": "Pumpkin hanging on branch right",
+      "y_hint": [
+        540,
+        640
+      ],
+      "multi_tile": false
+    }
+  ]
+}

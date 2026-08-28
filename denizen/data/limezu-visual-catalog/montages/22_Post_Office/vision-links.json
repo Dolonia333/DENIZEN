@@ -1,0 +1,12 @@
+{
+  "sheet": "22_Post_Office",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.post_office.building_maroon",
+    "2": "me.post_office.building_green",
+    "3": "me.post_office.package_pile_large",
+    "4": "me.post_office.package_pile_small",
+    "5": "me.post_office.building_grey",
+    "6": "me.post_office.building_orange_stripe"
+  }
+}

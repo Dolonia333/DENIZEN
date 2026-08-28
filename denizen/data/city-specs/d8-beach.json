@@ -435,6 +435,27 @@
    "x": 5632,
    "y": 4700,
    "origin": "bl"
+  },
+  {
+   "_doc": "Catalog-backed stamps (me.* resolved at merge via placement-index)",
+   "me": "me.beach.palm_tree",
+   "x": 3900,
+   "y": 4480,
+   "origin": "bc",
+   "solid": true
+  },
+  {
+   "me": "me.beach.bucket_blue",
+   "prefer": "Small_Blue_Bucket_1.png",
+   "x": 4020,
+   "y": 4560,
+   "origin": "bc"
+  },
+  {
+   "me": "me.beach.bucket_shovel_example",
+   "x": 4080,
+   "y": 4568,
+   "origin": "bc"
   }
  ],
  "anims": [

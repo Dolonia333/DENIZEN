@@ -4,18 +4,54 @@
 Adds arterial connector roads and the subway teleport portals (wired to the
 D3 Station Square stair entrances). Validates every referenced asset exists.
 Run after editing any district fragment.
+
+Compiler-generated fragments (scripts/compile-exterior-district.py) write to
+data/city-specs/generated/*.json, deliberately OUTSIDE the default `d*.json`
+glob so a WIP compile can't disturb the hand-authored city. Pass
+--include-generated to also merge data/city-specs/generated/d*.json once a
+compiled district is ready to promote (see docs/EXTERIOR-COMPILER.md).
+
+--compiler-replaces HAND is the surgical alternative to --include-generated:
+for every hand district data/city-specs/d{N}-*.json that has a matching
+data/city-specs/generated/d{N}-compiled.json, it takes ONLY stamps/anims/
+labels from the compiled fragment (dropping the hand district's own
+stamps/anims/labels), while patches/roads/solids/animBands/portals/npcs/
+vehicles still come from the hand fragment — UNLESS the compiled fragment's
+spec set compiler.full_bbox: true, in which case the compiler repainted the
+district's entire ground plane and its patches are used instead of the
+hand file's (stale/partial) ones. Districts with no compiled counterpart are
+merged unchanged. See docs/EXTERIOR-COMPILER.md.
 """
 
+import argparse
 import glob
 import json
 import os
+import re
+import sys
 
 from PIL import Image
 
 DEN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = os.path.join(DEN, "data", "city-specs")
+GENERATED = os.path.join(SPECS, "generated")
 ASSETS = os.path.join(DEN, "assets", "limezu")
 OUT = os.path.join(DEN, "data", "city-plan.json")
+
+ap = argparse.ArgumentParser(description=__doc__)
+ap.add_argument("--include-generated", action="store_true",
+                help="also merge data/city-specs/generated/d*.json "
+                     "(compiler-generated district fragments)")
+ap.add_argument("--include-pockets", action="store_true",
+                help="with --compiler-replaces HAND, also merge generated "
+                     "pockets/showcase (excluding d*-compiled.json)")
+ap.add_argument("--compiler-replaces", choices=["HAND"], default=None,
+                help="HAND: for each hand district with a matching "
+                     "data/city-specs/generated/d{N}-compiled.json, replace "
+                     "its stamps/anims/labels with the compiled fragment's "
+                     "(patches/roads/solids/portals/npcs/vehicles still come "
+                     "from the hand file, unless the spec painted full_bbox)")
+args = ap.parse_args()
 
 merged = {"worldSize": {"w": 6656, "h": 6400}, "patches": [], "roads": [],
           "stamps": [], "anims": [], "animBands": [], "solids": [],
@@ -27,16 +63,115 @@ merged = {"worldSize": {"w": 6656, "h": 6400}, "patches": [], "roads": [],
 # post-merge, once every district's stamps are known.
 _struct_furniture = []
 
-for f in sorted(glob.glob(os.path.join(SPECS, "d*.json"))):
+# --compiler-replaces HAND: build district-number -> compiled-fragment-path
+# map so the loop below can splice each hand district's stamps/anims/labels
+# for the compiler's, district by district.
+_replace_map = {}
+if args.compiler_replaces == "HAND":
+    for gf in sorted(glob.glob(os.path.join(GENERATED, "d*-compiled.json"))):
+        m = re.match(r"^d(\d+)-compiled\.json$", os.path.basename(gf))
+        if m:
+            _replace_map[int(m.group(1))] = gf
+    print(f"--compiler-replaces HAND: {len(_replace_map)} compiled district(s) "
+          f"available: {sorted(_replace_map)}")
+
+_frag_files = sorted(glob.glob(os.path.join(SPECS, "d*.json")))
+_generated_files = []
+if args.include_generated:
+    _generated_files = sorted(glob.glob(os.path.join(GENERATED, "d*.json")))
+elif args.include_pockets and args.compiler_replaces:
+    manifest_path = os.path.join(GENERATED, "manifest.json")
+    if os.path.exists(manifest_path):
+        manifest = json.load(open(manifest_path, encoding="utf-8"))
+        allow = set(manifest.get("include") or [])
+        _generated_files = sorted(
+            os.path.join(GENERATED, name) for name in allow
+            if os.path.exists(os.path.join(GENERATED, name))
+        )
+    else:
+        _generated_files = sorted(
+            f for f in glob.glob(os.path.join(GENERATED, "d*.json"))
+            if not re.match(r"^d\d+-compiled\.json$", os.path.basename(f))
+        )
+_frag_files += _generated_files
+if _generated_files:
+    print(f"including {len(_generated_files)} generated fragment(s): "
+          f"{[os.path.basename(f) for f in _generated_files]}")
+
+_REPLACED_KEYS = ("stamps", "anims", "labels")
+_replace_log = []
+
+for f in _frag_files:
     frag = json.load(open(f, encoding="utf-8"))
-    is_struct = os.path.basename(f).startswith("d00")
+    base = os.path.basename(f)
+    is_struct = base.startswith("d00")
+
+    dist_num = None
+    dm = re.match(r"^d(\d+)-", base)
+    if dm:
+        dist_num = int(dm.group(1))
+    replacement = _replace_map.get(dist_num) if dist_num is not None else None
+
+    gen_frag = None
+    prefer_generated_patches = False
+    if replacement:
+        gen_frag = json.load(open(replacement, encoding="utf-8"))
+        spec_path = gen_frag.get("_compiled", {}).get("spec")
+        if spec_path:
+            spec_full = spec_path if os.path.isabs(spec_path) else os.path.join(DEN, spec_path)
+            if os.path.exists(spec_full):
+                spec = json.load(open(spec_full, encoding="utf-8"))
+                prefer_generated_patches = bool(spec.get("compiler", {}).get("full_bbox"))
+
     for k in merged:
         if k == "worldSize":
             continue
+        if replacement and k in _REPLACED_KEYS:
+            continue  # dropped from hand; the compiled fragment supplies these below
+        if replacement and k == "patches" and prefer_generated_patches:
+            continue  # compiler repainted the whole bbox; use its patches instead
         if k == "stamps" and is_struct:
             for s in frag.get("stamps", []):
                 _struct_furniture.append(s)
         merged[k].extend(frag.get(k, []))
+
+    if gen_frag:
+        for k in _REPLACED_KEYS:
+            merged[k].extend(gen_frag.get(k, []))
+        if prefer_generated_patches:
+            merged["patches"].extend(gen_frag.get("patches", []))
+        _replace_log.append(
+            f"  D{dist_num}: {base} -> {os.path.basename(replacement)}  "
+            f"stamps {len(frag.get('stamps', []))}->{len(gen_frag.get('stamps', []))}, "
+            f"anims {len(frag.get('anims', []))}->{len(gen_frag.get('anims', []))}, "
+            f"labels {len(frag.get('labels', []))}->{len(gen_frag.get('labels', []))}, "
+            f"patches from {'generated (' + str(len(gen_frag.get('patches', []))) + ')' if prefer_generated_patches else 'hand (' + str(len(frag.get('patches', []))) + ')'}"
+        )
+
+if _replace_log:
+    print("compiler-replaces summary:")
+    for line in _replace_log:
+        print(line)
+
+# Resolve exterior catalog ids (me.* / exs.*) → img paths before footprint math.
+import sys
+sys.path.insert(0, os.path.join(DEN, "scripts"))
+from resolve_limezu_me_stamps import (  # noqa: E402
+    OUT_INDEX,
+    build_placement_index,
+    resolve_stamps,
+)
+
+if not os.path.exists(OUT_INDEX):
+    idx = build_placement_index()
+    json.dump(idx, open(OUT_INDEX, "w", encoding="utf-8"), indent=2)
+    open(OUT_INDEX, "a", encoding="utf-8").write("\n")
+
+merged["stamps"], _me_errs = resolve_stamps(merged["stamps"])
+if _me_errs:
+    print("me/exs resolve errors:", len(_me_errs))
+    for e in _me_errs[:10]:
+        print(" ", e)
 
 # Avenue connectors (old city -> D1 -> D3)
 merged["roads"] += [
@@ -105,23 +240,50 @@ def _rect(s):
 
 _struct_ids = {id(s) for s in _struct_furniture}
 # Obstacle footprints = every SOLID non-structure stamp (buildings AND placed
-# props: tents, vehicles, barriers, district trees...). Districts landscape
-# themselves, so auto street-furniture should survive only on open pavement.
+# props: tents, vehicles, barriers, district trees, compiler-placed decor...).
+# Districts landscape themselves, so auto street-furniture should survive only
+# on open pavement. No minimum-size floor: compiler-generated districts pack
+# small solid decor (16x16 rocks, flowers, wood scraps) densely enough near
+# roads that a "tiny decals don't matter" floor let auto lamps/trees land
+# right on top of them (see docs/EXTERIOR-COMPILER.md — merge-time collisions).
 _obstacles = []
 for s in merged["stamps"]:
     if id(s) in _struct_ids or not s.get("solid"):
         continue
     r = _rect(s)
-    if r and r[2] * r[3] > 24 * 24:   # ignore tiny decals
+    if r and r[2] * r[3] > 0:
         _obstacles.append(r)
 
 
+def _overlap_area(a, b):
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    ox = max(0, min(ax + aw, bx + bw) - max(ax, bx))
+    oy = max(0, min(ay + ah, by + bh) - max(ay, by))
+    return ox * oy
+
+
 def _base_in_obstacle(s):
+    """True if structure furniture collides with a district obstacle.
+
+    Uses baseline point (legacy) OR substantial sprite overlap so lamps/trees
+    that stand just outside a building footprint but visually sit inside it
+    still get pruned.
+    """
     bx, by = s["x"], s["y"]          # furniture is origin "bc": (x,y) is the base
+    fr = _rect(s)
     for rx, ry, rw, rh in _obstacles:
-        # inset 6px so props legitimately hugging an edge survive
-        if rx + 6 <= bx <= rx + rw - 6 and ry + 6 <= by <= ry + rh:
+        # inset 2px — tighter than before so curb-side props near facades prune
+        if rx + 2 <= bx <= rx + rw - 2 and ry + 2 <= by <= ry + rh:
             return True
+        if fr:
+            oa = _overlap_area(fr, (rx, ry, rw, rh))
+            # ratio vs whichever rect is smaller — a tiny compiler-placed decal
+            # fully swallowed by a big lamp footprint is just as much a defect
+            # as a big building swallowing a chunk of a lamp
+            smaller = min(fr[2] * fr[3], rw * rh)
+            if smaller and oa / smaller > 0.25:
+                return True
     return False
 
 
@@ -157,6 +319,13 @@ def _is_bld(img):
 
 _bld = [(s, _rect(s)) for s in merged["stamps"] if _is_bld(s["img"])]
 _bld = [(s, r) for s, r in _bld if r]
+# _BLD_KW catches some non-building props by folder-name coincidence (e.g.
+# "Stands_1" bleachers live under the school/ catalog folder, "Tree_House_1"
+# under villas/). Guard the nudge against ALL solid stamps, not just other
+# _is_bld matches, so a nudge can't shove one of these onto a compiler-placed
+# decor item that wasn't there when this heuristic was written.
+_all_solid = [(s, _rect(s)) for s in merged["stamps"] if s.get("solid")]
+_all_solid = [(s, r) for s, r in _all_solid if r]
 _nudged = 0
 for s, r in _bld:
     road = next((rd for rd in _roads if _ov(r, rd)), None)
@@ -173,7 +342,8 @@ for s, r in _bld:
         rt = (rx + rw) - r[0] + 4
         d = lf if abs(lf) <= abs(rt) else rt
         cand, nx, ny = (r[0] + d, r[1], r[2], r[3]), s["x"] + d, s["y"]
-    if _hits_road(cand) or any(_ov(cand, br) for bs, br in _bld if bs is not s):
+    if (_hits_road(cand)
+            or any(_ov(cand, orect) for os_, orect in _all_solid if os_ is not s)):
         continue
     s["x"], s["y"] = nx, ny
     _nudged += 1
@@ -194,3 +364,13 @@ print(f"nudged {_nudged} buildings off the streets")
 print("missing:", len(missing))
 for m in missing[:10]:
     print("  MISS", m)
+
+# QA gate (advisory print; exit code left to check-city-plan when run alone)
+import subprocess
+qa = subprocess.run(
+    [sys.executable, os.path.join(DEN, "scripts", "check-city-plan.py"), OUT],
+    capture_output=True, text=True,
+)
+print(qa.stdout.strip() or qa.stderr.strip())
+if qa.returncode:
+    print("(merge wrote plan anyway — re-run check-city-plan.py until clean)")

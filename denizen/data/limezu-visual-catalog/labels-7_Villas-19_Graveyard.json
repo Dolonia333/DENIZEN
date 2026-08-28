@@ -1,0 +1,7537 @@
+{
+  "sheets": [
+    {
+      "sheet": "7_Villas",
+      "pack": "limezu_modern_exteriors",
+      "labeled_by": "vision",
+      "objects": [
+        {
+          "id": "me.villa.villa_orange_roof",
+          "name": "Two-story villa orange/rust roof",
+          "category": "building",
+          "tags": [
+            "villa",
+            "house",
+            "residence",
+            "two-story",
+            "balcony",
+            "porch",
+            "gable",
+            "orange"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Full villa stamp; singles Villa_1"
+        },
+        {
+          "id": "me.villa.villa_brown_roof",
+          "name": "Two-story villa brown roof",
+          "category": "building",
+          "tags": [
+            "villa",
+            "house",
+            "residence",
+            "two-story",
+            "balcony",
+            "porch",
+            "gable",
+            "brown"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Full villa stamp; singles Villa_2"
+        },
+        {
+          "id": "me.villa.villa_burgundy_roof",
+          "name": "Two-story villa burgundy/purple roof",
+          "category": "building",
+          "tags": [
+            "villa",
+            "house",
+            "residence",
+            "two-story",
+            "balcony",
+            "porch",
+            "gable",
+            "burgundy"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Full villa stamp; singles Villa_3"
+        },
+        {
+          "id": "me.villa.villa_red_roof",
+          "name": "Two-story villa red roof",
+          "category": "building",
+          "tags": [
+            "villa",
+            "house",
+            "residence",
+            "two-story",
+            "balcony",
+            "porch",
+            "gable",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            420
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Full villa stamp; singles Villa_4"
+        },
+        {
+          "id": "me.villa.villa_blue_roof",
+          "name": "Two-story villa blue roof",
+          "category": "building",
+          "tags": [
+            "villa",
+            "house",
+            "residence",
+            "two-story",
+            "balcony",
+            "porch",
+            "gable",
+            "blue"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            420
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Full villa stamp; singles Villa_5"
+        },
+        {
+          "id": "me.villa.toy_house_1",
+          "name": "Small playhouse/toy house (green)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "green"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_1; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.toy_house_2",
+          "name": "Small playhouse/toy house (yellow)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_2; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.toy_house_3",
+          "name": "Small playhouse/toy house (cream)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "cream"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_3; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.toy_house_4",
+          "name": "Small playhouse/toy house (beige)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "beige"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_4; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.toy_house_5",
+          "name": "Small playhouse/toy house (green_alt)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "green"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_5; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.toy_house_6",
+          "name": "Small playhouse/toy house (yellow_alt)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_6; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.toy_house_7",
+          "name": "Small playhouse/toy house (cream_alt)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "cream"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_7; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.toy_house_8",
+          "name": "Small playhouse/toy house (beige_alt)",
+          "category": "building",
+          "tags": [
+            "playhouse",
+            "toy",
+            "shed",
+            "cottage",
+            "small",
+            "kids",
+            "beige"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Toy_House_8; red gabled roof, arched door"
+        },
+        {
+          "id": "me.villa.chimney_1",
+          "name": "Villa chimney (orange)",
+          "category": "building",
+          "tags": [
+            "chimney",
+            "roof",
+            "modular",
+            "orange"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Chimney_1"
+        },
+        {
+          "id": "me.villa.chimney_2",
+          "name": "Villa chimney (brown)",
+          "category": "building",
+          "tags": [
+            "chimney",
+            "roof",
+            "modular",
+            "brown"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Chimney_2"
+        },
+        {
+          "id": "me.villa.chimney_3",
+          "name": "Villa chimney (burgundy)",
+          "category": "building",
+          "tags": [
+            "chimney",
+            "roof",
+            "modular",
+            "burgundy"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Chimney_3"
+        },
+        {
+          "id": "me.villa.chimney_4",
+          "name": "Villa chimney (red)",
+          "category": "building",
+          "tags": [
+            "chimney",
+            "roof",
+            "modular",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Chimney_4"
+        },
+        {
+          "id": "me.villa.chimney_5",
+          "name": "Villa chimney (blue)",
+          "category": "building",
+          "tags": [
+            "chimney",
+            "roof",
+            "modular",
+            "blue"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Chimney_5"
+        },
+        {
+          "id": "me.villa.doormat_1",
+          "name": "Villa doormat variant 1",
+          "category": "decor",
+          "tags": [
+            "doormat",
+            "entrance",
+            "welcome"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            420
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Doormat_1"
+        },
+        {
+          "id": "me.villa.doormat_2",
+          "name": "Villa doormat variant 2",
+          "category": "decor",
+          "tags": [
+            "doormat",
+            "entrance"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            420
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Doormat_2"
+        },
+        {
+          "id": "me.villa.villa_ladder_1",
+          "name": "Villa exterior ladder",
+          "category": "infra",
+          "tags": [
+            "ladder",
+            "climb",
+            "access",
+            "wood"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            420
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Ladder_1"
+        },
+        {
+          "id": "me.villa.villa_ladder_2",
+          "name": "Villa exterior ladder angled",
+          "category": "infra",
+          "tags": [
+            "ladder",
+            "climb",
+            "access",
+            "wood"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            420
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Ladder_2"
+        },
+        {
+          "id": "me.villa.round_window_1",
+          "name": "Circular attic window on orange wall",
+          "category": "building",
+          "tags": [
+            "window",
+            "round",
+            "attic",
+            "modular",
+            "orange"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            420
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Round_Window_1"
+        },
+        {
+          "id": "me.villa.round_window_2",
+          "name": "Circular attic window on brown wall",
+          "category": "building",
+          "tags": [
+            "window",
+            "round",
+            "attic",
+            "modular",
+            "brown"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            420
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Round_Window_2"
+        },
+        {
+          "id": "me.villa.round_window_3",
+          "name": "Circular attic window on burgundy wall",
+          "category": "building",
+          "tags": [
+            "window",
+            "round",
+            "attic",
+            "modular",
+            "burgundy"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            420
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Round_Window_3"
+        },
+        {
+          "id": "me.villa.round_window_4",
+          "name": "Circular attic window on red wall",
+          "category": "building",
+          "tags": [
+            "window",
+            "round",
+            "attic",
+            "modular",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            420
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Round_Window_4"
+        },
+        {
+          "id": "me.villa.round_window_5",
+          "name": "Circular attic window on blue wall",
+          "category": "building",
+          "tags": [
+            "window",
+            "round",
+            "attic",
+            "modular",
+            "blue"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            420
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Round_Window_5"
+        },
+        {
+          "id": "me.villa.roof_window_1",
+          "name": "Villa roof window/skylight 1",
+          "category": "building",
+          "tags": [
+            "window",
+            "roof",
+            "dormer",
+            "modular"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Roof_Window_1"
+        },
+        {
+          "id": "me.villa.roof_window_2",
+          "name": "Villa roof window/skylight 2",
+          "category": "building",
+          "tags": [
+            "window",
+            "roof",
+            "dormer",
+            "modular"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Roof_Window_2"
+        },
+        {
+          "id": "me.villa.roof_window_3",
+          "name": "Villa roof window/skylight 3",
+          "category": "building",
+          "tags": [
+            "window",
+            "roof",
+            "dormer",
+            "modular"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Roof_Window_3"
+        },
+        {
+          "id": "me.villa.roof_window_4",
+          "name": "Villa roof window/skylight 4",
+          "category": "building",
+          "tags": [
+            "window",
+            "roof",
+            "dormer",
+            "modular"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Roof_Window_4"
+        },
+        {
+          "id": "me.villa.roof_window_5",
+          "name": "Villa roof window/skylight 5",
+          "category": "building",
+          "tags": [
+            "window",
+            "roof",
+            "dormer",
+            "modular"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            220
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Roof_Window_5"
+        },
+        {
+          "id": "me.villa.solar_panel_1",
+          "name": "Roof solar panel array 1",
+          "category": "infra",
+          "tags": [
+            "solar",
+            "panel",
+            "energy",
+            "roof",
+            "sustainable"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            480
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Solar_Panel_1"
+        },
+        {
+          "id": "me.villa.solar_panel_2",
+          "name": "Roof solar panel array 2",
+          "category": "infra",
+          "tags": [
+            "solar",
+            "panel",
+            "energy",
+            "roof",
+            "sustainable"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            480
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Solar_Panel_2"
+        },
+        {
+          "id": "me.villa.solar_panel_3",
+          "name": "Roof solar panel array 3",
+          "category": "infra",
+          "tags": [
+            "solar",
+            "panel",
+            "energy",
+            "roof",
+            "sustainable"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            480
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Solar_Panel_3"
+        },
+        {
+          "id": "me.villa.solar_panel_4",
+          "name": "Roof solar panel array 4",
+          "category": "infra",
+          "tags": [
+            "solar",
+            "panel",
+            "energy",
+            "roof",
+            "sustainable"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            480
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Solar_Panel_4"
+        },
+        {
+          "id": "me.villa.solar_panel_5",
+          "name": "Roof solar panel array 5",
+          "category": "infra",
+          "tags": [
+            "solar",
+            "panel",
+            "energy",
+            "roof",
+            "sustainable"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            480
+          ],
+          "surface": "roof",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Solar_Panel_5"
+        },
+        {
+          "id": "me.villa.wall_pot_empty",
+          "name": "Empty pot on wall ledge",
+          "category": "decor",
+          "tags": [
+            "pot",
+            "wall",
+            "empty"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Props cluster"
+        },
+        {
+          "id": "me.villa.wall_potted_bush",
+          "name": "Potted bush on wall ledge",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "bush",
+            "wall"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.wall_ornament_bird",
+          "name": "White bird ornament on wall",
+          "category": "decor",
+          "tags": [
+            "ornament",
+            "bird",
+            "wall"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.wall_potted_plant_small",
+          "name": "Small potted plant on wall",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "plant",
+            "wall"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.wall_potted_plant_tall",
+          "name": "Tall potted plant on wall",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "plant",
+            "topiary",
+            "wall"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.wall_sconce_white",
+          "name": "White wall light sconce",
+          "category": "decor",
+          "tags": [
+            "light",
+            "sconce",
+            "wall"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.wall_sconce_yellow",
+          "name": "Yellow wall light sconce",
+          "category": "decor",
+          "tags": [
+            "light",
+            "sconce",
+            "wall",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.hanging_plaque_diamond",
+          "name": "Hanging diamond/shield plaque",
+          "category": "sign",
+          "tags": [
+            "sign",
+            "plaque",
+            "hanging",
+            "wood"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.hanging_plaque_rect",
+          "name": "Hanging rectangular plaque",
+          "category": "sign",
+          "tags": [
+            "sign",
+            "plaque",
+            "hanging",
+            "wood"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.beam_hanging_bulb",
+          "name": "Wood beam with hanging bulb light",
+          "category": "decor",
+          "tags": [
+            "light",
+            "beam",
+            "hanging",
+            "porch"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.window_shutters_eave",
+          "name": "Window with open shutters and eave trim",
+          "category": "building",
+          "tags": [
+            "window",
+            "shutters",
+            "eave",
+            "modular"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Repeated shuttered window modules"
+        },
+        {
+          "id": "me.villa.lemonade_stand_1",
+          "name": "Wooden lemonade/market stand empty",
+          "category": "prop",
+          "tags": [
+            "stand",
+            "market",
+            "lemonade",
+            "awning",
+            "vendor"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Lemonade_Stand_1"
+        },
+        {
+          "id": "me.villa.lemonade_stand_2",
+          "name": "Wooden lemonade/market stand stocked",
+          "category": "prop",
+          "tags": [
+            "stand",
+            "market",
+            "lemonade",
+            "awning",
+            "vendor",
+            "goods"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Lemonade_Stand_2"
+        },
+        {
+          "id": "me.villa.basketball_net_1",
+          "name": "Yard basketball hoop 1",
+          "category": "prop",
+          "tags": [
+            "basketball",
+            "sport",
+            "hoop",
+            "playground",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Basketball_Net_1"
+        },
+        {
+          "id": "me.villa.basketball_net_2",
+          "name": "Yard basketball hoop 2",
+          "category": "prop",
+          "tags": [
+            "basketball",
+            "sport",
+            "hoop",
+            "playground",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Basketball_Net_2"
+        },
+        {
+          "id": "me.villa.basketball_net_3",
+          "name": "Yard basketball hoop 3",
+          "category": "prop",
+          "tags": [
+            "basketball",
+            "sport",
+            "hoop",
+            "playground",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Basketball_Net_3"
+        },
+        {
+          "id": "me.villa.basketball_net_4",
+          "name": "Yard basketball hoop 4",
+          "category": "prop",
+          "tags": [
+            "basketball",
+            "sport",
+            "hoop",
+            "playground",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Basketball_Net_4"
+        },
+        {
+          "id": "me.villa.trampoline_1",
+          "name": "Trampoline with safety net (blue)",
+          "category": "prop",
+          "tags": [
+            "trampoline",
+            "playground",
+            "toy",
+            "net",
+            "blue"
+          ],
+          "band": 0,
+          "y_hint": [
+            420,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Trampoline_1"
+        },
+        {
+          "id": "me.villa.trampoline_2",
+          "name": "Trampoline with safety net (yellow)",
+          "category": "prop",
+          "tags": [
+            "trampoline",
+            "playground",
+            "toy",
+            "net",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            420,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Trampoline_2"
+        },
+        {
+          "id": "me.villa.trampoline_3",
+          "name": "Trampoline with safety net (grey)",
+          "category": "prop",
+          "tags": [
+            "trampoline",
+            "playground",
+            "toy",
+            "net",
+            "grey"
+          ],
+          "band": 0,
+          "y_hint": [
+            420,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Trampoline_3"
+        },
+        {
+          "id": "me.villa.sandbox_1",
+          "name": "Sandbox with toys 1",
+          "category": "prop",
+          "tags": [
+            "sandbox",
+            "playground",
+            "toy",
+            "kids",
+            "sand"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Sand_Box_1"
+        },
+        {
+          "id": "me.villa.sandbox_2",
+          "name": "Sandbox with toys 2",
+          "category": "prop",
+          "tags": [
+            "sandbox",
+            "playground",
+            "toy",
+            "kids",
+            "sand"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Sand_Box_2"
+        },
+        {
+          "id": "me.villa.sandbox_3",
+          "name": "Sandbox with toys 3",
+          "category": "prop",
+          "tags": [
+            "sandbox",
+            "playground",
+            "toy",
+            "kids",
+            "sand"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Sand_Box_3"
+        },
+        {
+          "id": "me.villa.sandbox_4",
+          "name": "Sandbox with toys 4",
+          "category": "prop",
+          "tags": [
+            "sandbox",
+            "playground",
+            "toy",
+            "kids",
+            "sand"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Sand_Box_4"
+        },
+        {
+          "id": "me.villa.sandbox_modular_kit",
+          "name": "Sandbox modular frame/tile kit",
+          "category": "prop",
+          "tags": [
+            "sandbox",
+            "modular",
+            "frame",
+            "playground"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Sand_Box_Modular_1-22 pieces"
+        },
+        {
+          "id": "me.villa.seesaw_red",
+          "name": "Seesaw red seats",
+          "category": "prop",
+          "tags": [
+            "seesaw",
+            "playground",
+            "toy",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Rocking_1"
+        },
+        {
+          "id": "me.villa.seesaw_blue",
+          "name": "Seesaw blue seats",
+          "category": "prop",
+          "tags": [
+            "seesaw",
+            "playground",
+            "toy",
+            "blue"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Rocking_2"
+        },
+        {
+          "id": "me.villa.seesaw_wood_tilted_left",
+          "name": "Wooden seesaw tilted left",
+          "category": "prop",
+          "tags": [
+            "seesaw",
+            "playground",
+            "toy",
+            "wood"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Rocking_3"
+        },
+        {
+          "id": "me.villa.seesaw_wood_level",
+          "name": "Wooden seesaw level",
+          "category": "prop",
+          "tags": [
+            "seesaw",
+            "playground",
+            "toy",
+            "wood"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Rocking_4"
+        },
+        {
+          "id": "me.villa.seesaw_wood_tilted_right",
+          "name": "Wooden seesaw tilted right",
+          "category": "prop",
+          "tags": [
+            "seesaw",
+            "playground",
+            "toy",
+            "wood"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Rocking_5"
+        },
+        {
+          "id": "me.villa.seesaw_wood_level_alt",
+          "name": "Wooden seesaw level alt frame",
+          "category": "prop",
+          "tags": [
+            "seesaw",
+            "playground",
+            "toy",
+            "wood",
+            "animation"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Toy_Rocking_6"
+        },
+        {
+          "id": "me.villa.spring_rider_blue_duck",
+          "name": "Blue duck spring rider",
+          "category": "prop",
+          "tags": [
+            "spring-rider",
+            "playground",
+            "toy",
+            "duck",
+            "blue"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Toy_Rocking_7"
+        },
+        {
+          "id": "me.villa.spring_rider_red_bird",
+          "name": "Red bird/hen spring rider",
+          "category": "prop",
+          "tags": [
+            "spring-rider",
+            "playground",
+            "toy",
+            "bird",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            420
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Toy_Rocking_8"
+        },
+        {
+          "id": "me.villa.tree_1",
+          "name": "Leafy green tree (small)",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "foliage",
+            "yard",
+            "small"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            700
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_1"
+        },
+        {
+          "id": "me.villa.tree_2",
+          "name": "Leafy green tree (medium)",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "foliage",
+            "yard",
+            "medium"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            700
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_2"
+        },
+        {
+          "id": "me.villa.tree_3",
+          "name": "Leafy green tree (large)",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "foliage",
+            "yard",
+            "large"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            700
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_3"
+        },
+        {
+          "id": "me.villa.tree_4",
+          "name": "Leafy green tree (large_canopy)",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "foliage",
+            "yard",
+            "large_canopy"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            700
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_4"
+        },
+        {
+          "id": "me.villa.stump_1",
+          "name": "Tree stump small",
+          "category": "nature",
+          "tags": [
+            "stump",
+            "wood",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            700
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Stomp_1"
+        },
+        {
+          "id": "me.villa.stump_2",
+          "name": "Tree stump large with rings",
+          "category": "nature",
+          "tags": [
+            "stump",
+            "wood",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            700
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Stomp_2"
+        },
+        {
+          "id": "me.villa.yard_flowers_1",
+          "name": "Yard flower bed/cluster (pink)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "pink"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Flowers_1"
+        },
+        {
+          "id": "me.villa.yard_flowers_2",
+          "name": "Yard flower bed/cluster (white)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "white"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Flowers_2"
+        },
+        {
+          "id": "me.villa.yard_flowers_3",
+          "name": "Yard flower bed/cluster (orange)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "orange"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Flowers_3"
+        },
+        {
+          "id": "me.villa.yard_flowers_4",
+          "name": "Yard flower bed/cluster (yellow)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Flowers_4"
+        },
+        {
+          "id": "me.villa.yard_flowers_5",
+          "name": "Yard flower bed/cluster (mixed)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "mixed"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Villa_Yard_Flowers_5"
+        },
+        {
+          "id": "me.villa.yard_flowers_6",
+          "name": "Yard flower bed/cluster (pink_bed)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "pink"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_6"
+        },
+        {
+          "id": "me.villa.yard_flowers_7",
+          "name": "Yard flower bed/cluster (white_bed)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "white"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_7"
+        },
+        {
+          "id": "me.villa.yard_flowers_8",
+          "name": "Yard flower bed/cluster (orange_bed)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "orange"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_8"
+        },
+        {
+          "id": "me.villa.yard_flowers_9",
+          "name": "Yard flower bed/cluster (yellow_bed)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_9"
+        },
+        {
+          "id": "me.villa.yard_flowers_10",
+          "name": "Yard flower bed/cluster (white_alt)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "white"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_10"
+        },
+        {
+          "id": "me.villa.yard_flowers_11",
+          "name": "Yard flower bed/cluster (pink_alt)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "pink"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_11"
+        },
+        {
+          "id": "me.villa.yard_flowers_12",
+          "name": "Yard flower bed/cluster (orange_alt)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "orange"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_12"
+        },
+        {
+          "id": "me.villa.yard_flowers_13",
+          "name": "Yard flower bed/cluster (mixed_alt)",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "garden",
+            "yard",
+            "mixed"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Villa_Yard_Flowers_13"
+        },
+        {
+          "id": "me.villa.sapling_small",
+          "name": "Young sapling tree",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "sapling",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.bush_cluster_wide",
+          "name": "Wide leafy bush cluster",
+          "category": "nature",
+          "tags": [
+            "bush",
+            "shrub",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.sprouts_tuft",
+          "name": "Tiny green sprouts tuft",
+          "category": "nature",
+          "tags": [
+            "sprout",
+            "grass",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.bush_round_small",
+          "name": "Round green bush small",
+          "category": "nature",
+          "tags": [
+            "bush",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.bush_round_large",
+          "name": "Round green bush large",
+          "category": "nature",
+          "tags": [
+            "bush",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.plant_broadleaf",
+          "name": "Broadleaf garden plant",
+          "category": "nature",
+          "tags": [
+            "plant",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.clover_herb",
+          "name": "Clover/herb cluster",
+          "category": "nature",
+          "tags": [
+            "clover",
+            "herb",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.shrub_dense",
+          "name": "Dense branching shrub",
+          "category": "nature",
+          "tags": [
+            "shrub",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.branch_fallen_a",
+          "name": "Fallen thin branch A",
+          "category": "nature",
+          "tags": [
+            "branch",
+            "debris",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.branch_fallen_b",
+          "name": "Fallen thin branch B",
+          "category": "nature",
+          "tags": [
+            "branch",
+            "debris",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.pavers_grey_diagonal",
+          "name": "Grey stepping stones diagonal",
+          "category": "terrain",
+          "tags": [
+            "paver",
+            "stone",
+            "path",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.pavers_grey_vertical",
+          "name": "Grey stepping stones vertical",
+          "category": "terrain",
+          "tags": [
+            "paver",
+            "stone",
+            "path",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.pavers_brown_diagonal",
+          "name": "Brown stepping stones diagonal",
+          "category": "terrain",
+          "tags": [
+            "paver",
+            "stone",
+            "path",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.pavers_brown_vertical",
+          "name": "Brown stepping stones vertical",
+          "category": "terrain",
+          "tags": [
+            "paver",
+            "stone",
+            "path",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.log_with_mushrooms",
+          "name": "Fallen log with red mushrooms",
+          "category": "nature",
+          "tags": [
+            "log",
+            "mushroom",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            560,
+            740
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.log_plain",
+          "name": "Fallen log plain",
+          "category": "nature",
+          "tags": [
+            "log",
+            "wood",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            560,
+            740
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.bud_green",
+          "name": "Tiny green bud plant",
+          "category": "nature",
+          "tags": [
+            "bud",
+            "plant",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            560,
+            740
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.plant_orange_small",
+          "name": "Small orange flower plant",
+          "category": "nature",
+          "tags": [
+            "flower",
+            "orange",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            560,
+            740
+          ],
+          "surface": "grass",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.hanging_flowers_1",
+          "name": "Hanging flower box / planter 1",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_1"
+        },
+        {
+          "id": "me.villa.hanging_flowers_2",
+          "name": "Hanging flower box / planter 2",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_2"
+        },
+        {
+          "id": "me.villa.hanging_flowers_3",
+          "name": "Hanging flower box / planter 3",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_3"
+        },
+        {
+          "id": "me.villa.hanging_flowers_4",
+          "name": "Hanging flower box / planter 4",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_4"
+        },
+        {
+          "id": "me.villa.hanging_flowers_5",
+          "name": "Hanging flower box / planter 5",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_5"
+        },
+        {
+          "id": "me.villa.hanging_flowers_6",
+          "name": "Hanging flower box / planter 6",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_6"
+        },
+        {
+          "id": "me.villa.hanging_flowers_7",
+          "name": "Hanging flower box / planter 7",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_7"
+        },
+        {
+          "id": "me.villa.hanging_flowers_8",
+          "name": "Hanging flower box / planter 8",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_8"
+        },
+        {
+          "id": "me.villa.hanging_flowers_9",
+          "name": "Hanging flower box / planter 9",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_9"
+        },
+        {
+          "id": "me.villa.hanging_flowers_10",
+          "name": "Hanging flower box / planter 10",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_10"
+        },
+        {
+          "id": "me.villa.hanging_flowers_11",
+          "name": "Hanging flower box / planter 11",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_11"
+        },
+        {
+          "id": "me.villa.hanging_flowers_12",
+          "name": "Hanging flower box / planter 12",
+          "category": "decor",
+          "tags": [
+            "hanging",
+            "flowers",
+            "planter",
+            "window-box",
+            "facade"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            520
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Hanging_Flowers_12"
+        },
+        {
+          "id": "me.villa.pot_empty",
+          "name": "Empty terracotta pot",
+          "category": "decor",
+          "tags": [
+            "pot",
+            "empty",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Pot_1"
+        },
+        {
+          "id": "me.villa.potted_flowers_1",
+          "name": "Potted flowers 1",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "flowers",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Potted_Flowers_1"
+        },
+        {
+          "id": "me.villa.potted_flowers_2",
+          "name": "Potted flowers 2",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "flowers",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Potted_Flowers_2"
+        },
+        {
+          "id": "me.villa.potted_flowers_3",
+          "name": "Potted flowers 3",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "flowers",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Potted_Flowers_3"
+        },
+        {
+          "id": "me.villa.potted_flowers_4",
+          "name": "Potted flowers 4",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "flowers",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Potted_Flowers_4"
+        },
+        {
+          "id": "me.villa.potted_flowers_5",
+          "name": "Potted flowers 5",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "flowers",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Potted_Flowers_5"
+        },
+        {
+          "id": "me.villa.potted_flowers_6",
+          "name": "Potted flowers 6",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "flowers",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Potted_Flowers_6"
+        },
+        {
+          "id": "me.villa.potted_plant_1",
+          "name": "Potted leafy plant 1",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "plant",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.potted_plant_2",
+          "name": "Potted leafy plant 2",
+          "category": "nature",
+          "tags": [
+            "pot",
+            "plant",
+            "garden"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            720
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.armchair_1",
+          "name": "Outdoor armchair 1",
+          "category": "furniture",
+          "tags": [
+            "chair",
+            "seat",
+            "outdoor",
+            "patio"
+          ],
+          "band": 0,
+          "y_hint": [
+            600,
+            740
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Armchair_1"
+        },
+        {
+          "id": "me.villa.armchair_2",
+          "name": "Outdoor armchair 2",
+          "category": "furniture",
+          "tags": [
+            "chair",
+            "seat",
+            "outdoor",
+            "patio"
+          ],
+          "band": 0,
+          "y_hint": [
+            600,
+            740
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Armchair_2"
+        },
+        {
+          "id": "me.villa.picnic_1",
+          "name": "Picnic blanket scene 1",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_1"
+        },
+        {
+          "id": "me.villa.picnic_2",
+          "name": "Picnic blanket scene 2",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_2"
+        },
+        {
+          "id": "me.villa.picnic_3",
+          "name": "Picnic blanket scene 3",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_3"
+        },
+        {
+          "id": "me.villa.picnic_4",
+          "name": "Picnic blanket scene 4",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_4"
+        },
+        {
+          "id": "me.villa.picnic_5",
+          "name": "Picnic blanket scene 5",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_5"
+        },
+        {
+          "id": "me.villa.picnic_6",
+          "name": "Picnic blanket scene 6",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_6"
+        },
+        {
+          "id": "me.villa.picnic_7",
+          "name": "Picnic blanket scene 7",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_7"
+        },
+        {
+          "id": "me.villa.picnic_8",
+          "name": "Picnic blanket scene 8",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "outdoor",
+            "food",
+            "yard"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_8"
+        },
+        {
+          "id": "me.villa.picnic_basket_open",
+          "name": "Large open picnic basket with cloth",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Picnic_Props_1"
+        },
+        {
+          "id": "me.villa.picnic_basket_closed",
+          "name": "Small closed picnic basket",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_2"
+        },
+        {
+          "id": "me.villa.cooler_blue",
+          "name": "Blue cooler box",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_3"
+        },
+        {
+          "id": "me.villa.cooler_yellow",
+          "name": "Yellow cooler/toolbox",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_4"
+        },
+        {
+          "id": "me.villa.food_bag_fruit_knife",
+          "name": "Paper bag with fruit and knife",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_5"
+        },
+        {
+          "id": "me.villa.sandwich_on_napkin",
+          "name": "Sandwich/toast on napkin",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_6"
+        },
+        {
+          "id": "me.villa.bento_red",
+          "name": "Red food container",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_7"
+        },
+        {
+          "id": "me.villa.bento_red_utensils",
+          "name": "Red food container with utensils",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 0,
+          "y_hint": [
+            640,
+            768
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_8"
+        },
+        {
+          "id": "me.villa.scattered_cutlery",
+          "name": "Scattered utensils/scraps",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_9"
+        },
+        {
+          "id": "me.villa.appetizer_plate",
+          "name": "Plate of appetizers/sushi",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_10"
+        },
+        {
+          "id": "me.villa.fruit_cluster_red",
+          "name": "Cluster of red fruit",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_11"
+        },
+        {
+          "id": "me.villa.soda_cans",
+          "name": "Pair of soda cans",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_12"
+        },
+        {
+          "id": "me.villa.beverage_set",
+          "name": "Bottles and cups beverage set",
+          "category": "prop",
+          "tags": [
+            "picnic",
+            "food",
+            "outdoor"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            900
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Picnic_Props_13"
+        },
+        {
+          "id": "me.villa.treehouse_complete",
+          "name": "Complete treehouse with tire swing and ladder",
+          "category": "building",
+          "tags": [
+            "treehouse",
+            "tree",
+            "cabin",
+            "deck",
+            "ladder",
+            "tire-swing",
+            "backyard",
+            "play"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            912
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_House_1; mushrooms at base"
+        },
+        {
+          "id": "me.villa.treehouse_base",
+          "name": "Treehouse trunk base with deck platform",
+          "category": "building",
+          "tags": [
+            "treehouse",
+            "deck",
+            "platform",
+            "trunk",
+            "modular"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            912
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_House_Base_1"
+        },
+        {
+          "id": "me.villa.treehouse_cabin",
+          "name": "Treehouse cabin facade module",
+          "category": "building",
+          "tags": [
+            "treehouse",
+            "cabin",
+            "door",
+            "window",
+            "modular"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            880
+          ],
+          "surface": "deck",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_House_House_1"
+        },
+        {
+          "id": "me.villa.treehouse_ladder_1",
+          "name": "Treehouse wooden ladder vertical",
+          "category": "infra",
+          "tags": [
+            "ladder",
+            "treehouse",
+            "climb",
+            "wood"
+          ],
+          "band": 1,
+          "y_hint": [
+            800,
+            912
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_House_Ladder_1"
+        },
+        {
+          "id": "me.villa.treehouse_ladder_2",
+          "name": "Treehouse wooden ladder angled",
+          "category": "infra",
+          "tags": [
+            "ladder",
+            "treehouse",
+            "climb",
+            "wood"
+          ],
+          "band": 1,
+          "y_hint": [
+            800,
+            912
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Tree_House_Ladder_2"
+        },
+        {
+          "id": "me.villa.tire_swing",
+          "name": "Tire swing (attached to treehouse tree)",
+          "category": "prop",
+          "tags": [
+            "swing",
+            "tire",
+            "playground",
+            "tree"
+          ],
+          "band": 1,
+          "y_hint": [
+            780,
+            880
+          ],
+          "surface": "air",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Part of treehouse composition; may be inseparable on sheet"
+        },
+        {
+          "id": "me.villa.picnic_blanket_food",
+          "name": "Pink checkered picnic with food spread",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "food",
+            "outdoor"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            860
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.picnic_blanket_toolbox",
+          "name": "Pink picnic blanket with yellow toolbox",
+          "category": "furniture",
+          "tags": [
+            "picnic",
+            "blanket",
+            "toolbox",
+            "tools",
+            "outdoor"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            860
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.scatter_bottles_cans",
+          "name": "Scattered bottles and cans cluster",
+          "category": "prop",
+          "tags": [
+            "scatter",
+            "bottles",
+            "cans",
+            "junk",
+            "picnic"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            840
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.scatter_fruit_produce",
+          "name": "Scattered fruit/produce cluster",
+          "category": "prop",
+          "tags": [
+            "scatter",
+            "fruit",
+            "food",
+            "picnic"
+          ],
+          "band": 1,
+          "y_hint": [
+            768,
+            840
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.villa.fence_picket_segment",
+          "name": "White picket fence on grass patch",
+          "category": "infra",
+          "tags": [
+            "fence",
+            "picket",
+            "wood",
+            "boundary",
+            "yard"
+          ],
+          "band": 0,
+          "y_hint": [
+            560,
+            700
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Visible on overview mid-lower right"
+        },
+        {
+          "id": "me.villa.fence_rail_wood",
+          "name": "Wooden split-rail fence segment",
+          "category": "infra",
+          "tags": [
+            "fence",
+            "rail",
+            "wood",
+            "boundary"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            400
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.villa.ev_charger_white",
+          "name": "EV charging bollard white",
+          "category": "infra",
+          "tags": [
+            "ev",
+            "charger",
+            "utility",
+            "modern"
+          ],
+          "band": 0,
+          "y_hint": [
+            400,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "White bollard with display"
+        },
+        {
+          "id": "me.villa.ev_charger_dark",
+          "name": "EV charging bollard dark",
+          "category": "infra",
+          "tags": [
+            "ev",
+            "charger",
+            "utility",
+            "modern"
+          ],
+          "band": 0,
+          "y_hint": [
+            400,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        }
+      ],
+      "row_guide": "Top: five large two-story villa colorways (orange/brown/burgundy/red/blue roofs) with porch+balcony. Upper-mid: modular chimneys, round attic windows, roof windows, solar panels, wall props (sconces, plaques, shuttered windows), lemonade stands. Mid-right: toy/playhouses, basketball hoops, seesaws, spring riders, sandboxes. Mid-lower: trampolines, yard trees/stumps/flowers/bushes, stepping stones, logs, hanging flower boxes, potted plants, picket/rail fencing, EV bollards, armchairs. Lower band0 / band1 top: picnic blankets and picnic props (baskets, coolers, food). Band1 (y768\u2013912): complete treehouse with tire swing, trunk+deck base, cabin module, ladders, picnic/toolbox blankets, bottle/fruit scatter."
+    },
+    {
+      "sheet": "19_Graveyard",
+      "pack": "limezu_modern_exteriors",
+      "labeled_by": "vision",
+      "objects": [
+        {
+          "id": "me.graveyard.dirt_path_autotile",
+          "name": "Dirt path / grass-to-dirt transition tileset",
+          "category": "terrain",
+          "tags": [
+            "dirt",
+            "path",
+            "autotile",
+            "grass",
+            "cemetery"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            80
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Corner/edge/center dirt tiles"
+        },
+        {
+          "id": "me.graveyard.grass_tufts",
+          "name": "Grass tufts",
+          "category": "nature",
+          "tags": [
+            "grass",
+            "tuft",
+            "groundcover"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            80
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Grass_Tufts"
+        },
+        {
+          "id": "me.graveyard.pebbles_1",
+          "name": "Pebble cluster 1",
+          "category": "nature",
+          "tags": [
+            "pebbles",
+            "stone",
+            "ground"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            100
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Pebbles_1"
+        },
+        {
+          "id": "me.graveyard.pebbles_2",
+          "name": "Pebble cluster 2",
+          "category": "nature",
+          "tags": [
+            "pebbles",
+            "stone",
+            "ground"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            100
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Pebbles_2"
+        },
+        {
+          "id": "me.graveyard.pebbles_3",
+          "name": "Pebble cluster 3",
+          "category": "nature",
+          "tags": [
+            "pebbles",
+            "stone",
+            "ground"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            100
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Pebbles_3"
+        },
+        {
+          "id": "me.graveyard.pebbles_4",
+          "name": "Pebble cluster 4",
+          "category": "nature",
+          "tags": [
+            "pebbles",
+            "stone",
+            "ground"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            100
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Pebbles_4"
+        },
+        {
+          "id": "me.graveyard.stone_1",
+          "name": "Stone/boulder 1",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Stone_1"
+        },
+        {
+          "id": "me.graveyard.stone_2",
+          "name": "Stone/boulder 2",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Stone_2"
+        },
+        {
+          "id": "me.graveyard.stone_3",
+          "name": "Stone/boulder 3",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Stone_3"
+        },
+        {
+          "id": "me.graveyard.stone_4",
+          "name": "Stone/boulder 4",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Stone_4"
+        },
+        {
+          "id": "me.graveyard.stone_5",
+          "name": "Stone/boulder 5",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Stone_5"
+        },
+        {
+          "id": "me.graveyard.stone_6",
+          "name": "Stone/boulder 6",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Stone_6"
+        },
+        {
+          "id": "me.graveyard.stone_7",
+          "name": "Stone/boulder 7",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Stone_7"
+        },
+        {
+          "id": "me.graveyard.stone_8",
+          "name": "Stone/boulder 8",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Stone_8"
+        },
+        {
+          "id": "me.graveyard.stone_9",
+          "name": "Stone/boulder 9",
+          "category": "nature",
+          "tags": [
+            "stone",
+            "rock",
+            "boulder"
+          ],
+          "band": 0,
+          "y_hint": [
+            0,
+            120
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Stone_9"
+        },
+        {
+          "id": "me.graveyard.blue_flowers",
+          "name": "Blue flowers single",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.blue_group_flowers",
+          "name": "Blue flower group",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.bordeaux_flowers_pot",
+          "name": "Bordeaux flowers in pot",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.bordeaux_group_flowers",
+          "name": "Bordeaux flower group",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.pink_flowers_pot",
+          "name": "Pink flowers in pot",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.pink_group_flowers",
+          "name": "Pink flower group",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.red_flowers",
+          "name": "Red flowers",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.red_flowers_pot",
+          "name": "Red flowers in pot",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.red_group_flowers",
+          "name": "Red flower group",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.violet_flowers_pot",
+          "name": "Violet flowers in pot",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.violet_group_flowers",
+          "name": "Violet flower group",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.white_flowers",
+          "name": "White flowers",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.white_group_flowers",
+          "name": "White flower group",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.white_1_flowers_pot",
+          "name": "White flowers pot 1",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.white_2_flowers_pot",
+          "name": "White flowers pot 2",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.multicolor_flowers",
+          "name": "Multicolor flower cluster",
+          "category": "nature",
+          "tags": [
+            "flowers",
+            "cemetery",
+            "decor"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.empty_pot_1",
+          "name": "Empty pot 1",
+          "category": "decor",
+          "tags": [
+            "pot",
+            "empty"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.empty_pot_2",
+          "name": "Empty pot 2",
+          "category": "decor",
+          "tags": [
+            "pot",
+            "empty"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.brown_1_mushrooms",
+          "name": "Brown mushrooms 1",
+          "category": "nature",
+          "tags": [
+            "mushroom",
+            "flora"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.brown_2_mushrooms",
+          "name": "Brown mushrooms 2",
+          "category": "nature",
+          "tags": [
+            "mushroom",
+            "flora"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.brown_3_mushrooms",
+          "name": "Brown mushrooms 3",
+          "category": "nature",
+          "tags": [
+            "mushroom",
+            "flora"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.brown_3_little_mushrooms",
+          "name": "Little brown mushrooms",
+          "category": "nature",
+          "tags": [
+            "mushroom",
+            "flora"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.red_mushrooms",
+          "name": "Red mushrooms",
+          "category": "nature",
+          "tags": [
+            "mushroom",
+            "flora"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_sprout_1",
+          "name": "Little sprout 1",
+          "category": "nature",
+          "tags": [
+            "sprout",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_sprout_2",
+          "name": "Little sprout 2",
+          "category": "nature",
+          "tags": [
+            "sprout",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_sprout_3",
+          "name": "Little sprout 3",
+          "category": "nature",
+          "tags": [
+            "sprout",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_sprout_4",
+          "name": "Little sprout 4",
+          "category": "nature",
+          "tags": [
+            "sprout",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_sprout_5",
+          "name": "Little sprout 5",
+          "category": "nature",
+          "tags": [
+            "sprout",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.group_four_leaf_clover_1",
+          "name": "Four-leaf clover group 1",
+          "category": "nature",
+          "tags": [
+            "clover",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.group_four_leaf_clover_2",
+          "name": "Four-leaf clover group 2",
+          "category": "nature",
+          "tags": [
+            "clover",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.group_four_leaf_clover_3",
+          "name": "Four-leaf clover group 3",
+          "category": "nature",
+          "tags": [
+            "clover",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.group_leaf_clover_1",
+          "name": "Leaf clover group 1",
+          "category": "nature",
+          "tags": [
+            "clover",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.group_leaf_clover_2",
+          "name": "Leaf clover group 2",
+          "category": "nature",
+          "tags": [
+            "clover",
+            "plant"
+          ],
+          "band": 0,
+          "y_hint": [
+            40,
+            140
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.grey_cross_1",
+          "name": "Grey stone cross headstone 1",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "grey"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Grey_Cross_1"
+        },
+        {
+          "id": "me.graveyard.grey_cross_2",
+          "name": "Grey stone cross headstone 2",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "grey"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Grey_Cross_2"
+        },
+        {
+          "id": "me.graveyard.grey_cross_3",
+          "name": "Grey stone cross headstone 3",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "grey"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Grey_Cross_3"
+        },
+        {
+          "id": "me.graveyard.grey_cross_4",
+          "name": "Grey stone cross headstone 4",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "grey"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Grey_Cross_4"
+        },
+        {
+          "id": "me.graveyard.brown_cross_1",
+          "name": "Brown stone cross headstone 1",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "brown"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Brown_Cross_1"
+        },
+        {
+          "id": "me.graveyard.brown_cross_2",
+          "name": "Brown stone cross headstone 2",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "brown"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Brown_Cross_2"
+        },
+        {
+          "id": "me.graveyard.brown_cross_3",
+          "name": "Brown stone cross headstone 3",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "brown"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Brown_Cross_3"
+        },
+        {
+          "id": "me.graveyard.brown_cross_4",
+          "name": "Brown stone cross headstone 4",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "brown"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Brown_Cross_4"
+        },
+        {
+          "id": "me.graveyard.black_cross_1",
+          "name": "Black stone cross headstone 1",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "black"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Black_Cross_1"
+        },
+        {
+          "id": "me.graveyard.black_cross_2",
+          "name": "Black stone cross headstone 2",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "black"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Black_Cross_2"
+        },
+        {
+          "id": "me.graveyard.black_cross_3",
+          "name": "Black stone cross headstone 3",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "black"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Black_Cross_3"
+        },
+        {
+          "id": "me.graveyard.black_cross_4",
+          "name": "Black stone cross headstone 4",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "headstone",
+            "grave",
+            "marker",
+            "black"
+          ],
+          "band": 0,
+          "y_hint": [
+            100,
+            260
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Black_Cross_4"
+        },
+        {
+          "id": "me.graveyard.wood_cross_1",
+          "name": "Wood twig cross 1",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "wood",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Wood_Cross_1"
+        },
+        {
+          "id": "me.graveyard.wood_cross_2",
+          "name": "Wood twig cross 2",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "wood",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Wood_Cross_2"
+        },
+        {
+          "id": "me.graveyard.wood_cross_3",
+          "name": "Wood twig cross 3",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "wood",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Wood_Cross_3"
+        },
+        {
+          "id": "me.graveyard.wood_large_cross_1",
+          "name": "Large wood cross 1",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "wood",
+            "grave",
+            "large"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Large_Cross_1"
+        },
+        {
+          "id": "me.graveyard.wood_large_cross_2",
+          "name": "Large wood cross 2",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "wood",
+            "grave",
+            "large"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Large_Cross_2"
+        },
+        {
+          "id": "me.graveyard.wood_large_cross_3",
+          "name": "Large wood cross 3",
+          "category": "decor",
+          "tags": [
+            "cross",
+            "wood",
+            "grave",
+            "large"
+          ],
+          "band": 0,
+          "y_hint": [
+            200,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Large_Cross_3"
+        },
+        {
+          "id": "me.graveyard.small_black_tombstone_1",
+          "name": "small black tombstone 1",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Black_Tombstone_1"
+        },
+        {
+          "id": "me.graveyard.small_black_tombstone_2",
+          "name": "small black tombstone 2",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Black_Tombstone_2"
+        },
+        {
+          "id": "me.graveyard.small_black_tombstone_3",
+          "name": "small black tombstone 3",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Black_Tombstone_3"
+        },
+        {
+          "id": "me.graveyard.small_black_tombstone_4",
+          "name": "small black tombstone 4",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Black_Tombstone_4"
+        },
+        {
+          "id": "me.graveyard.small_black_tombstone_5",
+          "name": "small black tombstone 5",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Black_Tombstone_5"
+        },
+        {
+          "id": "me.graveyard.small_black_tombstone_6",
+          "name": "small black tombstone 6",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Black_Tombstone_6"
+        },
+        {
+          "id": "me.graveyard.small_brown_tombstone_1",
+          "name": "small brown tombstone 1",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Brown_Tombstone_1"
+        },
+        {
+          "id": "me.graveyard.small_brown_tombstone_2",
+          "name": "small brown tombstone 2",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Brown_Tombstone_2"
+        },
+        {
+          "id": "me.graveyard.small_brown_tombstone_3",
+          "name": "small brown tombstone 3",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Brown_Tombstone_3"
+        },
+        {
+          "id": "me.graveyard.small_brown_tombstone_4",
+          "name": "small brown tombstone 4",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Brown_Tombstone_4"
+        },
+        {
+          "id": "me.graveyard.small_brown_tombstone_5",
+          "name": "small brown tombstone 5",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Brown_Tombstone_5"
+        },
+        {
+          "id": "me.graveyard.small_brown_tombstone_6",
+          "name": "small brown tombstone 6",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Brown_Tombstone_6"
+        },
+        {
+          "id": "me.graveyard.small_grey_tombstone_1",
+          "name": "small grey tombstone 1",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small_Grey_Grave_1"
+        },
+        {
+          "id": "me.graveyard.small_grey_tombstone_2",
+          "name": "small grey tombstone 2",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Grey_Tombstone_2"
+        },
+        {
+          "id": "me.graveyard.small_grey_tombstone_3",
+          "name": "small grey tombstone 3",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Grey_Tombstone_3"
+        },
+        {
+          "id": "me.graveyard.small_grey_tombstone_4",
+          "name": "small grey tombstone 4",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Grey_Tombstone_4"
+        },
+        {
+          "id": "me.graveyard.small_grey_tombstone_5",
+          "name": "small grey tombstone 5",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "headstone",
+            "grave",
+            "marker"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            280
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false,
+          "notes": "Small Grey_Tombstone_5"
+        },
+        {
+          "id": "me.graveyard.long_tombstone_1",
+          "name": "Tall slim long tombstone 1",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "obelisk",
+            "tall"
+          ],
+          "band": 0,
+          "y_hint": [
+            140,
+            300
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_tombstone_2",
+          "name": "Tall slim long tombstone 2",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "obelisk",
+            "tall"
+          ],
+          "band": 0,
+          "y_hint": [
+            140,
+            300
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_brown_tombstone_1",
+          "name": "marble brown tombstone 1",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            140,
+            300
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_brown_coffin_1",
+          "name": "marble brown coffin/sarcophagus 1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "sarcophagus",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_brown_tombstone_2",
+          "name": "marble brown tombstone 2",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            140,
+            300
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_brown_coffin_2",
+          "name": "marble brown coffin/sarcophagus 2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "sarcophagus",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_grey_tombstone_1",
+          "name": "marble grey tombstone 1",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            140,
+            300
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_grey_coffin_1",
+          "name": "marble grey coffin/sarcophagus 1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "sarcophagus",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_grey_tombstone_2",
+          "name": "marble grey tombstone 2",
+          "category": "decor",
+          "tags": [
+            "tombstone",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            140,
+            300
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.marble_grey_coffin_2",
+          "name": "marble grey coffin/sarcophagus 2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "sarcophagus",
+            "marble",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            300,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.gate_big",
+          "name": "Big stone gate/arch",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "cemetery",
+            "entrance",
+            "big"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Big_Gate"
+        },
+        {
+          "id": "me.graveyard.gate_big_red_orb",
+          "name": "Big stone gate with glowing red orb",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "red-orb",
+            "glow",
+            "cemetery",
+            "big"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Big_Gate_Red_Orb"
+        },
+        {
+          "id": "me.graveyard.gate_high",
+          "name": "High stone gate/arch",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "cemetery",
+            "entrance",
+            "high"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "High_Gate"
+        },
+        {
+          "id": "me.graveyard.gate_high_red_orb",
+          "name": "High stone gate with glowing red orb",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "red-orb",
+            "glow",
+            "cemetery",
+            "high"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "High_Gate_Red_Orb"
+        },
+        {
+          "id": "me.graveyard.gate_medium",
+          "name": "Medium stone gate/arch",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "cemetery",
+            "entrance",
+            "medium"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Medium_Gate"
+        },
+        {
+          "id": "me.graveyard.gate_medium_red_orb",
+          "name": "Medium stone gate with glowing red orb",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "red-orb",
+            "glow",
+            "cemetery",
+            "medium"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Medium_Gate_Red_Orb"
+        },
+        {
+          "id": "me.graveyard.gate_small",
+          "name": "Small stone gate/arch",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "cemetery",
+            "entrance",
+            "small"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Small_Gate"
+        },
+        {
+          "id": "me.graveyard.gate_small_red_orb",
+          "name": "Small stone gate with glowing red orb",
+          "category": "infra",
+          "tags": [
+            "gate",
+            "arch",
+            "stone",
+            "red-orb",
+            "glow",
+            "cemetery",
+            "small"
+          ],
+          "band": 0,
+          "y_hint": [
+            120,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Small_Gate_Red_Orb"
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_1",
+          "name": "Open dirt grave ditch 1",
+          "category": "terrain",
+          "tags": [
+            "grave",
+            "ditch",
+            "dirt",
+            "hole"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Dirt_Ditch_1"
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_2",
+          "name": "Open dirt grave ditch 2",
+          "category": "terrain",
+          "tags": [
+            "grave",
+            "ditch",
+            "dirt",
+            "hole"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Dirt_Ditch_2"
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_wood_grave",
+          "name": "Dirt ditch with wooden grave cover",
+          "category": "terrain",
+          "tags": [
+            "grave",
+            "ditch",
+            "wood",
+            "cover"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_red_coffin",
+          "name": "Dirt ditch with red coffin",
+          "category": "prop",
+          "tags": [
+            "grave",
+            "ditch",
+            "coffin",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_red_skull_coffin",
+          "name": "Dirt ditch with red skull coffin",
+          "category": "prop",
+          "tags": [
+            "grave",
+            "ditch",
+            "coffin",
+            "skull",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_silver_coffin",
+          "name": "Dirt ditch with silver coffin",
+          "category": "prop",
+          "tags": [
+            "grave",
+            "ditch",
+            "coffin",
+            "silver"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_silver_skull_coffin",
+          "name": "Dirt ditch with silver skull coffin",
+          "category": "prop",
+          "tags": [
+            "grave",
+            "ditch",
+            "coffin",
+            "skull",
+            "silver"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_yellow_coffin",
+          "name": "Dirt ditch with yellow coffin",
+          "category": "prop",
+          "tags": [
+            "grave",
+            "ditch",
+            "coffin",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.dirt_ditch_yellow_skull_coffin",
+          "name": "Dirt ditch with yellow skull coffin",
+          "category": "prop",
+          "tags": [
+            "grave",
+            "ditch",
+            "coffin",
+            "skull",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.pile_of_dirt",
+          "name": "Small dirt pile",
+          "category": "prop",
+          "tags": [
+            "dirt",
+            "pile",
+            "digging"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.big_pile_of_dirt",
+          "name": "Big dirt pile",
+          "category": "prop",
+          "tags": [
+            "dirt",
+            "pile",
+            "digging"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.cross_pile_of_dirt",
+          "name": "Dirt pile with wood cross marker",
+          "category": "prop",
+          "tags": [
+            "dirt",
+            "pile",
+            "cross",
+            "grave"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.shovel",
+          "name": "Shovel standing alone",
+          "category": "prop",
+          "tags": [
+            "shovel",
+            "tool",
+            "digging"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.shovel_big_pile_of_dirt",
+          "name": "Big dirt pile with shovel",
+          "category": "prop",
+          "tags": [
+            "dirt",
+            "pile",
+            "shovel",
+            "digging"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.shovel_little_pile_of_dirt",
+          "name": "Little dirt pile with shovel",
+          "category": "prop",
+          "tags": [
+            "dirt",
+            "pile",
+            "shovel",
+            "digging"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            320
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.wood_grave_1_brown_1_v1",
+          "name": "Vertical wood grave/coffin style1 brown1 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_1_Brown_1_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_1_brown_1_v2",
+          "name": "Vertical wood grave/coffin style1 brown1 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_1_Brown_1_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_1_brown_2_v1",
+          "name": "Vertical wood grave/coffin style1 brown2 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_1_Brown_2_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_1_brown_2_v2",
+          "name": "Vertical wood grave/coffin style1 brown2 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_1_Brown_2_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_1_brown_3_v1",
+          "name": "Vertical wood grave/coffin style1 brown3 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_1_Brown_3_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_1_brown_3_v2",
+          "name": "Vertical wood grave/coffin style1 brown3 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_1_Brown_3_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_2_brown_1_v1",
+          "name": "Vertical wood grave/coffin style2 brown1 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_2_Brown_1_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_2_brown_1_v2",
+          "name": "Vertical wood grave/coffin style2 brown1 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_2_Brown_1_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_2_brown_2_v1",
+          "name": "Vertical wood grave/coffin style2 brown2 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_2_Brown_2_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_2_brown_2_v2",
+          "name": "Vertical wood grave/coffin style2 brown2 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_2_Brown_2_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_2_brown_3_v1",
+          "name": "Vertical wood grave/coffin style2 brown3 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_2_Brown_3_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_2_brown_3_v2",
+          "name": "Vertical wood grave/coffin style2 brown3 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_2_Brown_3_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_3_brown_1_v1",
+          "name": "Vertical wood grave/coffin style3 brown1 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_3_Brown_1_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_3_brown_1_v2",
+          "name": "Vertical wood grave/coffin style3 brown1 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_3_Brown_1_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_3_brown_2_v1",
+          "name": "Vertical wood grave/coffin style3 brown2 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_3_Brown_2_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_3_brown_2_v2",
+          "name": "Vertical wood grave/coffin style3 brown2 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_3_Brown_2_Vers_2"
+        },
+        {
+          "id": "me.graveyard.wood_grave_3_brown_3_v1",
+          "name": "Vertical wood grave/coffin style3 brown3 v1",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_3_Brown_3_Vers_1"
+        },
+        {
+          "id": "me.graveyard.wood_grave_3_brown_3_v2",
+          "name": "Vertical wood grave/coffin style3 brown3 v2",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "wood",
+            "grave",
+            "vertical",
+            "plank"
+          ],
+          "band": 0,
+          "y_hint": [
+            180,
+            340
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Wood_Grave_3_Brown_3_Vers_2"
+        },
+        {
+          "id": "me.graveyard.big_brown_candle",
+          "name": "Big brown candle",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.big_red_candle",
+          "name": "Big red candle",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.medium_brown_candle",
+          "name": "Medium brown candle",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.medium_red_candle",
+          "name": "Medium red candle",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.small_brown_candle",
+          "name": "Small brown candle",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.small_red_candle",
+          "name": "Small red candle",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.consumed_candle_1",
+          "name": "Consumed/melted candle 1",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.consumed_candle_2",
+          "name": "Consumed/melted candle 2",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.consumed_candle_3",
+          "name": "Consumed/melted candle 3",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.candle_holder_off",
+          "name": "Candle holder unlit",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.candle_holder_on",
+          "name": "Candle holder lit",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.wall_candle_1",
+          "name": "Wall-mounted candle 1",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.wall_candle_2",
+          "name": "Wall-mounted candle 2",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.wall_candle_holder",
+          "name": "Wall candle holder empty",
+          "category": "decor",
+          "tags": [
+            "candle",
+            "light",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            220,
+            380
+          ],
+          "surface": "wall",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.grace_chapel",
+          "name": "Gothic mausoleum/chapel open doorway",
+          "category": "building",
+          "tags": [
+            "mausoleum",
+            "chapel",
+            "crypt",
+            "gothic",
+            "stone",
+            "cemetery"
+          ],
+          "band": 0,
+          "y_hint": [
+            320,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Grace_Chapel"
+        },
+        {
+          "id": "me.graveyard.grace_chapel_with_gate",
+          "name": "Gothic mausoleum/chapel with iron gate",
+          "category": "building",
+          "tags": [
+            "mausoleum",
+            "chapel",
+            "crypt",
+            "gothic",
+            "gate",
+            "stone",
+            "cemetery"
+          ],
+          "band": 0,
+          "y_hint": [
+            320,
+            480
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Grace_Chapel_With_Gate"
+        },
+        {
+          "id": "me.graveyard.grave_cage",
+          "name": "Iron grave cage / railing enclosure",
+          "category": "infra",
+          "tags": [
+            "cage",
+            "iron",
+            "grave",
+            "fence"
+          ],
+          "band": 0,
+          "y_hint": [
+            280,
+            400
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Grave_Cage"
+        },
+        {
+          "id": "me.graveyard.big_tree",
+          "name": "Large gnarled leafless dead tree",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "dead",
+            "leafless",
+            "spooky",
+            "large"
+          ],
+          "band": 0,
+          "y_hint": [
+            360,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Big_Tree_"
+        },
+        {
+          "id": "me.graveyard.big_tree_pumpkins",
+          "name": "Large dead tree with hanging jack-o'-lanterns and trunk face",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "dead",
+            "halloween",
+            "pumpkin",
+            "jack-o-lantern",
+            "glow",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            360,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Big_Tree_Pumpkins_"
+        },
+        {
+          "id": "me.graveyard.medium_tree_1",
+          "name": "Medium leafless dead tree 1",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "dead",
+            "leafless",
+            "spooky",
+            "medium"
+          ],
+          "band": 0,
+          "y_hint": [
+            360,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Medium_Tree_1"
+        },
+        {
+          "id": "me.graveyard.medium_tree_2",
+          "name": "Medium leafless dead tree 2",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "dead",
+            "leafless",
+            "spooky",
+            "medium"
+          ],
+          "band": 0,
+          "y_hint": [
+            360,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Medium_Tree_2"
+        },
+        {
+          "id": "me.graveyard.medium_tree_3",
+          "name": "Medium leafless dead tree 3",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "dead",
+            "leafless",
+            "spooky",
+            "medium"
+          ],
+          "band": 0,
+          "y_hint": [
+            360,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true,
+          "notes": "Medium_Tree_3"
+        },
+        {
+          "id": "me.graveyard.small_tree_1",
+          "name": "Small leafless dead tree",
+          "category": "nature",
+          "tags": [
+            "tree",
+            "dead",
+            "leafless",
+            "spooky",
+            "small"
+          ],
+          "band": 0,
+          "y_hint": [
+            360,
+            520
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.tree_trunk_pumpkin",
+          "name": "Tree trunk segment with carved glowing face",
+          "category": "nature",
+          "tags": [
+            "trunk",
+            "pumpkin",
+            "face",
+            "halloween",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            380,
+            500
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.squared_closed_coffin_1",
+          "name": "Squared stone sarcophagus closed 1",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "coffin",
+            "stone",
+            "closed"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            580
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_closed_coffin_2",
+          "name": "Squared stone sarcophagus closed 2",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "coffin",
+            "stone",
+            "closed"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            580
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_open_coffin",
+          "name": "Squared stone sarcophagus open empty",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "coffin",
+            "stone",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            580
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_uncovered_coffin_1",
+          "name": "Squared uncovered sarcophagus 1",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "coffin",
+            "stone",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            580
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_uncovered_coffin_2",
+          "name": "Squared uncovered sarcophagus 2",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "coffin",
+            "stone",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            580
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_coffin_lid_1",
+          "name": "Squared sarcophagus lid 1",
+          "category": "prop",
+          "tags": [
+            "lid",
+            "sarcophagus",
+            "stone"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            580
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_coffin_lid_2",
+          "name": "Squared sarcophagus lid 2",
+          "category": "prop",
+          "tags": [
+            "lid",
+            "sarcophagus",
+            "stone"
+          ],
+          "band": 0,
+          "y_hint": [
+            480,
+            580
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_skeleton_coffin",
+          "name": "Sarcophagus with full skeleton",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "skeleton",
+            "bones",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_skull_coffin",
+          "name": "Sarcophagus with skull",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "skull",
+            "bones",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_ribcage_coffin",
+          "name": "Sarcophagus with ribcage",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "ribcage",
+            "bones",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_bones_coffin",
+          "name": "Sarcophagus with bones",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "bones",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.squared_bones_and_ribcage_coffin",
+          "name": "Sarcophagus with bones and ribcage",
+          "category": "prop",
+          "tags": [
+            "sarcophagus",
+            "bones",
+            "ribcage",
+            "open"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.red_coffin",
+          "name": "Red fancy coffin closed",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "red",
+            "cemetery"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.red_skull_coffin",
+          "name": "Red fancy coffin with skull emblem",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "skull",
+            "red"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.silver_coffin",
+          "name": "Silver fancy coffin closed",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "silver",
+            "cemetery"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.silver_skull_coffin",
+          "name": "Silver fancy coffin with skull emblem",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "skull",
+            "silver"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.yellow_coffin",
+          "name": "Yellow fancy coffin closed",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "yellow",
+            "cemetery"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.yellow_skull_coffin",
+          "name": "Yellow fancy coffin with skull emblem",
+          "category": "prop",
+          "tags": [
+            "coffin",
+            "skull",
+            "yellow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            620
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.bones",
+          "name": "Scattered bones pile",
+          "category": "prop",
+          "tags": [
+            "bones",
+            "remains",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.ribcage_1",
+          "name": "Ribcage remains 1",
+          "category": "prop",
+          "tags": [
+            "ribcage",
+            "bones",
+            "remains"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.ribcage_2",
+          "name": "Ribcage remains 2",
+          "category": "prop",
+          "tags": [
+            "ribcage",
+            "bones",
+            "remains"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.skeleton",
+          "name": "Full skeleton lying/reclining",
+          "category": "prop",
+          "tags": [
+            "skeleton",
+            "bones",
+            "remains"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.skull",
+          "name": "Human skull",
+          "category": "prop",
+          "tags": [
+            "skull",
+            "bones",
+            "remains"
+          ],
+          "band": 0,
+          "y_hint": [
+            500,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.crow_back",
+          "name": "Crow facing back",
+          "category": "prop",
+          "tags": [
+            "crow",
+            "raven",
+            "bird",
+            "spooky",
+            "back"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.crow_front",
+          "name": "Crow facing front",
+          "category": "prop",
+          "tags": [
+            "crow",
+            "raven",
+            "bird",
+            "spooky",
+            "front"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            600
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.crow_left",
+          "name": "Crow facing left",
+          "category": "prop",
+          "tags": [
+            "crow",
+            "raven",
+            "bird",
+            "spooky",
+            "left"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            600
+          ],
+          "surface": "ground",
+          "facing": "left",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.crow_right",
+          "name": "Crow facing right",
+          "category": "prop",
+          "tags": [
+            "crow",
+            "raven",
+            "bird",
+            "spooky",
+            "right"
+          ],
+          "band": 0,
+          "y_hint": [
+            520,
+            600
+          ],
+          "surface": "ground",
+          "facing": "right",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.big_pumpkin_1",
+          "name": "Big jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.big_pumpkin_2",
+          "name": "Big jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.big_yellow_lights_pumpkin_1",
+          "name": "Big glowing yellow jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.big_yellow_lights_pumpkin_2",
+          "name": "Big glowing yellow jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.medium_pumpkin_1",
+          "name": "Medium jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.medium_pumpkin_2",
+          "name": "Medium jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.medium_yellow_lights_pumpkin_1",
+          "name": "Medium glowing jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.medium_yellow_lights_pumpkin_2",
+          "name": "Medium glowing jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_pumpkin_1",
+          "name": "Little jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_pumpkin_2",
+          "name": "Little jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_blood_pumpkin",
+          "name": "Little blood/red jack-o'-lantern",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "blood"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_yellow_lights_pumpkin_1",
+          "name": "Little glowing jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.little_yellow_lights_pumpkin_2",
+          "name": "Little glowing jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.long_pumpkin_1",
+          "name": "Long jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_pumpkin_2",
+          "name": "Long jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_pumpkin_3",
+          "name": "Long jack-o'-lantern 3",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_pumpkin_4",
+          "name": "Long jack-o'-lantern 4",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_blood_pumpkin_1",
+          "name": "Long blood jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "blood"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_blood_pumpkin_2",
+          "name": "Long blood jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "blood"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_yellow_lights_pumpkin_1",
+          "name": "Long glowing jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_yellow_lights_pumpkin_2",
+          "name": "Long glowing jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_yellow_lights_pumpkin_3",
+          "name": "Long glowing jack-o'-lantern 3",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.long_yellow_lights_pumpkin_4",
+          "name": "Long glowing jack-o'-lantern 4",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": true
+        },
+        {
+          "id": "me.graveyard.medium_blood_pumpkin_1",
+          "name": "Medium blood jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "blood"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.medium_blood_pumpkin_2",
+          "name": "Medium blood jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "blood"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.tiny_pumpkin_1",
+          "name": "Tiny jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.tiny_pumpkin_3",
+          "name": "Tiny jack-o'-lantern 3",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.tiny_blood_pumpkin",
+          "name": "Tiny blood jack-o'-lantern",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "blood"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.tiny_yellow_lights_pumpkin_1",
+          "name": "Tiny glowing jack-o'-lantern 1",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.tiny_yellow_lights_pumpkin_2",
+          "name": "Tiny glowing jack-o'-lantern 2",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "glow"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "ground",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.pumpkin_branch_left",
+          "name": "Pumpkin hanging on branch left",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "hanging",
+            "branch"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "air",
+          "facing": "south",
+          "multi_tile": false
+        },
+        {
+          "id": "me.graveyard.pumpkin_branch_right",
+          "name": "Pumpkin hanging on branch right",
+          "category": "decor",
+          "tags": [
+            "pumpkin",
+            "jack-o-lantern",
+            "halloween",
+            "spooky",
+            "hanging",
+            "branch"
+          ],
+          "band": 0,
+          "y_hint": [
+            540,
+            640
+          ],
+          "surface": "air",
+          "facing": "south",
+          "multi_tile": false
+        }
+      ],
+      "row_guide": "Top: dirt/grass path autotiles, pebbles, stones, bushes implied via flora, flower pots/groups, mushrooms, sprouts, clovers. Upper-mid: grey/brown/black stone crosses, small tombstones, marble markers, long tombstones, stone gates/arches (plain + red-orb) in big/high/medium/small sizes. Mid: open dirt ditches/graves, wood plank vertical graves, dirt piles with/without shovel or cross, candles and holders. Mid-lower: Grace Chapel mausoleums (open + gated), grave cage, leafless dead trees (bare + pumpkin-faced with hanging lanterns), trunk face module. Bottom: squared stone sarcophagi (closed/open/lids/skeleton/skull/ribcage variants), fancy red/silver/yellow coffins, bones/skeleton/skull, crows (4 poses), jack-o'-lanterns in many sizes/colors including hanging branch pumpkins."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "grp.camping.tent_cluster",
+  "name": "Campsite tent pair (front-facing A-frame tent + side-profile tent)",
+  "biome": "camping",
+  "category": "building",
+  "surface": "ground",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.camping.tent_blue_front",
+    "me.camping.tent_blue_side"
+  ],
+  "footprint_tiles": {
+    "w": 8,
+    "h": 4
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the front-facing tent opens toward the viewer with the side-profile tent pitched beside it."
+  },
+  "offset_basis_summary": "Tent_1 (front) and Tent_4 (side) are semantically the same tent model rendered from two different sheet bands (front row y304, side row y368) with no direct spatial relationship, so this composition is hand-authored to place a front-view and side-view tent side by side as a plausible two-tent campsite.",
+  "pieces": [
+    {
+      "role": "tent_front",
+      "me": "me.camping.tent_blue_front",
+      "exs": "exs.11_camping.camping_tent_1",
+      "basename": "ME_Singles_Camping_16x16_Tent_1.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 64,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "south",
+      "interact": "enter"
+    },
+    {
+      "role": "tent_side",
+      "me": "me.camping.tent_blue_side",
+      "exs": "exs.11_camping.camping_tent_4",
+      "basename": "ME_Singles_Camping_16x16_Tent_4.png",
+      "dx": 4,
+      "dy": 1,
+      "w": 64,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "east",
+      "notes": "Pitched at an angle to the front tent to suggest a small cluster rather than a single row."
+    }
+  ],
+  "variants": {
+    "tent_count": "Add camping_tent_2/tent_3 (front) or tent_5/tent_6 (side) copies for a larger campsite; keep front-facing tents on the near row.",
+    "color_note": "Registry currently only links Tent_1-3 (front) and Tent_4-6 (side) singles; treat all three numbered variants as the same tent skin rather than distinct colors."
+  },
+  "interact": "enter",
+  "notes": "Curated composite (not sheet-derived): places a front-view and side-view tent from the same model together so the campsite reads as a small cluster instead of two disconnected single-tent stamps."
+}

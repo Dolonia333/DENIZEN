@@ -1,0 +1,138 @@
+{
+ "_doc": "W6-B FULL DISTRICT spec — replaces D11's hand-stamped exterior with a compiler-generated fragment covering the district's ENTIRE bbox. bbox CORRECTED to the district's real footprint: the hand file declares bbox {4200,1600,900,1100} but every one of its own patches/stamps/animBands actually sits at x:[4300,5216] y:[2256,3056] (EXTERIOR-MISTAKES.md #4 — same stale-bbox-after-relocate pattern as D10). This spec uses the true, tile-snapped footprint {4288,2256,928,800}, verified clear of D1 mainstreet (ends y=2100) and D12 military (real content starts x=5456). The hand district's barbed-wire animBands ring (kept unchanged by --compiler-replaces, since only stamps/anims/labels come from the compiled fragment) still frames the yard after the merge; this spec's own asphalt yard + landmarks sit inside that same footprint. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d11-industrial.json --qa -v. Merge with scripts/merge-city-plan.py --compiler-replaces.",
+ "schema": "exterior-district-spec/1",
+ "id": "d11-compiled",
+ "district": "D11 Industrial Yard (full compiler replacement)",
+ "biome": "industrial",
+ "palette": "industrial_rust",
+ "palette_secondary": "neutral_urban",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 110001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d11-compiled.json",
+  "full_bbox": true,
+  "_doc": "coords 'local': every rect/point below is relative to bbox (4288,2256), the CORRECTED footprint."
+ },
+
+ "bbox": { "x": 4288, "y": 2256, "w": 928, "h": 800 },
+ "label": "INDUSTRIAL YARD",
+ "label_at": { "x": 412, "y": 224 },
+
+ "surfaces": [
+  { "surface": "grass", "x": 0, "y": 0, "w": 928, "h": 800, "depth": 0.85,
+    "_doc": "perimeter buffer around the fenced yard covers the WHOLE bbox first" },
+  { "surface": "asphalt", "name": "yard_floor", "x": 96, "y": 288, "w": 704, "h": 448, "depth": 0.9,
+    "_doc": "the fenced work yard — asphalt so grp.worksite.* groups (all declare surface asphalt) can land here" },
+  { "surface": "sidewalk", "name": "entrance_walk", "x": 320, "y": 0, "w": 176, "h": 288, "depth": 0.89,
+    "_doc": "paved approach from the north edge down to the yard gate, over the hand district's own entrance road" }
+ ],
+
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "entrance_walk_edge",
+   "surface": "sidewalk",
+   "density": { "signage": "medium", "decor_small": "light", "street_furn": "medium" },
+   "_doc": "hazard signage and cones along the entrance corridor, mirrors the hand district's Danger_Sign/Cone/Entrance stamps"
+  },
+  {
+   "slot": "backlot",
+   "name": "yard",
+   "x": 96, "y": 288, "w": 704, "h": 448,
+   "density": { "decor_small": "packed", "infra": "dense", "barrier": "dense", "vegetation": "sparse", "vehicle": "light" },
+   "_doc": "matches placement-rules.biomes.industrial.density exactly — scrap, containers, tires, junk piles"
+  },
+  {
+   "slot": "interior_fill",
+   "name": "grounds",
+   "x": 0, "y": 0, "w": 928, "h": 800,
+   "density": { "vegetation": "sparse", "decor_small": "light", "barrier": "light" },
+   "_doc": "the grass buffer outside the fence — a few scrubby trees/bushes, mirrors the hand district's Tree_1/10/20 + Bush_7"
+  }
+ ],
+
+ "roads": [
+  { "x": 368, "y": 32, "w": 80, "h": 256 }
+ ],
+
+ "landmarks": [
+  { "me": "me.worksite.scaffolding_frame_a", "at": { "x": 140, "y": 608 }, "anchor": "bl", "solid": true,
+    "interact": "enter",
+    "_doc": "half-built steel skeleton, mirrors the hand district's Building_Skeleton_2" },
+  { "me": "me.worksite.light_tower_b", "at": { "x": 280, "y": 368 }, "anchor": "bl", "solid": true },
+  { "me": "me.worksite.light_tower_b", "at": { "x": 680, "y": 368 }, "anchor": "bl", "solid": true },
+  { "me": "me.city_props.junk_shack", "at": { "x": 620, "y": 720 }, "anchor": "bl", "solid": true,
+    "interact": "enter", "_doc": "mirrors the hand district's Junk_Shack_1" },
+  { "me": "me.houses.post_apoc_1", "prefer": "Post_Apocalyptic_House_1", "at": { "x": 640, "y": 272 },
+    "anchor": "bl", "solid": true,
+    "_doc": "derelict squat on the grass buffer NE of the yard fence (the yard interior is packed with equipment/containers/excavator), mirrors the hand district's Post_Apocalyptic_House_1" },
+  { "me": "me.worksite.excavator_yellow", "at": { "x": 720, "y": 700 }, "anchor": "bl", "solid": true,
+    "_doc": "mirrors the hand district's Excavator_1" },
+  { "me": "me.city_props.container_blue_side", "at": { "x": 150, "y": 736 }, "anchor": "bl", "solid": true },
+  { "me": "me.city_props.container_tan_side", "at": { "x": 230, "y": 736 }, "anchor": "bl", "solid": true },
+  { "me": "me.city_props.car_wreck_grey", "at": { "x": 500, "y": 736 }, "anchor": "bl", "solid": false },
+  { "grp": "grp.worksite.fenced_perimeter", "at": { "x": 360, "y": 304 }, "interact": "enter",
+    "_doc": "keypad gate + mesh fence run + hard-hat sign, 7x4 tiles, just inside the yard's north gate (clear of the entrance road's keep-clear halo and both light towers)" },
+  { "grp": "grp.worksite.equipment_depot", "at": { "x": 150, "y": 380 },
+    "_doc": "31x6-tile equipment line along the yard's inner north wall, between the two light towers" }
+ ],
+
+ "groups": [
+  {
+   "grp": "grp.worksite.material_stack_yard",
+   "slot": "yard",
+   "count": 1,
+   "_doc": "toolbox + lumber-stack columns + storage bin, 8x6 tiles, sampled into a free yard cell"
+  }
+ ],
+
+ "interactions": {
+  "enter": "auto",
+  "read": "auto"
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Campfire_16x16.png", "fw": 32, "fh": 32, "at": { "x": 760, "y": 344 }, "fps": 6 },
+  { "sheet": "ext/animated/Flame_2_16x16.png", "fw": 16, "fh": 16, "at": { "x": 774, "y": 344 }, "fps": 8 },
+  { "sheet": "ext/animated/Flame_1_16x16.png", "fw": 16, "fh": 16, "at": { "x": 718, "y": 660 }, "fps": 7 },
+  { "sheet": "ext/animated/Automatic_Barrier_1_16x16.png", "fw": 80, "fh": 80, "at": { "x": 404, "y": 244 }, "fps": 6 },
+  { "sheet": "ext/animated/Worksite_Door_16x16.png", "fw": 48, "fh": 48, "at": { "x": 180, "y": 706 }, "fps": 6 }
+ ],
+
+ "constraints": {
+  "max_stamps": 220,
+  "coverage_target_singles": 90,
+  "max_solid_cell_ratio": 0.3,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "928x800 = 58x50 tiles = 2900 cells; industrial wants decor_small packed + infra/barrier dense in the yard."
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": { "enabled": true },
+  "F_canopy": { "enabled": true },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.city_props.scrap_metal_pieces",
+    "me.city_props.tires_pair_and_pile",
+    "me.city_props.trash_pile_modular",
+    "me.city_props.cable_spools",
+    "me.city_props.pallets_and_crates",
+    "me.city_props.brick_rubble_set",
+    "me.city_props.broken_ladder",
+    "me.city_props.propane_tanks",
+    "me.worksite.bucket",
+    "me.worksite.shovel_upright",
+    "me.worksite.toolbox_open"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}

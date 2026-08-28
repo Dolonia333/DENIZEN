@@ -1,0 +1,219 @@
+{
+ "version": 1,
+ "lit_phases": [
+  "sunset",
+  "night"
+ ],
+ "by_img": {
+  "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Led_Light_On.png": {
+   "type": "day_override",
+   "day_img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Led_Light_Off.png"
+  }
+ },
+ "by_me": {
+  "me.police.facade_narrow_blue": {
+   "type": "img",
+   "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Station_Small_Highlight_1.png"
+  },
+  "me.police.facade_narrow_red": {
+   "type": "img",
+   "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Station_Small_Highlight_2.png"
+  },
+  "me.graveyard.candle_holder_off": {
+   "type": "img",
+   "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Candle_Holder_On.png"
+  },
+  "me.subway.led_light": {
+   "type": "day_override",
+   "day_img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Led_Light_Off.png"
+  }
+ },
+ "by_basename": {
+  "Street_Lamp_1": {
+   "type": "anim",
+   "sheet": "ext/animated/Street_Lamp_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "fps": 4
+  },
+  "Street_Lamp_2": {
+   "type": "anim",
+   "sheet": "ext/animated/Street_Lamp_2_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "fps": 4
+  },
+  "Street_Lamp_3": {
+   "type": "anim",
+   "sheet": "ext/animated/Street_Lamp_3_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "fps": 4
+  },
+  "Street_Lamp_4": {
+   "type": "anim",
+   "sheet": "ext/animated/Street_Lamp_3_2_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "fps": 4
+  },
+  "Street_Lamp_5": {
+   "type": "anim",
+   "sheet": "ext/animated/Street_Lamp_3_3_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "fps": 4
+  },
+  "Campfire_1": {
+   "type": "anim",
+   "sheet": "ext/animated/Campfire_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "fps": 6
+  },
+  "Campfire_2": {
+   "type": "anim",
+   "sheet": "ext/animated/Campfire_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "fps": 6
+  },
+  "Campfire_3": {
+   "type": "anim",
+   "sheet": "ext/animated/Campfire_2_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "fps": 6
+  },
+  "Campfire_Marshmallow_1": {
+   "type": "anim",
+   "sheet": "ext/animated/Campfire_2_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "fps": 6
+  },
+  "Campfire_Marshmallow_2": {
+   "type": "anim",
+   "sheet": "ext/animated/Campfire_2_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "fps": 6
+  },
+  "Lantern_1": {
+   "type": "anim",
+   "sheet": "ext/animated/Camping_Lantern_1.png",
+   "fw": 48,
+   "fh": 48,
+   "fps": 6
+  },
+  "Lantern_2": {
+   "type": "anim",
+   "sheet": "ext/animated/Camping_Lantern_2.png",
+   "fw": 48,
+   "fh": 48,
+   "fps": 6
+  },
+  "Lantern_3": {
+   "type": "anim",
+   "sheet": "ext/animated/Camping_Lantern_3.png",
+   "fw": 48,
+   "fh": 48,
+   "fps": 6
+  },
+  "Lantern_4": {
+   "type": "anim",
+   "sheet": "ext/animated/Camping_Lantern_4.png",
+   "fw": 48,
+   "fh": 48,
+   "fps": 6
+  },
+  "Lantern_5": {
+   "type": "anim",
+   "sheet": "ext/animated/Camping_Lantern_5.png",
+   "fw": 48,
+   "fh": 48,
+   "fps": 6
+  },
+  "Lantern_6": {
+   "type": "anim",
+   "sheet": "ext/animated/Camping_Lantern_6.png",
+   "fw": 48,
+   "fh": 48,
+   "fps": 6
+  },
+  "Small_Brown_Candle": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Candle_1_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "fps": 4
+  },
+  "Small_Red_Candle": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Candle_2_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "fps": 4
+  },
+  "Medium_Brown_Candle": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Candle_3_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "fps": 4
+  },
+  "Medium_Red_Candle": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Candle_4_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "fps": 4
+  },
+  "Big_Brown_Candle": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Candle_5_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "fps": 4
+  },
+  "Big_Red_Candle": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Candle_6_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "fps": 4
+  },
+  "Wall_Candle_Holder": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Wall_Candle_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "fps": 4
+  },
+  "Candle_Holder_Off": {
+   "type": "anim",
+   "sheet": "ext/animated/Graveyard_Candle_Standing_16x16.png",
+   "fw": 16,
+   "fh": 48,
+   "fps": 4
+  },
+  "Traffic_Light": {
+   "type": "anim",
+   "sheet": "ext/animated/Stoplight_16x16.png",
+   "fw": 33,
+   "fh": 27,
+   "fps": 4
+  }
+ },
+ "stats": {
+  "basename_rules": 25,
+  "me_rules": 4,
+  "img_rules": 1,
+  "plan_matches": {
+   "anim": 331,
+   "day_override": 2,
+   "img": 5
+  },
+  "plan_matches_total": 338
+ }
+}

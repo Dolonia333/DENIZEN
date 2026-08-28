@@ -1,0 +1,23 @@
+{
+  "sheet": "8_Worksite",
+  "source": "assets/limezu/ext/themes/8_Worksite.png",
+  "size": [
+    512,
+    320
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/8_Worksite/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 320,
+      "path": "data/limezu-visual-catalog/sheets/8_Worksite/band_00_y0-320.jpg",
+      "px_size": [
+        1024,
+        640
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/8_worksite",
+  "singles_count": 71
+}

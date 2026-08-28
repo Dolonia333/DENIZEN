@@ -1,0 +1,1337 @@
+{
+  "sheet": "4_Generic_Buildings",
+  "labels": [
+    {
+      "id": "me.generic_building.facade_yellow_roof",
+      "name": "Yellow modular flat roof cap",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_yellow_mid_double_window",
+      "name": "Yellow mid-floor double vertical windows",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_yellow_mid_wide_window",
+      "name": "Yellow mid-floor wide horizontal window",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_yellow_mid_narrow",
+      "name": "Yellow mid-floor narrow single window strip",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_yellow_blank_trim",
+      "name": "Yellow blank / edge trim strips",
+      "y_hint": [
+        0,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_yellow_ground_entrance",
+      "name": "Yellow ground double-door entrance module",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_yellow_ground_small_window",
+      "name": "Yellow ground small square window strip",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_yellow_vertical_pair",
+      "name": "Yellow-set vertical window pair",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_yellow_horizontal",
+      "name": "Yellow-set wide horizontal window",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_yellow_narrow",
+      "name": "Yellow-set narrow vertical window",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_yellow_square_small",
+      "name": "Yellow-set small square ground window",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.door_yellow_double_glass",
+      "name": "Yellow-set double glass entrance doors",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.facade_grey_roof",
+      "name": "Grey-blue modular flat roof cap",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_mid_double_window",
+      "name": "Grey mid-floor double vertical windows",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_mid_wide_window",
+      "name": "Grey mid-floor wide horizontal window",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_mid_narrow",
+      "name": "Grey mid-floor narrow single window strip",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_blank_trim",
+      "name": "Grey blank / edge trim strips",
+      "y_hint": [
+        0,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_ground_entrance",
+      "name": "Grey ground double-door entrance module",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_ground_small_window",
+      "name": "Grey ground small square window strip",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_grey_vertical_pair",
+      "name": "Grey-set vertical window pair",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_grey_horizontal",
+      "name": "Grey-set wide horizontal window",
+      "y_hint": [
+        70,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.door_grey_double_glass",
+      "name": "Grey-set double glass entrance doors",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.facade_brown_frame_tall",
+      "name": "Brown tall open-frame / balcony structure",
+      "y_hint": [
+        300,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_brown_wall_narrow",
+      "name": "Brown narrow wall modules with small windows",
+      "y_hint": [
+        300,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_brown_wide_floors",
+      "name": "Brown wide multi-floor facade modules",
+      "y_hint": [
+        300,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_brown_single_wood",
+      "name": "Brown single wood door",
+      "y_hint": [
+        420,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.door_brown_row_strip",
+      "name": "Brown three-door ground strip",
+      "y_hint": [
+        440,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_rooftop_access_brown",
+      "name": "Brown rooftop access door / shed",
+      "y_hint": [
+        520,
+        640
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_brown_standard",
+      "name": "Brown standard double-pane window",
+      "y_hint": [
+        360,
+        500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_red",
+      "name": "Window with red flower box",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_orange",
+      "name": "Window with orange flower box",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_blue",
+      "name": "Window with blue flower box",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_white",
+      "name": "Window with white flower box",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_double",
+      "name": "Double-wide window with flower boxes",
+      "y_hint": [
+        360,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_row",
+      "name": "Multi-window flower-box row strip",
+      "y_hint": [
+        380,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.vent_basement_square",
+      "name": "Basement / utility vent squares",
+      "y_hint": [
+        480,
+        540
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.roof_brown_flat_trim",
+      "name": "Brown building flat roof with stone trim",
+      "y_hint": [
+        300,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_snow_flat",
+      "name": "Snow-covered flat roof modules",
+      "y_hint": [
+        620,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_snow_slope",
+      "name": "Snow-covered sloped roof edge modules",
+      "y_hint": [
+        620,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_access_brown_penthouse",
+      "name": "Brown rooftop access structure",
+      "y_hint": [
+        560,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.prop_satellite_dish",
+      "name": "Rooftop satellite dish",
+      "y_hint": [
+        340,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_antenna",
+      "name": "Thin rooftop antenna",
+      "y_hint": [
+        340,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.example_brown_tall",
+      "name": "Example brown 5-story apartment",
+      "y_hint": [
+        320,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.example_brown_medium",
+      "name": "Example brown 3-story apartment",
+      "y_hint": [
+        360,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.example_brown_short",
+      "name": "Example brown short apartment",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_side_alley",
+      "name": "Red brick side/alley facade strip",
+      "y_hint": [
+        768,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_straight_upper",
+      "name": "Red brick straight upper-floor module",
+      "y_hint": [
+        768,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_straight_ground",
+      "name": "Red brick straight ground-floor module",
+      "y_hint": [
+        980,
+        1200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_corner_bay_upper",
+      "name": "Red brick angled bay corner upper",
+      "y_hint": [
+        768,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_corner_bay_ground",
+      "name": "Red brick angled bay corner ground",
+      "y_hint": [
+        980,
+        1200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_1floor",
+      "name": "Red brick 1-floor version modules",
+      "y_hint": [
+        1050,
+        1220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_cornice_white",
+      "name": "Red brick white dentil cornice band",
+      "y_hint": [
+        768,
+        900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_redbrick_tan_flat",
+      "name": "Red brick building tan flat roof",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_parapet_white_straight",
+      "name": "White parapet straight edge",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_parapet_white_corner",
+      "name": "White parapet corner / bay edge",
+      "y_hint": [
+        768,
+        960
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_access_redbrick_shed",
+      "name": "Red brick rooftop access shed",
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_redbrick_double_hooded",
+      "name": "Red brick double window with white hood",
+      "y_hint": [
+        850,
+        1100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_redbrick_bay",
+      "name": "Red brick bay/angled corner window",
+      "y_hint": [
+        850,
+        1100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_redbrick_side_small",
+      "name": "Red brick side-facade small window",
+      "y_hint": [
+        800,
+        1100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.door_redbrick_arch_double",
+      "name": "Red brick arched stone double doors",
+      "y_hint": [
+        1080,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_redbrick_arch_open",
+      "name": "Red brick open stone archway",
+      "y_hint": [
+        1080,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_redbrick_corner_double",
+      "name": "Red brick corner double doors under awning",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_redbrick_roof_wood",
+      "name": "Red brick roof-shed wood door",
+      "y_hint": [
+        1300,
+        1480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.steps_stone_carpet_red",
+      "name": "Stone steps with red carpet runner",
+      "y_hint": [
+        1150,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.storefront_blue_three_story",
+      "name": "Blue/teal three-story storefront building",
+      "y_hint": [
+        1200,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_blue_storefront_glass",
+      "name": "Blue storefront glass double door",
+      "y_hint": [
+        1400,
+        1520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_blue_storefront_display",
+      "name": "Blue storefront display window",
+      "y_hint": [
+        1400,
+        1520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_hedge_rect",
+      "name": "Rectangular green hedge planter",
+      "y_hint": [
+        780,
+        900
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_bush_round",
+      "name": "Round potted bush / topiary",
+      "y_hint": [
+        780,
+        950
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_bench_wood",
+      "name": "Wooden street bench",
+      "y_hint": [
+        800,
+        950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.prop_sign_wood_small",
+      "name": "Small wooden post signboard",
+      "y_hint": [
+        850,
+        980
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_clothesline_empty",
+      "name": "Clothesline empty between poles",
+      "y_hint": [
+        1180,
+        1400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.prop_clothesline_laundry",
+      "name": "Clothesline with hanging clothes",
+      "y_hint": [
+        1180,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.prop_clothesline_sheets",
+      "name": "Clothesline with hanging sheets",
+      "y_hint": [
+        1220,
+        1500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.prop_planter_ledge_green",
+      "name": "Small green ledge/window planter",
+      "y_hint": [
+        780,
+        920
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_upper_shuttered",
+      "name": "Red brick upper with shuttered windows",
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_ground_arch_entry",
+      "name": "Red brick ground arched wooden entrance",
+      "y_hint": [
+        1680,
+        1900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_1floor_arch",
+      "name": "Red brick single-story arched corner",
+      "y_hint": [
+        1750,
+        1920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_narrow_recessed_entry",
+      "name": "Red brick narrow recessed doorway",
+      "y_hint": [
+        1750,
+        1950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_redbrick_arch_wood_lamps",
+      "name": "Arched wood double doors with lamps",
+      "y_hint": [
+        1700,
+        1900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_redbrick_shutter_cap",
+      "name": "Red brick window with white shutter/cap",
+      "y_hint": [
+        1550,
+        1750
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.roof_redbrick_balcony_planter",
+      "name": "Red brick roof corner with balcony planter",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.storefront_teal_office_stack",
+      "name": "Teal/blue-grey office modular stack",
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_teal_roof",
+      "name": "Teal office flat roof module",
+      "y_hint": [
+        1536,
+        1620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_teal_mid_windows",
+      "name": "Teal office mid-floor window band",
+      "y_hint": [
+        1600,
+        1720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_teal_ground_storefront",
+      "name": "Teal office ground storefront entrance",
+      "y_hint": [
+        1700,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.storefront_grey_banded_stack",
+      "name": "Grey banded commercial modular stack",
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_banded_roof",
+      "name": "Grey commercial flat roof module",
+      "y_hint": [
+        1536,
+        1620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_banded_mid",
+      "name": "Grey commercial mid-floor windows",
+      "y_hint": [
+        1600,
+        1720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_banded_ground",
+      "name": "Grey commercial ground storefront",
+      "y_hint": [
+        1700,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.storefront_tan_yellow_stack",
+      "name": "Tan/yellow commercial modular stack",
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_tan_roof",
+      "name": "Tan commercial flat roof module",
+      "y_hint": [
+        1536,
+        1620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_tan_mid_windows",
+      "name": "Tan commercial mid-floor windows",
+      "y_hint": [
+        1600,
+        1720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_tan_ground_storefront",
+      "name": "Tan commercial ground storefront",
+      "y_hint": [
+        1700,
+        1880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_storefront_glass_double",
+      "name": "Glass double storefront doors (color stacks)",
+      "y_hint": [
+        1720,
+        1850
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_storefront_display_wide",
+      "name": "Wide storefront display window module",
+      "y_hint": [
+        1720,
+        1850
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.example_grey_stone_complex",
+      "name": "Grey stone L-shaped complex building",
+      "y_hint": [
+        1850,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_stone_arched_upper",
+      "name": "Grey stone arched-window upper facade",
+      "y_hint": [
+        1850,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_stone_storefront_ground",
+      "name": "Grey stone ground storefront + garage",
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_grey_stone_side_stair_entry",
+      "name": "Grey stone side stair entrance strip",
+      "y_hint": [
+        1900,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_grey_stone_arch_band",
+      "name": "Grey stone arched window horizontal band",
+      "y_hint": [
+        2100,
+        2250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_grey_stone_rect_band",
+      "name": "Grey stone rectangular window band",
+      "y_hint": [
+        2080,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_garage_rollup_grey",
+      "name": "Grey roll-up garage / service door",
+      "y_hint": [
+        2050,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_grey_stair_stoop",
+      "name": "Grey stone stair stoop entrance door",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_rooftop_access_grey",
+      "name": "Grey complex rooftop access door",
+      "y_hint": [
+        1850,
+        2000
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.roof_grey_parapet_notched",
+      "name": "Grey notched stone parapet roof",
+      "y_hint": [
+        1850,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_skylight_glass_pitched",
+      "name": "Pitched glass skylight / greenhouse roof",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_vent_grille_pair",
+      "name": "Flat roof dual ventilation grilles",
+      "y_hint": [
+        1950,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.infra_hvac_box",
+      "name": "Rooftop HVAC / AC box unit",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_misc_square_column",
+      "name": "Misc small square window variants",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_bench_park_small",
+      "name": "Small park bench (band 2)",
+      "y_hint": [
+        2150,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.prop_plant_red_pot",
+      "name": "Small plant in red pot",
+      "y_hint": [
+        2180,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.facade_balcony_stair_strip",
+      "name": "External balcony + stair facade strip",
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.facade_beige_pipe_wall",
+      "name": "Beige facade with pipes, circle & shutter windows",
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_circular_porthole",
+      "name": "Circular porthole window",
+      "y_hint": [
+        2320,
+        2450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_shutter_juliet_balcony",
+      "name": "Shuttered window with Juliet balcony",
+      "y_hint": [
+        2350,
+        2520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.infra_pipes_copper_vertical",
+      "name": "Vertical copper utility pipes",
+      "y_hint": [
+        2350,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.stairs_wood_external",
+      "name": "External wooden stair modules",
+      "y_hint": [
+        2320,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.balcony_railing_metal",
+      "name": "Black metal balcony railings",
+      "y_hint": [
+        2320,
+        2500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.fire_escape_ladder",
+      "name": "Metal fire-escape ladder modules",
+      "y_hint": [
+        2500,
+        2800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.roof_vent_square",
+      "name": "Square roof vent / skylight box",
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.infra_hvac_fan_pair",
+      "name": "Industrial HVAC units with fans",
+      "y_hint": [
+        2380,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.storefront_hardware_base",
+      "name": "Hardware storefront glass + awning base",
+      "y_hint": [
+        2500,
+        2750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.sign_hardware_hammer",
+      "name": "HARDWARE sign with hammer icon",
+      "y_hint": [
+        2450,
+        2620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.awning_striped_red_cream",
+      "name": "Red/cream striped fabric awnings",
+      "y_hint": [
+        2550,
+        2750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.awning_striped_blue_yellow",
+      "name": "Blue/yellow striped fabric awnings",
+      "y_hint": [
+        2550,
+        2750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_hardware_glass_entrance",
+      "name": "Hardware store glass entrance doors",
+      "y_hint": [
+        2580,
+        2750
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_hardware_display",
+      "name": "Hardware store tool display window",
+      "y_hint": [
+        2580,
+        2750
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_info_kiosk",
+      "name": "Octagonal information kiosk",
+      "y_hint": [
+        2450,
+        2650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.prop_flyers_stack",
+      "name": "Flyer / newspaper stacks",
+      "y_hint": [
+        2480,
+        2650
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_poster_wall",
+      "name": "Wall posters and bulletin flyers",
+      "y_hint": [
+        2500,
+        2800
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_plant_potted_green",
+      "name": "Small green potted plants",
+      "y_hint": [
+        2500,
+        2700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.example_rowhouses_narrow",
+      "name": "Example narrow brick row-houses",
+      "y_hint": [
+        2750,
+        3050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.example_hardware_complex",
+      "name": "Example hardware / commercial complex",
+      "y_hint": [
+        2750,
+        3072
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.example_fire_escape_tower",
+      "name": "Example tall fire-escape balcony building",
+      "y_hint": [
+        2750,
+        3072
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.window_arched_example",
+      "name": "Arched dark-pane windows (examples)",
+      "y_hint": [
+        2800,
+        3000
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.door_wood_stoop_residential",
+      "name": "Residential wood door with stoop",
+      "y_hint": [
+        2900,
+        3050
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.awning_metal_ribbed_small",
+      "name": "Small grey ribbed metal awning",
+      "y_hint": [
+        2850,
+        3050
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.facade_beige_detail_slice",
+      "name": "Beige detail facade with pipes & graffiti",
+      "y_hint": [
+        3072,
+        3200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.decal_cat_poster",
+      "name": "Orange black-cat poster decal",
+      "y_hint": [
+        3120,
+        3180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.decal_graffiti_scrawl",
+      "name": "White graffiti scrawl decal",
+      "y_hint": [
+        3120,
+        3180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.prop_trash_can",
+      "name": "Metal street trash can",
+      "y_hint": [
+        3140,
+        3200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.storefront_hardware_assembled",
+      "name": "Hardware storefront assembled module",
+      "y_hint": [
+        3072,
+        3200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.sign_hardware_hammer_detail",
+      "name": "HARDWARE hammer sign (detail band)",
+      "y_hint": [
+        3072,
+        3140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.awning_hardware_red_cream",
+      "name": "Hardware red/cream scalloped awning",
+      "y_hint": [
+        3100,
+        3160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.generic_building.door_hardware_glass_detail",
+      "name": "Hardware glass door (detail)",
+      "y_hint": [
+        3140,
+        3200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.window_hardware_tools_display",
+      "name": "Hardware tools display window",
+      "y_hint": [
+        3140,
+        3200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.generic_building.decor_string_lights_flags",
+      "name": "String lights / hanging flag bunting",
+      "y_hint": [
+        900,
+        1100
+      ],
+      "multi_tile": true
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "id": "grp.beach.stage_set",
+  "name": "Beach festival stage (truss structure + spotlights + PA speakers + DJ booth + barrier)",
+  "biome": "beach",
+  "category": "recreation",
+  "surface": "sand",
+  "facing": "north",
+  "solid": true,
+  "source_me_ids": [
+    "me.beach.stage_truss",
+    "me.beach.stage_spotlight",
+    "me.beach.dj_set",
+    "me.beach.speaker_big",
+    "me.beach.stage_barrier"
+  ],
+  "footprint_tiles": {
+    "w": 10,
+    "h": 10
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the truss anchors the back of the stage (facing north, away from the crowd) with the DJ booth and barrier in front of it toward the audience."
+  },
+  "offset_basis_summary": "The truss left/middle/right segments and the two spotlight-modular columns sit contiguously in the same sheet region (x192-304, y704-752 on 21_Beach) so those offsets are sheet_relative from a shared origin. The DJ set, PA speakers and crowd barrier live in a separate unrelated sheet region (x0-160, y336-528), so their placement in front of the truss is hand-authored.",
+  "pieces": [
+    {
+      "role": "truss_left",
+      "me": "me.beach.stage_truss",
+      "exs": "exs.21_beach.beach_stage_structure_left",
+      "basename": "21_Beach_16x16_Stage_Structure_Left.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 32,
+      "h": 144,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "north"
+    },
+    {
+      "role": "truss_middle",
+      "me": "me.beach.stage_truss",
+      "exs": "exs.21_beach.beach_stage_structure_middle_modular_1",
+      "basename": "21_Beach_16x16_Stage_Structure_Middle_Modular_1.png",
+      "dx": 2,
+      "dy": 1,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "north",
+      "notes": "Modular; repeat horizontally to widen the truss span between the left/right towers."
+    },
+    {
+      "role": "truss_right",
+      "me": "me.beach.stage_truss",
+      "exs": "exs.21_beach.beach_stage_structure_right",
+      "basename": "21_Beach_16x16_Stage_Structure_Right.png",
+      "dx": 4,
+      "dy": 0,
+      "w": 16,
+      "h": 144,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "north"
+    },
+    {
+      "role": "spotlight_left",
+      "me": "me.beach.stage_spotlight",
+      "exs": "exs.21_beach.beach_stage_structure_spotlight_modular_left_1",
+      "basename": "21_Beach_16x16_Stage_Structure_Spotlight_Modular_Left_1.png",
+      "dx": 5,
+      "dy": 1,
+      "w": 16,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "north"
+    },
+    {
+      "role": "spotlight_right",
+      "me": "me.beach.stage_spotlight",
+      "exs": "exs.21_beach.beach_stage_structure_spotlight_modular_right_1",
+      "basename": "21_Beach_16x16_Stage_Structure_Spotlight_Modular_Right_1.png",
+      "dx": 6,
+      "dy": 1,
+      "w": 16,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "north"
+    },
+    {
+      "role": "dj_booth",
+      "me": "me.beach.dj_set",
+      "exs": "exs.21_beach.beach_dj_set",
+      "basename": "21_Beach_16x16_DJ_Set.png",
+      "dx": 3,
+      "dy": 6,
+      "w": 48,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "south",
+      "notes": "Placed downstage-center, in front of the truss, facing the crowd."
+    },
+    {
+      "role": "pa_speaker_left",
+      "me": "me.beach.speaker_big",
+      "exs": "exs.21_beach.beach_big_loudspeaker_1_cable_sand",
+      "basename": "21_Beach_16x16_Big_Loudspeaker_1_Cable_Sand.png",
+      "dx": 0,
+      "dy": 6,
+      "w": 48,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "pa_speaker_right",
+      "me": "me.beach.speaker_big",
+      "exs": "exs.21_beach.beach_big_loudspeaker_2_cable_sand",
+      "basename": "21_Beach_16x16_Big_Loudspeaker_2_Cable_Sand.png",
+      "dx": 7,
+      "dy": 6,
+      "w": 48,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "crowd_barrier",
+      "me": "me.beach.stage_barrier",
+      "exs": "exs.21_beach.beach_stage_barrier_1",
+      "basename": "21_Beach_16x16_Stage_Barrier_1.png",
+      "dx": 3,
+      "dy": 9,
+      "w": 32,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any",
+      "notes": "Front-of-stage crowd-control barrier; repeat sideways to close off the whole stage front."
+    }
+  ],
+  "variants": {
+    "truss_span": "Repeat truss_middle to widen the rig; move spotlight columns outward to match.",
+    "speaker_count": "PA speakers are optional; drop for a smaller acoustic/unplugged stage."
+  },
+  "interact": null,
+  "notes": "Curated composite scene combining the mechanically co-located truss+spotlight modular kit with the DJ/PA/barrier props that make the truss read as a working festival stage rather than a bare scaffold."
+}

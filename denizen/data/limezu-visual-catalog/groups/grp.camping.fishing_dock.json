@@ -1,0 +1,90 @@
+{
+  "id": "grp.camping.fishing_dock",
+  "name": "Fishing dock corner (fish crates + fish bucket + baited rod spot)",
+  "biome": "camping",
+  "category": "recreation",
+  "surface": "ground",
+  "facing": "south",
+  "solid": false,
+  "source_me_ids": [
+    "me.camping.fish_crate",
+    "me.camping.fish_bucket",
+    "me.camping.fishing_spot"
+  ],
+  "footprint_tiles": {
+    "w": 5,
+    "h": 4
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; crates are stacked against the back, with the bucket and fishing spot toward the water's edge. Height is 4, not 3: fishing_spot (dy=0, 64px/4-tile-tall sprite) needs rows 0-3."
+  },
+  "offset_basis_summary": "Fish_Crate_1 and Fish_Crate_4 are two vertically-stacked tiles of the same crate stack on the 11_Camping sheet (x240, y208/208->240 diff), so that pair is sheet_relative. The fish bucket and fishing rod spot live in separate sheet regions, so their placement beside the crates is hand-authored.",
+  "pieces": [
+    {
+      "role": "crate_stack_bottom",
+      "me": "me.camping.fish_crate",
+      "exs": "exs.11_camping.camping_fish_crate_1",
+      "basename": "ME_Singles_Camping_16x16_Fish_Crate_1.png",
+      "dx": 0,
+      "dy": 1,
+      "w": 32,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    },
+    {
+      "role": "crate_stack_top",
+      "me": "me.camping.fish_crate",
+      "exs": "exs.11_camping.camping_fish_crate_4",
+      "basename": "ME_Singles_Camping_16x16_Fish_Crate_4.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 32,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "south",
+      "notes": "Second crate variant from the same vertical run on the sheet; stacked visually atop crate_stack_bottom, sharing its collider (dy=0 vs dy=1 on a 32px-tall sprite is a 50% footprint overlap, so only the bottom crate is solid -- two full colliders here would be check-city-plan.py OVERLAP every time this recipe compiles)."
+    },
+    {
+      "role": "fish_bucket",
+      "me": "me.camping.fish_bucket",
+      "exs": "exs.11_camping.camping_fish_bucket_1",
+      "basename": "ME_Singles_Camping_16x16_Fish_Bucket_1.png",
+      "dx": 2,
+      "dy": 1,
+      "w": 16,
+      "h": 32,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "fishing_spot",
+      "me": "me.camping.fishing_spot",
+      "exs": "exs.11_camping.camping_fishing_spot_1",
+      "basename": "ME_Singles_Camping_16x16_Fishing_Spot_1.png",
+      "dx": 3,
+      "dy": 0,
+      "w": 32,
+      "h": 64,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "south",
+      "interact": "fish",
+      "notes": "Baited rod + ripple prop marking the water's edge; place at the dock's water-facing side."
+    }
+  ],
+  "variants": {
+    "crate_count": "Add crate_stack_middle (fish_crate_2/3) between bottom/top for a taller pile.",
+    "fishing_spot_variant": "fishing_spot_2/3 offer alternate rod angles for corners vs. straight edges."
+  },
+  "interact": "fish",
+  "notes": "Composite dock-corner scene: the two-crate sheet_relative pair anchors the pile while the bucket and baited fishing spot (hand-placed) complete a small working fishing nook."
+}

@@ -1,0 +1,685 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://denizen.local/schemas/limezu/placement-rules.schema.json",
+  "title": "LimeZu exterior placement rules",
+  "description": "Validation schema for data/limezu-visual-catalog/placement-rules.json — the L1/L3 semantics layer of the exterior placement brain (roles, surfaces, mounts, biomes, palettes, interactions, density, slots, match/set rules). Also validates the per-asset rule objects that W1-A writes into me-placement-enriched.jsonl (see $defs.assetRule) and the district specs the compiler consumes (see $defs.districtSpec).",
+  "type": "object",
+  "required": ["version", "pack", "tile_px", "roles", "surfaces", "biomes", "theme_biomes", "palettes", "interact", "density", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "pack": { "type": "string", "const": "limezu_modern_exteriors" },
+    "scope": { "type": "string" },
+    "authored_by": { "type": "string" },
+    "_doc": { "$ref": "#/$defs/doc" },
+    "tile_px": { "type": "integer", "enum": [16] },
+    "world_size": { "$ref": "#/$defs/size" },
+    "generated_at": { "type": "string" },
+
+    "roles": {
+      "type": "object",
+      "description": "Role id -> role definition. Exactly one role per catalog asset.",
+      "minProperties": 2,
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/roleDef" } },
+      "additionalProperties": false
+    },
+
+    "surfaces": {
+      "type": "object",
+      "description": "The ground surfaces the renderer can paint. Keys must be the canonical five.",
+      "required": ["grass", "sand", "sidewalk", "asphalt", "water"],
+      "properties": {
+        "_doc": { "$ref": "#/$defs/doc" },
+        "grass": { "$ref": "#/$defs/surfaceDef" },
+        "sand": { "$ref": "#/$defs/surfaceDef" },
+        "sidewalk": { "$ref": "#/$defs/surfaceDef" },
+        "asphalt": { "$ref": "#/$defs/surfaceDef" },
+        "water": { "$ref": "#/$defs/surfaceDef" }
+      },
+      "additionalProperties": false
+    },
+
+    "mounts": {
+      "type": "object",
+      "description": "Non-ground attachment surfaces (relative placement against another stamp).",
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/mountDef" } },
+      "additionalProperties": false
+    },
+
+    "biomes": {
+      "type": "object",
+      "minProperties": 2,
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/biomeDef" } },
+      "additionalProperties": false
+    },
+
+    "theme_biomes": {
+      "type": "object",
+      "description": "All 24 LimeZu Modern Exteriors theme sheets mapped to biomes. Keys must match registry.jsonl `sheet` values exactly (note the upstream typo in 23_MIlitary_Base).",
+      "required": [
+        "1_Terrains_and_Fences", "2_City_Terrains", "3_City_Props", "4_Generic_Buildings",
+        "5_Floor_Modular_Buildings", "6_Garage_Sales", "7_Villas", "8_Worksite",
+        "9_Shopping_Center_and_Markets", "10_Vehicles", "11_Camping", "12_Hotel_and_Hospital",
+        "13_School", "14_Swimming_Pool", "15_Police_Station", "16_Office", "17_Garden",
+        "18_Fire_Station", "19_Graveyard", "20_Subway_and_Train_Station", "21_Beach",
+        "22_Post_Office", "23_MIlitary_Base", "24_Additional_Houses"
+      ],
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^\\d{1,2}_[A-Za-z_]+$": { "$ref": "#/$defs/themeBiomeDef" } },
+      "additionalProperties": false
+    },
+
+    "palettes": {
+      "type": "object",
+      "minProperties": 2,
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/paletteDef" } },
+      "additionalProperties": false
+    },
+
+    "color_tokens": {
+      "type": "array",
+      "description": "Colour words that actually occur in exs.* ids; the vocabulary palettes may weight.",
+      "items": { "type": "string", "pattern": "^[a-z]+$" },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+
+    "interact": {
+      "type": "object",
+      "description": "Runtime interaction contract. sit/enter/read/shop/play are the core set wired by W4-A.",
+      "required": ["sit", "enter", "read", "shop", "play"],
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/interactDef" } },
+      "additionalProperties": false
+    },
+
+    "density": {
+      "type": "object",
+      "description": "Fill intensity levels, ordered sparse -> packed.",
+      "required": ["sparse", "light", "medium", "dense", "packed"],
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/densityDef" } },
+      "additionalProperties": false
+    },
+
+    "slots": {
+      "type": "object",
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/slotDef" } },
+      "additionalProperties": false
+    },
+
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "collision": { "$ref": "#/$defs/collision" },
+        "align": { "$ref": "#/$defs/align" },
+        "depth": { "$ref": "#/$defs/depth" },
+        "palette_tolerance": { "type": "number", "minimum": 0, "maximum": 1 },
+        "biome_fallback": { "type": "string" },
+        "reject_on": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "rules": {
+      "type": "array",
+      "description": "Ordered match -> set rules used by the W1-A enrichment pass. Lower priority runs first; later matches override earlier `set` keys.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/matchRule" }
+    },
+
+    "example_rules": {
+      "type": "object",
+      "description": "Worked per-asset examples of what enrichment must produce.",
+      "properties": { "_doc": { "$ref": "#/$defs/doc" } },
+      "patternProperties": { "^(me|exs|grp)\\.[a-z0-9_]+\\.[a-z0-9_]+$": { "$ref": "#/$defs/assetRule" } },
+      "additionalProperties": false
+    },
+
+    "example_district_spec": { "$ref": "#/$defs/districtSpec" }
+  },
+
+  "$defs": {
+    "doc": {
+      "description": "Prose documentation; a string or an array of lines.",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ]
+    },
+
+    "size": {
+      "type": "object",
+      "required": ["w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "rect": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "integer" },
+        "y": { "type": "integer" },
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 },
+        "why": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "point": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": { "x": { "type": "integer" }, "y": { "type": "integer" } }
+    },
+
+    "surfaceId": { "type": "string", "enum": ["grass", "sand", "sidewalk", "asphalt", "water"] },
+    "mountId": { "type": "string", "enum": ["wall", "roof", "air", "none"] },
+    "anchor": {
+      "type": "string",
+      "description": "Stamp origin, matching check-city-plan.py / full-world.js: bl = bottom-left (default), bc = bottom-centre, tl = top-left.",
+      "enum": ["bl", "bc", "tl"]
+    },
+    "collision": { "type": "string", "enum": ["solid", "footprint", "none"] },
+    "align": { "type": "string", "enum": ["tile16", "tile32", "free"] },
+    "layer": { "type": "string", "enum": ["ground", "structure", "attach", "overhead", "scatter", "meta"] },
+    "emitAs": {
+      "type": "string",
+      "description": "Which array of the city-plan fragment this asset lands in.",
+      "enum": ["stamp", "patch", "run", "anim", "npc", "portal", "solid"]
+    },
+    "facing": { "type": "string", "enum": ["north", "south", "east", "west", "any"] },
+    "densityId": { "type": "string", "enum": ["sparse", "light", "medium", "dense", "packed"] },
+    "interactId": { "type": "string", "enum": ["sit", "enter", "read", "shop", "play", "board"] },
+
+    "depth": {
+      "type": "object",
+      "description": "Render depth. y_sort mirrors full-world.js's default of depth = baseline y; fixed is for floor paint under all stamps.",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "type": "string", "enum": ["y_sort", "y_sort_bias", "fixed"] },
+        "bias": { "type": "number" },
+        "value": { "type": "number" }
+      },
+      "allOf": [
+        { "if": { "properties": { "mode": { "const": "fixed" } }, "required": ["mode"] }, "then": { "required": ["value"] } },
+        { "if": { "properties": { "mode": { "const": "y_sort_bias" } }, "required": ["mode"] }, "then": { "required": ["bias"] } }
+      ]
+    },
+
+    "requires": {
+      "type": "object",
+      "description": "Hard constraints the compiler must satisfy before a candidate may be placed; QA (W4-C) re-checks them on the merged plan.",
+      "additionalProperties": false,
+      "properties": {
+        "on_surface": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" } },
+        "boundary_between": { "type": "integer", "minimum": 2, "maximum": 2 },
+        "over_role": { "type": "string" },
+        "abuts_role": { "type": "string" },
+        "max_offset_px": { "type": "integer", "minimum": 0 },
+        "near_slot": { "type": "array", "items": { "type": "string" } },
+        "max_dist_px": { "type": "integer", "minimum": 0 },
+        "reachable_from_surface": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" } },
+        "street_frontage": { "type": "boolean" },
+        "setback_tiles": {
+          "type": "array",
+          "description": "[min, max] tiles of gap between the stamp and the street it faces.",
+          "items": { "type": "integer", "minimum": 0 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "clear_apron_px": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "roleDef": {
+      "type": "object",
+      "required": ["label", "desc", "layer", "anchor", "collision", "depth"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "desc": { "type": "string" },
+        "layer": { "$ref": "#/$defs/layer" },
+        "surfaces": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" }, "uniqueItems": true },
+        "mounts": { "type": "array", "items": { "$ref": "#/$defs/mountId" }, "uniqueItems": true },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "align": { "$ref": "#/$defs/align" },
+        "collision": { "$ref": "#/$defs/collision" },
+        "depth": { "$ref": "#/$defs/depth" },
+        "spacing_px": { "type": "integer", "minimum": 0 },
+        "group_only": { "type": "boolean" },
+        "interact_default": { "oneOf": [{ "$ref": "#/$defs/interactId" }, { "type": "null" }] },
+        "categories": {
+          "type": "array",
+          "description": "registry.jsonl `category` values that auto-map to this role in W1-A.",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "tags_any": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "emit_as": { "$ref": "#/$defs/emitAs" },
+        "requires": { "$ref": "#/$defs/requires" },
+        "facing_default": { "$ref": "#/$defs/facing" },
+        "overhang_px": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "minItems": 2, "maxItems": 2 },
+        "max_per_district": { "type": "integer", "minimum": 1 },
+        "notes": { "type": "string" }
+      },
+      "anyOf": [
+        { "required": ["surfaces"] },
+        { "required": ["mounts"] },
+        { "properties": { "layer": { "const": "meta" } }, "required": ["layer"] }
+      ]
+    },
+
+    "surfaceDef": {
+      "type": "object",
+      "required": ["label", "walkable", "registry_aliases"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "tile": {
+          "description": "full-world.js TILE_KEYS name, or null when the surface is emitted as an animBand.",
+          "oneOf": [{ "type": "string" }, { "type": "null" }]
+        },
+        "walkable": { "type": "boolean" },
+        "paintable": { "type": "boolean" },
+        "default_depth": { "type": "number" },
+        "registry_aliases": {
+          "type": "array",
+          "description": "Free-text `surface` values from registry.jsonl folded onto this canonical surface.",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "roles_allowed": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "mountDef": {
+      "type": "object",
+      "required": ["label", "registry_aliases"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "registry_aliases": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "attach_to_role": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "max_offset_px": { "type": "integer", "minimum": 0 },
+        "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "biomeDef": {
+      "type": "object",
+      "required": ["label", "desc", "themes", "surfaces", "palettes"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "desc": { "type": "string" },
+        "themes": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "surfaces": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" }, "minItems": 1, "uniqueItems": true },
+        "palettes": {
+          "type": "array",
+          "description": "Palette ids in affinity order; the first is the district default.",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "districts": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "density": {
+          "type": "object",
+          "description": "Default fill level per role for districts in this biome.",
+          "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/densityId" } },
+          "additionalProperties": false
+        },
+        "forbid_tags": {
+          "type": "array",
+          "description": "Tag tokens that must not appear in this biome; the QA biome-violation check fails on them.",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "require_roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "themeBiomeDef": {
+      "type": "object",
+      "required": ["primary"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": { "type": "string" },
+        "also": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+
+    "paletteDef": {
+      "type": "object",
+      "required": ["label", "tokens"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "tokens": {
+          "type": "object",
+          "description": "colour token -> affinity 0..1.",
+          "minProperties": 1,
+          "patternProperties": { "^[a-z]+$": { "type": "number", "minimum": 0, "maximum": 1 } },
+          "additionalProperties": false
+        },
+        "avoid": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "interactDef": {
+      "type": "object",
+      "required": ["label", "desc", "roles", "runtime"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "desc": { "type": "string" },
+        "roles": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "tags_any": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "anchor": {
+          "type": "string",
+          "description": "Which derived point on the sprite the player interacts from.",
+          "enum": ["seat_point", "door_point", "front_point", "counter_point"]
+        },
+        "emits": { "type": "string", "enum": ["portal", "solid", "npc"] },
+        "pairs_with": { "type": "string" },
+        "runtime": {
+          "type": "string",
+          "description": "Whether src/full-world.js already handles this interaction.",
+          "enum": ["wired", "partial", "planned"]
+        }
+      }
+    },
+
+    "densityDef": {
+      "type": "object",
+      "required": ["target_coverage", "min_spacing_mult", "props_per_kilopx2"],
+      "additionalProperties": false,
+      "properties": {
+        "target_coverage": { "type": "number", "minimum": 0, "maximum": 1 },
+        "min_spacing_mult": { "type": "number", "exclusiveMinimum": 0 },
+        "props_per_kilopx2": { "type": "number", "minimum": 0 },
+        "jitter_px": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "slotDef": {
+      "type": "object",
+      "required": ["label", "roles"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "derived_from": {
+          "type": "string",
+          "description": "Where the compiler gets the slot geometry: from the spec, from plan arrays, or from a surface boundary.",
+          "enum": ["spec", "patches", "roads", "building_shell", "surface_boundary"]
+        },
+        "between": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" }, "minItems": 2, "maxItems": 2 },
+        "band_px": { "type": "integer", "minimum": 1 },
+        "roles": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "matchRule": {
+      "type": "object",
+      "required": ["id", "priority", "match", "set"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^rule\\.[a-z0-9_]+\\.[a-z0-9_]+$" },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "match": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "categories": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "sheets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "tags_any": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "tags_all": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "tags_none": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "surface_any": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "not_surface_any": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "id_prefix": { "type": "string" },
+            "name_regex": { "type": "string", "format": "regex" },
+            "multi_tile": { "type": "boolean" },
+            "band": { "type": "array", "items": { "type": "integer", "minimum": 0 }, "uniqueItems": true }
+          }
+        },
+        "set": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "role": { "type": "string" },
+            "surfaces": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" }, "uniqueItems": true },
+            "mount": { "$ref": "#/$defs/mountId" },
+            "anchor": { "$ref": "#/$defs/anchor" },
+            "align": { "$ref": "#/$defs/align" },
+            "collision": { "$ref": "#/$defs/collision" },
+            "depth": { "$ref": "#/$defs/depth" },
+            "interact": { "oneOf": [{ "$ref": "#/$defs/interactId" }, { "type": "null" }] },
+            "facing": { "$ref": "#/$defs/facing" },
+            "slots": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "group_only": { "type": "boolean" },
+            "placeable": { "type": "boolean" },
+            "emit_as": { "$ref": "#/$defs/emitAs" },
+            "emits": { "type": "string" },
+            "clear_apron_px": { "type": "integer", "minimum": 0 },
+            "spacing_px": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "why": {
+          "type": "string",
+          "description": "Why the rule exists — cites the grammar / QA check it protects."
+        }
+      }
+    },
+
+    "assetRule": {
+      "type": "object",
+      "description": "Fully resolved placement rule for one catalog asset. This is the row shape of me-placement-enriched.jsonl (W1-A).",
+      "required": ["role"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^(me|exs|grp)\\." },
+        "name": { "type": "string" },
+        "sheet": { "type": "string" },
+        "img": { "type": "string" },
+        "exs": { "type": "string" },
+        "size_px": { "$ref": "#/$defs/size" },
+        "role": { "type": "string" },
+        "biomes": { "$ref": "#/$defs/themeBiomeDef" },
+        "palettes": {
+          "type": "object",
+          "patternProperties": { "^[a-z][a-z0-9_]*$": { "type": "number", "minimum": 0, "maximum": 1 } },
+          "additionalProperties": false
+        },
+        "surfaces": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" }, "uniqueItems": true },
+        "forbid_surfaces": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" }, "uniqueItems": true },
+        "mount": { "$ref": "#/$defs/mountId" },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "align": { "$ref": "#/$defs/align" },
+        "collision": { "$ref": "#/$defs/collision" },
+        "footprint_px": { "$ref": "#/$defs/size" },
+        "depth": { "$ref": "#/$defs/depth" },
+        "spacing_px": { "type": "integer", "minimum": 0 },
+        "slots": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "density_by_slot": {
+          "type": "object",
+          "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/densityId" } },
+          "additionalProperties": false
+        },
+        "jitter_px": { "type": "integer", "minimum": 0 },
+        "interact": { "oneOf": [{ "$ref": "#/$defs/interactId" }, { "type": "null" }] },
+        "pairs_with": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "group_only": { "type": "boolean" },
+        "placeable": { "type": "boolean" },
+        "requires": { "$ref": "#/$defs/requires" },
+        "variants": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "family": { "type": "string" },
+            "siblings": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "pick": { "type": "string", "enum": ["first", "random", "weighted_palette", "round_robin"] }
+          }
+        },
+        "notes": { "type": "string" },
+        "derived_from": {
+          "type": "array",
+          "description": "Provenance: which rules / maps produced this row.",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "districtSpec": {
+      "type": "object",
+      "description": "Compiler-driven district spec (data/city-specs/d*-compiler*.json). Declares intent — biome, palette, surfaces, slots, densities — instead of hand stamps.",
+      "required": ["district", "bbox", "biome"],
+      "additionalProperties": false,
+      "properties": {
+        "_doc": { "$ref": "#/$defs/doc" },
+        "district": { "type": "string" },
+        "compiler": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "version": { "type": "integer", "minimum": 1 },
+            "rules": { "type": "string" },
+            "seed": { "type": "integer" }
+          }
+        },
+        "bbox": { "$ref": "#/$defs/rect" },
+        "biome": { "type": "string" },
+        "palette": { "type": "string" },
+        "palette_secondary": { "type": "string" },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["surface", "x", "y", "w", "h"],
+            "additionalProperties": false,
+            "properties": {
+              "surface": { "$ref": "#/$defs/surfaceId" },
+              "x": { "type": "integer" },
+              "y": { "type": "integer" },
+              "w": { "type": "integer", "minimum": 1 },
+              "h": { "type": "integer", "minimum": 1 },
+              "depth": { "type": "number" },
+              "anim": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          }
+        },
+        "roads": { "type": "array", "items": { "$ref": "#/$defs/rect" } },
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["slot"],
+            "additionalProperties": false,
+            "properties": {
+              "slot": { "type": "string" },
+              "name": { "type": "string" },
+              "surface": { "$ref": "#/$defs/surfaceId" },
+              "between": { "type": "array", "items": { "$ref": "#/$defs/surfaceId" }, "minItems": 2, "maxItems": 2 },
+              "x": { "type": "integer" },
+              "y": { "type": "integer" },
+              "w": { "type": "integer", "minimum": 1 },
+              "h": { "type": "integer", "minimum": 1 },
+              "density": {
+                "type": "object",
+                "patternProperties": { "^[a-z][a-z0-9_]*$": { "$ref": "#/$defs/densityId" } },
+                "additionalProperties": false
+              },
+              "palette": { "type": "string" },
+              "allow_roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+              "deny_roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+            }
+          }
+        },
+        "landmarks": { "type": "array", "items": { "$ref": "#/$defs/placement" } },
+        "groups": { "type": "array", "items": { "$ref": "#/$defs/placement" } },
+        "stamps": {
+          "type": "array",
+          "description": "Escape hatch: hand-pinned stamps in the existing d*.json format, passed through untouched.",
+          "items": { "type": "object" }
+        },
+        "interactions": {
+          "type": "object",
+          "description": "interact type -> \"auto\" or an explicit list of ids to wire.",
+          "patternProperties": {
+            "^(sit|enter|read|shop|play|board)$": {
+              "oneOf": [
+                { "type": "string", "const": "auto" },
+                { "type": "array", "items": { "type": "string" } }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "constraints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "keep_clear": { "type": "array", "items": { "$ref": "#/$defs/rect" } },
+            "max_stamps": { "type": "integer", "minimum": 1 },
+            "coverage_target_singles": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "placement": {
+      "type": "object",
+      "description": "One explicit placement request inside a district spec: a pinned asset/group, or N copies scattered into a slot.",
+      "additionalProperties": false,
+      "properties": {
+        "me": { "type": "string", "pattern": "^me\\." },
+        "exs": { "type": "string", "pattern": "^exs\\." },
+        "grp": { "type": "string", "pattern": "^grp\\." },
+        "role": { "type": "string" },
+        "at": { "$ref": "#/$defs/point" },
+        "anchor": { "$ref": "#/$defs/anchor" },
+        "pin": { "type": "boolean" },
+        "slot": { "type": "string" },
+        "count": { "type": "integer", "minimum": 1 },
+        "palette": { "type": "string" },
+        "interact": { "$ref": "#/$defs/interactId" },
+        "prefer": { "type": "string" },
+        "solid": { "type": "boolean" }
+      },
+      "oneOf": [
+        { "required": ["me"] },
+        { "required": ["exs"] },
+        { "required": ["grp"] },
+        { "required": ["role"] }
+      ],
+      "anyOf": [
+        { "required": ["at"] },
+        { "required": ["slot"] }
+      ]
+    }
+  }
+}

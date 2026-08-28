@@ -1,0 +1,113 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d4-foodmarket.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d4-commercial.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d4-compiled",
+ "district": "D4 Plaza Food Market & Canal",
+ "biome": "commercial",
+ "palette": "festive_market",
+ "palette_secondary": "warm_autumn",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 104001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d4-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 400,
+  "y": 2000,
+  "w": 1104,
+  "h": 1056
+ },
+ "label": "PLAZA FOOD MARKET & CANAL",
+ "label_at": {
+  "x": 550,
+  "y": 20
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 1104,
+   "h": 448,
+   "depth": 0.9,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "asphalt",
+   "x": 0,
+   "y": 432,
+   "w": 320,
+   "h": 304,
+   "depth": 0.9
+  },
+  {
+   "surface": "asphalt",
+   "x": 320,
+   "y": 432,
+   "w": 784,
+   "h": 304,
+   "depth": 0.9
+  },
+  {
+   "surface": "sidewalk",
+   "x": 528,
+   "y": 432,
+   "w": 64,
+   "h": 464,
+   "depth": 0.91
+  },
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 736,
+   "w": 1104,
+   "h": 160,
+   "depth": 0.9
+  },
+  {
+   "surface": "asphalt",
+   "x": 0,
+   "y": 896,
+   "w": 1104,
+   "h": 160,
+   "depth": 0.9
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 1072,
+   "h": 1024,
+   "density": {
+    "building_shell": "dense",
+    "canopy": "dense",
+    "furniture_ext": "medium",
+    "decor_small": "dense"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.commercial.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

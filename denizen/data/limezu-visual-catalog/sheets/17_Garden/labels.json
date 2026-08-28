@@ -1,0 +1,3390 @@
+{
+  "sheet": "17_Garden",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.garden.hedge_wall_1",
+      "name": "Hedge wall tileset style 1",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "hedge",
+        "wall",
+        "autotile"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grass_Wall_1_* straight/corner/T/cross"
+    },
+    {
+      "id": "me.garden.hedge_wall_1_flowered",
+      "name": "Flowered hedge wall style 1",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "hedge",
+        "flower",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        240
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grass_Wall_1_Flowered_*"
+    },
+    {
+      "id": "me.garden.hedge_wall_2",
+      "name": "Hedge wall tileset style 2",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "hedge",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        240
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grass_Wall_2_*"
+    },
+    {
+      "id": "me.garden.hedge_wall_2_flowered",
+      "name": "Flowered hedge wall style 2",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "hedge",
+        "flower",
+        "wall"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        260
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grass_Wall_2_Flowered_*"
+    },
+    {
+      "id": "me.garden.hedge_arch",
+      "name": "Hedge archways",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "hedge",
+        "arch"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grass_Arch_1\u20134"
+    },
+    {
+      "id": "me.garden.bush_round",
+      "name": "Round green bushes",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "bush",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Bush_1\u201323 dense shrubs"
+    },
+    {
+      "id": "me.garden.bush_potted",
+      "name": "Potted bushes / topiary spheres",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "bush",
+        "potted",
+        "topiary"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        300
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Bush_Potted_1\u20139"
+    },
+    {
+      "id": "me.garden.topiary_tiered",
+      "name": "Tiered ball topiary in pots",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "topiary",
+        "tiered",
+        "pot"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        320
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Stacked 1\u20133 ball topiaries"
+    },
+    {
+      "id": "me.garden.topiary_spiral",
+      "name": "Spiral / corkscrew topiary",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "topiary",
+        "spiral"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        320
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Spiral potted topiary"
+    },
+    {
+      "id": "me.garden.topiary_bear",
+      "name": "Bear topiary",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "topiary",
+        "animal",
+        "bear"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        340
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grass_Statue / topiary bear"
+    },
+    {
+      "id": "me.garden.topiary_elephant",
+      "name": "Elephant topiary",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "topiary",
+        "animal",
+        "elephant"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Elephant hedge sculptures"
+    },
+    {
+      "id": "me.garden.topiary_horse",
+      "name": "Horse / llama topiary",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "topiary",
+        "animal",
+        "horse"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horse/llama hedge sculptures"
+    },
+    {
+      "id": "me.garden.topiary_big_cat",
+      "name": "Lion / panther topiary",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "topiary",
+        "animal",
+        "cat"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Big-cat hedge sculptures"
+    },
+    {
+      "id": "me.garden.gate_iron",
+      "name": "Wrought-iron garden gates",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "gate",
+        "iron"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        360
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Gate_1\u20134 open/closed"
+    },
+    {
+      "id": "me.garden.statue_putto",
+      "name": "Cherub / putto statues",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "putto",
+        "cherub"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        420
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Statue_Putto_1\u20138"
+    },
+    {
+      "id": "me.garden.statue_angel_standing",
+      "name": "Standing angel statues",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "angel"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Statue_Angel / Angel_Statue"
+    },
+    {
+      "id": "me.garden.fountain_wall",
+      "name": "Wall / pedestal basin fountains",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "fountain",
+        "wall",
+        "basin"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        440
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Fountain_2_* small basins"
+    },
+    {
+      "id": "me.garden.fountain_maiden",
+      "name": "Maiden jug fountain statues",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "fountain",
+        "statue",
+        "maiden"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Fountain_3_* women with jugs"
+    },
+    {
+      "id": "me.garden.fountain_tiered",
+      "name": "Tiered circular stone fountains",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "fountain",
+        "tiered"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Fountain_1_* multi-tier; dry/water/color variants"
+    },
+    {
+      "id": "me.garden.statue_grey",
+      "name": "Grey garden figure statue",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey_Statue"
+    },
+    {
+      "id": "me.garden.statue_light_brown",
+      "name": "Light brown garden figure statue",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Light_Brown_Statue"
+    },
+    {
+      "id": "me.garden.vase_red_empty",
+      "name": "Red flower vases empty",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "vase",
+        "red",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        480
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Red_Vase_1\u20132 empty"
+    },
+    {
+      "id": "me.garden.vase_red_flowers",
+      "name": "Red vases with flowers",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "vase",
+        "red",
+        "flowers"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        500
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Red_Vase_*_Flowers stages"
+    },
+    {
+      "id": "me.garden.vase_blue_empty",
+      "name": "Blue flower vases empty",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "vase",
+        "blue",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        500
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Blue_Vase_*_Empty"
+    },
+    {
+      "id": "me.garden.vase_blue_flowers",
+      "name": "Blue vases with flowers",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "vase",
+        "blue",
+        "flowers"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Blue_Vase_* flower counts"
+    },
+    {
+      "id": "me.garden.tool_rake_red",
+      "name": "Red rakes",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "rake",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        520
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Red_Rake_1\u20132 + Ground_Red_Rake"
+    },
+    {
+      "id": "me.garden.tool_rake_yellow",
+      "name": "Yellow rakes",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "rake",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        520
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Yellow_Rake + Ground_Yellow_Rake"
+    },
+    {
+      "id": "me.garden.tool_rake_blue",
+      "name": "Blue rakes",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "rake",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        520
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Ground_Blue_Rake"
+    },
+    {
+      "id": "me.garden.tool_rake_green",
+      "name": "Green rakes",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "rake",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        520
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Ground_Green_Rake"
+    },
+    {
+      "id": "me.garden.tool_shovel_red",
+      "name": "Red shovels",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "shovel",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        540
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Ground_Red_Shovel"
+    },
+    {
+      "id": "me.garden.tool_shovel_brown",
+      "name": "Brown shovels",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "shovel",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        540
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Ground_Brown_Shovel"
+    },
+    {
+      "id": "me.garden.tool_watering_can_red",
+      "name": "Red watering cans",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "watering_can",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        540
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Red_Watering_Can empty/full L/R"
+    },
+    {
+      "id": "me.garden.tool_watering_can_yellow",
+      "name": "Yellow watering cans",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "watering_can",
+        "yellow"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        540
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Yellow_Watering_Can"
+    },
+    {
+      "id": "me.garden.tool_watering_can_green",
+      "name": "Green watering cans",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "watering_can",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        540
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Green_Watering_Can"
+    },
+    {
+      "id": "me.garden.tool_watering_can_grey",
+      "name": "Grey watering cans",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "watering_can",
+        "grey"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        560
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Grey_Watering_Can"
+    },
+    {
+      "id": "me.garden.tool_scissors",
+      "name": "Garden shears / scissors",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "scissors"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        540
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Scissors"
+    },
+    {
+      "id": "me.garden.birdhouse_big_blue",
+      "name": "Big blue birdhouse on post",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "blue",
+        "big"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue_Big_Bird_House"
+    },
+    {
+      "id": "me.garden.birdhouse_big_brown",
+      "name": "Big brown birdhouse on post",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "brown",
+        "big"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown_Big_Bird_House"
+    },
+    {
+      "id": "me.garden.birdhouse_big_red",
+      "name": "Big red birdhouse on post",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "red",
+        "big"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red_Big_Bird_House"
+    },
+    {
+      "id": "me.garden.birdhouse_big_pink",
+      "name": "Big pink birdhouse on post",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "pink",
+        "big"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pink_Big_Bird_House"
+    },
+    {
+      "id": "me.garden.birdhouse_little_blue",
+      "name": "Little blue birdhouse",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "blue",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue_Little_Bird_House"
+    },
+    {
+      "id": "me.garden.birdhouse_little_brown",
+      "name": "Little brown birdhouse",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "brown",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown_Little_Bird_House"
+    },
+    {
+      "id": "me.garden.birdhouse_little_red",
+      "name": "Little red birdhouse",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "red",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red_Little_Bird_House"
+    },
+    {
+      "id": "me.garden.birdhouse_little_pink",
+      "name": "Little pink birdhouse",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "birdhouse",
+        "pink",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pink_Little_Bird_House"
+    },
+    {
+      "id": "me.garden.pillar_full",
+      "name": "Full classical stone pillars",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "pillar",
+        "column"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        620
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pillar_1\u20134 full columns two color sets"
+    },
+    {
+      "id": "me.garden.pillar_broken",
+      "name": "Broken / ruined pillar stumps",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "pillar",
+        "broken",
+        "ruin"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        620
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Pillar_Broken_1\u20134"
+    },
+    {
+      "id": "me.garden.pillar_modular",
+      "name": "Pillar modular bases/tops/segments",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "pillar",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        640
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Pillar_Modular_1\u201316"
+    },
+    {
+      "id": "me.garden.pergola_structure",
+      "name": "Pergola structure frame",
+      "category": "building",
+      "tags": [
+        "garden",
+        "pergola",
+        "structure"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pergola_Structure + Example"
+    },
+    {
+      "id": "me.garden.pergola_roof",
+      "name": "Pergola roof / lattice",
+      "category": "building",
+      "tags": [
+        "garden",
+        "pergola",
+        "roof"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Pergola_Roof + Modular"
+    },
+    {
+      "id": "me.garden.pergola_fence",
+      "name": "Pergola fence / trellis segments",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "pergola",
+        "fence",
+        "trellis"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        720
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Pergola_*_Fence pieces"
+    },
+    {
+      "id": "me.garden.wood_cart_big_empty",
+      "name": "Large empty wood cart",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "cart",
+        "wood",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Big_Wood_Cart_Empty"
+    },
+    {
+      "id": "me.garden.wood_cart_big_full",
+      "name": "Large wood cart loaded",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "cart",
+        "wood",
+        "full"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        740
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Big_Wood_Cart_Full_1\u20134"
+    },
+    {
+      "id": "me.garden.wood_cart_small_empty",
+      "name": "Small empty wood cart",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "cart",
+        "wood",
+        "small",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        540,
+        740
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Small_Wood_Cart_Empty"
+    },
+    {
+      "id": "me.garden.wood_cart_small_full",
+      "name": "Small wood cart loaded",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "cart",
+        "wood",
+        "small",
+        "full"
+      ],
+      "band": 0,
+      "y_hint": [
+        540,
+        760
+      ],
+      "surface": "ground",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Small_Wood_Cart_Full_1\u20133"
+    },
+    {
+      "id": "me.garden.wood_box_empty",
+      "name": "Empty wooden garden box",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "box",
+        "wood",
+        "empty"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        740
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Wood_Box_Empty"
+    },
+    {
+      "id": "me.garden.wood_box_full",
+      "name": "Full wooden garden boxes",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "box",
+        "wood",
+        "full"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        760
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Wood_Box_Full_1\u20134"
+    },
+    {
+      "id": "me.garden.wood_storage_brown",
+      "name": "Brown wood storage shed",
+      "category": "building",
+      "tags": [
+        "garden",
+        "shed",
+        "storage",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown_Wood_Storage + Door + Roof"
+    },
+    {
+      "id": "me.garden.wood_storage_white",
+      "name": "White wood storage shed",
+      "category": "building",
+      "tags": [
+        "garden",
+        "shed",
+        "storage",
+        "white"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White_Wood_Storage + Door + Roof"
+    },
+    {
+      "id": "me.garden.wood_storage_blue_brown",
+      "name": "Blue-brown wood storage shed",
+      "category": "building",
+      "tags": [
+        "garden",
+        "shed",
+        "storage",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue_Brown_Wood_Storage"
+    },
+    {
+      "id": "me.garden.wood_storage_blue_white",
+      "name": "Blue-white wood storage shed",
+      "category": "building",
+      "tags": [
+        "garden",
+        "shed",
+        "storage",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue_White_Wood_Storage"
+    },
+    {
+      "id": "me.garden.wood_storage_red_brown",
+      "name": "Red-brown wood storage shed",
+      "category": "building",
+      "tags": [
+        "garden",
+        "shed",
+        "storage",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red_Brown_Wood_Storage"
+    },
+    {
+      "id": "me.garden.wood_storage_red_white",
+      "name": "Red-white wood storage shed",
+      "category": "building",
+      "tags": [
+        "garden",
+        "shed",
+        "storage",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        768
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red_White_Wood_Storage"
+    },
+    {
+      "id": "me.garden.bench_big",
+      "name": "Big garden benches H/V",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "bench",
+        "big"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        700
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Big_Bench_Horizontal/Vertical"
+    },
+    {
+      "id": "me.garden.bench_medium",
+      "name": "Medium garden benches H/V",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "bench",
+        "medium"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        700
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Medium_Bench_Horizontal/Vertical"
+    },
+    {
+      "id": "me.garden.bench_small",
+      "name": "Small garden benches H/V",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "bench",
+        "small"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        720
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Small_Bench_Horizontal/Vertical"
+    },
+    {
+      "id": "me.garden.bench_square",
+      "name": "Square garden bench",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "bench",
+        "square"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        720
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Square_Bench"
+    },
+    {
+      "id": "me.garden.bench_flowers",
+      "name": "Flower-decorated benches",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "bench",
+        "flowers"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        740
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Flowers_Bench + Red_Flower_Bench + Sunflower_Bench"
+    },
+    {
+      "id": "me.garden.bench_plants",
+      "name": "Plant / sprout benches",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "bench",
+        "plants"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        740
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Plants_Bench + Sprout_Square_Bench"
+    },
+    {
+      "id": "me.garden.bench_vase_tools",
+      "name": "Benches with vases/tools",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "bench",
+        "vase",
+        "tools"
+      ],
+      "band": 0,
+      "y_hint": [
+        540,
+        760
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Vase_*_Bench variants"
+    },
+    {
+      "id": "me.garden.greenhouse_example_small",
+      "name": "Small greenhouse example assembly",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "example",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1100
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small_Greenhouse_Example / Layer full+empty"
+    },
+    {
+      "id": "me.garden.greenhouse_example_large",
+      "name": "Large greenhouse example assembly",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "example",
+        "large"
+      ],
+      "band": 1,
+      "y_hint": [
+        800,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large_Greenhouse_Example / Layer"
+    },
+    {
+      "id": "me.garden.greenhouse_see_through",
+      "name": "Greenhouse see-through overlays",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "see_through"
+      ],
+      "band": 1,
+      "y_hint": [
+        800,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small/Large_Greenhouse_See_Through"
+    },
+    {
+      "id": "me.garden.greenhouse_overgrown",
+      "name": "Overgrown vine-covered greenhouse",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "vines",
+        "overgrown"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        1150
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Exterior with hanging vines"
+    },
+    {
+      "id": "me.garden.greenhouse_interior",
+      "name": "Greenhouse interior furnished view",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "interior"
+      ],
+      "band": 1,
+      "y_hint": [
+        820,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Interior with shelves/plants/tools"
+    },
+    {
+      "id": "me.garden.greenhouse_structure_layer",
+      "name": "Greenhouse structure modular LAYER1",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "structure",
+        "modular",
+        "layer1"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1450
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Greenhouse_Structure_*_Layer frames/walls"
+    },
+    {
+      "id": "me.garden.greenhouse_structure_see_through",
+      "name": "Greenhouse structure see-through modular",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "structure",
+        "see_through"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1500
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Greenhouse_Structure_*_See_Through"
+    },
+    {
+      "id": "me.garden.greenhouse_glass_layer",
+      "name": "Greenhouse glass PANEL LAYER2",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "glass",
+        "modular",
+        "layer2"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1536
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Greenhouse_*_Glass_* roof/wall glass"
+    },
+    {
+      "id": "me.garden.greenhouse_floor_layer",
+      "name": "Greenhouse floor modular tiles",
+      "category": "terrain",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "floor",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1500
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Greenhouse_Floor_* wood floors"
+    },
+    {
+      "id": "me.garden.greenhouse_roof_layer",
+      "name": "Greenhouse roof modular tiles",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "roof",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1536
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Greenhouse_Roof_*"
+    },
+    {
+      "id": "me.garden.greenhouse_door",
+      "name": "Greenhouse door tiles",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "door"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1450
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Greenhouse_Door / Front_Door / Glass_Door"
+    },
+    {
+      "id": "me.garden.greenhouse_window",
+      "name": "Greenhouse window modular",
+      "category": "building",
+      "tags": [
+        "garden",
+        "greenhouse",
+        "window"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1500
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Greenhouse_Window_Modular / Glass_Window"
+    },
+    {
+      "id": "me.garden.wood_deck_platform",
+      "name": "Wooden decking platforms",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "deck",
+        "wood",
+        "platform"
+      ],
+      "band": 1,
+      "y_hint": [
+        780,
+        1000
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Modular plank platforms L/rect"
+    },
+    {
+      "id": "me.garden.ladder_wood",
+      "name": "Wooden ladders",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "ladder",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1150
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Greenhouse ladders tall/short"
+    },
+    {
+      "id": "me.garden.shelf_big",
+      "name": "Big plant shelf",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "shelf",
+        "plants"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Big_Shelf"
+    },
+    {
+      "id": "me.garden.shelf_flowers",
+      "name": "Flower display shelves",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "shelf",
+        "flowers"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flowers_Shelf_1\u20132"
+    },
+    {
+      "id": "me.garden.shelf_liana",
+      "name": "Liana / vine shelf",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "shelf",
+        "vine",
+        "liana"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Liana_Shelf"
+    },
+    {
+      "id": "me.garden.shelf_sprout_tools",
+      "name": "Sprout / tools shelf",
+      "category": "furniture",
+      "tags": [
+        "garden",
+        "shelf",
+        "sprout",
+        "tools"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sprout_Tools_Shelf"
+    },
+    {
+      "id": "me.garden.big_sunflower",
+      "name": "Big sunflower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "big",
+        "sunflower"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Sunflower"
+    },
+    {
+      "id": "me.garden.big_sunflower_vase",
+      "name": "Big sunflower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Sunflower_Vase"
+    },
+    {
+      "id": "me.garden.big_red_flower",
+      "name": "Big red flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "big",
+        "red"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Red_Flower"
+    },
+    {
+      "id": "me.garden.big_red_flower_vase",
+      "name": "Big red flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Red_Flower_Vase"
+    },
+    {
+      "id": "me.garden.big_pink_flower",
+      "name": "Big pink flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "big",
+        "pink"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Pink_Flower"
+    },
+    {
+      "id": "me.garden.big_pink_flower_vase",
+      "name": "Big pink flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Pink_Flower_Vase"
+    },
+    {
+      "id": "me.garden.big_white_flower",
+      "name": "Big white flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "big",
+        "white"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_White_Flower"
+    },
+    {
+      "id": "me.garden.big_white_flower_vase",
+      "name": "Big white flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_White_Flower_Vase"
+    },
+    {
+      "id": "me.garden.big_yellow_flower",
+      "name": "Big yellow flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "big",
+        "yellow"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Yellow_Flower"
+    },
+    {
+      "id": "me.garden.big_yellow_flower_vase",
+      "name": "Big yellow flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Yellow_Flower_Vase"
+    },
+    {
+      "id": "me.garden.big_light_blue_flower",
+      "name": "Big light blue flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "big",
+        "light"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Light_Blue_Flower"
+    },
+    {
+      "id": "me.garden.big_light_blue_flower_vase",
+      "name": "Big light blue flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Light_Blue_Flower_Vase"
+    },
+    {
+      "id": "me.garden.big_sprout",
+      "name": "Big sprouts (growth stages)",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "sprout",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Sprout_1\u20137"
+    },
+    {
+      "id": "me.garden.big_sprout_vase",
+      "name": "Big sprouts in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "sprout",
+        "vase",
+        "big"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big_Sprout_Vase_1\u20137"
+    },
+    {
+      "id": "me.garden.medium_sunflower",
+      "name": "Medium sunflower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "medium",
+        "sunflower"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Sunflower"
+    },
+    {
+      "id": "me.garden.medium_sunflower_vase",
+      "name": "Medium sunflower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Sunflower_Vase"
+    },
+    {
+      "id": "me.garden.medium_red_flower",
+      "name": "Medium red flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "medium",
+        "red"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Red_Flower"
+    },
+    {
+      "id": "me.garden.medium_red_flower_vase",
+      "name": "Medium red flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Red_Flower_Vase"
+    },
+    {
+      "id": "me.garden.medium_pink_flower",
+      "name": "Medium pink flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "medium",
+        "pink"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Pink_Flower"
+    },
+    {
+      "id": "me.garden.medium_pink_flower_vase",
+      "name": "Medium pink flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Pink_Flower_Vase"
+    },
+    {
+      "id": "me.garden.medium_white_flower",
+      "name": "Medium white flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "medium",
+        "white"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_White_Flower"
+    },
+    {
+      "id": "me.garden.medium_white_flower_vase",
+      "name": "Medium white flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_White_Flower_Vase"
+    },
+    {
+      "id": "me.garden.medium_yellow_flower",
+      "name": "Medium yellow flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "medium",
+        "yellow"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Yellow_Flower"
+    },
+    {
+      "id": "me.garden.medium_yellow_flower_vase",
+      "name": "Medium yellow flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Yellow_Flower_Vase"
+    },
+    {
+      "id": "me.garden.medium_light_blue_flower",
+      "name": "Medium light blue flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "medium",
+        "light"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Light_Blue_Flower"
+    },
+    {
+      "id": "me.garden.medium_light_blue_flower_vase",
+      "name": "Medium light blue flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Light_Blue_Flower_Vase"
+    },
+    {
+      "id": "me.garden.medium_sprout",
+      "name": "Medium sprouts (growth stages)",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "sprout",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Sprout_1\u20137"
+    },
+    {
+      "id": "me.garden.medium_sprout_vase",
+      "name": "Medium sprouts in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "sprout",
+        "vase",
+        "medium"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Medium_Sprout_Vase_1\u20137"
+    },
+    {
+      "id": "me.garden.small_sunflower",
+      "name": "Small sunflower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "small",
+        "sunflower"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Sunflower"
+    },
+    {
+      "id": "me.garden.small_sunflower_vase",
+      "name": "Small sunflower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Sunflower_Vase"
+    },
+    {
+      "id": "me.garden.small_red_flower",
+      "name": "Small red flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "small",
+        "red"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Red_Flower"
+    },
+    {
+      "id": "me.garden.small_red_flower_vase",
+      "name": "Small red flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Red_Flower_Vase"
+    },
+    {
+      "id": "me.garden.small_pink_flower",
+      "name": "Small pink flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "small",
+        "pink"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Pink_Flower"
+    },
+    {
+      "id": "me.garden.small_pink_flower_vase",
+      "name": "Small pink flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Pink_Flower_Vase"
+    },
+    {
+      "id": "me.garden.small_white_flower",
+      "name": "Small white flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "small",
+        "white"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_White_Flower"
+    },
+    {
+      "id": "me.garden.small_white_flower_vase",
+      "name": "Small white flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_White_Flower_Vase"
+    },
+    {
+      "id": "me.garden.small_yellow_flower",
+      "name": "Small yellow flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "small",
+        "yellow"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Yellow_Flower"
+    },
+    {
+      "id": "me.garden.small_yellow_flower_vase",
+      "name": "Small yellow flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Yellow_Flower_Vase"
+    },
+    {
+      "id": "me.garden.small_light_blue_flower",
+      "name": "Small light blue flower",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "flower",
+        "small",
+        "light"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Light_Blue_Flower"
+    },
+    {
+      "id": "me.garden.small_light_blue_flower_vase",
+      "name": "Small light blue flower in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "flower",
+        "vase",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Light_Blue_Flower_Vase"
+    },
+    {
+      "id": "me.garden.small_sprout",
+      "name": "Small sprouts (growth stages)",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "sprout",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Sprout_1\u20137"
+    },
+    {
+      "id": "me.garden.small_sprout_vase",
+      "name": "Small sprouts in vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "sprout",
+        "vase",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        880,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Sprout_Vase_1\u20137"
+    },
+    {
+      "id": "me.garden.pot_empty",
+      "name": "Empty terracotta pot",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "pot",
+        "empty"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Pot_1 / Vase_Empty"
+    },
+    {
+      "id": "me.garden.vase_full",
+      "name": "Full decorative vase",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "vase",
+        "full"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Vase_Full"
+    },
+    {
+      "id": "me.garden.vase_sprout",
+      "name": "Vase with sprout",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "vase",
+        "sprout"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Vase_Sprout"
+    },
+    {
+      "id": "me.garden.vase_tools",
+      "name": "Vase / tools upright props",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "vase",
+        "tools"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1240
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Vase_Tools_Vertical"
+    },
+    {
+      "id": "me.garden.hanging_vines",
+      "name": "Hanging vines / lianas",
+      "category": "nature",
+      "tags": [
+        "garden",
+        "vine",
+        "hanging"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1200
+      ],
+      "surface": "wall",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Vines for greenhouse walls"
+    },
+    {
+      "id": "me.garden.tool_watering_can_blue",
+      "name": "Blue watering cans (greenhouse)",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "watering_can",
+        "blue"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1200
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Blue cans near pots"
+    },
+    {
+      "id": "me.garden.tool_hand_trowel",
+      "name": "Hand trowels / small rakes",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "tool",
+        "trowel"
+      ],
+      "band": 1,
+      "y_hint": [
+        920,
+        1220
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Hand tools near pots"
+    },
+    {
+      "id": "me.garden.stairs_garden",
+      "name": "Garden stairs S/M/L",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "stairs",
+        "stone"
+      ],
+      "band": 1,
+      "y_hint": [
+        950,
+        1250
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small/Medium/Big_Stairs"
+    },
+    {
+      "id": "me.garden.palace_see_through_frame",
+      "name": "Palace/conservatory see-through frames",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "see_through",
+        "frame"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Blue-outlined LAYER see-through frames"
+    },
+    {
+      "id": "me.garden.palace_example_facade",
+      "name": "Grand palace / conservatory facade example",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "facade",
+        "example"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Palace_Example_1\u20132 large assembled facade"
+    },
+    {
+      "id": "me.garden.palace_roof_skylight",
+      "name": "Palace roof glass skylights",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "roof",
+        "skylight"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2000
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grid glass skylights on brown roof"
+    },
+    {
+      "id": "me.garden.palace_roof_ornament",
+      "name": "Palace roof golden ornaments",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "palace",
+        "roof",
+        "ornament",
+        "gold"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2000
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Golden sphere roof posts"
+    },
+    {
+      "id": "me.garden.palace_window_arched",
+      "name": "Palace arched windows",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "window",
+        "arched"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall arched windows with shutters/balconies"
+    },
+    {
+      "id": "me.garden.palace_balcony",
+      "name": "Palace stone balconies",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "balcony"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Balcony railings on facade"
+    },
+    {
+      "id": "me.garden.palace_column_white",
+      "name": "Palace white facade columns",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "column"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White neoclassical columns on facade"
+    },
+    {
+      "id": "me.garden.statue_angel_vines_light",
+      "name": "Praying angel statue light stone + vines",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "angel",
+        "vines",
+        "light"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2150
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Light grey angel with vines"
+    },
+    {
+      "id": "me.garden.statue_angel_vines_dark",
+      "name": "Praying angel statue dark stone + vines",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "angel",
+        "vines",
+        "dark"
+      ],
+      "band": 2,
+      "y_hint": [
+        1800,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark weathered angel with vines"
+    },
+    {
+      "id": "me.garden.statue_figure_vines_blue",
+      "name": "Vined figure fountain statue blue-grey",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "fountain",
+        "vines",
+        "blue"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        2000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small blue-grey vined figure"
+    },
+    {
+      "id": "me.garden.statue_figure_vines_tan",
+      "name": "Vined figure fountain statue tan",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "statue",
+        "fountain",
+        "vines",
+        "tan"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small tan vined figure"
+    },
+    {
+      "id": "me.garden.palace_door_frame",
+      "name": "Palace doorway frame segments",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "door",
+        "frame"
+      ],
+      "band": 2,
+      "y_hint": [
+        1550,
+        1750
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark frames with reddish doors"
+    },
+    {
+      "id": "me.garden.manor_facade_main",
+      "name": "Manor / museum main facade assembly",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "facade",
+        "main"
+      ],
+      "band": 3,
+      "y_hint": [
+        2400,
+        3000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full tan manor with roof/windows/entrance"
+    },
+    {
+      "id": "me.garden.manor_roof_topdown",
+      "name": "Manor roof top-down assembly",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "roof",
+        "topdown"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Bird's-eye dark roof with skylights"
+    },
+    {
+      "id": "me.garden.manor_skylight",
+      "name": "Manor roof skylights",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "skylight"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rectangular glass grid skylights"
+    },
+    {
+      "id": "me.garden.manor_roof_dormer",
+      "name": "Manor roof dormer windows",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "dormer"
+      ],
+      "band": 3,
+      "y_hint": [
+        2350,
+        2600
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small gabled dormers"
+    },
+    {
+      "id": "me.garden.manor_roof_cap",
+      "name": "Manor roof stone caps / vents",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "roof",
+        "cap"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "surface": "air",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Grey dome/stone roof caps"
+    },
+    {
+      "id": "me.garden.manor_window_arched",
+      "name": "Manor arched windows",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "window",
+        "arched"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2900
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue arched windows + shutters"
+    },
+    {
+      "id": "me.garden.manor_window_rect",
+      "name": "Manor rectangular windows",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "window",
+        "rectangular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2950
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Simple rectangular windows"
+    },
+    {
+      "id": "me.garden.manor_window_circle",
+      "name": "Manor circular porthole windows",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "window",
+        "circle"
+      ],
+      "band": 3,
+      "y_hint": [
+        2480,
+        2750
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small circular windows"
+    },
+    {
+      "id": "me.garden.manor_balcony",
+      "name": "Manor balconies with railings",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "balcony"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2900
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stone balconies"
+    },
+    {
+      "id": "me.garden.manor_column",
+      "name": "Manor white columns",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "column"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        3000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White columns flanking entrance"
+    },
+    {
+      "id": "me.garden.manor_entrance_door",
+      "name": "Manor entrance doors",
+      "category": "building",
+      "tags": [
+        "garden",
+        "manor",
+        "door",
+        "entrance"
+      ],
+      "band": 3,
+      "y_hint": [
+        2700,
+        3000
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Central arched/double doors"
+    },
+    {
+      "id": "me.garden.manor_stairs_wide",
+      "name": "Wide stone stairs with globe finials",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "manor",
+        "stairs"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Big_Stairs style with gold globes"
+    },
+    {
+      "id": "me.garden.manor_ornament_globe",
+      "name": "Golden globe pillar ornaments",
+      "category": "decor",
+      "tags": [
+        "garden",
+        "manor",
+        "ornament",
+        "globe",
+        "gold"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2500
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Gold spheres on stair/balcony pillars"
+    },
+    {
+      "id": "me.garden.palace_1_entrance_variant",
+      "name": "Palace entrance variant set 1",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "entrance",
+        "variant"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Palace_1_Entrance_Variant_1\u20134"
+    },
+    {
+      "id": "me.garden.palace_2_entrance_variant",
+      "name": "Palace entrance variant set 2",
+      "category": "building",
+      "tags": [
+        "garden",
+        "palace",
+        "entrance",
+        "variant"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2480
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Palace_2_Entrance_Variant_*"
+    },
+    {
+      "id": "me.garden.facade_door_plain",
+      "name": "Brown facade door+windows plain",
+      "category": "building",
+      "tags": [
+        "garden",
+        "facade",
+        "door",
+        "plain"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3136
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Door, windows, mat, lights; no columns"
+    },
+    {
+      "id": "me.garden.facade_door_columns_4",
+      "name": "Brown facade with 4 columns",
+      "category": "building",
+      "tags": [
+        "garden",
+        "facade",
+        "door",
+        "columns"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3136
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same facade + four white columns"
+    },
+    {
+      "id": "me.garden.facade_door_columns_2",
+      "name": "Brown facade with 2 columns",
+      "category": "building",
+      "tags": [
+        "garden",
+        "facade",
+        "door",
+        "columns"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3136
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Same facade + two columns by door"
+    },
+    {
+      "id": "me.garden.facade_arch_alcove",
+      "name": "Narrow facade arch/alcove segment",
+      "category": "building",
+      "tags": [
+        "garden",
+        "facade",
+        "arch",
+        "alcove"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3136
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stacked dark arched openings + column flanks"
+    },
+    {
+      "id": "me.garden.facade_doormat",
+      "name": "Brown entrance doormat",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "doormat"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3136
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Rectangular mat at door"
+    },
+    {
+      "id": "me.garden.facade_ground_light",
+      "name": "Yellow ground path lights",
+      "category": "prop",
+      "tags": [
+        "garden",
+        "light",
+        "ground"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3136
+      ],
+      "surface": "ground",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small glowing ground spheres"
+    },
+    {
+      "id": "me.garden.facade_column_white",
+      "name": "White cylindrical facade columns",
+      "category": "infra",
+      "tags": [
+        "garden",
+        "column",
+        "white"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3136
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Columns with dark square bases/caps"
+    }
+  ],
+  "row_guide": "Band0 (y0\u2013768): hedge walls plain+flowered styles 1\u20132, arches, bushes, potted/tiered/spiral topiary, animal topiaries (bear/elephant/horse/cat), iron gates; putto/angel statues, wall basins, maiden fountains, tiered fountains, grey/brown statues; red/blue vases empty+flowered; rakes/shovels/watering cans by color, shears; birdhouses big/little by color; pillars full/broken/modular; pergola structure/roof/fence; wood carts big/small empty/full, wood boxes; storage sheds brown/white/blue/red variants; benches big/med/small/square/decorated. Band1 (y768\u20131536): greenhouse examples small/large, see-through, overgrown, interior; structure/glass/floor/roof/door/window modular layers; wood decks, ladders, shelves; flowers+vases sunflower/red/pink/white/yellow/light-blue at big/med/small; sprouts+vases growth stages; pots, hanging vines, blue cans, hand tools, garden stairs. Band2 (y1536\u20132304): palace see-through frames; grand conservatory/palace facade example with skylights, roof ornaments, arched windows, balconies, columns; vined angel statues light/dark; vined figure statues blue/tan; door frames. Band3 (y2304\u20133072): manor main facade + roof topdown, skylights, dormers, roof caps; arched/rect/circle windows, balconies, columns, entrance; wide stairs + globe ornaments; palace entrance variants 1\u20132. Band4 (y3072\u20133136): brown facade strips plain / 4-col / 2-col / arch alcove; doormat, ground lights, white columns."
+}

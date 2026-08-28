@@ -1,0 +1,89 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d15-downtown.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d15-urban_core.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d15-compiled",
+ "district": "D15 Downtown & Hotel",
+ "biome": "urban_core",
+ "palette": "neutral_urban",
+ "palette_secondary": "night_neon",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 115001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d15-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 2000,
+  "y": 608,
+  "w": 512,
+  "h": 912
+ },
+ "label": "DOWNTOWN",
+ "label_at": {
+  "x": 240,
+  "y": 886
+ },
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0,
+   "y": 0,
+   "w": 512,
+   "h": 912,
+   "depth": 0.85,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "sidewalk",
+   "x": 16,
+   "y": 16,
+   "w": 480,
+   "h": 368,
+   "depth": 0.9
+  },
+  {
+   "surface": "sidewalk",
+   "x": 16,
+   "y": 480,
+   "w": 480,
+   "h": 416,
+   "depth": 0.9
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 480,
+   "h": 880,
+   "density": {
+    "building_shell": "packed",
+    "street_furn": "dense",
+    "vegetation": "sparse",
+    "decor_small": "medium"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.urban_core.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

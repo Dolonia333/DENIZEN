@@ -1,0 +1,1877 @@
+{
+  "sheet": "21_Beach",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.beach.terrain_sand_fill",
+      "name": "Sand fill / texture tiles",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "terrain",
+        "fill"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Solid sand squares with subtle grain/footprint textures"
+    },
+    {
+      "id": "me.beach.terrain_sand_grass_transition",
+      "name": "Sand\u2013grass transition tiles",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "grass",
+        "transition",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Edge/corner tiles where green grass meets yellow sand"
+    },
+    {
+      "id": "me.beach.terrain_sand_water_island",
+      "name": "Sand island / water edge tiles",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "water",
+        "island",
+        "shore"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        220
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Small sandy islets and sand surrounded by blue water with wave edges"
+    },
+    {
+      "id": "me.beach.terrain_sand_mound_small",
+      "name": "Small sand mound / mountain modular",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "mound",
+        "elevation",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        280
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Base_Single_Small_Sand_Mountain and small side modulars"
+    },
+    {
+      "id": "me.beach.bucket_red",
+      "name": "Red beach bucket",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "bucket",
+        "toy",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Red_Bucket"
+    },
+    {
+      "id": "me.beach.bucket_green",
+      "name": "Green / emerald beach bucket",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "bucket",
+        "toy",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Green_Bucket / Emerald"
+    },
+    {
+      "id": "me.beach.bucket_blue",
+      "name": "Blue / ice-white beach bucket",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "bucket",
+        "toy",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Blue_Bucket / Ice_White"
+    },
+    {
+      "id": "me.beach.bucket_yellow",
+      "name": "Yellow / pink / white beach bucket",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "bucket",
+        "toy",
+        "yellow",
+        "pink"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Yellow/Pink/White_Bucket row"
+    },
+    {
+      "id": "me.beach.shovel_red",
+      "name": "Red shovel (loose + insertable)",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "shovel",
+        "toy",
+        "red"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        140
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Red_Shovel (+ To_Insert)"
+    },
+    {
+      "id": "me.beach.shovel_green",
+      "name": "Green shovel (loose + insertable)",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "shovel",
+        "toy",
+        "green"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        140
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Green_Shovel"
+    },
+    {
+      "id": "me.beach.shovel_blue",
+      "name": "Blue shovel (loose + insertable)",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "shovel",
+        "toy",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        140
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small_Blue_Shovel"
+    },
+    {
+      "id": "me.beach.shovel_yellow",
+      "name": "Yellow / multicolor shovel",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "shovel",
+        "toy",
+        "yellow",
+        "multicolor"
+      ],
+      "band": 0,
+      "y_hint": [
+        20,
+        160
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Yellow and multicolor shovel variants"
+    },
+    {
+      "id": "me.beach.bucket_shovel_example",
+      "name": "Bucket with shovel example stamp",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "bucket",
+        "shovel",
+        "example",
+        "toy"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        160
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Example_Bucket_With_Shovel composite"
+    },
+    {
+      "id": "me.beach.sandcastle_simple",
+      "name": "Sandcastle simple mounds / towers",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "sandcastle",
+        "sand",
+        "toy"
+      ],
+      "band": 0,
+      "y_hint": [
+        40,
+        200
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sand_Castle_Tower and simple castle versions"
+    },
+    {
+      "id": "me.beach.sandcastle_flagged",
+      "name": "Sandcastle with flags",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "sandcastle",
+        "flag",
+        "toy"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        220
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sand_Castle with blue/red flag variants"
+    },
+    {
+      "id": "me.beach.sand_hole",
+      "name": "Sand hole",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "sand",
+        "hole",
+        "dig"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Sand_Hole dug pit"
+    },
+    {
+      "id": "me.beach.crab",
+      "name": "Beach crabs",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "crab",
+        "wildlife",
+        "sea"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        180
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small pink/blue/red crabs near toys"
+    },
+    {
+      "id": "me.beach.starfish",
+      "name": "Starfish set",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "starfish",
+        "shell",
+        "sea"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        200
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Big/small starfish in blue, green, purple, yellow"
+    },
+    {
+      "id": "me.beach.towel_blue",
+      "name": "Blue striped beach towel",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "towel",
+        "blue",
+        "relax"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Blue_Beach_Towel_1\u20132"
+    },
+    {
+      "id": "me.beach.towel_green",
+      "name": "Green striped beach towel",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "towel",
+        "green",
+        "relax"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Green_Beach_Towel"
+    },
+    {
+      "id": "me.beach.towel_purple_pink",
+      "name": "Purple / pink / multicolor towels",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "towel",
+        "purple",
+        "pink",
+        "multicolor",
+        "relax"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        240
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Purple/Multicolor/Grey towel variants"
+    },
+    {
+      "id": "me.beach.towel_yellow_grey",
+      "name": "Yellow / grey beach towels",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "towel",
+        "yellow",
+        "grey",
+        "relax"
+      ],
+      "band": 0,
+      "y_hint": [
+        120,
+        240
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Remaining towel colors in grid"
+    },
+    {
+      "id": "me.beach.shells_brown",
+      "name": "Brown seashells",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "shell",
+        "brown",
+        "sea"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        260
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Brown_Shell family"
+    },
+    {
+      "id": "me.beach.shells_gold",
+      "name": "Gold / gold-blue seashells",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "shell",
+        "gold",
+        "sea"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        280
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Gold_Shell / Gold_Blue_Shell"
+    },
+    {
+      "id": "me.beach.shells_pink_grey",
+      "name": "Pink / grey / ice-white shells",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "shell",
+        "pink",
+        "grey",
+        "white",
+        "sea"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        300
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Pink/Grey/Ice_White shell rows"
+    },
+    {
+      "id": "me.beach.sign_arch_beach",
+      "name": "BEACH entrance archway",
+      "category": "sign",
+      "tags": [
+        "beach",
+        "sign",
+        "arch",
+        "entrance"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        360
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark wooden/metal arch reading Beach"
+    },
+    {
+      "id": "me.beach.sign_direction_big",
+      "name": "Directional signpost large",
+      "category": "sign",
+      "tags": [
+        "beach",
+        "sign",
+        "direction",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Direction_Pole_Big multi-arrow"
+    },
+    {
+      "id": "me.beach.sign_direction_small",
+      "name": "Directional signpost small",
+      "category": "sign",
+      "tags": [
+        "beach",
+        "sign",
+        "direction",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        360
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Direction_Pole_Small"
+    },
+    {
+      "id": "me.beach.info_board_blue",
+      "name": "Blue information / map boards",
+      "category": "sign",
+      "tags": [
+        "beach",
+        "sign",
+        "info",
+        "board",
+        "cartel",
+        "blue"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        380
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue_Cartel_1\u20132 kiosk boards"
+    },
+    {
+      "id": "me.beach.bar_ship",
+      "name": "Ship / shark beach bar building",
+      "category": "building",
+      "tags": [
+        "beach",
+        "bar",
+        "ship",
+        "shark",
+        "surf",
+        "cafe"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        420
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden thatched bar with shark logo (Ship_Bar + logo variant)"
+    },
+    {
+      "id": "me.beach.bar_counter",
+      "name": "Bar counter modules",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "bar",
+        "counter",
+        "wood"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ship_Bar_Counter and Bamboo_Bar_Counter sand variants"
+    },
+    {
+      "id": "me.beach.bar_stool",
+      "name": "Bar stools / chairs",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "bar",
+        "stool",
+        "chair",
+        "bamboo"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        440
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Ship_Bar_Chair and Bamboo_Bar_Chiar sand/plain"
+    },
+    {
+      "id": "me.beach.bar_table_drinks",
+      "name": "Bar tables with bottles / cocktails",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "bar",
+        "table",
+        "bottle",
+        "cocktail",
+        "glass"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        460
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Bottle/cocktail/glass table props around bar"
+    },
+    {
+      "id": "me.beach.palm_tree",
+      "name": "Palm tree",
+      "category": "nature",
+      "tags": [
+        "beach",
+        "palm",
+        "tree",
+        "tropical"
+      ],
+      "band": 0,
+      "y_hint": [
+        260,
+        420
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Single detailed palm"
+    },
+    {
+      "id": "me.beach.umbrella_blue_open",
+      "name": "Blue beach umbrella open",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "umbrella",
+        "blue",
+        "shade",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue_Beach_Umbrella_Opened"
+    },
+    {
+      "id": "me.beach.umbrella_blue_closed",
+      "name": "Blue beach umbrella closed",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "umbrella",
+        "blue",
+        "shade",
+        "closed"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        420
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue_Beach_Umbrella_Closed"
+    },
+    {
+      "id": "me.beach.umbrella_green_open",
+      "name": "Green beach umbrella open",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "umbrella",
+        "green",
+        "shade",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        440
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green open"
+    },
+    {
+      "id": "me.beach.umbrella_green_closed",
+      "name": "Green beach umbrella closed",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "umbrella",
+        "green",
+        "shade",
+        "closed"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        440
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green closed"
+    },
+    {
+      "id": "me.beach.umbrella_lightblue_open",
+      "name": "Light-blue / orange umbrella open",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "umbrella",
+        "lightblue",
+        "orange",
+        "shade",
+        "open"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        460
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Lightblue and orange/yellow striped open umbrellas"
+    },
+    {
+      "id": "me.beach.umbrella_lightblue_closed",
+      "name": "Light-blue / orange umbrella closed",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "umbrella",
+        "lightblue",
+        "orange",
+        "shade",
+        "closed"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        460
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Folded counterparts"
+    },
+    {
+      "id": "me.beach.stall_thatch",
+      "name": "Thatched beach market stalls",
+      "category": "building",
+      "tags": [
+        "beach",
+        "stall",
+        "kiosk",
+        "thatch",
+        "market"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Three wooden stalls with straw roofs and bottle counters"
+    },
+    {
+      "id": "me.beach.speaker_big",
+      "name": "Big loudspeaker / PA stacks",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "speaker",
+        "loudspeaker",
+        "stage",
+        "audio",
+        "event"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        580
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Big_Loudspeaker (+ cable sand variants)"
+    },
+    {
+      "id": "me.beach.speaker_medium_small",
+      "name": "Medium / small loudspeakers",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "speaker",
+        "monitor",
+        "audio",
+        "stage"
+      ],
+      "band": 0,
+      "y_hint": [
+        440,
+        580
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Medium_Loudspeaker / Small_Loudspeaker / Music_Box"
+    },
+    {
+      "id": "me.beach.dj_set",
+      "name": "DJ turntable / mixer set",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "dj",
+        "mixer",
+        "turntable",
+        "audio",
+        "stage"
+      ],
+      "band": 0,
+      "y_hint": [
+        440,
+        600
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "DJ_Set and Mixer console"
+    },
+    {
+      "id": "me.beach.stage_barrier",
+      "name": "Crowd control stage barriers",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "barrier",
+        "crowd",
+        "metal",
+        "stage"
+      ],
+      "band": 0,
+      "y_hint": [
+        460,
+        600
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Stage_Barrier_1\u20133 and Stage_Lateral_Barrier segments"
+    },
+    {
+      "id": "me.beach.stage_stairs",
+      "name": "Stage access stairs",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "stairs",
+        "stage",
+        "access"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        620
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stage_Stairs Up/Down/Left/Right"
+    },
+    {
+      "id": "me.beach.boardwalk_deck",
+      "name": "Wooden boardwalk / stage deck platforms",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "boardwalk",
+        "deck",
+        "wood",
+        "stage",
+        "platform"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        700
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Large plank platforms with dark frames; Left/Right/Middle_Modular_Stage pieces"
+    },
+    {
+      "id": "me.beach.stage_truss",
+      "name": "Metal stage truss structure",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "truss",
+        "scaffold",
+        "metal",
+        "stage"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        700
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical/horizontal Stage_Structure truss modules"
+    },
+    {
+      "id": "me.beach.stage_spotlight",
+      "name": "Stage spotlights on truss",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "spotlight",
+        "light",
+        "stage",
+        "truss"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        700
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Stage_Spotlight Left/Right and Structure_Spotlight_Modular"
+    },
+    {
+      "id": "me.beach.stage_example_big",
+      "name": "Example big stage assembly",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "stage",
+        "example",
+        "event",
+        "boardwalk"
+      ],
+      "band": 0,
+      "y_hint": [
+        500,
+        720
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Example_Big_Stage (+ sand / structure composites)"
+    },
+    {
+      "id": "me.beach.stage_example_small",
+      "name": "Example small stage assembly",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "stage",
+        "example",
+        "event"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        740
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Example_Small_Stage composites"
+    },
+    {
+      "id": "me.beach.volley_net",
+      "name": "Beach volleyball net",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "volleyball",
+        "net",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        720
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Beach_Volley_Net Left/Middle/Right with orange posts"
+    },
+    {
+      "id": "me.beach.volley_court_lines",
+      "name": "Beach volleyball court line modular",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "volleyball",
+        "court",
+        "lines",
+        "sand",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        740
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Beach_Volley_Field_Line corner and middle modular tiles"
+    },
+    {
+      "id": "me.beach.ball_volleyball",
+      "name": "Volleyball / beach ball",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "ball",
+        "volleyball",
+        "sports"
+      ],
+      "band": 0,
+      "y_hint": [
+        580,
+        720
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Ball.png"
+    },
+    {
+      "id": "me.beach.seagull",
+      "name": "Seagulls standing / flying",
+      "category": "nature",
+      "tags": [
+        "beach",
+        "seagull",
+        "bird",
+        "wildlife"
+      ],
+      "band": 0,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Seagull Front/Back/Left/Right poses"
+    },
+    {
+      "id": "me.beach.rock_land",
+      "name": "Land rocks / boulders",
+      "category": "nature",
+      "tags": [
+        "beach",
+        "rock",
+        "boulder",
+        "land"
+      ],
+      "band": 0,
+      "y_hint": [
+        620,
+        768
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grey rock clusters without water base"
+    },
+    {
+      "id": "me.beach.rock_sea",
+      "name": "Sea rocks with water ripples",
+      "category": "nature",
+      "tags": [
+        "beach",
+        "rock",
+        "sea",
+        "water",
+        "boulder"
+      ],
+      "band": 0,
+      "y_hint": [
+        620,
+        768
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Big/Medium/Small_Sea_Rock variants with blue ripple bases"
+    },
+    {
+      "id": "me.beach.rock_sea_arch",
+      "name": "Broken arch sea rocks",
+      "category": "nature",
+      "tags": [
+        "beach",
+        "rock",
+        "arch",
+        "sea",
+        "water"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        200
+      ],
+      "surface": "water",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Broken_Arch_Sea_Rock and Small_Broken_Arch families"
+    },
+    {
+      "id": "me.beach.buoy_lighthouse",
+      "name": "Miniature lighthouse buoy",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "buoy",
+        "lighthouse",
+        "nautical"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red/blue lighthouse-shaped buoy"
+    },
+    {
+      "id": "me.beach.buoy_round",
+      "name": "Round nautical buoys",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "buoy",
+        "nautical",
+        "red",
+        "yellow"
+      ],
+      "band": 1,
+      "y_hint": [
+        80,
+        200
+      ],
+      "surface": "water",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red/white and yellow/orange spherical buoys"
+    },
+    {
+      "id": "me.beach.plants_tropical",
+      "name": "Tropical beach plants / sprouts",
+      "category": "nature",
+      "tags": [
+        "beach",
+        "plant",
+        "sprout",
+        "tropical",
+        "bush"
+      ],
+      "band": 1,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Big/Small_Sprout row and sand-mountain plant variants"
+    },
+    {
+      "id": "me.beach.truss_standalone",
+      "name": "Standalone metal truss posts",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "truss",
+        "metal",
+        "stage"
+      ],
+      "band": 1,
+      "y_hint": [
+        0,
+        180
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall silver scaffolding posts near top of band 1"
+    },
+    {
+      "id": "me.beach.boardwalk_foggy",
+      "name": "Foggy boardwalk / deck variants",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "boardwalk",
+        "deck",
+        "foggy",
+        "mist",
+        "wood"
+      ],
+      "band": 1,
+      "y_hint": [
+        200,
+        480
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Desaturated foggy plank platforms labeled on sheet"
+    },
+    {
+      "id": "me.beach.boardwalk_vertical",
+      "name": "Vertical boardwalk deck strips",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "boardwalk",
+        "deck",
+        "wood",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        180,
+        450
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Narrow vertical plank sections for piers"
+    },
+    {
+      "id": "me.beach.lighthouse_full",
+      "name": "Lighthouse complete assembly",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "tower",
+        "red",
+        "white",
+        "coast"
+      ],
+      "band": 1,
+      "y_hint": [
+        480,
+        760
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Full red/white lighthouse with dome (Example_Lighthouse / assembled)"
+    },
+    {
+      "id": "me.beach.lighthouse_open_top",
+      "name": "Lighthouse lantern room open / no dome",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "lantern",
+        "interior",
+        "balcony"
+      ],
+      "band": 1,
+      "y_hint": [
+        500,
+        768
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Top without roof showing walkway/glass housing"
+    },
+    {
+      "id": "me.beach.lighthouse_lens",
+      "name": "Lighthouse lens / light mechanism top-down",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "lens",
+        "light",
+        "mechanism"
+      ],
+      "band": 1,
+      "y_hint": [
+        560,
+        720
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Top-down rotating light mechanism tiles"
+    },
+    {
+      "id": "me.beach.lighthouse_roof",
+      "name": "Lighthouse roof / trapdoor / decorated tops",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "roof",
+        "dome",
+        "trapdoor"
+      ],
+      "band": 1,
+      "y_hint": [
+        520,
+        700
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Lighthouse_Roof_Decorated / Light / Trapdoor pieces"
+    },
+    {
+      "id": "me.beach.lighthouse_door",
+      "name": "Lighthouse door open / closed",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "door"
+      ],
+      "band": 1,
+      "y_hint": [
+        600,
+        760
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Lighthouse_Bottom_Door_Closed / Door_Open"
+    },
+    {
+      "id": "me.beach.spotlight_search",
+      "name": "Coastal searchlight / spotlight prop",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "spotlight",
+        "searchlight",
+        "lighthouse"
+      ],
+      "band": 1,
+      "y_hint": [
+        620,
+        760
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grey housing searchlight near lighthouse cluster"
+    },
+    {
+      "id": "me.beach.lighthouse_base_ring",
+      "name": "Lighthouse circular base segments",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "base",
+        "modular",
+        "red"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        120
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Curved red wall base with stone footing and door"
+    },
+    {
+      "id": "me.beach.lighthouse_mid_ring",
+      "name": "Lighthouse mid wall / window segments",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "mid",
+        "modular",
+        "window"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        140
+      ],
+      "surface": "any",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red cylindrical mid sections with arched windows"
+    },
+    {
+      "id": "me.beach.lighthouse_balcony_top",
+      "name": "Lighthouse balcony / lantern top segment",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "balcony",
+        "lantern",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        0,
+        160
+      ],
+      "surface": "any",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey walkway railings and red dome top pieces"
+    },
+    {
+      "id": "me.beach.cliff_sand_modular",
+      "name": "Sandy cliff / rock wall modular set",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "cliff",
+        "sand",
+        "rock",
+        "wall",
+        "modular",
+        "elevation"
+      ],
+      "band": 2,
+      "y_hint": [
+        80,
+        400
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Sand-top plateaus with brown rocky faces: edges, corners, fills"
+    },
+    {
+      "id": "me.beach.cliff_stairs_wood",
+      "name": "Wooden stairs into sand cliffs",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "stairs",
+        "wood",
+        "cliff",
+        "sand"
+      ],
+      "band": 2,
+      "y_hint": [
+        120,
+        380
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical plank stair tiles integrated into cliff faces"
+    },
+    {
+      "id": "me.beach.sand_mountain_big",
+      "name": "Big sand mountain modular sides",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "mountain",
+        "elevation",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        100,
+        360
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Sand_Mountain_Big Left/Right Diagonal/Modular pieces"
+    },
+    {
+      "id": "me.beach.sand_mountain_small",
+      "name": "Small sand mountain modular sides",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "mountain",
+        "elevation",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        140,
+        380
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Sand_Mountain_Small side modulars"
+    },
+    {
+      "id": "me.beach.sand_mountain_four_example",
+      "name": "Four sand mountains example plateau",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "mountain",
+        "example",
+        "plateau",
+        "stairs"
+      ],
+      "band": 2,
+      "y_hint": [
+        160,
+        400
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Example_Four_Sand_Mountains / Four_Sand_Mountains_* cross plateau with stairs"
+    },
+    {
+      "id": "me.beach.sand_mountain_single_example",
+      "name": "Single sand mountain examples",
+      "category": "terrain",
+      "tags": [
+        "beach",
+        "sand",
+        "mountain",
+        "example"
+      ],
+      "band": 2,
+      "y_hint": [
+        200,
+        380
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Example_Single_Big/Small_Sand_Mountain stamps"
+    },
+    {
+      "id": "me.beach.grass_tuft",
+      "name": "Beach grass / sprout tufts",
+      "category": "nature",
+      "tags": [
+        "beach",
+        "grass",
+        "tuft",
+        "vegetation",
+        "sand"
+      ],
+      "band": 2,
+      "y_hint": [
+        360,
+        460
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small green/yellow grass clumps for sand tops"
+    },
+    {
+      "id": "me.beach.lighthouse_to_decorate",
+      "name": "Lighthouse shell to decorate",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "modular",
+        "shell"
+      ],
+      "band": 1,
+      "y_hint": [
+        540,
+        720
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Lighthouse_To_Decorate base shell for custom lantern setups"
+    },
+    {
+      "id": "me.beach.ship_bar_anchor_variant",
+      "name": "Ship bar anchor logo variant",
+      "category": "building",
+      "tags": [
+        "beach",
+        "bar",
+        "ship",
+        "anchor",
+        "variant"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        420
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ship_Bar_Archor_Variant alternate facade branding"
+    },
+    {
+      "id": "me.beach.bamboo_bar_sand",
+      "name": "Bamboo bar counter/chair sand-embedded",
+      "category": "furniture",
+      "tags": [
+        "beach",
+        "bar",
+        "bamboo",
+        "sand",
+        "counter",
+        "chair"
+      ],
+      "band": 0,
+      "y_hint": [
+        280,
+        440
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Bamboo_Bar_*_Sand variants sitting in sand"
+    },
+    {
+      "id": "me.beach.music_box",
+      "name": "Small music / amp box",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "audio",
+        "amp",
+        "music",
+        "stage"
+      ],
+      "band": 0,
+      "y_hint": [
+        440,
+        600
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Music_Box power/amp brick near DJ gear"
+    },
+    {
+      "id": "me.beach.stage_lateral_barrier",
+      "name": "Stage lateral barrier segments",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "barrier",
+        "lateral",
+        "stage",
+        "metal"
+      ],
+      "band": 0,
+      "y_hint": [
+        460,
+        620
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Stage_Lateral_Barrier_1\u20133 side rails"
+    },
+    {
+      "id": "me.beach.boardwalk_sand_under",
+      "name": "Boardwalk with sand-under edge",
+      "category": "infra",
+      "tags": [
+        "beach",
+        "boardwalk",
+        "deck",
+        "sand",
+        "edge"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        680
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Deck platforms showing sand underneath at edges"
+    },
+    {
+      "id": "me.beach.lighthouse_example",
+      "name": "Example assembled lighthouse stamp",
+      "category": "building",
+      "tags": [
+        "beach",
+        "lighthouse",
+        "example",
+        "coast"
+      ],
+      "band": 1,
+      "y_hint": [
+        480,
+        760
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Example_Lighthouse full placement stamp"
+    },
+    {
+      "id": "me.beach.float_green",
+      "name": "Green inflatable float",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "float",
+        "green",
+        "swim"
+      ],
+      "band": 0,
+      "y_hint": [
+        580,
+        740
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Green_Float"
+    },
+    {
+      "id": "me.beach.float_orange",
+      "name": "Orange inflatable float",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "float",
+        "orange",
+        "swim"
+      ],
+      "band": 0,
+      "y_hint": [
+        580,
+        740
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Orange_Float"
+    },
+    {
+      "id": "me.beach.float_red",
+      "name": "Red inflatable float",
+      "category": "prop",
+      "tags": [
+        "beach",
+        "float",
+        "red",
+        "swim"
+      ],
+      "band": 0,
+      "y_hint": [
+        580,
+        740
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Red_Float"
+    }
+  ],
+  "row_guide": "Band0 top-left: sand/grass/water terrain tiles and mounds. Top-right: buckets, shovels, sandcastles, crabs, starfish, towels, shells. Mid: BEACH arch, direction poles, blue info boards, ship/shark bar + counters/stools/tables, palm, open/closed umbrellas. Lower: thatched stalls, PA speakers, DJ/mixer, crowd barriers, stage stairs, boardwalk decks, metal trusses + spotlights, example stages. Bottom: volleyball net/lines/ball, float rings, seagulls, land and sea rocks. Band1: sea/arch rocks, buoys, tropical plants, standalone trusses, boardwalk + foggy variants, full lighthouse + open top, lens mechanisms, roofs, doors, searchlight. Band2: lighthouse ring base/mid/balcony segments; sandy cliff modular walls + wooden cliff stairs; big/small sand-mountain modulars and example plateaus; grass tufts."
+}

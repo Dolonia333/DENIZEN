@@ -1,0 +1,905 @@
+{
+  "sheet": "8_Worksite",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.worksite.light_tower_a",
+      "name": "Mobile light tower with floodlights",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "lighting",
+        "trailer",
+        "generator",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        90
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wheeled generator base with mast and four lamps; top-left cluster"
+    },
+    {
+      "id": "me.worksite.light_tower_b",
+      "name": "Mobile light tower variant",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "lighting",
+        "trailer",
+        "hazard",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        90
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Second light-tower cutout beside first; often with yellow hazard triangle"
+    },
+    {
+      "id": "me.worksite.scissor_lift_lowered",
+      "name": "Scissor lift retracted",
+      "category": "vehicle",
+      "tags": [
+        "construction",
+        "lift",
+        "orange",
+        "aerial",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        90
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Orange hydraulic platform in lowered state"
+    },
+    {
+      "id": "me.worksite.scissor_lift_raised",
+      "name": "Scissor lift extended",
+      "category": "vehicle",
+      "tags": [
+        "construction",
+        "lift",
+        "orange",
+        "aerial",
+        "raised",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        110
+      ],
+      "surface": "asphalt",
+      "facing": "east",
+      "multi_tile": true,
+      "notes": "Same lift with platform raised; taller footprint"
+    },
+    {
+      "id": "me.worksite.excavator_yellow",
+      "name": "Front loader yellow",
+      "category": "vehicle",
+      "tags": [
+        "construction",
+        "loader",
+        "bulldozer",
+        "yellow",
+        "heavy",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Yellow front-end loader / excavator with bucket; top of vehicle cluster"
+    },
+    {
+      "id": "me.worksite.excavator_orange_n",
+      "name": "Front loader orange north pair",
+      "category": "vehicle",
+      "tags": [
+        "construction",
+        "loader",
+        "orange",
+        "heavy",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        100
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Orange loader near yellow; top row of excavator cluster"
+    },
+    {
+      "id": "me.worksite.excavator_orange_s",
+      "name": "Front loader orange lower",
+      "category": "vehicle",
+      "tags": [
+        "construction",
+        "loader",
+        "orange",
+        "heavy",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        90,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Lower orange excavator variant"
+    },
+    {
+      "id": "me.worksite.excavator_green",
+      "name": "Front loader green",
+      "category": "vehicle",
+      "tags": [
+        "construction",
+        "loader",
+        "green",
+        "heavy",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        90,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Green front-end loader; bottom-right of excavator cluster"
+    },
+    {
+      "id": "me.worksite.portable_toilet_red_closed",
+      "name": "Portable toilet red closed",
+      "category": "prop",
+      "tags": [
+        "construction",
+        "toilet",
+        "porta-potty",
+        "red",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red porta-potty roof/closed door view"
+    },
+    {
+      "id": "me.worksite.portable_toilet_red_open",
+      "name": "Portable toilet red open",
+      "category": "prop",
+      "tags": [
+        "construction",
+        "toilet",
+        "porta-potty",
+        "red",
+        "open",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        90
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Red unit with door open showing interior"
+    },
+    {
+      "id": "me.worksite.portable_toilet_blue_closed",
+      "name": "Portable toilet blue closed",
+      "category": "prop",
+      "tags": [
+        "construction",
+        "toilet",
+        "porta-potty",
+        "blue",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue porta-potty closed"
+    },
+    {
+      "id": "me.worksite.portable_toilet_blue_open",
+      "name": "Portable toilet blue open",
+      "category": "prop",
+      "tags": [
+        "construction",
+        "toilet",
+        "porta-potty",
+        "blue",
+        "open",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        90
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue unit door open"
+    },
+    {
+      "id": "me.worksite.scaffolding_frame_a",
+      "name": "Building skeleton scaffolding A",
+      "category": "building",
+      "tags": [
+        "construction",
+        "scaffold",
+        "steel",
+        "frame",
+        "skeleton",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large multi-story grey steel frame with plank levels; right side of sheet"
+    },
+    {
+      "id": "me.worksite.scaffolding_frame_b",
+      "name": "Building skeleton scaffolding B",
+      "category": "building",
+      "tags": [
+        "construction",
+        "scaffold",
+        "steel",
+        "frame",
+        "skeleton",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Second identical large scaffolding frame beside first"
+    },
+    {
+      "id": "me.worksite.fence_gate_keypad",
+      "name": "Safety fence gate with keypad",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "fence",
+        "gate",
+        "mesh",
+        "hazard",
+        "security",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red mesh panel with door, keypad light, yellow-black hazard stripe"
+    },
+    {
+      "id": "me.worksite.fence_panel_tall",
+      "name": "Tall red mesh fence panel",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "fence",
+        "mesh",
+        "barrier",
+        "hazard",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        160
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Vertical/horizontal red mesh segments with hazard base stripe"
+    },
+    {
+      "id": "me.worksite.fence_panel_hardhat",
+      "name": "Fence panel with hard-hat sign",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "fence",
+        "safety",
+        "sign",
+        "mesh",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        190
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Mesh fence section mounting blue hard-hat pictogram"
+    },
+    {
+      "id": "me.worksite.fence_corner",
+      "name": "Safety fence corner piece",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "fence",
+        "corner",
+        "mesh",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        60,
+        200
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Corner connector for modular red mesh fencing"
+    },
+    {
+      "id": "me.worksite.fence_low_base",
+      "name": "Low fence with dirt base",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "fence",
+        "barrier",
+        "dirt",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        280
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Lower barrier segment with filled/dirt base"
+    },
+    {
+      "id": "me.worksite.site_entrance",
+      "name": "Construction site entrance gate",
+      "category": "infra",
+      "tags": [
+        "construction",
+        "entrance",
+        "gate",
+        "fence",
+        "sand",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        310
+      ],
+      "surface": "sand",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide orange/red mesh entrance with sandy floor inside gate"
+    },
+    {
+      "id": "me.worksite.trench_cut",
+      "name": "Excavation trench / sand pit",
+      "category": "terrain",
+      "tags": [
+        "construction",
+        "trench",
+        "dirt",
+        "excavation",
+        "hole",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        190
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Rectangular dug earth / wooden-bordered sand pit"
+    },
+    {
+      "id": "me.worksite.dirt_pile_large",
+      "name": "Dirt mound large",
+      "category": "terrain",
+      "tags": [
+        "dirt",
+        "mound",
+        "soil",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        80,
+        180
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Brown earth pile near center"
+    },
+    {
+      "id": "me.worksite.dirt_pile_small",
+      "name": "Dirt mound small",
+      "category": "terrain",
+      "tags": [
+        "dirt",
+        "mound",
+        "soil",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        200
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Smaller dirt/gravel heaps scattered mid-sheet"
+    },
+    {
+      "id": "me.worksite.water_puddle",
+      "name": "Construction water puddle",
+      "category": "terrain",
+      "tags": [
+        "water",
+        "puddle",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        90,
+        170
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small blue puddle near dirt piles"
+    },
+    {
+      "id": "me.worksite.lumber_stack",
+      "name": "Stacked lumber planks",
+      "category": "prop",
+      "tags": [
+        "wood",
+        "lumber",
+        "materials",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Vertical/stacked wooden planks bottom-left materials cluster"
+    },
+    {
+      "id": "me.worksite.rebar_stack_vertical",
+      "name": "Vertical rebar / rod bundle",
+      "category": "prop",
+      "tags": [
+        "rebar",
+        "steel",
+        "materials",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Upright grey rebar or rod bundle"
+    },
+    {
+      "id": "me.worksite.pipes_horizontal",
+      "name": "Horizontal pipe stack",
+      "category": "prop",
+      "tags": [
+        "pipes",
+        "steel",
+        "materials",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        230,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Dark grey pipes stacked horizontally"
+    },
+    {
+      "id": "me.worksite.steel_beams",
+      "name": "Stacked steel I-beams",
+      "category": "prop",
+      "tags": [
+        "steel",
+        "beams",
+        "materials",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        210,
+        310
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Silver/grey structural beams pile"
+    },
+    {
+      "id": "me.worksite.concrete_blocks",
+      "name": "Pallet of concrete blocks",
+      "category": "prop",
+      "tags": [
+        "concrete",
+        "blocks",
+        "masonry",
+        "materials",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        240,
+        320
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Grey cinder-block grid / pallet"
+    },
+    {
+      "id": "me.worksite.toolbox_closed",
+      "name": "Orange toolbox closed",
+      "category": "prop",
+      "tags": [
+        "toolbox",
+        "storage",
+        "orange",
+        "tools",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        310
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Closed orange metal utility chest"
+    },
+    {
+      "id": "me.worksite.toolbox_open",
+      "name": "Orange toolbox open",
+      "category": "prop",
+      "tags": [
+        "toolbox",
+        "storage",
+        "orange",
+        "tools",
+        "open",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        310
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Open chest showing tools or debris"
+    },
+    {
+      "id": "me.worksite.storage_bin",
+      "name": "Orange storage bin / dumpster",
+      "category": "prop",
+      "tags": [
+        "bin",
+        "dumpster",
+        "storage",
+        "orange",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        220,
+        310
+      ],
+      "surface": "asphalt",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Larger orange industrial bin; some filled with rubble"
+    },
+    {
+      "id": "me.worksite.shovel_upright",
+      "name": "Shovel upright",
+      "category": "prop",
+      "tags": [
+        "tool",
+        "shovel",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        140,
+        260
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Shovel standing or stuck in dirt"
+    },
+    {
+      "id": "me.worksite.shovel_in_dirt",
+      "name": "Shovel in dirt mound",
+      "category": "prop",
+      "tags": [
+        "tool",
+        "shovel",
+        "dirt",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        270
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Shovel planted in small earth mound"
+    },
+    {
+      "id": "me.worksite.pickaxe",
+      "name": "Pickaxe",
+      "category": "prop",
+      "tags": [
+        "tool",
+        "pickaxe",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        270
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Pickaxe lying or stuck near tools cluster"
+    },
+    {
+      "id": "me.worksite.cone_upright",
+      "name": "Traffic cone upright",
+      "category": "prop",
+      "tags": [
+        "cone",
+        "safety",
+        "traffic",
+        "orange",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        160,
+        280
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Standard orange safety cone"
+    },
+    {
+      "id": "me.worksite.cone_fallen",
+      "name": "Traffic cone tipped over",
+      "category": "prop",
+      "tags": [
+        "cone",
+        "safety",
+        "traffic",
+        "fallen",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        170,
+        290
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Knocked-over cone variant"
+    },
+    {
+      "id": "me.worksite.bucket",
+      "name": "Construction bucket",
+      "category": "prop",
+      "tags": [
+        "bucket",
+        "tools",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small bucket prop near materials"
+    },
+    {
+      "id": "me.worksite.hard_hat",
+      "name": "Hard hat on ground",
+      "category": "prop",
+      "tags": [
+        "helmet",
+        "hardhat",
+        "safety",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        150,
+        260
+      ],
+      "surface": "asphalt",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Yellow/orange safety helmet prop"
+    },
+    {
+      "id": "me.worksite.hardhat_sign",
+      "name": "Hard hat required sign",
+      "category": "sign",
+      "tags": [
+        "safety",
+        "sign",
+        "hardhat",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        190
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Blue circular hard-hat pictogram on pole"
+    },
+    {
+      "id": "me.worksite.wood_scraps",
+      "name": "Wood scrap pile",
+      "category": "nature",
+      "tags": [
+        "wood",
+        "scraps",
+        "logs",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        300
+      ],
+      "surface": "any",
+      "facing": "any",
+      "multi_tile": false,
+      "notes": "Small cut logs / wood scrap cluster"
+    },
+    {
+      "id": "me.worksite.ground_patch",
+      "name": "Dirt ground patch tiles",
+      "category": "terrain",
+      "tags": [
+        "ground",
+        "dirt",
+        "sand",
+        "construction",
+        "worksite"
+      ],
+      "band": 0,
+      "y_hint": [
+        100,
+        220
+      ],
+      "surface": "sand",
+      "facing": "any",
+      "multi_tile": true,
+      "notes": "Modular dug-earth / ground patch tiles under entrance and trench"
+    }
+  ],
+  "row_guide": "Top: light towers, scissor lifts, loaders, porta-potties, scaffolding tops. Mid: red mesh fencing/gates, trench, dirt/puddles, lower loaders, scaffold middles, tools/cones. Bottom: site entrance, lumber/rebar/pipes/blocks, toolboxes/bins, scaffold bases."
+}

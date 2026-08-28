@@ -1,0 +1,187 @@
+{
+ "_doc": "COMPILER POCKET spec — a 480x480 forest clearing/campsite pocket inside D10 Camping Forest's declared bbox (4200,200,1900,1400), NOT a replacement of the hand-authored district. Verified empty ground: no patch/stamp/solid/road of any existing d*.json (including d10's own hand stamps, which per EXTERIOR-MISTAKES.md #4 actually live far outside D10's declared bbox) falls inside this pocket's rect. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/wild.json -v --qa",
+ "schema": "exterior-district-spec/1",
+ "id": "d19-wild-camp-pocket",
+ "district": "D19 Wild Camp Pocket",
+ "biome": "wild",
+ "palette": "verdant",
+ "palette_secondary": "warm_autumn",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 34521,
+  "coords": "local",
+  "out": "data/city-specs/generated/d19-wild-camp-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox, so the pocket relocates by editing bbox alone."
+ },
+
+ "bbox": { "x": 4320, "y": 304, "w": 480, "h": 480 },
+ "label": "WILD CAMP",
+ "label_at": { "x": 240, "y": 16 },
+
+ "surfaces": [
+  {
+   "surface": "grass",
+   "name": "clearing",
+   "x": 0, "y": 0, "w": 480, "h": 480,
+   "depth": 0.9,
+   "_doc": "forest-floor grass covers the WHOLE bbox so pass A never leaves a sliver of world grass at an edge"
+  },
+  {
+   "surface": "sand",
+   "name": "pond_shore",
+   "x": 304, "y": 304, "w": 176, "h": 176,
+   "depth": 0.92,
+   "_doc": "a sandy shore shelf in the SE corner, overwriting grass, so the little camp pond reads as a proper beach-edge rather than water dropped straight into turf"
+  },
+  {
+   "surface": "water",
+   "name": "camp_pond",
+   "x": 304, "y": 416, "w": 176, "h": 64,
+   "depth": 0.95,
+   "shore": "top",
+   "anim": "ext/animated/_water_fill_16x16.png",
+   "fw": 64, "fh": 64, "fps": 5,
+   "_doc": "the bottom strip of the shore shelf, nested inside pond_shore, so shore_line derives a sand/water boundary in the SE corner for a fishing/pier flavour without touching the rest of the clearing"
+  }
+ ],
+
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "camp",
+   "x": 16, "y": 32, "w": 432, "h": 256,
+   "density": {
+    "vegetation": "packed",
+    "decor_small": "dense",
+    "furniture_ext": "dense",
+    "canopy": "medium"
+   },
+   "_doc": "the main clearing: packed conifers/leafy trees per the wild biome's own density profile, camp clutter, spare furniture beyond the campfire_set/tent_cluster groups, and standalone tents (tent_blue_front/side are filed role=canopy in the enriched catalog, so canopy density is how extra loose tents get scattered here)"
+  },
+  {
+   "slot": "path_edge",
+   "name": "trail",
+   "x": 192, "y": 0, "w": 96, "h": 64,
+   "density": {
+    "street_furn": "light",
+    "signage": "light",
+    "vegetation": "light"
+   },
+   "_doc": "the dirt entrance track down from the world edge into the clearing; the gateway sign anchors here"
+  },
+  {
+   "slot": "plaza",
+   "name": "campfire_circle",
+   "x": 176, "y": 96, "w": 128, "h": 128,
+   "density": {
+    "furniture_ext": "light",
+    "decor_small": "medium",
+    "npc_anchor": "light"
+   },
+   "_doc": "open ground around the campfire_set group: a couple of spare chairs/tables plus cookware clutter"
+  },
+  {
+   "slot": "shore_line",
+   "name": "pond_edge",
+   "between": ["sand", "water"],
+   "band_px": 48,
+   "density": {
+    "decor_small": "light",
+    "water_prop": "light",
+    "vegetation": "sparse"
+   },
+   "_doc": "the camp pond's wet-sand/water boundary: buoys, lily pads, a canoe. grp.camping.pier_walkway needs surface=water but the compiler marks every water cell UNWALKABLE|RESERVED in pass A, and pass D's place_group() rejects any group footprint touching a RESERVED cell (verified empirically: 0/1 placed, 14 anchors tried) -- a water-surface atomic group cannot land under the current pass D implementation, so the pier is represented here as scattered water_prop/decor_small instead of the grp recipe. See report notes."
+  }
+ ],
+
+ "landmarks": [
+  {
+   "me": "me.camping.mobile_house_medium",
+   "at": { "x": 48, "y": 176 },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "hero camper trailer, west side of the clearing"
+  },
+  {
+   "me": "me.camping.mobile_house_small",
+   "at": { "x": 384, "y": 96 },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "second, smaller cabin/trailer, NE corner away from the pond and the trail"
+  },
+  {
+   "me": "me.camping.sign_gateway",
+   "at": { "x": 240, "y": 64 },
+   "anchor": "bc",
+   "solid": true,
+   "interact": "read",
+   "_doc": "entrance arch sign at the foot of the dirt trail"
+  }
+ ],
+
+ "groups": [
+  {
+   "grp": "grp.camping.campfire_set",
+   "slot": "campfire_circle",
+   "count": 1,
+   "interact": "sit",
+   "_doc": "fire + folding chairs + stumps + firewood, the heart of the clearing"
+  },
+  {
+   "grp": "grp.camping.tent_cluster",
+   "slot": "camp",
+   "count": 2,
+   "_doc": "two front+side tent pairs scattered through the clearing"
+  },
+  {
+   "grp": "grp.camping.fishing_dock",
+   "slot": "camp",
+   "count": 1,
+   "_doc": "fish crates + bucket + baited rod corner near the pond; surface=ground so it lands on the grass fringing the shore, not on the sand/water itself"
+  },
+  {
+   "grp": "grp.camping.dock_utility",
+   "slot": "camp",
+   "count": 1,
+   "_doc": "clothesline + storage bin + rope coil dressing the pond-side camp"
+  }
+ ],
+
+ "interactions": {
+  "sit": "auto",
+  "enter": ["me.camping.mobile_house_medium", "me.camping.mobile_house_small"],
+  "read": ["me.camping.sign_gateway"]
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Campfire_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 216, "y": 136 }, "fps": 6 },
+  { "sheet": "ext/animated/Camping_Lantern_1.png", "fw": 48, "fh": 48,
+    "at": { "x": 96, "y": 160 }, "fps": 6 },
+  { "sheet": "ext/animated/Fishes_1_16x16.png", "fw": 16, "fh": 16,
+    "at": { "x": 360, "y": 440 }, "fps": 4 }
+ ],
+
+ "constraints": {
+  "max_stamps": 170,
+  "coverage_target_singles": 60,
+  "max_solid_cell_ratio": 0.3,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "480x480 pocket is 30x30 = 900 cells; wild biome runs vegetation at 'packed' so budgets are looser than beach.json's 400x280/450-cell pocket"
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": { "enabled": true },
+  "F_canopy": { "enabled": true },
+  "G_detail": { "enabled": true },
+  "H_life": { "enabled": true }
+ }
+}

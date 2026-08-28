@@ -1,0 +1,100 @@
+{
+  "id": "grp.camping.dock_utility",
+  "name": "Pier utility corner (hanging laundry line + storage bin + coiled rope)",
+  "biome": "camping",
+  "category": "prop",
+  "surface": "ground",
+  "facing": "any",
+  "solid": false,
+  "source_me_ids": [
+    "me.camping.pier_clothes",
+    "me.camping.pier_bin",
+    "me.camping.rope"
+  ],
+  "footprint_tiles": {
+    "w": 5,
+    "h": 2
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the clothesline runs along the back with the bin and rope coil at the near end."
+  },
+  "offset_basis_summary": "Pier_Clothes_1/2/3 are three consecutive 16px tiles on the 11_Camping sheet (x128-160, y400), so that trio is sheet_relative. Rope_1/2 are a vertically-stacked sheet_relative pair elsewhere on the sheet (x304, y448/464); the bin is a lone single placed by hand between them.",
+  "pieces": [
+    {
+      "role": "clothesline_1",
+      "me": "me.camping.pier_clothes",
+      "exs": "exs.11_camping.camping_pier_clothes_1",
+      "basename": "ME_Singles_Camping_16x16_Pier_Clothes_1.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "clothesline_2",
+      "me": "me.camping.pier_clothes",
+      "exs": "exs.11_camping.camping_pier_clothes_2",
+      "basename": "ME_Singles_Camping_16x16_Pier_Clothes_2.png",
+      "dx": 1,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "clothesline_3",
+      "me": "me.camping.pier_clothes",
+      "exs": "exs.11_camping.camping_pier_clothes_3",
+      "basename": "ME_Singles_Camping_16x16_Pier_Clothes_3.png",
+      "dx": 2,
+      "dy": 0,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "storage_bin",
+      "me": "me.camping.pier_bin",
+      "exs": "exs.11_camping.camping_pier_bin_1",
+      "basename": "ME_Singles_Camping_16x16_Pier_Bin_1.png",
+      "dx": 3,
+      "dy": 1,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": true,
+      "facing": "any"
+    },
+    {
+      "role": "rope_coil",
+      "me": "me.camping.rope",
+      "exs": "exs.11_camping.camping_rope_1",
+      "basename": "ME_Singles_Camping_16x16_Rope_1.png",
+      "dx": 1,
+      "dy": 1,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any"
+    }
+  ],
+  "variants": {
+    "clothesline_length": "Repeat clothesline_2 (modular middle tile) to extend the line beyond 3 tiles."
+  },
+  "interact": null,
+  "notes": "Small decorative utility corner combining the sheet-adjacent clothesline trio with a hand-placed bin and rope coil, meant to dress the end of a pier_walkway or fishing_dock stamp."
+}

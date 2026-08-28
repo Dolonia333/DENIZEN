@@ -1,0 +1,117 @@
+{
+  "id": "grp.beach.ship_bar",
+  "name": "Ship-hull beach bar (shark/ship bar building + counters + stool + service table)",
+  "biome": "beach",
+  "category": "building",
+  "surface": "sand",
+  "facing": "south",
+  "solid": true,
+  "source_me_ids": [
+    "me.beach.bar_ship",
+    "me.beach.bar_table_drinks"
+  ],
+  "footprint_tiles": {
+    "w": 7,
+    "h": 11
+  },
+  "anchor": {
+    "origin": "tl",
+    "note": "dx/dy are tile offsets from the top-left of the footprint (ship-bar building's top-left corner); origin snapped to (240,128) on the 21_Beach sheet. Height is 11, not 10: drinks_topper (dy=10, one tile tall) sits one row below the service_table/guest_chair row."
+  },
+  "offset_basis_summary": "The ship-bar building, its two counter modules, the guest chair and the service table are all laid out contiguously in the same sheet region (x240-352, y128-288 on 21_Beach), so their offsets are read directly from sheet_x/sheet_y (sheet_relative). The chair_2 exs reports sheet_x=239 (1px off chair_1's 240) which is a vision-labeling rounding artifact for the same tile cell.",
+  "pieces": [
+    {
+      "role": "bar_building",
+      "me": "me.beach.bar_ship",
+      "exs": "exs.21_beach.beach_ship_bar",
+      "basename": "21_Beach_16x16_Ship_Bar.png",
+      "dx": 0,
+      "dy": 0,
+      "w": 112,
+      "h": 80,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south",
+      "notes": "Pre-composed ship/shark hull bar building; already spans 7x5 tiles by itself."
+    },
+    {
+      "role": "counter_left",
+      "me": "me.beach.bar_ship",
+      "exs": "exs.21_beach.beach_ship_bar_counter_1",
+      "basename": "21_Beach_16x16_Ship_Bar_Counter_1.png",
+      "dx": 0,
+      "dy": 5,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    },
+    {
+      "role": "counter_right",
+      "me": "me.beach.bar_ship",
+      "exs": "exs.21_beach.beach_ship_bar_counter_2",
+      "basename": "21_Beach_16x16_Ship_Bar_Counter_2.png",
+      "dx": 3,
+      "dy": 5,
+      "w": 32,
+      "h": 48,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "south"
+    },
+    {
+      "role": "guest_chair",
+      "me": "me.beach.bar_ship",
+      "exs": "exs.21_beach.beach_ship_bar_chair_1",
+      "basename": "21_Beach_16x16_Ship_Bar_Chair_1.png",
+      "dx": 0,
+      "dy": 9,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": true,
+      "facing": "east",
+      "interact": "sit"
+    },
+    {
+      "role": "service_table",
+      "me": "me.beach.bar_ship",
+      "exs": "exs.21_beach.beach_ship_bar_table",
+      "basename": "21_Beach_16x16_Ship_Bar_Table.png",
+      "dx": 1,
+      "dy": 9,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "sheet_relative",
+      "solid": false,
+      "facing": "any"
+    },
+    {
+      "role": "drinks_topper",
+      "me": "me.beach.bar_table_drinks",
+      "exs": "exs.21_beach.beach_ship_bar_bottle_1_table",
+      "basename": "21_Beach_16x16_Ship_Bar_Bottle_1_Table.png",
+      "dx": 3,
+      "dy": 10,
+      "w": 16,
+      "h": 16,
+      "origin": "tl",
+      "offset_basis": "authored",
+      "solid": false,
+      "facing": "any",
+      "notes": "Bottle decor sprite sits one row below the table on the sheet (fractional cocktail/glass variants share the same cell); placed by hand on the service table."
+    }
+  ],
+  "variants": {
+    "chair_count": "guest_chair is optional; add a second chair mirrored on counter_right for two-seat service.",
+    "drinks_topper": "Swap the bottle for cocktail_1_table / cocktail_2_table / glass_table exs for a different tabletop prop."
+  },
+  "interact": "sit",
+  "notes": "The ship-bar building is already multi_tile on its own; this grp widens it into a working bar counter with seating so the counters/chair/table land on the correct sand-front side of the hull rather than stacked on top of it."
+}

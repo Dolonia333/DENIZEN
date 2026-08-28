@@ -85,23 +85,23 @@
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Stacked_Barrels_1.png",
    "x": 4410,
-   "y": 2786,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_1.png",
    "x": 4460,
-   "y": 2780,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Brown_Barrel_1.png",
-   "x": 4478,
-   "y": 2786,
+   "x": 4520,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Tool_Box_1.png",
@@ -115,7 +115,7 @@
    "x": 4548,
    "y": 2770,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Light_Tower_1.png",
@@ -154,10 +154,10 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_2.png",
-   "x": 4484,
-   "y": 2806,
+   "x": 4300,
+   "y": 2860,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Broken_Ladder_1.png",
@@ -220,63 +220,63 @@
    "x": 4956,
    "y": 2620,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_3.png",
    "x": 4956,
    "y": 2668,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_4.png",
    "x": 4956,
    "y": 2716,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_10.png",
    "x": 4660,
    "y": 2850,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_5.png",
-   "x": 4692,
-   "y": 2870,
+   "x": 4760,
+   "y": 3000,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_1.png",
-   "x": 4750,
-   "y": 2882,
+   "x": 4680,
+   "y": 2880,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_8.png",
-   "x": 4776,
-   "y": 2898,
+   "x": 4860,
+   "y": 2930,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_3.png",
    "x": 4688,
    "y": 2926,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_12.png",
-   "x": 4756,
-   "y": 2950,
+   "x": 4880,
+   "y": 2960,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_1.png",
@@ -311,14 +311,14 @@
    "x": 5028,
    "y": 2770,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
    "x": 5036,
    "y": 2830,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
@@ -360,7 +360,7 @@
    "x": 4900,
    "y": 2962,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_3.png",
@@ -388,14 +388,14 @@
    "x": 4532,
    "y": 2950,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
    "x": 4562,
    "y": 2960,
    "origin": "bl",
-   "solid": true
+   "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_2.png",
@@ -569,7 +569,7 @@
    "h": 448
   },
   {
-   "x": 5084,
+   "x": 5120,
    "y": 2542,
    "w": 8,
    "h": 448

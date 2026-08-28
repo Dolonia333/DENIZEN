@@ -1,0 +1,1110 @@
+{
+  "$schema": "./placement-rules.schema.json",
+  "version": "0.1.0",
+  "pack": "limezu_modern_exteriors",
+  "scope": "Modern Exteriors only (assets/limezu/ext/). Interiors / Modern Office out of scope.",
+  "authored_by": "W0-A (exterior placement brain, wave 0)",
+  "_doc": [
+    "L1 semantics layer of the exterior placement brain. This file is the single",
+    "source of truth for the vocabularies the enrichment pass (W1-A), the group",
+    "recipes (W1-C) and the district compiler (W2-A) share: roles, surfaces,",
+    "mounts, biomes, palettes, interactions, density and slots.",
+    "",
+    "Nothing here places anything by itself. The compiler reads a district spec",
+    "(see example_district_spec), resolves biome + palette + slots + density,",
+    "then draws candidates from the enriched me.*/exs.* catalog filtered by the",
+    "role/surface/biome constraints defined below.",
+    "",
+    "Coordinate conventions match data/city-plan.json: world pixels, 16px tile",
+    "grid, stamp anchors bl (default) / bc / tl, and stamp depth defaulting to",
+    "baseline y (see src/full-world.js)."
+  ],
+  "tile_px": 16,
+  "world_size": { "w": 6656, "h": 6400 },
+
+  "roles": {
+    "_doc": "Role = what an asset structurally IS for placement purposes, independent of its theme. Every me.* gets exactly one role. `categories` lists the registry.jsonl `category` values that auto-map to this role in W1-A; `tags_any` narrows within a category.",
+    "ground_fill": {
+      "label": "Ground fill",
+      "desc": "Terrain autotiles and large flat slabs that paint the district floor. Emitted as `patches`, not as stamps.",
+      "layer": "ground",
+      "surfaces": ["grass", "sand", "sidewalk", "asphalt", "water"],
+      "anchor": "tl",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "fixed", "value": 0.9 },
+      "spacing_px": 0,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["terrain", "asphalt", "sidewalk", "road", "path"],
+      "emit_as": "patch"
+    },
+    "ground_edge": {
+      "label": "Ground edge / transition",
+      "desc": "Curbs, shorelines, cliff faces, surface-to-surface transition strips. Must straddle the boundary between two surfaces.",
+      "layer": "ground",
+      "surfaces": ["grass", "sand", "sidewalk", "asphalt", "water"],
+      "anchor": "tl",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "fixed", "value": 1.15 },
+      "spacing_px": 0,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["curb", "cliff", "transition"],
+      "requires": { "boundary_between": 2 }
+    },
+    "road_marking": {
+      "label": "Road marking",
+      "desc": "Painted lane lines, crosswalks, arrows, parking bays. Asphalt only, flush with the road grid.",
+      "layer": "ground",
+      "surfaces": ["asphalt"],
+      "anchor": "tl",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "fixed", "value": 1.3 },
+      "spacing_px": 0,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["road_marking", "parking"]
+    },
+    "landmark": {
+      "label": "Landmark",
+      "desc": "Hero structure that defines a district silhouette (lighthouse, chapel, hangar, station hall, big top). One or two per district; placed first, everything else yields to it.",
+      "layer": "structure",
+      "surfaces": ["sidewalk", "asphalt", "sand", "grass"],
+      "anchor": "bl",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 256,
+      "group_only": false,
+      "interact_default": "enter",
+      "categories": ["building"],
+      "tags_any": ["landmark", "lighthouse", "chapel", "hangar", "stadium", "tower", "monument"],
+      "max_per_district": 2
+    },
+    "building_shell": {
+      "label": "Building shell",
+      "desc": "A complete building stamp that stands on the ground plane and faces the street. Doors south by default (structure-grammar.md).",
+      "layer": "structure",
+      "surfaces": ["sidewalk", "asphalt", "grass", "sand"],
+      "anchor": "bl",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 0,
+      "group_only": false,
+      "interact_default": "enter",
+      "categories": ["building"],
+      "facing_default": "south",
+      "requires": { "street_frontage": true, "setback_tiles": [0, 1] }
+    },
+    "facade": {
+      "label": "Facade module",
+      "desc": "Modular wall / window / balcony pieces that compose a building face. Never a solo stamp: only valid inside a grp.* recipe that also supplies roof + entrance.",
+      "layer": "structure",
+      "surfaces": [],
+      "mounts": ["wall"],
+      "anchor": "tl",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 0,
+      "group_only": true,
+      "interact_default": null,
+      "categories": ["wall", "building"],
+      "tags_any": ["modular", "facade", "window", "balcony", "wall"]
+    },
+    "roof": {
+      "label": "Roof module",
+      "desc": "Roof plates, ridges, gutters and parapets that cap a facade stack. Group-only, drawn above the facade it belongs to.",
+      "layer": "structure",
+      "surfaces": [],
+      "mounts": ["wall", "roof"],
+      "anchor": "tl",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "y_sort_bias", "bias": 2 },
+      "spacing_px": 0,
+      "group_only": true,
+      "interact_default": null,
+      "categories": ["building"],
+      "tags_any": ["roof", "ridge", "gutter", "parapet", "attic"]
+    },
+    "roof_prop": {
+      "label": "Rooftop prop",
+      "desc": "HVAC units, antennas, water tanks, chimneys, solar panels, rooftop gardens. Must overlap a building stamp — never open ground (see audit-placement-logic.py ROOF rule).",
+      "layer": "attach",
+      "surfaces": [],
+      "mounts": ["roof"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "y_sort_bias", "bias": 3 },
+      "spacing_px": 32,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["infra", "prop", "utility"],
+      "tags_any": ["hvac", "antenna", "satellite", "chimney", "solar", "vent", "water_tank", "rooftop"],
+      "requires": { "over_role": "building_shell" }
+    },
+    "canopy": {
+      "label": "Canopy / overhang",
+      "desc": "Awnings, marquees, parasols, tarps, market tents, bus-stop shelters. Overhangs the walkable surface in front of a facade or over furniture, so it draws above ground props but keeps the tile walkable.",
+      "layer": "overhead",
+      "surfaces": ["sidewalk", "sand", "grass", "asphalt"],
+      "mounts": ["wall", "air"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "y_sort_bias", "bias": 6 },
+      "spacing_px": 48,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["prop", "infra", "decor", "building"],
+      "tags_any": ["awning", "canopy", "umbrella", "parasol", "tent", "shelter", "marquee", "pergola", "tarp"],
+      "overhang_px": [16, 48]
+    },
+    "entrance": {
+      "label": "Entrance",
+      "desc": "Doors, stoops, steps, gates, garage doors, turnstiles. The interactive seam between exterior and interior; anchors portals in the merged plan.",
+      "layer": "attach",
+      "surfaces": ["sidewalk", "asphalt", "sand", "grass"],
+      "mounts": ["wall"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "y_sort_bias", "bias": 2 },
+      "spacing_px": 64,
+      "group_only": false,
+      "interact_default": "enter",
+      "categories": ["building", "infra", "fence"],
+      "tags_any": ["door", "entrance", "stairs", "stoop", "gate", "garage", "turnstile"],
+      "requires": { "reachable_from_surface": ["sidewalk", "asphalt", "sand", "grass"] }
+    },
+    "wall_mount": {
+      "label": "Wall-mounted",
+      "desc": "Hanging shop signs, posters, graffiti panels, wall lamps, mailslots. Must abut a building face within ~24px above its baseline (audit-placement-logic.py WALL rule).",
+      "layer": "attach",
+      "surfaces": [],
+      "mounts": ["wall"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "y_sort_bias", "bias": 4 },
+      "spacing_px": 48,
+      "group_only": false,
+      "interact_default": "read",
+      "categories": ["sign", "decor", "decal"],
+      "tags_any": ["hanging_sign", "poster", "billboard", "wall_art", "graffiti", "wall_lamp", "plaque"],
+      "requires": { "abuts_role": "building_shell", "max_offset_px": 24 }
+    },
+    "signage": {
+      "label": "Freestanding sign",
+      "desc": "Pole signs, direction poles, notice boards, price totems, district signs. Stands on the ground beside a path.",
+      "layer": "structure",
+      "surfaces": ["sidewalk", "sand", "grass", "asphalt"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 96,
+      "group_only": false,
+      "interact_default": "read",
+      "categories": ["sign"],
+      "requires": { "near_slot": ["road_edge", "path_edge", "plaza", "shore_line"], "max_dist_px": 64 }
+    },
+    "street_furn": {
+      "label": "Street furniture",
+      "desc": "Benches, bins, hydrants, bollards, mailboxes, ATMs, phone booths, lamp posts, planters, bike racks. Lines sidewalks against walls and road edges — never floating (structure-grammar.md).",
+      "layer": "structure",
+      "surfaces": ["sidewalk", "asphalt", "sand", "grass"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 48,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["prop", "infra", "furniture", "utility"],
+      "tags_any": ["bench", "trash", "bin", "hydrant", "bollard", "mailbox", "atm", "phone", "lamp", "light", "planter", "bike", "pole"],
+      "requires": { "near_slot": ["road_edge", "wall_line", "path_edge", "plaza"], "max_dist_px": 32 }
+    },
+    "vegetation": {
+      "label": "Vegetation",
+      "desc": "Trees, palms, bushes, hedges, flower beds, crops, potted greenery. Softens grass/sand and divides paved blocks as hedge rows.",
+      "layer": "structure",
+      "surfaces": ["grass", "sand", "sidewalk"],
+      "anchor": "bc",
+      "align": "free",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 40,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["nature"],
+      "tags_any": ["tree", "palm", "bush", "hedge", "flower", "flowers", "plant", "grass", "crop", "vase"]
+    },
+    "barrier": {
+      "label": "Barrier",
+      "desc": "Fences, railings, hedge dividers, jersey barriers, sandbag walls, chain-link runs. Placed as a linear run along a slot edge, not as scatter.",
+      "layer": "structure",
+      "surfaces": ["grass", "sand", "sidewalk", "asphalt"],
+      "anchor": "bl",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 0,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["fence", "wall", "infra"],
+      "tags_any": ["fence", "railing", "barrier", "hedge", "sandbag", "chainlink", "wall"],
+      "emit_as": "run"
+    },
+    "infra": {
+      "label": "Infrastructure",
+      "desc": "Traffic lights, utility poles, transformers, manholes, hydro boxes, pipes, tracks, platforms, pylons. Functional city plumbing that reads as permanent.",
+      "layer": "structure",
+      "surfaces": ["sidewalk", "asphalt", "grass", "sand", "water"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 96,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["infra", "utility"],
+      "notes": "Piers, docks and boardwalks are the water-surface members of this role and are the one case where collision is none (they are walkable)."
+    },
+    "vehicle": {
+      "label": "Vehicle",
+      "desc": "Cars, trucks, buses, trains, boats, bikes, service vehicles. Faces the lane it sits in; parked ones align to a bay.",
+      "layer": "structure",
+      "surfaces": ["asphalt", "sidewalk", "sand", "water"],
+      "anchor": "bl",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 24,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["vehicle"],
+      "requires": { "near_slot": ["road_edge", "parking_bay", "backlot", "rail_bed", "water_body"], "max_dist_px": 48 }
+    },
+    "furniture_ext": {
+      "label": "Outdoor furniture",
+      "desc": "Cafe tables and chairs, sun loungers, picnic sets, bar counters, market stall tables, deck chairs. The main sit-interact population.",
+      "layer": "structure",
+      "surfaces": ["sidewalk", "sand", "grass"],
+      "anchor": "bc",
+      "align": "free",
+      "collision": "footprint",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 32,
+      "group_only": false,
+      "interact_default": "sit",
+      "categories": ["furniture"]
+    },
+    "play_sport": {
+      "label": "Play / sport",
+      "desc": "Playground equipment, volleyball nets, courts, goals, pool ladders, gym rigs. Needs a clear apron of open surface around it.",
+      "layer": "structure",
+      "surfaces": ["grass", "sand", "sidewalk"],
+      "anchor": "bc",
+      "align": "free",
+      "collision": "footprint",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 64,
+      "group_only": false,
+      "interact_default": "play",
+      "categories": ["prop", "furniture", "infra"],
+      "tags_any": ["playground", "sports", "toy", "slide", "swing", "net", "goal", "court", "pool"],
+      "requires": { "clear_apron_px": 48 }
+    },
+    "decor_small": {
+      "label": "Small decor / clutter",
+      "desc": "Buckets, crates, toys, litter, cones, rocks, pumpkins, tools, towels. The scatter layer that makes a district look inhabited.",
+      "layer": "scatter",
+      "surfaces": ["grass", "sand", "sidewalk", "asphalt"],
+      "anchor": "bc",
+      "align": "free",
+      "collision": "none",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 16,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["prop", "decor"]
+    },
+    "decal": {
+      "label": "Ground decal",
+      "desc": "Flat marks on the floor: puddles, stains, tire tracks, ground graffiti, sand ripples, footprints. Never collides, always under stamps.",
+      "layer": "ground",
+      "surfaces": ["grass", "sand", "sidewalk", "asphalt", "water"],
+      "anchor": "tl",
+      "align": "free",
+      "collision": "none",
+      "depth": { "mode": "fixed", "value": 1.35 },
+      "spacing_px": 24,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["decal"]
+    },
+    "water_prop": {
+      "label": "Water prop",
+      "desc": "Buoys, floats, moored boats, jetski, wave foam props. Must sit on a water patch or animBand (audit-placement-logic.py WATER rule).",
+      "layer": "structure",
+      "surfaces": ["water"],
+      "anchor": "bc",
+      "align": "free",
+      "collision": "none",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 48,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["prop", "vehicle", "decor"],
+      "tags_any": ["buoy", "boat", "ship", "float", "wave", "water"],
+      "requires": { "on_surface": ["water"] }
+    },
+    "npc_anchor": {
+      "label": "NPC anchor",
+      "desc": "Not a sprite: a compiler-emitted marker for vendor posts, queue spots, bench seats and patrol waypoints. Feeds `npcs` in the plan and (later) Denizen assign_task routes.",
+      "layer": "meta",
+      "surfaces": ["sidewalk", "asphalt", "sand", "grass"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 64,
+      "group_only": false,
+      "interact_default": null,
+      "categories": ["npc"],
+      "emit_as": "npc"
+    },
+    "fragment": {
+      "label": "Fragment",
+      "desc": "Partial cutout that is meaningless alone (half an arch, a wall corner, one awning stripe, an autotile inner piece). Tier D coverage: usable only inside a grp.* recipe, never stamped solo.",
+      "layer": "meta",
+      "surfaces": [],
+      "anchor": "tl",
+      "align": "tile16",
+      "collision": "none",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 0,
+      "group_only": true,
+      "interact_default": null,
+      "categories": [],
+      "tags_any": ["corner", "edge", "side", "middle", "example"]
+    }
+  },
+
+  "surfaces": {
+    "_doc": "The five ground surfaces the renderer can paint (src/full-world.js TILE_KEYS + water animBands). `registry_aliases` fold the 22 free-text `surface` values in registry.jsonl onto these five during W1-A enrichment.",
+    "grass": {
+      "label": "Grass",
+      "tile": "grass_tile",
+      "walkable": true,
+      "paintable": true,
+      "default_depth": 0.9,
+      "registry_aliases": ["ground", "grass", "dirt", "rock"],
+      "roles_allowed": ["ground_fill", "ground_edge", "decal", "landmark", "building_shell", "entrance", "signage", "street_furn", "vegetation", "barrier", "infra", "furniture_ext", "play_sport", "decor_small", "npc_anchor", "canopy"],
+      "notes": "Default world floor. Per structure-grammar.md grass must NOT show between urban-core buildings — it is for parks, hedge dividers, rooftop gardens and rural edges. The `rock` alias covers the cliff/bank pieces in 1_Terrains_and_Fences, which top out on natural ground."
+    },
+    "sand": {
+      "label": "Sand",
+      "tile": "sand_tile",
+      "walkable": true,
+      "paintable": true,
+      "default_depth": 0.92,
+      "registry_aliases": ["sand"],
+      "roles_allowed": ["ground_fill", "ground_edge", "decal", "landmark", "building_shell", "entrance", "signage", "street_furn", "vegetation", "barrier", "infra", "vehicle", "furniture_ext", "play_sport", "decor_small", "npc_anchor", "canopy"],
+      "notes": "Beach and desert-worksite floor; meets water through the shoreline foam tile."
+    },
+    "sidewalk": {
+      "label": "Sidewalk / paved",
+      "tile": "sidewalk_tile",
+      "walkable": true,
+      "paintable": true,
+      "default_depth": 0.87,
+      "registry_aliases": ["sidewalk", "concrete", "stone", "brick", "floor", "helipad", "wood", "deck"],
+      "roles_allowed": ["ground_fill", "ground_edge", "decal", "landmark", "building_shell", "facade", "entrance", "signage", "street_furn", "vegetation", "barrier", "infra", "vehicle", "furniture_ext", "play_sport", "decor_small", "npc_anchor", "canopy"],
+      "notes": "The urban city floor. Fills all space between roads and buildings in the paved core."
+    },
+    "asphalt": {
+      "label": "Asphalt road",
+      "tile": "asphalt_tile",
+      "walkable": true,
+      "paintable": true,
+      "default_depth": 1.1,
+      "registry_aliases": ["asphalt", "road"],
+      "roles_allowed": ["ground_fill", "ground_edge", "road_marking", "decal", "vehicle", "infra", "decor_small", "npc_anchor"],
+      "notes": "Driving lanes are 3-4 tiles wide. Solids must never cover a lane (check-city-plan.py ROADBLOCK)."
+    },
+    "water": {
+      "label": "Water",
+      "tile": null,
+      "walkable": false,
+      "paintable": true,
+      "default_depth": 0.95,
+      "registry_aliases": ["water"],
+      "roles_allowed": ["ground_fill", "ground_edge", "decal", "water_prop", "vehicle", "infra"],
+      "notes": "Emitted as `animBands` (animated ocean/pool), not a static patch. Blocks walking; only water_prop, boat-tagged vehicles and pier/boardwalk infra may sit on it."
+    }
+  },
+
+  "mounts": {
+    "_doc": "Non-ground attachment surfaces. An asset with a mount is positioned relative to another stamp rather than to the floor, so it can never be scattered by the fill passes.",
+    "wall": {
+      "label": "Building face",
+      "registry_aliases": ["wall", "sign"],
+      "attach_to_role": ["building_shell", "landmark", "facade"],
+      "max_offset_px": 24,
+      "roles": ["facade", "roof", "entrance", "wall_mount", "canopy"]
+    },
+    "roof": {
+      "label": "Building top",
+      "registry_aliases": ["roof"],
+      "attach_to_role": ["building_shell", "landmark"],
+      "roles": ["roof", "roof_prop"]
+    },
+    "air": {
+      "label": "Overhead / floating",
+      "registry_aliases": ["air"],
+      "attach_to_role": [],
+      "roles": ["canopy"],
+      "notes": "Cables, string lights, hanging banners spanning between two anchors."
+    },
+    "none": {
+      "label": "Not placeable",
+      "registry_aliases": ["ui", "none", "any"],
+      "roles": ["fragment"],
+      "notes": "UI chrome and sheet legends; excluded from all fill passes."
+    }
+  },
+
+  "biomes": {
+    "_doc": "L3 world model. A district spec names one biome; the biome fixes which themes are drawable, which surfaces exist, palette affinity order and the forbidden token list that the QA biome-violation check (W4-C) enforces.",
+    "universal": {
+      "label": "Universal kit",
+      "desc": "Cross-biome asset kits — terrain autotiles, fences, vehicles, generic props. Always drawable as a secondary source in every biome.",
+      "themes": ["1_Terrains_and_Fences", "10_Vehicles"],
+      "surfaces": ["grass", "sand", "sidewalk", "asphalt", "water"],
+      "palettes": ["neutral_urban"],
+      "districts": [],
+      "forbid_tags": []
+    },
+    "urban_core": {
+      "label": "Urban core",
+      "desc": "Continuous paved downtown: tight building rows flush to the sidewalk, awnings over the walk, dense street furniture, no visible grass.",
+      "themes": ["2_City_Terrains", "3_City_Props", "4_Generic_Buildings", "5_Floor_Modular_Buildings", "16_Office"],
+      "surfaces": ["sidewalk", "asphalt", "grass"],
+      "palettes": ["neutral_urban", "warm_autumn", "night_neon"],
+      "districts": ["d1-mainstreet", "d15-downtown"],
+      "density": { "building_shell": "packed", "street_furn": "dense", "vegetation": "sparse", "decor_small": "medium" },
+      "forbid_tags": ["beach", "camping", "grave", "military", "farm"],
+      "require_roles": ["building_shell", "canopy", "street_furn", "road_marking"]
+    },
+    "commercial": {
+      "label": "Commercial strip",
+      "desc": "Shopping centre, food market and garage-sale frontage: stalls, awnings, price signage, shopper NPC anchors.",
+      "themes": ["9_Shopping_Center_and_Markets", "6_Garage_Sales", "3_City_Props"],
+      "surfaces": ["sidewalk", "asphalt"],
+      "palettes": ["festive_market", "warm_autumn", "neutral_urban"],
+      "districts": ["d2-shopping", "d4-foodmarket"],
+      "density": { "building_shell": "dense", "canopy": "dense", "furniture_ext": "medium", "decor_small": "dense" },
+      "forbid_tags": ["grave", "military", "camping"],
+      "require_roles": ["canopy", "signage", "npc_anchor"]
+    },
+    "civic": {
+      "label": "Civic / institutional",
+      "desc": "School, hospital, police, fire and post office blocks: wide entrances, flagpoles, service vehicle bays, formal planting.",
+      "themes": ["12_Hotel_and_Hospital", "13_School", "15_Police_Station", "18_Fire_Station", "22_Post_Office"],
+      "surfaces": ["sidewalk", "asphalt", "grass"],
+      "palettes": ["civic_blue", "neutral_urban"],
+      "districts": ["d5-civic"],
+      "density": { "building_shell": "medium", "street_furn": "medium", "vegetation": "light", "vehicle": "medium" },
+      "forbid_tags": ["beach", "grave", "camping"],
+      "require_roles": ["entrance", "signage", "vehicle"]
+    },
+    "residential": {
+      "label": "Residential",
+      "desc": "Houses and villas with yards, driveways, fenced gardens, garage sales, loose spacing and visible grass between plots.",
+      "themes": ["7_Villas", "24_Additional_Houses", "6_Garage_Sales", "17_Garden"],
+      "surfaces": ["grass", "sidewalk", "asphalt"],
+      "palettes": ["pastel_suburb", "warm_autumn", "verdant"],
+      "districts": ["d6-residential"],
+      "density": { "building_shell": "medium", "barrier": "dense", "vegetation": "dense", "street_furn": "light" },
+      "forbid_tags": ["military", "grave", "worksite", "subway"],
+      "require_roles": ["barrier", "vegetation", "entrance"]
+    },
+    "transit": {
+      "label": "Transit",
+      "desc": "Train and subway stations: rail beds, platforms, turnstiles, timetable boards, waiting benches, bus bays.",
+      "themes": ["20_Subway_and_Train_Station"],
+      "surfaces": ["sidewalk", "asphalt"],
+      "palettes": ["neutral_urban", "civic_blue"],
+      "districts": ["d3-station", "d13-subway"],
+      "density": { "infra": "dense", "street_furn": "dense", "signage": "dense", "vehicle": "light" },
+      "forbid_tags": ["beach", "camping", "grave", "farm"],
+      "require_roles": ["infra", "signage", "entrance"]
+    },
+    "industrial": {
+      "label": "Industrial / worksite",
+      "desc": "Worksite and yard: scaffolds, pipes, cones, spoil heaps, machinery, chain-link runs, rust everywhere.",
+      "themes": ["8_Worksite", "3_City_Props"],
+      "surfaces": ["asphalt", "sidewalk", "grass", "sand"],
+      "palettes": ["industrial_rust", "neutral_urban"],
+      "districts": ["d11-industrial"],
+      "density": { "decor_small": "packed", "infra": "dense", "barrier": "dense", "vegetation": "sparse" },
+      "forbid_tags": ["beach", "grave", "flowers"],
+      "require_roles": ["barrier", "decor_small", "infra"]
+    },
+    "military": {
+      "label": "Military base",
+      "desc": "Barracks, hangars, helipads, sandbag walls, checkpoints, olive vehicles on a hard-standing.",
+      "themes": ["23_MIlitary_Base"],
+      "surfaces": ["asphalt", "sidewalk", "grass", "sand"],
+      "palettes": ["military_olive", "industrial_rust"],
+      "districts": ["d12-military"],
+      "density": { "building_shell": "light", "barrier": "dense", "vehicle": "medium", "decor_small": "medium" },
+      "forbid_tags": ["beach", "grave", "flowers", "shop"],
+      "require_roles": ["barrier", "vehicle", "signage"]
+    },
+    "park": {
+      "label": "Park / garden",
+      "desc": "Managed greenery: lawns, flower beds, paths, gazebos, fountains, benches, hedges, playgrounds.",
+      "themes": ["17_Garden", "13_School"],
+      "surfaces": ["grass", "sidewalk"],
+      "palettes": ["verdant", "warm_autumn", "pastel_suburb"],
+      "districts": ["d7-park"],
+      "density": { "vegetation": "packed", "furniture_ext": "medium", "play_sport": "medium", "building_shell": "sparse" },
+      "forbid_tags": ["military", "worksite", "subway", "grave"],
+      "require_roles": ["vegetation", "furniture_ext", "street_furn"]
+    },
+    "beach": {
+      "label": "Beach",
+      "desc": "Sand shelf against animated water: palms, loungers, parasols, bars, stages, lighthouse, buckets and toys as scatter.",
+      "themes": ["21_Beach", "14_Swimming_Pool"],
+      "surfaces": ["sand", "water", "sidewalk", "grass"],
+      "palettes": ["coastal", "festive_market"],
+      "districts": ["d8-beach", "d18-beach-compiler-pilot"],
+      "density": { "vegetation": "medium", "furniture_ext": "dense", "canopy": "dense", "decor_small": "dense", "building_shell": "sparse" },
+      "forbid_tags": ["grave", "military", "worksite", "subway", "snow"],
+      "require_roles": ["vegetation", "canopy", "furniture_ext", "water_prop"]
+    },
+    "leisure": {
+      "label": "Leisure / pool",
+      "desc": "Swimming pool and resort deck: tiled water, ladders, loungers, changing cabins, tropical planting.",
+      "themes": ["14_Swimming_Pool", "12_Hotel_and_Hospital"],
+      "surfaces": ["sidewalk", "water", "grass"],
+      "palettes": ["coastal", "pastel_suburb"],
+      "districts": [],
+      "density": { "furniture_ext": "dense", "canopy": "medium", "vegetation": "medium" },
+      "forbid_tags": ["grave", "military", "worksite"],
+      "require_roles": ["furniture_ext", "vegetation"]
+    },
+    "wild": {
+      "label": "Wild / camping",
+      "desc": "Forest clearing and campground: tents, firepits, log benches, dirt tracks, dense conifers, caravans.",
+      "themes": ["11_Camping", "1_Terrains_and_Fences"],
+      "surfaces": ["grass", "sand", "water"],
+      "palettes": ["verdant", "warm_autumn"],
+      "districts": ["d10-camping"],
+      "density": { "vegetation": "packed", "canopy": "medium", "decor_small": "medium", "building_shell": "sparse" },
+      "forbid_tags": ["subway", "office", "military", "grave"],
+      "require_roles": ["vegetation", "canopy", "furniture_ext"]
+    },
+    "rural": {
+      "label": "Rural / farm",
+      "desc": "Farm edge: crop rows, barns, wooden fences, tractors, dirt paths, hay. Uses the camping/garden/terrain kits until a dedicated farm sheet exists.",
+      "themes": ["1_Terrains_and_Fences", "17_Garden", "11_Camping"],
+      "surfaces": ["grass", "sand"],
+      "palettes": ["warm_autumn", "verdant"],
+      "districts": ["d14-farm"],
+      "density": { "vegetation": "dense", "barrier": "dense", "building_shell": "sparse", "decor_small": "light" },
+      "forbid_tags": ["subway", "office", "grave", "beach"],
+      "require_roles": ["barrier", "vegetation"]
+    },
+    "memorial": {
+      "label": "Memorial / graveyard",
+      "desc": "Cemetery: gravestone rows, crypts, iron fencing, bare trees, lanterns, pumpkins. Somber palette, strict row alignment.",
+      "themes": ["19_Graveyard"],
+      "surfaces": ["grass", "sidewalk"],
+      "palettes": ["somber_stone", "verdant"],
+      "districts": ["d9-graveyard"],
+      "density": { "decor_small": "packed", "vegetation": "medium", "barrier": "dense", "building_shell": "sparse" },
+      "forbid_tags": ["beach", "shop", "playground", "military"],
+      "require_roles": ["barrier", "decor_small", "vegetation"]
+    }
+  },
+
+  "theme_biomes": {
+    "_doc": "All 24 LimeZu Modern Exteriors theme sheets mapped to a primary biome plus the biomes that may borrow from them. W1-A seeds every me.* biome from its `sheet` via this map, then filename/tag rules refine it.",
+    "1_Terrains_and_Fences": { "primary": "universal", "also": ["rural", "wild", "park", "residential", "beach"] },
+    "2_City_Terrains": { "primary": "urban_core", "also": ["commercial", "civic", "transit"] },
+    "3_City_Props": { "primary": "urban_core", "also": ["commercial", "civic", "industrial", "transit"] },
+    "4_Generic_Buildings": { "primary": "urban_core", "also": ["commercial", "civic", "residential"] },
+    "5_Floor_Modular_Buildings": { "primary": "urban_core", "also": ["commercial", "residential", "civic"] },
+    "6_Garage_Sales": { "primary": "residential", "also": ["commercial"] },
+    "7_Villas": { "primary": "residential", "also": ["leisure"] },
+    "8_Worksite": { "primary": "industrial", "also": ["urban_core", "military"] },
+    "9_Shopping_Center_and_Markets": { "primary": "commercial", "also": ["urban_core"] },
+    "10_Vehicles": { "primary": "universal", "also": ["urban_core", "commercial", "civic", "residential", "industrial", "military", "transit"] },
+    "11_Camping": { "primary": "wild", "also": ["rural", "park", "beach"] },
+    "12_Hotel_and_Hospital": { "primary": "civic", "also": ["urban_core", "leisure"] },
+    "13_School": { "primary": "civic", "also": ["park"] },
+    "14_Swimming_Pool": { "primary": "leisure", "also": ["beach", "residential"] },
+    "15_Police_Station": { "primary": "civic", "also": ["urban_core"] },
+    "16_Office": { "primary": "urban_core", "also": ["civic", "commercial"] },
+    "17_Garden": { "primary": "park", "also": ["residential", "rural", "memorial"] },
+    "18_Fire_Station": { "primary": "civic", "also": ["urban_core", "industrial"] },
+    "19_Graveyard": { "primary": "memorial", "also": ["park"] },
+    "20_Subway_and_Train_Station": { "primary": "transit", "also": ["urban_core"] },
+    "21_Beach": { "primary": "beach", "also": ["leisure"] },
+    "22_Post_Office": { "primary": "civic", "also": ["urban_core", "commercial"] },
+    "23_MIlitary_Base": { "primary": "military", "also": ["industrial"] },
+    "24_Additional_Houses": { "primary": "residential", "also": ["rural", "urban_core"] }
+  },
+
+  "palettes": {
+    "_doc": "Color-variant steering. LimeZu ships most props in colour families; `tokens` are the colour words that actually appear in exs.* ids (weight = affinity 0..1), `avoid` demotes a variant to last resort. W1-B turns these into a per-variant score so a district reads as one coherent colour story instead of a rainbow.",
+    "neutral_urban": {
+      "label": "Neutral urban",
+      "tokens": { "grey": 1.0, "white": 0.9, "black": 0.8, "stone": 0.8, "silver": 0.7, "brick": 0.6, "blue": 0.5, "cream": 0.4 },
+      "avoid": ["pink", "violet", "emerald"]
+    },
+    "warm_autumn": {
+      "label": "Warm autumn",
+      "tokens": { "orange": 1.0, "brown": 1.0, "gold": 0.9, "cream": 0.8, "yellow": 0.7, "wood": 0.7, "red": 0.6 },
+      "avoid": ["ice", "violet", "silver"]
+    },
+    "coastal": {
+      "label": "Coastal",
+      "tokens": { "blue": 1.0, "ice": 1.0, "white": 0.9, "sand": 0.9, "cream": 0.6, "wood": 0.5, "green": 0.4 },
+      "avoid": ["black", "brick", "marble"]
+    },
+    "industrial_rust": {
+      "label": "Industrial rust",
+      "tokens": { "orange": 1.0, "brown": 0.9, "grey": 0.9, "black": 0.8, "yellow": 0.8, "red": 0.6, "silver": 0.5 },
+      "avoid": ["pink", "violet", "marble", "gold"]
+    },
+    "verdant": {
+      "label": "Verdant",
+      "tokens": { "green": 1.0, "emerald": 1.0, "wood": 0.8, "brown": 0.7, "stone": 0.5, "white": 0.4 },
+      "avoid": ["black", "silver", "violet"]
+    },
+    "pastel_suburb": {
+      "label": "Pastel suburb",
+      "tokens": { "cream": 1.0, "pink": 0.9, "yellow": 0.8, "white": 0.8, "blue": 0.7, "ice": 0.6, "wood": 0.5 },
+      "avoid": ["black", "grey", "orange"]
+    },
+    "civic_blue": {
+      "label": "Civic blue",
+      "tokens": { "blue": 1.0, "white": 0.9, "grey": 0.8, "silver": 0.7, "ice": 0.6, "red": 0.4 },
+      "avoid": ["pink", "emerald", "gold"]
+    },
+    "military_olive": {
+      "label": "Military olive",
+      "tokens": { "green": 1.0, "brown": 0.9, "grey": 0.8, "black": 0.7, "sand": 0.6 },
+      "avoid": ["pink", "violet", "gold", "ice"]
+    },
+    "somber_stone": {
+      "label": "Somber stone",
+      "tokens": { "stone": 1.0, "grey": 1.0, "marble": 0.9, "black": 0.8, "white": 0.7, "purple": 0.5, "violet": 0.4 },
+      "avoid": ["yellow", "pink", "orange"]
+    },
+    "festive_market": {
+      "label": "Festive market",
+      "tokens": { "red": 1.0, "yellow": 1.0, "pink": 0.9, "orange": 0.9, "purple": 0.7, "white": 0.7, "green": 0.6 },
+      "avoid": ["grey", "black", "stone"]
+    },
+    "night_neon": {
+      "label": "Night neon",
+      "tokens": { "violet": 1.0, "purple": 1.0, "pink": 0.9, "blue": 0.8, "black": 0.8, "white": 0.6 },
+      "avoid": ["brown", "sand", "cream"],
+      "notes": "Only for lit signage / late-night blocks; never the base palette of a whole district."
+    }
+  },
+
+  "color_tokens": ["blue", "brown", "green", "sand", "grey", "white", "red", "wood", "orange", "black", "yellow", "ice", "cream", "pink", "gold", "stone", "marble", "purple", "brick", "silver", "emerald", "violet"],
+
+  "interact": {
+    "_doc": "L6 runtime contract. The compiler writes `interact` onto a stamp; W4-A wires these to handlers in src/full-world.js. `runtime` says whether the hook exists yet — the compiler may emit planned types, but QA warns instead of failing.",
+    "sit": {
+      "label": "Sit",
+      "desc": "Player (or NPC) occupies a seat facing the implied direction.",
+      "roles": ["furniture_ext", "street_furn"],
+      "tags_any": ["bench", "chair", "lounger", "stool", "seat", "swing", "picnic"],
+      "anchor": "seat_point",
+      "runtime": "planned"
+    },
+    "enter": {
+      "label": "Enter",
+      "desc": "Teleports through a portal into an interior scene or subway band.",
+      "roles": ["entrance", "building_shell", "landmark"],
+      "tags_any": ["door", "entrance", "gate", "garage", "turnstile", "stairs"],
+      "anchor": "door_point",
+      "emits": "portal",
+      "runtime": "partial"
+    },
+    "read": {
+      "label": "Read",
+      "desc": "Shows a text panel: district signs, notice boards, timetables, gravestones, posters.",
+      "roles": ["signage", "wall_mount", "decor_small"],
+      "tags_any": ["sign", "board", "poster", "plaque", "marker", "grave", "timetable"],
+      "anchor": "front_point",
+      "runtime": "planned"
+    },
+    "shop": {
+      "label": "Shop",
+      "desc": "Opens a vendor exchange at a stall, counter, cart or vending machine.",
+      "roles": ["furniture_ext", "street_furn", "building_shell", "canopy"],
+      "tags_any": ["shop", "stall", "cart", "counter", "vending", "market", "kiosk", "bar"],
+      "anchor": "counter_point",
+      "pairs_with": "npc_anchor",
+      "runtime": "planned"
+    },
+    "play": {
+      "label": "Play",
+      "desc": "Triggers a mini-interaction on playground and sport equipment.",
+      "roles": ["play_sport", "decor_small"],
+      "tags_any": ["playground", "slide", "swing", "toy", "sports", "net", "ball", "court"],
+      "anchor": "front_point",
+      "runtime": "planned"
+    },
+    "board": {
+      "label": "Board",
+      "desc": "Boards a train, bus or boat — a transit-flavoured enter that moves the player between districts.",
+      "roles": ["vehicle", "infra"],
+      "tags_any": ["train", "bus", "boat", "platform", "tram"],
+      "anchor": "door_point",
+      "emits": "portal",
+      "runtime": "planned"
+    }
+  },
+
+  "density": {
+    "_doc": "Fill intensity per role per slot. `target_coverage` is the fraction of the slot's free area the pass tries to occupy; `min_spacing_mult` scales the role's own spacing_px; `props_per_kilopx2` is the scatter budget per 1000 px^2 of slot area (16px tiles => 1 tile ~= 0.26 kilopx2).",
+    "sparse": { "target_coverage": 0.03, "min_spacing_mult": 3.0, "props_per_kilopx2": 0.02, "jitter_px": 24 },
+    "light": { "target_coverage": 0.08, "min_spacing_mult": 2.0, "props_per_kilopx2": 0.05, "jitter_px": 20 },
+    "medium": { "target_coverage": 0.18, "min_spacing_mult": 1.25, "props_per_kilopx2": 0.12, "jitter_px": 16 },
+    "dense": { "target_coverage": 0.32, "min_spacing_mult": 1.0, "props_per_kilopx2": 0.24, "jitter_px": 12 },
+    "packed": { "target_coverage": 0.5, "min_spacing_mult": 0.75, "props_per_kilopx2": 0.4, "jitter_px": 8 }
+  },
+
+  "slots": {
+    "_doc": "Named regions a district spec declares (or the compiler derives from patches/roads). Each fill pass targets slots, so a rule never has to know absolute coordinates.",
+    "road_edge": { "label": "Road edge", "derived_from": "roads", "band_px": 32, "roles": ["street_furn", "signage", "infra", "vehicle", "vegetation", "decal"] },
+    "parking_bay": { "label": "Parking bay", "derived_from": "spec", "roles": ["vehicle", "road_marking", "decor_small"] },
+    "wall_line": { "label": "Building wall line", "derived_from": "building_shell", "band_px": 24, "roles": ["street_furn", "wall_mount", "canopy", "entrance", "decor_small", "vegetation"] },
+    "building_row": { "label": "Building row", "derived_from": "spec", "roles": ["building_shell", "landmark", "facade", "roof"] },
+    "plaza": { "label": "Open plaza", "derived_from": "patches", "roles": ["furniture_ext", "street_furn", "vegetation", "signage", "play_sport", "npc_anchor", "decal"] },
+    "path_edge": { "label": "Path edge", "derived_from": "patches", "band_px": 24, "roles": ["street_furn", "vegetation", "signage", "barrier", "decor_small"] },
+    "shore_line": { "label": "Shore line", "derived_from": "surface_boundary", "between": ["sand", "water"], "band_px": 48, "roles": ["ground_edge", "decor_small", "water_prop", "furniture_ext", "signage"] },
+    "water_body": { "label": "Water body", "derived_from": "patches", "roles": ["water_prop", "vehicle", "decal"] },
+    "backlot": { "label": "Backlot / yard", "derived_from": "spec", "roles": ["decor_small", "vehicle", "barrier", "infra", "vegetation"] },
+    "rail_bed": { "label": "Rail bed", "derived_from": "spec", "roles": ["infra", "vehicle", "decal", "barrier"] },
+    "interior_fill": { "label": "Slot interior", "derived_from": "patches", "roles": ["vegetation", "decor_small", "furniture_ext", "play_sport", "decal"] },
+    "rooftop": { "label": "Rooftop", "derived_from": "building_shell", "roles": ["roof", "roof_prop", "vegetation"] }
+  },
+
+  "defaults": {
+    "anchor": "bl",
+    "collision": "none",
+    "align": "tile16",
+    "depth": { "mode": "y_sort" },
+    "palette_tolerance": 0.35,
+    "biome_fallback": "universal",
+    "reject_on": ["surface_mismatch", "biome_forbidden", "group_only_solo", "overlap_gt_0.35"]
+  },
+
+  "rules": [
+    {
+      "id": "rule.ground.terrain_is_patch",
+      "priority": 10,
+      "match": { "categories": ["terrain", "asphalt", "sidewalk", "road", "path"] },
+      "set": { "role": "ground_fill", "emit_as": "patch", "collision": "none" },
+      "why": "Terrain autotiles are floor paint, not stamps; stamping them creates the seam artefacts listed in EXTERIOR-MISTAKES.md."
+    },
+    {
+      "id": "rule.ground.curbs_are_edges",
+      "priority": 10,
+      "match": { "categories": ["curb", "cliff", "transition"] },
+      "set": { "role": "ground_edge" },
+      "why": "Curbs and cliff faces only make sense straddling a surface boundary."
+    },
+    {
+      "id": "rule.road.markings_on_asphalt",
+      "priority": 10,
+      "match": { "categories": ["road_marking", "parking"] },
+      "set": { "role": "road_marking", "surfaces": ["asphalt"], "collision": "none" },
+      "why": "Paint belongs on the driving surface and must never block a lane."
+    },
+    {
+      "id": "rule.building.shell_default",
+      "priority": 20,
+      "match": { "categories": ["building"] },
+      "set": { "role": "building_shell", "interact": "enter", "collision": "solid", "facing": "south" },
+      "why": "structure-grammar.md: all buildings face the street with doors south."
+    },
+    {
+      "id": "rule.building.landmark_promote",
+      "priority": 25,
+      "match": { "categories": ["building"], "tags_any": ["landmark", "lighthouse", "chapel", "hangar", "stadium", "tower", "monument"] },
+      "set": { "role": "landmark" },
+      "why": "Hero structures are placed before everything else so props can yield to them."
+    },
+    {
+      "id": "rule.building.modular_is_fragment_of_group",
+      "priority": 30,
+      "match": { "categories": ["building", "wall"], "tags_any": ["modular"], "surface_any": ["wall"] },
+      "set": { "role": "facade", "group_only": true },
+      "why": "Modular facade pieces read as floating walls when stamped alone; they must come from a grp.* recipe."
+    },
+    {
+      "id": "rule.building.roof_modules",
+      "priority": 30,
+      "match": { "surface_any": ["roof"], "tags_any": ["roof", "ridge", "gutter", "parapet"] },
+      "set": { "role": "roof", "group_only": true },
+      "why": "A roof without its facade stack is a floating lid."
+    },
+    {
+      "id": "rule.attach.rooftop_props",
+      "priority": 35,
+      "match": { "tags_any": ["hvac", "antenna", "satellite", "chimney", "solar", "vent", "water_tank", "rooftop"] },
+      "set": { "role": "roof_prop", "mount": "roof" },
+      "why": "audit-placement-logic.py flags these as misplaced whenever they sit on open ground."
+    },
+    {
+      "id": "rule.attach.wall_mounted",
+      "priority": 35,
+      "match": { "tags_any": ["hanging_sign", "poster", "billboard", "wall_art", "graffiti", "plaque"], "surface_any": ["wall", "sign"] },
+      "set": { "role": "wall_mount", "mount": "wall", "interact": "read" },
+      "why": "Wall art must abut a building face within 24px of its baseline."
+    },
+    {
+      "id": "rule.canopy.overhang",
+      "priority": 40,
+      "match": { "tags_any": ["awning", "canopy", "umbrella", "parasol", "tent", "shelter", "marquee", "pergola", "tarp"] },
+      "set": { "role": "canopy", "collision": "none", "depth": { "mode": "y_sort_bias", "bias": 6 } },
+      "why": "Awnings overhang the sidewalk: they must draw above the props under them but keep the tile walkable."
+    },
+    {
+      "id": "rule.entrance.doors",
+      "priority": 40,
+      "match": { "tags_any": ["door", "entrance", "stairs", "stoop", "gate", "garage", "turnstile"] },
+      "set": { "role": "entrance", "interact": "enter", "emits": "portal_candidate" },
+      "why": "Entrances are the only legitimate anchor for a portal into an interior scene."
+    },
+    {
+      "id": "rule.sign.wall_blade",
+      "priority": 44,
+      "match": { "categories": ["sign"], "surface_any": ["wall", "sign"] },
+      "set": { "role": "wall_mount", "mount": "wall", "interact": "read" },
+      "why": "Blade and box signs whose registry surface is the wall itself are mounts, not freestanding poles."
+    },
+    {
+      "id": "rule.sign.freestanding",
+      "priority": 45,
+      "match": { "categories": ["sign"], "not_surface_any": ["wall", "sign"] },
+      "set": { "role": "signage", "interact": "read", "collision": "solid" },
+      "why": "Pole signs stand on the ground and want a path within 64px to be readable."
+    },
+    {
+      "id": "rule.infra.city_plumbing",
+      "priority": 48,
+      "match": { "categories": ["infra", "utility"] },
+      "set": { "role": "infra", "collision": "solid" },
+      "why": "Catch-all for functional city plumbing (traffic lights, poles, transformers, platforms, piers, ladders) before the narrower street-furniture and canopy tag rules refine it."
+    },
+    {
+      "id": "rule.street.furniture",
+      "priority": 50,
+      "match": { "categories": ["prop", "infra", "furniture", "utility"], "tags_any": ["bench", "trash", "bin", "hydrant", "bollard", "mailbox", "atm", "phone", "lamp", "light", "planter", "bike", "pole"] },
+      "set": { "role": "street_furn", "slots": ["road_edge", "wall_line", "path_edge", "plaza"] },
+      "why": "structure-grammar.md: props line the sidewalks against walls and road edges, never floating."
+    },
+    {
+      "id": "rule.nature.vegetation",
+      "priority": 50,
+      "match": { "categories": ["nature"] },
+      "set": { "role": "vegetation", "collision": "solid", "align": "free" },
+      "why": "Trees and beds want organic jitter, not tile lock, and they block movement."
+    },
+    {
+      "id": "rule.barrier.fence_and_wall_kits",
+      "priority": 49,
+      "match": { "categories": ["fence", "wall"] },
+      "set": { "role": "barrier", "emit_as": "run" },
+      "why": "Everything in the fence/wall kits is a linear run along a slot edge; scattered fence pieces are the classic broken look."
+    },
+    {
+      "id": "rule.barrier.tagged_runs",
+      "priority": 50,
+      "match": { "tags_any": ["fence", "railing", "barrier", "sandbag", "chainlink"] },
+      "set": { "role": "barrier", "emit_as": "run" },
+      "why": "Railings and barriers filed under other categories (school railing, military sandbags) still have to be run out as a line, not scattered."
+    },
+    {
+      "id": "rule.infra.piers_and_decks",
+      "priority": 52,
+      "match": { "tags_any": ["pier", "dock", "boardwalk"] },
+      "set": { "role": "infra", "surfaces": ["water", "sand", "grass", "sidewalk"], "collision": "none" },
+      "why": "Piers and boardwalks are walkable structures laid over water or sand, so they must not inherit the fence kit's barrier collision."
+    },
+    {
+      "id": "rule.vehicle.on_lane_or_bay",
+      "priority": 50,
+      "match": { "categories": ["vehicle"] },
+      "set": { "role": "vehicle", "slots": ["road_edge", "parking_bay", "backlot", "rail_bed", "water_body"], "collision": "solid" },
+      "why": "A car on grass reads as a bug; vehicles snap to a lane, bay, yard, rail bed or water."
+    },
+    {
+      "id": "rule.vehicle.boats_on_water",
+      "priority": 55,
+      "match": { "categories": ["vehicle", "prop", "decor"], "tags_any": ["boat", "ship", "buoy", "float", "jetski"] },
+      "set": { "role": "water_prop", "surfaces": ["water"] },
+      "why": "audit-placement-logic.py WATER rule: hulls and buoys must sit on a water band."
+    },
+    {
+      "id": "rule.furniture.outdoor_sets",
+      "priority": 55,
+      "match": { "categories": ["furniture"] },
+      "set": { "role": "furniture_ext", "interact": "sit", "align": "free" },
+      "why": "Outdoor furniture is the main sit-interact population and looks best slightly off-grid."
+    },
+    {
+      "id": "rule.play.equipment",
+      "priority": 55,
+      "match": { "tags_any": ["playground", "sports", "slide", "swing", "net", "goal", "court", "toy"] },
+      "set": { "role": "play_sport", "interact": "play", "clear_apron_px": 48 },
+      "why": "Play equipment needs a clear apron or it reads as clutter."
+    },
+    {
+      "id": "rule.decal.flat_marks",
+      "priority": 60,
+      "match": { "categories": ["decal"] },
+      "set": { "role": "decal", "collision": "none", "depth": { "mode": "fixed", "value": 1.35 } },
+      "why": "Decals are floor paint: fixed depth under every stamp, no collision."
+    },
+    {
+      "id": "rule.scatter.small_decor",
+      "priority": 70,
+      "match": { "categories": ["prop", "decor"] },
+      "set": { "role": "decor_small", "collision": "none", "align": "free" },
+      "why": "Catch-all scatter layer; this is where the bulk of the unused 6224 Singles gets spent."
+    },
+    {
+      "id": "rule.meta.example_stamps_are_groups",
+      "priority": 80,
+      "match": { "tags_any": ["example"] },
+      "set": { "group_only": true },
+      "why": "LimeZu `Example_*` cutouts are pre-assembled scenes; treat them as ready-made groups, not as generic props."
+    },
+    {
+      "id": "rule.meta.fragments_group_only",
+      "priority": 80,
+      "match": { "tags_any": ["corner", "edge", "side", "middle"], "multi_tile": false },
+      "set": { "role": "fragment", "group_only": true },
+      "why": "Tier D coverage: autotile fragments are only legal inside a group recipe."
+    },
+    {
+      "id": "rule.meta.npc_anchors",
+      "priority": 80,
+      "match": { "categories": ["npc"] },
+      "set": { "role": "npc_anchor", "emit_as": "npc" },
+      "why": "Sheet NPCs are population hints, not stamps; they become `npcs` entries."
+    },
+    {
+      "id": "rule.meta.ui_not_placeable",
+      "priority": 90,
+      "match": { "surface_any": ["ui", "none"] },
+      "set": { "role": "fragment", "group_only": true, "placeable": false },
+      "why": "Sheet legends and UI chrome must never enter a fill pass."
+    }
+  ],
+
+  "example_rules": {
+    "_doc": "Worked examples showing a fully resolved rule for one asset — what W1-A enrichment should produce per me.* id.",
+    "me.beach.palm_tree": {
+      "id": "me.beach.palm_tree",
+      "name": "Palm tree",
+      "sheet": "21_Beach",
+      "img": "ext/singles/21_beach/21_Beach_16x16_Palm_Tree.png",
+      "exs": "exs.21_beach.beach_palm_tree",
+      "size_px": { "w": 64, "h": 80 },
+      "role": "vegetation",
+      "biomes": { "primary": "beach", "also": ["leisure"] },
+      "palettes": { "coastal": 1.0, "festive_market": 0.6, "verdant": 0.5, "somber_stone": 0.0 },
+      "surfaces": ["sand", "grass"],
+      "forbid_surfaces": ["asphalt", "water", "sidewalk"],
+      "anchor": "bc",
+      "align": "free",
+      "collision": "solid",
+      "footprint_px": { "w": 24, "h": 12 },
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 56,
+      "slots": ["shore_line", "interior_fill", "path_edge", "plaza"],
+      "density_by_slot": { "shore_line": "medium", "interior_fill": "light", "path_edge": "light" },
+      "jitter_px": 20,
+      "interact": null,
+      "group_only": false,
+      "variants": { "family": "palm", "siblings": ["exs.14_swimming_pool.swimming_pool_palm_1", "exs.14_swimming_pool.swimming_pool_palm_2", "exs.14_swimming_pool.swimming_pool_palm_3"], "pick": "weighted_palette" },
+      "notes": "Single detailed palm, 64x80 with a 4-tile canopy. Collides on the trunk only, so the 24x12 footprint is narrower than the sprite. Cluster in 2-3s with >=56px trunk spacing so canopies overlap without stacking trunks; keep >=32px off the shoreline foam tile and never on the sidewalk boardwalk.",
+      "derived_from": ["rule.nature.vegetation", "theme_biomes.21_Beach", "biomes.beach", "palettes.coastal"]
+    },
+    "me.city_props.bench_wood": {
+      "id": "me.city_props.bench_wood",
+      "role": "street_furn",
+      "biomes": { "primary": "urban_core", "also": ["commercial", "civic", "park", "transit"] },
+      "palettes": { "neutral_urban": 1.0, "warm_autumn": 0.9, "verdant": 0.7 },
+      "surfaces": ["sidewalk", "grass", "sand"],
+      "anchor": "bc",
+      "align": "tile16",
+      "collision": "solid",
+      "depth": { "mode": "y_sort" },
+      "spacing_px": 96,
+      "slots": ["road_edge", "wall_line", "plaza", "path_edge"],
+      "interact": "sit",
+      "pairs_with": ["npc_anchor"],
+      "group_only": false,
+      "derived_from": ["rule.street.furniture", "interact.sit"]
+    }
+  },
+
+  "example_district_spec": {
+    "_doc": "Shape of a compiler-driven district (W2-B `d18-beach-compiler-pilot.json`). The compiler consumes this plus placement-rules.json and emits the usual patches/roads/stamps/anims/solids/portals/npcs fragment that merge-city-plan.py already understands. Hand `stamps` arrays stay legal for pinned hero placements.",
+    "district": "D18 Beach (compiler pilot)",
+    "compiler": { "version": 1, "rules": "data/limezu-visual-catalog/placement-rules.json", "seed": 8181 },
+    "bbox": { "x": 3600, "y": 4600, "w": 2400, "h": 1200 },
+    "biome": "beach",
+    "palette": "coastal",
+    "palette_secondary": "festive_market",
+    "surfaces": [
+      { "surface": "sand", "x": 3600, "y": 4600, "w": 2400, "h": 800 },
+      { "surface": "water", "x": 3600, "y": 5400, "w": 2400, "h": 400, "anim": "ext/animated/water_ocean.png" },
+      { "surface": "sidewalk", "x": 3600, "y": 4600, "w": 2400, "h": 96, "name": "promenade" }
+    ],
+    "slots": [
+      { "slot": "shore_line", "between": ["sand", "water"], "density": { "vegetation": "sparse", "decor_small": "dense", "water_prop": "medium" } },
+      { "slot": "interior_fill", "surface": "sand", "density": { "vegetation": "medium", "furniture_ext": "dense", "canopy": "dense", "decor_small": "dense" } },
+      { "slot": "path_edge", "surface": "sidewalk", "name": "promenade", "density": { "street_furn": "dense", "signage": "light", "vegetation": "medium" } },
+      { "slot": "plaza", "x": 4200, "y": 4800, "w": 480, "h": 320, "density": { "play_sport": "medium", "npc_anchor": "medium" } }
+    ],
+    "landmarks": [
+      { "me": "me.beach.lighthouse", "at": { "x": 5880, "y": 5340 }, "anchor": "bl", "pin": true },
+      { "grp": "grp.beach.stage_dj", "at": { "x": 4280, "y": 5200 } }
+    ],
+    "groups": [
+      { "grp": "grp.beach.volley_court", "slot": "plaza", "count": 1 },
+      { "grp": "grp.beach.parasol_lounger_pair", "slot": "interior_fill", "count": 8, "palette": "coastal" },
+      { "grp": "grp.beach.bar_ship", "slot": "shore_line", "count": 1, "interact": "shop" }
+    ],
+    "interactions": { "sit": "auto", "shop": ["grp.beach.bar_ship"], "read": ["me.beach.sign_beach"], "play": ["grp.beach.volley_court"] },
+    "constraints": {
+      "keep_clear": [{ "x": 4900, "y": 4600, "w": 160, "h": 1200, "why": "walk-down from the promenade to the water" }],
+      "max_stamps": 900,
+      "coverage_target_singles": 240
+    }
+  }
+}

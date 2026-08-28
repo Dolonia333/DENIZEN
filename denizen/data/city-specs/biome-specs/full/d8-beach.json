@@ -1,0 +1,114 @@
+{
+ "_doc": "AUTO-DERIVED by scripts/derive-full-district-spec.py from d8-beach.json. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d8-beach.json --qa -v",
+ "schema": "exterior-district-spec/1",
+ "id": "d8-compiled",
+ "district": "D8 Beach & Boardwalk",
+ "biome": "beach",
+ "palette": "coastal",
+ "palette_secondary": "festive_market",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 108001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d8-compiled.json",
+  "full_bbox": true
+ },
+ "bbox": {
+  "x": 3600,
+  "y": 3200,
+  "w": 2512,
+  "h": 1200
+ },
+ "label": "BEACH & BOARDWALK",
+ "label_at": {
+  "x": 1000,
+  "y": 50
+ },
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0,
+   "y": 0,
+   "w": 2512,
+   "h": 1184,
+   "depth": 0.9,
+   "_doc": "derived from hand district patches"
+  },
+  {
+   "surface": "sidewalk",
+   "x": 96,
+   "y": 400,
+   "w": 560,
+   "h": 304,
+   "depth": 0.9
+  },
+  {
+   "surface": "sidewalk",
+   "x": 320,
+   "y": 0,
+   "w": 96,
+   "h": 400,
+   "depth": 0.9
+  },
+  {
+   "surface": "sidewalk",
+   "x": 1744,
+   "y": 0,
+   "w": 96,
+   "h": 704,
+   "depth": 0.9
+  },
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 704,
+   "w": 2512,
+   "h": 96,
+   "depth": 0.9
+  },
+  {
+   "surface": "sand",
+   "x": 0,
+   "y": 800,
+   "w": 2512,
+   "h": 400,
+   "depth": 0.92
+  }
+ ],
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "district_fill",
+   "x": 16,
+   "y": 16,
+   "w": 2480,
+   "h": 1168,
+   "density": {
+    "vegetation": "medium",
+    "furniture_ext": "dense",
+    "canopy": "dense",
+    "decor_small": "dense",
+    "building_shell": "sparse"
+   },
+   "_doc": "auto-derived from placement-rules.biomes.beach.density"
+  },
+  {
+   "slot": "path_edge",
+   "name": "walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "medium",
+    "signage": "light",
+    "vegetation": "light"
+   }
+  }
+ ],
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "shop": "auto",
+  "play": "auto",
+  "enter": "auto"
+ }
+}

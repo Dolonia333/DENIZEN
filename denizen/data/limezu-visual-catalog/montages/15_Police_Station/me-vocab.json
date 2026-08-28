@@ -1,0 +1,392 @@
+{
+  "sheet": "15_Police_Station",
+  "labels": [
+    {
+      "id": "me.police.station_red",
+      "name": "Police station building red/grey",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.station_grey",
+      "name": "Police station building dark grey/blue",
+      "y_hint": [
+        260,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.station_white",
+      "name": "Police station building white/lavender/blue",
+      "y_hint": [
+        500,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.spotlight_front",
+      "name": "Roof spotlight facing front",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.spotlight_right",
+      "name": "Roof spotlight facing right",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.spotlight_back",
+      "name": "Roof spotlight facing back",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.spotlight_left",
+      "name": "Roof spotlight facing left",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.rail_lights_curved",
+      "name": "Curved roof railing with spotlights",
+      "y_hint": [
+        20,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.rail_lights_straight",
+      "name": "Straight roof railing with spotlights",
+      "y_hint": [
+        40,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.rail_plain",
+      "name": "Plain metal roof railing segment",
+      "y_hint": [
+        40,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.police.sign_full",
+      "name": "POLICE sign with gold badge",
+      "y_hint": [
+        140,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.badge_large",
+      "name": "Gold police badge large",
+      "y_hint": [
+        160,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.police.badge_small",
+      "name": "Gold police badge small",
+      "y_hint": [
+        160,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.police.roof_modular_empty",
+      "name": "Modular empty roof deck with railings",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.roof_ledge_slice",
+      "name": "Roof ledge / facade edge slice",
+      "y_hint": [
+        260,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.roof_cabin",
+      "name": "Rooftop access cabin / stair bulkhead",
+      "y_hint": [
+        300,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.helicopter",
+      "name": "Police helicopter",
+      "y_hint": [
+        520,
+        680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.helipad",
+      "name": "Helipad circular H pad",
+      "y_hint": [
+        560,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.car_front",
+      "name": "Police car front/rear view",
+      "y_hint": [
+        640,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.car_side",
+      "name": "Police car side profile",
+      "y_hint": [
+        640,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.station_wing_modular",
+      "name": "Police station modular wing / garage section",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.facade_narrow_blue",
+      "name": "Narrow tall POLICE facade blue trim",
+      "y_hint": [
+        880,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.facade_narrow_red",
+      "name": "Narrow tall POLICE facade red trim",
+      "y_hint": [
+        880,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.box_front",
+      "name": "Police call box front",
+      "y_hint": [
+        920,
+        1080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.box_side",
+      "name": "Police call box side",
+      "y_hint": [
+        920,
+        1080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.parking_booth_orange",
+      "name": "Parking/security booth orange stripe",
+      "y_hint": [
+        980,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.parking_booth_blue",
+      "name": "Parking/security booth blue stripe",
+      "y_hint": [
+        980,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.kiosk_terminal",
+      "name": "Security terminal / info kiosk",
+      "y_hint": [
+        900,
+        1000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.searchlight_ground",
+      "name": "Ground searchlight on swivel base",
+      "y_hint": [
+        900,
+        1020
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.barrier_arm_closed",
+      "name": "Boom barrier arm closed (horizontal)",
+      "y_hint": [
+        1000,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.barrier_arm_open",
+      "name": "Boom barrier arm open (vertical)",
+      "y_hint": [
+        1000,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.barrier_base",
+      "name": "Boom barrier mechanism base",
+      "y_hint": [
+        1020,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.bollard",
+      "name": "Security bollard yellow top",
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.police.siren_post",
+      "name": "Siren / beacon light on post",
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.police.signal_lights",
+      "name": "Traffic/gate signal lights",
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.police.car_side_alt",
+      "name": "Police car additional facing variants",
+      "y_hint": [
+        768,
+        880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.roof_no_sign",
+      "name": "Police station roof module without sign",
+      "y_hint": [
+        260,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.roof_no_spotlights",
+      "name": "Police station roof module without spotlights",
+      "y_hint": [
+        260,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.facade_narrow_blue_highlight",
+      "name": "Narrow facade blue highlight variant",
+      "y_hint": [
+        880,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.facade_narrow_red_highlight",
+      "name": "Narrow facade red highlight variant",
+      "y_hint": [
+        880,
+        1104
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.sidewalk_obstacle",
+      "name": "Sidewalk security obstacle / bollard pair",
+      "y_hint": [
+        1040,
+        1104
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.police.car_rear",
+      "name": "Police car rear view",
+      "y_hint": [
+        640,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.police.car_side_left",
+      "name": "Police car side facing left",
+      "y_hint": [
+        768,
+        880
+      ],
+      "multi_tile": true
+    }
+  ]
+}

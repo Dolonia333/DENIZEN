@@ -1,0 +1,53 @@
+{
+  "sheet": "20_Subway_and_Train_Station",
+  "source": "assets/limezu/ext/themes/20_Subway_and_Train_Station.png",
+  "size": [
+    512,
+    2960
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 768,
+      "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_00_y0-768.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 1,
+      "y0": 768,
+      "y1": 1536,
+      "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_01_y768-1536.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 2,
+      "y0": 1536,
+      "y1": 2304,
+      "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_02_y1536-2304.jpg",
+      "px_size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "index": 3,
+      "y0": 2304,
+      "y1": 2960,
+      "path": "data/limezu-visual-catalog/sheets/20_Subway_and_Train_Station/band_03_y2304-2960.jpg",
+      "px_size": [
+        1024,
+        1312
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/20_subway_and_train_station",
+  "singles_count": 582
+}

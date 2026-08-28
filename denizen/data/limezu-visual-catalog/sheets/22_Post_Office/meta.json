@@ -1,0 +1,23 @@
+{
+  "sheet": "22_Post_Office",
+  "source": "assets/limezu/ext/themes/22_Post_Office.png",
+  "size": [
+    512,
+    480
+  ],
+  "overview": "data/limezu-visual-catalog/sheets/22_Post_Office/_overview.jpg",
+  "bands": [
+    {
+      "index": 0,
+      "y0": 0,
+      "y1": 480,
+      "path": "data/limezu-visual-catalog/sheets/22_Post_Office/band_00_y0-480.jpg",
+      "px_size": [
+        1024,
+        960
+      ]
+    }
+  ],
+  "singles_dir": "assets/limezu/ext/singles/22_post_office",
+  "singles_count": 44
+}
