@@ -1,0 +1,173 @@
+{
+ "_doc": "W3-D exterior district compiler spec — a 360x280 sandbagged motor-pool annex pocket in D12's own southern reaches (D12 bbox nominally ends y=2700, but its actual stamped footprint — watch towers, hangar, bunker, dormitory, tanks — runs from y~2136 to y~3220 between two full-width E-W highways at y=1872 and y=3232; this pocket at y=2880 sits in the clear strip east of the watch-tower cluster and west/south of the hangar/dormitory cluster, still inside the highway pair that bounds D12 north-south). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/military.json --qa. Vocabulary (biome / surface / slot / role / density / palette / interact) comes from data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md",
+ "schema": "exterior-district-spec/1",
+ "id": "d26-military-pocket",
+ "district": "D26 Military Motor-Pool Annex (D12 extension)",
+ "biome": "military",
+ "palette": "military_olive",
+ "palette_secondary": "industrial_rust",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 26014,
+  "coords": "local",
+  "out": "data/city-specs/generated/d26-military-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox (5216,2880), verified empty of every existing d*.json solid stamp's true PNG footprint (watch tower, hangar, bunker, dormitory, radio tower, tanks, sandbag clusters) — see EXTERIOR-MISTAKES.md #4 on stale bbox after relocate."
+ },
+ "bbox": {
+  "x": 5216,
+  "y": 2880,
+  "w": 360,
+  "h": 280
+ },
+ "label": "MOTOR POOL ANNEX",
+ "label_at": {
+  "x": 180,
+  "y": 24
+ },
+ "surfaces": [
+  {
+   "surface": "asphalt",
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 280,
+   "depth": 0.9,
+   "_doc": "hard-standing across the whole bbox for parked armor and the checkpoint lane"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "perimeter_walk",
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 32,
+   "depth": 0.89,
+   "_doc": "paved approach along the north edge, continuing the base's internal road network"
+  },
+  {
+   "surface": "sand",
+   "name": "drill_yard",
+   "x": 24,
+   "y": 168,
+   "w": 128,
+   "h": 96,
+   "depth": 0.92,
+   "_doc": "bare-earth drill/training patch for the shooting-target row and training dummies"
+  }
+ ],
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "perimeter_walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "dense",
+    "signage": "dense",
+    "decor_small": "medium"
+   },
+   "_doc": "warning signs and a streetlight along the paved strip"
+  },
+  {
+   "slot": "backlot",
+   "name": "motor_pool",
+   "x": 8,
+   "y": 32,
+   "w": 344,
+   "h": 240,
+   "density": {
+    "barrier": "dense",
+    "vehicle": "medium",
+    "decor_small": "dense",
+    "vegetation": "sparse",
+    "infra": "dense"
+   },
+   "_doc": "sandbag walls, barbed wire runs, tank/vehicle parking, tire stacks — matches biomes.military density (barrier dense, vehicle medium) exactly"
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.military.quonset_tall_closed",
+   "at": {
+    "x": 66,
+    "y": 250
+   },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "sealed quonset motor-shed, the pocket's hero silhouette"
+  },
+  {
+   "me": "me.military.watchtower_empty",
+   "at": {
+    "x": 300,
+    "y": 90
+   },
+   "anchor": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.military.tank_green_south",
+   "at": {
+    "x": 220,
+    "y": 250
+   },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "parked armor, hull facing the yard"
+  }
+ ],
+ "groups": [],
+ "interactions": {
+  "enter": "auto",
+  "read": "auto"
+ },
+ "anims": [
+  {
+   "sheet": "ext/animated/Automatic_Barrier_1_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "at": {
+    "x": 24,
+    "y": 72
+   },
+   "fps": 6
+  }
+ ],
+ "constraints": {
+  "max_stamps": 85,
+  "coverage_target_singles": 32,
+  "max_solid_cell_ratio": 0.32,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "a 360x280 pocket is ~23x18 = 414 cells; military wants barrier dense + vehicle medium, so headroom mirrors the industrial pilot. Target trimmed to 32 (from the beach/industrial 38-45) because 23_MIlitary_Base's decor_small/infra catalog is smaller — pushing density past 'dense' just re-picks the same few Singles instead of adding real variety."
+ },
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": {
+   "enabled": true,
+   "themes": [
+    "23_MIlitary_Base"
+   ]
+  },
+  "F_canopy": { "enabled": true },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.military.sandbag_single",
+    "me.military.sandbag_stacks",
+    "me.military.barbed_wire_kit",
+    "me.military.wall_barbed",
+    "me.military.tire_single",
+    "me.military.tire_stacks",
+    "me.military.warning_signs",
+    "me.military.shooting_target",
+    "me.military.training_dummy",
+    "me.military.mine"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}

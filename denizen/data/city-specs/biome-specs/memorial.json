@@ -1,0 +1,187 @@
+{
+ "_doc": "W3-D exterior district compiler spec — a 360x280 overflow-plot pocket immediately south of D9's graveyard grounds (D9 bbox is (200,4400,900,660), ending at y=5060; this pocket starts at y=5072, clear of D9's own trees/crosses/gates and of D13-subway's bbox which only starts at x=640,y=5120). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/memorial.json --qa. Vocabulary (biome / surface / slot / role / density / palette / interact) comes from data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md",
+ "schema": "exterior-district-spec/1",
+ "id": "d27-memorial-pocket",
+ "district": "D27 Memorial Overflow Plot (D9 extension)",
+ "biome": "memorial",
+ "palette": "somber_stone",
+ "palette_secondary": "verdant",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 27019,
+  "coords": "local",
+  "out": "data/city-specs/generated/d27-memorial-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox (208,5072), verified empty of every existing d*.json solid stamp's true PNG footprint — see EXTERIOR-MISTAKES.md #4 on stale bbox after relocate."
+ },
+ "bbox": {
+  "x": 208,
+  "y": 5072,
+  "w": 360,
+  "h": 280
+ },
+ "label": "OVERFLOW PLOT",
+ "label_at": {
+  "x": 180,
+  "y": 24
+ },
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 280,
+   "depth": 0.9,
+   "_doc": "the whole pocket is mown cemetery lawn — grp.graveyard.tombstone_plot declares surface grass"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "chapel_walk",
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 32,
+   "depth": 0.89,
+   "_doc": "paved approach along the north edge, continuing down from D9's own grounds"
+  }
+ ],
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "chapel_walk_edge",
+   "surface": "sidewalk",
+   "density": {
+    "street_furn": "light",
+    "signage": "light",
+    "decor_small": "light"
+   },
+   "_doc": "a lantern and a low iron fence run along the paved strip"
+  },
+  {
+   "slot": "interior_fill",
+   "name": "plot_rows",
+   "x": 16,
+   "y": 40,
+   "w": 328,
+   "h": 224,
+   "density": {
+    "decor_small": "packed",
+    "vegetation": "medium",
+    "barrier": "dense",
+    "building_shell": "sparse"
+   },
+   "_doc": "row after row of grave markers, candles, wreaths and bare trees — matches biomes.memorial density exactly"
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.graveyard.grace_chapel",
+   "at": {
+    "x": 60,
+    "y": 200
+   },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "small stone chapel, the pocket's hero silhouette"
+  },
+  {
+   "me": "me.graveyard.gate_medium",
+   "at": {
+    "x": 180,
+    "y": 32
+   },
+   "anchor": "bc",
+   "solid": true,
+   "interact": "unlock",
+   "_doc": "wrought-iron entry gate on the paved approach; y kept clear of the chapel footprint below"
+  },
+  {
+   "me": "me.graveyard.wood_large_cross_1",
+   "at": {
+    "x": 300,
+    "y": 250
+   },
+   "anchor": "bl",
+   "solid": true
+  }
+ ],
+ "groups": [
+  {
+   "grp": "grp.graveyard.tombstone_plot",
+   "slot": "plot_rows",
+   "count": 3,
+   "_doc": "recipe from data/limezu-visual-catalog/groups/: 2x6-tile mixed black/brown tombstone grid, sampled 3x into free plot cells for strict row alignment"
+  }
+ ],
+ "interactions": {
+  "enter": "auto",
+  "read": "auto"
+ },
+ "anims": [
+  {
+   "sheet": "ext/animated/Worksite_Door_16x16.png",
+   "fw": 48,
+   "fh": 48,
+   "at": {
+    "x": 70,
+    "y": 176
+   },
+   "fps": 6
+  }
+ ],
+ "constraints": {
+  "keep_clear": [
+   {
+    "x": 140,
+    "y": 32,
+    "w": 80,
+    "h": 40,
+    "why": "gate approach on the chapel walk must stay walkable"
+   }
+  ],
+  "max_stamps": 90,
+  "coverage_target_singles": 40,
+  "max_solid_cell_ratio": 0.3,
+  "min_free_cell_ratio": 0.42,
+  "_doc": "a 360x280 pocket is ~23x18 = 414 cells; memorial wants decor_small packed + barrier dense with strict row alignment, so headroom mirrors the beach pilot"
+ },
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": {
+   "enabled": true,
+   "themes": [
+    "19_Graveyard"
+   ]
+  },
+  "F_canopy": {
+   "enabled": true,
+   "candidates": [
+    "me.graveyard.big_tree",
+    "me.graveyard.medium_tree_1",
+    "me.graveyard.small_tree_1"
+   ]
+  },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.graveyard.small_grey_tombstone_1",
+    "me.graveyard.small_grey_tombstone_2",
+    "me.graveyard.marble_grey_tombstone_1",
+    "me.graveyard.marble_brown_tombstone_1",
+    "me.graveyard.long_tombstone_1",
+    "me.graveyard.wood_cross_1",
+    "me.graveyard.grey_cross_1",
+    "me.graveyard.consumed_candle_1",
+    "me.graveyard.wall_candle_1",
+    "me.graveyard.pebbles_1",
+    "me.graveyard.grass_tufts"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}

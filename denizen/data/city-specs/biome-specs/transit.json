@@ -1,0 +1,177 @@
+{
+ "_doc": "W3-D exterior district compiler spec — a 360x280 bus-transfer plaza pocket inside D13's own subway/train-station bbox ((640,5120)-(4096,5632)); this pocket at (1600,5264) is verified clear of every existing d*.json solid stamp's true PNG footprint. Note: grp.subway.platform_bench_row and grp.subway.turnstile_gate both declare `surface: ground`, which placement-rules.json aliases to `grass` (not sidewalk) — so the concourse is landscaped lawn (a common real-world station-plaza treatment) rather than bare pavement, or the D_groups pass silently rejects every anchor as a surface mismatch (see EXTERIOR-MISTAKES.md pattern: a group's declared surface is a hard 80%-of-footprint gate, not a hint). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/transit.json --qa. Vocabulary (biome / surface / slot / role / density / palette / interact) comes from data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md",
+ "schema": "exterior-district-spec/1",
+ "id": "d28-transit-pocket",
+ "district": "D28 Transit Transfer Plaza (D13 extension)",
+ "biome": "transit",
+ "palette": "neutral_urban",
+ "palette_secondary": "civic_blue",
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 28023,
+  "coords": "local",
+  "out": "data/city-specs/generated/d28-transit-pocket.json",
+  "_doc": "coords 'local': every rect/point below is relative to bbox (1600,5264), verified empty of every existing d*.json solid stamp's true PNG footprint — see EXTERIOR-MISTAKES.md #4 on stale bbox after relocate."
+ },
+ "bbox": {
+  "x": 1600,
+  "y": 5264,
+  "w": 360,
+  "h": 280
+ },
+ "label": "TRANSFER PLAZA",
+ "label_at": {
+  "x": 180,
+  "y": 24
+ },
+ "surfaces": [
+  {
+   "surface": "sidewalk",
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 280,
+   "depth": 0.9,
+   "_doc": "paved apron across the whole bbox for the bus bay and path_edge dressing"
+  },
+  {
+   "surface": "grass",
+   "name": "concourse_lawn",
+   "x": 16,
+   "y": 64,
+   "w": 328,
+   "h": 200,
+   "depth": 0.92,
+   "_doc": "landscaped plaza lawn — required so grp.subway.turnstile_gate and grp.subway.platform_bench_row (both declared surface 'ground' -> alias 'grass') pass the compiler's 80%-footprint surface gate; grass still allows street_furn/signage/infra per placement-rules.json roles_allowed"
+  }
+ ],
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "bus_bay_edge",
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 56,
+   "density": {
+    "street_furn": "dense",
+    "signage": "dense",
+    "decor_small": "medium"
+   },
+   "_doc": "shelter benches and route signage along the paved bus-bay strip (explicit rect, not surface-derived, so it stays on the sidewalk apron and out of the lawn)"
+  },
+  {
+   "slot": "plaza",
+   "name": "concourse",
+   "x": 16,
+   "y": 64,
+   "w": 328,
+   "h": 200,
+   "density": {
+    "furniture_ext": "medium",
+    "street_furn": "dense",
+    "signage": "dense",
+    "npc_anchor": "medium"
+   },
+   "_doc": "the heart of the pocket: turnstile lane, wait seating, vending nook — matches biomes.transit density (infra/street_furn/signage all dense) as closely as the 'plaza' archetype's role list allows; infra is not a plaza role so furniture_ext (wait seats, benches) stands in for it"
+  }
+ ],
+ "landmarks": [
+  {
+   "me": "me.subway.stairs_complete_1",
+   "at": {
+    "x": 208,
+    "y": 240
+   },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "traverse",
+   "_doc": "station stairwell descent, the pocket's hero silhouette"
+  },
+  {
+   "me": "me.subway.tunnel_single",
+   "at": {
+    "x": 232,
+    "y": 96
+   },
+   "anchor": "tl",
+   "solid": true,
+   "interact": "traverse"
+  },
+  {
+   "grp": "grp.subway.turnstile_gate",
+   "at": {
+    "x": 32,
+    "y": 96
+   },
+   "interact": "unlock",
+   "_doc": "closed turnstile + railing + support pillar, 5x9 tiles (80x144px), anchored inside concourse_lawn well clear of the stairwell/tunnel"
+  }
+ ],
+ "groups": [],
+ "interactions": {
+  "sit": "auto",
+  "traverse": "auto",
+  "unlock": [
+   "grp.subway.turnstile_gate"
+  ]
+ },
+ "anims": [
+  {
+   "sheet": "ext/animated/Automatic_Barrier_1_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "at": {
+    "x": 130,
+    "y": 96
+   },
+   "fps": 6
+  }
+ ],
+ "constraints": {
+  "keep_clear": [
+   {
+    "x": 112,
+    "y": 200,
+    "w": 96,
+    "h": 40,
+    "why": "stairwell approach must stay walkable"
+   }
+  ],
+  "max_stamps": 90,
+  "coverage_target_singles": 32,
+  "max_solid_cell_ratio": 0.3,
+  "min_free_cell_ratio": 0.42,
+  "_doc": "a 360x280 pocket is ~23x18 = 414 cells; transit wants infra/street_furn/signage all dense, but the 'plaza' archetype does not admit an infra role (see slots.plaza.roles in placement-rules.json), so real headroom here is furniture_ext+street_furn+signage on ~255 concourse cells plus the bus_bay_edge strip. Target trimmed to 32 (from the beach pilot's 45) to match that catalog/archetype ceiling rather than chase a number by over-packing one role into repeats."
+ },
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": {
+   "enabled": true,
+   "themes": [
+    "20_Subway_and_Train_Station"
+   ]
+  },
+  "F_canopy": { "enabled": true },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.subway.sign_arrow_down",
+    "me.subway.sign_arrow_left",
+    "me.subway.sign_arrow_right",
+    "me.subway.sign_arrow_up",
+    "me.subway.sign_stop",
+    "me.subway.trash_cans_pressed",
+    "me.subway.poster_set",
+    "me.subway.map_monitor",
+    "me.subway.led_light",
+    "me.subway.plant_vase"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}
