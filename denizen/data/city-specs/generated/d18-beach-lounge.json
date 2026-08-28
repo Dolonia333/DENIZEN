@@ -12,30 +12,55 @@
  "_compiled": {
   "spec": "data/city-specs/biome-specs/beach.json",
   "seed": 21084,
-  "at": "2026-08-28T00:42:57Z",
-  "rules": null,
+  "rules_version": "0.1.0",
+  "coords": "local",
   "passes": {
    "A_ground": {
-    "patches": 3
+    "patches": 3,
+    "unpaintable_surfaces": 1
    },
    "B_skeleton": {
-    "reserved": 2,
-    "roads": 0
+    "keep_clear": 1,
+    "roads": 0,
+    "slots": {
+     "promenade_edge": {
+      "archetype": "path_edge",
+      "cells": 50,
+      "derived_from": "patches"
+     },
+     "lounge": {
+      "archetype": "interior_fill",
+      "cells": 180,
+      "derived_from": "patches"
+     },
+     "court": {
+      "archetype": "plaza",
+      "cells": 63,
+      "derived_from": "patches"
+     },
+     "wet_sand": {
+      "archetype": "shore_line",
+      "cells": 0,
+      "derived_from": "surface_boundary"
+     }
+    }
    },
    "C_landmarks": {
     "placed": 0,
-    "skipped_slots": 4,
+    "pending": 3,
     "todo": true
    },
    "D_groups": {
     "groups": 0,
     "stamps": 0,
-    "recipes_available": 0,
+    "pending": 1,
+    "recipes_checked": 1,
+    "recipes_available": 3,
     "todo": true
    },
    "E_props": {
     "placed": 0,
-    "zones": 3,
+    "slots": 4,
     "todo": true
    },
    "F_canopy": {
@@ -48,14 +73,18 @@
    },
    "H_life": {
     "labels": 1,
-    "anims": 0,
+    "anims": 2,
+    "animBands": 1,
+    "interactions_pending": 4,
     "todo": true
    }
   },
   "occupancy": {
    "cells": 450,
    "occupied_cells": 0,
-   "reserved_cells": 83
+   "reserved_cells": 92,
+   "unwalkable_cells": 50,
+   "free_ratio": 1.0
   },
   "catalog_misses": []
  },
@@ -87,8 +116,38 @@
  ],
  "roads": [],
  "stamps": [],
- "anims": [],
- "animBands": [],
+ "anims": [
+  {
+   "sheet": "ext/animated/Beach_Seagull_Idle_Left_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 3216,
+   "y": 5024,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Crabs_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 3400,
+   "y": 5064,
+   "fps": 5
+  }
+ ],
+ "animBands": [
+  {
+   "sheet": "ext/animated/_water_fill_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 3120,
+   "y": 5072,
+   "w": 400,
+   "h": 32,
+   "fps": 5,
+   "depth": 0.96,
+   "shore": "top"
+  }
+ ],
  "solids": [],
  "labels": [
   {

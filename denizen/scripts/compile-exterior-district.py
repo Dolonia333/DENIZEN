@@ -6,11 +6,15 @@ Architecture, spec format and pass contracts: docs/EXTERIOR-COMPILER.md
 
     python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/beach.json
 
-This is the W0-D scaffold: the spec loader, validator, catalog footprint
-lookup, occupancy grid, pass pipeline and fragment emitter are REAL. The
-fill passes C-H are registered no-op hooks (see TODO markers) so the CLI
-runs end to end today and W2-A can land placement logic one pass at a time
-without touching the plumbing.
+Spec vocabulary (biome / role / slot / density / palette / interact names) is
+owned by data/limezu-visual-catalog/placement-rules.json — this script is its
+consumer and validates every spec against it.
+
+This is the W0-D scaffold: the spec loader, rules-aware validator, catalog
+footprint oracle, occupancy grid with surface map, slot resolution, pass
+pipeline and fragment emitter are REAL. The fill passes C-G are registered
+no-op hooks (see TODO markers) so the CLI runs end to end today and W2-A can
+land placement logic one pass at a time without touching the plumbing.
 
 Stamps are emitted as catalog ids (`me` / `prefer`), never as `img` paths —
 `merge-city-plan.py` stays the single place where ids resolve to PNGs.
@@ -24,22 +28,23 @@ import os
 import random
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 DEN = Path(__file__).resolve().parents[1]
 CAT = DEN / "data" / "limezu-visual-catalog"
-RULES_PATH = CAT / "placement-rules.json"          # W0-A output
+RULES_PATH = CAT / "placement-rules.json"          # W0-A
 INDEX_PATH = CAT / "placement-index.json"          # resolve_limezu_me_stamps.py
 ME_TO_SINGLES = CAT / "me-to-singles.json"
 GROUPS_DIR = CAT / "groups"                        # W1-C grp.* recipes
 SPECS_DIR = DEN / "data" / "city-specs"
 DEFAULT_OUT_DIR = SPECS_DIR / "generated"
+ASSETS = DEN / "assets" / "limezu"
 
 # The played world (data/city-plan.json worldSize). Districts must fit inside.
 WORLD = {"w": 6656, "h": 6400}
 TILE = 16
-PATCH_TILES = {"grass", "sidewalk", "asphalt", "sand"}   # full-world.js TILE_KEYS
+# The only ground tiles src/full-world.js can paint (TILE_KEYS).
+PAINTABLE_TILES = {"grass", "sidewalk", "asphalt", "sand"}
 FRAGMENT_LISTS = ("patches", "roads", "stamps", "anims", "animBands",
                   "solids", "labels", "portals", "npcs", "vehicles")
 
@@ -48,9 +53,11 @@ RESERVED = 1    # circulation / keep-clear: nothing may be placed
 SOLID = 2       # a solid footprint stands here
 DECOR = 4       # a walkable decal/prop stands here
 CLEAR = 8       # clearance halo around a solid (soft: decor may still land)
+UNWALKABLE = 16  # water and the like: only water_prop / boats may sit here
 
+PASS_KEYS = ("A_ground", "B_skeleton", "C_landmarks", "D_groups",
+             "E_props", "F_canopy", "G_detail", "H_life")
 
-# ── spec loading + validation ────────────────────────────────────────────────
 
 def load_json(path: Path, default=None):
     if not path.exists():
@@ -60,30 +67,71 @@ def load_json(path: Path, default=None):
 
 def load_rules(verbose: bool = False) -> dict:
     """placement-rules.json (W0-A). Missing = compile with built-in defaults so
-    this script is usable before gate G0 lands the rules file."""
+    this script stays usable before gate G0 lands the rules file."""
     rules = load_json(RULES_PATH)
     if rules is None:
-        print(f"warn: {RULES_PATH.relative_to(DEN)} not found — "
-              "compiling with built-in defaults (biome/role filters disabled)")
+        print(f"warn: {RULES_PATH.relative_to(DEN)} not found — compiling with "
+              "built-in defaults (biome/role/slot validation disabled)")
         return {}
     if verbose:
-        print(f"rules: {RULES_PATH.relative_to(DEN)} "
-              f"v{rules.get('version', '?')} "
-              f"biomes={len(rules.get('biomes') or {})} "
-              f"roles={len(rules.get('roles') or {})}")
+        print(f"rules: {RULES_PATH.relative_to(DEN)} v{rules.get('version', '?')} "
+              f"biomes={_vocab_count(rules, 'biomes')} roles={_vocab_count(rules, 'roles')} "
+              f"slots={_vocab_count(rules, 'slots')}")
     return rules
 
 
-PASS_KEYS = ("A_ground", "B_skeleton", "C_landmarks", "D_groups",
-             "E_props", "F_canopy", "G_detail", "H_life")
+def _vocab(rules: dict, key: str) -> set[str]:
+    """Vocabulary names from a rules section, minus its `_doc` prose key."""
+    return {k for k in (rules.get(key) or {}) if not k.startswith("_")}
 
 
-def validate_spec(spec: dict, rules: dict) -> tuple[list[str], list[str]]:
-    """Structural + semantic checks. Returns (errors, warnings).
+def _vocab_count(rules: dict, key: str) -> int:
+    return len(_vocab(rules, key))
 
-    Errors abort the compile; warnings are printed and ignored. Everything the
-    spec declares in LOCAL district coordinates is bounds-checked here so no
-    pass has to defend against off-district rects.
+
+# ── geometry helpers ─────────────────────────────────────────────────────────
+
+def as_rect(obj, label: str) -> tuple[int, int, int, int] | None:
+    """Accept either {"x","y","w","h"} (placement-rules style) or
+    {"rect": [x,y,w,h]} (compact). Returns None if neither is well-formed."""
+    if not isinstance(obj, dict):
+        return None
+    if isinstance(obj.get("rect"), list) and len(obj["rect"]) == 4:
+        vals = obj["rect"]
+    elif all(k in obj for k in ("x", "y", "w", "h")):
+        vals = [obj["x"], obj["y"], obj["w"], obj["h"]]
+    else:
+        return None
+    return tuple(vals) if all(isinstance(v, int) for v in vals) else None
+
+
+def as_point(obj, label: str) -> tuple[int, int] | None:
+    """Accept {"x":..,"y":..} or [x, y]."""
+    if isinstance(obj, dict) and isinstance(obj.get("x"), int) and isinstance(obj.get("y"), int):
+        return (obj["x"], obj["y"])
+    if isinstance(obj, list) and len(obj) == 2 and all(isinstance(v, int) for v in obj):
+        return (obj[0], obj[1])
+    return None
+
+
+def snap16(x: int, y: int, w: int, h: int) -> tuple[int, int, int, int]:
+    """Snap a rect to the tile grid (origin down, size up) so every patch shares
+    one grout lattice — off-grid patches are why ground read as broken seams.
+    """
+    x0, y0 = (x // TILE) * TILE, (y // TILE) * TILE
+    return (x0, y0,
+            ((x + w + TILE - 1) // TILE) * TILE - x0,
+            ((y + h + TILE - 1) // TILE) * TILE - y0)
+
+
+# ── validation ───────────────────────────────────────────────────────────────
+
+def validate_spec(spec: dict, rules: dict, catalog: "Catalog") -> tuple[list[str], list[str]]:
+    """Structural checks + semantic checks against placement-rules vocabularies.
+
+    Errors abort the compile; warnings print and are ignored. Everything a pass
+    later reads is bounds-checked here, so no pass has to defend against bad
+    input. Vocabulary checks self-disable when placement-rules.json is absent.
     """
     errs: list[str] = []
     warns: list[str] = []
@@ -92,76 +140,126 @@ def validate_spec(spec: dict, rules: dict) -> tuple[list[str], list[str]]:
         if not spec.get(key):
             errs.append(f"spec.{key} is required")
 
-    bbox = spec.get("bbox") or {}
-    if errs and not bbox:
+    bbox = as_rect(spec.get("bbox") or {}, "bbox")
+    if bbox is None:
+        errs.append("spec.bbox must be {x, y, w, h} ints")
         return errs, warns
-    for key in ("x", "y", "w", "h"):
-        if not isinstance(bbox.get(key), int):
-            errs.append(f"spec.bbox.{key} must be an int (px)")
+    bx, by, bw, bh = bbox
+    if bw <= 0 or bh <= 0:
+        errs.append("spec.bbox w/h must be positive")
+    if bx < 0 or by < 0:
+        errs.append("spec.bbox origin is negative")
+    if bx + bw > WORLD["w"] or by + bh > WORLD["h"]:
+        errs.append(f"spec.bbox exceeds world {WORLD['w']}x{WORLD['h']} (OFFWORLD)")
     if errs:
         return errs, warns
-
-    if bbox["w"] <= 0 or bbox["h"] <= 0:
-        errs.append("spec.bbox w/h must be positive")
-    if bbox["x"] < 0 or bbox["y"] < 0:
-        errs.append("spec.bbox origin is negative")
-    if bbox["x"] + bbox["w"] > WORLD["w"] or bbox["y"] + bbox["h"] > WORLD["h"]:
-        errs.append(f"spec.bbox exceeds world {WORLD['w']}x{WORLD['h']} (OFFWORLD)")
-    # Only the ORIGIN has to be on the lattice: pass A snaps patch sizes up, but
-    # an off-grid origin shifts the whole grout grid and reads as broken seams.
-    for key in ("x", "y"):
-        if bbox[key] % TILE:
-            warns.append(f"spec.bbox.{key}={bbox[key]} is off the {TILE}px tile grid "
+    # Only the ORIGIN must sit on the lattice: pass A snaps sizes up, but an
+    # off-grid origin shifts the grout grid and reads as broken seams.
+    for name, val in (("x", bx), ("y", by)):
+        if val % TILE:
+            warns.append(f"spec.bbox.{name}={val} is off the {TILE}px tile grid "
                          "(ground seams will not line up with neighbouring districts)")
 
-    if not isinstance(spec.get("seed", 0), int):
-        errs.append("spec.seed must be an int")
+    coords = (spec.get("compiler") or {}).get("coords", "world")
+    if coords not in ("world", "local"):
+        errs.append(f"compiler.coords '{coords}' must be 'world' or 'local'")
+    seed = (spec.get("compiler") or {}).get("seed", 0)
+    if not isinstance(seed, int):
+        errs.append("compiler.seed must be an int")
 
-    biome = spec.get("biome")
-    known_biomes = rules.get("biomes") or {}
-    if known_biomes and biome not in known_biomes:
-        warns.append(f"biome '{biome}' is not in placement-rules.json biomes "
-                     f"({', '.join(sorted(known_biomes)[:6])}…)")
+    biomes, palettes = _vocab(rules, "biomes"), _vocab(rules, "palettes")
+    surfaces, slots_v = _vocab(rules, "surfaces"), _vocab(rules, "slots")
+    roles, levels = _vocab(rules, "roles"), _vocab(rules, "density")
+    verbs = _vocab(rules, "interact")
 
-    ground = spec.get("ground") or {}
-    base_tile = ((ground.get("base") or {}).get("tile"))
-    if not base_tile:
-        errs.append("spec.ground.base.tile is required (grass|sidewalk|asphalt|sand)")
-    elif base_tile not in PATCH_TILES:
-        errs.append(f"spec.ground.base.tile '{base_tile}' unknown; "
-                    f"full-world.js renders {sorted(PATCH_TILES)}")
-    for i, layer in enumerate(ground.get("layers") or []):
-        errs += _rect_errors(f"ground.layers[{i}].rect", layer.get("rect"), bbox)
-        if layer.get("tile") not in PATCH_TILES:
-            errs.append(f"ground.layers[{i}].tile '{layer.get('tile')}' unknown")
+    if biomes and spec["biome"] not in biomes:
+        warns.append(f"biome '{spec['biome']}' is not in placement-rules biomes")
+    for key in ("palette", "palette_secondary"):
+        if spec.get(key) and palettes and spec[key] not in palettes:
+            warns.append(f"{key} '{spec[key]}' is not in placement-rules palettes")
 
-    zone_ids = set()
-    for i, zone in enumerate(spec.get("zones") or []):
-        zid = zone.get("id")
-        if not zid:
-            errs.append(f"zones[{i}].id is required")
-        elif zid in zone_ids:
-            errs.append(f"zones[{i}].id '{zid}' is duplicated")
-        zone_ids.add(zid)
-        errs += _rect_errors(f"zones[{i}].rect", zone.get("rect"), bbox)
-        density = zone.get("density", 0)
-        if not isinstance(density, (int, float)) or not 0 <= density <= 1:
-            errs.append(f"zones[{i}].density must be 0..1")
+    # surfaces[] — the ground plan.
+    if not (spec.get("surfaces") or []):
+        errs.append("spec.surfaces[] is required (the district needs ground, "
+                    "or every solid lands FLOATING)")
+    for i, srf in enumerate(spec.get("surfaces") or []):
+        name = srf.get("surface")
+        if not name:
+            errs.append(f"surfaces[{i}].surface is required")
+        elif surfaces and name not in surfaces:
+            errs.append(f"surfaces[{i}].surface '{name}' is not a placement-rules surface")
+        elif not surfaces and name not in PAINTABLE_TILES and name != "water":
+            errs.append(f"surfaces[{i}].surface '{name}' is not renderable")
+        errs += _rect_errors(f"surfaces[{i}]", srf, bbox, coords)
+        if name == "water" and not srf.get("anim"):
+            warns.append(f"surfaces[{i}] is water with no `anim` sheet — "
+                         "pass A can only reserve it, not render it")
 
-    for i, res in enumerate(spec.get("reserve") or []):
-        errs += _rect_errors(f"reserve[{i}].rect", res.get("rect"), bbox)
-
+    # slots[] — scatter targets.
+    slot_names = set()
     for i, slot in enumerate(spec.get("slots") or []):
-        if slot.get("zone") and slot["zone"] not in zone_ids:
-            errs.append(f"slots[{i}].zone '{slot['zone']}' is not a declared zone")
-        at = slot.get("at")
-        if not (isinstance(at, list) and len(at) == 2 and all(isinstance(v, int) for v in at)):
-            errs.append(f"slots[{i}].at must be [x, y] local ints")
-        elif not (0 <= at[0] <= bbox["w"] and 0 <= at[1] <= bbox["h"]):
-            errs.append(f"slots[{i}].at {at} is outside the district bbox")
-        pick = slot.get("pick") or {}
-        if not (pick.get("me") or pick.get("exs") or pick.get("group")):
-            errs.append(f"slots[{i}].pick needs one of me / exs / group")
+        arch = slot.get("slot")
+        if not arch:
+            errs.append(f"slots[{i}].slot (archetype) is required")
+        elif slots_v and arch not in slots_v:
+            errs.append(f"slots[{i}].slot '{arch}' is not a placement-rules slot archetype")
+        sid = slot.get("name") or arch
+        if sid in slot_names:
+            errs.append(f"slots[{i}] name '{sid}' is duplicated; give each slot a unique `name`")
+        slot_names.add(sid)
+        if as_rect(slot, "") is not None:
+            errs += _rect_errors(f"slots[{i}]", slot, bbox, coords)
+        elif not (slot.get("surface") or slot.get("between")):
+            errs.append(f"slots[{i}] needs a rect, a `surface`, or `between` "
+                        "(nothing to derive its area from)")
+        if slot.get("surface") and surfaces and slot["surface"] not in surfaces:
+            errs.append(f"slots[{i}].surface '{slot['surface']}' is not a placement-rules surface")
+        for role, level in (slot.get("density") or {}).items():
+            if roles and role not in roles:
+                errs.append(f"slots[{i}].density role '{role}' is not a placement-rules role")
+            if levels and level not in levels:
+                errs.append(f"slots[{i}].density.{role} level '{level}' is not one of "
+                            f"{sorted(levels)}")
+
+    # landmarks[] — pinned anchors.
+    for i, lm in enumerate(spec.get("landmarks") or []):
+        if not (lm.get("me") or lm.get("exs") or lm.get("grp")):
+            errs.append(f"landmarks[{i}] needs one of me / exs / grp")
+        at = as_point(lm.get("at"), "")
+        if at is None:
+            errs.append(f"landmarks[{i}].at must be {{x, y}} ints")
+        else:
+            errs += _point_errors(f"landmarks[{i}].at", at, bbox, coords)
+        if lm.get("me") and catalog.ready and catalog.footprint(me=lm["me"]) is None:
+            errs.append(f"landmarks[{i}].me '{lm['me']}' is not in the placement index "
+                        "(merge would fail to resolve it)")
+        if lm.get("grp") and not _recipe_path(lm["grp"]).exists():
+            warns.append(f"landmarks[{i}].grp '{lm['grp']}' has no recipe yet (W1-C)")
+        if lm.get("interact") and verbs and lm["interact"] not in verbs:
+            warns.append(f"landmarks[{i}].interact '{lm['interact']}' is not a known verb")
+
+    # groups[] — recipe placements.
+    for i, grp in enumerate(spec.get("groups") or []):
+        if not grp.get("grp"):
+            errs.append(f"groups[{i}].grp is required")
+        elif not _recipe_path(grp["grp"]).exists():
+            warns.append(f"groups[{i}].grp '{grp['grp']}' has no recipe yet (W1-C)")
+        if grp.get("slot") and slot_names and grp["slot"] not in slot_names:
+            errs.append(f"groups[{i}].slot '{grp['slot']}' is not a declared slot")
+        if not isinstance(grp.get("count", 1), int) or grp.get("count", 1) < 1:
+            errs.append(f"groups[{i}].count must be a positive int")
+
+    for verb, targets in (spec.get("interactions") or {}).items():
+        if verbs and verb not in verbs:
+            warns.append(f"interactions.{verb} is not a placement-rules verb")
+        if not (targets == "auto" or isinstance(targets, list)):
+            errs.append(f"interactions.{verb} must be 'auto' or a list of ids")
+
+    for i, kc in enumerate((spec.get("constraints") or {}).get("keep_clear") or []):
+        errs += _rect_errors(f"constraints.keep_clear[{i}]", kc, bbox, coords)
+
+    for i, road in enumerate(spec.get("roads") or []):
+        errs += _rect_errors(f"roads[{i}]", road, bbox, coords)
 
     for key in (spec.get("passes") or {}):
         if key not in PASS_KEYS:
@@ -170,15 +268,33 @@ def validate_spec(spec: dict, rules: dict) -> tuple[list[str], list[str]]:
     return errs, warns
 
 
-def _rect_errors(label: str, rect, bbox: dict) -> list[str]:
-    if not (isinstance(rect, list) and len(rect) == 4 and all(isinstance(v, int) for v in rect)):
-        return [f"{label} must be [x, y, w, h] local ints"]
+def _rect_errors(label: str, obj, bbox, coords: str) -> list[str]:
+    rect = as_rect(obj, label)
+    if rect is None:
+        return [f"{label} needs a rect: {{x, y, w, h}} or {{rect: [x, y, w, h]}} ints"]
     x, y, w, h = rect
     if w <= 0 or h <= 0:
         return [f"{label} has non-positive size"]
-    if x < 0 or y < 0 or x + w > bbox["w"] or y + h > bbox["h"]:
-        return [f"{label} {rect} escapes the district bbox {bbox['w']}x{bbox['h']}"]
+    bx, by, bw, bh = bbox
+    if coords == "world":
+        x, y = x - bx, y - by
+    if x < 0 or y < 0 or x + w > bw or y + h > bh:
+        return [f"{label} {rect} escapes the district bbox ({bw}x{bh}, coords={coords})"]
     return []
+
+
+def _point_errors(label: str, point, bbox, coords: str) -> list[str]:
+    x, y = point
+    bx, by, bw, bh = bbox
+    if coords == "world":
+        x, y = x - bx, y - by
+    if not (0 <= x <= bw and 0 <= y <= bh):
+        return [f"{label} {point} is outside the district bbox (coords={coords})"]
+    return []
+
+
+def _recipe_path(grp_id: str) -> Path:
+    return GROUPS_DIR / f"{grp_id}.json"
 
 
 # ── catalog footprints ───────────────────────────────────────────────────────
@@ -191,9 +307,9 @@ class Catalog:
     """
 
     def __init__(self) -> None:
-        self.index = load_json(INDEX_PATH) or {"me": {}, "exs": {}}
-        self.me = self.index.get("me") or {}
-        self.exs = self.index.get("exs") or {}
+        index = load_json(INDEX_PATH) or {}
+        self.me = index.get("me") or {}
+        self.exs = index.get("exs") or {}
         self._variants: dict | None = None
         self.misses: list[str] = []
 
@@ -203,8 +319,7 @@ class Catalog:
 
     def _variant_list(self, me_id: str) -> list[dict]:
         if self._variants is None:
-            data = load_json(ME_TO_SINGLES) or {}
-            self._variants = data.get("links") or {}
+            self._variants = (load_json(ME_TO_SINGLES) or {}).get("links") or {}
         return self._variants.get(me_id) or []
 
     def footprint(self, me: str | None = None, exs: str | None = None,
@@ -226,8 +341,7 @@ class Catalog:
         if prefer:
             low = prefer.lower()
             for v in self._variant_list(me):
-                path = (v.get("path") or v.get("basename") or "").lower()
-                if low in path:
+                if low in (v.get("path") or v.get("basename") or "").lower():
                     target = v.get("id") or target
                     break
         sized = self.exs.get(target or "")
@@ -245,33 +359,28 @@ class Occupancy:
     come out clean against `check-city-plan.py` (OVERLAP / FLOATING / ROADBLOCK).
     """
 
-    def __init__(self, bbox: dict) -> None:
-        self.x0, self.y0 = bbox["x"], bbox["y"]
-        self.cw = (bbox["w"] + TILE - 1) // TILE
-        self.ch = (bbox["h"] + TILE - 1) // TILE
+    def __init__(self, bbox: tuple[int, int, int, int]) -> None:
+        self.x0, self.y0, w, h = bbox
+        self.cw = (w + TILE - 1) // TILE
+        self.ch = (h + TILE - 1) // TILE
         self.flags = bytearray(self.cw * self.ch)
         self.surface: list[str | None] = [None] * (self.cw * self.ch)
         self.solid_rects: list[tuple[int, int, int, int]] = []
 
-    def _cell_span(self, rect: tuple[int, int, int, int]):
-        """World rect → inclusive cell index ranges, clipped to the district."""
+    def _cells(self, rect):
         x, y, w, h = rect
         cx0 = max(0, (x - self.x0) // TILE)
         cy0 = max(0, (y - self.y0) // TILE)
         cx1 = min(self.cw - 1, (x + w - 1 - self.x0) // TILE)
         cy1 = min(self.ch - 1, (y + h - 1 - self.y0) // TILE)
-        return cx0, cy0, cx1, cy1
-
-    def _cells(self, rect):
-        cx0, cy0, cx1, cy1 = self._cell_span(rect)
         for cy in range(cy0, cy1 + 1):
             row = cy * self.cw
             for cx in range(cx0, cx1 + 1):
                 yield row + cx
 
-    def paint_surface(self, rect, tile: str) -> None:
+    def paint_surface(self, rect, surface: str) -> None:
         for i in self._cells(rect):
-            self.surface[i] = tile
+            self.surface[i] = surface
 
     def surface_at(self, px: int, py: int) -> str | None:
         cx, cy = (px - self.x0) // TILE, (py - self.y0) // TILE
@@ -282,12 +391,22 @@ class Occupancy:
     def surfaces_under(self, rect) -> set[str | None]:
         return {self.surface[i] for i in self._cells(rect)}
 
+    def cells_of_surface(self, surface: str) -> list[int]:
+        return [i for i, s in enumerate(self.surface) if s == surface]
+
     def mark(self, rect, flag: int) -> None:
         for i in self._cells(rect):
             self.flags[i] |= flag
 
+    def mark_cells(self, cells, flag: int) -> None:
+        for i in cells:
+            self.flags[i] |= flag
+
     def is_free(self, rect, blocked: int = RESERVED | SOLID) -> bool:
         return all(not (self.flags[i] & blocked) for i in self._cells(rect))
+
+    def free_cells(self, cells, blocked: int = RESERVED | SOLID) -> list[int]:
+        return [i for i in cells if not (self.flags[i] & blocked)]
 
     def claim(self, rect, flag: int = SOLID, halo: int = 0) -> None:
         self.mark(rect, flag)
@@ -314,9 +433,15 @@ class Occupancy:
         return worst
 
     def stats(self) -> dict:
-        used = sum(1 for f in self.flags if f & (SOLID | DECOR))
-        return {"cells": self.cw * self.ch, "occupied_cells": used,
-                "reserved_cells": sum(1 for f in self.flags if f & RESERVED)}
+        total = self.cw * self.ch
+        occupied = sum(1 for f in self.flags if f & (SOLID | DECOR))
+        return {
+            "cells": total,
+            "occupied_cells": occupied,
+            "reserved_cells": sum(1 for f in self.flags if f & RESERVED),
+            "unwalkable_cells": sum(1 for f in self.flags if f & UNWALKABLE),
+            "free_ratio": round(1 - occupied / total, 3) if total else 0,
+        }
 
 
 # ── compile context ──────────────────────────────────────────────────────────
@@ -327,26 +452,41 @@ class Ctx:
         self.spec = spec
         self.rules = rules
         self.cat = catalog
-        self.bbox = spec["bbox"]
+        self.bbox = as_rect(spec["bbox"], "bbox")
+        self.coords = (spec.get("compiler") or {}).get("coords", "world")
         self.occ = Occupancy(self.bbox)
         self.seed = seed
         self.verbose = verbose
-        self.frag = {k: [] for k in FRAGMENT_LISTS}
+        self.frag: dict[str, list] = {k: [] for k in FRAGMENT_LISTS}
         self.stats: dict[str, dict] = {}
-        self.zones = {z["id"]: z for z in (spec.get("zones") or [])}
+        self.slot_cells: dict[str, list[int]] = {}   # slot name → cell indices
 
     def rng(self, pass_letter: str, salt: str = "") -> random.Random:
-        """One deterministic stream per pass (and per zone/recipe), so adding a
+        """One deterministic stream per pass (and per slot/recipe), so adding a
         pass never reshuffles what earlier passes already placed."""
         return random.Random(f"{self.seed}:{self.spec['id']}:{pass_letter}:{salt}")
 
-    def world(self, local: list[int]) -> tuple[int, ...]:
-        """Local district coords → world coords. Specs are relocatable: only
-        bbox carries an absolute position."""
-        if len(local) == 2:
-            return (self.bbox["x"] + local[0], self.bbox["y"] + local[1])
-        x, y, w, h = local
-        return (self.bbox["x"] + x, self.bbox["y"] + y, w, h)
+    def rect(self, obj) -> tuple[int, int, int, int]:
+        """Spec rect → world rect, honouring compiler.coords."""
+        x, y, w, h = as_rect(obj, "")
+        if self.coords == "local":
+            x, y = x + self.bbox[0], y + self.bbox[1]
+        return (x, y, w, h)
+
+    def point(self, obj) -> tuple[int, int]:
+        x, y = as_point(obj, "")
+        if self.coords == "local":
+            x, y = x + self.bbox[0], y + self.bbox[1]
+        return (x, y)
+
+    def surface_rule(self, surface: str) -> dict:
+        return ((self.rules.get("surfaces") or {}).get(surface)) or {}
+
+    def density_rule(self, level: str) -> dict:
+        return ((self.rules.get("density") or {}).get(level)) or {}
+
+    def slot_rule(self, archetype: str) -> dict:
+        return ((self.rules.get("slots") or {}).get(archetype)) or {}
 
     def pass_cfg(self, key: str) -> dict:
         return (self.spec.get("passes") or {}).get(key) or {}
@@ -358,116 +498,225 @@ class Ctx:
 # ── passes ───────────────────────────────────────────────────────────────────
 
 def pass_a_ground(ctx: Ctx) -> dict:
-    """A — Ground. Base patch + declared overlay slabs, and the surface map
-    every later pass queries. Runs first so nothing can end up FLOATING.
+    """A — Ground. `surfaces[]` become patches (paintable tiles) or animBands
+    (water), plus the surface map every later pass queries. Runs first so
+    nothing can end up FLOATING and no pass has to guess what it stands on.
     """
-    ground = ctx.spec.get("ground") or {}
-    base = ground.get("base") or {}
-    bx, by, bw, bh = ctx.bbox["x"], ctx.bbox["y"], ctx.bbox["w"], ctx.bbox["h"]
-    base_rect = _snap16(bx, by, bw, bh)
-    ctx.frag["patches"].append({"tile": base["tile"], "x": base_rect[0], "y": base_rect[1],
-                                "w": base_rect[2], "h": base_rect[3],
-                                "depth": base.get("depth", 0.9)})
-    ctx.occ.paint_surface(base_rect, base["tile"])
+    patches = water = 0
+    for srf in ctx.spec.get("surfaces") or []:
+        name = srf["surface"]
+        rect = snap16(*ctx.rect(srf))
+        rule = ctx.surface_rule(name)
+        depth = srf.get("depth", rule.get("default_depth", 0.9))
+        ctx.occ.paint_surface(rect, name)
 
-    for layer in ground.get("layers") or []:
-        rect = _snap16(*ctx.world(layer["rect"]))
-        ctx.frag["patches"].append({"tile": layer["tile"], "x": rect[0], "y": rect[1],
-                                    "w": rect[2], "h": rect[3],
-                                    "depth": layer.get("depth", 0.91)})
-        ctx.occ.paint_surface(rect, layer["tile"])
+        if name in PAINTABLE_TILES:
+            ctx.frag["patches"].append({"tile": name, "x": rect[0], "y": rect[1],
+                                        "w": rect[2], "h": rect[3], "depth": depth})
+            patches += 1
+        else:
+            # Not a paintable tile (water): reserve it and let pass H animate it.
+            ctx.occ.mark(rect, UNWALKABLE | RESERVED)
+            water += 1
+        if rule.get("walkable") is False:
+            ctx.occ.mark(rect, UNWALKABLE | RESERVED)
 
-    return {"patches": len(ctx.frag["patches"])}
+    return {"patches": patches, "unpaintable_surfaces": water}
 
 
 def pass_b_skeleton(ctx: Ctx) -> dict:
-    """B — Skeleton. Circulation: keep-clear reservations, walkable paths and
-    the district's own roads. Reserving before any prop lands is what keeps
-    walkways open and solids off the lanes (ROADBLOCK).
+    """B — Skeleton. Circulation and slot geometry, before anything can block
+    it: keep-clear reservations, district roads, and resolving each declared
+    slot into the concrete cell set that passes E-G scatter into.
     """
-    reserved = 0
-    for res in ctx.spec.get("reserve") or []:
-        ctx.occ.mark(ctx.world(res["rect"]), RESERVED)
-        reserved += 1
+    kept = 0
+    for kc in (ctx.spec.get("constraints") or {}).get("keep_clear") or []:
+        ctx.occ.mark(ctx.rect(kc), RESERVED)
+        kept += 1
 
     roads = 0
-    for road in (ctx.pass_cfg("B_skeleton").get("roads") or []):
-        x, y, w, h = ctx.world(road["rect"])
+    for road in ctx.spec.get("roads") or []:
+        x, y, w, h = ctx.rect(road)
         ctx.frag["roads"].append({"x": x, "y": y, "w": w, "h": h})
+        # Reserve the lane plus a tile of shoulder so no later pass can drop a
+        # solid into traffic (ROADBLOCK).
         ctx.occ.mark((x - TILE, y - TILE, w + 2 * TILE, h + 2 * TILE), RESERVED)
         roads += 1
 
-    # TODO(W2-A): auto-route paths between district entrances and slot anchors
-    # (A* on the free cells), emit them as `path_tile` patches, and reserve the
-    # corridor. Today only spec-declared reserves/roads are honoured.
-    return {"reserved": reserved, "roads": roads}
+    resolved = {}
+    for slot in ctx.spec.get("slots") or []:
+        name = slot.get("name") or slot["slot"]
+        rule = ctx.slot_rule(slot["slot"])
+        if as_rect(slot, "") is not None:
+            cells = list(ctx.occ._cells(ctx.rect(slot)))
+        elif slot.get("surface"):
+            cells = ctx.occ.cells_of_surface(slot["surface"])
+        else:
+            # TODO(W2-A): `between: [a, b]` / derived_from surface_boundary —
+            # walk the surface map for cells of A adjacent to B and dilate by
+            # the archetype's band_px. Skipped for now, so shore_line-style
+            # slots resolve empty rather than wrong.
+            cells = []
+        ctx.slot_cells[name] = ctx.occ.free_cells(cells)
+        resolved[name] = {"archetype": slot["slot"], "cells": len(ctx.slot_cells[name]),
+                          "derived_from": rule.get("derived_from")}
+
+    # TODO(W2-A): auto-route paths between district entrances and landmark
+    # anchors (A* over free cells), emit them as patches and reserve the
+    # corridor. Today only spec-declared keep_clear/roads are honoured.
+    return {"keep_clear": kept, "roads": roads, "slots": resolved}
 
 
 def pass_c_landmarks(ctx: Ctx) -> dict:
-    """C — Landmarks. Largest footprints first, from `slots` (explicit anchors)
-    then from the biome's building/landmark pool. Big, inflexible pieces claim
-    space before anything small can box them out.
+    """C — Landmarks. Pinned hero objects from `landmarks[]`, largest footprint
+    first. Big, inflexible pieces claim space before anything small can box
+    them out; `pin: true` means the anchor is authoritative and must not drift.
     """
-    # TODO(W2-A): for each slot, resolve pick → footprint via ctx.cat, snap the
-    # anchor to the facing surface, reject on ctx.occ.overlap_ratio() > 0.2,
-    # claim with a doorway halo, then emit {me, prefer, x, y, origin, solid}.
-    return {"placed": 0, "skipped_slots": len(ctx.spec.get("slots") or []), "todo": True}
+    # TODO(W2-A): resolve me/exs → footprint via ctx.cat, snap the anchor to the
+    # accepted surface, reject when ctx.occ.overlap_ratio() exceeds the rules'
+    # reject_on overlap threshold, claim with an entrance halo, then emit
+    # {me, prefer?, x, y, origin, solid}.
+    return {"placed": 0, "pending": len(ctx.spec.get("landmarks") or []), "todo": True}
 
 
 def pass_d_groups(ctx: Ctx) -> dict:
-    """D — Groups. Expand `grp.*` recipes (volley court, bamboo bar + stools,
-    stage + barriers + speakers) as ATOMIC multi-stamp assemblies: all member
-    stamps land at recipe-relative offsets or the whole group is rejected.
-    Fixes mistake #1 (stamp collage instead of composed scenes).
+    """D — Groups. Expand `grp.*` recipes (volley court, campfire set, station
+    stairs) as ATOMIC multi-stamp assemblies: all members land at their
+    recipe-relative tile offsets, or the whole group is rejected. Fixes mistake
+    #1 (stamp collage instead of composed scenes) and coverage tier D (fragment
+    Singles must never be stamped solo).
+
+    Placement is W2-A's job. This pass currently only PRE-VALIDATES each recipe
+    so the handoff cannot fail on data problems: every piece must resolve in the
+    catalog and every offset must fit the declared footprint.
     """
-    # TODO(W1-C/W2-A): load recipes from GROUPS_DIR, test the group's union
-    # footprint against the occupancy, then emit every member stamp.
-    return {"groups": 0, "stamps": 0, "recipes_available": _count_recipes(), "todo": True}
+    wanted = 0
+    checked = 0
+    problems: list[str] = []
+    for entry in ctx.spec.get("groups") or []:
+        wanted += entry.get("count", 1)
+        recipe = load_json(_recipe_path(entry["grp"]))
+        if recipe is None:
+            continue
+        checked += 1
+        fp = recipe.get("footprint_tiles") or {}
+        for piece in recipe.get("pieces") or []:
+            if not ctx.cat.footprint(me=piece.get("me"), exs=piece.get("exs")):
+                problems.append(f"{entry['grp']}:{piece.get('role')} unresolvable")
+            dx, dy = piece.get("dx", 0), piece.get("dy", 0)
+            pw = (piece.get("w") or TILE + TILE - 1) // TILE
+            ph = (piece.get("h") or TILE + TILE - 1) // TILE
+            if fp.get("w") and (dx + pw > fp["w"] or dy + ph > fp["h"]):
+                problems.append(f"{entry['grp']}:{piece.get('role')} "
+                                f"offset ({dx},{dy}) escapes footprint "
+                                f"{fp.get('w')}x{fp.get('h')} tiles")
+
+    # TODO(W2-A): for each entry, sample `count` anchors from the slot's free
+    # cells, test the recipe's union footprint via ctx.occ.overlap_ratio(), then
+    # emit every piece at anchor + (dx, dy) * TILE with the piece's origin/solid.
+    stats = {"groups": 0, "stamps": 0, "pending": wanted,
+             "recipes_checked": checked, "recipes_available": _count_recipes(),
+             "todo": True}
+    if problems:
+        stats["recipe_problems"] = problems[:10]
+    return stats
 
 
 def pass_e_props(ctx: Ctx) -> dict:
-    """E — Props. Per-zone scatter of role-matched, surface-matched props at the
-    zone's density, using a jittered-grid / Poisson-disc sample. Variant choice
-    is coverage-aware so a district spends unused Singles instead of repeating
-    the same six PNGs (mistake #2).
+    """E — Props. Per-slot scatter of role-matched, surface-matched props at the
+    slot's per-role density level (sparse…packed → target_coverage, spacing
+    multiplier, jitter). Variant choice is coverage-aware so a district spends
+    unused Singles instead of repeating the same six PNGs (mistake #2).
     """
-    # TODO(W2-A): candidate pool = enriched me.* filtered by biome + role +
-    # surface; sample anchors from ctx.rng('E', zone_id); enforce zone spacing.
-    return {"placed": 0, "zones": len(ctx.zones), "todo": True}
+    # TODO(W2-A): candidate pool = enriched me.* (W1-A) filtered by biome
+    # forbid_tags, the slot archetype's roles and the surface's roles_allowed;
+    # sample anchors from ctx.rng('E', slot_name) over ctx.slot_cells.
+    return {"placed": 0, "slots": len(ctx.slot_cells), "todo": True}
 
 
 def pass_f_canopy(ctx: Ctx) -> dict:
-    """F — Canopy. Overhead cover (palms, trees, umbrellas, awnings) last among
+    """F — Canopy. Overhead cover (palms, parasols, awnings, tents) last among
     the solids: it overhangs what pass E placed, so it must see the ground props
-    to avoid burying an interactable or blocking a sightline.
+    to avoid burying an interactable or blocking a sightline. The rules give
+    canopy `layer: overhead` with a y-sort depth bias, and its tile stays
+    walkable — so it claims CLEAR, not SOLID.
     """
-    # TODO(W2-A): place on CLEAR-tolerant cells with canopy spacing, skip cells
-    # adjacent to slot doorways, keep the shade footprint inside the zone.
+    # TODO(W2-A): place on CLEAR-tolerant cells at the role's spacing_px scaled
+    # by the density level's min_spacing_mult; keep the shade inside the slot.
     return {"placed": 0, "todo": True}
 
 
 def pass_g_detail(ctx: Ctx) -> dict:
     """G — Detail. High-count, zero-collision dressing (shells, starfish, sand
-    holes, litter, decals) into whatever cells are still empty. Never solid, so
-    it cannot create an OVERLAP defect.
+    holes, litter, decals) into cells that are still empty. Claims DECOR only
+    and never sets `solid`, so it cannot create an OVERLAP defect.
     """
-    # TODO(W2-A): fill to a target free-cell ratio using DECOR-only claims.
+    # TODO(W2-A): fill to the density level's target_coverage over free cells.
     return {"placed": 0, "todo": True}
 
 
 def pass_h_life(ctx: Ctx) -> dict:
     """H — Life. Anims, animBands (water/shore), vehicles, labels, portals, NPC
-    patrol hints and `interact` tags on stamps placed by C-G. Runs last because
-    interaction attaches to the objects the earlier passes chose.
+    anchors and `interact` verbs on the stamps C-G chose. Runs last because
+    interaction attaches to objects earlier passes selected.
     """
     label = ctx.spec.get("label")
     if label:
-        lx, ly = ctx.world(ctx.spec.get("label_at") or [ctx.bbox["w"] // 2, 24])
+        at = ctx.spec.get("label_at") or {"x": ctx.bbox[2] // 2, "y": 24}
+        lx, ly = ctx.point(at) if ctx.coords == "local" else as_point(at, "")
         ctx.frag["labels"].append({"x": lx, "y": ly, "text": label})
 
-    # TODO(W4-A): emit anims/animBands from the biome's animated inventory and
-    # attach interact verbs (sit / enter / read / shop) to eligible stamps.
-    return {"labels": len(ctx.frag["labels"]), "anims": 0, "todo": True}
+    bad = []
+    for anim in ctx.spec.get("anims") or []:
+        x, y = ctx.point(anim.get("at") or anim)
+        entry = {"sheet": anim["sheet"], "fw": anim.get("fw", 16), "fh": anim.get("fh", 16),
+                 "x": x, "y": y, "fps": anim.get("fps", 4)}
+        if anim.get("depth") is not None:
+            entry["depth"] = anim["depth"]
+        bad += _anim_frame_errors(entry)
+        ctx.frag["anims"].append(entry)
+
+    # Water surfaces declared in pass A become animated bands here.
+    for srf in ctx.spec.get("surfaces") or []:
+        if srf["surface"] in PAINTABLE_TILES or not srf.get("anim"):
+            continue
+        x, y, w, h = snap16(*ctx.rect(srf))
+        rule = ctx.surface_rule(srf["surface"])
+        band = {"sheet": srf["anim"], "fw": srf.get("fw", 64), "fh": srf.get("fh", 64),
+                "x": x, "y": y, "w": w, "h": h, "fps": srf.get("fps", 5),
+                "depth": srf.get("depth", rule.get("default_depth", 0.95))}
+        if srf.get("shore"):
+            band["shore"] = srf["shore"]
+        bad += _anim_frame_errors(band)
+        ctx.frag["animBands"].append(band)
+
+    for name in bad:
+        print(f"warn: anim sheet {name}")
+
+    # TODO(W4-A): attach interact verbs from spec.interactions to the stamps
+    # placed by C-G ('auto' = every stamp whose role/tags match the verb's
+    # rules entry), and emit npc_anchor spawn hints.
+    return {"labels": len(ctx.frag["labels"]), "anims": len(ctx.frag["anims"]),
+            "animBands": len(ctx.frag["animBands"]),
+            "interactions_pending": len(ctx.spec.get("interactions") or {}), "todo": True}
+
+
+def _anim_frame_errors(entry: dict) -> list[str]:
+    """Pre-empt the BADANIM defect: sheet must exist and divide by fw/fh.
+    Uses PIL only if it is installed — footprints never need it."""
+    path = ASSETS / entry["sheet"].replace("/", os.sep)
+    if not path.exists():
+        return [f"{entry['sheet']} not found"]
+    try:
+        from PIL import Image
+    except ImportError:
+        return []
+    with Image.open(path) as im:
+        w, h = im.size
+    if w % entry["fw"] or h % entry["fh"]:
+        return [f"{entry['sheet']} is {w}x{h}, not divisible by "
+                f"{entry['fw']}x{entry['fh']} (BADANIM)"]
+    return []
 
 
 PASSES = [
@@ -486,24 +735,11 @@ def _count_recipes() -> int:
     return len(list(GROUPS_DIR.glob("grp.*.json"))) if GROUPS_DIR.exists() else 0
 
 
-def _snap16(x: int, y: int, w: int, h: int) -> tuple[int, int, int, int]:
-    """Snap a rect to the tile grid (origin down, size up) so every patch shares
-    one grout lattice — off-grid patches are why ground read as 'broken' seams.
-    """
-    x0, y0 = (x // TILE) * TILE, (y // TILE) * TILE
-    return (x0, y0,
-            ((x + w + TILE - 1) // TILE) * TILE - x0,
-            ((y + h + TILE - 1) // TILE) * TILE - y0)
-
-
 # ── emit ─────────────────────────────────────────────────────────────────────
 
-def compile_spec(spec: dict, rules: dict, seed: int, only: set[str] | None = None,
-                 verbose: bool = False) -> tuple[dict, Ctx]:
-    ctx = Ctx(spec, rules, Catalog(), seed, verbose=verbose)
-    if not ctx.cat.ready:
-        print(f"warn: {INDEX_PATH.relative_to(DEN)} missing — footprints unavailable; "
-              "run `python3 scripts/resolve_limezu_me_stamps.py` first")
+def compile_spec(spec: dict, rules: dict, catalog: Catalog, seed: int,
+                 only: set[str] | None = None, verbose: bool = False) -> tuple[dict, Ctx]:
+    ctx = Ctx(spec, rules, catalog, seed, verbose=verbose)
 
     for key, fn in PASSES:
         if only and key not in only:
@@ -516,18 +752,22 @@ def compile_spec(spec: dict, rules: dict, seed: int, only: set[str] | None = Non
         if verbose:
             print(f"  pass {key:12s} {ctx.stats[key]}")
 
+    bx, by, bw, bh = ctx.bbox
     frag = {
         "_doc": f"GENERATED by scripts/compile-exterior-district.py from "
-                f"{spec.get('_spec_path', 'spec')} — do not hand-edit; edit the spec and recompile.",
+                f"{spec.get('_spec_path', 'spec')} — do not hand-edit; "
+                f"edit the spec and recompile.",
         "district": spec["district"],
         "id": spec["id"],
         "biome": spec["biome"],
-        "bbox": dict(spec["bbox"]),
+        "bbox": {"x": bx, "y": by, "w": bw, "h": bh},
         "_compiled": {
+            # No timestamp on purpose: same spec + seed + catalog must produce a
+            # byte-identical fragment, so recompiles show no diff noise.
             "spec": spec.get("_spec_path"),
             "seed": seed,
-            "at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "rules": rules.get("version") if rules else None,
+            "rules_version": rules.get("version"),
+            "coords": ctx.coords,
             "passes": ctx.stats,
             "occupancy": ctx.occ.stats(),
             "catalog_misses": sorted(set(ctx.cat.misses))[:20],
@@ -542,31 +782,36 @@ def main() -> int:
         description="Compile an exterior district spec into a city-plan fragment.")
     ap.add_argument("--spec", required=True,
                     help="district spec JSON (e.g. data/city-specs/biome-specs/beach.json)")
-    ap.add_argument("--out", help="fragment output path (default: spec.out or "
+    ap.add_argument("--out", help="fragment output path (default: compiler.out, else "
                                  "data/city-specs/generated/<id>.json)")
-    ap.add_argument("--seed", type=int, help="override spec.seed (deterministic compile)")
+    ap.add_argument("--seed", type=int, help="override compiler.seed (deterministic compile)")
     ap.add_argument("--passes", help="comma-separated subset, e.g. A_ground,B_skeleton")
     ap.add_argument("--validate-only", action="store_true", help="check the spec, emit nothing")
     ap.add_argument("--dry-run", action="store_true", help="compile but do not write the fragment")
     ap.add_argument("--qa", action="store_true", help="run check-city-plan.py on the fragment")
-    ap.add_argument("--stats-json", help="also write the per-pass stats block here")
+    ap.add_argument("--stats-json", help="also write the _compiled stats block here")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
 
     spec_path = Path(args.spec)
-    if not spec_path.is_absolute():
-        spec_path = (DEN / spec_path) if not spec_path.exists() else spec_path.resolve()
+    if not spec_path.is_absolute() and not spec_path.exists():
+        spec_path = DEN / spec_path
     spec = load_json(spec_path)
     if spec is None:
         print(f"error: spec not found: {args.spec}", file=sys.stderr)
         return 2
     try:
-        spec["_spec_path"] = str(spec_path.relative_to(DEN)).replace(os.sep, "/")
+        spec["_spec_path"] = str(spec_path.resolve().relative_to(DEN)).replace(os.sep, "/")
     except ValueError:
         spec["_spec_path"] = str(spec_path)
 
     rules = load_rules(verbose=args.verbose)
-    errs, warns = validate_spec(spec, rules)
+    catalog = Catalog()
+    if not catalog.ready:
+        print(f"warn: {INDEX_PATH.relative_to(DEN)} missing — footprints unavailable; "
+              "run `python3 scripts/resolve_limezu_me_stamps.py` first")
+
+    errs, warns = validate_spec(spec, rules, catalog)
     for w in warns:
         print(f"warn: {w}")
     if errs:
@@ -574,24 +819,28 @@ def main() -> int:
             print(f"error: {e}", file=sys.stderr)
         print(f"spec INVALID: {len(errs)} error(s)", file=sys.stderr)
         return 1
+    bx, by, bw, bh = as_rect(spec["bbox"], "bbox")
     print(f"spec OK: {spec['id']} ({spec['district']}) biome={spec['biome']} "
-          f"{spec['bbox']['w']}x{spec['bbox']['h']} @({spec['bbox']['x']},{spec['bbox']['y']})")
+          f"{bw}x{bh} @({bx},{by})")
     if args.validate_only:
         return 0
 
-    seed = args.seed if args.seed is not None else spec.get("seed", 0)
+    seed = args.seed if args.seed is not None else (spec.get("compiler") or {}).get("seed", 0)
     only = {p.strip() for p in args.passes.split(",")} if args.passes else None
-    frag, ctx = compile_spec(spec, rules, seed, only=only, verbose=args.verbose)
+    frag, ctx = compile_spec(spec, rules, catalog, seed, only=only, verbose=args.verbose)
 
     counts = {k: len(frag[k]) for k in FRAGMENT_LISTS if frag[k]}
     print(f"compiled seed={seed}: {counts or 'empty fragment'}")
     todo = [k for k, v in ctx.stats.items() if v.get("todo")]
     if todo:
         print(f"stub passes (no fill logic yet): {', '.join(todo)}")
+    if ctx.cat.misses:
+        print(f"catalog misses: {len(set(ctx.cat.misses))}")
 
     out = Path(args.out) if args.out else None
     if out is None:
-        out = DEN / spec["out"] if spec.get("out") else DEFAULT_OUT_DIR / f"{spec['id']}.json"
+        declared = (spec.get("compiler") or {}).get("out")
+        out = (DEN / declared) if declared else DEFAULT_OUT_DIR / f"{spec['id']}.json"
     if not out.is_absolute():
         out = DEN / out
 
