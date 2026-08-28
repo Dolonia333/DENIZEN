@@ -13,11 +13,11 @@
   ],
   "footprint_tiles": {
     "w": 5,
-    "h": 3
+    "h": 4
   },
   "anchor": {
     "origin": "tl",
-    "note": "dx/dy are tile offsets from the top-left of the footprint; crates are stacked against the back, with the bucket and fishing spot toward the water's edge."
+    "note": "dx/dy are tile offsets from the top-left of the footprint; crates are stacked against the back, with the bucket and fishing spot toward the water's edge. Height is 4, not 3: fishing_spot (dy=0, 64px/4-tile-tall sprite) needs rows 0-3."
   },
   "offset_basis_summary": "Fish_Crate_1 and Fish_Crate_4 are two vertically-stacked tiles of the same crate stack on the 11_Camping sheet (x240, y208/208->240 diff), so that pair is sheet_relative. The fish bucket and fishing rod spot live in separate sheet regions, so their placement beside the crates is hand-authored.",
   "pieces": [
@@ -46,9 +46,9 @@
       "h": 32,
       "origin": "tl",
       "offset_basis": "sheet_relative",
-      "solid": true,
+      "solid": false,
       "facing": "south",
-      "notes": "Second crate variant from the same vertical run on the sheet; stacked visually atop crate_stack_bottom."
+      "notes": "Second crate variant from the same vertical run on the sheet; stacked visually atop crate_stack_bottom, sharing its collider (dy=0 vs dy=1 on a 32px-tall sprite is a 50% footprint overlap, so only the bottom crate is solid -- two full colliders here would be check-city-plan.py OVERLAP every time this recipe compiles)."
     },
     {
       "role": "fish_bucket",

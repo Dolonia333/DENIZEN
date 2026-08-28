@@ -12,11 +12,11 @@
   ],
   "footprint_tiles": {
     "w": 7,
-    "h": 10
+    "h": 11
   },
   "anchor": {
     "origin": "tl",
-    "note": "dx/dy are tile offsets from the top-left of the footprint (ship-bar building's top-left corner); origin snapped to (240,128) on the 21_Beach sheet."
+    "note": "dx/dy are tile offsets from the top-left of the footprint (ship-bar building's top-left corner); origin snapped to (240,128) on the 21_Beach sheet. Height is 11, not 10: drinks_topper (dy=10, one tile tall) sits one row below the service_table/guest_chair row."
   },
   "offset_basis_summary": "The ship-bar building, its two counter modules, the guest chair and the service table are all laid out contiguously in the same sheet region (x240-352, y128-288 on 21_Beach), so their offsets are read directly from sheet_x/sheet_y (sheet_relative). The chair_2 exs reports sheet_x=239 (1px off chair_1's 240) which is a vision-labeling rounding artifact for the same tile cell.",
   "pieces": [

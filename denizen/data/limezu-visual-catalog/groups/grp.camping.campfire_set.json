@@ -16,10 +16,10 @@
     "me.camping.stump",
     "me.camping.log_fallen"
   ],
-  "footprint_tiles": { "w": 5, "h": 5 },
+  "footprint_tiles": { "w": 5, "h": 6 },
   "anchor": {
     "origin": "tl",
-    "note": "dx/dy below are tile offsets from the top-left of the 5x5 footprint; fire sits at the visual center."
+    "note": "dx/dy below are tile offsets from the top-left of the 5x6 footprint; fire sits at the visual center. Height is 6, not 5: chair_grey (dy=4, 32px/2-tile-tall sprite) is the near-side seat and needs rows 4-5, one row past a nominal 5-row box."
   },
   "offset_basis_summary": "These pieces are semantically related but physically scattered across the Camping sheet (chairs, campfire, stumps, and cut-wood piles are drawn in unrelated rows/columns), so sheet_x/sheet_y offer no usable spatial relationship. Every offset here is hand-authored to form a plausible campsite circle: fire in the middle, seating and firewood arranged around it.",
   "pieces": [

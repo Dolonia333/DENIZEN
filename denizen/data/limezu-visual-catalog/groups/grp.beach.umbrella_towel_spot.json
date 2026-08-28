@@ -15,11 +15,11 @@
   ],
   "footprint_tiles": {
     "w": 6,
-    "h": 5
+    "h": 6
   },
   "anchor": {
     "origin": "tl",
-    "note": "dx/dy are tile offsets from the top-left of the footprint; the parasol anchors the back row and the towel/toys spread out in front of it on the sand."
+    "note": "dx/dy are tile offsets from the top-left of the footprint; the parasol anchors the back row and the towel/toys spread out in front of it on the sand. Height is 6, not 5: towel (dy=4, 32px/2-tile-tall sprite) needs rows 4-5."
   },
   "offset_basis_summary": "Umbrella, towel, bucket, shovel and starfish singles live in unrelated rows/columns of the 21_Beach sheet (umbrella at ~y208, towel at ~y96, bucket at ~y32, shovel at ~y32, starfish at ~y64-80), so every offset here is hand-authored to form a plausible sunbathing spot: parasol shading the towel, toys scattered beside it.",
   "pieces": [
