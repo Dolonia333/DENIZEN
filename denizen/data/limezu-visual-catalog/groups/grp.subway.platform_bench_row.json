@@ -11,7 +11,7 @@
     "me.subway.plant_vase"
   ],
   "footprint_tiles": {
-    "w": 5,
+    "w": 6,
     "h": 2
   },
   "anchor": {
@@ -55,7 +55,7 @@
       "me": "me.subway.plant_vase",
       "exs": "exs.20_subway_and_train_station.subway_and_train_station_plant_vase_1",
       "basename": "ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
-      "dx": 4,
+      "dx": 5,
       "dy": 0,
       "w": 16,
       "h": 32,
@@ -63,7 +63,7 @@
       "offset_basis": "authored",
       "solid": true,
       "facing": "any",
-      "notes": "Placed past the end of the three-seat bench, out of the seating footprint."
+      "notes": "Placed past the end of the three-seat bench, out of the seating footprint. Footprint widened 5->6 tiles and dx 4->5 (bugfix: the old dx=4 placed the plant's 16x32 rect on top of the three-seat bench's own 48x16 rect at x64-80, a 50% solid/solid overlap that check-city-plan.py OVERLAP flags — dx=5 clears the bench row's x32-80 span entirely)."
     }
   ],
   "variants": {

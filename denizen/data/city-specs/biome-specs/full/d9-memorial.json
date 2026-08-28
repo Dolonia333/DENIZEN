@@ -1,0 +1,203 @@
+{
+ "_doc": "W6-B FULL DISTRICT spec — replaces D9's hand-stamped exterior with a compiler-generated fragment covering the district's ENTIRE bbox (not a pocket). bbox corrected to the district's real footprint (content extent x:[192,1104] y:[4400,5072], already tile-aligned) — see EXTERIOR-MISTAKES.md #4 on the declared {200,4400,900,660} being 8px off-grid. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d9-memorial.json --qa -v. Merge with scripts/merge-city-plan.py --compiler-replaces (see docs/EXTERIOR-COMPILER.md) which takes patches from THIS fragment (full bbox painted) and roads/portals/npcs/vehicles from the hand d9-graveyard.json, replacing only stamps/anims/labels.",
+ "schema": "exterior-district-spec/1",
+ "id": "d9-compiled",
+ "district": "D9 Old Cemetery (full compiler replacement)",
+ "biome": "memorial",
+ "palette": "somber_stone",
+ "palette_secondary": "verdant",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 90001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d9-compiled.json",
+  "full_bbox": true,
+  "_doc": "coords 'local': every rect/point below is relative to bbox (192,4400)."
+ },
+
+ "bbox": { "x": 192, "y": 4400, "w": 912, "h": 672 },
+ "label": "OLD CEMETERY",
+ "label_at": { "x": 368, "y": 32 },
+
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0, "y": 0, "w": 912, "h": 672,
+   "depth": 0.85,
+   "_doc": "cemetery lawn covers the WHOLE bbox"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "chapel_walk",
+   "x": 0, "y": 0, "w": 912, "h": 48,
+   "depth": 0.87,
+   "_doc": "north entrance walk, continuing the residential district's street grid above"
+  },
+  {
+   "surface": "sand",
+   "name": "dig_ground_a",
+   "x": 480, "y": 288, "w": 176, "h": 128,
+   "depth": 0.92,
+   "_doc": "dirt patch for the grave_dig_site group + loose dirt-pile decor"
+  },
+  {
+   "surface": "sand",
+   "name": "dig_ground_b",
+   "x": 176, "y": 448, "w": 144, "h": 112,
+   "depth": 0.92,
+   "_doc": "second dirt patch, west side"
+  }
+ ],
+
+ "slots": [
+  {
+   "slot": "path_edge",
+   "name": "chapel_walk_edge",
+   "surface": "sidewalk",
+   "density": { "street_furn": "light", "signage": "light", "decor_small": "light" },
+   "_doc": "lanterns and a low fence run along the entrance walk"
+  },
+  {
+   "slot": "interior_fill",
+   "name": "plot_rows",
+   "x": 32, "y": 64, "w": 848, "h": 576,
+   "density": {
+    "decor_small": "packed",
+    "vegetation": "medium",
+    "barrier": "dense",
+    "building_shell": "sparse"
+   },
+   "_doc": "the cemetery grounds — matches biomes.memorial.density exactly (decor_small packed, vegetation medium, barrier dense)"
+  }
+ ],
+
+ "landmarks": [
+  {
+   "me": "me.graveyard.grace_chapel_with_gate",
+   "at": { "x": 96, "y": 224 },
+   "anchor": "bl",
+   "role": "landmark",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "hero chapel + wrought-iron gate, NW plot — same asset the hand district stamped"
+  },
+  {
+   "me": "me.graveyard.gate_big_red_orb",
+   "at": { "x": 448, "y": 656 },
+   "anchor": "bc",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "south boundary gate, mirrors the hand district's Big_Gate_Red_Orb"
+  },
+  {
+   "me": "me.graveyard.grave_cage",
+   "at": { "x": 700, "y": 360 },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "spooky caged grave, east plot"
+  },
+  {
+   "me": "me.graveyard.wood_large_cross_1",
+   "at": { "x": 420, "y": 480 },
+   "anchor": "bl",
+   "solid": true
+  },
+  {
+   "me": "me.graveyard.big_tree_pumpkins",
+   "at": { "x": 700, "y": 180 },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "haunted big tree, matching the hand district's Halloween dressing"
+  }
+ ],
+
+ "groups": [
+  {
+   "grp": "grp.graveyard.tombstone_plot",
+   "slot": "plot_rows",
+   "count": 10,
+   "_doc": "2x6-tile mixed black/brown/grey tombstone rows, sampled 10x for strict row alignment across the full grounds"
+  },
+  {
+   "grp": "grp.graveyard.grave_dig_site",
+   "slot": "plot_rows",
+   "count": 3,
+   "_doc": "open coffin + dirt pile + shovel dig sites, on the sand patches"
+  }
+ ],
+
+ "interactions": {
+  "enter": "auto",
+  "read": "auto"
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Graveyard_Haunted_Tree_Pumpkins_16x16.png", "fw": 64, "fh": 64,
+    "at": { "x": 700, "y": 180 }, "fps": 5 },
+  { "sheet": "ext/animated/Graveyard_Ghosts_1_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 300, "y": 380 }, "fps": 6 },
+  { "sheet": "ext/animated/Graveyard_Ghosts_2_16x16.png", "fw": 32, "fh": 64,
+    "at": { "x": 620, "y": 440 }, "fps": 6 },
+  { "sheet": "ext/animated/Graveyard_Ghosts_4_16x16.png", "fw": 64, "fh": 48,
+    "at": { "x": 520, "y": 340 }, "fps": 6 },
+  { "sheet": "ext/animated/Graveyard_Candle_Standing_16x16.png", "fw": 16, "fh": 48,
+    "at": { "x": 200, "y": 300 }, "fps": 6 },
+  { "sheet": "ext/animated/Graveyard_Candle_1_16x16.png", "fw": 16, "fh": 16,
+    "at": { "x": 760, "y": 420 }, "fps": 6 },
+  { "sheet": "ext/animated/Crow_idle_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 780, "y": 300 }, "fps": 6 }
+ ],
+
+ "constraints": {
+  "max_stamps": 280,
+  "coverage_target_singles": 85,
+  "max_solid_cell_ratio": 0.28,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "912x672 = 57x42 tiles = 2394 cells; memorial runs decor_small packed + barrier dense, so headroom mirrors the W3 pocket ratios scaled up"
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": { "enabled": true },
+  "F_canopy": {
+   "enabled": true,
+   "candidates": [
+    "me.graveyard.big_tree",
+    "me.graveyard.medium_tree_1",
+    "me.graveyard.medium_tree_2",
+    "me.graveyard.medium_tree_3",
+    "me.graveyard.small_tree_1"
+   ]
+  },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.graveyard.small_grey_tombstone_1",
+    "me.graveyard.small_grey_tombstone_2",
+    "me.graveyard.small_grey_tombstone_3",
+    "me.graveyard.small_brown_tombstone_1",
+    "me.graveyard.small_brown_tombstone_2",
+    "me.graveyard.marble_grey_tombstone_1",
+    "me.graveyard.marble_brown_tombstone_1",
+    "me.graveyard.long_tombstone_1",
+    "me.graveyard.wood_cross_1",
+    "me.graveyard.grey_cross_1",
+    "me.graveyard.grey_cross_2",
+    "me.graveyard.black_cross_1",
+    "me.graveyard.consumed_candle_1",
+    "me.graveyard.wall_candle_1",
+    "me.graveyard.pebbles_1",
+    "me.graveyard.grass_tufts",
+    "me.graveyard.big_pumpkin_1",
+    "me.graveyard.medium_pumpkin_1",
+    "me.graveyard.little_pumpkin_1"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}

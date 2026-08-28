@@ -23,7 +23,8 @@ This is layer **L4** of the placement brain (see
 | Footprints | `data/limezu-visual-catalog/placement-index.json` |
 | Candidate pool | `data/limezu-visual-catalog/me-placement-enriched.jsonl` (W1-A) |
 | Palette scoring | `data/limezu-visual-catalog/variant-palette-map.json` (W1-B) |
-| Status | W2-A — all eight passes implemented |
+| Merge flag | `scripts/merge-city-plan.py --compiler-replaces HAND` (W6-B — full district migration) |
+| Status | W2-A — all eight passes implemented; W6-B — 6 priority districts fully migrated |
 
 **The rules file is authoritative for names.** Every biome, surface, slot archetype, role,
 density level, palette and interact verb a spec uses must exist in
@@ -527,6 +528,91 @@ Either way the compiler must respect what merge already does:
 - Merge nudges building-keyword stamps off the street grid. Compiled districts should not
   need it; if the nudge count rises after a compile, pass B under-reserved.
 
+### `--compiler-replaces HAND`: full district migration (W6-B)
+
+`--include-generated` is additive — it keeps the hand district's own stamps/anims AND
+appends the compiled fragment's, which is why the promotion flow above only ever points it
+at a district whose hand fragment has already been emptied out. **Full district
+migration** — swapping a hand district's exterior stamps for compiler output while it is
+still sitting in `data/city-specs/d*.json` — needs a surgical merge instead:
+
+```bash
+python3 scripts/merge-city-plan.py --compiler-replaces HAND
+```
+
+Per hand fragment `data/city-specs/d{N}-*.json`, if a matching
+`data/city-specs/generated/d{N}-compiled.json` exists:
+
+| Taken from the **compiled** fragment | Taken from the **hand** fragment |
+|---|---|
+| `stamps`, `anims`, `labels` | `roads`, `solids`, `animBands`, `portals`, `npcs`, `vehicles` |
+| `patches` too, **if** the spec set `compiler.full_bbox: true` | `patches`, otherwise (the compiler only painted a pocket, so the hand ground plan is still authoritative outside it) |
+
+Districts with no `d{N}-compiled.json` merge unchanged. `--include-generated` and
+`--compiler-replaces` are mutually exclusive — passing both is a no-op for
+`--include-generated` (a printed note explains why): every generated file
+`--compiler-replaces` needs is already folded in per-district.
+
+```
+--compiler-replaces HAND: 6 compiled district(s) available: [6, 7, 9, 10, 11, 13]
+compiler-replaces summary:
+  D10: d10-camping.json -> d10-compiled.json  stamps 51->300, anims 5->5, labels 1->1, patches from generated (9)
+  D11: d11-industrial.json -> d11-compiled.json  stamps 60->220, anims 5->5, labels 1->1, patches from generated (3)
+  D13: d13-subway.json -> d13-compiled.json  stamps 60->320, anims 5->5, labels 2->1, patches from generated (4)
+  D6: d6-residential.json -> d6-compiled.json  stamps 59->420, anims 9->5, labels 2->1, patches from generated (10)
+  D7: d7-park.json -> d7-compiled.json  stamps 60->400, anims 8->5, labels 1->1, patches from generated (11)
+  D9: d9-graveyard.json -> d9-compiled.json  stamps 60->280, anims 8->7, labels 1->1, patches from generated (4)
+```
+
+**Full-bbox specs** live in `data/city-specs/biome-specs/full/d{N}-{biome}.json` — same spec
+format as any other biome-spec, but sized to cover the *entire* hand district's footprint
+(`compiler.full_bbox: true`) rather than a pocket, and usually with a corrected `bbox`: several
+hand districts have a stale declared bbox that no longer matches where `relocate-district.py`
+actually left their content (`data/city-specs/EXTERIOR-MISTAKES.md` #4) — the full-bbox spec
+uses the district's *real* footprint, verified clear of its neighbours, and documents the
+correction in its own `_doc`. Compile each the normal way:
+
+```bash
+python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d6-residential.json --qa -v
+```
+
+**W6-B migrated six priority districts** this way — every one compiles standalone with
+`defects: none`, and the full city plan is `defects: none` after `--compiler-replaces HAND`:
+
+| District | Biome | Hand stamps | Compiled stamps |
+|---|---|---:|---:|
+| D6 Residential | residential | 59 | 420 |
+| D7 Grand Park | park | 60 | 400 |
+| D9 Graveyard/Memorial | memorial | 60 | 280 |
+| D10 Camping/Wild | wild | 51 | 300 |
+| D11 Industrial Yard | industrial | 60 | 220 |
+| D13 Subway/Transit | transit | 60 | 320 |
+| **Total** | | **350** | **1940** |
+
+Full city plan: **1215 → 2790 stamps** (+1575) merging these six via `--compiler-replaces
+HAND`, still `defects: none` (the delta isn't a clean 1:1 with the table above because
+`merge-city-plan.py`'s structure-furniture pruning and building-nudge steps react to the new
+stamp set too — see below).
+
+**Two merge-time collision fixes came out of this migration**, both in the post-merge
+cleanup steps, neither behind a flag (they apply to every merge, `--compiler-replaces` or
+not, and are provably non-regressive — the default hand-only merge stays `defects: none`
+with the identical `pruned`/`nudged` mechanism):
+
+- *Structure-furniture pruning* used to ignore any obstacle under 24×24px ("tiny decals
+  don't matter"). The compiler's `G_detail`/`E_props` passes place real 16×16–32×16 solid
+  decor (rocks, wood scraps, flowers) far denser than any hand district did, so that floor
+  started letting auto-placed lamps/trees land right on top of them. The floor is gone, and
+  the overlap-ratio test now divides by whichever rect is smaller (obstacle or furniture),
+  so a tiny decal fully swallowed by a lamp's footprint is caught exactly like a lamp
+  swallowed by a building.
+- *Building-off-street nudging* keys off filename substrings (`"school"`, `"villa"`, …) that
+  false-positive on non-building props filed in the same catalog folder (a bleachers prop
+  under `13_school/`, a tree house under `7_villas/`). The nudge's collision guard checked
+  the candidate spot against other buildings and roads only — extended to check against
+  every solid stamp, so a nudge can't shove a falsely-flagged prop onto compiler-placed decor
+  that wasn't there when the heuristic was written.
+
 ### Promoting a compiled district
 
 Once a district's fill passes (C–G) are far enough along that you want it live in
@@ -711,6 +797,16 @@ function returning a stats dict, so the remaining work is additive.
 3. **W3** — roll the remaining biome specs. Nothing in the compiler is beach-specific; a
    biome needs enrichment coverage for the roles its slots declare, which is where a thin
    pass shows up as `{'placed': 0, 'skipped': 'no candidates'}`.
+3b. **W6-B follow-on** — seven hand districts still have no full-bbox spec:
+   `d1-mainstreet`, `d2-shopping`, `d3-station`, `d4-foodmarket`, `d5-civic`, `d8-beach`,
+   `d12-military` (plus `d14-farm`/`d15-downtown`/`d16-interiors`/`d17-life` if in scope —
+   `d16`/`d17` are interiors-flavoured and may not need it at all). Same recipe as the six
+   done: derive the district's *real* footprint (not necessarily its declared `bbox` —
+   check `EXTERIOR-MISTAKES.md` #4 first), write
+   `data/city-specs/biome-specs/full/d{N}-{biome}.json` with `compiler.full_bbox: true`,
+   compile with `--qa` until clean, then re-run
+   `merge-city-plan.py --compiler-replaces HAND` and `check-city-plan.py` to confirm the
+   full plan is still `defects: none`.
 4. **W4-A** — `npc_anchor` → `npcs` (the renderer needs a `char` per NPC that the compiler
    has no basis to choose). The runtime `interact` handlers are done: `merge-city-plan.py`
    carries the verb through the me→img resolve untouched, and `src/full-world.js` collects

@@ -1,0 +1,146 @@
+{
+ "_doc": "W6-B FULL DISTRICT spec — replaces D6's hand-stamped exterior with a compiler-generated fragment covering the district's ENTIRE bbox. bbox matches the hand district's own grass patch exactly: the hand file declares bbox {200,3200,2000,1200} but its ground patch is painted at {192,3200,2000,1200} (8px rounding) — a handful of decor stamps (a street lamp, a palm tree) spill a little past x=2192 onto D7's grass, which we do NOT replicate here to keep D6/D7 bboxes from overlapping (D7's corrected full-bbox spec starts at x=2208). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d6-residential.json --qa -v. Merge with scripts/merge-city-plan.py --compiler-replaces.",
+ "schema": "exterior-district-spec/1",
+ "id": "d6-compiled",
+ "district": "D6 Residential District (full compiler replacement)",
+ "biome": "residential",
+ "palette": "pastel_suburb",
+ "palette_secondary": "verdant",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 60001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d6-compiled.json",
+  "full_bbox": true,
+  "_doc": "coords 'local': every rect/point below is relative to bbox (192,3200)."
+ },
+
+ "bbox": { "x": 192, "y": 3200, "w": 2000, "h": 1200 },
+ "label": "RESIDENTIAL DISTRICT",
+ "label_at": { "x": 858, "y": 50 },
+
+ "surfaces": [
+  { "surface": "grass", "x": 0, "y": 0, "w": 2000, "h": 1200, "depth": 0.9,
+    "_doc": "front/back yards cover the WHOLE bbox first" },
+  { "surface": "sidewalk", "name": "north_street_walk", "x": 0, "y": 400, "w": 2000, "h": 144, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "south_street_walk", "x": 0, "y": 864, "w": 2000, "h": 144, "depth": 0.9 },
+  { "surface": "sidewalk", "name": "median_walk", "x": 720, "y": 0, "w": 144, "h": 1200, "depth": 0.9,
+    "_doc": "the cross-street sidewalk splitting the district into west/east halves" },
+  { "surface": "sidewalk", "name": "rec_yard", "x": 1072, "y": 544, "w": 496, "h": 336, "depth": 0.9,
+    "_doc": "paved rec-yard courtyard between the two streets, mirrors the hand district's school/pool plaza" },
+  { "surface": "grass", "name": "rec_yard_lawn", "x": 1088, "y": 608, "w": 192, "h": 192, "depth": 0.91 },
+  { "surface": "asphalt", "name": "driveway", "x": 1072, "y": 800, "w": 128, "h": 80, "depth": 1.1 },
+  { "surface": "sand", "name": "old_block_lot", "x": 1408, "y": 1008, "w": 400, "h": 192, "depth": 0.92,
+    "_doc": "derelict SE corner, mirrors the hand district's OLD BLOCK label" },
+  { "surface": "sand", "name": "corner_path_a", "x": 112, "y": 560, "w": 200, "h": 64, "depth": 0.92 },
+  { "surface": "sand", "name": "corner_path_b", "x": 1664, "y": 144, "w": 144, "h": 80, "depth": 0.92 }
+ ],
+
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "yard",
+   "x": 0, "y": 0, "w": 2000, "h": 1200,
+   "density": { "vegetation": "dense", "decor_small": "medium", "furniture_ext": "light", "barrier": "dense" },
+   "_doc": "the whole plot, front and back — matches placement-rules.biomes.residential.density exactly. Landmarks below claim their own cells first, so this never overlaps a house."
+  },
+  {
+   "slot": "path_edge",
+   "name": "median_edge",
+   "surface": "sidewalk",
+   "density": { "street_furn": "light", "vegetation": "light", "barrier": "light" },
+   "_doc": "trees/lamps along the median crossing sidewalk"
+  },
+  {
+   "slot": "plaza",
+   "name": "rec_yard_plaza",
+   "x": 1072, "y": 544, "w": 496, "h": 336,
+   "density": { "furniture_ext": "medium", "street_furn": "light", "play_sport": "light", "npc_anchor": "light" },
+   "_doc": "bench + loose play props around the basketball court landmark"
+  },
+  {
+   "slot": "backlot",
+   "name": "old_block",
+   "x": 1408, "y": 1008, "w": 400, "h": 192,
+   "density": { "decor_small": "medium", "vehicle": "light", "barrier": "light", "vegetation": "light" },
+   "_doc": "rubble + a wrecked car around the post-apocalyptic house landmark"
+  },
+  {
+   "slot": "parking_bay",
+   "name": "driveway_bay",
+   "x": 1072, "y": 800, "w": 128, "h": 80,
+   "density": { "vehicle": "medium" }
+  }
+ ],
+
+ "landmarks": [
+  { "me": "me.houses.victorian_1", "at": { "x": 40, "y": 400 }, "anchor": "bl", "solid": true,
+    "_doc": "hero Victorian on the west end of the north row, same asset the hand district stamped" },
+  { "me": "me.houses.country_house", "at": { "x": 320, "y": 400 }, "anchor": "bl", "solid": true },
+  { "me": "me.houses.haunted_house", "at": { "x": 608, "y": 400 }, "anchor": "bl", "solid": true },
+  { "me": "me.houses.terraced_house_porch", "prefer": "Terraced_House_1", "at": { "x": 1080, "y": 400 }, "anchor": "bl", "solid": true },
+  { "me": "me.houses.japanese_house", "at": { "x": 1310, "y": 400 }, "anchor": "bl", "solid": true },
+  { "me": "me.houses.one_story_house", "at": { "x": 1580, "y": 400 }, "anchor": "bl", "solid": true },
+  { "me": "me.houses.post_apoc_1", "prefer": "Post_Apocalyptic_House_1", "at": { "x": 1650, "y": 1200 }, "anchor": "bl", "solid": true,
+    "_doc": "derelict corner house, mirrors the hand district's Post_Apocalyptic_House_1 in the OLD BLOCK" },
+  { "me": "me.school.court_basketball_clean", "at": { "x": 1200, "y": 752 }, "anchor": "bl", "solid": false,
+    "role": "play_sport", "interact": "play",
+    "_doc": "rec-yard basketball court, mirrors the hand district's Basketball_Court_1" },
+  { "me": "me.school.hoop_basketball_angled", "at": { "x": 1288, "y": 592 }, "anchor": "bl", "solid": true },
+  { "me": "me.school.playground_swing_set", "at": { "x": 1420, "y": 848 }, "anchor": "bl", "solid": true, "interact": "play" },
+  { "me": "me.vehicles.compact_blue_east", "at": { "x": 1088, "y": 880 }, "anchor": "bl", "solid": true,
+    "_doc": "car parked on the driveway, mirrors the hand district's Car_Left_1" },
+  { "me": "me.city_props.car_wreck_grey", "at": { "x": 1750, "y": 1180 }, "anchor": "bl", "solid": false },
+  { "me": "me.city_props.barrels_stacked_colored", "at": { "x": 1900, "y": 1180 }, "anchor": "bl", "solid": true }
+ ],
+
+ "interactions": {
+  "sit": "auto",
+  "play": ["me.school.court_basketball_clean", "me.school.playground_swing_set"]
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Park_Swing_1.png", "fw": 32, "fh": 32, "at": { "x": 1424, "y": 828 }, "fps": 6 },
+  { "sheet": "ext/animated/Trampoline_1.png", "fw": 48, "fh": 80, "at": { "x": 200, "y": 340 }, "fps": 6 },
+  { "sheet": "ext/animated/Clothes_Hanging_1_16x16.png", "fw": 48, "fh": 48, "at": { "x": 660, "y": 340 }, "fps": 4 },
+  { "sheet": "ext/animated/Garden_Fountain_1_16x16.png", "fw": 32, "fh": 48, "at": { "x": 1700, "y": 210 }, "fps": 5 },
+  { "sheet": "ext/animated/Street_Lamp_16x16.png", "fw": 80, "fh": 80, "at": { "x": 894, "y": 428 }, "fps": 4 }
+ ],
+
+ "constraints": {
+  "max_stamps": 420,
+  "coverage_target_singles": 150,
+  "max_solid_cell_ratio": 0.26,
+  "min_free_cell_ratio": 0.42,
+  "_doc": "2000x1200 = 125x75 tiles = 9375 cells; residential wants vegetation dense + barrier dense across a big district."
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": { "enabled": true },
+  "F_canopy": { "enabled": true },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.garden.small_red_flower",
+    "me.garden.small_yellow_flower",
+    "me.garden.small_white_flower",
+    "me.garden.bush_round",
+    "me.garden.bush_potted",
+    "me.garden.statue_putto",
+    "me.garden.birdhouse_little_blue",
+    "me.garden.birdhouse_little_red",
+    "me.pool.beach_ball_pastel",
+    "me.pool.float_ring_green",
+    "me.villa.tire_swing",
+    "me.villa.trampoline_1"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}

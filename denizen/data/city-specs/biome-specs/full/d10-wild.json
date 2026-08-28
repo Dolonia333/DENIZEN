@@ -1,0 +1,177 @@
+{
+ "_doc": "W6-B FULL DISTRICT spec — replaces D10's hand-stamped exterior with a compiler-generated fragment covering the district's ENTIRE bbox. bbox CORRECTED to the district's real footprint: the hand file declares bbox {4200,200,1900,1400} but every one of its own patches/stamps actually sits at x:[2680,3872] y:[160,1040] (EXTERIOR-MISTAKES.md #4 — camping's declared bbox is stale/oversized after a relocate). This spec uses the true, tile-snapped footprint {2672,160,1200,880} so the compiled ground lines up with the hand fragment's own patches/roads/solids that scripts/merge-city-plan.py --compiler-replaces keeps. Verified clear of the existing d19-wild-camp-pocket generated district (4320,304,480,480 — x-disjoint, starts at 4320 > our x1=3872). Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d10-wild.json --qa -v.",
+ "schema": "exterior-district-spec/1",
+ "id": "d10-compiled",
+ "district": "D10 Camping Forest (full compiler replacement)",
+ "biome": "wild",
+ "palette": "verdant",
+ "palette_secondary": "warm_autumn",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 100001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d10-compiled.json",
+  "full_bbox": true,
+  "_doc": "coords 'local': every rect/point below is relative to bbox (2672,160), the CORRECTED footprint, not the hand file's declared bbox."
+ },
+
+ "bbox": { "x": 2672, "y": 160, "w": 1200, "h": 880 },
+ "label": "CAMPING FOREST",
+ "label_at": { "x": 470, "y": 24 },
+
+ "surfaces": [
+  {
+   "surface": "grass",
+   "x": 0, "y": 0, "w": 1200, "h": 880,
+   "depth": 0.9,
+   "_doc": "forest floor covers the WHOLE bbox"
+  },
+  { "surface": "sand", "name": "trail_a", "x": 112, "y": 256, "w": 320, "h": 112, "depth": 0.92 },
+  { "surface": "sand", "name": "trail_b", "x": 288, "y": 368, "w": 48, "h": 112, "depth": 0.92 },
+  { "surface": "sand", "name": "trail_c", "x": 256, "y": 464, "w": 336, "h": 64, "depth": 0.92 },
+  { "surface": "sand", "name": "trail_d", "x": 512, "y": 496, "w": 64, "h": 384, "depth": 0.92 },
+  { "surface": "sand", "name": "trail_e", "x": 272, "y": 528, "w": 48, "h": 64, "depth": 0.92 },
+  { "surface": "sand", "name": "trail_f", "x": 224, "y": 576, "w": 64, "h": 48, "depth": 0.92 },
+  { "surface": "sand", "name": "clearing", "x": 416, "y": 544, "w": 112, "h": 112, "depth": 0.92 },
+  { "surface": "sand", "name": "trail_g", "x": 576, "y": 528, "w": 144, "h": 48, "depth": 0.92 }
+ ],
+
+ "slots": [
+  {
+   "slot": "interior_fill",
+   "name": "forest",
+   "x": 16, "y": 16, "w": 1168, "h": 848,
+   "density": { "vegetation": "packed", "canopy": "medium", "decor_small": "medium", "furniture_ext": "light" },
+   "_doc": "the treeline — matches biomes.wild.density exactly (vegetation packed, canopy medium, decor_small medium)"
+  },
+  {
+   "slot": "plaza",
+   "name": "campfire_circle",
+   "x": 192, "y": 496, "w": 320, "h": 224,
+   "density": { "furniture_ext": "light", "decor_small": "medium", "npc_anchor": "light" },
+   "_doc": "open ground around the campfire_set group, over the sand clearing"
+  },
+  {
+   "slot": "path_edge",
+   "name": "trail_edge",
+   "surface": "sand",
+   "density": { "street_furn": "light", "signage": "light", "vegetation": "light" },
+   "_doc": "signage and lanterns along the dirt trail (all `sand`-surface patches above)"
+  },
+  {
+   "slot": "backlot",
+   "name": "rv_lot",
+   "x": 48, "y": 280, "w": 400, "h": 160,
+   "density": { "vehicle": "medium", "decor_small": "light", "barrier": "light" },
+   "_doc": "camper/RV parking beside the mobile-home landmark"
+  }
+ ],
+
+ "landmarks": [
+  {
+   "me": "me.camping.mobile_house_big",
+   "at": { "x": 126, "y": 345 },
+   "anchor": "bl",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "hero camper trailer — same asset the hand district stamped (Mobile_House_Big_1)"
+  },
+  {
+   "me": "me.camping.mobile_house_medium",
+   "at": { "x": 281, "y": 347 },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "parked camper/RV, mirrors the hand district's Camper_Right_1 (rv_side_* has no placement-index single, so use the RV-tagged trailer)"
+  },
+  {
+   "me": "me.camping.sign_gateway",
+   "at": { "x": 600, "y": 16 },
+   "anchor": "bc",
+   "solid": true,
+   "interact": "read",
+   "_doc": "entrance signboard at the north edge of the clearing"
+  }
+ ],
+
+ "groups": [
+  {
+   "grp": "grp.camping.tent_cluster",
+   "slot": "forest",
+   "count": 2,
+   "_doc": "front+side tent pairs, 8x4 tiles each, scattered through the treeline like the hand district's Tent_1/3/5/6"
+  },
+  {
+   "grp": "grp.camping.campfire_set",
+   "slot": "campfire_circle",
+   "count": 1,
+   "interact": "sit",
+   "_doc": "fire + folding chairs + stumps + firewood, 5x6 tiles — the heart of the clearing, matches the hand district's Campfire/benched-table cluster"
+  },
+  {
+   "grp": "grp.camping.fishing_dock",
+   "slot": "forest",
+   "count": 1,
+   "_doc": "fish crates + bucket + baited rod corner, near the hand district's Fishing_Spot_2"
+  },
+  {
+   "grp": "grp.camping.dock_utility",
+   "slot": "forest",
+   "count": 1,
+   "_doc": "clothesline + storage bin + rope coil"
+  }
+ ],
+
+ "interactions": {
+  "sit": "auto",
+  "enter": ["me.camping.mobile_house_big"],
+  "read": ["me.camping.sign_gateway"]
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Campfire_16x16.png", "fw": 32, "fh": 32, "at": { "x": 262, "y": 595 }, "fps": 6 },
+  { "sheet": "ext/animated/Campfire_2_16x16.png", "fw": 32, "fh": 32, "at": { "x": 454, "y": 601 }, "fps": 8 },
+  { "sheet": "ext/animated/Camping_Lantern_1.png", "fw": 48, "fh": 48, "at": { "x": 306, "y": 608 }, "fps": 6 },
+  { "sheet": "ext/animated/Bubbles_16x16.png", "fw": 16, "fh": 16, "at": { "x": 730, "y": 533 }, "fps": 6 },
+  { "sheet": "ext/animated/Water_Tileset_16x16.png", "fw": 48, "fh": 48, "at": { "x": 721, "y": 546 }, "fps": 4 }
+ ],
+
+ "constraints": {
+  "max_stamps": 300,
+  "coverage_target_singles": 95,
+  "max_solid_cell_ratio": 0.28,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "1200x880 = 75x55 tiles = 4125 cells; wild runs vegetation packed + canopy medium, matching the W3 pocket ratios scaled up"
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": { "enabled": true },
+  "F_canopy": { "enabled": true },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.camping.mushrooms",
+    "me.camping.pine_cone",
+    "me.camping.rock",
+    "me.camping.stump",
+    "me.camping.log_fallen",
+    "me.camping.moss",
+    "me.camping.flower_red",
+    "me.camping.flower_yellow",
+    "me.camping.flower_white",
+    "me.camping.rope",
+    "me.camping.tire",
+    "me.camping.wood_board",
+    "me.camping.fish_crate",
+    "me.camping.fishing_spot",
+    "me.camping.binoculars"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}

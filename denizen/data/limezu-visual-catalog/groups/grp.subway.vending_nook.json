@@ -13,7 +13,7 @@
     "me.subway.led_light"
   ],
   "footprint_tiles": {
-    "w": 4,
+    "w": 6,
     "h": 3
   },
   "anchor": {
@@ -28,7 +28,7 @@
       "exs": "exs.20_subway_and_train_station.subway_and_train_station_drink_machine_front",
       "basename": "ME_Singles_Subway_and_Train_Station_16x16_Drink_Machine_Front.png",
       "dx": 0,
-      "dy": 1,
+      "dy": 0,
       "w": 32,
       "h": 48,
       "origin": "tl",
@@ -43,7 +43,7 @@
       "exs": "exs.20_subway_and_train_station.subway_and_train_station_coffee_machine_front",
       "basename": "ME_Singles_Subway_and_Train_Station_16x16_Coffee_Machine_Front.png",
       "dx": 2,
-      "dy": 1,
+      "dy": 0,
       "w": 32,
       "h": 48,
       "origin": "tl",
@@ -57,7 +57,7 @@
       "me": "me.subway.locker_small",
       "exs": "exs.20_subway_and_train_station.subway_and_train_station_small_black_locker",
       "basename": "ME_Singles_Subway_and_Train_Station_16x16_Small_Black_Locker.png",
-      "dx": 0,
+      "dx": 4,
       "dy": 0,
       "w": 32,
       "h": 32,
@@ -65,7 +65,7 @@
       "offset_basis": "authored",
       "solid": true,
       "facing": "any",
-      "notes": "Sits above the machines against the wall; footprint overlaps only the wall row, not the machine floor tiles."
+      "notes": "Stands beside the machines against the wall. Bugfix: footprint widened 4->6 tiles, machines' dy 1->0 (they were escaping the declared 3-tile-tall footprint) and locker dx 0->4 (the old dx=0/dy=0 placed it directly on top of the drink machine's own dx=0 column, a 50% solid/solid overlap that check-city-plan.py OVERLAP flags) — the extra 2 tiles of width give the locker its own column clear of both machines."
     },
     {
       "role": "led_strip",

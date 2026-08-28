@@ -1,0 +1,216 @@
+{
+ "_doc": "W6-B FULL DISTRICT spec — replaces D13's hand-stamped exterior with a compiler-generated fragment covering the district's ENTIRE bbox. bbox matches the hand district's declared {x0:640,y0:5120,x1:4096,y1:5632} exactly (already tile-aligned, no staleness here). The concourse strip between the two platforms is painted `grass` (not sidewalk) on purpose: grp.subway.turnstile_gate / platform_bench_row / vending_nook all declare `surface: ground`, which placement-rules.json aliases to `grass`, not `sidewalk` — the same trick data/city-specs/biome-specs/transit.json (the D28 pocket) documents. Compile with: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/full/d13-transit.json --qa -v. Merge with scripts/merge-city-plan.py --compiler-replaces.",
+ "schema": "exterior-district-spec/1",
+ "id": "d13-compiled",
+ "district": "D13 Subway Underground (full compiler replacement)",
+ "biome": "transit",
+ "palette": "neutral_urban",
+ "palette_secondary": "civic_blue",
+
+ "compiler": {
+  "version": 1,
+  "rules": "data/limezu-visual-catalog/placement-rules.json",
+  "seed": 130001,
+  "coords": "local",
+  "out": "data/city-specs/generated/d13-compiled.json",
+  "full_bbox": true,
+  "_doc": "coords 'local': every rect/point below is relative to bbox (640,5120)."
+ },
+
+ "bbox": { "x": 640, "y": 5120, "w": 3456, "h": 512 },
+ "label": "LME STATION",
+ "label_at": { "x": 1728, "y": 32 },
+
+ "surfaces": [
+  {
+   "surface": "asphalt",
+   "x": 0, "y": 0, "w": 3456, "h": 512,
+   "depth": 0.9,
+   "_doc": "track bed + station shell covers the WHOLE bbox first"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "west_platform",
+   "x": 16, "y": 96, "w": 1568, "h": 336,
+   "depth": 0.91,
+   "_doc": "west platform, mirrors the hand district's old-platform paving"
+  },
+  {
+   "surface": "sidewalk",
+   "name": "east_platform",
+   "x": 1888, "y": 96, "w": 1552, "h": 336,
+   "depth": 0.91,
+   "_doc": "east platform (LME station side)"
+  },
+  {
+   "surface": "grass",
+   "name": "concourse",
+   "x": 1600, "y": 96, "w": 272, "h": 336,
+   "depth": 0.92,
+   "_doc": "landscaped transfer concourse between the platforms — required so grp.subway.turnstile_gate / platform_bench_row / vending_nook (all declared surface 'ground' -> alias 'grass') pass the compiler's 80%-footprint surface gate"
+  }
+ ],
+
+ "slots": [
+  {
+   "slot": "plaza",
+   "name": "west_platform_slot",
+   "x": 16, "y": 96, "w": 1568, "h": 336,
+   "density": { "furniture_ext": "dense", "street_furn": "dense", "signage": "dense", "npc_anchor": "light" },
+   "_doc": "old-platform waiting area — matches biomes.transit density (street_furn/signage dense)"
+  },
+  {
+   "slot": "plaza",
+   "name": "east_platform_slot",
+   "x": 1888, "y": 96, "w": 1552, "h": 336,
+   "density": { "furniture_ext": "dense", "street_furn": "dense", "signage": "dense", "npc_anchor": "light" },
+   "_doc": "LME station platform waiting area"
+  },
+  {
+   "slot": "plaza",
+   "name": "concourse_slot",
+   "x": 1600, "y": 96, "w": 272, "h": 336,
+   "density": { "furniture_ext": "medium", "street_furn": "dense", "signage": "dense", "npc_anchor": "medium" },
+   "_doc": "turnstile lane + vending nook + bench row anchor here"
+  },
+  {
+   "slot": "rail_bed",
+   "name": "trackside",
+   "x": 16, "y": 0, "w": 3424, "h": 96,
+   "density": { "infra": "dense", "vehicle": "light", "decal": "light", "barrier": "light" },
+   "_doc": "the rail bed itself — trains, rail infra, track-side barriers"
+  }
+ ],
+
+ "landmarks": [
+  {
+   "me": "me.subway.stairs_complete_1",
+   "at": { "x": 64, "y": 400 },
+   "anchor": "bl",
+   "role": "landmark",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "west stairwell descent — hero silhouette, same asset the hand district stamped"
+  },
+  {
+   "me": "me.subway.stairs_complete_1",
+   "prefer": "Stairs_Complete_2",
+   "at": { "x": 3360, "y": 400 },
+   "anchor": "bl",
+   "role": "landmark",
+   "solid": true,
+   "interact": "enter",
+   "_doc": "east (LME) stairwell descent"
+  },
+  {
+   "me": "me.subway.train_graffiti_car",
+   "at": { "x": 260, "y": 96 },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "graffitied train car on the old platform's track, mirrors the hand district's Example_Graffiti_Train"
+  },
+  {
+   "me": "me.subway.train_white_exterior",
+   "prefer": "Exterior_Train_White_Left",
+   "at": { "x": 2260, "y": 96 },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "clean white train pulled in at the LME platform (left car)"
+  },
+  {
+   "me": "me.subway.train_white_exterior",
+   "prefer": "Exterior_Train_White_Middle",
+   "at": { "x": 2372, "y": 96 },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "LME platform train, middle car"
+  },
+  {
+   "me": "me.subway.train_white_exterior",
+   "prefer": "Exterior_Train_White_Right",
+   "at": { "x": 2516, "y": 96 },
+   "anchor": "bl",
+   "solid": true,
+   "_doc": "LME platform train, right car"
+  }
+ ],
+
+ "groups": [
+  {
+   "grp": "grp.subway.turnstile_gate",
+   "slot": "concourse_slot",
+   "count": 1,
+   "interact": "enter",
+   "_doc": "closed turnstile + railing + support pillar, 5x9 tiles"
+  },
+  {
+   "grp": "grp.subway.vending_nook",
+   "slot": "concourse_slot",
+   "count": 1,
+   "_doc": "coffee/drink machine nook, 4x3 tiles"
+  },
+  {
+   "grp": "grp.subway.platform_bench_row",
+   "slot": "concourse_slot",
+   "count": 1,
+   "_doc": "wait-seat bench row, 5x2 tiles"
+  }
+ ],
+
+ "interactions": {
+  "sit": "auto",
+  "read": "auto",
+  "enter": ["me.subway.stairs_complete_1", "grp.subway.turnstile_gate"]
+ },
+
+ "anims": [
+  { "sheet": "ext/animated/Subway_Train_4_Door_1_Graffiti_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 356, "y": 64 }, "fps": 6 },
+  { "sheet": "ext/animated/Subway_Train_5_Door_1_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 2420, "y": 64 }, "fps": 6 },
+  { "sheet": "ext/animated/Subway_Busker_1_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 910, "y": 370 }, "fps": 6 },
+  { "sheet": "ext/animated/Subway_Busker_2_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 950, "y": 370 }, "fps": 6 },
+  { "sheet": "ext/animated/Subway_Elevator_Going_Down_16x16.png", "fw": 32, "fh": 32,
+    "at": { "x": 2980, "y": 216 }, "fps": 4 }
+ ],
+
+ "constraints": {
+  "max_stamps": 320,
+  "coverage_target_singles": 75,
+  "max_solid_cell_ratio": 0.28,
+  "min_free_cell_ratio": 0.4,
+  "_doc": "3456x512 = 216x32 tiles = 6912 cells; transit wants infra/street_furn/signage all dense across two big platforms plus the concourse"
+ },
+
+ "passes": {
+  "A_ground": { "enabled": true },
+  "B_skeleton": { "enabled": true },
+  "C_landmarks": { "enabled": true },
+  "D_groups": { "enabled": true },
+  "E_props": {
+   "enabled": true,
+   "themes": ["20_Subway_and_Train_Station"]
+  },
+  "F_canopy": { "enabled": true },
+  "G_detail": {
+   "enabled": true,
+   "candidates": [
+    "me.subway.graffiti_angry_face",
+    "me.subway.graffiti_angry_grey_face",
+    "me.subway.graffiti_crown_white",
+    "me.subway.graffiti_flower",
+    "me.subway.graffiti_frog_clean",
+    "me.subway.graffiti_writing_set",
+    "me.subway.graffiti_wolf_blue_clean",
+    "me.subway.crack_set",
+    "me.subway.ground_paper",
+    "me.subway.trash_bags",
+    "me.subway.bottles_box",
+    "me.subway.cardboard_box"
+   ]
+  },
+  "H_life": { "enabled": true }
+ }
+}
