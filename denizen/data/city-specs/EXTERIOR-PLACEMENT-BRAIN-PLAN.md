@@ -58,13 +58,13 @@
   scaffold (passes A/B/H real; C–G stub hooks)
 
 ### Wave 1 — Enrichment (depends G0 schema)
-| ID | Group | Task | Output |
-|----|-------|------|--------|
-| W1-A | Enrich | `enrich-me-placement-rules.py` — tag all 1295 `me.*` from theme + filename + registry | `me-placement-enriched.jsonl` |
-| W1-B | Variants | `variant-palette-map.json` — color tokens → palette affinity | palette scoring table |
-| W1-C | Groups | Author first 20 `grp.*` JSON recipes (beach, camping, subway, worksite) | `data/limezu-visual-catalog/groups/*.json` |
+| ID | Group | Task | Output | Status |
+|----|-------|------|--------|--------|
+| W1-A | Enrich | `enrich-me-placement-rules.py` — tag all 2749 `me.*` | `me-placement-enriched.jsonl` | ✅ 100% role+biome |
+| W1-B | Variants | `variant-palette-map.json` — color tokens → palette affinity | palette scoring table | ✅ 22 tokens, 30 families |
+| W1-C | Groups | Author 20 `grp.*` JSON recipes | `groups/*.json` | ✅ 20 files, 124 pieces |
 
-**Gate G1:** ≥90% `me.*` have role + biome; 20 groups validate against Singles inventory.
+**Gate G1:** ✅ **done** — 2749/2749 me.* have role + biome; 20 groups validate; variant map OK
 
 ### Wave 2 — Compiler v1 (depends G1)
 | ID | Group | Task | Output |
@@ -218,8 +218,8 @@ docs/
 | Gate | Status | Notes |
 |------|--------|-------|
 | G0 | **done** | All W0 deliverables committed; validate-placement-rules OK (2749/2749 roles) |
-| G1 | in_progress | W1-A/B/C sub-agents running |
-| G2 | pending | |
+| G1 | **done** | W1-A/B/C: 100% enrichment, 20 groups, variant map validated |
+| G2 | in_progress | W2 sub-agents running |
 | G3 | pending | |
 | G4 | pending | |
 | G5 | blocked | Denizen MCP not connected |
