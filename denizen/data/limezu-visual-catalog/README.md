@@ -96,6 +96,38 @@ contract, 5 **density** levels, 12 named **slots**, and an ordered list of
 python3 scripts/validate-placement-rules.py     # schema + refs + rule dry run
 ```
 
+## Enriched placement rows (`me-placement-enriched.jsonl`)
+
+`scripts/enrich-me-placement-rules.py` (W1-A) replays the `placement-rules.json`
+`match`→`set` rules over every row of `registry.jsonl` — same predicate and same
+"lower priority runs first, later matches override" ordering the validator's dry
+run uses — and folds in the theme→biome map, the surface/mount aliases, the
+palette colour tokens and the interact contract. One line per `me.*` (2749),
+carrying `role`, `biome_primary` + `biomes_allowed`, canonical `surface`,
+`palette_affinity`, `color_tokens` (from the me id and its linked `exs.*`
+Singles), `interact`, `group_only`, `confidence` (1.0 rule match / 0.8 category
+map / 0.5 fallback) and a `source` trail naming every input that contributed:
+
+```bash
+python3 scripts/enrich-me-placement-rules.py            # write the jsonl
+python3 scripts/enrich-me-placement-rules.py --stats    # coverage only, no write
+python3 scripts/enrich-me-placement-rules.py --validate # exit 1 if <90% role+biome
+```
+
+```json
+{ "me": "me.beach.volley_net", "role": "decor_small", "biome_primary": "beach",
+  "biomes_allowed": ["beach", "leisure"], "surface": "sand",
+  "palette_affinity": ["coastal", "festive_market"], "color_tokens": [],
+  "interact": "play", "group_only": false, "confidence": 1.0,
+  "source": ["theme_biomes", "role_rule:decor_small", "rule:rule.scatter.small_decor",
+             "registry.surface", "biome.palettes", "rule.interact"] }
+```
+
+Objects whose registry `surface` is a mount (`wall` / `roof` / `air` / `ui` /
+`any`) have no paintable surface of their own, so the enricher falls through to
+the rules', then the role's, then the biome's surfaces, preferring one the biome
+actually paints; the `source` trail records which step answered.
+
 ## Label schema (`labels.json`)
 
 ```json
