@@ -915,6 +915,38 @@
    "w": 704,
    "h": 32,
    "depth": 0.93
+  },
+  {
+   "tile": "sidewalk",
+   "x": 3456,
+   "y": 1264,
+   "w": 624,
+   "h": 608,
+   "depth": 0.87
+  },
+  {
+   "tile": "asphalt",
+   "x": 3504,
+   "y": 1568,
+   "w": 528,
+   "h": 96,
+   "depth": 1.1
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2624,
+   "y": 2624,
+   "w": 672,
+   "h": 576,
+   "depth": 0.87
+  },
+  {
+   "tile": "grass",
+   "x": 2656,
+   "y": 2896,
+   "w": 608,
+   "h": 48,
+   "depth": 0.9
   }
  ],
  "roads": [
@@ -2786,37 +2818,7 @@
   },
   {
    "x": 3584,
-   "y": 1860,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 3584,
    "y": 1958,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 3792,
-   "y": 1860,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
-   "x": 4000,
-   "y": 1860,
    "origin": "bc",
    "solid": true,
    "me": "me.city_props.tree_in_square_planter",
@@ -3125,16 +3127,6 @@
    "exs": "exs.3_city_props.city_props_tree_9"
   },
   {
-   "x": 2752,
-   "y": 2646,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
    "x": 2960,
    "y": 2548,
    "origin": "bc",
@@ -3145,28 +3137,8 @@
    "exs": "exs.3_city_props.city_props_street_lamp_1"
   },
   {
-   "x": 2960,
-   "y": 2646,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.lamp_ornate_double",
-   "prefer": "Street_Lamp_1.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "exs": "exs.3_city_props.city_props_street_lamp_1"
-  },
-  {
    "x": 3168,
    "y": 2548,
-   "origin": "bc",
-   "solid": true,
-   "me": "me.city_props.tree_in_square_planter",
-   "prefer": "Tree_9.png",
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png",
-   "exs": "exs.3_city_props.city_props_tree_9"
-  },
-  {
-   "x": 3168,
-   "y": 2646,
    "origin": "bc",
    "solid": true,
    "me": "me.city_props.tree_in_square_planter",
@@ -25321,7 +25293,7 @@
   {
    "me": "me.fire_station.hydrant",
    "x": 3864,
-   "y": 1868,
+   "y": 1936,
    "origin": "bc",
    "solid": true,
    "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Hydrant_Tube_2.png",
@@ -54471,6 +54443,361 @@
    "origin": "bc",
    "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Yellow_Flower_Vase.png",
    "exs": "exs.17_garden.garden_big_yellow_flower_vase"
+  },
+  {
+   "me": "me.office_ext.building_lime_corp",
+   "x": 3504,
+   "y": 1856,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/16_office/ME_Singles_Office_16x16_Example_2.png",
+   "exs": "exs.16_office.office_example_2"
+  },
+  {
+   "me": "me.generic_building.facade_redbrick_cornice_white",
+   "x": 3504,
+   "y": 1504,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_4_3.png",
+   "exs": "exs.4_generic_building.generic_building_condo_4_3"
+  },
+  {
+   "me": "me.generic_building.storefront_blue_three_story",
+   "x": 3904,
+   "y": 1504,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_5_1.png",
+   "exs": "exs.4_generic_building.generic_building_condo_5_1"
+  },
+  {
+   "me": "me.generic_building.storefront_blue_three_story",
+   "x": 3856,
+   "y": 1856,
+   "origin": "bl",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_5_1.png",
+   "exs": "exs.4_generic_building.generic_building_condo_5_1"
+  },
+  {
+   "me": "me.shopping.store_blue_flat_shadow",
+   "x": 3664,
+   "y": 1504,
+   "origin": "bl",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Small_6.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_small_6"
+  },
+  {
+   "me": "me.shopping.store_green_bay_shadow",
+   "x": 3776,
+   "y": 1504,
+   "origin": "bl",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Small_4.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_small_4"
+  },
+  {
+   "me": "me.shopping.store_tan_bay_shadow",
+   "x": 3984,
+   "y": 1856,
+   "origin": "bl",
+   "solid": true,
+   "interact": "shop",
+   "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Small_12.png",
+   "exs": "exs.9_shopping_center_and_markets.shopping_center_and_markets_market_small_12"
+  },
+  {
+   "me": "me.vehicles.sedan_lavender_south",
+   "x": 3888,
+   "y": 1600,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_9.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_9"
+  },
+  {
+   "me": "me.vehicles.sedan_b_white_west",
+   "x": 3968,
+   "y": 1616,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_20.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_20"
+  },
+  {
+   "me": "me.vehicles.sedan_b_teal_stripe_east",
+   "x": 3920,
+   "y": 1648,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_15.png",
+   "exs": "exs.10_vehicles.vehicles_car_right_15"
+  },
+  {
+   "me": "me.vehicles.compact_red_south",
+   "x": 3984,
+   "y": 1584,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_4.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_4"
+  },
+  {
+   "me": "me.vehicles.bus_yellow_west",
+   "prefer": "ME_Singles_Vehicles_16x16_Bus_Left_1.png",
+   "x": 3632,
+   "y": 1584,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Bus_Left_1.png",
+   "exs": "exs.10_vehicles.vehicles_bus_left_1"
+  },
+  {
+   "me": "me.city_terrains.parking_spot_p_h",
+   "prefer": "ME_Singles_City_Terrains_16x16_Sidewalk_3_45.png",
+   "x": 3632,
+   "y": 1616,
+   "origin": "tl",
+   "depth": 1.3,
+   "img": "ext/singles/2_city_terrains/ME_Singles_City_Terrains_16x16_Sidewalk_3_45.png",
+   "exs": "exs.2_city_terrains.city_terrains_sidewalk_3_45"
+  },
+  {
+   "me": "me.city_terrains.parking_spot_p_v",
+   "prefer": "ME_Singles_City_Terrains_16x16_Sidewalk_6_44.png",
+   "x": 3744,
+   "y": 1648,
+   "origin": "tl",
+   "depth": 1.3,
+   "img": "ext/singles/2_city_terrains/ME_Singles_City_Terrains_16x16_Sidewalk_6_44.png",
+   "exs": "exs.2_city_terrains.city_terrains_sidewalk_6_44"
+  },
+  {
+   "me": "me.city_props.broken_ladder",
+   "x": 3884,
+   "y": 1631,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Broken_Ladder_1.png",
+   "exs": "exs.3_city_props.city_props_broken_ladder_1"
+  },
+  {
+   "me": "me.city_props.security_booth_yellow_lights",
+   "x": 3749,
+   "y": 1617,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Traffic_Lights_Yellow_Mod_1.png",
+   "exs": "exs.3_city_props.city_props_traffic_lights_yellow_mod_1"
+  },
+  {
+   "me": "me.post_office.mailbox_black_1_front",
+   "prefer": "22_Post_Office_16x16_Black_Mailbox_2_Front.png",
+   "x": 3864,
+   "y": 1552,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/22_post_office/22_Post_Office_16x16_Black_Mailbox_2_Front.png",
+   "exs": "exs.22_post_office.post_office_black_mailbox_2_front"
+  },
+  {
+   "me": "me.city_props.sign_info_board_set",
+   "prefer": "ME_Singles_City_Props_16x16_Info_Sign_6.png",
+   "x": 3752,
+   "y": 1536,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Info_Sign_6.png",
+   "exs": "exs.3_city_props.city_props_info_sign_6"
+  },
+  {
+   "me": "me.city_props.lamp_ornate_double",
+   "prefer": "ME_Singles_City_Props_16x16_Street_Lamp_2.png",
+   "x": 3976,
+   "y": 1696,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png",
+   "exs": "exs.3_city_props.city_props_street_lamp_2"
+  },
+  {
+   "me": "me.city_props.planter_long_mixed_flowers",
+   "x": 3904,
+   "y": 1687,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Shrub_11.png",
+   "exs": "exs.3_city_props.city_props_shrub_11"
+  },
+  {
+   "me": "me.city_props.barrels_metal_yard",
+   "prefer": "ME_Singles_City_Props_16x16_Barrel_10.png",
+   "x": 3602,
+   "y": 1623,
+   "origin": "bc",
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_10.png",
+   "exs": "exs.3_city_props.city_props_barrel_10"
+  },
+  {
+   "me": "me.houses.country_house",
+   "x": 2672,
+   "y": 3184,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/24_additional_houses/24_Additional_Houses_Country_House_16x16.png",
+   "exs": "exs.24_additional_houses.additional_houses_country_house"
+  },
+  {
+   "me": "me.houses.terraced_house_3",
+   "prefer": "24_Additional_Houses_Terraced_House_5_16x16.png",
+   "x": 3088,
+   "y": 2880,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/24_additional_houses/24_Additional_Houses_Terraced_House_5_16x16.png",
+   "exs": "exs.24_additional_houses.additional_houses_terraced_house_5"
+  },
+  {
+   "me": "me.houses.terraced_house_3",
+   "prefer": "24_Additional_Houses_Terraced_House_6_16x16.png",
+   "x": 3008,
+   "y": 3184,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/24_additional_houses/24_Additional_Houses_Terraced_House_6_16x16.png",
+   "exs": "exs.24_additional_houses.additional_houses_terraced_house_6"
+  },
+  {
+   "me": "me.houses.terraced_house_5",
+   "prefer": "24_Additional_Houses_Terraced_House_Modular_6_16x16.png",
+   "x": 2672,
+   "y": 2880,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/24_additional_houses/24_Additional_Houses_Terraced_House_Modular_6_16x16.png",
+   "exs": "exs.24_additional_houses.additional_houses_terraced_house_modular_6"
+  },
+  {
+   "me": "me.houses.terraced_house_porch",
+   "prefer": "24_Additional_Houses_Terraced_House_Modular_1_16x16.png",
+   "x": 2880,
+   "y": 2880,
+   "origin": "bl",
+   "solid": true,
+   "interact": "enter",
+   "img": "ext/singles/24_additional_houses/24_Additional_Houses_Terraced_House_Modular_1_16x16.png",
+   "exs": "exs.24_additional_houses.additional_houses_terraced_house_modular_1"
+  },
+  {
+   "me": "me.garden.big_light_blue_flower",
+   "x": 2677,
+   "y": 2913,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Light_Blue_Flower.png",
+   "exs": "exs.17_garden.garden_big_light_blue_flower"
+  },
+  {
+   "me": "me.garden.medium_white_flower",
+   "x": 3157,
+   "y": 2947,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_White_Flower.png",
+   "exs": "exs.17_garden.garden_medium_white_flower"
+  },
+  {
+   "me": "me.garden.hedge_arch",
+   "x": 2947,
+   "y": 2932,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Arch_1.png",
+   "exs": "exs.17_garden.garden_grass_arch_1"
+  },
+  {
+   "me": "me.garden.medium_red_flower",
+   "x": 3235,
+   "y": 2949,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Medium_Red_Flower.png",
+   "exs": "exs.17_garden.garden_medium_red_flower"
+  },
+  {
+   "me": "me.garden.hedge_wall_1",
+   "prefer": "ME_Singles_Garden_16x16_Grass_Wall_1_13.png",
+   "x": 2805,
+   "y": 2913,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Wall_1_13.png",
+   "exs": "exs.17_garden.garden_grass_wall_1_13"
+  },
+  {
+   "me": "me.garden.big_sunflower",
+   "x": 2999,
+   "y": 2933,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Sunflower.png",
+   "exs": "exs.17_garden.garden_big_sunflower"
+  },
+  {
+   "me": "me.villa.stump_1",
+   "prefer": "ME_Singles_Villas_16x16_Villa_Props_17.png",
+   "x": 3094,
+   "y": 2947,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_Props_17.png",
+   "exs": "exs.7_villas.villas_villa_props_17"
+  },
+  {
+   "me": "me.villa.basketball_net_1",
+   "prefer": "ME_Singles_Villas_16x16_Villa_Props_5.png",
+   "x": 3038,
+   "y": 2941,
+   "origin": "bc",
+   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_Props_5.png",
+   "exs": "exs.7_villas.villas_villa_props_5"
+  },
+  {
+   "me": "me.garage_sales.hanging_sign_white",
+   "x": 3064,
+   "y": 2896,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Sign_1.png",
+   "exs": "exs.6_garage_sales.garage_sales_sign_1"
+  },
+  {
+   "me": "me.garden.small_yellow_flower",
+   "x": 2663,
+   "y": 2954,
+   "origin": "bc",
+   "solid": true,
+   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Small_Yellow_Flower.png",
+   "exs": "exs.17_garden.garden_small_yellow_flower"
+  },
+  {
+   "me": "me.villa.trampoline_1",
+   "prefer": "ME_Singles_Villas_16x16_Villa_Yard_Toy_Trampoline_1.png",
+   "x": 2759,
+   "y": 2947,
+   "origin": "bc",
+   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_Yard_Toy_Trampoline_1.png",
+   "exs": "exs.7_villas.villas_villa_yard_toy_trampoline_1"
   }
  ],
  "anims": [
@@ -55748,6 +56075,16 @@
    "x": 2176,
    "y": 2640,
    "text": "MIDTOWN GREEN"
+  },
+  {
+   "x": 3768,
+   "y": 1280,
+   "text": "MIDTOWN OFFICES"
+  },
+  {
+   "x": 2960,
+   "y": 2640,
+   "text": "MIDTOWN TERRACE"
   }
  ],
  "portals": [
