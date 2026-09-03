@@ -1,12 +1,16 @@
 {
- "_doc": "Active generated fragments for merge-city-plan.py --include-pockets. Pockets overlapping a d*-compiled replacement district are excluded (see EXTERIOR-PLACEMENT-BRAIN-PLAN.md W6/W7). Re-run compile-coverage-showcase.py after changing compiled districts, then merge with d99.",
+ "_doc": "Active generated fragments for merge-city-plan.py --include-pockets. Pockets overlapping a d*-compiled replacement district are excluded (see EXTERIOR-PLACEMENT-BRAIN-PLAN.md W6/W7). d99 measures catalog coverage and must NOT be merged into the played plan.",
  "include": [
   "d18-beach-lounge.json",
   "d19-beach-shore-pocket.json",
   "d22-civic-pocket.json",
-  "d99-catalog-showcase.json"
+  "d29-midtown-retail.json",
+  "d30-midtown-square.json",
+  "d31-midtown-green.json"
  ],
+ "_block_fill_doc": "d29/d30/d31 fill the emptiest three of the 21 core street-grid blocks (r1c4 12%, r2c3 25%, r3c3 27% sprite coverage measured in the real renderer). Specs live in data/city-specs/biome-specs/blocks/. They are pockets, not district replacements, so they carry no d{N}-compiled.json name and merge whole.",
  "exclude_reason": {
+  "d99-catalog-showcase.json": "COVERAGE METRICS ONLY, NOT CITY DESIGN. compile-coverage-showcase.py parks every orphan me.* in empty world space to lift Tier A/B numbers; merging it put 683 exhibit stamps, 23 bare paving patches and 23 'CATALOG SHOWCASE - <BIOME>' labels into the played city across 13 zones, so players walked past buildings lined up in rows on blank concrete. Keep running the compiler to measure coverage; strip its output with scripts/strip-showcase-from-plan.py after any merge that reintroduces showcase-tagged elements.",
   "d19-wild-camp-pocket.json": "overlaps d10-compiled wild district",
   "d20-urban-pocket.json": "overlaps d11-compiled / d1-compiled urban bbox",
   "d21-commercial-pocket.json": "OVERLAP with d2/d4-compiled commercial districts",
