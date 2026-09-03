@@ -85,7 +85,7 @@ class ViewerScene extends Phaser.Scene {
       cam.stopFollow();
       const cx = Number.isFinite(AIM.x) ? AIM.x : st.worldW / 2;
       const cy = Number.isFinite(AIM.y) ? AIM.y : st.worldH / 2;
-      cam.setScroll(cx - cam.width / 2 / cam.zoom, cy - cam.height / 2 / cam.zoom);
+      cam.setScroll(cx - cam.width / 2, cy - cam.height / 2);
       // Drag-to-pan. Phaser's own scroll is in world units, so divide by zoom.
       this.input.on('pointermove', (p) => {
         if (!p.isDown) return;
@@ -193,10 +193,14 @@ window.__cityViewer = {
     const cam = game.scene.scenes[0].cameras.main;
     cam.stopFollow();
     if (zoom) cam.setZoom(zoom);
-    // Camera.centerOn() offsets by width/2 in SCREEN px and ignores zoom, so at
-    // zoom 2 the requested point lands at the view's edge instead of its middle.
-    // Scroll is in world units — divide by zoom to actually centre.
-    cam.setScroll(x - cam.width / 2 / cam.zoom, y - cam.height / 2 / cam.zoom);
+    // scrollX is offset by HALF THE CAMERA WIDTH, not half the visible world
+    // width. Phaser applies zoom about the camera midpoint, so
+    //   worldView.x = scrollX + width/2 - width/(2*zoom)
+    // and substituting scrollX = X - width/2 gives worldView.x = X - (width/zoom)/2,
+    // i.e. X really is the centre. Dividing by zoom here instead put the target
+    // in the view's top-left CORNER at zoom 2, which silently mis-framed every
+    // screenshot by half a viewport. This matches Camera.centerOn().
+    cam.setScroll(x - cam.width / 2, y - cam.height / 2);
     return { x, y, zoom: cam.zoom, view: [cam.width / cam.zoom, cam.height / cam.zoom] };
   },
 

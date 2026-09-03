@@ -947,6 +947,46 @@
    "w": 608,
    "h": 48,
    "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 3744,
+   "y": 2224,
+   "w": 336,
+   "h": 192,
+   "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 5776,
+   "y": 1600,
+   "w": 320,
+   "h": 176,
+   "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 3328,
+   "y": 3904,
+   "w": 224,
+   "h": 224,
+   "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 3328,
+   "y": 2272,
+   "w": 352,
+   "h": 128,
+   "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 3776,
+   "y": 2464,
+   "w": 176,
+   "h": 128,
+   "depth": 0.9
   }
  ],
  "roads": [
@@ -54798,6 +54838,217 @@
    "origin": "bc",
    "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_Yard_Toy_Trampoline_1.png",
    "exs": "exs.7_villas.villas_villa_yard_toy_trampoline_1"
+  },
+  {
+   "me": "me.vehicles.camper_west",
+   "prefer": "ME_Singles_Vehicles_16x16_Camper_Left_4.png",
+   "x": 3808,
+   "y": 2352,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Camper_Left_4.png",
+   "exs": "exs.10_vehicles.vehicles_camper_left_4"
+  },
+  {
+   "me": "me.vehicles.sedan_b_yellow_west",
+   "x": 3936,
+   "y": 2336,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_18.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_18"
+  },
+  {
+   "me": "me.vehicles.compact_orange_west",
+   "x": 3824,
+   "y": 2288,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_5.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_5"
+  },
+  {
+   "me": "me.vehicles.compact_orange_south",
+   "x": 3920,
+   "y": 2288,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_5.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_5"
+  },
+  {
+   "me": "me.vehicles.bus_yellow_door_east",
+   "prefer": "ME_Singles_Vehicles_16x16_Bus_Up_4.png",
+   "x": 5936,
+   "y": 1728,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Bus_Up_4.png",
+   "exs": "exs.10_vehicles.vehicles_bus_up_4"
+  },
+  {
+   "me": "me.vehicles.ice_cream_truck_open_east",
+   "prefer": "ME_Singles_Vehicles_16x16_Ice_Cream_Truck_Props_1.png",
+   "x": 6016,
+   "y": 1728,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ice_Cream_Truck_Props_1.png",
+   "exs": "exs.10_vehicles.vehicles_ice_cream_truck_props_1"
+  },
+  {
+   "me": "me.vehicles.tacos_truck_open_east",
+   "prefer": "ME_Singles_Vehicles_16x16_Tacos_Truck_2.png",
+   "x": 5808,
+   "y": 1696,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Tacos_Truck_2.png",
+   "exs": "exs.10_vehicles.vehicles_tacos_truck_2"
+  },
+  {
+   "me": "me.vehicles.compact_blue_north",
+   "x": 6048,
+   "y": 1648,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_1.png",
+   "exs": "exs.10_vehicles.vehicles_car_up_1"
+  },
+  {
+   "me": "me.vehicles.sedan_b_dark_green_north",
+   "x": 6016,
+   "y": 1696,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_17.png",
+   "exs": "exs.10_vehicles.vehicles_car_up_17"
+  },
+  {
+   "me": "me.vehicles.sedan_lavender_north",
+   "x": 6000,
+   "y": 1648,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_9.png",
+   "exs": "exs.10_vehicles.vehicles_car_up_9"
+  },
+  {
+   "me": "me.vehicles.sedan_b_purple_west",
+   "x": 5840,
+   "y": 1744,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_16.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_16"
+  },
+  {
+   "me": "me.vehicles.ice_cream_prop_3",
+   "prefer": "ME_Singles_Vehicles_16x16_Ice_Cream_Fallen_2.png",
+   "x": 5965,
+   "y": 1650,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ice_Cream_Fallen_2.png",
+   "exs": "exs.10_vehicles.vehicles_ice_cream_fallen_2"
+  },
+  {
+   "me": "me.vehicles.sedan_silver_north",
+   "x": 3456,
+   "y": 4000,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_7.png",
+   "exs": "exs.10_vehicles.vehicles_car_up_7"
+  },
+  {
+   "me": "me.vehicles.sedan_b_teal_stripe_west",
+   "x": 3504,
+   "y": 4096,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_15.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_15"
+  },
+  {
+   "me": "me.vehicles.ambulance_south",
+   "prefer": "ME_Singles_Vehicles_16x16_Ambulance_Down_2.png",
+   "x": 3424,
+   "y": 4096,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ambulance_Down_2.png",
+   "exs": "exs.10_vehicles.vehicles_ambulance_down_2"
+  },
+  {
+   "me": "me.vehicles.street_food_table_1",
+   "prefer": "ME_Singles_Vehicles_16x16_Street_Food_Table_1.png",
+   "x": 3403,
+   "y": 4056,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_1.png",
+   "exs": "exs.10_vehicles.vehicles_street_food_table_1"
+  },
+  {
+   "me": "me.vehicles.gas_station_price_signboard_1",
+   "prefer": "ME_Singles_Vehicles_16x16_Gas_Station_Price_Signboard_4.png",
+   "x": 3506,
+   "y": 4053,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Gas_Station_Price_Signboard_4.png",
+   "exs": "exs.10_vehicles.vehicles_gas_station_price_signboard_4"
+  },
+  {
+   "me": "me.vehicles.fruit_cart_empty",
+   "prefer": "ME_Singles_Vehicles_16x16_Fruit_Flowers_Cart_2.png",
+   "x": 3377,
+   "y": 4015,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Fruit_Flowers_Cart_2.png",
+   "exs": "exs.10_vehicles.vehicles_fruit_flowers_cart_2"
+  },
+  {
+   "me": "me.vehicles.skid_demo_yellow_car",
+   "prefer": "ME_Singles_Vehicles_16x16_Car_Left_17.png",
+   "x": 3552,
+   "y": 2336,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_17.png",
+   "exs": "exs.10_vehicles.vehicles_car_left_17"
+  },
+  {
+   "me": "me.vehicles.compact_dark_green_north",
+   "x": 3440,
+   "y": 2368,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_2.png",
+   "exs": "exs.10_vehicles.vehicles_car_up_2"
+  },
+  {
+   "me": "me.vehicles.sedan_teal_south",
+   "x": 3824,
+   "y": 2512,
+   "origin": "bl",
+   "solid": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_10.png",
+   "exs": "exs.10_vehicles.vehicles_car_down_10"
+  },
+  {
+   "me": "me.generic_building.prop_bush_round",
+   "x": 6003,
+   "y": 1752,
+   "origin": "bc",
+   "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_3_20.png",
+   "exs": "exs.4_generic_building.generic_building_condo_3_20"
+  },
+  {
+   "me": "me.vehicles.street_sign_heli",
+   "x": 3435,
+   "y": 4009,
+   "origin": "bc",
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Helicopter_Props_4.png",
+   "exs": "exs.10_vehicles.vehicles_helicopter_props_4"
   }
  ],
  "anims": [
