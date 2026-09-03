@@ -17,6 +17,7 @@
     city-viewer.html?x=512&y=1568&free=1      detach camera from the player
     city-viewer.html?atlas=0                  bypass the packed atlas
     city-viewer.html?grid=1                   overlay a 64px grid + block labels
+    city-viewer.html?canvas=1                 force Canvas2D (compare vs WebGL)
 
   Drag to pan (free mode), wheel to zoom, WASD to walk. The HUD reports the
   cursor's world coordinate, so you can read a spot off the map and re-aim.
@@ -136,10 +137,12 @@ class ViewerScene extends Phaser.Scene {
 }
 
 const game = new Phaser.Game({
-  // The office forces CANVAS (WebGL uploads OOM'd some browsers); the city is a
-  // far bigger draw list, so the viewer honours ?webgl=1 the same way and
-  // otherwise matches the game's default so what you see is what players get.
-  type: q.get('webgl') === '1' ? Phaser.WEBGL : Phaser.CANVAS,
+  // Match what players get: office-scene.js preferCanvasRenderer() forces
+  // CANVAS for the office (WebGL uploads OOM'd some browsers) but returns
+  // WebGL for ?world=full, because the city draws ~11.7k objects from one
+  // atlas page and Canvas2D cannot batch — measured 3.7-5.3x slower.
+  // ?canvas=1 here forces 2D so the two can be compared side by side.
+  type: q.get('canvas') === '1' ? Phaser.CANVAS : Phaser.WEBGL,
   // Fixed 1280x720 — the exact viewport the game runs at, so a shot here frames
   // the same thing a player sees. Sizing from window.innerWidth would also read
   // 0 whenever the page boots in a hidden/unpainted pane, which silently gives
