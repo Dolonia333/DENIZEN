@@ -7,7 +7,7 @@ import { CRM_DOCK_EVENTS, dockBaseBottom, isCrmDockMounted } from "@/lib/crm-doc
 // ── Design tokens (mirrors crm-data T) ──
 const T = {
   bg0:"#05080f",bg1:"#080d18",bg2:"#0d1422",bg3:"#121b2e",bg4:"#1c2640",bg5:"#1e2d4d",
-  text0:"#ffffff",text1:"#e2eaf8",text2:"#7a92b8",text3:"#3d5278",
+  text0:"#ffffff",text1:"#e2eaf8",text2:"#7a92b8",text3:"#64799f",
   accent:"#f0b429",purple:"#8b5cf6",blue:"#4d9ef7",green:"#22d3a0",red:"#f85b5b",orange:"#fb923c",
 };
 

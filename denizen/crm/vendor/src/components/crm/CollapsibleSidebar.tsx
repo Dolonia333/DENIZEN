@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { T, NAV_GROUPS, type Contact, type Deal, type Task } from "@/lib/crm-data";
 import { useCRMTranslation } from "@/hooks/use-crm-translation";
+import { NavIcon } from "@/lib/crm-nav-icons";
 
 interface Props {
   tab: string;
@@ -127,7 +128,9 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
                         borderRadius: "0 2px 2px 0", background: T.accent,
                       }} />
                     )}
-                    <span style={{ fontSize: 16, width: 20, textAlign: "center", opacity: active ? 1 : 0.6 }}>{item.icon}</span>
+                    <span style={{ fontSize: 16, width: 20, display: "inline-flex", justifyContent: "center", opacity: active ? 1 : 0.7 }}>
+                      <NavIcon id={item.id} fallback={item.icon} />
+                    </span>
                     <span style={{ flex: 1 }}>{termLabel}</span>
                     {/* Count badge */}
                     {count !== null && count > 0 && (

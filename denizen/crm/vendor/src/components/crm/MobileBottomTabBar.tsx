@@ -2,6 +2,7 @@
 // REFACTORED: nav-lock prevents overlapping swipe+tap nav; respects prefers-reduced-motion
 import { useState, useCallback, useRef, useEffect, KeyboardEvent, TouchEvent } from "react";
 import { T } from "@/lib/crm-data";
+import { NavIcon } from "@/lib/crm-nav-icons";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard", icon: "◈" },
@@ -233,10 +234,10 @@ export function MobileBottomTabBar({ activeTab, onNavigate }: Props) {
               }}
             >
               <span style={{
-                fontSize: 18, lineHeight: 1,
+                fontSize: 18, lineHeight: 1, display: "inline-flex",
                 transform: active && !reducedMotion ? "scale(1.1)" : "scale(1)",
                 transition: reducedMotion ? "none" : "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
-              }}>{t.icon}</span>
+              }}><NavIcon id={t.id} fallback={t.icon} size={20} /></span>
               <span style={{
                 fontSize: 9, fontWeight: active ? 700 : 500,
                 letterSpacing: "0.04em",

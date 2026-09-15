@@ -198,6 +198,12 @@ export function isCeoPrincipalSession(): boolean {
   return isCeoSession(normalizeDenizenSession());
 }
 
+/** Demo tier / demo login / acme org — the only place sample data is offered. */
+export function isDemoCrmSession(): boolean {
+  absorbUrlSessionParams();
+  return isDemoSession(normalizeDenizenSession());
+}
+
 function absorbUrlSessionParams() {
   if (urlParamsAbsorbed || typeof window === "undefined") return;
   urlParamsAbsorbed = true;

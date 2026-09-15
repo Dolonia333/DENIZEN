@@ -19,7 +19,7 @@ import { CRM_ROLES, getRole, DEFAULT_ROLE_ID } from "@/lib/crm-roles";
 import { DEFAULT_LEAD_MODEL_STATE, type LeadModelState } from "@/lib/crm-lead-model";
 import { IndustryConfigBridge } from "@/lib/crm-industry-bridge";
 import type { ProspectorLead } from "./AIProspector";
-import { ensureDenizenSession, markCrmDemoLoaded, markCrmUserEdited, postCrmEvent, intakeHandoff, fetchCrmWorkspace, fetchCrmTeam, fetchCrmSession, fetchVisitorAssistant, isCeoPrincipalSession, resolveProfileDisplayName, type CrmSendEmailResult, type CrmWorkspaceState, type CrmTeamMember } from "@/lib/crm-api";
+import { ensureDenizenSession, markCrmDemoLoaded, markCrmUserEdited, postCrmEvent, intakeHandoff, fetchCrmWorkspace, fetchCrmTeam, fetchCrmSession, fetchVisitorAssistant, isCeoPrincipalSession, isDemoCrmSession, resolveProfileDisplayName, type CrmSendEmailResult, type CrmWorkspaceState, type CrmTeamMember } from "@/lib/crm-api";
 import { appendAudit, restoreWorkspace, type ClearableEntity, type RestoreMode } from "@/lib/crm-data-management";
 import { EmailComposeModal, type ComposeSeed } from "./EmailComposeModal";
 import { CommandPalette } from "./CommandPalette";
@@ -1084,7 +1084,25 @@ export default function CRMApp() {
         <span style={{ fontSize: 11, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
           Dashboard view
         </span>
-        {CRM_ROLES.map((r) => {
+        {/* Phones: one dropdown — seven wrapping pills took ~a quarter of the
+            screen before any dashboard content. */}
+        {isMobile ? (
+          <select
+            aria-label="Dashboard view"
+            value={activeRole}
+            onChange={(e) => switchRole(e.target.value)}
+            style={{
+              flex: 1, minWidth: 0, minHeight: 44,
+              background: T.bg3, color: T.text1,
+              border: `1px solid ${role.accent}`, borderRadius: T.radius.md,
+              padding: "8px 12px", fontSize: 15, fontWeight: 600,
+            }}
+          >
+            {CRM_ROLES.map((r) => (
+              <option key={r.id} value={r.id}>{r.icon} {r.label}</option>
+            ))}
+          </select>
+        ) : CRM_ROLES.map((r) => {
           const on = r.id === activeRole;
           return (
             <button
@@ -1112,6 +1130,28 @@ export default function CRMApp() {
         </h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text2 }}>{role.blurb}</p>
       </div>
+      {/* Empty demo workspace: every tile below reads "$0 / No deals yet", a
+          dead end for a first visit. Offer the two ways forward. Demo sessions
+          only — real team workspaces (My Board: "no invented numbers") must
+          never be one click from syncing sample deals. Still an explicit click
+          even here, since the loader syncs to the shared demo workspace. */}
+      {isDemoCrmSession() && deals.length === 0 && contacts.length === 0 && (
+        <div style={{
+          ...S.card, marginBottom: 16, display: "flex", alignItems: "center",
+          gap: 16, flexWrap: "wrap", borderColor: `${T.accent}55`,
+        }}>
+          <div style={{ flex: "1 1 240px" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>Your {term.deal.toLowerCase()} pipeline is empty</div>
+            <div style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+              Explore with sample {term.contact.toLowerCase()}s and {term.deal.toLowerCase()}s, or add your first one.
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={handleLoadDemoData} style={{ ...S.btn, minHeight: 40 }}>Explore with sample data</button>
+            <button onClick={() => handleNavigate("sales")} style={{ ...S.btnGhost, minHeight: 40 }}>Add a {term.deal.toLowerCase()}</button>
+          </div>
+        </div>
+      )}
       {(activeRole === "me" || activeRole === "exec") && (
         <WorkingSetDashboard
           contacts={contacts}

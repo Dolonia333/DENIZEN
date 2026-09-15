@@ -236,7 +236,7 @@ export const T = {
   /** Visible grid lines for calendar month/week/day views */
   gridLine:"rgba(148, 163, 184, 0.38)",
   gridLineStrong:"rgba(148, 163, 184, 0.55)",
-  text0:"#ffffff",text1:"#e2eaf8",text2:"#7a92b8",text3:"#3d5278",
+  text0:"#ffffff",text1:"#e2eaf8",text2:"#7a92b8",text3:"#64799f" /* was #3d5278 — 2.5:1 on bg1; now ~4.4:1 */,
   accent:"#f0b429",accentHi:"#ffd166",accentDim:"#f0b42918",accentGlow:"0 0 20px #f0b42930",
   purple:"#8b5cf6",purpleDim:"#8b5cf618",
   blue:"#4d9ef7",blueDim:"#4d9ef718",
