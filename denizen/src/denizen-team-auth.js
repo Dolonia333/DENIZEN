@@ -154,6 +154,15 @@ function isTeamOwnerAccount(account) {
   return String(account.role || '').toLowerCase() === 'owner';
 }
 
+function toPublicTeamAccount(account) {
+  if (!account) return null;
+  const {
+    password_hash: _passwordHash,
+    ...safe
+  } = account;
+  return safe;
+}
+
 async function sessionBundle(account, org, accessMethod, source) {
   const isOwner = isTeamOwnerAccount(account);
   const grantAccessMethod = isOwner ? 'owner_login' : accessMethod;
@@ -181,7 +190,7 @@ async function sessionBundle(account, org, accessMethod, source) {
   }
 
   return {
-    account,
+    account: toPublicTeamAccount(account),
     org_slug: org.slug,
     tier: isOwner ? 'ceo' : 'team',
     access_grant,
@@ -377,23 +386,8 @@ async function loginTeamAccount({
 
   let account = await findTeamAccount({ orgId: org.id, email: normalizedEmail, username: user });
 
-  if (!account && code && normalizedEmail) {
-    const role = await resolveTeamMemberRole(normalizedEmail, org.id);
-    const rows = await denizenDb._post(
-      'denizen_team_accounts',
-      {
-        org_id: org.id,
-        email: normalizedEmail,
-        display_name: user || normalizedEmail.split('@')[0],
-        username: normalizeUsername(user || normalizedEmail.split('@')[0]),
-        password_hash: pass ? hashPassword(pass) : null,
-        role,
-      },
-      { prefer: 'return=representation' },
-    );
-    account = rows?.[0];
-  }
-
+  // Never mint accounts during login — wrong password + team code + email used to
+  // silently create a new member row. Joining must go through Join a team.
   if (!account) {
     throw new TeamAuthError(
       'Account not found — use Join a team with your team code (username + email + password), or Create a team if you are starting fresh',

@@ -134,4 +134,31 @@ describe('loginTeamAccount treats email-in-username as email', () => {
       },
     );
   });
+
+  it('does not auto-create an account on login miss', async () => {
+    let posted = false;
+    denizenDb._get = async (path) => {
+      if (String(path).includes('team_code')) {
+        return [{ id: 'org-1', slug: 'zion', display_name: 'Zion', settings: { team_code: '1921' } }];
+      }
+      return [];
+    };
+    denizenDb._post = async () => {
+      posted = true;
+      return [{ id: 'should-not-create' }];
+    };
+    await assert.rejects(
+      () => teamAuth.loginTeamAccount({
+        username: 'kaiser',
+        email: 'info@royalsocietymanagement.com',
+        password: 'x',
+        teamCode: '1921',
+      }),
+      (err) => {
+        assert.equal(err.code, 'NOT_FOUND');
+        return true;
+      },
+    );
+    assert.equal(posted, false);
+  });
 });
