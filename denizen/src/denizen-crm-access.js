@@ -335,12 +335,20 @@ function mergeMemberWorkspace(fullState, memberState, actor) {
     // Drop owned rows the member deleted (were owned, not in member payload)
     const stampedMember = memberList.map((row) => {
       const base = stampOwnerFields(row, actor);
+      const name = actor.user || actor.displayName || null;
       // Prefer keeping ownership stamps
-      if (key === 'deals' && !base.ownerId && (actor.user || actor.displayName)) {
-        base.ownerId = actor.user || actor.displayName;
+      if (key === 'deals' && !base.ownerId && name) {
+        base.ownerId = name;
       }
-      if (key === 'tasks' && !base.assignee && (actor.user || actor.displayName)) {
-        base.assignee = actor.user || actor.displayName;
+      if (key === 'tasks' && !base.assignee && name) {
+        base.assignee = name;
+      }
+      if ((key === 'notes' || key === 'dealComments' || key === 'usageLog') && !base.createdBy && !base.user && name) {
+        if (key === 'usageLog' || key === 'dealComments') base.user = base.user || name;
+        else base.createdBy = name;
+      }
+      if (key === 'supportTickets' && !base.assignee && name) {
+        base.assignee = name;
       }
       return base;
     });
