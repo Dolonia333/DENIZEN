@@ -1409,6 +1409,29 @@ class AgentActions {
     bubbleText.x = npc.x;
     bubbleText.y = npc.y - (isThought ? 44 : 48);
 
+    // Nudge up when another live bubble sits on roughly the same spot so
+    // clustered NPCs don't stack unreadable chips on top of each other.
+    try {
+      const bw = bubbleText.width || 80;
+      const bh = bubbleText.height || 16;
+      let guard = 0;
+      while (guard < 6) {
+        let hit = false;
+        for (const [otherKey, other] of this._speechBubbles) {
+          if (otherKey === npcKey || !other?.text) continue;
+          const dx = Math.abs(other.text.x - bubbleText.x);
+          const dy = Math.abs(other.text.y - bubbleText.y);
+          if (dx < (bw + (other.text.width || 80)) * 0.55 && dy < Math.max(bh, other.text.height || 16) + 4) {
+            hit = true;
+            break;
+          }
+        }
+        if (!hit) break;
+        bubbleText.y -= (bh + 6);
+        guard += 1;
+      }
+    } catch (_) { /* layout nudge is best-effort */ }
+
     // duration=0 means persist forever (no auto-clear), undefined defaults to 5s
     const dur = duration !== undefined ? duration : (isThought ? 3500 : 5000);
     const timer = dur > 0 ? this.scene.time.delayedCall(dur, () => {

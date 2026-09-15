@@ -52,16 +52,25 @@
       #${CHIP_ID} {
         display: none;
         align-items: center;
-        gap: 6px;
-        margin-left: 8px;
-        padding: 2px 8px;
+        gap: 4px;
+        margin: 2px 0 0;
+        padding: 2px 6px;
+        max-width: 100%;
         border-radius: 999px;
         background: rgba(74, 222, 128, 0.15);
         border: 1px solid rgba(74, 222, 128, 0.4);
         color: #4ade80;
-        font-size: 10px;
+        font-size: 9px;
         font-weight: bold;
-        vertical-align: middle;
+        line-height: 1.2;
+        align-self: flex-start;
+        min-width: 0;
+      }
+      #${CHIP_ID} .dz-asst-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
       }
       #${CHIP_ID} .dz-asst-release {
         border: none;
@@ -71,10 +80,15 @@
         font: inherit;
         font-size: 10px;
         line-height: 1;
-        padding: 2px 5px;
+        padding: 2px 4px;
         border-radius: 999px;
         opacity: 0.7;
         touch-action: manipulation;
+        flex-shrink: 0;
+      }
+      html.denizen-touch #${CHIP_ID} {
+        padding: 2px 6px;
+        font-size: 9px;
       }
       #${CHIP_ID} .dz-asst-release:hover { opacity: 1; background: rgba(74, 222, 128, 0.18); }
       #${CHIP_ID} .dz-asst-release.armed {
@@ -262,7 +276,12 @@
       chip.id = CHIP_ID;
       chip.innerHTML = '<span class="dz-asst-name"></span>'
         + '<button type="button" class="dz-asst-release" title="Release this assistant" aria-label="Release this assistant">✕</button>';
-      headerTarget.parentNode?.insertBefore(chip, headerTarget.nextSibling);
+      const status = document.getElementById('player-chat-header-status');
+      if (status?.parentNode) {
+        status.parentNode.insertBefore(chip, status.nextSibling);
+      } else {
+        headerTarget.parentNode?.insertBefore(chip, headerTarget.nextSibling);
+      }
       assistantChip = chip;
       const relBtn = chip.querySelector('.dz-asst-release');
       if (relBtn) {

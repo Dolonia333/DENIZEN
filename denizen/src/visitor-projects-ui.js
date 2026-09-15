@@ -23,23 +23,27 @@
     }
     s.textContent = `
       #${BTN_ID} {
-        margin-left: auto;
-        margin-right: 4px;
-        padding: 5px 10px;
+        margin: 0;
+        padding: 5px 8px;
         border-radius: 4px;
         background: rgba(245, 158, 11, 0.12);
         border: 2px solid #020617;
         color: #fde68a;
-        font: 700 10px/1.2 "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-        letter-spacing: 0.08em;
+        font: 700 9px/1.2 "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         cursor: pointer;
         flex-shrink: 0;
+        white-space: nowrap;
         box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45), 2px 2px 0 #020617;
       }
       #${BTN_ID}:hover {
         background: rgba(245, 158, 11, 0.22);
         color: #fff7ed;
+      }
+      html.denizen-touch #${BTN_ID} {
+        padding: 6px 8px;
+        min-height: 32px;
       }
       #${PANEL_ID} {
         position: fixed;
@@ -187,20 +191,25 @@
   function ensureProjectsBtn() {
     if (projectsBtn) return projectsBtn;
     injectStyles();
-    const chip = document.getElementById('denizen-visitor-assistant-chip');
     projectsBtn = document.createElement('button');
     projectsBtn.id = BTN_ID;
     projectsBtn.type = 'button';
     projectsBtn.textContent = 'Projects';
     projectsBtn.title = 'Your personal project list';
     projectsBtn.addEventListener('click', () => togglePanel());
-    if (chip?.parentNode) {
-      chip.parentNode.insertBefore(projectsBtn, chip.nextSibling);
+    const actions = document.getElementById('player-chat-header-actions');
+    const closeBtn = document.getElementById('player-chat-close-btn');
+    if (actions) {
+      actions.insertBefore(projectsBtn, closeBtn || null);
     } else {
-      const header = document.getElementById('player-chat-header');
-      const closeBtn = header?.querySelector('#player-chat-close-btn');
-      if (header && closeBtn) header.insertBefore(projectsBtn, closeBtn);
-      else header?.appendChild(projectsBtn) || document.body.appendChild(projectsBtn);
+      const chip = document.getElementById('denizen-visitor-assistant-chip');
+      if (chip?.parentNode) {
+        chip.parentNode.insertBefore(projectsBtn, chip.nextSibling);
+      } else {
+        const header = document.getElementById('player-chat-header');
+        if (header && closeBtn) header.insertBefore(projectsBtn, closeBtn);
+        else header?.appendChild(projectsBtn) || document.body.appendChild(projectsBtn);
+      }
     }
     return projectsBtn;
   }

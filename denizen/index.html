@@ -345,6 +345,10 @@
         overflow: hidden;
       }
       #game-container canvas {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
         image-rendering: pixelated;
         image-rendering: crisp-edges;
         touch-action: none;
@@ -671,7 +675,7 @@
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=dedupe1" defer></script>
     <!-- Agent Office System -->
-    <script src="./src/agent-actions.js?v=noBlueChip1" defer></script>
+    <script src="./src/agent-actions.js?v=bubbleNudge1" defer></script>
     <script src="./src/agent-office-manager.js?v=walkHome1" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
     <!-- OpenClaw → WorldState bridge (translator must load BEFORE the bridge runner) -->
@@ -687,7 +691,7 @@
     <script src="./src/mobile-controls.js?v=deskframe1" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
-    <script src="./src/visitor-session.js?v=mpBuzz1" defer></script>
+    <script src="./src/visitor-session.js?v=hqPassScroll1" defer></script>
     <script src="./src/visitor-demo-account-prompt.js?v=demoacct1" defer></script>
     <script src="./src/visitor-client-platform.js?v=plat1" defer></script>
     <script src="./src/visitor-profile-ui.js?v=prof2" defer></script>
@@ -697,11 +701,11 @@
     <script src="./src/visitor-onboarding.js?v=buzzTour7" defer></script>
     <script src="./src/visitor-capabilities-guide.js?v=guide2" defer></script>
     <script src="./src/visitor-superuser-onboarding.js?v=suTourOff1" defer></script>
-    <script src="./src/visitor-claim-ui.js?v=mobplay6" defer></script>
+    <script src="./src/visitor-claim-ui.js?v=chipCompact1" defer></script>
     <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
     <script src="./src/visitor-market-panel.js?v=rokiRhLive1" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=npcMcpAvatar1" defer></script>
+    <script src="./src/player-chat.js?v=floorHeader1" defer></script>
     <script src="./src/denizen-phone-chat-ui.js?v=phchatNoSpin1" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/tabler-icons.js?v=ti5" defer></script>

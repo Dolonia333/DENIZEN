@@ -1057,17 +1057,14 @@
         padding: 22px 10px 16px;
         box-sizing: border-box;
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-        overflow-x: visible !important;
-        overflow-y: auto !important;
-        overscroll-behavior: contain;
-        -webkit-overflow-scrolling: touch;
+        overflow: visible !important;
         pointer-events: auto !important;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card {
         width: calc(100% - 12px);
         max-width: 100%;
         margin: 6px auto 8px;
-        max-height: none;
+        max-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         padding: 26px 16px 18px;
         border-radius: 4px;
         border: 3px solid #020617;
@@ -1075,7 +1072,11 @@
           inset 0 0 0 2px #334155,
           0 0 0 3px #f59e0b,
           5px 7px 0 #020617;
-        overflow: visible;
+        /* Card scrolls so sticky Log in stays inside the amber ring */
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         flex: 0 1 auto;
         min-height: 0;
         box-sizing: border-box;
@@ -1091,8 +1092,12 @@
       html.denizen-touch #denizen-visitor-name-modal #denizen-visitor-name-continue {
         position: sticky;
         bottom: 0;
-        margin-top: 12px;
-        box-shadow: 0 -10px 18px rgba(2, 6, 23, 0.55);
+        margin-top: 14px;
+        margin-bottom: 2px;
+        z-index: 4;
+        box-shadow:
+          0 -14px 20px rgba(2, 6, 23, 0.92),
+          0 8px 22px rgba(56, 189, 248, 0.22);
       }
       /* Choose: Buzz stays in-flow above the pass so he can't get clipped off-screen */
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
@@ -1176,7 +1181,7 @@
         width: calc(100% - 12px);
         max-width: 100%;
         margin: 6px auto 8px;
-        max-height: none;
+        max-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         padding: 26px 16px 18px;
         border-radius: 4px;
         border: 3px solid #020617;
@@ -1184,13 +1189,18 @@
           inset 0 0 0 2px #334155,
           0 0 0 3px #f59e0b,
           5px 7px 0 #020617;
-        overflow: visible;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         flex: 0 1 auto;
         min-height: 0;
         box-sizing: border-box;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card.vis-lobby {
         padding-top: 28px;
+        overflow: visible;
+        max-height: none;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card::before {
         left: 12px;
@@ -1267,7 +1277,7 @@
       html.denizen-touch #denizen-visitor-name-input {
         font-size: 16px;
         min-height: 48px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         border-radius: 8px;
         -webkit-user-select: text !important;
         user-select: text !important;
@@ -1275,10 +1285,23 @@
         touch-action: manipulation;
         cursor: text;
       }
+      html.denizen-touch #denizen-visitor-name-modal .vis-or {
+        margin: 8px 0 10px;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+      }
+      html.denizen-touch #denizen-visitor-name-modal h2 + p {
+        margin-bottom: 10px;
+      }
       html.denizen-touch #denizen-visitor-name-continue {
         min-height: 52px;
         font-size: 16px;
         border-radius: 10px;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-link-row {
+        font-size: 12px;
+        margin-top: 10px;
+        line-height: 1.35;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-back {
         min-height: 44px;
@@ -1287,11 +1310,6 @@
         font-size: 13px;
         display: inline-flex;
         align-items: center;
-      }
-      html.denizen-touch #denizen-visitor-name-modal .vis-link-row {
-        font-size: 12px;
-        margin-top: 12px;
-        line-height: 1.4;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-link {
         font-size: 12px;
@@ -1340,7 +1358,7 @@
         width: calc(100% - 12px);
         max-width: 100%;
         margin: 6px auto 8px;
-        max-height: none;
+        max-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         padding: 26px 16px 18px;
         border: 3px solid #020617;
         border-radius: 4px;
@@ -1348,7 +1366,10 @@
           inset 0 0 0 2px #334155,
           0 0 0 3px #f59e0b,
           5px 7px 0 #020617;
-        overflow: visible;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         flex: 0 1 auto;
         min-height: 0;
         box-sizing: border-box;
@@ -1483,9 +1504,11 @@
         width: min(460px, calc(100% - 140px));
         margin: 12px 4px 12px;
         padding: 18px 16px 14px;
-        max-height: none;
-        /* Panel scrolls; keep stamp visible around the card */
-        overflow: visible;
+        max-height: calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         flex: 1 1 auto;
         box-shadow:
           inset 0 0 0 2px #334155,

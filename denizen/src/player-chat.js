@@ -209,6 +209,35 @@ class PlayerChat {
     panel.insertAdjacentHTML('beforeend', PlayerChat._composerHtml());
   }
 
+  /** Migrate legacy header (close btn as direct child) into #player-chat-header-actions. */
+  _ensureChatHeaderActions(panel) {
+    const header = panel?.querySelector?.('#player-chat-header');
+    if (!header) return;
+    let actions = header.querySelector('#player-chat-header-actions');
+    const closeBtn = header.querySelector('#player-chat-close-btn');
+    if (!actions) {
+      actions = document.createElement('div');
+      actions.id = 'player-chat-header-actions';
+      header.appendChild(actions);
+    }
+    if (closeBtn && closeBtn.parentElement !== actions) {
+      actions.appendChild(closeBtn);
+    }
+    // Move action chips that were incorrectly nested under .chat-header-main
+    const main = header.querySelector('.chat-header-main');
+    if (!main) return;
+    for (const id of [
+      'denizen-visitor-mcp-connect-btn',
+      'denizen-visitor-team-mcp-btn',
+      'denizen-visitor-projects-btn',
+    ]) {
+      const el = main.querySelector(`#${id}`) || header.querySelector(`#${id}`);
+      if (el && el.parentElement !== actions) {
+        actions.insertBefore(el, closeBtn || null);
+      }
+    }
+  }
+
   _chatFabClosedLabel() {
     return this.manager?.connected ? 'Chat' : 'Chat (offline)';
   }
@@ -2151,7 +2180,9 @@ class PlayerChat {
         font-family: var(--pc-mono);
         font-size: 13px;
         color: var(--pc-text);
-        overflow: visible;
+        /* Clip body so a tall header cannot paint over the log; stamp sits in padding */
+        overflow: hidden;
+        padding-top: 10px;
         box-shadow:
           inset 0 0 0 2px var(--pc-line),
           0 0 0 2px var(--pc-amber),
@@ -2165,7 +2196,7 @@ class PlayerChat {
       #player-chat-panel::before {
         content: "FLOOR LINE";
         position: absolute;
-        top: -12px;
+        top: 2px;
         left: 14px;
         z-index: 3;
         padding: 3px 8px;
@@ -2185,15 +2216,27 @@ class PlayerChat {
       #player-chat-header {
         position: relative;
         display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 18px 12px 12px;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 14px 10px 10px;
         border-bottom: 2px solid var(--pc-border);
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
           rgba(2, 6, 23, 0.55);
         flex-shrink: 0;
         box-shadow: inset 0 -1px 0 var(--pc-line);
+        min-width: 0;
+      }
+      #player-chat-header-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 4px;
+        flex: 0 1 auto;
+        max-width: min(52%, 220px);
+        margin-left: auto;
+        min-width: 0;
       }
       .pc-header-avatar {
         flex: 0 0 40px;
@@ -2227,11 +2270,11 @@ class PlayerChat {
         transform: translateY(1px) scale(0.98);
       }
       #player-chat-header .chat-header-main {
-        flex: 1;
+        flex: 1 1 0;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 3px;
       }
       #player-chat-close-btn {
         display: none;
@@ -2292,7 +2335,8 @@ class PlayerChat {
         flex-shrink: 0;
       }
       #player-chat-log {
-        flex: 1;
+        flex: 1 1 auto;
+        min-height: 0;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -2765,7 +2809,11 @@ class PlayerChat {
         }
         #player-chat-header {
           font-size: 12px;
-          padding: 16px 12px 10px;
+          padding: 12px 10px 8px;
+        }
+        #player-chat-header-actions {
+          max-width: min(58%, 200px);
+          gap: 3px;
         }
         #player-chat-input { font-size: 16px; }
         html.denizen-touch #player-chat-send,
@@ -2828,7 +2876,8 @@ class PlayerChat {
       }
       html.denizen-touch #player-chat-panel {
         font-family: var(--pc-mono);
-        overflow: visible;
+        overflow: hidden;
+        padding-top: 10px;
         background:
           repeating-linear-gradient(
             -12deg,
@@ -2916,8 +2965,8 @@ class PlayerChat {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        flex: 1;
-        min-height: 120px;
+        flex: 1 1 auto;
+        min-height: 0;
         max-height: none;
         line-height: 1.45;
         padding: 12px;
@@ -2973,11 +3022,15 @@ class PlayerChat {
       html.denizen-touch #player-chat-speak { background: transparent; }
       html.denizen-touch #player-chat-speak .pc-speak-label { display: none; }
       html.denizen-touch #player-chat-header {
-        padding: 16px 12px 10px;
+        padding: 12px 10px 8px;
         font-size: 13px;
+        align-items: flex-start;
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
           rgba(2, 6, 23, 0.55);
+      }
+      html.denizen-touch #player-chat-header-actions {
+        max-width: min(56%, 190px);
       }
       html.denizen-touch #player-chat-header .target {
         display: block;
@@ -2985,6 +3038,11 @@ class PlayerChat {
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: 15px;
+      }
+      html.denizen-touch #player-chat-header .pc-header-status {
+        font-size: 10px;
+        line-height: 1.25;
+        white-space: normal;
       }
       html.denizen-touch.denizen-chat-open #game-container,
       html.denizen-touch.denizen-chat-open #game-container canvas {
@@ -3010,7 +3068,9 @@ class PlayerChat {
             <span class="target" id="player-chat-target">Messages</span>
             <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
           </div>
-          <button type="button" id="player-chat-close-btn" aria-label="Close chat">✕</button>
+          <div id="player-chat-header-actions">
+            <button type="button" id="player-chat-close-btn" aria-label="Close chat">✕</button>
+          </div>
         </div>
         <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
         ${PlayerChat._composerHtml()}
@@ -3018,7 +3078,9 @@ class PlayerChat {
       document.body.appendChild(panel);
     } else {
       this._upgradeComposerDom(panel);
+      this._ensureChatHeaderActions(panel);
     }
+    this._ensureChatHeaderActions(panel);
 
     const existingFab = document.getElementById('player-chat-fab');
     if (existingFab) {
