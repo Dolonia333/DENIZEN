@@ -42,8 +42,8 @@
         color: #fff7ed;
       }
       html.denizen-touch #${BTN_ID} {
-        padding: 6px 8px;
-        min-height: 32px;
+        padding: 4px 6px;
+        min-height: 28px;
       }
       #${PANEL_ID} {
         position: fixed;

@@ -41,8 +41,8 @@
       }
       #${BTN_ID}:hover { background: rgba(96, 165, 250, 0.22); border-color: #60a5fa; }
       html.denizen-touch #${BTN_ID} {
-        padding: 6px 8px;
-        min-height: 32px;
+        padding: 4px 6px;
+        min-height: 28px;
       }
       #${MODAL_ID} {
         position: fixed;

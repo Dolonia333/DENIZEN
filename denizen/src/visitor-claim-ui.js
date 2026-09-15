@@ -91,6 +91,8 @@
       html.denizen-touch #${CHIP_ID} {
         padding: 2px 6px;
         font-size: 9px;
+        box-shadow: 0 2px 8px rgba(2, 6, 23, 0.55);
+        background: rgba(6, 78, 40, 0.92);
       }
       #${CHIP_ID} .dz-asst-release:hover { opacity: 1; background: rgba(74, 222, 128, 0.18); }
       #${CHIP_ID} .dz-asst-release.armed {
