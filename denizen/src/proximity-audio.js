@@ -427,7 +427,8 @@
     MODES,
   };
   if (typeof window !== 'undefined') {
-    window.DenizenProximityAudio = { ...surface, rewireTouch };
+    // cycleFromUi = the Listen-in button: cycle mode, turn voice on if needed.
+    window.DenizenProximityAudio = { ...surface, rewireTouch, cycleFromUi: onAudioModePress };
   }
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = surface;

@@ -167,7 +167,7 @@ describe('mobile Settings panel e2e', () => {
         viewportHeight: vh,
         dockHidden: (() => {
           const dock = document.getElementById('denizen-bottom-dock');
-          if (!dock) return false;
+          if (!dock) return true; // bottom dock retired — nothing covers the panel
           const s = getComputedStyle(dock);
           return Number.parseFloat(s.opacity) < 0.05 || s.pointerEvents === 'none';
         })(),
@@ -229,7 +229,7 @@ describe('mobile Settings panel e2e', () => {
         heightRatio: rect ? rect.height / vh : 0,
         dockHidden: (() => {
           const dock = document.getElementById('denizen-bottom-dock');
-          if (!dock) return false;
+          if (!dock) return true; // bottom dock retired — nothing covers the panel
           const s = getComputedStyle(dock);
           return Number.parseFloat(s.opacity) < 0.05 || s.pointerEvents === 'none';
         })(),

@@ -154,7 +154,7 @@ describe('mobile dock panels match browser mirror sizing', () => {
       const dockStyle = dock ? getComputedStyle(dock) : null;
       const dockHidden = dockStyle
         ? Number.parseFloat(dockStyle.opacity) < 0.05 || dockStyle.pointerEvents === 'none'
-        : false;
+        : true; // bottom dock retired — nothing covers the panel
       return {
         width: rect.width,
         height: rect.height,

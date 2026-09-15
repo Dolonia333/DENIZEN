@@ -821,10 +821,9 @@
   function rewireReplayChip() {
     const chip = document.getElementById(TOUR_CHIP_ID);
     if (!chip) return;
-    // Touch dock is icon-only — full label lives in the tooltip
+    // Touch chip is icon-only — full label lives in the tooltip
     const touch = document.documentElement.classList.contains('denizen-touch');
-    globalThis.DenizenBottomDock?.renderChip?.(TOUR_CHIP_ID, touch ? '' : replayChipLabel(), { iconOnly: touch, title: "Replay Buzz's Denizen office tour" });
-    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = touch ? '📖' : replayChipLabel();
+    chip.textContent = touch ? '📖' : replayChipLabel();
     chip.title = "Replay Buzz's Denizen office tour";
     const clone = chip.cloneNode(true);
     chip.replaceWith(clone);
@@ -852,7 +851,6 @@
     }
     chip.classList.add('ready');
     rewireReplayChip();
-    window.DenizenBottomDock?.refresh?.();
   }
 
   function centerRect() {
@@ -923,16 +921,16 @@
       return rectForEl('denizen-visitor-claim-btn') || rectForEl('game-container') || centerRect();
     }
     if (anchor === 'chat-fab') {
-      return rectForEl('player-chat-fab') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('player-chat-fab') || centerRect();
     }
     if (anchor === 'voice') {
-      return rectForEl('denizen-presence-chip') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-presence-chip') || centerRect();
     }
     if (anchor === 'mic') {
-      return rectForEl('denizen-mic-button') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-mic-button') || centerRect();
     }
     if (anchor === 'browser') {
-      return rectForEl('denizen-browser-mirror-chip') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-browser-mirror-chip') || centerRect();
     }
     if (anchor === 'briefing') {
       return rectForEl('denizen-visitor-briefing-btn')
@@ -957,16 +955,16 @@
         || centerRect();
     }
     if (anchor === 'dock') {
-      return rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-phone-fab') || centerRect();
     }
     if (anchor === 'guide') {
-      return rectForEl('denizen-capabilities-guide-chip') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-capabilities-guide-chip') || centerRect();
     }
     if (anchor === 'compute') {
       return rectForEl('denizen-node-ui-chip') || centerRect();
     }
     if (anchor === 'mesh') {
-      return rectForEl('denizen-mesh-jobs-chip') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-mesh-jobs-chip') || centerRect();
     }
     const gc = document.getElementById('game-container');
     if (anchor === 'game' && gc) return gc.getBoundingClientRect();

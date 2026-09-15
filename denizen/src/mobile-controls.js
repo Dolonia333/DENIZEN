@@ -346,24 +346,6 @@
         background: rgba(29, 78, 216, 0.95);
       }
 
-      /* Hide floating chips until bottom-dock adopts them (prevents overlap flash) */
-      html.denizen-touch body:not(.denizen-dock-ready) #player-chat-fab,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-mic-button,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-onboarding-replay-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-superuser-replay-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-capabilities-guide-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-diag-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-mesh-jobs-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-security-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-llm-tel-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-audio-mode-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-presence-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-browser-mirror-chip,
-      html.denizen-touch body:not(.denizen-dock-ready) #denizen-proposals-chip {
-        visibility: hidden !important;
-        pointer-events: none !important;
-      }
-
       #${CONTROLS_ID} .mc-joy-base {
         position: absolute;
         left: max(14px, env(safe-area-inset-left, 0px));
@@ -460,21 +442,6 @@
         overflow-y: auto;
       }
 
-      /* CEO mode chip — floats above dock until bottom-dock adopts it */
-      html.denizen-touch body:not(.denizen-dock-ready) #${CEO_CHIP_ID} {
-        position: fixed;
-        bottom: calc(var(--denizen-dock-height, 52px) + env(safe-area-inset-bottom, 0px) + 8px);
-        right: max(10px, env(safe-area-inset-right, 0px));
-        z-index: 100002;
-        background: #0f172a;
-        color: #e2e8f0;
-        border: 1px solid #475569;
-        border-radius: 999px;
-        padding: 6px 12px;
-        font: 11px/1.2 system-ui, sans-serif;
-        cursor: pointer;
-        touch-action: manipulation;
-      }
       #${CEO_CHIP_ID}.active {
         background: #1e3a5f;
         border-color: #60a5fa;
@@ -545,8 +512,7 @@
       }
       #${CEO_SHELL_ID} .ceo-btn .icon { font-size: 22px; line-height: 1; }
 
-      /* Reliable taps on all Denizen UI buttons (dock, panels, chat) */
-      html.denizen-touch #denizen-bottom-dock button,
+      /* Reliable taps on all Denizen UI buttons (panels, chat) */
       html.denizen-touch #denizen-speak-fab,
       html.denizen-touch #player-chat-panel button,
       html.denizen-touch #denizen-proposals-panel button,
@@ -569,7 +535,6 @@
         min-width: 44px;
         min-height: 44px;
       }
-      html.denizen-touch.denizen-phone #denizen-bottom-dock button,
       html.denizen-touch.denizen-phone #denizen-mobile-menu-btn {
         min-width: 34px;
         min-height: 34px;
@@ -593,7 +558,6 @@
       target.closest('#player-chat-panel') ||
       target.closest('#denizen-visitor-name-modal') ||
       target.closest('#denizen-demo-account-modal') ||
-      target.closest('#denizen-bottom-dock') ||
       target.closest('#denizen-diag-panel') ||
       target.closest('#denizen-llm-tel-panel') ||
       target.closest('#denizen-proposals-panel') ||

@@ -44,7 +44,6 @@
       el.hidden = !allowed;
       el.setAttribute('aria-hidden', allowed ? 'false' : 'true');
     }
-    globalThis.DenizenBottomDock?.refresh?.();
   }
 
   function applyAll() {

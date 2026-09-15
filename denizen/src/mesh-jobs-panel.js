@@ -2,7 +2,7 @@
  * Mesh jobs panel — fleet nodes, pending/running jobs, recent completions.
  *
  * Polls /api/compute/node/status (no auth) and /api/health or session fleet.
- * Toggle via bottom-dock chip, ?mesh=1, or window.DenizenMeshJobs.toggle().
+ * Open via the phone's Power Grid app, ?mesh=1, or window.DenizenMeshJobs.toggle().
  */
 (function () {
   'use strict';
@@ -187,8 +187,7 @@
     chipEl.id = CHIP_ID;
     chipEl.type = 'button';
     chipEl.title = 'City Power and connected stations';
-    globalThis.DenizenBottomDock?.renderChip?.('denizen-mesh-jobs-chip', 'power');
-    if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '⬡ power';
+    chipEl.textContent = '⬡ power';
     const openPanel = () => setPanelOpen(!panelOpen);
     const bind = globalThis.DenizenTouchBind?.bindPress;
     if (bind) bind(chipEl, openPanel);
@@ -228,8 +227,7 @@
     const touch = isTouchUi();
     const pressureHigh = resourcePressure?.severity === 'critical' || resourcePressure?.severity === 'high';
     const paint = (label, title) => {
-      globalThis.DenizenBottomDock?.renderChip?.('denizen-mesh-jobs-chip', label, { iconOnly: touch, title });
-      if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = touch ? '⬡' : label;
+      chipEl.textContent = touch ? '⬡' : label;
       if (title) chipEl.title = title;
     };
     if (watchdogAlerts?.length || pressureHigh) {
@@ -502,11 +500,13 @@
       show: () => setPanelOpen(true),
       hide: () => setPanelOpen(false),
       toggle: () => setPanelOpen(!panelOpen),
+      isOpen: () => panelOpen,
+      /** Waiting + running jobs — the phone's Power Grid badge. */
+      badgeCount: () => (Number(snapshot.pendingCount) || 0) + (Number(snapshot.runningCount) || 0),
       refresh,
       snapshot: () => snapshot,
     };
-    globalThis.DenizenBottomDock?.refresh?.();
-    console.log('[MeshJobs] panel ready (bottom-dock chip)');
+    console.log('[MeshJobs] panel ready');
   }
 
   if (document.readyState === 'loading') {

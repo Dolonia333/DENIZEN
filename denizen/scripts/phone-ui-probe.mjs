@@ -1,7 +1,7 @@
 // Phone UI smoke check — desktop + iPhone contexts.
-// Asserts: dock hidden, FAB present, shell opens, chat app renders inside the
-// phone screen bounds, Home returns to the grid, legacy mode (?phonemode=0)
-// still shows the dock. Saves screenshots to reports/phone-ui/.
+// Asserts: no bottom dock, FAB present, shell opens, chat app renders inside
+// the phone screen bounds, Home returns to the grid, ?phonemode=0 still boots
+// with the tool chips mounted. Saves screenshots to reports/phone-ui/.
 // Usage: node scripts/phone-ui-probe.mjs [baseUrl]
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
@@ -29,10 +29,10 @@ async function flow(ctxName, ctx, tap) {
   const click = (sel) => tap ? page.locator(sel).tap({ timeout: 10_000 }) : page.locator(sel).click({ timeout: 10_000 });
 
   const base = await page.evaluate(() => ({
-    dockHidden: (() => { const d = document.getElementById('denizen-bottom-dock'); return d ? getComputedStyle(d).display === 'none' : false; })(),
+    noDock: !document.getElementById('denizen-bottom-dock'),
     fabVisible: (() => { const f = document.getElementById('denizen-phone-fab'); return f && getComputedStyle(f).display !== 'none'; })(),
   }));
-  check(`${ctxName}: dock hidden`, base.dockHidden);
+  check(`${ctxName}: no bottom dock`, base.noDock);
   check(`${ctxName}: phone FAB visible`, base.fabVisible);
 
   await click('#denizen-phone-fab');
@@ -201,17 +201,17 @@ const phone = await browser.newContext({
 await flow('iphone', phone, true);
 await phone.close();
 
-// Legacy escape hatch still works
+// ?phonemode=0 debug switch still boots (no phone, tool chips at fallback spots)
 const legacy = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const lp = await legacy.newPage();
 await lp.goto(`${BASE_URL}/?reset=1&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
 await loginOwner(lp);
 await lp.waitForTimeout(4000);
 const leg = await lp.evaluate(() => ({
-  dockShown: (() => { const d = document.getElementById('denizen-bottom-dock'); return d && getComputedStyle(d).display !== 'none'; })(),
+  chipsMounted: !!document.getElementById('player-chat-fab'),
   noFab: !document.getElementById('denizen-phone-fab'),
 }));
-check('legacy: dock visible with ?phonemode=0', leg.dockShown);
+check('legacy: tool chips mount with ?phonemode=0', leg.chipsMounted);
 check('legacy: no phone FAB', leg.noFab);
 await legacy.close();
 

@@ -215,8 +215,7 @@ class PlayerChat {
 
   _syncFabLabel() {
     if (!this._fab) return;
-    const compact = document.documentElement.classList.contains('denizen-touch')
-      && this._fab.closest('#denizen-bottom-dock');
+    const compact = document.documentElement.classList.contains('denizen-touch');
     const paint = globalThis.DenizenTablerIcons?.paintChip;
     if (this._visible) {
       if (paint) paint(this._fab, 'x', compact ? '' : 'Close', { iconOnly: compact, title: 'Close chat' });
@@ -227,8 +226,6 @@ class PlayerChat {
       const label = this._chatFabClosedLabel();
       if (paint) {
         paint(this._fab, 'messages', label, { iconOnly: compact, title: label });
-      } else if (globalThis.DenizenBottomDock?.renderChip) {
-        globalThis.DenizenBottomDock.renderChip('player-chat-fab', label, { iconOnly: compact });
       } else {
         this._fab.textContent = compact ? '💬' : label;
       }
@@ -3028,8 +3025,7 @@ class PlayerChat {
       fab.id = 'player-chat-fab';
       fab.type = 'button';
       fab.className = 'ws-off';
-      globalThis.DenizenTablerIcons?.paintChip?.(fab, 'messages', 'Chat', { title: 'Talk to NPCs (Enter or T also works)' })
-        || globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
+      globalThis.DenizenTablerIcons?.paintChip?.(fab, 'messages', 'Chat', { title: 'Talk to NPCs (Enter or T also works)' });
       if (!fab.innerHTML) fab.textContent = '💬 Chat';
       fab.title = 'Talk to NPCs (Enter or T also works)';
       document.body.appendChild(fab);

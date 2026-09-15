@@ -119,8 +119,7 @@
     document.body.appendChild(fab);
 
     const paintFab = () => {
-      globalThis.DenizenTablerIcons?.paintChip?.(fab, 'messages', 'Chat', { title: fab.title })
-        || globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
+      globalThis.DenizenTablerIcons?.paintChip?.(fab, 'messages', 'Chat', { title: fab.title });
       if (!fab.innerHTML) fab.textContent = '💬 Chat';
     };
     paintFab();
