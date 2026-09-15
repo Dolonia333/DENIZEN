@@ -308,10 +308,16 @@ YOUR JOB — create a LIVING office:
   async _tryRecoverFromDemoLoop() {
     if (!this._usingDemoLoop) return false;
     try {
+      // _callLmStudio rejects on any provider failure (unreachable, cooldown,
+      // HTTP error), so a non-empty reply means the director path works again.
+      // Don't insist on the literal word "OK": the probe carries the director
+      // system prompt, so healthy models answer with JSON commands — the old
+      // /\bok\b/ check kept Abby in the scripted loop forever once LM Studio
+      // came back.
       const text = await this._callLmStudio([
         { role: 'user', content: 'Reply with exactly the word OK and nothing else.' },
       ]);
-      if (!text || !/\bok\b/i.test(String(text).slice(0, 40))) return false;
+      if (!String(text || '').trim()) return false;
       console.log('[CofounderAgent] LM Studio recovered — exiting demo think loop');
       this.stop();
       this._usingDemoLoop = false;
@@ -629,10 +635,12 @@ YOUR JOB — create a LIVING office:
    * E.g. '[{"a":1},{"b":2},{"c":3' → [{"a":1},{"b":2}]
    */
   _salvageTruncatedArray(str) {
-    // Find individual complete JSON objects using brace matching
+    // Find individual complete JSON objects using brace matching. Step inside
+    // a leading '[' only — for bare objects ('{…}\n{…}') start at the first
+    // '{' so a '[' inside one of them isn't mistaken for the list start.
     const objects = [];
-    let i = str.indexOf('[');
-    if (i === -1) i = 0; else i++;
+    let i = str.search(/[\[{]/);
+    if (i === -1) i = 0; else if (str[i] === '[') i++;
 
     while (i < str.length) {
       // Skip whitespace and commas
@@ -670,9 +678,15 @@ YOUR JOB — create a LIVING office:
     if (!cmd || typeof cmd !== 'object') return null;
     const action = cmd.action || cmd.Action || cmd.name || cmd.command || null;
     if (!action) return null;
-    const agentId = cmd.agentId || cmd.agent || cmd.npc || cmd.npcName || 'Abby';
     let params = cmd.params || cmd.parameters || cmd.args || {};
     if (typeof params !== 'object' || params == null) params = {};
+    // Llama tool-call shape: {"name":"speakTo","parameters":{"agentId":"Abby",
+    // "params":{"target":…}}} — who acts, and the real params, sit one level down.
+    const { agentId: pAgent, speaker: pSpeaker, listener: pListener, params: inner, ...rest } = params;
+    params = inner && typeof inner === 'object' ? { ...rest, ...inner } : rest;
+    if (pListener != null && params.target == null) params.target = pListener;
+    const agentId = cmd.agentId || cmd.agent || cmd.npc || cmd.npcName || cmd.speaker
+      || pAgent || pSpeaker || 'Abby';
     // Flatten common top-level fields into params when missing
     for (const k of ['text', 'target', 'x', 'y', 'room', 'deskId', 'attendees', 'type']) {
       if (cmd[k] != null && params[k] == null) params[k] = cmd[k];
@@ -694,10 +708,13 @@ YOUR JOB — create a LIVING office:
         jsonStr = codeBlockMatch[1].trim();
       }
 
-      // Try to find array brackets
-      const arrayMatch = jsonStr.match(/\[[\s\S]*/);
-      if (arrayMatch) {
-        jsonStr = arrayMatch[0];
+      // Skip any prose before the first JSON value. Start at whichever of
+      // '[' / '{' comes first — a single command object may itself contain
+      // an array (attendees) or a '[' in its text, and jumping to that inner
+      // '[' used to throw the whole command away.
+      const jsonStart = jsonStr.search(/[\[{]/);
+      if (jsonStart > 0) {
+        jsonStr = jsonStr.slice(jsonStart);
       }
 
       // First try strict parse
