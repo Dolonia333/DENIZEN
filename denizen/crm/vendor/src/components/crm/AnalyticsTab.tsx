@@ -58,12 +58,24 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
       const si = stages.indexOf(d.stage);
       return si >= stages.indexOf(s);
     }).length);
-    return stages.map((s, i) => ({
-      stage: s.replace("Closed ", ""),
-      count: counts[i],
-      rate: i === 0 ? 100 : Math.round((counts[i] / (counts[0] || 1)) * 100),
-      fill: STAGE_COLORS[s],
-    }));
+    const values = stages.map(s => deals.filter(d => {
+      const si = stages.indexOf(d.stage);
+      return si >= stages.indexOf(s);
+    }).reduce((sum, d) => sum + (d.value || 0), 0));
+    return stages.map((s, i) => {
+      const prev = i === 0 ? counts[0] : counts[i - 1];
+      const stepRate = i === 0 ? 100 : (prev ? Math.round((counts[i] / prev) * 100) : 0);
+      const dropOff = i === 0 ? 0 : Math.max(0, prev - counts[i]);
+      return {
+        stage: s.replace("Closed ", ""),
+        count: counts[i],
+        value: values[i],
+        rate: i === 0 ? 100 : Math.round((counts[i] / (counts[0] || 1)) * 100),
+        stepRate,
+        dropOff,
+        fill: STAGE_COLORS[s],
+      };
+    });
   }, [deals]);
 
   const trendData = useMemo(() => {
@@ -159,15 +171,28 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
       </div>
 
       <div style={{ ...cardStyle, marginBottom: 14 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Conversion Funnel</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {funnelData.map((f) => (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Conversion Funnel</div>
+          <div style={{ fontSize: 11, color: T.text3 }}>Cumulative reach + step conversion</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+          {funnelData.map((f, i) => (
             <div key={f.stage}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: T.text1 }}>{f.stage}</span>
-                <span style={{ fontSize: 11, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>{f.count} deals · {f.rate}%</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, color: T.text1, fontWeight: 600 }}>
+                  {f.stage}
+                  {i > 0 && (
+                    <span style={{ marginLeft: 8, fontSize: 10, color: f.stepRate >= 50 ? T.green : T.orange, fontWeight: 700 }}>
+                      {f.stepRate}% from prior
+                    </span>
+                  )}
+                </span>
+                <span style={{ fontSize: 11, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {f.count} deals · {fmt(f.value)} · {f.rate}% of top
+                  {f.dropOff > 0 ? ` · −${f.dropOff} drop` : ""}
+                </span>
               </div>
-              <div style={{ height: 8, background: T.bg4, borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: 10, background: T.bg4, borderRadius: 4, overflow: "hidden" }}>
                 <div style={{
                   height: "100%", width: `${f.rate}%`,
                   background: `linear-gradient(90deg, ${f.fill}, ${f.fill}88)`,
@@ -176,6 +201,32 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
               </div>
             </div>
           ))}
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead>
+              <tr>
+                {["Stage", "Deals", "Pipeline $", "vs Top", "Step conv.", "Drop-off"].map(h => (
+                  <th key={h} style={{ textAlign: "left", padding: "6px 8px", color: T.text3, borderBottom: `1px solid ${T.bg4}`, fontWeight: 600 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {funnelData.map((f) => (
+                <tr key={`row-${f.stage}`}>
+                  <td style={{ padding: "7px 8px", color: T.text0, borderBottom: `1px solid ${T.bg4}` }}>
+                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: f.fill, marginRight: 6 }} />
+                    {f.stage}
+                  </td>
+                  <td style={{ padding: "7px 8px", color: T.text1, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{f.count}</td>
+                  <td style={{ padding: "7px 8px", color: T.text1, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{fmt(f.value)}</td>
+                  <td style={{ padding: "7px 8px", color: T.text1, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{f.rate}%</td>
+                  <td style={{ padding: "7px 8px", color: f.stepRate >= 50 ? T.green : T.orange, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}`, fontWeight: 700 }}>{f.stepRate}%</td>
+                  <td style={{ padding: "7px 8px", color: f.dropOff ? T.red : T.text3, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{f.dropOff || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -282,6 +282,8 @@ Three **sub-tabs:**
 | View | What it does |
 |------|----------------|
 | Month / Week / Day / Agenda | Calendar layouts |
+| **Layer chips** | Toggle Meetings / Tasks / Overdue / Deal closes so the grid stays readable |
+| **This-week strip** | Counts for meetings, open tasks, overdue, deal closes, and busy days (2+ meetings) |
 | **Connect Google** | OAuth — sync Google Calendar events into meetings |
 | **Connect Outlook** | OAuth — sync Microsoft calendar |
 | **Sync** | Pull external events after connected |
@@ -387,6 +389,8 @@ Three **sub-tabs:**
 ## 14. Analytics
 
 **Purpose:** Funnel and revenue charts from live workspace data.
+
+The **Conversion Funnel** shows cumulative reach **and** step-to-step conversion (plus drop-off) in a detail table. Pipeline charts / velocity include deal counts and a stage occupancy ladder.
 
 | Charts / metrics | Source |
 |------------------|--------|
