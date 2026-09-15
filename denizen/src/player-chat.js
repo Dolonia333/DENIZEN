@@ -230,6 +230,7 @@ class PlayerChat {
       'denizen-visitor-mcp-connect-btn',
       'denizen-visitor-team-mcp-btn',
       'denizen-visitor-projects-btn',
+      'denizen-visitor-handoff-btn',
     ]) {
       const el = main.querySelector(`#${id}`) || header.querySelector(`#${id}`);
       if (el && el.parentElement !== actions) {

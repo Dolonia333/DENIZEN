@@ -87,7 +87,7 @@
         './src/office-hq/office-hq-panel.js?v=hq2',
         './src/visitor-desktop-pairing.js?v=pair3',
         './src/visitor-credits-chip.js?v=node7',
-        './src/visitor-handoff-ui.js?v=vis3',
+        './src/visitor-handoff-ui.js?v=handoffHeader1',
         './src/visitor-projects-ui.js?v=projHeader1',
         './src/visitor-assistant-labels.js?v=noStroke1',
         './src/bouncer-client-init.js?v=sec3',
