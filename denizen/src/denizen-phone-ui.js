@@ -251,7 +251,7 @@
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workflow', 'profile'];
   /** Prefer these near the top of the home grid (first page / less scroll). */
   const PRIORITY_GRID_IDS = ['discordmap', 'discordcmds', 'crm', 'studioboard', 'tour', 'npcteam', 'market', 'station', 'compute'];
-  const LAYOUT_VERSION = 4;
+  const LAYOUT_VERSION = 5; // v5: surface Studio Board next to CRM
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {
