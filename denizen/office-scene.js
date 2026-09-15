@@ -2765,7 +2765,9 @@ class OfficeScene extends Phaser.Scene {
     if (!agent?.assignedDesk) return;
     if (this._agentManager.actions.isSeatedAtDesk(npcKey, agent.assignedDesk)) return;
     ai._seatRetryAt = now;
-    this._agentManager.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
+    // Let useComputer decide: sit instantly only when already within ~40px of
+    // the chair. Passing instant:true yanked NPCs across the floor on arrival.
+    this._agentManager.actions.useComputer(npcKey, agent.assignedDesk);
     agent.status = 'working';
   }
 
@@ -3432,25 +3434,40 @@ class OfficeScene extends Phaser.Scene {
                       message: 'immobile watchdog fired after 2.2s while wanting to move',
                     });
                   }
-                  // Hard unstick for normal wander/task
-                  if (this._unstickNpc) this._unstickNpc(npc);
+                  // Soft recovery: nudge + nearby repath. Hard unstick + office-wide
+                  // random targets looked like a mid-walk teleport/respawn.
+                  ai._immobileStrikes = (ai._immobileStrikes || 0) + 1;
+                  const pfStuck = npc._pathFollower;
+                  if (pfStuck && typeof pfStuck.forceUnstick === 'function' && ai._immobileStrikes >= 3) {
+                    pfStuck.forceUnstick(null);
+                  } else if (npc.body) {
+                    npc.x += (Math.random() - 0.5) * 10;
+                    npc.y += (Math.random() - 0.5) * 8;
+                    npc.body.setVelocity(0, 0);
+                  }
                   if (this._pathfinder && npc.ai) {
-                    const fresh = this._pathfinder.sampleSafeWalkTarget(npc.x, npc.y, 200, 10) || { x: 300 + Math.random()*600, y: 220 + Math.random()*280 };
-                    npc.ai.wanderTarget = fresh;
-                    npc.ai.nextWanderAt = now + 80;
-                    if (npc._pathFollower) npc._pathFollower.navigateTo(fresh.x, fresh.y);
+                    // findWalkableNear stays local; sampleSafeWalkTarget is office-wide.
+                    const near = this._pathfinder.findWalkableNear(npc.x, npc.y, 48)
+                      || this._pathfinder.findWalkableNear(npc.x, npc.y, 96)
+                      || { x: npc.x + (Math.random() - 0.5) * 40, y: npc.y + (Math.random() - 0.5) * 40 };
+                    npc.ai.wanderTarget = near;
+                    npc.ai.nextWanderAt = now + 400;
                     npc.ai.mode = 'wander';
                     npc.ai.taskState = null;
+                    npc.ai.taskTarget = null;
+                    if (npc._pathFollower) npc._pathFollower.navigateTo(near.x, near.y);
                   }
                   ai._immobileCheck = { x: npc.x, y: npc.y, t: now, time: 0 };
                 }
               }
             } else {
               ai._immobileCheck = { x: npc.x, y: npc.y, t: now, time: 0 };
+              ai._immobileStrikes = 0;
             }
           }
         } else {
           ai._immobileCheck = { x: npc.x, y: npc.y, t: now, time: 0 };
+          ai._immobileStrikes = 0;
         }
 
         if (ai.mode === 'agent_task') {

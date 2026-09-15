@@ -2341,7 +2341,9 @@ class AgentOfficeManager {
 
       case 'work':
         if (agent.assignedDesk) {
-          this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
+          // Walk home — never teleport. Instant seating mid-wander looked like
+          // NPCs vanishing and respawning at their desks after a stroll.
+          this.actions.useComputer(npcKey, agent.assignedDesk);
           agent.status = 'working';
         } else {
           // No desk — go to breakroom rather than random center clustering
