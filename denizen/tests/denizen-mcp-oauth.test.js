@@ -222,7 +222,7 @@ describe('denizen-mcp-oauth', () => {
     });
     assert.equal(approve.res.statusCode, 403);
     assert.equal(approve.json.error, 'access_denied');
-    assert.match(approve.json.error_description, /joshi.*protected/i);
+    assert.match(approve.json.error_description, /josh.*protected/i);
   });
 
   it('approve maps missing-org mint failures to invalid_request', async () => {
@@ -237,15 +237,53 @@ describe('denizen-mcp-oauth', () => {
     assert.match(approve.json.error_description, /team office/i);
   });
 
-  it('approve returns server_error with description when mint returns no token', async () => {
+  it('approve maps missing-NPC FK failures to a clear invalid_request with suggestion', async () => {
     const approve = await call('POST', '/mcp/oauth/approve', {
       headers: { 'content-type': 'application/json' },
-      body: approveBody,
+      body: {
+        ...approveBody,
+        npc: 'notanpc',
+        resource: `${BASE}/mcp/npc/notanpc`,
+      },
     }, {
-      createMcpToken: async () => ({ mcp_url: `${BASE}/mcp/npc/joshi` }),
+      createMcpToken: async () => {
+        throw new Error('RPC denizen_register_mcp_token → HTTP 409 {"code":"23503","details":"Key (npc_key)=(notanpc) is not present in table \\"denizen_npcs\\"."}');
+      },
     });
-    assert.equal(approve.res.statusCode, 500);
-    assert.equal(approve.json.error, 'server_error');
-    assert.match(approve.json.error_description, /no access token/i);
+    assert.equal(approve.res.statusCode, 400);
+    assert.equal(approve.json.error, 'invalid_request');
+    assert.match(approve.json.error_description, /not a known office NPC/i);
+  });
+
+  it('approve canonicalizes joshl → josh before minting', async () => {
+    let mintedKey = null;
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: {
+        ...approveBody,
+        npc: 'joshl',
+        resource: `${BASE}/mcp/npc/joshl`,
+      },
+    }, {
+      createMcpToken: async ({ npcKey }) => {
+        mintedKey = npcKey;
+        return { token: `tok-${npcKey}`, mcp_url: `${BASE}/mcp/npc/${npcKey}` };
+      },
+    });
+    assert.equal(approve.res.statusCode, 200, approve.res.body);
+    assert.equal(mintedKey, 'josh');
+    assert.ok(approve.json.redirect);
+  });
+
+  it('authorize consent page rewrites joshl resource to josh', async () => {
+    const url = `/mcp/oauth/authorize?response_type=code&client_id=c1`
+      + `&redirect_uri=${encodeURIComponent('https://chatgpt.com/cb')}`
+      + `&code_challenge=abc&code_challenge_method=S256&state=s1`
+      + `&resource=${encodeURIComponent(`${BASE}/mcp/npc/joshl`)}`;
+    const { res } = await call('GET', url);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, />Josh</);
+    assert.match(res.body, /"npc":"josh"/);
+    assert.doesNotMatch(res.body, />Joshl</);
   });
 });
