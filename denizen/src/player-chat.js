@@ -3960,7 +3960,7 @@ class PlayerChat {
       if (globalThis.DenizenVisitorMcpConnectUI?.openConnect) return true;
       try {
         await globalThis.DenizenLazyScripts?.load?.(
-          ['./src/visitor-mcp-connect-ui.js?v=mcp9avatar'],
+          ['./src/visitor-mcp-connect-ui.js?v=mcpHeader1'],
         );
       } catch (_) { /* ignore */ }
       return !!globalThis.DenizenVisitorMcpConnectUI?.openConnect;
