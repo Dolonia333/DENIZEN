@@ -392,6 +392,18 @@
         from { opacity: 0; transform: translateY(14px); }
         to { opacity: 1; transform: translateY(0); }
       }
+      /* Touch: never leave a transform on the card — Safari Password AutoFill
+         positions its denizen.dolonia.cloud / credential pills relative to the
+         transformed ancestor and they float over the wrong field. */
+      html.denizen-touch #denizen-visitor-name-modal .vis-card,
+      html.denizen-touch #denizen-demo-account-modal .vis-card {
+        animation: denizen-vis-fade 280ms ease-out;
+        transform: none !important;
+      }
+      @keyframes denizen-vis-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
       @keyframes denizen-vis-mascot-in {
         from { opacity: 0; transform: translateX(-36px) rotate(-14deg); }
         to { opacity: 1; transform: translateX(0) rotate(-6deg); }
@@ -1033,19 +1045,40 @@
         z-index: 2147483645;
       }
       html.denizen-touch #denizen-visitor-name-modal {
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         /* Extra inset so the amber HQ PASS ring + stamp are not clipped */
-        padding: max(18px, env(safe-area-inset-top, 0px))
-          max(18px, env(safe-area-inset-right, 0px))
-          max(18px, env(safe-area-inset-bottom, 0px))
-          max(18px, env(safe-area-inset-left, 0px));
+        padding: max(12px, env(safe-area-inset-top, 0px))
+          max(12px, env(safe-area-inset-right, 0px))
+          max(12px, env(safe-area-inset-bottom, 0px))
+          max(12px, env(safe-area-inset-left, 0px));
         box-sizing: border-box;
         background:
           radial-gradient(ellipse 90% 50% at 50% 42%, rgba(56, 189, 248, 0.14), transparent 58%),
           rgba(2, 6, 23, 0.58);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         overflow: auto;
+        /* Leave room for the soft keyboard via visualViewport sync */
+        padding-bottom: max(
+          12px,
+          env(safe-area-inset-bottom, 0px),
+          var(--denizen-keyboard-inset, 0px)
+        );
+      }
+      html.denizen-touch.denizen-keyboard-open #denizen-visitor-name-modal {
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+      html.denizen-touch.denizen-keyboard-open #denizen-visitor-name-modal .vis-mascot {
+        display: none !important;
+      }
+      html.denizen-touch.denizen-keyboard-open #denizen-visitor-name-modal .vis-card {
+        max-height: calc(
+          100dvh
+          - var(--denizen-keyboard-inset, 0px)
+          - env(safe-area-inset-top, 0px)
+          - 24px
+        );
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-panel {
         position: relative;
@@ -2374,11 +2407,11 @@
               <h2>Login</h2>
               <p>Sign in with your username and password. Use your team code or email to find your workspace.</p>
               <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
-              <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="Password" autocomplete="current-password" />
-              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" />
+              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" />
+              <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="Password" name="password" autocomplete="current-password" />
+              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" name="team-code" autocomplete="off" data-1p-ignore="true" data-lpignore="true" data-form-type="other" />
               <p class="vis-or">or</p>
-              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Email" autocomplete="email" inputmode="email" />
+              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Email" name="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" />
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-login">Log in</button>
               <div class="vis-link-row">No team yet? <button type="button" class="vis-link" data-action="goto-create-team">Create a team</button></div>
               <div class="vis-link-row">Have a code but no account? <button type="button" class="vis-link" data-action="goto-join-team">Join a team</button></div>
@@ -3750,18 +3783,39 @@
 
   globalThis.DenizenVisitorSession = DenizenVisitorSession;
 
-  // Phones: the login card is bottom-anchored, exactly where the on-screen
-  // keyboard opens. Once the viewport resizes (interactive-widget), scroll the
-  // focused field back into view so people can see what they're typing.
+  // Phones: the login card fights the soft keyboard. Track visualViewport so
+  // the card shrinks above the keyboard, and scroll the focused field into view.
+  // Also: never leave transform on .vis-card (Safari autofill pills mis-place).
   if (typeof document !== 'undefined') {
+    const syncKeyboardInset = () => {
+      try {
+        const vv = window.visualViewport;
+        if (!vv) return;
+        const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        document.documentElement.style.setProperty('--denizen-keyboard-inset', `${Math.round(inset)}px`);
+        document.documentElement.classList.toggle('denizen-keyboard-open', inset > 80);
+      } catch (_) {}
+    };
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncKeyboardInset);
+      window.visualViewport.addEventListener('scroll', syncKeyboardInset);
+    }
+    window.addEventListener('resize', syncKeyboardInset);
+    syncKeyboardInset();
+
     document.addEventListener('focusin', (e) => {
       const el = e.target;
       if (!el || !el.classList || !el.classList.contains('vis-input')) return;
+      syncKeyboardInset();
       // Don't fight the keyboard on the first focus frame — wait until it settles.
       setTimeout(() => {
         if (document.activeElement !== el) return;
-        try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (_) {}
+        syncKeyboardInset();
+        try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
       }, 350);
+    });
+    document.addEventListener('focusout', () => {
+      setTimeout(syncKeyboardInset, 200);
     });
   }
 })();

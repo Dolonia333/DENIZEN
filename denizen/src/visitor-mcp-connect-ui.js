@@ -927,8 +927,22 @@
     if (actions) {
       actions.insertBefore(connectBtn, closeBtn || null);
     } else {
-      const chip = document.getElementById('denizen-visitor-assistant-chip');
-      chip?.parentNode?.insertBefore(connectBtn, chip?.nextSibling);
+      // Never insert into the name/chip column — create the actions row if needed.
+      const header = document.getElementById('player-chat-header');
+      if (header) {
+        let created = document.getElementById('player-chat-header-actions');
+        if (!created) {
+          created = document.createElement('div');
+          created.id = 'player-chat-header-actions';
+          if (closeBtn) {
+            header.appendChild(created);
+            created.appendChild(closeBtn);
+          } else {
+            header.appendChild(created);
+          }
+        }
+        created.insertBefore(connectBtn, document.getElementById('player-chat-close-btn') || null);
+      }
     }
     return connectBtn;
   }

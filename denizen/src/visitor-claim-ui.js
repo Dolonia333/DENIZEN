@@ -53,18 +53,20 @@
         display: none;
         align-items: center;
         gap: 4px;
-        margin: 2px 0 0;
-        padding: 2px 6px;
+        margin: 0;
+        padding: 4px 8px;
         max-width: 100%;
+        width: max-content;
         border-radius: 999px;
         background: rgba(74, 222, 128, 0.15);
         border: 1px solid rgba(74, 222, 128, 0.4);
         color: #4ade80;
-        font-size: 9px;
+        font-size: 10px;
         font-weight: bold;
         line-height: 1.2;
-        align-self: flex-start;
         min-width: 0;
+        grid-column: 1 / -1;
+        justify-self: start;
       }
       #${CHIP_ID} .dz-asst-name {
         overflow: hidden;
@@ -267,8 +269,8 @@
 
   function updateAssistantChip() {
     const sess = globalThis.DenizenVisitorSession;
-    const headerTarget = document.getElementById('player-chat-target');
-    if (!headerTarget) return;
+    const header = document.getElementById('player-chat-header');
+    if (!header) return;
 
     let chip = document.getElementById(CHIP_ID);
     if (!chip) {
@@ -276,12 +278,8 @@
       chip.id = CHIP_ID;
       chip.innerHTML = '<span class="dz-asst-name"></span>'
         + '<button type="button" class="dz-asst-release" title="Release this assistant" aria-label="Release this assistant">✕</button>';
-      const status = document.getElementById('player-chat-header-status');
-      if (status?.parentNode) {
-        status.parentNode.insertBefore(chip, status.nextSibling);
-      } else {
-        headerTarget.parentNode?.insertBefore(chip, headerTarget.nextSibling);
-      }
+      // Direct child of the header grid so it can span a full row under the toolbar.
+      header.appendChild(chip);
       assistantChip = chip;
       const relBtn = chip.querySelector('.dz-asst-release');
       if (relBtn) {
@@ -293,6 +291,8 @@
           relBtn.addEventListener('click', onReleaseClick);
         }
       }
+    } else if (chip.parentElement !== header) {
+      header.appendChild(chip);
     }
 
     const asst = sess?.getAssistant?.();

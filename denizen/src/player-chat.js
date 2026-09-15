@@ -225,17 +225,31 @@ class PlayerChat {
     }
     // Move action chips that were incorrectly nested under .chat-header-main
     const main = header.querySelector('.chat-header-main');
-    if (!main) return;
+    if (main) {
+      for (const id of [
+        'denizen-visitor-mcp-connect-btn',
+        'denizen-visitor-team-mcp-btn',
+        'denizen-visitor-projects-btn',
+        'denizen-visitor-handoff-btn',
+        'denizen-visitor-briefing-btn',
+      ]) {
+        const el = main.querySelector(`#${id}`);
+        if (el) actions.insertBefore(el, closeBtn || null);
+      }
+      // Assistant chip belongs on its own full-width grid row, not inside main.
+      const chip = main.querySelector('#denizen-visitor-assistant-chip');
+      if (chip) header.appendChild(chip);
+    }
+    // Briefing/etc. may also have been appended as a raw header child.
     for (const id of [
       'denizen-visitor-mcp-connect-btn',
       'denizen-visitor-team-mcp-btn',
       'denizen-visitor-projects-btn',
       'denizen-visitor-handoff-btn',
+      'denizen-visitor-briefing-btn',
     ]) {
-      const el = main.querySelector(`#${id}`) || header.querySelector(`#${id}`);
-      if (el && el.parentElement !== actions) {
-        actions.insertBefore(el, closeBtn || null);
-      }
+      const el = header.querySelector(`:scope > #${id}`);
+      if (el) actions.insertBefore(el, closeBtn || null);
     }
   }
 
@@ -2217,9 +2231,14 @@ class PlayerChat {
       }
       #player-chat-header {
         position: relative;
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        grid-template-areas:
+          "avatar main actions"
+          "chip chip chip";
+        align-items: start;
+        column-gap: 8px;
+        row-gap: 6px;
         padding: 14px 10px 10px;
         border-bottom: 2px solid var(--pc-border);
         background:
@@ -2229,16 +2248,41 @@ class PlayerChat {
         box-shadow: inset 0 -1px 0 var(--pc-line);
         min-width: 0;
       }
+      #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: center; }
+      #player-chat-header .chat-header-main { grid-area: main; min-width: 0; }
+      #player-chat-header #denizen-visitor-assistant-chip { grid-area: chip; }
       #player-chat-header-actions {
+        grid-area: actions;
         display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: flex-end;
-        flex-wrap: wrap;
+        align-content: flex-start;
         gap: 4px;
-        flex: 0 1 auto;
-        max-width: min(52%, 220px);
-        margin-left: auto;
+        max-width: min(48vw, 168px);
         min-width: 0;
+      }
+      html.denizen-touch #player-chat-header-actions {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        max-width: none;
+        width: auto;
+      }
+      html.denizen-touch #player-chat-header-actions > button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+      }
+      /* Never let action chips land inside the name column */
+      #player-chat-header .chat-header-main > #denizen-visitor-mcp-connect-btn,
+      #player-chat-header .chat-header-main > #denizen-visitor-team-mcp-btn,
+      #player-chat-header .chat-header-main > #denizen-visitor-projects-btn,
+      #player-chat-header .chat-header-main > #denizen-visitor-handoff-btn,
+      #player-chat-header .chat-header-main > #denizen-visitor-briefing-btn,
+      #player-chat-header .chat-header-main > #player-chat-close-btn {
+        display: none !important;
       }
       .pc-header-avatar {
         flex: 0 0 40px;

@@ -202,13 +202,18 @@
     if (actions) {
       actions.insertBefore(projectsBtn, closeBtn || null);
     } else {
-      const chip = document.getElementById('denizen-visitor-assistant-chip');
-      if (chip?.parentNode) {
-        chip.parentNode.insertBefore(projectsBtn, chip.nextSibling);
+      const header = document.getElementById('player-chat-header');
+      if (header) {
+        let created = document.getElementById('player-chat-header-actions');
+        if (!created) {
+          created = document.createElement('div');
+          created.id = 'player-chat-header-actions';
+          header.appendChild(created);
+          if (closeBtn) created.appendChild(closeBtn);
+        }
+        created.insertBefore(projectsBtn, document.getElementById('player-chat-close-btn') || null);
       } else {
-        const header = document.getElementById('player-chat-header');
-        if (header && closeBtn) header.insertBefore(projectsBtn, closeBtn);
-        else header?.appendChild(projectsBtn) || document.body.appendChild(projectsBtn);
+        document.body.appendChild(projectsBtn);
       }
     }
     return projectsBtn;

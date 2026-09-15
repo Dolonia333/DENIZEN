@@ -20,13 +20,30 @@ describe('mobile UI layout fixes', () => {
     assert.match(chat, /padding-top:\s*10px/);
   });
 
-  it('Projects, Connect AI, and Hand off mount into header-actions', () => {
+  it('Projects, Connect AI, Hand off, and Briefing mount into header-actions', () => {
     const projects = read('src/visitor-projects-ui.js');
     const mcp = read('src/visitor-mcp-connect-ui.js');
     const handoff = read('src/visitor-handoff-ui.js');
+    const briefing = read('src/visitor-briefing-ui.js');
     assert.match(projects, /player-chat-header-actions/);
     assert.match(mcp, /player-chat-header-actions/);
     assert.match(handoff, /player-chat-header-actions/);
+    assert.match(briefing, /player-chat-header-actions/);
+  });
+
+  it('assistant chip is a full-width header grid row, not nested under the name', () => {
+    const claim = read('src/visitor-claim-ui.js');
+    const chat = read('src/player-chat.js');
+    assert.match(claim, /header\.appendChild\(chip\)/);
+    assert.match(chat, /"chip chip chip"/);
+    assert.match(chat, /#denizen-visitor-assistant-chip \{ grid-area: chip/);
+  });
+
+  it('HQ PASS login avoids transform on touch so Safari autofill stays anchored', () => {
+    const session = read('src/visitor-session.js');
+    assert.match(session, /denizen-keyboard-open/);
+    assert.match(session, /--denizen-keyboard-inset/);
+    assert.match(session, /transform: none !important/);
   });
 
   it('HQ PASS login card is the sticky-button scroll container', () => {

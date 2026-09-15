@@ -18,17 +18,24 @@
     s.id = STYLE_ID;
     s.textContent = `
       #${BTN_ID} {
-        margin-left: 6px;
-        padding: 2px 8px;
-        border-radius: 999px;
+        margin: 0;
+        padding: 4px 8px;
+        border-radius: 4px;
         background: rgba(251, 191, 36, 0.12);
         border: 1px solid rgba(251, 191, 36, 0.35);
         color: #fcd34d;
-        font: 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-weight: bold;
+        font: 700 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.04em;
         cursor: pointer;
+        flex-shrink: 0;
+        white-space: nowrap;
+        touch-action: manipulation;
       }
       #${BTN_ID}:hover { background: rgba(251, 191, 36, 0.22); }
+      html.denizen-touch #${BTN_ID} {
+        padding: 6px 8px;
+        min-height: 32px;
+      }
       #${PANEL_ID} {
         position: fixed;
         top: 48px;
@@ -288,15 +295,20 @@
 
   function mountBtn() {
     if (isCeo()) return;
+    if (document.getElementById(BTN_ID)) return;
+    const actions = document.getElementById('player-chat-header-actions');
+    const closeBtn = document.getElementById('player-chat-close-btn');
     const chatHeader = document.querySelector('#player-chat-header, .player-chat-header');
-    if (!chatHeader || document.getElementById(BTN_ID)) return;
+    if (!actions && !chatHeader) return;
     const btn = document.createElement('button');
     btn.id = BTN_ID;
     btn.type = 'button';
     btn.textContent = 'Briefing';
     btn.title = 'Morning briefing & commitments';
     btn.addEventListener('click', togglePanel);
-    chatHeader.appendChild(btn);
+    if (actions) actions.insertBefore(btn, closeBtn || null);
+    else if (closeBtn) chatHeader.insertBefore(btn, closeBtn);
+    else chatHeader.appendChild(btn);
   }
 
   function canUseBriefing() {
