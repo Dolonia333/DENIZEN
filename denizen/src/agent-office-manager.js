@@ -5217,7 +5217,13 @@ class AgentOfficeManager {
   _updateDirectorBanner(health = {}) {
     const ID = 'denizen-director-offline-banner';
     let el = document.getElementById(ID);
-    if (!health.offline) {
+    this._lastDirectorHealth = health;
+    if (!this._directorBannerSessionHook) {
+      // Session role often lands after the first health check — re-apply then.
+      this._directorBannerSessionHook = () => this._updateDirectorBanner(this._lastDirectorHealth || {});
+      document.addEventListener('denizen-visitor-session-ready', this._directorBannerSessionHook);
+    }
+    if (!health.offline || !this._isDirectorBannerAudience()) {
       if (el) el.remove();
       return;
     }
@@ -5238,6 +5244,21 @@ class AgentOfficeManager {
     el.textContent = health.demoLoop
       ? '⚠ Director offline — Abby is running the scripted demo loop (LM Studio unreachable)'
       : `⚠ Director degraded — ${health.consecutiveErrors || 3}+ consecutive think errors`;
+  }
+
+  /**
+   * The banner is an operator signal. Guests and public-demo spectators can't
+   * act on it — they saw a red "think errors" box over the game (a quarter of
+   * it on phones). Only team and owner sessions get it.
+   */
+  _isDirectorBannerAudience() {
+    if (globalThis.DenizenPublicDemo?.active) return false;
+    const sess = globalThis.DenizenVisitorSession;
+    try {
+      return !!(sess?.isCeoPrincipal?.() || sess?.isTeam?.());
+    } catch (_) {
+      return false;
+    }
   }
 
   /**
