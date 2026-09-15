@@ -11171,6 +11171,52 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   }
 
   // Deal Weaver CRM — Vite SPA served at /crm/ (phone app embeds this route)
+
+
+  if (urlPath === '/studio-board.html') {
+    res.writeHead(302, { Location: '/studio-board/' });
+    res.end();
+    return;
+  }
+
+  // Studio Board — Agency Tracker (Monday-style board) at /studio-board/
+  // Phone app navigates here like CRM (full page), not an in-phone iframe.
+  if (urlPath === '/studio-board' || urlPath.startsWith('/studio-board/')) {
+    const BOARD_ROOT = path.join(ROOT, 'studio-board');
+    let rel = urlPath.replace(/^\/studio-board\/?/, '') || 'index.html';
+    if (rel.endsWith('/')) rel += 'index.html';
+    const filePath = path.resolve(BOARD_ROOT, rel);
+    const inside = path.relative(BOARD_ROOT, filePath);
+    if (inside.startsWith('..') || path.isAbsolute(inside)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+    const sendBoard = (target) => {
+      fs.readFile(target, (err, data) => {
+        if (err) {
+          if (target !== path.join(BOARD_ROOT, 'index.html')) {
+            sendBoard(path.join(BOARD_ROOT, 'index.html'));
+            return;
+          }
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Studio Board not found');
+          return;
+        }
+        const ext = path.extname(target).toLowerCase() || '.html';
+        const headers = {
+          'Content-Type': MIME[ext] || 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          Pragma: 'no-cache',
+        };
+        res.writeHead(200, headers);
+        res.end(data);
+      });
+    };
+    sendBoard(path.extname(rel) ? filePath : path.join(BOARD_ROOT, 'index.html'));
+    return;
+  }
+
   if (urlPath === '/crm' || urlPath.startsWith('/crm/')) {
     let crmRel = urlPath.replace(/^\/crm\/?/, '') || 'index.html';
     if (crmRel.endsWith('/')) crmRel += 'index.html';

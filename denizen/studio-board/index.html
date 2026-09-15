@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Studio Board — Agency Tracker</title>
+<title>Studio Board — Agency Tracker · Denizen</title>
 <style>
 :root{
   --canvas:#E8E6DC; --surface:#FDFCF7; --surface-2:#F4F2E9;
@@ -747,9 +747,28 @@ html.embed .stat .v{font-size:18px}
 html.embed .cal-cell{min-height:72px;padding:5px 4px}
 html.embed .modal{width:min(520px,100%);max-height:92vh}
 html.embed .people-strip{display:none}
+
+/* Full-page Denizen app chrome (CRM-style standalone) */
+.dz-app-chrome{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;
+  padding:8px 14px;background:#0D1F1A;border-bottom:1px solid rgba(143,174,159,.28);
+  font-family:var(--font-ui)}
+.dz-app-chrome a{color:#F4F2EA;text-decoration:none;font-size:12.5px;font-weight:600;
+  padding:6px 10px;border-radius:8px;border:1px solid rgba(143,174,159,.35)}
+.dz-app-chrome a:hover{background:rgba(232,230,220,.10);border-color:#F4F2EA}
+.dz-app-chrome .dz-app-title{color:#8FAE9F;font-size:12px;margin-left:4px}
+.dz-app-chrome .dz-app-spacer{flex:1}
+html.embed .dz-app-chrome{display:none}
+body.standalone{min-height:100vh}
 </style>
 </head>
 <body>
+<div class="dz-app-chrome" role="navigation" aria-label="Studio Board app bar">
+  <a href="/">← Back to office</a>
+  <span class="dz-app-title">Studio Board · Agency Tracker</span>
+  <span class="dz-app-spacer"></span>
+  <a href="/crm/">Open CRM</a>
+</div>
+
 <div class="app">
   <header class="appbar">
     <div class="bar-row bar-top">
@@ -934,6 +953,7 @@ html.embed .people-strip{display:none}
   try{
     var q = new URLSearchParams(location.search);
     if(q.get('embed') === '1' || q.get('embed') === 'true') document.documentElement.classList.add('embed');
+    else document.body.classList.add('standalone');
   }catch(e){}
   if(window.storage && typeof window.storage.get === 'function') return;
   var mem = Object.create(null);

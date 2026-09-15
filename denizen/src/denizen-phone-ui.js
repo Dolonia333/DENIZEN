@@ -159,7 +159,7 @@
       available: () => true },
     { id: 'crm', tabler: 'address-book', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
       available: () => true },
-    { id: 'studioboard', tabler: 'layout-kanban', icon: '📋', label: 'Studio Board', type: 'internal', c: ['#2a6a55', '#163a2f'],
+    { id: 'studioboard', tabler: 'layout-kanban', icon: '📋', label: 'Studio Board', type: 'navigate', url: '/studio-board/', c: ['#2a6a55', '#163a2f'],
       available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
       c: ['#34d399', '#047857'],
@@ -1692,19 +1692,6 @@
         border: 0;
         background: #0a0e1a;
       }
-      #${FRAME_ID} .dzp-settings.dzp-studioboard {
-        padding: 0;
-        gap: 0;
-        overflow: hidden;
-        background: #e8e6dc;
-      }
-      #${FRAME_ID} .dzp-studioboard-frame {
-        flex: 1;
-        width: 100%;
-        min-height: 0;
-        border: 0;
-        background: #e8e6dc;
-      }
       #${FRAME_ID} .dzp-office-guide .og-hero {
         border: 1px solid rgba(45, 212, 191, 0.22);
         border-radius: 16px;
@@ -3036,7 +3023,7 @@
     shellEl?.querySelector(`#${FRAME_ID}`)?.classList.remove('dzp-app-open');
     const ph = shellEl?.querySelector('.dzp-placeholder');
     if (ph) { ph.classList.remove('show', 'err'); }
-    settingsEl?.classList.remove('show', 'dzp-office-guide', 'dzp-station-connect', 'dzp-workflow', 'dzp-studioboard');
+    settingsEl?.classList.remove('show', 'dzp-office-guide', 'dzp-station-connect', 'dzp-workflow');
     if (settingsEl) settingsEl.onclick = null;
     globalThis.DenizenPhoneStationConnect?.unmount?.();
     loadingToken += 1;
@@ -3335,19 +3322,12 @@
 
   function renderWorkflowApp(app) {
     setAppOpenUi(app);
-    settingsEl.classList.remove('dzp-office-guide', 'dzp-station-connect', 'dzp-studioboard');
+    settingsEl.classList.remove('dzp-office-guide', 'dzp-station-connect');
     settingsEl.classList.add('show', 'dzp-workflow');
     settingsEl.innerHTML = '<iframe class="dzp-workflow-frame" src="/workflow-dashboard.html?embed=1" title="Office workflow tools"></iframe>';
     document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
   }
 
-  function renderStudioBoardApp(app) {
-    setAppOpenUi(app);
-    settingsEl.classList.remove('dzp-office-guide', 'dzp-station-connect', 'dzp-workflow');
-    settingsEl.classList.add('show', 'dzp-studioboard');
-    settingsEl.innerHTML = '<iframe class="dzp-studioboard-frame" src="/studio-board.html?embed=1" title="Studio Board — Agency Tracker"></iframe>';
-    document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
-  }
 
   function renderSettings(app) {
     setAppOpenUi(app);
@@ -3439,7 +3419,6 @@
     if (app.type === 'internal') {
       if (app.id === 'station') { void renderStationConnect(app); }
       else if (app.id === 'workflow') renderWorkflowApp(app);
-      else if (app.id === 'studioboard') renderStudioBoardApp(app);
       else renderSettings(app);
       return;
     }

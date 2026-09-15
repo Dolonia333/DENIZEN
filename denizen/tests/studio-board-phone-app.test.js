@@ -9,27 +9,34 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
 describe('Studio Board phone app', () => {
-  it('ships the agency tracker HTML with storage shim and embed mode', () => {
-    const html = read('studio-board.html');
+  it('ships as its own full-page app at /studio-board/', () => {
+    const html = read('studio-board/index.html');
     assert.match(html, /Studio Board/);
     assert.match(html, /dz-sb:/);
     assert.match(html, /window\.storage/);
-    assert.match(html, /html\.embed/);
-    assert.match(html, /setView|viewtab|Calendar|Board|My Day/i);
+    assert.match(html, /Back to office/);
+    assert.match(html, /dz-app-chrome/);
   });
 
-  it('registers Studio Board on the Denizen phone home screen', () => {
+  it('registers Studio Board as a navigate app like CRM', () => {
     const src = read('src/denizen-phone-ui.js');
     assert.match(src, /id: 'studioboard'/);
-    assert.match(src, /Studio Board/);
-    assert.match(src, /renderStudioBoardApp/);
-    assert.match(src, /\/studio-board\.html\?embed=1/);
+    assert.match(src, /type: 'navigate'/);
+    assert.match(src, /url: '\/studio-board\/'/);
     assert.match(src, /PRIORITY_GRID_IDS = \[[^\]]*studioboard/);
-    assert.match(src, /dzp-studioboard-frame/);
+    assert.doesNotMatch(src, /renderStudioBoardApp/);
+    assert.doesNotMatch(src, /dzp-studioboard-frame/);
+  });
+
+  it('serves /studio-board/ from the Denizen server', () => {
+    const srv = read('server.js');
+    assert.match(srv, /urlPath === '\/studio-board'/);
+    assert.match(srv, /studio-board/);
+    assert.match(srv, /Location: '\/studio-board\/'/);
   });
 
   it('bumps the phone UI cache buster for Studio Board', () => {
     const idx = read('index.html');
-    assert.match(idx, /denizen-phone-ui\.js\?v=phone34studioboard/);
+    assert.match(idx, /denizen-phone-ui\.js\?v=phone35studioboard/);
   });
 });

@@ -120,10 +120,12 @@ custom fields, **and** reshapes the dashboard with industry-specific widgets.
 
 ## 6b. Studio Board (Agency Tracker)
 
-Open **Studio Board** from the phone. It's a Monday.com-style work board for agency
-pipelines: **Calendar**, **Table**, **Board**, **My Day**, **Team**, **Activity**, and
-**Settings**. Create tasks, filter by type, save views, and reset demo data. Progress
-is stored in the browser (`localStorage`) so the board survives reloads on that device.
+Open **Studio Board** from the phone (or go to `/studio-board/`). Like CRM, it opens as
+its own full-page app — not an in-phone iframe. It's a Monday.com-style work board for
+agency pipelines: **Calendar**, **Table**, **Board**, **My Day**, **Team**, **Activity**,
+and **Settings**. Create tasks, filter by type, save views, and reset demo data. Use
+**← Back to office** to return to Denizen. Progress is stored in the browser
+(`localStorage`) so the board survives reloads on that device.
 
 ---
 
