@@ -3924,6 +3924,7 @@ const server = http.createServer((req, res) => {
       getPublicBaseUrl: npcMcpGateway.getPublicBaseUrl,
       createMcpToken: npcMcpGateway.createMcpToken,
       guardVisitorFeature: _guardVisitorFeature,
+      getDefaultOrgId: () => denizenDb.orgId || worldState.getDefaultOrgId?.() || null,
     }).then((handled) => {
       if (!handled && !res.writableEnded) {
         res.writeHead(404, { 'Content-Type': 'application/json' });

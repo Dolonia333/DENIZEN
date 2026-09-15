@@ -182,8 +182,11 @@ function consentPage({ npcKey, clientName, params }) {
     try{
       const res=await fetch('/mcp/oauth/approve',{method:'POST',headers:{'Content-Type':'application/json','X-Session-Id':sess.session_id||'','X-Session-Token':sess.session_token||''},
         body:JSON.stringify({ ...PARAMS, session_id:sess.session_id, session_token:sess.session_token })});
-      const data=await res.json();
-      if(!res.ok||!data.redirect) throw new Error(data.error||'Approval failed');
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok||!data.redirect){
+        const detail=data.error_description||data.error||('Approval failed ('+res.status+')');
+        throw new Error(detail);
+      }
       location.href=data.redirect;
     }catch(e){ const el=document.getElementById('err'); el.textContent=e.message||'Could not connect'; el.style.display='block'; btn.textContent='Allow'; btn.disabled=false; }
   }
@@ -281,7 +284,7 @@ async function handleOAuthRoute(req, res, urlPath, deps) {
       return (send(res, 400, { error: 'invalid_request', error_description: 'session and npc required' }), true);
     }
     if (!body.code_challenge || !body.redirect_uri) {
-      return (send(res, 400, { error: 'invalid_request' }), true);
+      return (send(res, 400, { error: 'invalid_request', error_description: 'code_challenge and redirect_uri required' }), true);
     }
     let access;
     try {
@@ -289,11 +292,44 @@ async function handleOAuthRoute(req, res, urlPath, deps) {
     } catch (err) {
       return (send(res, 403, { error: 'access_denied', error_description: err?.message || 'session invalid' }), true);
     }
+    const orgId = access?.orgId
+      || (typeof deps.resolveOrgId === 'function' ? await deps.resolveOrgId(access, sessionId) : null)
+      || (typeof deps.getDefaultOrgId === 'function' ? deps.getDefaultOrgId() : null)
+      || null;
+    if (!orgId) {
+      return (send(res, 400, {
+        error: 'invalid_request',
+        error_description: 'Your Denizen session has no organization. Sign in with a team office code on denizen.dolonia.cloud, then click Allow again.',
+      }), true);
+    }
     let minted;
     try {
-      minted = await deps.createMcpToken({ orgId: access.orgId, npcKey, sessionId, label: 'oauth' });
+      minted = await deps.createMcpToken({ orgId, npcKey, sessionId, label: 'oauth' });
     } catch (err) {
-      return (send(res, 500, { error: 'server_error', error_description: err?.message || 'token mint failed' }), true);
+      const msg = String(err?.message || 'token mint failed');
+      console.error('[mcp-oauth] token mint failed', { npcKey, sessionId, orgId, err: msg });
+      if (/demo org/i.test(msg)) {
+        return (send(res, 403, {
+          error: 'access_denied',
+          error_description: 'Demo offices cannot connect ChatGPT or Claude. Join a team office, then try Allow again.',
+        }), true);
+      }
+      if (/protected/i.test(msg)) {
+        return (send(res, 403, {
+          error: 'access_denied',
+          error_description: `Teammate "${npcKey}" is protected and cannot be connected via MCP.`,
+        }), true);
+      }
+      if (/database unavailable|missing org|org_id.*required/i.test(msg)) {
+        return (send(res, 400, {
+          error: 'invalid_request',
+          error_description: 'Could not mint an MCP token for this session. Sign in to your team office and retry.',
+        }), true);
+      }
+      return (send(res, 500, { error: 'server_error', error_description: msg }), true);
+    }
+    if (!minted?.token) {
+      return (send(res, 500, { error: 'server_error', error_description: 'token mint returned no access token' }), true);
     }
     const code = crypto.randomBytes(32).toString('base64url');
     _codes.set(code, {
