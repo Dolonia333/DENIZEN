@@ -48,7 +48,6 @@
 
   function finishDeferred() {
     initDeferredSceneFeatures();
-    globalThis.DenizenBottomDock?.refresh?.();
     globalThis.DenizenMobileSidebar?.relayout?.();
     globalThis.DenizenVisitorMcpConnectUI?.attach?.();
     try {
@@ -64,8 +63,8 @@
     deferredDone = (async () => {
       await loadParallel([
         './src/visitor-capabilities.js?v=vis4',
-        './src/visitor-dashboard-gate.js?v=dgate1',
-        './src/proximity-audio.js?v=audio2',
+        './src/visitor-dashboard-gate.js?v=nodock1',
+        './src/proximity-audio.js?v=nodock1',
         './src/voice-gate.js?v=audio2',
       ]);
       await loadParallel([
@@ -74,12 +73,12 @@
         './src/denizen-voice-call-ui.js?v=vc1',
         './src/elevenlabs-provider.js',
         './src/sfx.js?v=always1',
-        './src/voice-input.js?v=voicevc3corner',
-        './src/llm-telemetry-panel.js?v=lmfix8',
-        './src/mesh-jobs-panel.js?v=mesh2',
-        './src/browser-mirror-panel.js?v=lucymirror6',
-        './src/diag.js?v=diag2',
-        './src/security-feed.js?v=sec2',
+        './src/voice-input.js?v=nodock1',
+        './src/llm-telemetry-panel.js?v=nodock1',
+        './src/mesh-jobs-panel.js?v=nodock1',
+        './src/browser-mirror-panel.js?v=nodock1',
+        './src/diag.js?v=nodock1',
+        './src/security-feed.js?v=nodock1',
       ]);
       await loadParallel([
         './src/tabler-icons.js?v=ti1',
@@ -94,7 +93,7 @@
         './src/security-monitor.js?v=sec3',
         './src/robber-controller.js?v=sec3',
         './src/work-feed.js?v=feed4dedupe',
-        './src/content-pipeline-panel.js?v=cp2',
+        './src/content-pipeline-panel.js?v=nodock1',
       ]);
       finishDeferred();
     })();
@@ -111,7 +110,7 @@
       './src/visitor-skill-gap-ui.js?v=sgap1',
       './src/visitor-agent-inbox.js?v=ainbox1',
       './src/mesh-alert-toast.js?v=mtoast2',
-      './src/proposals-panel.js?v=propfix9',
+      './src/proposals-panel.js?v=nodock1',
       './src/city-debug.js',
     ];
     try {

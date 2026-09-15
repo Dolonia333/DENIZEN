@@ -23,7 +23,6 @@ await page.waitForTimeout(6000);
 
 const state = await page.evaluate(() => {
   const gc = document.getElementById('game-container')?.getBoundingClientRect();
-  const dock = document.getElementById('denizen-bottom-dock')?.getBoundingClientRect();
   const rotateHint = document.getElementById('denizen-rotate-hint');
   const cam = window.game?.scene?.scenes?.[0]?.cameras?.main;
   return {
@@ -31,7 +30,6 @@ const state = await page.evaluate(() => {
     innerW: window.innerWidth,
     innerH: window.innerHeight,
     container: gc ? { w: Math.round(gc.width), h: Math.round(gc.height), top: Math.round(gc.top), left: Math.round(gc.left) } : null,
-    dock: dock ? { h: Math.round(dock.height), top: Math.round(dock.top) } : null,
     rotateHintBlocking: rotateHint ? getComputedStyle(rotateHint).pointerEvents !== 'none' : false,
     camZoom: cam?.zoom ?? null,
     camFollowing: !!cam?._follow,

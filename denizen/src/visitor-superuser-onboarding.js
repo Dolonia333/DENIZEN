@@ -215,7 +215,6 @@
         cursor: pointer;
       }
       #${CHIP_ID}.ready { display: inline-flex; align-items: center; }
-      html[data-denizen-superuser-onboarding="open"] #denizen-bottom-dock,
       html[data-denizen-superuser-onboarding="open"] #denizen-node-ui-chip {
         pointer-events: none !important;
       }
@@ -259,10 +258,10 @@
       return rectForEl('denizen-node-level') || rectForEl('denizen-node-ui-chip') || rectForEl('denizen-phone-fab') || centerRect();
     }
     if (anchor === 'mesh') {
-      return rectForEl('denizen-mesh-jobs-chip') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-mesh-jobs-chip') || centerRect();
     }
     if (anchor === 'guide') {
-      return rectForEl('denizen-capabilities-guide-chip') || rectForEl('denizen-bottom-dock') || centerRect();
+      return rectForEl('denizen-capabilities-guide-chip') || centerRect();
     }
     return centerRect();
   }

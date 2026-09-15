@@ -56,7 +56,7 @@ flowchart TB
 | `src/openclaw-worldstate-bridge.js` | Bridge between external agent events and world state | runtime integration paths |
 | `src/openclaw-chat.js` | Embedded OpenClaw chat panel integration | browser UI, `office-scene.js` |
 | `src/chat-bootstrap.js` | Chat UI initialization/bootstrap glue | browser startup path |
-| `src/bottom-dock.js` | Bottom dock UI controls/composition | browser UI |
+| `src/denizen-phone-ui.js` | Buzz phone HUD — the toolbar; opens tools via their module APIs | browser UI |
 | `src/diag.js` | Diagnostics UI toggle/panel hooks | browser scene/UI |
 | `src/denizen-lazy-scripts.js` | Lazy script loader for optional modules | `office-scene.js` |
 | `src/mobile-controls.js` | Touch/mobile movement controls | browser scene |

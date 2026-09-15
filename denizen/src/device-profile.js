@@ -154,19 +154,6 @@
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
       }
-      html.denizen-touch.denizen-phone.denizen-llm-tel-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-mesh-jobs-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-proposals-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-diag-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-browser-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-npc-team-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-content-pipeline-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-drawer-open #denizen-bottom-dock {
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(110%);
-        transition: transform 0.2s ease, opacity 0.2s ease;
-      }
     `;
     document.head.appendChild(style);
   }

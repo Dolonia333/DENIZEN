@@ -269,12 +269,6 @@
       html.denizen-touch.denizen-llm-tel-open #denizen-llm-tel-panel.open {
         z-index: 2147483644 !important;
       }
-      html.denizen-touch.denizen-phone.denizen-llm-tel-open #denizen-bottom-dock {
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(110%);
-        transition: transform 0.2s ease, opacity 0.2s ease;
-      }
       html.denizen-touch.denizen-llm-tel-open #game-container,
       html.denizen-touch.denizen-llm-tel-open #game-container canvas {
         pointer-events: none !important;
@@ -460,8 +454,7 @@
     chip.id = 'denizen-llm-tel-chip';
     chip.type = 'button';
     chip.title = 'LM Studio + provider telemetry (click for details)';
-    globalThis.DenizenBottomDock?.renderChip?.('denizen-llm-tel-chip', 'LM Stats');
-    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = '⚙';
+    chip.textContent = '⚙';
     wireLmChip(chip);
     document.body.appendChild(chip);
     return chip;
@@ -505,8 +498,7 @@
     const s = state.stats;
     const touch = isTouchUi();
     const paint = (label, title) => {
-      globalThis.DenizenBottomDock?.renderChip?.('denizen-llm-tel-chip', label, { iconOnly: touch, title });
-      if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = touch ? '⚙' : label;
+      chip.textContent = touch ? '⚙' : label;
       if (title) chip.title = title;
     };
     if (!s) {

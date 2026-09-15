@@ -994,7 +994,6 @@
       }
       html[data-denizen-modal="open"] #game-container,
       html[data-denizen-modal="open"] #game-container canvas,
-      html[data-denizen-modal="open"] #denizen-bottom-dock,
       html[data-denizen-modal="open"] #player-chat-fab,
       html[data-denizen-modal="open"] #denizen-mobile-menu-btn,
       html[data-denizen-modal="open"] #denizen-mobile-controls,
@@ -1024,7 +1023,6 @@
       html[data-denizen-modal="open"] #denizen-work-feed-toggle {
         display: none !important;
       }
-      html[data-denizen-modal="open"] #denizen-bottom-dock,
       html[data-denizen-modal="open"] #denizen-mobile-menu-btn {
         opacity: 0 !important;
         visibility: hidden !important;

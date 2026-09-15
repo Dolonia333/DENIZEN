@@ -10,7 +10,7 @@ mobile-sidebar.js          → touch drawer shell
 visitor-session.js         → session auth
 visitor-account-panel.js   → top-right Me panel
 visitor-node-ui.js         → bottom-left compute panel
-bottom-dock.js             → unified toolbar
+denizen-phone-ui.js        → Buzz phone — the only toolbar
 denizen-lazy-scripts.js    → mesh-jobs-panel, visitor-desktop-pairing, visitor-credits-chip, …
 ```
 
@@ -25,11 +25,11 @@ denizen-lazy-scripts.js    → mesh-jobs-panel, visitor-desktop-pairing, visitor
 | `mesh-jobs-panel.js` | `DenizenMeshJobs` | `#denizen-mesh-jobs-chip` / `#denizen-mesh-jobs-panel` | Fleet nodes, pending/running jobs, recent completions |
 | `mobile-sidebar.js` | `DenizenMobileSidebar` | `#denizen-mobile-drawer` | Full-screen drawer on touch devices |
 | `device-profile.js` | `DenizenDeviceProfile` | `<html>` classes | Phone / tablet / desktop detection + panel sizing |
-| `bottom-dock.js` | `DenizenBottomDock` | `#denizen-bottom-dock` | Hosts dock chips; re-parents panel triggers |
+| `denizen-phone-ui.js` | `DenizenPhoneUi` | `#denizen-phone-shell` | Phone HUD; opens every tool through its module API |
 
 ## visitor-node-ui.js
 
-Primary compute / credits / fleet UI. Fixed panel bottom-left (above the dock), collapsible with a restore tab.
+Primary compute / credits / fleet UI. Fixed panel bottom-left, collapsible with a restore tab.
 
 **Data sources:** `/api/compute/node/status`, `/api/desktop/capabilities/sync`, visitor session APIs.
 
@@ -75,7 +75,7 @@ Operational view of the compute mesh. Polls `/api/compute/node/status` (public) 
 | Method | Example |
 |--------|---------|
 | URL query | `?mesh=1` or `?mesh=open` (auto-opens on init) |
-| Bottom dock | Tap **⬡** (`#denizen-mesh-jobs-chip`) |
+| Phone | **Power Grid** app (badge = waiting + running jobs) |
 | Console | `DenizenMeshJobs.show()` / `.toggle()` / `.hide()` |
 
 Panel lists pending/running jobs, recent completions, and fleet CPU/RAM. Chip color reflects idle vs busy.
@@ -94,7 +94,7 @@ Detects touch vs desktop and sets `<html>` classes:
 
 Sets CSS variables: `--denizen-short-edge`, `--denizen-long-edge`, `--denizen-panel-max-width`.
 
-**Phone panel shell:** on `denizen-touch.denizen-phone`, full-screen panels (`#denizen-mesh-jobs-panel`, LLM telemetry, proposals, diag, browser mirror) get inset safe-area positioning and the bottom dock slides away while a panel is open.
+**Phone panel shell:** on `denizen-touch.denizen-phone`, full-screen panels (`#denizen-mesh-jobs-panel`, LLM telemetry, proposals, diag, browser mirror) get inset safe-area positioning.
 
 Dispatches `denizen-device-profile-change` on resize/orientation change.
 
@@ -107,27 +107,30 @@ Touch-only drawer (`denizen-mobile-drawer-mode` on `<html>`):
 - **Relocates** `#denizen-account-panel` and `#denizen-node-ui-chip` into the drawer body
 - Hides floating credits chip and node-ui restore tab while drawer mode is active
 
-Phones use a shorter dock (`--denizen-dock-height: 34px`) and compact chips.
+## denizen-phone-ui.js — apps
 
-## bottom-dock.js — chips
+The phone is the only toolbar (the old `bottom-dock.js` is gone). Each app in
+`APPS` calls its tool module's public API — nothing clicks hidden chips:
 
-Unified bottom toolbar. Desktop layout: status chips left · chat center · voice/tools right. Touch layout: horizontal scroll, mic/voice beside chat.
+| App | Module API |
+|-----|------------|
+| Chat | `__DenizenPlayerChat.open()` / `.close()` |
+| Voice | `DenizenVoiceSession` / `DenizenVoiceCallUi` / `DenizenVoiceInput` |
+| Walk-up | `DenizenTogglePresence()` |
+| Listen-in | `DenizenProximityAudio.cycleFromUi()` / `.getAudioMode()` |
+| Health | `DenizenDiag.show()` / `.hide()` |
+| LM Stats | `DenizenLlmTelemetry.show()` / `.hide()` |
+| Power Grid | `DenizenMeshJobs.show()` / `.hide()` / `.badgeCount()` |
+| Approvals | `DenizenProposals.show()` / `.hide()` / `.pendingCount()` |
+| Newsroom | `DenizenContentPipelinePanel.show()` / `.hide()` / `.activeCount()` |
+| Browser | `DenizenBrowserMirror.show()` / `.hide()` |
+| Security | `DenizenSecurityFeed.show()` / `.hide()` |
+| Office Tour | `DenizenVisitorOnboarding.replay()` |
 
-| Chip ID | Icon | Panel / action |
-|---------|------|----------------|
-| `denizen-onboarding-replay-chip` | (dynamic) | Replay onboarding |
-| `denizen-audio-mode-chip` | 🔊 | Audio mode |
-| `denizen-diag-chip` | (dynamic) | Diagnostics panel |
-| `denizen-security-chip` | 🛡️ | Security feed |
-| `denizen-mesh-jobs-chip` | ⬡ | Mesh jobs panel |
-| `denizen-llm-tel-chip` | ⚙ | LM telemetry |
-| `player-chat-fab` | 💬 | Player chat |
-| `denizen-presence-chip` | 👤 | Presence |
-| `denizen-browser-mirror-chip` | 🌐 | Browser mirror |
-| `denizen-proposals-chip` | 📋 | Proposals |
-| `denizen-mic-button` | 🎤 | Voice input |
-
-`DenizenBottomDock.refresh()` re-slots chips when lazy scripts inject new elements.
+The tool modules still create their toggle chips (`#player-chat-fab`,
+`#denizen-mic-button`, `#denizen-diag-chip`, …); phone mode hides them. With
+`?phonemode=0` (debug only) the phone is skipped and those chips show at their
+own fallback positions.
 
 ## Mobile vs desktop behavior
 
@@ -136,9 +139,8 @@ Unified bottom toolbar. Desktop layout: status chips left · chat center · voic
 | Account panel | Fixed top-right | Inside drawer **Profile** tab |
 | Compute panel (`DenizenNodeUI`) | Fixed bottom-left | Inside drawer **Compute** tab |
 | Credits chip | Bottom-left pill | Hidden; credits in drawer subtitle |
-| Mesh jobs | Dock **⬡** → floating panel | Full-screen inset panel; dock hidden while open |
+| Mesh jobs | Phone **Power Grid** → panel inside the phone | Same, inside the phone screen |
 | Pairing modal | Centered modal | Same modal; safe-area aware |
-| Bottom dock | Three groups, 56px | Compact scroll row, 34px on phone |
 | Panel max width | ~580px | Phone: up to ~440px; tablet: ~540px |
 
 ## Related docs

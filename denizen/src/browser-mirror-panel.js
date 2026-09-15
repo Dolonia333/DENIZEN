@@ -324,13 +324,6 @@
         max-height: 72px;
         margin-top: 6px;
       }
-      html.denizen-touch.denizen-phone.denizen-browser-open #denizen-bottom-dock,
-      html.denizen-touch.denizen-phone.denizen-drawer-open #denizen-bottom-dock {
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(110%);
-        transition: transform 0.2s ease, opacity 0.2s ease;
-      }
       #${PANEL_ID} .bm-close {
         min-width: 44px;
         min-height: 44px;
@@ -447,10 +440,7 @@
       chipEl.style.borderColor = '#355';
       label = touch ? '' : 'browser';
     }
-    globalThis.DenizenBottomDock?.renderChip?.('denizen-browser-mirror-chip', label, { iconOnly: touch });
-    if (!globalThis.DenizenBottomDock?.renderChip) {
-      chipEl.textContent = touch ? '🌐' : `🌐 ${label}`;
-    }
+    chipEl.textContent = touch ? '🌐' : `🌐 ${label}`;
   }
 
   function syncChipAccess() {
@@ -466,8 +456,7 @@
       chipEl.style.background = '#1e293b';
       chipEl.style.borderColor = '#475569';
       chipEl.style.color = '#64748b';
-      globalThis.DenizenBottomDock?.renderChip?.('denizen-browser-mirror-chip', 'browser', { iconOnly: true });
-      if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '🌐 browser';
+      chipEl.textContent = '🌐 browser';
       return;
     }
     boundNpcKey = resolveBoundNpcKey();
@@ -539,14 +528,12 @@
     chipEl = document.createElement('button');
     chipEl.id = CHIP_ID;
     chipEl.type = 'button';
-    chipEl.className = 'denizen-dock-chip';
     Object.assign(chipEl.style, {
       background: '#0f172a', color: '#cfe7ff', border: '1px solid #355',
       cursor: 'pointer',
     });
     boundNpcKey = resolveBoundNpcKey();
-    globalThis.DenizenBottomDock?.renderChip?.(CHIP_ID, 'browser');
-    if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '🌐 browser';
+    chipEl.textContent = '🌐 browser';
     document.body.appendChild(chipEl);
     rewireTouch();
 
@@ -1288,7 +1275,6 @@
     buildUI();
     syncChipAccess();
     rewireTouch();
-    window.DenizenBottomDock?.refresh?.();
     const next = resolveBoundNpcKey();
     if (next !== boundNpcKey) {
       boundNpcKey = next;

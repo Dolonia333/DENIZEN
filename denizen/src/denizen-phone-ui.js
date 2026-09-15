@@ -1,13 +1,13 @@
 /**
  * Denizen OS — the in-game smartphone HUD.
  *
- * Replaces the bottom dock with a concept phone: hardware frame (side buttons,
+ * The only toolbar: a concept phone with hardware frame (side buttons,
  * punch-hole camera, speaker), live status bar (clock / signal / wifi / real
  * battery), boot splash, wallpaper home screen with clock widget, gradient app
  * icons with notification badges + live state dots, favorites dock, and a
- * native Settings app. Apps proxy the legacy dock chips' click handlers, so
- * every tool keeps its existing logic untouched; panel apps render their
- * panels INSIDE the phone screen via geometry overrides keyed off
+ * native Settings app. Apps call each tool module's public API (open/close/run
+ * in APPS), so every tool keeps its existing logic untouched; panel apps
+ * render their panels INSIDE the phone screen via geometry overrides keyed off
  * html[data-denizen-phone-app].
  *
  * - Lazy tools: tapping an app whose script hasn't loaded shows an in-phone
@@ -18,7 +18,8 @@
  * - Long-press any app (or tap Edit) to rearrange apps, group into folders, and set the
  *   4-slot dock (default: Chat, Voice, Profile, NPC Team). Layout persists in
  *   localStorage (`denizen-phone-layout`).
- * - Escape hatch: load with ?phonemode=0 to restore the legacy bottom dock.
+ * - Debug switch: ?phonemode=0 skips the phone entirely. There is no other
+ *   toolbar — the tool modules' own chips show at their fallback positions.
  */
 (function () {
   'use strict';
@@ -70,36 +71,50 @@
   // type 'internal' : renders its own screen inside the phone (Settings, Link Station, …)
   // type 'navigate' : leave the phone and open a full Denizen page (CRM at /crm/)
   // c: [light, dark] icon tile gradient; dock placement comes from saved home layout
+  // Every tool is driven through its owning module's public API (open/close
+  // for panels, run for actions/launches). `ready` says the module has
+  // mounted; without it, the app's panel existing in the DOM counts as ready.
   const APPS = [
-    { id: 'chat', tabler: 'messages', icon: '💬', label: 'Chat', type: 'panel', trigger: '#player-chat-fab', panel: '#player-chat-panel',
+    { id: 'chat', tabler: 'messages', icon: '💬', label: 'Chat', type: 'panel', panel: '#player-chat-panel',
       c: ['#60a5fa', '#1d4ed8'],
+      ready: () => !!window.__DenizenPlayerChat,
       open: () => window.__DenizenPlayerChat?.open?.(), close: () => window.__DenizenPlayerChat?.close?.() },
-    { id: 'voice', tabler: 'microphone', icon: '🎤', label: 'Voice', type: 'action', trigger: '#denizen-mic-button',
+    { id: 'voice', tabler: 'microphone', icon: '🎤', label: 'Voice', type: 'action',
       c: ['#f87171', '#b91c1c'],
+      ready: () => !!window.DenizenVoiceInput,
       toastOn: 'Microphone toggled', stateDot: () => null },
-    { id: 'presence', tabler: 'user', icon: '👤', label: 'Walk-up', type: 'action', trigger: '#denizen-presence-chip',
+    { id: 'presence', tabler: 'user', icon: '👤', label: 'Walk-up', type: 'action',
       c: ['#fbbf24', '#b45309'],
+      ready: () => typeof window.DenizenTogglePresence === 'function',
+      run: () => { window.DenizenHaptics?.tap?.(); window.DenizenTogglePresence(); },
       stateDot: () => !!window.DenizenPresence?.zionPresent,
       stateText: () => (window.DenizenPresence?.zionPresent ? 'voice on' : 'voice off') },
-    { id: 'listen', tabler: 'volume', icon: '🔊', label: 'Listen-in', type: 'action', trigger: '#denizen-audio-mode-chip',
+    { id: 'listen', tabler: 'volume', icon: '🔊', label: 'Listen-in', type: 'action',
       c: ['#a78bfa', '#6d28d9'],
+      ready: () => !!window.DenizenProximityAudio,
+      run: () => window.DenizenProximityAudio.cycleFromUi(),
       stateText: () => {
-        const m = document.getElementById('denizen-audio-mode-chip')?.dataset?.mode;
+        const m = window.DenizenProximityAudio?.getAudioMode?.();
         return m === 'focus' ? 'focus' : m === 'mute-all' ? 'muted' : m ? 'listen-in' : '';
       },
       stateDot: () => {
-        const m = document.getElementById('denizen-audio-mode-chip')?.dataset?.mode;
+        const m = window.DenizenProximityAudio?.getAudioMode?.();
         return m ? m !== 'mute-all' : null;
       } },
-    { id: 'health', tabler: 'stethoscope', icon: '🩺', label: 'Health', type: 'panel', trigger: '#denizen-diag-chip', panel: '#denizen-diag-panel',
+    { id: 'health', tabler: 'stethoscope', icon: '🩺', label: 'Health', type: 'panel', panel: '#denizen-diag-panel',
       c: ['#34d399', '#047857'],
       open: () => window.DenizenDiag?.show?.(), close: () => window.DenizenDiag?.hide?.() },
-    { id: 'lm', tabler: 'chart-dots', icon: '📊', label: 'LM Stats', type: 'panel', trigger: '#denizen-llm-tel-chip', panel: '#denizen-llm-tel-panel',
-      c: ['#22d3ee', '#0e7490'] },
-    { id: 'mesh', tabler: 'hexagon', icon: '⬡', label: 'Power Grid', type: 'panel', trigger: '#denizen-mesh-jobs-chip', panel: '#denizen-mesh-jobs-panel',
-      c: ['#818cf8', '#3730a3'], badgeFrom: '#denizen-mesh-jobs-chip' },
-    { id: 'approvals', tabler: 'clipboard-list', icon: '📋', label: 'Approvals', type: 'panel', trigger: '#denizen-proposals-chip', panel: '#denizen-proposals-panel',
-      c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip',
+    { id: 'lm', tabler: 'chart-dots', icon: '📊', label: 'LM Stats', type: 'panel', panel: '#denizen-llm-tel-panel',
+      c: ['#22d3ee', '#0e7490'],
+      open: () => window.DenizenLlmTelemetry?.show?.(), close: () => window.DenizenLlmTelemetry?.hide?.() },
+    { id: 'mesh', tabler: 'hexagon', icon: '⬡', label: 'Power Grid', type: 'panel', panel: '#denizen-mesh-jobs-panel',
+      c: ['#818cf8', '#3730a3'],
+      badge: () => globalThis.DenizenMeshJobs?.badgeCount?.() || 0,
+      open: () => globalThis.DenizenMeshJobs?.show?.(), close: () => globalThis.DenizenMeshJobs?.hide?.() },
+    { id: 'approvals', tabler: 'clipboard-list', icon: '📋', label: 'Approvals', type: 'panel', panel: '#denizen-proposals-panel',
+      c: ['#fb923c', '#c2410c'],
+      ready: () => !!window.DenizenProposals,
+      badge: () => window.DenizenProposals?.pendingCount?.() || 0,
       open: () => window.DenizenProposals?.show?.(),
       close: () => window.DenizenProposals?.hide?.(),
       available: () => {
@@ -108,21 +123,27 @@
         if (sess.isCeoPrincipal?.() || sess.getProfile?.()?.canApproveSkills) return true;
         return !!sess.getIdentityId?.();
       } },
-    { id: 'newsroom', tabler: 'news', icon: '📰', label: 'Newsroom', type: 'panel', trigger: '#denizen-content-pipeline-chip', panel: '#denizen-content-pipeline-panel',
-      c: ['#f97316', '#c2410c'], badgeFrom: '#denizen-content-pipeline-chip', available: () => true },
+    { id: 'newsroom', tabler: 'news', icon: '📰', label: 'Newsroom', type: 'panel', panel: '#denizen-content-pipeline-panel',
+      c: ['#f97316', '#c2410c'], available: () => true,
+      badge: () => globalThis.DenizenContentPipelinePanel?.activeCount?.() || 0,
+      open: () => globalThis.DenizenContentPipelinePanel?.show?.(),
+      close: () => globalThis.DenizenContentPipelinePanel?.hide?.() },
     { id: 'npcteam', tabler: 'building', icon: '🏢', label: 'Office Team', type: 'panel', panel: '#denizen-npc-team-panel',
       c: ['#f472b6', '#9d174d'],
+      ready: () => !!window.DenizenVisitorNpcTeamUI,
       open: () => window.DenizenVisitorNpcTeamUI?.show?.(), close: () => window.DenizenVisitorNpcTeamUI?.hide?.(),
       available: () => true },
     { id: 'workflow', tabler: 'tools', icon: '🛠️', label: 'Office Build', type: 'internal', c: ['#e94560', '#9f1239'],
       available: () => isOfficeBuilderAllowed() },
-    { id: 'browser', tabler: 'world-www', icon: '🌐', label: 'Browser', type: 'panel', trigger: '#denizen-browser-mirror-chip', panel: '#denizen-browser-mirror-panel',
+    { id: 'browser', tabler: 'world-www', icon: '🌐', label: 'Browser', type: 'panel', panel: '#denizen-browser-mirror-panel',
       c: ['#38bdf8', '#0369a1'],
       available: () => true,
+      ready: () => !!window.DenizenBrowserMirror,
       open: () => { ensureBrowserMirrorReady().catch(() => {}); },
       close: () => window.DenizenBrowserMirror?.hide?.() },
-    { id: 'security', tabler: 'shield', icon: '🛡️', label: 'Security', type: 'panel', trigger: '#denizen-security-chip', panel: '#denizen-security-feed',
-      c: ['#f87171', '#7f1d1d'] },
+    { id: 'security', tabler: 'shield', icon: '🛡️', label: 'Security', type: 'panel', panel: '#denizen-security-feed',
+      c: ['#f87171', '#7f1d1d'],
+      open: () => window.DenizenSecurityFeed?.show?.(), close: () => window.DenizenSecurityFeed?.hide?.() },
     { id: 'profile', tabler: 'id-badge-2', icon: '🪪', label: 'Citizen ID', type: 'special-profile', c: ['#2dd4bf', '#0f766e'] },
     { id: 'station', tabler: 'device-desktop', icon: '🖥️', label: 'Link Station', type: 'internal', c: ['#4ade80', '#15803d'],
       stateDot: () => {
@@ -141,14 +162,13 @@
       } },
     { id: 'compute', tabler: 'bolt', icon: '💠', label: 'City Power', type: 'special-compute', c: ['#c084fc', '#7e22ce'] },
     { id: 'tour', tabler: 'book', icon: '📖', label: 'Office Tour', type: 'launch',
-      trigger: '#denizen-onboarding-replay-chip',
       c: ['#67e8f9', '#155e75'],
-      // Buzz's branded office tour — don't depend only on a dock chip existing in the DOM.
+      // Buzz's branded office tour.
+      ready: () => typeof globalThis.DenizenVisitorOnboarding?.replay === 'function',
+      run: () => globalThis.DenizenVisitorOnboarding.replay(),
       available: () => {
         if (globalThis.DenizenVisitorSession?.isCeoPrincipal?.()) return false;
-        return typeof globalThis.DenizenVisitorOnboarding?.replay === 'function'
-          || !!document.getElementById('denizen-onboarding-replay-chip')
-          || !scriptsSettled;
+        return typeof globalThis.DenizenVisitorOnboarding?.replay === 'function' || !scriptsSettled;
       },
     },
     // Discord Spaces + CRM sit high so they’re on the first home page (not
@@ -161,6 +181,7 @@
       available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
       c: ['#34d399', '#047857'],
+      ready: () => !!window.DenizenMarketPanel,
       open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
       available: () => true },
     { id: 'settings', tabler: 'settings', icon: '⚙️', label: 'Settings', type: 'internal', c: ['#94a3b8', '#334155'] },
@@ -226,6 +247,23 @@
     });
     paintPhoneFab();
   }
+
+  // Toggle chips the tool modules still create for ?phonemode=0. Phone mode
+  // hides them; nothing in the phone reads or clicks them.
+  const LEGACY_CHIP_IDS = [
+    'player-chat-fab',
+    'denizen-mic-button',
+    'denizen-presence-chip',
+    'denizen-audio-mode-chip',
+    'denizen-diag-chip',
+    'denizen-llm-tel-chip',
+    'denizen-mesh-jobs-chip',
+    'denizen-proposals-chip',
+    'denizen-content-pipeline-chip',
+    'denizen-browser-mirror-chip',
+    'denizen-security-chip',
+    'denizen-onboarding-replay-chip',
+  ];
 
   // Panel ids that get geometry overrides (per app id)
   const PANEL_FOR_APP = {
@@ -500,19 +538,23 @@
     return r.width > 0 && r.height > 0;
   }
 
-  function chipBadgeCount(sel) {
-    const el = $(sel);
-    if (!el) return 0;
-    const m = `${el.textContent || ''} ${el.title || ''}`.match(/\d+/);
-    return m ? Math.min(99, parseInt(m[0], 10)) : 0;
+  /** The owning module has mounted (its API or its panel exists). */
+  function appReady(app) {
+    if (typeof app.ready === 'function') return !!app.ready();
+    return !!(app.panel && $(app.panel));
+  }
+
+  /** Apps whose module loads lazily and may not have mounted yet. */
+  function appNeedsModule(app) {
+    return app.type === 'panel' || app.type === 'action' || app.type === 'launch';
   }
 
   function appAvailable(app) {
     if (typeof app.available === 'function') return !!app.available();
-    if (app.type === 'internal' || app.type === 'navigate' || app.type === 'special-profile' || app.type === 'special-compute') return true;
-    if ($(app.trigger) || (app.panel && $(app.panel))) return true;
+    if (!appNeedsModule(app)) return true;
+    if (appReady(app)) return true;
     // Until lazy scripts settle, assume the tool is still on its way; gated
-    // apps (role-dependent chips) hide once we know they're not coming.
+    // apps (role-dependent panels) hide once we know they're not coming.
     return !scriptsSettled;
   }
 
@@ -523,7 +565,7 @@
     return !!sess.getIdentityId?.();
   }
 
-  const BROWSER_MIRROR_SRC = './src/browser-mirror-panel.js?v=lucymirror6';
+  const BROWSER_MIRROR_SRC = './src/browser-mirror-panel.js?v=nodock1';
 
   function browserMirrorScriptUrl() {
     const tagged = document.querySelector('script[src*="browser-mirror-panel"]');
@@ -732,8 +774,9 @@
     const s = document.createElement('style');
     s.id = STYLE_ID;
     s.textContent = `
-      /* The dock and standalone HUD cards retire in phone mode */
-      ${M} #denizen-bottom-dock { display: none !important; }
+      /* Legacy toolbar chips and standalone HUD cards retire in phone mode —
+         the phone drives each tool through its module API instead. */
+      ${M} :is(${LEGACY_CHIP_IDS.map((id) => `#${id}`).join(', ')}) { display: none !important; }
       ${M}.denizen-desktop #denizen-account-panel,
       ${M}.denizen-desktop #denizen-node-ui-chip,
       ${M}.denizen-desktop #denizen-node-ui-restore,
@@ -1945,11 +1988,6 @@
         visibility: hidden !important;
         pointer-events: none !important;
       }
-      ${M} #player-chat-fab,
-      ${M} #denizen-bottom-dock #player-chat-fab,
-      ${M} #denizen-proposals-chip {
-        display: none !important;
-      }
 
       /* ---- Panel containment: each app's panel renders inside the screen ---- */
       ${Object.entries(PANEL_FOR_APP).filter(([id]) => id !== 'profile' && id !== 'compute').map(([app, sel]) =>
@@ -2960,8 +2998,7 @@
       const statusCell = btn.querySelector('.dzp-app-status');
       if (statusCell) {
         if (app.stateText) statusCell.textContent = app.stateText() || '';
-        else if (app.trigger && !$(app.trigger) && !scriptsSettled
-          && app.type !== 'special-profile' && app.type !== 'special-compute' && app.type !== 'internal') {
+        else if (appNeedsModule(app) && !appReady(app) && !scriptsSettled) {
           statusCell.textContent = 'loading…';
         } else statusCell.textContent = '';
       }
@@ -2972,8 +3009,8 @@
         btn.classList.toggle('dot-off', v === false);
       }
 
-      if (app.badgeFrom) {
-        const n = chipBadgeCount(app.badgeFrom);
+      if (app.badge) {
+        const n = Math.min(99, Math.max(0, Number(app.badge()) || 0));
         btn.classList.toggle('has-badge', n > 0);
         const b = btn.querySelector('.dzp-badge');
         if (b) b.textContent = n > 9 ? '9+' : String(n);
@@ -3116,10 +3153,10 @@
     }
 
     // Tool not loaded yet? Kick the lazy loader and wait for it right here.
-    if (!$(app.panel) && !$(app.trigger)) {
+    if (!appReady(app)) {
       showPlaceholder(`Loading ${app.label}…`);
       kickLazyLoad();
-      const ok = await waitFor(() => $(app.panel) || $(app.trigger), 12_000);
+      const ok = await waitFor(() => appReady(app), 12_000);
       if (token !== loadingToken || currentApp?.id !== app.id) return;
       if (!ok) {
         showPlaceholder(`${app.label} isn't available for this account.`, true);
@@ -3129,10 +3166,7 @@
       hidePlaceholder();
     }
 
-    if (!panelVisible(app.panel)) {
-      if (app.open) app.open();
-      else if (app.trigger) $(app.trigger)?.click();
-    }
+    if (!panelVisible(app.panel)) app.open?.();
     // Some panels open asynchronously — give them a beat before judging.
     if (!panelVisible(app.panel)) {
       showPlaceholder(`Opening ${app.label}…`);
@@ -3183,15 +3217,13 @@
       setTimeout(refreshAppStatuses, 200);
       return;
     }
-    let trigger = $(app.trigger);
-    if (!trigger) {
+    if (!appReady(app)) {
       showToast(`Loading ${app.label}…`);
       kickLazyLoad();
-      await waitFor(() => $(app.trigger), 10_000);
-      trigger = $(app.trigger);
-      if (!trigger) { showToast(`${app.label} isn't available right now`); return; }
+      await waitFor(() => appReady(app), 10_000);
+      if (!appReady(app)) { showToast(`${app.label} isn't available right now`); return; }
     }
-    trigger.click();
+    app.run();
     setTimeout(() => {
       refreshAppStatuses();
       const txt = app.stateText?.();
@@ -3200,39 +3232,20 @@
   }
 
   async function runLaunchApp(app) {
-    // Office Tour = Buzz's branded overlay ("Hey — I work here too"). Call the API
-    // directly so the app still works if the dock replay chip never mounted.
-    if (app.id === 'tour') {
-      closePhoneFromUi();
-      setTimeout(() => {
-        const replay = globalThis.DenizenVisitorOnboarding?.replay;
-        if (typeof replay === 'function') {
-          const ok = replay.call(globalThis.DenizenVisitorOnboarding);
-          if (ok !== false) {
-            showToast("Buzz's Office Tour");
-            return;
-          }
-        }
-        const trigger = $(app.trigger);
-        if (trigger) {
-          trigger.click();
-          return;
-        }
-        showToast('Office Tour is loading — open the phone again in a moment');
-      }, 180);
-      return;
-    }
-
-    let trigger = $(app.trigger);
-    if (!trigger) {
+    // Launch apps (Buzz's Office Tour) take over the screen, so the phone
+    // closes first and the tool starts once it has slid away.
+    if (!appReady(app)) {
       showToast(`Loading ${app.label}…`);
       kickLazyLoad();
-      await waitFor(() => $(app.trigger), 8_000);
-      trigger = $(app.trigger);
-      if (!trigger) { showToast(`${app.label} isn't available for this account`); return; }
+      await waitFor(() => appReady(app), 8_000);
+      if (!appReady(app)) { showToast(`${app.label} isn't available for this account`); return; }
     }
     closePhoneFromUi();
-    setTimeout(() => trigger.click(), 180);
+    setTimeout(() => {
+      const started = app.run() !== false;
+      if (app.id !== 'tour') return;
+      showToast(started ? "Buzz's Office Tour" : 'Office Tour is loading — open the phone again in a moment');
+    }, 180);
   }
 
   async function runNavigateApp(app) {
@@ -3359,13 +3372,6 @@
         <div id="dzp-mcp-settings-host"><p class="v">Loading…</p></div>
       </div>
       <div class="sec">
-        <h3>Interface</h3>
-        <div class="row">
-          <span>Classic toolbar<br><span class="v">Reload with the legacy bottom dock</span></span>
-          <button type="button" data-act="legacy">Switch</button>
-        </div>
-      </div>
-      <div class="sec">
         <h3>Help</h3>
         <div class="row">
           <span>Buzz's Office Tour<br><span class="v">Walk the floor with your office key</span></span>
@@ -3376,13 +3382,7 @@
     void loadPhoneMcpSettings();
     const onAct = (e) => {
       const act = e.target?.closest?.('[data-act]')?.dataset?.act;
-      if (act === 'legacy') {
-        try {
-          const u = new URL(window.location.href);
-          u.searchParams.set('phonemode', '0');
-          window.location.href = u.toString();
-        } catch (_) {}
-      } else if (act === 'edit-home') {
+      if (act === 'edit-home') {
         goHome(true);
         enterEditMode();
       } else if (act === 'reset-home') {
@@ -3441,10 +3441,7 @@
     if (!currentApp) return;
     const app = currentApp;
     if (alsoClosePanel) {
-      if (app.type === 'panel' && panelVisible(app.panel)) {
-        if (app.close) app.close();
-        if (panelVisible(app.panel)) $(app.trigger)?.click();
-      }
+      if (app.type === 'panel' && panelVisible(app.panel)) app.close?.();
       if (app.type === 'special-compute' && isDesktop()) {
         globalThis.DenizenNodeUI?.hidePanel?.({ persist: false });
       }
@@ -3621,7 +3618,8 @@
     buildFab();
     prefetchCrmBundle();
     maybeOpenPhoneFromQuery();
-    // The hidden dock no longer takes vertical space — reclaim it for the game.
+    // No bottom toolbar in phone mode — panels that offset by the old dock
+    // height (var fallbacks of 40–56px) sit flush with the bottom instead.
     document.documentElement.style.setProperty('--denizen-dock-height', '0px');
 
     document.addEventListener('denizen-deferred-scripts-ready', () => {

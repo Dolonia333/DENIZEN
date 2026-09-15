@@ -11,6 +11,7 @@
   let panelEl = null;
   let open = false;
   let pollTimer = null;
+  let activeCount = 0;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -235,12 +236,11 @@
     try {
       const summary = await fetchSummary();
       render(summary);
+      activeCount = Number(summary.active || 0);
       const chip = document.getElementById(CHIP_ID);
       if (chip) {
-        const n = Number(summary.active || 0);
-        const touch = document.documentElement.classList.contains('denizen-touch');
-        globalThis.DenizenBottomDock?.renderChip?.(CHIP_ID, n > 0 ? String(n) : 'Newsroom', { iconOnly: touch && n === 0 });
-        if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = n > 0 ? `📰 ${n}` : '📰';
+        const n = activeCount;
+        chip.textContent = n > 0 ? `📰 ${n}` : '📰';
         chip.dataset.badge = n > 0 ? String(n) : '';
       }
     } catch (_) {
@@ -251,7 +251,11 @@
   }
 
   function toggle() {
-    open = !open;
+    setOpen(!open);
+  }
+
+  function setOpen(next) {
+    open = !!next;
     document.documentElement.classList.toggle('denizen-content-pipeline-open', open);
     if (panelEl) {
       panelEl.classList.toggle('open', open);
@@ -271,12 +275,9 @@
     chip.id = CHIP_ID;
     chip.type = 'button';
     chip.title = 'Newsroom content pipeline';
-    globalThis.DenizenBottomDock?.renderChip?.(CHIP_ID, 'Newsroom');
-    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = '📰';
-    chip.classList.add('denizen-dock-chip');
+    chip.textContent = '📰';
     chip.addEventListener('click', toggle);
     document.body.appendChild(chip);
-    globalThis.DenizenBottomDock?.refresh?.();
   }
 
   function init() {
@@ -292,14 +293,23 @@
     refresh();
     if (!pollTimer) {
       pollTimer = setInterval(() => {
-        if (open || Number(document.getElementById(CHIP_ID)?.dataset?.badge || 0) > 0) {
+        if (open || activeCount > 0) {
           refresh();
         }
       }, 5000);
     }
   }
 
-  globalThis.DenizenContentPipelinePanel = { init, refresh, toggle };
+  globalThis.DenizenContentPipelinePanel = {
+    init,
+    refresh,
+    toggle,
+    show: () => setOpen(true),
+    hide: () => setOpen(false),
+    isOpen: () => open,
+    /** Running pipelines — the phone's Newsroom badge. */
+    activeCount: () => activeCount,
+  };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

@@ -80,8 +80,7 @@
       cursor: 'pointer', maxWidth: '300px',
     });
     chip.title = 'Click to expand office diagnostics';
-    globalThis.DenizenBottomDock?.renderChip?.('denizen-diag-chip', 'diag');
-    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = '⋯ diag';
+    chip.textContent = '⋯ diag';
     const bind = window.DenizenTouchBind?.bindPress;
     if (bind) bind(chip, togglePanel);
     else chip.addEventListener('click', togglePanel);
@@ -287,9 +286,10 @@
   }
 
   window.DenizenDiag = {
-    show() { panelOpen = true; if (panel) panel.style.display = 'block'; renderPanel(); },
-    hide() { panelOpen = false; if (panel) panel.style.display = 'none'; },
+    show: () => setPanelOpen(true),
+    hide: () => setPanelOpen(false),
     toggle: togglePanel,
+    isOpen: () => panelOpen,
     snapshot: () => lastSnapshot,
     refresh: pollOnce,
   };

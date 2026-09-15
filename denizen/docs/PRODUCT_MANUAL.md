@@ -66,7 +66,7 @@ persona ("soul"), memory, and goals.
 Tap the **📱 button** to open the in-world phone — a concept "Denizen OS" home
 screen with apps for Chat, the CRM, Compute, Profile, Settings, and more. Apps
 open as panels; favorites sit in the dock. Use it as the fast way to reach any
-tool without hunting the toolbar. (Legacy toolbar: add `?phonemode=0` to the URL.)
+tool — it replaced the old bottom toolbar.
 
 ---
 

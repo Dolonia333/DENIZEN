@@ -64,16 +64,6 @@
         --denizen-dock-height: 34px;
         --denizen-play-gap: 0px;
       }
-      html.denizen-mobile-drawer-mode.denizen-phone #denizen-bottom-dock .denizen-dock-chip,
-      html.denizen-mobile-drawer-mode.denizen-phone #denizen-bottom-dock #player-chat-fab,
-      html.denizen-mobile-drawer-mode.denizen-phone #denizen-bottom-dock #denizen-mic-button {
-        min-height: 34px !important;
-        min-width: 34px !important;
-        max-width: 40px !important;
-        padding: 4px 6px !important;
-        font-size: 15px !important;
-      }
-
       html.denizen-mobile-drawer-mode #denizen-visitor-credits-chip,
       html.denizen-mobile-drawer-mode #denizen-node-ui-restore {
         display: none !important;
@@ -418,9 +408,6 @@
         color: #94a3b8;
         font-size: 11px;
         margin-top: 10px;
-      }
-      html.denizen-drawer-open #denizen-bottom-dock .denizen-dock-scroll {
-        pointer-events: none;
       }
 
       /* Small phones — short landscape viewport (iPhone SE, mini, etc.) */

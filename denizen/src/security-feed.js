@@ -158,10 +158,8 @@
     chip = document.createElement('button');
     chip.id = CHIP_ID;
     chip.type = 'button';
-    chip.className = 'denizen-dock-chip';
     chip.title = 'Bouncer security feed';
-    globalThis.DenizenBottomDock?.renderChip?.('denizen-security-chip', 'Security');
-    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = '🛡️';
+    chip.textContent = '🛡️';
     const toggle = () => setOpen(!open);
     if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(chip, toggle);
     else chip.addEventListener('click', toggle);
