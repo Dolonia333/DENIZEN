@@ -74,7 +74,11 @@ const STUDIO_BOARD_TOOL_DEFINITIONS = [
         status: { type: 'string', description: 'Pipeline stage id' },
         priority: { type: 'string', description: 'e.g. low|normal|high' },
         due: { type: 'string', description: 'YYYY-MM-DD' },
+        start: { type: 'string', description: 'YYYY-MM-DD timeline start' },
         notes: { type: 'string', description: 'Task notes' },
+        group_id: { type: 'string', description: 'Group id (active/backlog/custom)' },
+        fields: { type: 'object', description: 'Custom column values keyed by column id' },
+        blocked_by: { type: 'array', items: { type: 'string' }, description: 'Blocking task ids' },
       },
       required: ['title'],
     },
@@ -307,6 +311,96 @@ const STUDIO_BOARD_TOOL_DEFINITIONS = [
       },
     },
   },
+  {
+    name: 'studio_board_list_columns',
+    description: 'List custom columns and groups on the Studio Board.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'studio_board_upsert_column',
+    description: 'Create or update a custom column (type: status|person|date|number|dropdown|checkbox|link|file|formula).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        type: { type: 'string' },
+        options: { type: 'array', items: { type: 'string' } },
+        formula: { type: 'string' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'studio_board_set_field',
+    description: 'Set a custom field value on a task (column_id + value).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Task id' },
+        column_id: { type: 'string' },
+        value: {},
+      },
+      required: ['id', 'column_id'],
+    },
+  },
+  {
+    name: 'studio_board_set_dates',
+    description: 'Set task start and/or due dates (YYYY-MM-DD) for Timeline.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        start: { type: 'string' },
+        due: { type: 'string' },
+      },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'studio_board_set_blockers',
+    description: 'Set task blockers (blocked_by = array of task ids). Rejects cycles.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        blocked_by: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['id', 'blocked_by'],
+    },
+  },
+  {
+    name: 'studio_board_timeline',
+    description: 'READ-ONLY timeline window of tasks with start/due for Gantt planning.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        from: { type: 'string', description: 'YYYY-MM-DD start of window' },
+        days: { type: 'number', description: 'Window length (default 28)' },
+        include_done: { type: 'boolean' },
+      },
+    },
+  },
+  {
+    name: 'studio_board_list_automations',
+    description: 'List board automations (when/then rules).',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'studio_board_upsert_automation',
+    description: 'Create or update an automation rule (when status_changed/due_passed/field_changed → notify/move/set/comment/followup).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        enabled: { type: 'boolean' },
+        when: { type: 'object' },
+        then: { type: 'array', items: { type: 'object' } },
+      },
+      required: ['name'],
+    },
+  },
 ];
 
 function hasStudioBoardAccess(npcKey) {
@@ -405,7 +499,7 @@ async function callTool(scope, name, args = {}) {
     case 'studio_board_upsert_person':
       return boardMutations.upsertPerson(orgId, args || {}, identityId);
     case 'studio_board_delete_task':
-      return boardMutations.deleteTask(orgId, args || {}, identityId);
+      return boardMutations.deleteTask(orgId, args || {}, identityId, actor);
     case 'studio_board_delete_person':
       return boardMutations.deletePerson(orgId, args || {}, identityId);
     case 'studio_board_list_events':
@@ -432,6 +526,22 @@ async function callTool(scope, name, args = {}) {
       return boardMutations.standup(orgId, args || {});
     case 'studio_board_my_day':
       return boardMutations.myDay(orgId, args || {}, actor);
+    case 'studio_board_list_columns':
+      return boardMutations.listColumns(orgId);
+    case 'studio_board_upsert_column':
+      return boardMutations.upsertColumn(orgId, args || {}, identityId, actor);
+    case 'studio_board_set_field':
+      return boardMutations.setField(orgId, args || {}, identityId, actor);
+    case 'studio_board_set_dates':
+      return boardMutations.setDates(orgId, args || {}, identityId, actor);
+    case 'studio_board_set_blockers':
+      return boardMutations.setBlockers(orgId, args || {}, identityId, actor);
+    case 'studio_board_timeline':
+      return boardMutations.timeline(orgId, args || {});
+    case 'studio_board_list_automations':
+      return boardMutations.listAutomations(orgId);
+    case 'studio_board_upsert_automation':
+      return boardMutations.upsertAutomation(orgId, args || {}, identityId, actor);
     default:
       return { ok: false, error: `unknown studio board tool: ${name}` };
   }
