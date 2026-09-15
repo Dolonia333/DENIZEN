@@ -272,8 +272,12 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: pin the office view to the top — chat and panels use the space below */
+      /* Portrait: float the HQ map box mid-screen over the skyline.
+         When FLOOR LINE opens, pin back to the top so chat has room below. */
       html.denizen-touch.denizen-portrait body {
+        align-items: center;
+      }
+      html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: flex-start;
       }
 
