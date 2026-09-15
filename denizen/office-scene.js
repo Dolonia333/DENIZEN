@@ -188,6 +188,80 @@ function getPlayfieldDeviceProfile() {
   };
 }
 
+/*
+ * Crisp playfield. The canvas used to be a fixed 1280×720 buffer that CSS
+ * stretched to the container by a fractional factor (1301/1280 on a 1440×900
+ * screen, 1055/1280 on 1280×720), times a fractional camera zoom (2.75) — so
+ * world pixels landed on uneven device pixels and the pixel art shimmered.
+ * Now the buffer tracks #game-container's real size (× devicePixelRatio when
+ * affordable) and the camera zoom snaps to a whole number, so every world
+ * pixel is an integer block of device pixels. Framing is kept: the integer is
+ * chosen so the visible world width stays close to what the device-profile
+ * zoom showed on the old 1280-wide buffer.
+ *
+ * Off for the city (?world=full, full-world.js runs its own camera), the map
+ * editor (?editor) and the scripted cutscenes (?demo=investor|tour) — all
+ * built around the 1280-wide buffer — and with ?crisp=0 for comparison.
+ */
+const LEGACY_BUFFER_W = 1280;
+// Cap on buffer pixels (~1.6× the old 1280×720 draw cost). Above it, render
+// at CSS size and let the browser's pixelated upscale scale by DPR.
+const CRISP_MAX_BUFFER_PX = 1500000;
+
+function crispPlayfieldEnabled() {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('crisp') === '0') return false;
+    if (q.get('world') === 'full' || q.has('editor')) return false;
+    const demo = q.get('demo');
+    if (demo === 'investor' || demo === 'tour') return false;
+  } catch (_) {}
+  return true;
+}
+
+function crispBufferSize(cssW, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const scale = cssW * cssH * dpr * dpr <= CRISP_MAX_BUFFER_PX ? dpr : 1;
+  return { w: Math.max(160, Math.round(cssW * scale)), h: Math.max(90, Math.round(cssH * scale)) };
+}
+
+/** Whole-number zoom showing about as much world as `legacyZoom` did at 1280px. */
+function crispZoomFor(cam, legacyZoom) {
+  const targetWorldW = LEGACY_BUFFER_W / legacyZoom;
+  return Math.max(1, Math.round((cam?.width || LEGACY_BUFFER_W) / targetWorldW));
+}
+
+function playfieldCameraZoom(cam, profile) {
+  const legacy = playfieldZoomForProfile(profile);
+  return crispPlayfieldEnabled() ? crispZoomFor(cam, legacy) : legacy;
+}
+
+/** Keep the canvas buffer matched to the container; re-snap the camera. */
+function installCrispPlayfield(game) {
+  if (!crispPlayfieldEnabled()) return;
+  const container = document.getElementById('game-container');
+  if (!container || typeof ResizeObserver === 'undefined') return;
+  let raf = 0;
+  const apply = () => {
+    raf = 0;
+    if (!game?.scale) return;
+    // The canvas's own box (100% of the container's content box) — the
+    // container rect includes its 1px border, which made the buffer 2px too big.
+    const r = (game.canvas || container).getBoundingClientRect();
+    if (r.width < 50 || r.height < 50) return;
+    const { w, h } = crispBufferSize(r.width, r.height);
+    if (game.scale.width !== w || game.scale.height !== h) game.scale.resize(w, h);
+    try { game.scene.getScene('OfficeScene')?._applyPlayfieldCamera?.(); } catch (_) {}
+  };
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(apply); };
+  // Canvas CSS is 100% of the container, so resizing the buffer never resizes
+  // the container — no observer feedback loop.
+  new ResizeObserver(schedule).observe(container);
+  // Browser zoom changes devicePixelRatio without resizing the container.
+  window.addEventListener('resize', schedule, { passive: true });
+  schedule();
+}
+
 function playfieldZoomForProfile(profile) {
   const dp = globalThis.DenizenDeviceProfile;
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
@@ -210,7 +284,7 @@ class OfficeScene extends Phaser.Scene {
     if (!cam) return;
     // Scripted cutscenes (?demo=investor|tour) own the camera — don't fight them.
     if (this._agentManager?._demoMode) return;
-    cam.setZoom(playfieldZoomForProfile(getPlayfieldDeviceProfile()));
+    cam.setZoom(playfieldCameraZoom(cam, getPlayfieldDeviceProfile()));
     // Soft follow — hard-lock (1,1) + roundPixels made walking read as judder.
     if (this.player) {
       cam.startFollow(this.player, true, 0.16, 0.16);
@@ -849,7 +923,7 @@ class OfficeScene extends Phaser.Scene {
            cam.setBounds(zoneX - 32, zoneY - 32, zoneW + 64, zoneH + 64);
            const playProfile = getPlayfieldDeviceProfile();
            // Same tier zoom as the main office — do not force desktop to 1.0 (too far out).
-           cam.setZoom(playfieldZoomForProfile(playProfile));
+           cam.setZoom(playfieldCameraZoom(cam, playProfile));
            if (this.player) {
              cam.startFollow(this.player, true, 1, 1);
            } else {
@@ -4074,6 +4148,7 @@ function bootOfficeGame() {
   try {
     window.game = new Phaser.Game(config);
     console.log('[OfficeScene] Phaser.Game created', Phaser.VERSION, useCanvas ? 'CANVAS' : 'AUTO');
+    installCrispPlayfield(window.game);
     try { window.__DenizenChatBootstrap?.setLoadPct?.(1); } catch (_) {}
   } catch (err) {
     // WebGL can throw on some locked-down GPUs — retry pure Canvas.
@@ -4081,6 +4156,7 @@ function bootOfficeGame() {
       config.type = Phaser.CANVAS;
       window.game = new Phaser.Game(config);
       console.warn('[OfficeScene] WebGL failed; fell back to Canvas', err?.message || err);
+      installCrispPlayfield(window.game);
     } catch (err2) {
       showBootError(`Phaser.Game crashed: ${err2?.message || err2}`);
     }
