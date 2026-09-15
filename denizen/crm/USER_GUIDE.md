@@ -603,3 +603,9 @@ Mobile: swipe bottom bar to change main tab.
 ---
 
 *Meridian CRM — Sales Manager edition. Hosted on Denizen. Vendor source: `crm/vendor/` (from [remix-of-deal-weaver](https://github.com/kaiser-create/remix-of-deal-weaver)).*
+
+
+### Mobile schedule & analytics
+
+On phones, Calendar switches between **month grid** and **day detail** instead of a clipped two-column layout. Schedule month cells use color dots (not truncated title chips). Analytics KPI cards stay in a 2-up grid with ring accents, and charts show clear empty states when there is no contact or snapshot data yet.
+

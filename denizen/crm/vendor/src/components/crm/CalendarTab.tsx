@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type CSSProperties } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { T, S, fmt, MEETING_TEMPLATES, type Task, type Deal, type Meeting, type Contact } from "@/lib/crm-data";
 import {
   fetchCalendarStatus,
@@ -86,6 +87,8 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
   const [layers, setLayers] = useState({ meetings: true, tasks: true, deals: true, overdue: true });
   const toggleLayer = (key: keyof typeof layers) => setLayers(prev => ({ ...prev, [key]: !prev[key] }));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+  const [mobilePanel, setMobilePanel] = useState<"calendar" | "day">("calendar");
   const [dayViewDate, setDayViewDate] = useState(
     `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
   );
@@ -536,11 +539,13 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               setViewMode(v);
               if ((v === "day" || v === "week") && selectedDate) setDayViewDate(selectedDate);
             }} style={{
-              ...S.btnGhost, fontSize: 12, padding: "6px 14px",
+              ...S.btnGhost, fontSize: isMobile ? 11 : 12, padding: isMobile ? "6px 10px" : "6px 14px",
               background: viewMode === v ? T.accent : T.bg3, color: viewMode === v ? "#080d18" : T.text2,
               fontWeight: viewMode === v ? 700 : 500,
             }}>
-              {v === "month" ? "📅 Month" : v === "week" ? "📆 Week" : v === "day" ? "🕐 Day" : v === "agenda" ? "📋 Agenda" : "🔗 Booking"}
+              {isMobile
+                ? (v === "month" ? "Month" : v === "week" ? "Week" : v === "day" ? "Day" : v === "agenda" ? "Agenda" : "Book")
+                : (v === "month" ? "📅 Month" : v === "week" ? "📆 Week" : v === "day" ? "🕐 Day" : v === "agenda" ? "📋 Agenda" : "🔗 Booking")}
             </button>
           ))}
           <button onClick={() => openNewMeeting(selectedDate || dayViewDate || todayStr)} style={{ ...S.btn, fontSize: 12, padding: "6px 14px" }}>+ Meeting</button>
@@ -623,7 +628,21 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
       })()}
 
 {viewMode === "month" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
+        <>
+        {isMobile && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+            {(["calendar", "day"] as const).map(p => (
+              <button key={p} type="button" onClick={() => setMobilePanel(p)} style={{
+                flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                borderRadius: T.radius.md, border: `1px solid ${mobilePanel === p ? T.accent + "66" : T.bg4}`,
+                background: mobilePanel === p ? T.accent + "18" : T.bg3,
+                color: mobilePanel === p ? T.accent : T.text3,
+              }}>{p === "calendar" ? "📅 Calendar" : "🗓 Day detail"}</button>
+            ))}
+          </div>
+        )}
+        <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
+          {(!isMobile || mobilePanel === "calendar") && (
           <div style={{ ...S.card }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <button onClick={prev} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "6px 12px", color: T.text2, cursor: "pointer", fontSize: 13 }}>←</button>
@@ -666,7 +685,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                         const mc = meetingCounts[dateStr] || 0;
                         return (
                           <td key={dateStr}
-                            onClick={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}
+                            onClick={() => { const next = dateStr === selectedDate ? null : dateStr; setSelectedDate(next); if (next && isMobile) setMobilePanel("day"); }}
                             onDoubleClick={() => { setDayViewDate(dateStr); setViewMode("day"); }}
                             style={{
                               height: 72, padding: "6px 8px", verticalAlign: "top",
@@ -714,9 +733,11 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
             </div>
           </div>
+          )}
 
           {/* Right panel */}
-          <div style={{ ...S.card }}>
+          {(!isMobile || mobilePanel === "day") && (
+          <div style={{ ...S.card, marginTop: isMobile ? 14 : 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>
                 {selectedDate ? new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "Select a date"}
@@ -777,7 +798,9 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
             ))}
           </div>
+          )}
         </div>
+        </>
       )}
 
       {/* ── DAY VIEW ── */}
@@ -1095,7 +1118,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
       {/* ── BOOKING VIEW ── */}
       {viewMode === "booking" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
           <div style={{ ...S.card }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, marginBottom: 16 }}>🔗 Booking Page</div>
             <div style={{ ...S.label }}>Your Booking Link</div>

@@ -7,7 +7,9 @@ import {
   type LeadModelState,
   type ConfusionMatrix,
 } from "@/lib/crm-lead-model";
-import { BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
+import { BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, Radar, Cell } from "recharts";
+import { MiniRing } from "./shared/MiniRing";
+import { DashboardEmptyState } from "./shared/DashboardEmptyState";
 
 interface Props {
   contacts: Contact[];
@@ -60,21 +62,30 @@ function computeScoreFactors(contacts: Contact[], deals: Deal[]) {
 }
 
 function ConfusionMatrixCard({ matrix }: { matrix: ConfusionMatrix }) {
-  const cells: (keyof ConfusionMatrix)[] = ["truePos", "falseNeg", "falsePos", "trueNeg"];
+  const cells: { key: keyof ConfusionMatrix; accent: string }[] = [
+    { key: "truePos", accent: T.green },
+    { key: "falseNeg", accent: T.orange },
+    { key: "falsePos", accent: T.red },
+    { key: "trueNeg", accent: T.blue },
+  ];
+  const total = cells.reduce((s, c) => s + (matrix[c.key] || 0), 0) || 1;
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-      {cells.map((key) => {
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      {cells.map(({ key, accent }) => {
         const meta = CONFUSION_MATRIX_LABELS[key];
+        const n = matrix[key] || 0;
+        const pct = Math.round((n / total) * 100);
         return (
           <div key={key} style={{
-            padding: "12px 14px", borderRadius: T.radius.md,
-            background: T.bg3, border: `1px solid ${T.bg4}`, textAlign: "center",
+            padding: "12px 12px", borderRadius: T.radius.md,
+            background: `${accent}10`, border: `1px solid ${accent}33`, textAlign: "center",
           }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>
-              {matrix[key]}
+            <div style={{ fontSize: 22, fontWeight: 800, color: accent, fontFamily: "'JetBrains Mono', monospace" }}>
+              {n}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: T.text1, marginTop: 4 }}>{meta.short}</div>
-            <div style={{ fontSize: 10, color: T.text2, marginTop: 2, lineHeight: 1.35 }}>{meta.hint}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.text1, marginTop: 4 }}>{meta.short}</div>
+            <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{pct}% of sample</div>
+            <div style={{ fontSize: 10, color: T.text2, marginTop: 4, lineHeight: 1.35 }}>{meta.hint}</div>
           </div>
         );
       })}
@@ -155,7 +166,7 @@ export function LeadGenTab({
 
   const cardStyle = {
     background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-    border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: "20px 22px",
+    border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: "14px 14px",
   };
 
   const avgScore = scoredContacts.length
@@ -204,20 +215,27 @@ export function LeadGenTab({
         </div>
       )}
 
-      <div className="crm-stats-grid" style={{ display: "grid", gap: 14, marginBottom: 20 }}>
+      <div className="crm-stats-grid" style={{ display: "grid", gap: 10, marginBottom: 16 }}>
         {[
           { label: "Scoring Model", value: modelLabel, color: T.purple },
-          { label: "Est. Accuracy", value: `${displayAccuracy}%`, color: T.blue, animate: true },
+          { label: "Est. Accuracy", value: `${displayAccuracy}%`, color: T.blue, animate: true, ring: displayAccuracy },
           { label: "Scored Leads", value: String(scoredContacts.length), color: T.blue },
-          { label: "Avg Score", value: String(avgScore), color: T.accent },
+          { label: "Avg Score", value: String(avgScore), color: T.accent, ring: Math.min(avgScore, 100) },
           { label: "Hot Leads (80+)", value: String(scoredContacts.filter(c => c.aiScore >= 80).length), color: T.green },
         ].map(s => (
-          <div key={s.label} style={cardStyle}>
-            <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>{s.label}</div>
-            <div style={{
-              fontSize: 24, fontWeight: 800, color: s.color, fontFamily: "'JetBrains Mono', monospace",
-              transition: s.animate ? "color 0.3s ease" : undefined,
-            }}>{s.value}</div>
+          <div key={s.label} style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 10, minHeight: 84 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{s.label}</div>
+              <div style={{
+                fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'JetBrains Mono', monospace",
+                transition: s.animate ? "color 0.3s ease" : undefined, lineHeight: 1.1,
+              }}>{s.value}</div>
+            </div>
+            {s.ring != null && (
+              <div style={{ position: "relative", width: 48, height: 48, flexShrink: 0 }}>
+                <MiniRing segments={[{ value: Math.max(s.ring, 1), color: s.color, label: s.label }, { value: Math.max(100 - s.ring, 0), color: T.bg4, label: "rest" }]} size={48} stroke={5} />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -260,15 +278,21 @@ export function LeadGenTab({
 
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Score Distribution</div>
-          <ResponsiveContainer width="100%" height={220}>
+          {scoredContacts.length === 0 ? (
+            <DashboardEmptyState icon="📊" title="No scored leads yet" subtitle="Add non-customer contacts to populate the score histogram." />
+          ) : (
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={scoreBuckets} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
               <XAxis dataKey="range" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, "auto"]} />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="count" name="Leads" fill={T.accent} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" name="Leads" radius={[4, 4, 0, 0]}>
+                {scoreBuckets.map((b, i) => <Cell key={i} fill={b.color} />)}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
+          )}
         </div>
       </div>
 

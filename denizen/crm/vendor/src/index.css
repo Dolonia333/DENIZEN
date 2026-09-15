@@ -244,7 +244,8 @@
   .crm-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
-  .crm-stats-grid { grid-template-columns: 1fr; }
+  .crm-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .crm-stats-grid > * { padding: 14px 14px !important; }
 }
 
 .crm-dashboard-grid {

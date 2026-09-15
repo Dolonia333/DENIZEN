@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { T, fmt, STAGE_COLORS, type Deal, type Contact, type MetricSnapshot } from "@/lib/crm-data";
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from "recharts";
+import { MiniRing } from "./shared/MiniRing";
+import { DashboardEmptyState } from "./shared/DashboardEmptyState";
 
 interface Props {
   deals: Deal[];
@@ -93,7 +95,7 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
 
   const cardStyle = {
     background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-    border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: "20px 22px",
+    border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: "14px 14px",
   };
 
   return (
@@ -105,30 +107,50 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
         </p>
       </div>
 
-      <div className="crm-stats-grid" style={{ display: "grid", gap: 14, marginBottom: 24 }}>
-        {metrics.map(m => (
-          <div key={m.label} style={cardStyle}>
-            <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>{m.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: m.color, fontFamily: "'JetBrains Mono', monospace" }}>{m.value}</div>
-          </div>
-        ))}
+      <div className="crm-stats-grid" style={{ display: "grid", gap: 10, marginBottom: 20 }}>
+        {metrics.map((m, idx) => {
+          const hints = [
+            `${wonDeals.length} won · ${lostDeals.length} lost`,
+            `${openDeals.length} open deals`,
+            `${contacts.length} contacts`,
+            `${wonDeals.length} closed won`,
+          ];
+          const ringVal = idx === 0 ? winRate : idx === 2 ? Math.min(avgScore, 100) : null;
+          return (
+            <div key={m.label} style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 12, minHeight: 88 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{m.label}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: m.color, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.1 }}>{m.value}</div>
+                <div style={{ fontSize: 10, color: T.text3, marginTop: 6 }}>{hints[idx]}</div>
+              </div>
+              {ringVal != null && (
+                <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
+                  <MiniRing segments={[{ value: Math.max(ringVal, 1), color: m.color, label: m.label }, { value: Math.max(100 - ringVal, 0), color: T.bg4, label: "rest" }]} size={52} stroke={5} />
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: m.color, fontFamily: "'JetBrains Mono', monospace" }}>{ringVal}%</div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {trendData.length >= 2 && (
-        <div style={{ ...cardStyle, marginBottom: 14 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Pipeline & revenue trends</div>
-          <ResponsiveContainer width="100%" height={220}>
+      <div style={{ ...cardStyle, marginBottom: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Pipeline & revenue trends</div>
+        {trendData.length >= 2 ? (
+          <ResponsiveContainer width="100%" height={200}>
             <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} width={40} />
               <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="pipeline" name="Pipeline" stroke={T.accent} strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="won" name="Won" stroke={T.green} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-      )}
+        ) : (
+          <DashboardEmptyState icon="📈" title="No trend history yet" subtitle="Daily snapshots appear here once pipeline activity is recorded." />
+        )}
+      </div>
 
       <div className="crm-dashboard-grid" style={{ display: "grid", gap: 14, marginBottom: 14 }}>
         <div style={cardStyle}>
@@ -148,30 +170,34 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
 
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Contact Distribution</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <ResponsiveContainer width={160} height={160}>
+          {statusPie.length === 0 ? (
+            <DashboardEmptyState icon="👥" title="No contacts yet" subtitle="Add contacts to see Lead / Prospect / Customer mix." />
+          ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
+            <ResponsiveContainer width={150} height={150}>
               <PieChart>
-                <Pie data={statusPie} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
+                <Pie data={statusPie} cx="50%" cy="50%" innerRadius={38} outerRadius={62} dataKey="value" strokeWidth={0}>
                   {statusPie.map((d, i) => <Cell key={i} fill={d.fill} />)}
                 </Pie>
                 <Tooltip content={<ChartTooltip />} />
               </PieChart>
             </ResponsiveContainer>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 120 }}>
               {statusPie.map(d => (
                 <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: d.fill }} />
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: d.fill, flexShrink: 0 }} />
                   <span style={{ fontSize: 12, color: T.text2 }}>{d.name}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{d.value}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace", marginLeft: "auto" }}>{d.value}</span>
                 </div>
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
 
       <div style={{ ...cardStyle, marginBottom: 14 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Conversion Funnel</div>
           <div style={{ fontSize: 11, color: T.text3 }}>Cumulative reach + step conversion</div>
         </div>
@@ -192,11 +218,12 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
                   {f.dropOff > 0 ? ` · −${f.dropOff} drop` : ""}
                 </span>
               </div>
-              <div style={{ height: 10, background: T.bg4, borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: 14, background: T.bg4, borderRadius: 7, overflow: "hidden", position: "relative" }}>
                 <div style={{
-                  height: "100%", width: `${f.rate}%`,
+                  height: "100%", width: `${Math.max(f.rate, f.count > 0 ? 8 : 0)}%`,
                   background: `linear-gradient(90deg, ${f.fill}, ${f.fill}88)`,
-                  borderRadius: 4, transition: "width 0.5s ease",
+                  borderRadius: 7, transition: "width 0.5s ease",
+                  boxShadow: f.rate > 0 ? `0 0 12px ${f.fill}33` : undefined,
                 }} />
               </div>
             </div>
