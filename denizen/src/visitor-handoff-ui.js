@@ -26,18 +26,24 @@
     s.id = STYLE_ID;
     s.textContent = `
       #${BTN_ID} {
-        margin-left: 8px;
-        padding: 2px 8px;
-        border-radius: 999px;
+        margin: 0;
+        padding: 4px 8px;
+        border-radius: 4px;
         background: rgba(96, 165, 250, 0.12);
         border: 1px solid rgba(96, 165, 250, 0.35);
         color: #93c5fd;
-        font: 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-weight: bold;
+        font: 700 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.04em;
         cursor: pointer;
-        vertical-align: middle;
+        flex-shrink: 0;
+        white-space: nowrap;
+        touch-action: manipulation;
       }
       #${BTN_ID}:hover { background: rgba(96, 165, 250, 0.22); border-color: #60a5fa; }
+      html.denizen-touch #${BTN_ID} {
+        padding: 6px 8px;
+        min-height: 32px;
+      }
       #${MODAL_ID} {
         position: fixed;
         inset: 0;
@@ -295,20 +301,20 @@
     const sess = globalThis.DenizenVisitorSession;
     if (sess?.isCeoMode?.()) return null;
     injectStyles();
-    const header = document.getElementById('player-chat-header');
-    const targetWrap = header?.querySelector('div');
     handoffBtn = document.createElement('button');
     handoffBtn.id = BTN_ID;
     handoffBtn.type = 'button';
-    handoffBtn.textContent = '↗ Hand off';
+    handoffBtn.textContent = 'Hand off';
     handoffBtn.title = 'Hand off context to Lucy, CEO, or a teammate';
     handoffBtn.addEventListener('click', () => openModal());
-    if (targetWrap) {
-      targetWrap.appendChild(handoffBtn);
-    } else if (header) {
-      header.appendChild(handoffBtn);
+    const actions = document.getElementById('player-chat-header-actions');
+    const closeBtn = document.getElementById('player-chat-close-btn');
+    if (actions) {
+      actions.insertBefore(handoffBtn, closeBtn || null);
     } else {
-      document.body.appendChild(handoffBtn);
+      const header = document.getElementById('player-chat-header');
+      if (header && closeBtn) header.insertBefore(handoffBtn, closeBtn);
+      else header?.appendChild(handoffBtn) || document.body.appendChild(handoffBtn);
     }
     return handoffBtn;
   }

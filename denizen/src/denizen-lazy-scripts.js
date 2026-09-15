@@ -87,8 +87,8 @@
         './src/office-hq/office-hq-panel.js?v=hq2',
         './src/visitor-desktop-pairing.js?v=pair3',
         './src/visitor-credits-chip.js?v=node7',
-        './src/visitor-handoff-ui.js?v=vis3',
-        './src/visitor-projects-ui.js?v=vis3',
+        './src/visitor-handoff-ui.js?v=handoffHeader1',
+        './src/visitor-projects-ui.js?v=projHeader2',
         './src/visitor-assistant-labels.js?v=noStroke1',
         './src/bouncer-client-init.js?v=sec3',
         './src/security-monitor.js?v=sec3',
@@ -105,8 +105,8 @@
   function afterOffice() {
     const urls = [
       './src/visitor-companion-bridge.js?v=comp1',
-      './src/visitor-mcp-connect-ui.js?v=mcp8bridge',
-      './src/visitor-briefing-ui.js?v=vis3',
+      './src/visitor-mcp-connect-ui.js?v=mcpHeader1',
+      './src/visitor-briefing-ui.js?v=briefHeader1',
       './src/visitor-voice-walkup.js?v=vis3',
       './src/visitor-skill-gap-ui.js?v=sgap1',
       './src/visitor-agent-inbox.js?v=ainbox1',

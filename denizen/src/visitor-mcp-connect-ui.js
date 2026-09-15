@@ -18,18 +18,41 @@
     s.textContent = `
       #${BTN_ID} {
         display: none;
-        margin-left: 6px;
-        padding: 2px 8px;
-        border-radius: 999px;
+        margin: 0;
+        padding: 4px 8px;
+        border-radius: 4px;
         background: rgba(96, 165, 250, 0.15);
         border: 1px solid rgba(96, 165, 250, 0.45);
         color: #93c5fd;
-        font: 10px ui-monospace, monospace;
-        font-weight: bold;
+        font: 700 9px/1.2 ui-monospace, monospace;
+        letter-spacing: 0.04em;
         cursor: pointer;
-        vertical-align: middle;
+        flex-shrink: 0;
+        white-space: nowrap;
+        touch-action: manipulation;
       }
       #${BTN_ID}:hover { background: rgba(96, 165, 250, 0.28); }
+      html.denizen-touch #${BTN_ID} {
+        padding: 6px 8px;
+        min-height: 32px;
+      }
+      #denizen-visitor-team-mcp-btn {
+        margin: 0;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: rgba(167, 139, 250, 0.12);
+        border: 1px solid rgba(167, 139, 250, 0.4);
+        color: #c4b5fd;
+        font: 700 9px/1.2 ui-monospace, monospace;
+        cursor: pointer;
+        flex-shrink: 0;
+        white-space: nowrap;
+        touch-action: manipulation;
+      }
+      html.denizen-touch #denizen-visitor-team-mcp-btn {
+        padding: 6px 8px;
+        min-height: 32px;
+      }
       #${MODAL_ID} {
         position: fixed;
         inset: 0;
@@ -895,12 +918,32 @@
   function ensureConnectBtn() {
     if (connectBtn) return connectBtn;
     injectStyles();
-    const chip = document.getElementById('denizen-visitor-assistant-chip');
     connectBtn = document.createElement('button');
     connectBtn.id = BTN_ID;
     connectBtn.type = 'button';
     connectBtn.textContent = 'Connect AI';
-    chip?.parentNode?.insertBefore(connectBtn, chip?.nextSibling);
+    const actions = document.getElementById('player-chat-header-actions');
+    const closeBtn = document.getElementById('player-chat-close-btn');
+    if (actions) {
+      actions.insertBefore(connectBtn, closeBtn || null);
+    } else {
+      // Never insert into the name/chip column — create the actions row if needed.
+      const header = document.getElementById('player-chat-header');
+      if (header) {
+        let created = document.getElementById('player-chat-header-actions');
+        if (!created) {
+          created = document.createElement('div');
+          created.id = 'player-chat-header-actions';
+          if (closeBtn) {
+            header.appendChild(created);
+            created.appendChild(closeBtn);
+          } else {
+            header.appendChild(created);
+          }
+        }
+        created.insertBefore(connectBtn, document.getElementById('player-chat-close-btn') || null);
+      }
+    }
     return connectBtn;
   }
 
@@ -913,7 +956,7 @@
       return;
     }
     const name = asst.assistant_name || asst.npc_key;
-    btn.style.display = 'inline';
+    btn.style.display = 'inline-flex';
     btn.onclick = () => openConnectFlow(asst.npc_key, name);
 
     let teamBtn = document.getElementById('denizen-visitor-team-mcp-btn');
@@ -923,12 +966,14 @@
       teamBtn.type = 'button';
       teamBtn.textContent = 'Team MCP';
       teamBtn.title = 'Connect Cursor/Claude to operate the whole office';
-      teamBtn.style.marginLeft = '6px';
-      btn.parentNode?.insertBefore(teamBtn, btn.nextSibling);
+      const actions = document.getElementById('player-chat-header-actions');
+      const closeBtn = document.getElementById('player-chat-close-btn');
+      if (actions) actions.insertBefore(teamBtn, closeBtn || null);
+      else btn.parentNode?.insertBefore(teamBtn, btn.nextSibling);
     }
     const tier = sess?.getAccessTier?.() || sess?.getTier?.();
     const showTeam = tier === 'team' || tier === 'owner' || sess?.isTeamSession?.();
-    teamBtn.style.display = showTeam ? 'inline' : 'none';
+    teamBtn.style.display = showTeam ? 'inline-flex' : 'none';
     teamBtn.onclick = () => openTeamConnectFlow();
   }
 

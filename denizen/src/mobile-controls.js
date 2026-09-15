@@ -845,6 +845,14 @@
     sync();
   }
 
+  /** Publish the live game-frame bottom so FLOOR LINE can sit flush under it. */
+  function syncGameFrameBottom() {
+    const frame = document.getElementById('game-frame') || document.getElementById('game-container');
+    if (!frame) return;
+    const bottom = Math.round(frame.getBoundingClientRect().bottom);
+    document.documentElement.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
+  }
+
   function boot() {
     injectStyles();
     buildRotateHint();
@@ -854,20 +862,27 @@
     removeCeoUiArtifacts();
     installKeyboardViewportSync();
     syncLayoutClasses();
+    syncGameFrameBottom();
 
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         syncLayoutClasses();
+        syncGameFrameBottom();
         try { window.game?.scale?.refresh?.(); } catch (_) {}
       }, 120);
       setTimeout(() => {
+        syncGameFrameBottom();
         try { window.game?.scale?.refresh?.(); } catch (_) {}
       }, 400);
     });
     window.addEventListener('resize', () => {
       syncLayoutClasses();
+      syncGameFrameBottom();
       try { window.game?.scale?.refresh?.(); } catch (_) {}
     });
+    // Phaser may resize the canvas a beat after first paint
+    setTimeout(syncGameFrameBottom, 250);
+    setTimeout(syncGameFrameBottom, 1000);
 
     console.log('[MobilePlay] touch controls ready — portrait and landscape supported');
   }
@@ -880,6 +895,7 @@
 
   window.DenizenMobilePlay = {
     syncLayout: syncLayoutClasses,
+    syncGameFrameBottom,
     isTouch: () => true,
     isPhoneLike,
     useTapMove,
