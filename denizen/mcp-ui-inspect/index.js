@@ -13,7 +13,7 @@ const SCRIPTS = path.join(DENIZEN_ROOT, 'scripts');
 const PHONE_APPS = [
   'home', 'profile', 'chat', 'settings', 'compute', 'mesh',
   'health', 'lm', 'approvals', 'browser', 'security',
-  'voice', 'presence', 'listen',
+  'voice', 'presence', 'listen', 'studioboard', 'crm',
 ];
 
 const CRM_TABS = [
