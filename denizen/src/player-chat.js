@@ -220,8 +220,8 @@ class PlayerChat {
       actions.id = 'player-chat-header-actions';
       header.appendChild(actions);
     }
-    if (closeBtn && closeBtn.parentElement !== actions) {
-      actions.appendChild(closeBtn);
+    if (closeBtn && closeBtn.parentElement !== header) {
+      header.appendChild(closeBtn);
     }
     // Move action chips that were incorrectly nested under .chat-header-main
     const main = header.querySelector('.chat-header-main');
@@ -234,7 +234,7 @@ class PlayerChat {
         'denizen-visitor-briefing-btn',
       ]) {
         const el = main.querySelector(`#${id}`);
-        if (el) actions.insertBefore(el, closeBtn || null);
+        if (el && el.parentElement !== actions) actions.appendChild(el);
       }
       // Assistant chip belongs on its own full-width grid row, not inside main.
       const chip = main.querySelector('#denizen-visitor-assistant-chip');
@@ -249,8 +249,9 @@ class PlayerChat {
       'denizen-visitor-briefing-btn',
     ]) {
       const el = header.querySelector(`:scope > #${id}`);
-      if (el) actions.insertBefore(el, closeBtn || null);
+      if (el) actions.appendChild(el);
     }
+    if (closeBtn) header.appendChild(closeBtn);
   }
 
   _chatFabClosedLabel() {
@@ -2176,7 +2177,7 @@ class PlayerChat {
         position: fixed;
         bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px));
         left: max(20px, env(safe-area-inset-left, 0px));
-        width: min(400px, calc(100vw - 32px));
+        width: min(440px, calc(100vw - 32px));
         height: min(440px, calc(100vh - 120px));
         max-height: min(52vh, 440px);
         background:
@@ -2232,14 +2233,15 @@ class PlayerChat {
       #player-chat-header {
         position: relative;
         display: grid;
-        grid-template-columns: 40px minmax(0, 1fr) auto;
+        grid-template-columns: 40px minmax(0, 1fr) 32px;
         grid-template-areas:
-          "avatar main actions"
+          "avatar main close"
+          "actions actions actions"
           "chip chip chip";
         align-items: center;
         column-gap: 8px;
-        row-gap: 4px;
-        padding: 14px 10px 10px;
+        row-gap: 6px;
+        padding: 16px 10px 10px;
         border-bottom: 2px solid var(--pc-border);
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
@@ -2251,26 +2253,35 @@ class PlayerChat {
       #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: center; }
       #player-chat-header .chat-header-main { grid-area: main; min-width: 0; }
       #player-chat-header #denizen-visitor-assistant-chip { grid-area: chip; }
+      #player-chat-close-btn { grid-area: close; }
       #player-chat-header-actions {
         grid-area: actions;
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: flex-end;
-        align-content: flex-start;
-        gap: 4px;
-        max-width: min(52vw, 180px);
+        justify-content: flex-start;
+        gap: 6px;
+        max-width: none;
         min-width: 0;
+      }
+      #player-chat-header-actions > button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        white-space: nowrap;
       }
       /* Touch: keep a single thin toolbar row — never stack action chips vertically */
       html.denizen-touch #player-chat-header {
-        grid-template-columns: 34px minmax(0, 1fr) auto;
-        grid-template-areas: "avatar main actions";
+        grid-template-columns: 34px minmax(0, 1fr) 32px;
+        grid-template-areas:
+          "avatar main close"
+          "actions actions actions";
         align-items: center;
         column-gap: 6px;
-        row-gap: 0;
-        padding: 10px 8px 6px;
+        row-gap: 6px;
+        padding: 12px 8px 8px;
       }
       html.denizen-touch #player-chat-header .pc-header-avatar {
         width: 34px;
@@ -2281,10 +2292,10 @@ class PlayerChat {
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: flex-end;
-        max-width: min(46vw, 152px);
+        justify-content: flex-start;
+        max-width: none;
         width: auto;
-        gap: 3px;
+        gap: 4px;
       }
       html.denizen-touch #player-chat-header-actions > button {
         width: auto;
@@ -2930,8 +2941,8 @@ class PlayerChat {
           padding: 12px 10px 8px;
         }
         #player-chat-header-actions {
-          max-width: min(58%, 200px);
-          gap: 3px;
+          max-width: none;
+          gap: 4px;
         }
         #player-chat-input { font-size: 16px; }
         html.denizen-touch #player-chat-send,
@@ -3198,7 +3209,7 @@ class PlayerChat {
           rgba(2, 6, 23, 0.55);
       }
       html.denizen-touch #player-chat-header-actions {
-        max-width: min(46vw, 152px);
+        max-width: none;
       }
       html.denizen-touch #player-chat-header .target {
         display: block;
@@ -3240,9 +3251,8 @@ class PlayerChat {
             <span class="target" id="player-chat-target">Messages</span>
             <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
           </div>
-          <div id="player-chat-header-actions">
-            <button type="button" id="player-chat-close-btn" aria-label="Close chat">✕</button>
-          </div>
+          <div id="player-chat-header-actions"></div>
+          <button type="button" id="player-chat-close-btn" aria-label="Close chat">✕</button>
         </div>
         <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
         ${PlayerChat._composerHtml()}
@@ -3453,7 +3463,14 @@ class PlayerChat {
       if (e?.preventDefault) e.preventDefault();
       this.close();
     };
+    const paintClose = () => {
+      if (!closeBtn) return;
+      const T = globalThis.DenizenTablerIcons;
+      closeBtn.innerHTML = T?.x ? T.x({ size: 14 }) : '✕';
+    };
     if (closeBtn) {
+      paintClose();
+      window.addEventListener('denizen-tabler-ready', paintClose);
       if (bindPress) bindPress(closeBtn, onCloseChat);
       else closeBtn.addEventListener('click', onCloseChat);
     }

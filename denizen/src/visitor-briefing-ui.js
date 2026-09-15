@@ -306,7 +306,7 @@
     btn.textContent = 'Briefing';
     btn.title = 'Morning briefing & commitments';
     btn.addEventListener('click', togglePanel);
-    if (actions) actions.insertBefore(btn, closeBtn || null);
+    if (actions) actions.appendChild(btn);
     else if (closeBtn) chatHeader.insertBefore(btn, closeBtn);
     else chatHeader.appendChild(btn);
   }

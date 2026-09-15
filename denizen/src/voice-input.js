@@ -357,48 +357,9 @@
     const s = document.createElement('style');
     s.id = SPEAK_FAB_STYLE_ID;
     s.textContent = `
-      #denizen-speak-fab {
-        position: fixed;
-        z-index: 2147483495;
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        border: 2px solid #3b82f6;
-        background: linear-gradient(145deg, #1e3a8a, #0f172a);
-        color: #dbeafe;
-        font: 700 13px/1 system-ui, sans-serif;
-        cursor: pointer;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 1px;
-        padding: 0;
-      }
-      #denizen-speak-fab .dzs-label {
-        font-size: 9px;
-        letter-spacing: 0.02em;
-        font-weight: 700;
-      }
-      #denizen-speak-fab.listening {
-        background: linear-gradient(145deg, #7f1d1d, #450a0a);
-        border-color: #fca5a5;
-        color: #fecaca;
-      }
+      #denizen-speak-fab,
       html.denizen-touch #denizen-speak-fab,
-      html.denizen-phone-mode #denizen-speak-fab {
-        display: flex;
-        bottom: max(14px, env(safe-area-inset-bottom, 0px));
-        left: max(14px, env(safe-area-inset-left, 0px));
-        right: auto;
-      }
-      html.denizen-touch:not(.denizen-phone-mode) #denizen-speak-fab {
-        bottom: calc(var(--denizen-dock-height, 52px) + 14px + env(safe-area-inset-bottom, 0px));
-      }
-      /* Chat has its own speak control — don't stack a second mic over the input row */
+      html.denizen-phone-mode #denizen-speak-fab,
       html.denizen-chat-open #denizen-speak-fab,
       html.denizen-phone-open #denizen-speak-fab {
         display: none !important;
@@ -485,14 +446,7 @@
     document.body.appendChild(micButton);
 
     injectSpeakFabStyles();
-    speakFab = document.createElement('button');
-    speakFab.id = 'denizen-speak-fab';
-    speakFab.type = 'button';
-    speakFab.innerHTML = speakFabMarkup(false);
-    wirePress(speakFab, onMicPress);
-    document.body.appendChild(speakFab);
     refreshSpeakFab();
-    setInterval(refreshSpeakFab, 400);
 
     const presenceChip = document.createElement('button');
     presenceChip.id = 'denizen-presence-chip';

@@ -200,6 +200,9 @@ const skillBuilder     = require('./src/skill-builder');
 const computeQueue     = require('./src/denizen-compute-queue');
 const playerChatSkills = require('./src/player-chat-skill-bridge');
 const chatAttachments = require('./src/chat-attachments');
+const contextDrop = require('./src/context-drop');
+const seatAiCatalog = require('./src/seat-ai-catalog');
+const memoryRetrieve = require('./src/denizen-memory-retrieve');
 const localMetrics = require('./src/npc-local-metrics');
 const officeStatusBrief = require('./src/office-status-brief');
 const denizenDailyPlan = require('./src/denizen-daily-plan');
@@ -5390,6 +5393,150 @@ const server = http.createServer((req, res) => {
     }).catch(err => {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: err.message }));
+    });
+    return;
+  }
+
+  // --- POST /api/context-drop — Buzz screenshot / voice / note → Abby ---
+  if (urlPath === '/api/context-drop' && req.method === 'POST') {
+    _readJsonBody(req, 12 * 1024 * 1024).then(async (payload) => {
+      if (!(await _hasAnySessionAccess(req, payload || {}))) { _denyOperatorApi(res); return; }
+      const result = await contextDrop.handleContextDrop(payload || {}, {
+        processAttachments: (raw) => chatAttachments.processChatAttachments(raw),
+        assignDirective: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, urgent),
+        broadcast: _ceoBroadcast,
+      });
+      const status = result.ok ? 200 : 400;
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message }));
+    });
+    return;
+  }
+
+  // --- GET /api/workbench — directives + recent Buzz drops for the rail ---
+  if (urlPath === '/api/workbench' && req.method === 'GET') {
+    (async () => {
+      if (!(await _hasAnySessionAccess(req, {}))) { _denyOperatorApi(res); return; }
+      const url = new URL(req.url, 'http://localhost');
+      const memoryQ = String(url.searchParams.get('q') || url.searchParams.get('memory') || '').trim();
+      const sessionId = url.searchParams.get('session_id') || url.searchParams.get('sessionId')
+        || req.headers['x-session-id'] || '';
+
+      const crew = seatAiCatalog.buildCrewRows({
+        roster: npcRoster,
+        directives: npcBrains.listDirectives({ include_archived: false }),
+        presenceAtNpc: (key) => mcpTeamTools.getMcpPresenceAtNpc?.(key) || null,
+      });
+
+      let handoffs = [];
+      if (sessionId) {
+        try {
+          const pending = await denizenVisitor.getPendingHandoffs(sessionId);
+          handoffs = (pending || []).slice(0, 12).map((h) => ({
+            id: h.id || h.handoff_id,
+            from: h.from_npc || h.from || h.from_display_name,
+            message: String(h.message || h.body || '').slice(0, 240),
+            ts: h.created_at || h.ts || null,
+          }));
+        } catch (_) {}
+      }
+
+      let approvals = [];
+      try {
+        const soulFile = typeof _readSoulProposalsFile === 'function' ? _readSoulProposalsFile() : { proposals: [] };
+        approvals = (soulFile.proposals || [])
+          .filter((p) => String(p.status || 'pending') === 'pending')
+          .slice(0, 8)
+          .map((p) => ({
+            id: p.id,
+            by: p.npcName || p.by,
+            summary: String(p.proposal?.summary || p.summary || '').slice(0, 180),
+            kind: 'soul',
+          }));
+      } catch (_) {}
+
+      const memory = [];
+      try {
+        for (const entry of (npcRoster.entries || []).slice(0, 18)) {
+          const hit = memoryRetrieve.retrieveMemory(entry.display, memoryQ || entry.display, {
+            k: memoryQ ? 4 : 2,
+            maxChars: 360,
+          });
+          if (hit?.lines?.length) {
+            memory.push({ npc: entry.display, lines: hit.lines.slice(0, 3) });
+          }
+          if (memory.length >= 10) break;
+        }
+      } catch (_) {}
+
+      let providers = [];
+      try {
+        let tokens = [];
+        if (sessionId && denizenDb.enabled) {
+          const listed = await denizenDb._rpc('denizen_list_mcp_tokens', {
+            p_org_id: null,
+            p_session_id: sessionId,
+            p_org_wide: false,
+          }).catch(() => null);
+          tokens = listed?.tokens || listed?.rows || [];
+        }
+        providers = seatAiCatalog.providersWithStatus({ tokens });
+        for (const p of providers) {
+          const row = crew.find((c) => c.key === p.id || c.name === p.desk);
+          if (row && p.seated) row.seated = true;
+        }
+      } catch (_) {}
+
+      const snap = contextDrop.workbenchSnapshot({
+        listDirectives: () => npcBrains.listDirectives({ include_archived: false }),
+        crew,
+        handoffs,
+        approvals,
+        memory,
+        leash: seatAiCatalog.leashFromStats(llmTelemetry.getStats({ windowMs: 15 * 60 * 1000 })),
+        providers,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(snap));
+    })().catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message }));
+    });
+    return;
+  }
+
+  // --- GET /api/seat-ai — which subscriptions can sit at desks ---
+  if (urlPath === '/api/seat-ai' && req.method === 'GET') {
+    (async () => {
+      if (!(await _hasAnySessionAccess(req, {}))) { _denyOperatorApi(res); return; }
+      const url = new URL(req.url, 'http://localhost');
+      const sessionId = url.searchParams.get('session_id') || url.searchParams.get('sessionId')
+        || req.headers['x-session-id'] || '';
+      let tokens = [];
+      if (sessionId) {
+        try {
+          const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', {});
+          const listed = await denizenDb._rpc('denizen_list_mcp_tokens', {
+            p_org_id: access.orgId,
+            p_session_id: sessionId,
+            p_org_wide: _canManageOrgNpcTeam(await visitorAccess.resolveSessionAccess(sessionId).catch(() => null)),
+          });
+          tokens = listed?.tokens || listed?.rows || [];
+        } catch (_) {
+          tokens = [];
+        }
+      }
+      let lmStudio = { reachable: false };
+      try { lmStudio = await seatAiCatalog.probeLmStudio(); } catch (_) {}
+      const providers = seatAiCatalog.providersWithStatus({ tokens, lmStudio });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, providers, lmStudio }));
+    })().catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message }));
     });
     return;
   }

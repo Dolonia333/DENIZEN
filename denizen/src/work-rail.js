@@ -1,0 +1,439 @@
+/**
+ * Team workbench rail — orchestrator, crew, inbox, trail, memory.
+ * Desktop: right-side rail. Phone: Denizen OS Workbench app mounts the same body.
+ */
+(function () {
+  'use strict';
+
+  const STYLE_ID = 'denizen-work-rail-style';
+  const RAIL_ID = 'denizen-work-rail';
+  const TAB_ID = 'denizen-work-rail-tab';
+  const STORAGE_KEY = 'denizen-work-rail-open';
+  const TABS = [
+    { id: 'orchestrator', label: 'Abby' },
+    { id: 'crew', label: 'Crew' },
+    { id: 'inbox', label: 'Inbox' },
+    { id: 'trail', label: 'Trail' },
+    { id: 'memory', label: 'Memory' },
+  ];
+
+  let railEl = null;
+  let tabEl = null;
+  let currentTab = 'orchestrator';
+  let snapshot = { directives: [], drops: [], orchestrator: 'Abby' };
+
+  function isTouchPhone() {
+    return document.documentElement.classList.contains('denizen-phone');
+  }
+
+  function isDemo() {
+    return !!globalThis.DenizenVisitorSession?.isDemo?.();
+  }
+
+  function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    const s = document.createElement('style');
+    s.id = STYLE_ID;
+    s.textContent = `
+      #${TAB_ID} {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        z-index: 10040;
+        transform: translateY(-50%);
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        border: 1px solid rgba(163,230,53,0.35);
+        border-right: 0;
+        border-radius: 10px 0 0 10px;
+        background: rgba(8, 14, 28, 0.92);
+        color: #d9f99d;
+        font: 600 11px/1.2 "IBM Plex Sans", system-ui, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 14px 7px;
+        cursor: pointer;
+      }
+      html.denizen-phone #${TAB_ID},
+      html.denizen-work-rail-open #${TAB_ID} { display: none; }
+      #${RAIL_ID} {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(380px, 42vw);
+        z-index: 10050;
+        display: none;
+        flex-direction: column;
+        background: rgba(6, 12, 24, 0.94);
+        border-left: 1px solid rgba(80,110,160,0.22);
+        color: #e2e8f0;
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        backdrop-filter: blur(10px);
+      }
+      html.denizen-work-rail-open #${RAIL_ID} { display: flex; }
+      html.denizen-phone #${RAIL_ID} {
+        position: relative; inset: auto; width: 100%; height: 100%;
+        border: 0; background: transparent;
+      }
+      html.denizen-phone #dzp-workbench-host #${RAIL_ID} {
+        display: flex;
+      }
+      #${RAIL_ID} .wr-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 12px 8px; border-bottom: 1px solid rgba(148,163,184,0.14);
+      }
+      #${RAIL_ID} .wr-head h2 {
+        margin: 0; font-size: 13px; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #a3e635;
+      }
+      #${RAIL_ID} .wr-close {
+        background: transparent; border: 0; color: #94a3b8; cursor: pointer; font-size: 16px;
+      }
+      #${RAIL_ID} .wr-tabs {
+        display: flex; gap: 2px; padding: 8px 8px 0; overflow-x: auto;
+      }
+      #${RAIL_ID} .wr-tabs button {
+        flex: 1; border: 0; background: transparent; color: #94a3b8;
+        font-size: 11px; padding: 6px 4px; cursor: pointer;
+        border-bottom: 2px solid transparent;
+      }
+      #${RAIL_ID} .wr-tabs button.active {
+        color: #f1f5f9; border-bottom-color: #a3e635;
+      }
+      #${RAIL_ID} .wr-body {
+        flex: 1; overflow: auto; padding: 12px;
+      }
+      #${RAIL_ID} .wr-empty { color: #94a3b8; font-size: 13px; line-height: 1.5; }
+      #${RAIL_ID} .wr-card {
+        border: 1px solid rgba(80,110,160,0.2); border-radius: 10px;
+        padding: 10px 12px; margin-bottom: 8px; background: rgba(2,6,23,0.4);
+      }
+      #${RAIL_ID} .wr-card b { color: #f8fafc; }
+      #${RAIL_ID} .wr-card small { color: #94a3b8; }
+      #${RAIL_ID} textarea, #${RAIL_ID} input[type="text"] {
+        width: 100%; box-sizing: border-box; border-radius: 8px;
+        border: 1px solid #334155; background: #020617; color: #e2e8f0;
+        padding: 8px; font: 13px/1.4 inherit;
+      }
+      #${RAIL_ID} .wr-send {
+        margin-top: 8px; border: 0; border-radius: 999px; padding: 7px 14px;
+        background: #a3e635; color: #052e16; font-weight: 700; cursor: pointer;
+      }
+      #${RAIL_ID} .wr-crew {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+      }
+      #${RAIL_ID} .wr-crew button {
+        text-align: left; border-radius: 8px; border: 1px solid #1e293b;
+        background: #0b1220; color: #e2e8f0; padding: 8px; cursor: pointer;
+      }
+      #${RAIL_ID} .denizen-work-rail-host #denizen-work-feed,
+      #${RAIL_ID} #denizen-work-feed {
+        position: relative !important; left: auto !important; bottom: auto !important;
+        width: 100% !important; max-height: none !important; display: flex !important;
+        transform: none !important; opacity: 1 !important;
+      }
+      #${RAIL_ID} #denizen-work-feed-toggle { display: none !important; }
+      html.denizen-work-rail-open #denizen-work-feed-toggle { display: none !important; }
+      html.denizen-work-rail-open #denizen-phone-fab {
+        right: calc(min(380px, 42vw) + 12px) !important;
+      }
+      html.denizen-work-rail-open.denizen-buzz-ring-open:not(.denizen-phone) #denizen-phone-fab {
+        right: calc(min(380px, 42vw) + 168px) !important;
+        bottom: 152px !important;
+        transform: none !important;
+      }
+      html.denizen-work-rail-open #denizen-buzz-note {
+        right: calc(min(380px, 42vw) + 16px) !important;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function esc(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+
+  function buildChrome() {
+    if (railEl) return;
+    railEl = document.createElement('aside');
+    railEl.id = RAIL_ID;
+    railEl.setAttribute('aria-label', 'Workbench');
+    railEl.innerHTML = `
+      <div class="wr-head">
+        <h2>Workbench</h2>
+        <button type="button" class="wr-close" data-wr="close" aria-label="Close workbench">✕</button>
+      </div>
+      <div class="wr-tabs" role="tablist">
+        ${TABS.map((t) => `<button type="button" role="tab" data-tab="${t.id}">${t.label}</button>`).join('')}
+      </div>
+      <div class="wr-body" id="denizen-work-rail-body"></div>
+    `;
+    railEl.addEventListener('click', (e) => {
+      const close = e.target.closest('[data-wr="close"]');
+      if (close) { closeRail(); return; }
+      const tab = e.target.closest('[data-tab]');
+      if (tab) setTab(tab.dataset.tab);
+      const send = e.target.closest('[data-wr="send"]');
+      if (send) void sendToAbby();
+      const crew = e.target.closest('[data-crew]');
+      if (crew) talkTo(crew.dataset.crew);
+      const mer = e.target.closest('[data-wr="crm"]');
+      if (mer) window.location.href = '/crm/';
+      const seat = e.target.closest('[data-wr="seat"]');
+      if (seat) globalThis.DenizenSeatAI?.open?.();
+      const memBtn = e.target.closest('[data-wr="memory-search"]');
+      if (memBtn) void searchMemory();
+    });
+    document.body.appendChild(railEl);
+
+    tabEl = document.createElement('button');
+    tabEl.id = TAB_ID;
+    tabEl.type = 'button';
+    tabEl.textContent = 'Workbench';
+    tabEl.title = 'Open the workbench (])';
+    tabEl.addEventListener('click', openRail);
+    document.body.appendChild(tabEl);
+  }
+
+  function setTab(id) {
+    currentTab = TABS.some((t) => t.id === id) ? id : 'orchestrator';
+    railEl?.querySelectorAll('[data-tab]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === currentTab);
+    });
+    renderBody();
+  }
+
+  function demoGateHtml() {
+    if (!isDemo()) return '';
+    return `<p class="wr-empty">Demo can watch the floor. <a href="/office?login=1" style="color:#a3e635">Sign in</a> for the full workbench — directives, approvals, CRM, and Connect AI.</p>`;
+  }
+
+  function renderBody() {
+    const body = railEl?.querySelector('#denizen-work-rail-body');
+    if (!body) return;
+    if (currentTab === 'orchestrator') {
+      const dirs = snapshot.directives || [];
+      const leash = snapshot.leash;
+      body.innerHTML = `
+        ${demoGateHtml()}
+        <p class="wr-empty">Abby runs the floor. Send a line — or drop a Buzz screenshot.</p>
+        <p class="wr-empty">${esc(leash?.note || snapshot.escalate || 'Spend, destructive ops, and scope changes wait for you.')}</p>
+        ${leash && leash.state !== 'ok' ? `<div class="wr-card"><b>Leash · ${esc(leash.state)}</b><div>${esc(leash.note)}</div></div>` : ''}
+        <textarea id="wr-note" rows="3" placeholder="Tell Abby what to do next"></textarea>
+        <button type="button" class="wr-send" data-wr="send">Send to Abby</button>
+        <div style="margin-top:14px">
+          ${dirs.length ? dirs.map((d) => `
+            <div class="wr-card">
+              <b>${esc(d.npc)}</b> · <small>${esc(d.status)}</small>
+              <div>${esc(d.task)}</div>
+              <small>from ${esc(d.from || '—')}</small>
+            </div>`).join('') : '<p class="wr-empty">No open directives yet.</p>'}
+        </div>
+      `;
+      return;
+    }
+    if (currentTab === 'crew') {
+      const crew = snapshot.crew?.length
+        ? snapshot.crew
+        : (globalThis.DenizenNpcRoster?.displayNames || []).map((n) => ({ name: n, seated: false, status: 'empty' }));
+      body.innerHTML = `
+        <p class="wr-empty">Seated desks have a live AI. Empty desks are named staff waiting for a subscription.</p>
+        <p><button type="button" class="wr-send" data-wr="seat">Seat an AI</button></p>
+        <div class="wr-crew" style="margin-top:10px">
+          ${crew.map((c) => {
+            const name = c.name || c;
+            const seated = !!c.seated;
+            const status = c.status || (seated ? 'seated' : 'empty');
+            return `<button type="button" data-crew="${esc(name)}"><b>${esc(name)}</b><br><small>${seated ? 'Seated' : 'Empty'} · ${esc(status)}</small></button>`;
+          }).join('')}
+        </div>
+      `;
+      return;
+    }
+    if (currentTab === 'inbox') {
+      const drops = snapshot.drops || [];
+      const handoffs = snapshot.handoffs || [];
+      const approvals = snapshot.approvals || [];
+      body.innerHTML = `
+        ${demoGateHtml()}
+        <p class="wr-empty">Approvals, handoffs, and Buzz drops land here.</p>
+        ${handoffs.map((h) => `
+          <div class="wr-card">
+            <b>Handoff · ${esc(h.from || 'crew')}</b>
+            <div>${esc(h.message || '')}</div>
+          </div>`).join('')}
+        ${approvals.map((a) => `
+          <div class="wr-card">
+            <b>Approval · ${esc(a.by || a.kind)}</b>
+            <div>${esc(a.summary || '')}</div>
+          </div>`).join('')}
+        ${drops.map((d) => `
+          <div class="wr-card">
+            <b>Buzz → ${esc(d.to)}</b> · <small>${esc(d.kind)}</small>
+            <div>${esc(d.note || '(no note)')}</div>
+          </div>`).join('') || (!handoffs.length && !approvals.length ? '<p class="wr-empty">No Buzz drops yet. Click Buzz to capture.</p>' : '')}
+        <p class="wr-empty" style="margin-top:12px"><button type="button" class="wr-send" data-wr="crm">Open Meridian CRM</button></p>
+      `;
+      try { globalThis.DenizenProposals?.show?.(); } catch (_) {}
+      return;
+    }
+    if (currentTab === 'trail') {
+      body.classList.add('denizen-work-rail-host');
+      body.innerHTML = '<p class="wr-empty">Live work trail. Tab still toggles the floating feed.</p>';
+      const feed = document.getElementById('denizen-work-feed');
+      if (feed) {
+        body.appendChild(feed);
+        feed.style.display = 'flex';
+      }
+      return;
+    }
+    if (currentTab === 'memory') {
+      const assistant = globalThis.DenizenVisitorSession?.getAssistant?.();
+      const rows = snapshot.memory || [];
+      body.innerHTML = `
+        <p class="wr-empty">Markdown memory from souls on disk. Search the palace, then open a desk.</p>
+        <input type="text" id="wr-memory-q" placeholder="Search memory" />
+        <button type="button" class="wr-send" data-wr="memory-search">Search</button>
+        ${assistant ? `<div class="wr-card"><b>${esc(assistant.assistant_name || assistant.npc_key)}</b><div>Your claimed assistant keeps memory across sessions.</div></div>` : ''}
+        ${rows.length ? rows.map((m) => `
+          <div class="wr-card">
+            <b>${esc(m.npc)}</b>
+            ${(m.lines || []).map((line) => `<div><small>${esc(line)}</small></div>`).join('')}
+          </div>`).join('') : '<p class="wr-empty">No memory lines yet. Claim an assistant or run the floor.</p>'}
+      `;
+    }
+  }
+
+  async function refresh(extra = {}) {
+    try {
+      const sess = globalThis.DenizenVisitorSession;
+      const u = new URL('/api/workbench', window.location.origin);
+      const sid = sess?.getSessionId?.();
+      if (sid) u.searchParams.set('session_id', sid);
+      if (extra.q) u.searchParams.set('q', extra.q);
+      const res = await fetch(u.toString(), {
+        headers: sess?.authHeaders?.() || {},
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.ok) snapshot = json;
+    } catch (_) {}
+    if (railEl && document.documentElement.classList.contains('denizen-work-rail-open')) {
+      renderBody();
+    }
+  }
+
+  async function searchMemory() {
+    const q = String(railEl?.querySelector('#wr-memory-q')?.value || '').trim();
+    currentTab = 'memory';
+    await refresh({ q });
+  }
+
+  async function sendToAbby() {
+    const ta = railEl?.querySelector('#wr-note');
+    const note = String(ta?.value || '').trim();
+    if (!note) return;
+    const sess = globalThis.DenizenVisitorSession;
+    const res = await fetch('/api/context-drop', {
+      method: 'POST',
+      headers: sess?.authHeaders?.() || { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        note,
+        kind: 'note',
+        to: 'Abby',
+        from: sess?.getDisplayName?.() || 'Visitor',
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (ta) ta.value = '';
+    if (json.ok) await refresh();
+  }
+
+  function talkTo(name) {
+    try {
+      globalThis.__DenizenPlayerChat?.open?.();
+      const input = document.querySelector('#player-chat-input, #player-chat-panel textarea, #player-chat-panel input');
+      if (input) {
+        input.focus();
+        if (!input.value) input.value = `@${name} `;
+      }
+    } catch (_) {}
+  }
+
+  function openRail() {
+    injectStyles();
+    buildChrome();
+    document.documentElement.classList.add('denizen-work-rail-open');
+    try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
+    setTab(currentTab);
+    void refresh();
+  }
+
+  function closeRail() {
+    document.documentElement.classList.remove('denizen-work-rail-open');
+    try { localStorage.setItem(STORAGE_KEY, '0'); } catch (_) {}
+    const feed = document.getElementById('denizen-work-feed');
+    if (feed && feed.parentElement?.id === 'denizen-work-rail-body') {
+      document.body.appendChild(feed);
+    }
+  }
+
+  function toggleRail() {
+    if (document.documentElement.classList.contains('denizen-work-rail-open')) closeRail();
+    else openRail();
+  }
+
+  function mountPhone(host) {
+    injectStyles();
+    buildChrome();
+    if (!host) return;
+    host.innerHTML = '';
+    host.appendChild(railEl);
+    document.documentElement.classList.add('denizen-work-rail-open');
+    setTab(currentTab);
+    void refresh();
+  }
+
+  function unmountPhone() {
+    if (!railEl) return;
+    if (railEl.parentElement && railEl.parentElement.id === 'dzp-workbench-host') {
+      document.body.appendChild(railEl);
+    }
+    if (isTouchPhone()) {
+      document.documentElement.classList.remove('denizen-work-rail-open');
+    }
+  }
+
+  function boot() {
+    if (isTouchPhone()) return;
+    injectStyles();
+    buildChrome();
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = String(e.target?.tagName || '');
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable) return;
+      e.preventDefault();
+      toggleRail();
+    });
+    document.addEventListener('denizen-buzz-drop', () => {
+      currentTab = 'inbox';
+      if (document.documentElement.classList.contains('denizen-work-rail-open')) void refresh();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+  globalThis.DenizenWorkRail = {
+    open: openRail,
+    close: closeRail,
+    toggle: toggleRail,
+    mountPhone,
+    unmountPhone,
+    refresh,
+  };
+})();

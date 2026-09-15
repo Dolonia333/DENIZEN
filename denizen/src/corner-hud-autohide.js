@@ -25,8 +25,7 @@
     // itself a mutation, which re-triggers the observer in an infinite
     // microtask loop that freezes the page and OOMs the tab.
     const css = `
-      #${HIT_PHONE_ID},
-      #${HIT_SPEAK_ID} {
+      #${HIT_PHONE_ID} {
         display: none;
         position: fixed;
         /* Below FABs so once revealed, clicks hit the real buttons */
@@ -38,67 +37,74 @@
         pointer-events: auto;
       }
       #${HIT_PHONE_ID} { right: 0; }
-      #${HIT_SPEAK_ID} { left: 0; }
+      #${HIT_SPEAK_ID} { display: none !important; }
 
       /* Hide on laptop/desktop/tablet — not real phones */
-      html:not(.denizen-phone).denizen-phone-mode #${HIT_PHONE_ID},
-      html:not(.denizen-phone).denizen-phone-mode #${HIT_SPEAK_ID} {
+      html:not(.denizen-phone).denizen-phone-mode #${HIT_PHONE_ID} {
         display: block;
       }
       html.denizen-phone-open #${HIT_PHONE_ID},
-      html.denizen-phone-open #${HIT_SPEAK_ID},
       html.denizen-chat-open #${HIT_PHONE_ID},
-      html.denizen-chat-open #${HIT_SPEAK_ID} {
+      html.denizen-buzz-ring-open #${HIT_PHONE_ID} {
         display: none !important;
       }
 
       /* While FABs are visible, hit zones must not steal clicks */
-      html.denizen-corner-hud-open #${HIT_PHONE_ID},
-      html.denizen-corner-hud-open #${HIT_SPEAK_ID} {
+      html.denizen-corner-hud-open #${HIT_PHONE_ID} {
         pointer-events: none !important;
       }
 
-      html:not(.denizen-phone).denizen-phone-mode #denizen-phone-fab,
-      html:not(.denizen-phone).denizen-phone-mode #denizen-speak-fab {
+      html:not(.denizen-phone).denizen-phone-mode #denizen-phone-fab {
         transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
       }
 
-      /* Fully gone until corner HUD is open / hovered / listening */
-      html:not(.denizen-phone).denizen-phone-mode:not(.denizen-corner-hud-open):not(.denizen-phone-open):not(.denizen-chat-open) #denizen-phone-fab:not(:hover):not(:focus-within) {
+      /* Fully gone until corner HUD is open / hovered */
+      html:not(.denizen-phone).denizen-phone-mode:not(.denizen-corner-hud-open):not(.denizen-phone-open):not(.denizen-chat-open):not(.denizen-buzz-ring-open) #denizen-phone-fab:not(:hover):not(:focus-within) {
         transform: translateX(120%) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        visibility: hidden !important;
-      }
-      html:not(.denizen-phone).denizen-phone-mode:not(.denizen-corner-hud-open):not(.denizen-phone-open):not(.denizen-chat-open) #denizen-speak-fab:not(:hover):not(:focus-within):not(.listening) {
-        transform: translateX(-120%) !important;
         opacity: 0 !important;
         pointer-events: none !important;
         visibility: hidden !important;
       }
 
       html:not(.denizen-phone).denizen-corner-hud-open #denizen-phone-fab,
-      html:not(.denizen-phone).denizen-corner-hud-open #denizen-speak-fab,
-      html:not(.denizen-phone) #denizen-phone-fab:hover,
-      html:not(.denizen-phone) #denizen-phone-fab:focus-within,
-      html:not(.denizen-phone) #denizen-speak-fab:hover,
-      html:not(.denizen-phone) #denizen-speak-fab:focus-within,
-      html:not(.denizen-phone) #denizen-speak-fab.listening {
+      html:not(.denizen-phone):not(.denizen-buzz-ring-open) #denizen-phone-fab:hover,
+      html:not(.denizen-phone):not(.denizen-buzz-ring-open) #denizen-phone-fab:focus-within {
         transform: translateX(0) !important;
         opacity: 1 !important;
         pointer-events: auto !important;
         visibility: visible !important;
         z-index: 2147483646 !important;
       }
+      html.denizen-buzz-ring-open #denizen-phone-fab,
+      html.denizen-buzz-ring-open #denizen-phone-fab:hover,
+      html.denizen-buzz-ring-open #denizen-phone-fab:focus-within,
+      html.denizen-buzz-ring-open #denizen-phone-fab.denizen-press-active,
+      html.denizen-buzz-ring-open #denizen-phone-fab:active {
+        right: 168px !important;
+        bottom: 152px !important;
+        transform: none !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        z-index: 2147483646 !important;
+      }
+      html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab,
+      html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab:hover,
+      html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab:focus-within {
+        right: 50% !important;
+        bottom: 38% !important;
+        transform: translateX(50%) !important;
+      }
+      #denizen-speak-fab { display: none !important; }
       /* Keep slide-in transform; scale lives on inner .dzp-fab-buzz so Buzz stays crisp */
-      html:not(.denizen-phone) #denizen-phone-fab:hover {
+      html:not(.denizen-phone):not(.denizen-buzz-ring-open) #denizen-phone-fab:hover {
         transform: translateX(0) !important;
       }
       html:not(.denizen-phone) #denizen-phone-fab:hover .dzp-fab-buzz {
         filter: brightness(1.08);
       }
-      html:not(.denizen-phone) #denizen-phone-fab.denizen-press-active,
-      html:not(.denizen-phone) #denizen-phone-fab:active {
+      html:not(.denizen-phone):not(.denizen-buzz-ring-open) #denizen-phone-fab.denizen-press-active,
+      html:not(.denizen-phone):not(.denizen-buzz-ring-open) #denizen-phone-fab:active {
         transform: translateX(0) !important;
       }
       html:not(.denizen-phone) #denizen-phone-fab.denizen-press-active .dzp-fab-buzz,
@@ -116,12 +122,8 @@
       phoneHit.setAttribute('aria-hidden', 'true');
       document.body.appendChild(phoneHit);
     }
-    if (!document.getElementById(HIT_SPEAK_ID)) {
-      const speakHit = document.createElement('div');
-      speakHit.id = HIT_SPEAK_ID;
-      speakHit.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(speakHit);
-    }
+    const leftoverSpeak = document.getElementById(HIT_SPEAK_ID);
+    if (leftoverSpeak) leftoverSpeak.remove();
   }
 
   function reveal(ms = 2400) {
@@ -152,9 +154,7 @@
     injectStyles();
     ensureHitZones();
     wireEl(document.getElementById('denizen-phone-fab'));
-    wireEl(document.getElementById('denizen-speak-fab'));
     wireEl(document.getElementById(HIT_PHONE_ID));
-    wireEl(document.getElementById(HIT_SPEAK_ID));
   }
 
   function boot() {
@@ -166,9 +166,8 @@
       if (root.classList.contains('denizen-phone-open')) return;
       if (root.classList.contains('denizen-chat-open')) return;
       const nearBottom = window.innerHeight - e.clientY <= 120;
-      const nearLeft = e.clientX <= 100;
       const nearRight = window.innerWidth - e.clientX <= 100;
-      if (nearBottom && (nearLeft || nearRight)) reveal(2800);
+      if (nearBottom && nearRight) reveal(2800);
     }, { passive: true });
     if (typeof MutationObserver !== 'undefined') {
       const obs = new MutationObserver(scan);

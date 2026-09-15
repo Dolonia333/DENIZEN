@@ -36,6 +36,9 @@
         flex-shrink: 0;
         white-space: nowrap;
         box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45), 2px 2px 0 #020617;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
       }
       #${BTN_ID}:hover {
         background: rgba(245, 158, 11, 0.22);
@@ -195,12 +198,19 @@
     projectsBtn.id = BTN_ID;
     projectsBtn.type = 'button';
     projectsBtn.textContent = 'Projects';
+    const paint = () => {
+      const T = globalThis.DenizenTablerIcons;
+      if (T?.setEl) T.setEl(projectsBtn, 'briefcase', 'Projects', { size: 12, fallback: '📁' });
+      else projectsBtn.textContent = '📁 Projects';
+    };
+    paint();
+    window.addEventListener('denizen-tabler-ready', paint);
     projectsBtn.title = 'Your personal project list';
     projectsBtn.addEventListener('click', () => togglePanel());
     const actions = document.getElementById('player-chat-header-actions');
     const closeBtn = document.getElementById('player-chat-close-btn');
     if (actions) {
-      actions.insertBefore(projectsBtn, closeBtn || null);
+      actions.appendChild(projectsBtn);
     } else {
       const header = document.getElementById('player-chat-header');
       if (header) {
@@ -211,7 +221,7 @@
           header.appendChild(created);
           if (closeBtn) created.appendChild(closeBtn);
         }
-        created.insertBefore(projectsBtn, document.getElementById('player-chat-close-btn') || null);
+        created.appendChild(projectsBtn);
       } else {
         document.body.appendChild(projectsBtn);
       }

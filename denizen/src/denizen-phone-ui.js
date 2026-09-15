@@ -98,6 +98,8 @@
       c: ['#22d3ee', '#0e7490'] },
     { id: 'mesh', tabler: 'hexagon', icon: '⬡', label: 'Power Grid', type: 'panel', trigger: '#denizen-mesh-jobs-chip', panel: '#denizen-mesh-jobs-panel',
       c: ['#818cf8', '#3730a3'], badgeFrom: '#denizen-mesh-jobs-chip' },
+    { id: 'workbench', tabler: 'columns', icon: '📋', label: 'Workbench', type: 'internal',
+      c: ['#a3e635', '#3f6212'] },
     { id: 'approvals', tabler: 'clipboard-list', icon: '📋', label: 'Approvals', type: 'panel', trigger: '#denizen-proposals-chip', panel: '#denizen-proposals-panel',
       c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip',
       open: () => window.DenizenProposals?.show?.(),
@@ -171,11 +173,12 @@
   function appIconMarkup(app, size = 26) {
     const T = globalThis.DenizenTablerIcons;
     const name = app?.tabler;
+    const emoji = app?.icon || '';
     if (T?.icon && name) {
       T.ensureStyles?.();
-      return T.icon(name, { size: Math.round(size * 0.78), className: 'dzp-ti' });
+      return T.icon(name, { size: Math.round(size * 0.78), className: 'dzp-ti', fallback: emoji });
     }
-    return app?.icon || '';
+    return emoji;
   }
 
   /** Tour-quality Buzz mascot for the bottom-right phone FAB (CRM, chat, etc.). */
@@ -248,10 +251,10 @@
   const LAYOUT_STORAGE_KEY = 'denizen-phone-layout';
   const OFFICE_GUIDE_STORAGE_KEY = 'denizen-office-guide-progress-v1';
   const MAX_DOCK_APPS = 4;
-  const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workflow', 'profile'];
+  const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workbench', 'profile'];
   /** Prefer these near the top of the home grid (first page / less scroll). */
-  const PRIORITY_GRID_IDS = ['discordmap', 'discordcmds', 'crm', 'studioboard', 'tour', 'npcteam', 'market', 'station', 'compute'];
-  const LAYOUT_VERSION = 5; // v5: surface Studio Board next to CRM
+  const PRIORITY_GRID_IDS = ['workbench', 'crm', 'studioboard', 'compute', 'station', 'npcteam', 'tour', 'discordmap', 'discordcmds', 'market', 'approvals'];
+  const LAYOUT_VERSION = 6; // v6: Workbench + Studio Board next to CRM
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {
@@ -1488,6 +1491,10 @@
         color: rgba(255, 255, 255, 0.96);
         filter: drop-shadow(0 1px 2px rgba(2, 6, 23, 0.45));
       }
+      #${FRAME_ID} .dzp-app-icon .denizen-ti-wrap,
+      #${FRAME_ID} .dzp-folder-icons .denizen-ti-wrap {
+        color: rgba(255, 255, 255, 0.96);
+      }
       #${FRAME_ID} .dzp-folder-icons .dzp-ti {
         font-size: 14px !important;
       }
@@ -1684,6 +1691,17 @@
         gap: 0;
         overflow: hidden;
         background: #0a0e1a;
+      }
+      #${FRAME_ID} .dzp-settings.dzp-workbench {
+        padding: 0;
+        gap: 0;
+        overflow: hidden;
+        background: #060c18;
+      }
+      #${FRAME_ID} #dzp-workbench-host {
+        flex: 1;
+        min-height: 0;
+        display: flex;
       }
       #${FRAME_ID} .dzp-workflow-frame {
         flex: 1;
@@ -3023,9 +3041,10 @@
     shellEl?.querySelector(`#${FRAME_ID}`)?.classList.remove('dzp-app-open');
     const ph = shellEl?.querySelector('.dzp-placeholder');
     if (ph) { ph.classList.remove('show', 'err'); }
-    settingsEl?.classList.remove('show', 'dzp-office-guide', 'dzp-station-connect', 'dzp-workflow');
+    settingsEl?.classList.remove('show', 'dzp-office-guide', 'dzp-station-connect', 'dzp-workflow', 'dzp-workbench');
     if (settingsEl) settingsEl.onclick = null;
     globalThis.DenizenPhoneStationConnect?.unmount?.();
+    if (closingId === 'workbench') globalThis.DenizenWorkRail?.unmountPhone?.();
     loadingToken += 1;
     if (appWatchTimer) { clearInterval(appWatchTimer); appWatchTimer = null; }
     refreshAppStatuses();
@@ -3328,6 +3347,23 @@
     document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
   }
 
+  function renderWorkbenchApp(app) {
+    setAppOpenUi(app);
+    settingsEl.classList.remove('dzp-office-guide', 'dzp-station-connect', 'dzp-workflow');
+    settingsEl.classList.add('show', 'dzp-workbench');
+    settingsEl.innerHTML = '<div id="dzp-workbench-host"></div>';
+    const host = settingsEl.querySelector('#dzp-workbench-host');
+    if (globalThis.DenizenWorkRail?.mountPhone) {
+      globalThis.DenizenWorkRail.mountPhone(host);
+    } else {
+      host.innerHTML = '<p class="v">Workbench is loading…</p>';
+      globalThis.DenizenLazyScripts?.load?.(['./src/work-rail.js?v=wr1']).then(() => {
+        globalThis.DenizenWorkRail?.mountPhone?.(host);
+      });
+    }
+    document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
+  }
+
 
   function renderSettings(app) {
     setAppOpenUi(app);
@@ -3419,6 +3455,7 @@
     if (app.type === 'internal') {
       if (app.id === 'station') { void renderStationConnect(app); }
       else if (app.id === 'workflow') renderWorkflowApp(app);
+      else if (app.id === 'workbench') renderWorkbenchApp(app);
       else renderSettings(app);
       return;
     }
@@ -3581,6 +3618,48 @@
     else openPhone();
   }
 
+  function bindBuzzFab(el) {
+    let longTimer = null;
+    let longFired = false;
+    const clearLong = () => {
+      if (longTimer) clearTimeout(longTimer);
+      longTimer = null;
+    };
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      longFired = false;
+      clearLong();
+      longTimer = setTimeout(() => {
+        longFired = true;
+        globalThis.DenizenBuzzCapture?.closeRing?.();
+        window.DenizenHaptics?.impact?.();
+        openPhone();
+      }, 520);
+    });
+    const end = (e) => {
+      const wasLong = longFired;
+      clearLong();
+      if (wasLong) return;
+      if (e.type === 'pointercancel') return;
+      if (shellEl?.classList.contains('open')) {
+        closePhoneFromUi();
+        return;
+      }
+      if (globalThis.DenizenBuzzCapture?.toggleRing) {
+        globalThis.DenizenBuzzCapture.toggleRing();
+        return;
+      }
+      openPhone();
+    };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      globalThis.DenizenBuzzCapture?.closeRing?.();
+      openPhone();
+    });
+  }
+
   function buildFab() {
     if (document.getElementById(FAB_ID)) return;
     fabEl = document.createElement('button');
@@ -3588,11 +3667,9 @@
     fabEl.type = 'button';
     fabEl.innerHTML = '<span class="dzp-fab-badge"></span>';
     ensurePhoneFabIcon();
-    fabEl.title = 'Buzz — open your office phone (chat, Citizen ID, City Power, tools)';
-    fabEl.setAttribute('aria-label', 'Open Buzz phone');
-    const bind = window.DenizenTouchBind?.bindPress;
-    if (bind) bind(fabEl, togglePhone);
-    else fabEl.addEventListener('click', togglePhone);
+    fabEl.title = 'Buzz — click to capture, hold for phone';
+    fabEl.setAttribute('aria-label', 'Buzz capture ring. Hold to open phone');
+    bindBuzzFab(fabEl);
     document.body.appendChild(fabEl);
   }
 
@@ -3632,6 +3709,7 @@
       repaintAppIcons();
       ensurePhoneFabIcon();
     });
+    window.addEventListener('denizen-tabler-ready', () => repaintAppIcons());
     document.addEventListener('denizen-browser-mirror-ready', () => setTimeout(refreshAppStatuses, 50));
     loadBrowserMirrorScript().catch(() => {});
     document.addEventListener('denizen-visitor-session-ready', () => setTimeout(refreshAppStatuses, 500));

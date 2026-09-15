@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Buzz</title>
+  <style>
+    html, body { margin: 0; background: transparent; overflow: hidden; font-family: "IBM Plex Sans", system-ui, sans-serif; }
+    #orb {
+      width: 64px; height: 80px; margin: 8px auto 0; border-radius: 14px;
+      background: linear-gradient(180deg, #facc15, #ca8a04); border: 2px solid #1e293b;
+      cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    #orb .eyes { display: flex; justify-content: center; gap: 10px; padding-top: 16px; }
+    #orb .eyes i { width: 8px; height: 8px; border-radius: 50%; background: #0f172a; }
+    #ring { display: none; position: relative; width: 240px; height: 240px; }
+    body.ring #orb { display: none; }
+    body.ring #ring, body.note #note { display: block; }
+    body.note #orb, body.note #ring { display: none; }
+    body.pick { background: rgba(15,23,42,0.18); cursor: crosshair; }
+    body.pick #orb, body.pick #ring, body.pick #note { display: none; }
+    .act {
+      position: absolute; width: 52px; height: 52px; margin: -26px 0 0 -26px;
+      border-radius: 50%; border: 1px solid #facc15; background: #0f172a; color: #fde68a;
+      font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    #note {
+      display: none; background: #0b1220; color: #e2e8f0; border: 1px solid #ca8a04;
+      border-radius: 14px; padding: 10px; height: 440px; box-sizing: border-box;
+    }
+    #note img { max-height: 140px; width: 100%; object-fit: contain; background: #020617; }
+    #note textarea {
+      width: 100%; height: 90px; background: transparent; color: #f8fafc; border: 0; resize: none;
+    }
+    #note footer { display: flex; justify-content: flex-end; gap: 8px; }
+    #note button { border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+    #sel {
+      display: none; position: fixed; border: 2px solid #a3e635; background: rgba(163,230,53,0.12); pointer-events: none;
+    }
+    body.pick #sel { display: block; }
+    .status { font-size: 11px; color: #94a3b8; min-height: 16px; }
+  </style>
+</head>
+<body>
+  <div id="orb" title="Buzz — click to capture"><div class="eyes"><i></i><i></i></div></div>
+  <div id="ring">
+    <button class="act" data-act="screenshot" style="left:78%;top:22%">Shot</button>
+    <button class="act" data-act="record" style="left:90%;top:48%">Rec</button>
+    <button class="act" data-act="meeting" style="left:78%;top:74%">Meet</button>
+    <button class="act" data-act="dictate" style="left:50%;top:86%">Say</button>
+    <button class="act" data-act="invisible" style="left:22%;top:74%">Ghost</button>
+    <button class="act" data-act="close" style="left:22%;top:30%">Hide</button>
+  </div>
+  <div id="note">
+    <strong>Buzz note</strong>
+    <img id="preview" alt="" />
+    <textarea id="line" placeholder="One line — what should they do?"></textarea>
+    <div class="status" id="status"></div>
+    <footer>
+      <button type="button" id="discard">Discard</button>
+      <button type="button" id="send">Send</button>
+    </footer>
+  </div>
+  <div id="sel"></div>
+  <script>
+    const api = window.DenizenDesktop || {};
+    let kind = 'screenshot';
+    let pngBase64 = '';
+    let localPath = '';
+    let transcript = '';
+    let rec = null;
+    let invisible = true;
+
+    function mode(name) {
+      document.body.className = name;
+      return api.buzzOverlayMode?.(name);
+    }
+
+    document.getElementById('orb').onclick = () => { mode('ring'); };
+
+    document.getElementById('ring').addEventListener('click', async (e) => {
+      const act = e.target.closest('[data-act]')?.dataset.act;
+      if (act === 'close') { mode('orb'); return; }
+      if (act === 'invisible') {
+        const next = await api.buzzOverlayInvisible?.(!invisible);
+        invisible = next?.invisible !== false;
+        document.getElementById('status').textContent = invisible
+          ? 'Invisible — out of screen share and recordings'
+          : 'Visible in screen share';
+        return;
+      }
+      if (act === 'screenshot') startPick();
+      if (act === 'record' || act === 'dictate') startRec(act);
+      if (act === 'meeting') startMeeting();
+    });
+
+    let pickOrigin = null;
+    function startPick() {
+      mode('pick');
+      pickOrigin = null;
+    }
+    window.addEventListener('mousedown', (e) => {
+      if (document.body.className !== 'pick') return;
+      pickOrigin = { x: e.screenX, y: e.screenY, cx: e.clientX, cy: e.clientY };
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!pickOrigin || document.body.className !== 'pick') return;
+      const sel = document.getElementById('sel');
+      const x = Math.min(pickOrigin.cx, e.clientX);
+      const y = Math.min(pickOrigin.cy, e.clientY);
+      sel.style.left = x + 'px';
+      sel.style.top = y + 'px';
+      sel.style.width = Math.abs(e.clientX - pickOrigin.cx) + 'px';
+      sel.style.height = Math.abs(e.clientY - pickOrigin.cy) + 'px';
+    });
+    window.addEventListener('mouseup', async (e) => {
+      if (!pickOrigin || document.body.className !== 'pick') return;
+      const rect = {
+        x: Math.min(pickOrigin.x, e.screenX),
+        y: Math.min(pickOrigin.y, e.screenY),
+        width: Math.abs(e.screenX - pickOrigin.x),
+        height: Math.abs(e.screenY - pickOrigin.y),
+      };
+      pickOrigin = null;
+      const cropped = await api.buzzCropScreen?.(rect);
+      pngBase64 = cropped?.pngBase64 || '';
+      localPath = '';
+      if (pngBase64 && api.buzzSaveCapture) {
+        try {
+          const saved = await api.buzzSaveCapture(pngBase64);
+          localPath = saved?.path || '';
+        } catch (_) {}
+      }
+      kind = 'screenshot';
+      const img = document.getElementById('preview');
+      img.src = pngBase64 ? ('data:image/png;base64,' + pngBase64) : '';
+      await mode('note');
+    });
+
+    async function startRec(nextKind) {
+      kind = nextKind;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      rec = new MediaRecorder(stream);
+      const chunks = [];
+      rec.ondataavailable = (ev) => { if (ev.data.size) chunks.push(ev.data); };
+      rec.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+        const sess = await api.buzzSession?.();
+        const buf = await blob.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        const audioBase64 = btoa(binary);
+        try {
+          const res = await fetch((sess?.serverUrl || '') + '/api/stt', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Session-Id': sess?.sessionId || '',
+              'X-Session-Token': sess?.sessionToken || '',
+            },
+            body: JSON.stringify({ audioBase64, mimeType: blob.type || 'audio/webm' }),
+          });
+          const json = await res.json();
+          transcript = json.text || '';
+          document.getElementById('line').value = transcript;
+        } catch (err) {
+          document.getElementById('status').textContent = err.message || 'STT failed';
+        }
+        await mode('note');
+      };
+      rec.start();
+      document.getElementById('status').textContent = 'Recording… click Send to stop, or wait.';
+      await mode('note');
+      setTimeout(() => { try { rec.stop(); } catch (_) {} }, 120000);
+    }
+
+    async function startMeeting() {
+      kind = 'meeting';
+      try {
+        const still = await api.buzzCaptureScreen?.();
+        pngBase64 = still?.pngBase64 || '';
+        localPath = '';
+        if (pngBase64 && api.buzzSaveCapture) {
+          try {
+            const saved = await api.buzzSaveCapture(pngBase64);
+            localPath = saved?.path || '';
+          } catch (_) {}
+        }
+        const img = document.getElementById('preview');
+        if (pngBase64) img.src = 'data:image/png;base64,' + pngBase64;
+      } catch (_) {}
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      rec = new MediaRecorder(stream);
+      rec.ondataavailable = async (ev) => {
+        if (!ev.data?.size) return;
+        const blob = ev.data;
+        const sess = await api.buzzSession?.();
+        const buf = await blob.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        try {
+          const res = await fetch((sess?.serverUrl || '') + '/api/stt', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Session-Id': sess?.sessionId || '',
+              'X-Session-Token': sess?.sessionToken || '',
+            },
+            body: JSON.stringify({ audioBase64: btoa(binary), mimeType: blob.type || 'audio/webm' }),
+          });
+          const json = await res.json();
+          const text = String(json.text || '').trim();
+          if (!text) return;
+          transcript = transcript ? `${transcript}\n${text}` : text;
+          const line = document.getElementById('line');
+          if (line && !line.value) line.value = text;
+          else if (line && text) line.value = `${line.value}\n${text}`;
+          document.getElementById('status').textContent = 'Meeting transcript landing…';
+        } catch (err) {
+          document.getElementById('status').textContent = err.message || 'STT failed';
+        }
+      };
+      rec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        document.getElementById('status').textContent = transcript
+          ? 'Meeting transcript ready — edit before send'
+          : 'Meeting captured — add a line, then Send';
+      };
+      rec.start(10 * 60 * 1000);
+      document.getElementById('status').textContent = 'Recording meeting… Send to stop. Transcripts land in parts.';
+      await mode('note');
+    }
+
+    document.getElementById('discard').onclick = () => {
+      pngBase64 = ''; transcript = ''; localPath = '';
+      document.getElementById('line').value = '';
+      mode('orb');
+    };
+
+    document.getElementById('send').onclick = async () => {
+      if (rec && rec.state !== 'inactive') {
+        rec.stop();
+        return;
+      }
+      const sess = await api.buzzSession?.();
+      const note = document.getElementById('line').value.trim();
+      const host = String(sess?.serverUrl || '');
+      const localOffice = /localhost|127\.0\.0\.1/i.test(host);
+      const attachments = (!localOffice && pngBase64)
+        ? [{ name: 'buzz-screenshot.png', mime: 'image/png', data: pngBase64 }]
+        : [];
+      document.getElementById('status').textContent = 'Sending…';
+      try {
+        const res = await fetch((sess?.serverUrl || '') + '/api/context-drop', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Id': sess?.sessionId || '',
+            'X-Session-Token': sess?.sessionToken || '',
+          },
+          body: JSON.stringify({
+            note, transcript, kind, to: 'Abby', from: 'Desktop Buzz',
+            attachments, localPath: localPath || undefined,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || json.ok === false) throw new Error(json.error || 'drop failed');
+        document.getElementById('status').textContent = 'Sent to ' + (json.to || 'Abby');
+        setTimeout(() => mode('orb'), 700);
+      } catch (err) {
+        document.getElementById('status').textContent = err.message || 'Send failed';
+      }
+    };
+  </script>
+</body>
+</html>

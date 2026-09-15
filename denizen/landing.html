@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>DENIZEN — The office for your AI agents</title>
-  <meta name="description" content="An office you can actually see. Every agent gets a desk, a role, and a trail of work — open the live demo." />
+  <meta name="description" content="The office for your AI agents. Floor, workbench, and Buzz — walk in, drop context, stay in the loop." />
   <meta name="theme-color" content="#1a1f2e" />
   <meta property="og:title" content="DENIZEN — The office for your AI agents" />
   <meta property="og:description" content="An office you can actually see. Every agent gets a desk, a role, and a trail of work — open the live demo." />
@@ -503,6 +503,8 @@
       50% { box-shadow: 0 0 0 6px rgba(163, 230, 53, 0); }
     }
     .hud-enter {
+      position: relative;
+      z-index: 2;
       font-family: var(--display);
       font-weight: 700;
       font-size: 0.75rem;
@@ -521,6 +523,8 @@
       white-space: nowrap;
       flex-shrink: 0;
       border-radius: 4px;
+      cursor: pointer;
+      pointer-events: auto;
     }
     .hud-enter:hover {
       filter: brightness(1.08);
@@ -2612,6 +2616,836 @@
     }
     .biz-note a { color: var(--lime); text-decoration: none; }
     .biz-note a:hover { text-decoration: underline; }
+
+    .product-views, .offers-section, .providers-strip, .meet-buzz, .privacy-strip, .coming-strip {
+      width: calc(100% - (var(--page-gutter) * 2));
+      max-width: 1080px;
+      margin: 0 auto var(--section-y);
+    }
+    .meet-buzz {
+      scroll-margin-top: 96px;
+      max-width: 1160px;
+    }
+    .meet-layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) minmax(0, 1.08fr);
+      gap: 28px 40px;
+      align-items: center;
+    }
+    .meet-copy { min-width: 0; }
+    .meet-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    .meet-badges span {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      color: var(--lime);
+      background: rgba(163, 230, 53, 0.08);
+    }
+    .meet-badges span.meet-badge-muted {
+      color: #94a3b8;
+      border-color: rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.5);
+    }
+    .product-views h2, .offers-section h2, .providers-strip h2, .meet-buzz h2, .privacy-strip h2, .coming-strip h2 {
+      font-family: var(--display);
+      font-size: clamp(1.4rem, 3.4vw, 2rem);
+      margin: 0 0 10px;
+      color: var(--cream);
+    }
+    .section-lead {
+      margin: 0 0 18px;
+      max-width: 56ch;
+      color: var(--text-soft);
+    }
+    .view-grid, .offer-grid, .privacy-grid, .coming-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .view-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .offer-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    @media (max-width: 1100px) {
+      .offer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .meet-layout { gap: 20px 24px; }
+    }
+    .privacy-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .privacy-wire {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .privacy-wire article {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(80, 110, 160, 0.18);
+      background: rgba(6, 12, 24, 0.72);
+    }
+    .privacy-wire h3 { margin: 0 0 8px; font-size: 15px; }
+    .privacy-wire p, .privacy-wire li { margin: 0 0 6px; color: var(--text-soft); font-size: 13px; line-height: 1.45; }
+    .privacy-wire ul { margin: 0; padding-left: 18px; }
+    .coming-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .view-card, .offer-card, .privacy-card, .coming-card {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(80, 110, 160, 0.18);
+      background: rgba(6, 12, 24, 0.72);
+    }
+    .view-card .kicker, .offer-card .kicker, .offer-tabs .kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin-bottom: 6px;
+    }
+    .view-card h3, .offer-card h3, .privacy-card h3, .coming-card h3 {
+      margin: 0 0 8px;
+      font-family: var(--display);
+      font-size: 1rem;
+      color: var(--cream);
+    }
+    .view-card p, .offer-card p, .privacy-card p, .coming-card p {
+      margin: 0;
+      color: var(--text-body);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .offer-card-tools {
+      border-color: rgba(163, 230, 53, 0.32);
+      background:
+        linear-gradient(165deg, rgba(163, 230, 53, 0.12), rgba(6, 12, 24, 0.78) 42%);
+      box-shadow: inset 0 1px 0 rgba(163, 230, 53, 0.16);
+    }
+    .offer-card-tools .offer-tools,
+    .offer-tools-visual .offer-tools {
+      list-style: none;
+      margin: 10px 0 12px;
+      padding: 0;
+      display: grid;
+      gap: 7px;
+    }
+    .offer-card-tools .offer-tools li,
+    .offer-tools-visual .offer-tools li {
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: var(--text-body);
+    }
+    .offer-card-tools .offer-tools strong,
+    .offer-tools-visual .offer-tools strong {
+      color: var(--cream);
+      font-weight: 700;
+    }
+    .offer-try {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--display);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--lime-bright);
+      text-decoration: none;
+    }
+    .offer-try:hover,
+    .offer-try:focus-visible {
+      text-decoration: underline;
+      color: #ecfccb;
+    }
+    .offers-section .section-kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin: 0 0 8px;
+    }
+    .offer-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.88fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+    .offer-preview {
+      position: relative;
+      min-height: 340px;
+      border-radius: 16px;
+      border: 1px solid rgba(163, 230, 53, 0.22);
+      background:
+        linear-gradient(165deg, rgba(163, 230, 53, 0.08), rgba(6, 12, 24, 0.82) 46%);
+      overflow: hidden;
+    }
+    .offer-panel {
+      display: none;
+      height: 100%;
+      padding: 22px 22px 20px;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .offer-panel.is-on {
+      display: flex;
+    }
+    .offer-visual {
+      flex: 1 1 auto;
+      min-height: 148px;
+      border-radius: 12px;
+      border: 1px solid rgba(80, 110, 160, 0.22);
+      background: rgba(4, 10, 20, 0.55);
+      overflow: hidden;
+      position: relative;
+    }
+    .offer-copy h3 {
+      margin: 0 0 6px;
+      font-family: var(--display);
+      font-size: 1.15rem;
+      color: var(--cream);
+    }
+    .offer-copy p {
+      margin: 0 0 12px;
+      color: var(--text-body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .offer-tabs {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+    .offer-tabs [role="tab"] {
+      display: grid;
+      gap: 2px;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(80, 110, 160, 0.2);
+      background: rgba(6, 12, 24, 0.72);
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    }
+    .offer-tabs [role="tab"] .kicker {
+      margin-bottom: 0;
+    }
+    .offer-tab-title {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--cream);
+    }
+    .offer-tab-line {
+      font-size: 0.78rem;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+    .offer-tabs [role="tab"]:hover,
+    .offer-tabs [role="tab"]:focus-visible {
+      border-color: rgba(163, 230, 53, 0.4);
+    }
+    .offer-tabs [role="tab"][aria-selected="true"] {
+      border-color: rgba(163, 230, 53, 0.55);
+      background: linear-gradient(180deg, rgba(163, 230, 53, 0.12), rgba(6, 12, 24, 0.8));
+      box-shadow: inset 3px 0 0 var(--lime);
+    }
+    .offer-floor {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      gap: 10px;
+      height: 100%;
+      min-height: 168px;
+      padding: 18px 14px 14px;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(56, 189, 248, 0.08), transparent 55%),
+        linear-gradient(180deg, #1a2740 0%, #121a2c 42%, #3d4a5c 42%, #2a3344 100%);
+    }
+    .offer-desk {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .offer-desk .npc-portrait {
+      --npc-scale: 1.85;
+      border-radius: 6px;
+      border: 1px solid rgba(125, 211, 252, 0.28);
+      background: #0b1220;
+      box-shadow: 0 8px 0 #1e293b, 0 10px 0 #020617;
+    }
+    .offer-desk span {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .offer-desk em {
+      font-style: normal;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--lime);
+    }
+    .offer-desk em.is-wait { color: #fbbf24; }
+    .offer-rail {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
+      height: 100%;
+      min-height: 168px;
+    }
+    .offer-wb-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(80, 110, 160, 0.22);
+      font-family: var(--display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--cream);
+    }
+    .offer-wb-head span { color: var(--lime); font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; }
+    .offer-wb-card {
+      margin: 12px 14px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(163, 230, 53, 0.4);
+      background: rgba(163, 230, 53, 0.08);
+    }
+    .offer-wb-card strong { display: block; color: var(--cream); font-size: 0.88rem; margin-bottom: 4px; }
+    .offer-wb-card p { margin: 0; font-size: 0.78rem; color: var(--text-muted); }
+    .offer-wb-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      margin-top: auto;
+      background: rgba(80, 110, 160, 0.18);
+      border-top: 1px solid rgba(80, 110, 160, 0.22);
+    }
+    .offer-wb-nav span {
+      padding: 10px 6px;
+      text-align: center;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+      color: var(--text-muted);
+      background: rgba(8, 14, 28, 0.85);
+    }
+    .offer-wb-nav span.is-on { color: var(--lime); background: rgba(6, 12, 24, 0.95); }
+    .offer-buzz-scene {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      height: 100%;
+      min-height: 200px;
+      padding: 12px 12px 10px;
+      background:
+        radial-gradient(ellipse 50% 50% at 50% 42%, rgba(163, 230, 53, 0.08), transparent 62%),
+        #0b1220;
+    }
+    .offer-buzz-mini {
+      position: relative;
+      width: 210px;
+      height: 210px;
+      flex-shrink: 0;
+    }
+    .offer-buzz-mini .offer-orbit {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(163, 230, 53, 0.35);
+    }
+    .offer-buzz-mini .landing-buzz-phone {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 64px;
+      height: 80px;
+      margin: -40px 0 0 -32px;
+      animation: none;
+    }
+    .offer-buzz-mini .landing-buzz-pad span {
+      display: block;
+      width: 7px;
+      height: 7px;
+      border-radius: 1px;
+      border: 1px solid #020617;
+      background: #475569;
+    }
+    .offer-act {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 36px;
+      height: 36px;
+      margin: -18px 0 0 -18px;
+      border-radius: 50%;
+      border: 0;
+      background: #f8f4ec;
+      color: #1a1520;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+      transform: rotate(calc(var(--i) * 60deg - 90deg)) translate(88px) rotate(calc(-1 * (var(--i) * 60deg - 90deg)));
+    }
+    .offer-act svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    .offer-act.is-on {
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), 0 0 0 2px rgba(163, 230, 53, 0.7);
+    }
+    .offer-act-close {
+      background: #2a2f3a;
+      color: #f4efe4;
+    }
+    .offer-note {
+      width: min(260px, 100%);
+      border-radius: 10px;
+      border: 1px solid rgba(80, 110, 160, 0.28);
+      background: rgba(8, 14, 28, 0.92);
+      overflow: hidden;
+    }
+    .offer-note header {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 10px;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fde68a;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .offer-note p {
+      margin: 0;
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #cbd5e1;
+    }
+    .offer-brands {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px;
+      align-content: center;
+      height: 100%;
+    }
+    .offer-tool-tiles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 14px;
+      height: 100%;
+    }
+    .offer-tool-tiles div {
+      padding: 12px 12px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(80, 110, 160, 0.22);
+      background: rgba(8, 14, 28, 0.72);
+    }
+    .offer-tool-tiles strong {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--cream);
+      margin-bottom: 4px;
+    }
+    .offer-tool-tiles span {
+      font-size: 0.72rem;
+      line-height: 1.35;
+      color: var(--text-muted);
+    }
+    .brand-mark {
+      width: 20px;
+      height: 20px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .faq-strip {
+      max-width: 720px;
+      margin: var(--section-y) auto 0;
+      padding: clamp(18px, 3vw, 28px) var(--page-gutter);
+    }
+    .faq-strip .section-kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin: 0 0 8px;
+    }
+    .faq-strip h2 {
+      font-family: var(--display);
+      font-size: clamp(1.3rem, 3vw, 1.65rem);
+      margin: 0 0 8px;
+      color: var(--cream);
+    }
+    .faq-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .faq-list details {
+      border-radius: 12px;
+      border: 1px solid rgba(80, 110, 160, 0.2);
+      background: rgba(6, 12, 24, 0.72);
+      padding: 0 16px;
+    }
+    .faq-list summary {
+      cursor: pointer;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--cream);
+      padding: 14px 0;
+      list-style: none;
+    }
+    .faq-list summary::-webkit-details-marker { display: none; }
+    .faq-list summary::after {
+      content: "+";
+      float: right;
+      color: var(--lime);
+      font-weight: 700;
+    }
+    .faq-list details[open] summary::after { content: "–"; }
+    .faq-list details p {
+      margin: 0 0 14px;
+      color: var(--text-body);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .offer-tabs [role="tab"],
+      .offer-panel { transition: none; }
+    }
+    .provider-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .provider-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 211, 252, 0.25);
+      background: rgba(8, 16, 32, 0.78);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+    .provider-pill svg,
+    .provider-pill .brand-mark {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .meet-buzz .section-kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin: 0 0 8px;
+    }
+    .meet-stage {
+      position: relative;
+      min-height: 460px;
+      margin: 0;
+      padding: 36px 20px 52px;
+      border-radius: 22px;
+      border: 1px solid #e4ddd0;
+      background:
+        radial-gradient(ellipse 70% 70% at 50% 42%, rgba(255,255,255,0.65), transparent 62%),
+        #f3eee4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+    .meet-stage-hint {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      margin: 0;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8a8174;
+    }
+    .meet-stage-hint button {
+      background: none;
+      border: 0;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      cursor: pointer;
+    }
+    .meet-ring {
+      position: relative;
+      width: min(360px, 78vw);
+      height: min(360px, 78vw);
+      flex: 0 0 auto;
+    }
+    .meet-orbit {
+      position: absolute;
+      inset: 8%;
+      width: 84%;
+      height: 84%;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.78);
+      transition: opacity 0.28s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .meet-ring.open .meet-orbit {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .meet-ring .mb-orb {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: auto;
+      height: auto;
+      margin: 0;
+      border: 0;
+      padding: 18px 14px 10px;
+      background: transparent;
+      cursor: pointer;
+      z-index: 3;
+      transform: translate(-50%, -50%);
+      transition: transform 0.2s ease;
+    }
+    .meet-ring .mb-orb:hover,
+    .meet-ring .mb-orb:focus-visible {
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+    .meet-ring .mb-orb:focus-visible {
+      outline: 2px solid var(--lime);
+      outline-offset: 6px;
+      border-radius: 18px;
+    }
+    .meet-ring .mb-orb .landing-buzz-phone {
+      width: 96px;
+      height: 118px;
+      border-radius: 16px 16px 22px 22px;
+      padding-top: 14px;
+      gap: 10px;
+      border-width: 3px;
+      pointer-events: none;
+      filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.45));
+    }
+    .meet-ring .mb-orb .landing-buzz-antenna {
+      top: -12px;
+      right: 18px;
+      width: 3px;
+      height: 14px;
+    }
+    .meet-ring .mb-orb .landing-buzz-antenna::after {
+      top: -5px;
+      left: -4px;
+      width: 11px;
+      height: 11px;
+    }
+    .meet-ring .mb-orb .landing-buzz-screen {
+      width: 58px;
+      height: 40px;
+      border-radius: 7px;
+      gap: 9px;
+    }
+    .meet-ring .mb-orb .landing-buzz-eye {
+      width: 8px;
+      height: 12px;
+      border-radius: 2px;
+    }
+    .meet-ring .mb-orb .landing-buzz-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 9px);
+      gap: 4px;
+    }
+    .meet-ring .mb-orb .landing-buzz-pad span {
+      display: block;
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      border: 1px solid #020617;
+      background: #475569;
+    }
+    .meet-ring .mb-act {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 64px;
+      height: 64px;
+      margin: -32px 0 0 -32px;
+      border: 0;
+      border-radius: 50%;
+      background: #f8f4ec;
+      color: #1a1520;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transform: rotate(calc(var(--i) * 60deg - 90deg)) translate(0) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(0.4);
+      transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+      z-index: 2;
+    }
+    .meet-ring .mb-act svg.mb-ico {
+      width: 22px;
+      height: 22px;
+      display: block;
+      stroke: currentColor;
+    }
+    .meet-ring .mb-act i {
+      display: none;
+    }
+    .meet-ring.open .mb-act {
+      opacity: 1;
+      pointer-events: auto;
+      transform: rotate(calc(var(--i) * 60deg - 90deg)) translate(min(132px, 36vw)) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(1);
+    }
+    .meet-ring.open .mb-act:nth-child(2) { transition-delay: 0.02s; }
+    .meet-ring.open .mb-act:nth-child(3) { transition-delay: 0.05s; }
+    .meet-ring.open .mb-act:nth-child(4) { transition-delay: 0.08s; }
+    .meet-ring.open .mb-act:nth-child(5) { transition-delay: 0.11s; }
+    .meet-ring.open .mb-act:nth-child(6) { transition-delay: 0.14s; }
+    .meet-ring.open .mb-act:nth-child(7) { transition-delay: 0.17s; }
+    .meet-ring .mb-act:hover,
+    .meet-ring .mb-act.is-on {
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34), 0 0 0 3px rgba(163, 230, 53, 0.45);
+    }
+    .meet-ring .mb-act-close {
+      background: #2a2f3a;
+      color: #f4efe4;
+    }
+    .meet-ring .mb-act[disabled] {
+      background: #d7d2c8;
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .meet-ring.open .mb-act[disabled] { opacity: 0.55; }
+    .meet-orbit circle { stroke: rgba(40, 36, 30, 0.22); }
+    .meet-copy {
+      max-width: 62ch;
+    }
+    .meet-copy .section-lead { margin-bottom: 16px; }
+    .meet-copy .btn { margin-top: 18px; }
+    .meet-bullets {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+    .meet-bullets li {
+      color: var(--text-body);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .meet-bullets strong { color: var(--cream); }
+    .meet-note {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      margin: 16px 0 0;
+      line-height: 1.5;
+    }
+    .meet-previews {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 28px;
+    }
+    .meet-preview {
+      border-radius: 16px;
+      border: 1px solid rgba(80, 110, 160, 0.2);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.96));
+      overflow: hidden;
+      color: #e2e8f0;
+    }
+    .meet-preview header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      font-size: 12px;
+      color: #fde68a;
+      font-weight: 700;
+    }
+    .meet-preview header span { color: #94a3b8; font-weight: 500; }
+    .meet-preview p {
+      margin: 0;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      min-height: 88px;
+    }
+    .meet-preview footer {
+      padding: 8px 12px 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .meet-preview footer span {
+      border-radius: 999px;
+      background: #a3e635;
+      color: #052e16;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 10px;
+    }
+    @media (max-width: 900px) {
+      .meet-layout, .meet-previews { grid-template-columns: 1fr; }
+      .meet-stage { min-height: 400px; }
+      .view-grid, .offer-grid, .privacy-grid, .privacy-wire, .coming-grid {
+        grid-template-columns: 1fr;
+      }
+      .offer-stage { grid-template-columns: 1fr; }
+      .offer-preview { min-height: 280px; scroll-margin-top: 72px; }
+    }
+    @media (max-width: 720px) {
+      .meet-ring { width: min(300px, 88vw); height: min(300px, 88vw); }
+      .meet-ring .mb-act {
+        width: 48px;
+        height: 48px;
+        margin: -24px 0 0 -24px;
+      }
+      .meet-ring.open .mb-act {
+        transform: rotate(calc(var(--i) * 60deg - 90deg)) translate(min(108px, 30vw)) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(1);
+      }
+      .meet-ring .mb-orb .landing-buzz-phone {
+        width: 72px;
+        height: 90px;
+      }
+    }
+
     @media (max-width: 720px) {
       .biz-grid { grid-template-columns: 1fr; }
       .biz-actions .btn {
@@ -2889,11 +3723,11 @@
         <p class="hero-brand">DENI<em>ZEN</em></p>
         <div class="hero-tagline">The office for your AI agents</div>
         <h1>An office you can actually <em>see</em>.</h1>
-        <p class="hero-sub">An AI workforce you can see — agents run the work; <strong>you stay in the loop</strong> when something needs a human.</p>
-        <p class="hero-enter-hint">Buzz the phone or press <kbd>B</kbd> to walk in</p>
+        <p class="hero-sub">You do the work only you can do. The office does the rest — and you can <strong>see</strong> it.</p>
+        <p class="hero-enter-hint">Click Buzz to walk in</p>
       </div>
-      <a class="hero-buzz" href="/office?demo=1" id="hero-buzz" aria-label="Buzz the lobby phone — open live demo (press B)">
-        <div class="landing-buzz-bubble" id="hero-buzz-bubble">Ready to buzz you in · press B</div>
+      <a class="hero-buzz" href="/office?demo=1" id="hero-buzz" aria-label="Buzz the lobby phone — open live demo">
+        <div class="landing-buzz-bubble" id="hero-buzz-bubble">Ready to buzz you in</div>
         <div class="landing-buzz-phone">
           <span class="landing-buzz-antenna" aria-hidden="true"></span>
           <div class="landing-buzz-screen" aria-hidden="true">
@@ -2965,6 +3799,280 @@
     </div>
   </section>
 
+  <section class="offers-section reveal" id="what-you-get" aria-label="What you get">
+    <p class="section-kicker">What you get</p>
+    <h2>Walk in once. Stop paying for four apps.</h2>
+    <p class="section-lead">One office for the crew, the work, and the AIs you already subscribe to.</p>
+    <div class="offer-stage">
+      <div class="offer-preview">
+        <div class="offer-panel is-on" id="offer-panel-floor" role="tabpanel" data-offer="floor" aria-labelledby="offer-tab-floor">
+          <div class="offer-visual offer-floor" aria-hidden="true">
+            <div class="offer-desk">
+              <div class="npc-portrait"><img src="./assets/Lucy.png" alt="" /></div>
+              <span>Lucy</span>
+              <em>Greeting</em>
+            </div>
+            <div class="offer-desk">
+              <div class="npc-portrait"><img src="./assets/Conference_man.png" alt="" /></div>
+              <span>Marcus</span>
+              <em class="is-wait">Standup</em>
+            </div>
+            <div class="offer-desk">
+              <div class="npc-portrait"><img src="./assets/Abby.png" alt="" /></div>
+              <span>Abby</span>
+              <em>Shipping</em>
+            </div>
+            <div class="offer-desk">
+              <div class="npc-portrait"><img src="./assets/Bouncer.png" alt="" /></div>
+              <span>Bouncer</span>
+              <em>On watch</em>
+            </div>
+          </div>
+          <div class="offer-copy">
+            <h3>The Floor</h3>
+            <p>See who is working without opening Slack or logs. Sixteen named staff. Demo is free to walk in.</p>
+            <a class="offer-try" href="/office?demo=1">Try the floor in the live demo →</a>
+          </div>
+        </div>
+        <div class="offer-panel" id="offer-panel-workbench" role="tabpanel" data-offer="workbench" aria-labelledby="offer-tab-workbench" hidden>
+          <div class="offer-visual offer-rail" aria-hidden="true">
+            <div class="offer-wb-head">Workbench <span>3 gates</span></div>
+            <div class="offer-wb-card">
+              <strong>Approve · ship the CRM follow-up</strong>
+              <p>Abby drafted it. You gate code, mail, and desktop — nothing high-impact ships silent.</p>
+            </div>
+            <div class="offer-wb-nav">
+              <span class="is-on">Abby</span>
+              <span>Crew</span>
+              <span>Inbox</span>
+              <span>Trail</span>
+            </div>
+          </div>
+          <div class="offer-copy">
+            <h3>The Workbench</h3>
+            <p>Approvals, inbox, and trail in one rail — not twenty tabs. Human gates on code, mail, and desktop control.</p>
+            <a class="offer-try" href="/office?demo=1">Open the workbench in demo →</a>
+          </div>
+        </div>
+        <div class="offer-panel" id="offer-panel-buzz" role="tabpanel" data-offer="buzz" aria-labelledby="offer-tab-buzz" hidden>
+          <div class="offer-visual offer-buzz-scene" aria-hidden="true">
+            <div class="offer-buzz-mini">
+              <span class="offer-orbit"></span>
+              <span class="offer-act is-on" style="--i:0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2-2v-2"/></svg>
+              </span>
+              <span class="offer-act" style="--i:1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10l5-2v8l-5-2z"/></svg>
+              </span>
+              <span class="offer-act" style="--i:2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6z"/></svg>
+              </span>
+              <span class="offer-act offer-act-close" style="--i:3">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </span>
+              <span class="offer-act" style="--i:4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+              </span>
+              <span class="offer-act" style="--i:5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>
+              </span>
+              <span class="landing-buzz-phone">
+                <span class="landing-buzz-antenna"></span>
+                <span class="landing-buzz-screen">
+                  <span class="landing-buzz-eye"></span>
+                  <span class="landing-buzz-eye"></span>
+                </span>
+                <span class="landing-buzz-pad">
+                  <span></span><span></span><span></span>
+                  <span></span><span></span><span></span>
+                </span>
+              </span>
+            </div>
+            <div class="offer-note">
+              <header>Screenshot <span>to Abby</span></header>
+              <p>You see the note first. Then it hits the workbench — not a mystery chat.</p>
+            </div>
+          </div>
+          <div class="offer-copy">
+            <h3>Buzz</h3>
+            <p>Screenshot or speak; Abby gets the note, you see it first. In the office now — always-on-top on Desktop.</p>
+            <a class="offer-try" href="/office?demo=1&amp;buzz=screenshot">Try Buzz in the live demo →</a>
+          </div>
+        </div>
+        <div class="offer-panel" id="offer-panel-ais" role="tabpanel" data-offer="ais" aria-labelledby="offer-tab-ais" hidden>
+          <div class="offer-visual offer-brands" aria-hidden="true">
+            <span class="provider-pill"><img class="brand-mark" src="./assets/brands/anthropic.svg" alt="" width="20" height="20" /> Claude</span>
+            <span class="provider-pill"><img class="brand-mark" src="./assets/brands/openai.svg" alt="" width="20" height="20" /> ChatGPT</span>
+            <span class="provider-pill"><img class="brand-mark" src="./assets/brands/cursor.svg" alt="" width="20" height="20" /> Cursor</span>
+            <span class="provider-pill"><img class="brand-mark" src="./assets/brands/xai.svg" alt="" width="20" height="20" /> Grok</span>
+            <span class="provider-pill"><img class="brand-mark" src="./assets/brands/gemini.svg" alt="" width="20" height="20" /> Gemini</span>
+            <span class="provider-pill"><img class="brand-mark" src="./assets/brands/kimi.svg" alt="" width="20" height="20" /> Kimi</span>
+            <span class="provider-pill"><img class="brand-mark" src="./assets/brands/lmstudio.svg" alt="" width="20" height="20" /> LM Studio</span>
+          </div>
+          <div class="offer-copy">
+            <h3>Your AIs</h3>
+            <p>The models you already pay for, one floor, less overlap. Seat Claude, ChatGPT, Cursor, Grok, or LM Studio at a desk in a few clicks.</p>
+            <a class="offer-try" href="/office?demo=1&amp;seat=1">Seat an AI in the demo →</a>
+          </div>
+        </div>
+        <div class="offer-panel" id="offer-panel-tools" role="tabpanel" data-offer="tools" aria-labelledby="offer-tab-tools" hidden>
+          <div class="offer-visual offer-tool-tiles" aria-hidden="true">
+            <div><strong>Meridian CRM</strong><span>Pipeline the crew actually works.</span></div>
+            <div><strong>City Power</strong><span>Jobs on hardware you own.</span></div>
+            <div><strong>Desktop station</strong><span>Agents on your machine, when you allow it.</span></div>
+            <div><strong>Bouncer</strong><span>A guard on the door.</span></div>
+          </div>
+          <div class="offer-copy">
+            <h3>Business tools</h3>
+            <p>CRM, your own compute, a desktop station, a guard — not four extra products. The stack most teams buy four times, already on this floor.</p>
+            <a class="offer-try" href="/office?demo=1">Try the tools in the live demo →</a>
+          </div>
+        </div>
+      </div>
+      <div class="offer-tabs" role="tablist" aria-label="What you get">
+        <button type="button" role="tab" id="offer-tab-floor" data-offer="floor" aria-controls="offer-panel-floor" aria-selected="true" tabindex="0">
+          <span class="kicker">01</span>
+          <span class="offer-tab-title">The Floor</span>
+          <span class="offer-tab-line">See who is working without opening Slack or logs</span>
+        </button>
+        <button type="button" role="tab" id="offer-tab-workbench" data-offer="workbench" aria-controls="offer-panel-workbench" aria-selected="false" tabindex="-1">
+          <span class="kicker">02</span>
+          <span class="offer-tab-title">The Workbench</span>
+          <span class="offer-tab-line">Approvals, inbox, and trail in one rail — not twenty tabs</span>
+        </button>
+        <button type="button" role="tab" id="offer-tab-buzz" data-offer="buzz" aria-controls="offer-panel-buzz" aria-selected="false" tabindex="-1">
+          <span class="kicker">03</span>
+          <span class="offer-tab-title">Buzz</span>
+          <span class="offer-tab-line">Screenshot or speak; Abby gets the note, you see it first</span>
+        </button>
+        <button type="button" role="tab" id="offer-tab-ais" data-offer="ais" aria-controls="offer-panel-ais" aria-selected="false" tabindex="-1">
+          <span class="kicker">04</span>
+          <span class="offer-tab-title">Your AIs</span>
+          <span class="offer-tab-line">The models you already pay for, one floor, less overlap</span>
+        </button>
+        <button type="button" role="tab" id="offer-tab-tools" data-offer="tools" aria-controls="offer-panel-tools" aria-selected="false" tabindex="-1">
+          <span class="kicker">05</span>
+          <span class="offer-tab-title">Business tools</span>
+          <span class="offer-tab-line">CRM, your own compute, a desktop station, a guard</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="providers-strip reveal" id="your-ais" aria-label="Your AIs">
+    <h2>Your subscriptions. Their desks.</h2>
+    <p class="section-lead">Claude, ChatGPT, Cursor, Grok, Gemini, Kimi, LM Studio — one floor instead of a stack of tabs.</p>
+    <div class="provider-pills" aria-label="Supported providers">
+      <span class="provider-pill">
+        <img class="brand-mark" src="./assets/brands/anthropic.svg" alt="" width="20" height="20" aria-hidden="true" />
+        Claude
+      </span>
+      <span class="provider-pill">
+        <img class="brand-mark" src="./assets/brands/openai.svg" alt="" width="20" height="20" aria-hidden="true" />
+        ChatGPT
+      </span>
+      <span class="provider-pill">
+        <img class="brand-mark" src="./assets/brands/cursor.svg" alt="" width="20" height="20" aria-hidden="true" />
+        Cursor
+      </span>
+      <span class="provider-pill">
+        <img class="brand-mark" src="./assets/brands/xai.svg" alt="" width="20" height="20" aria-hidden="true" />
+        Grok
+      </span>
+      <span class="provider-pill">
+        <img class="brand-mark" src="./assets/brands/gemini.svg" alt="" width="20" height="20" aria-hidden="true" />
+        Gemini
+      </span>
+      <span class="provider-pill">
+        <img class="brand-mark" src="./assets/brands/kimi.svg" alt="" width="20" height="20" aria-hidden="true" />
+        Kimi
+      </span>
+      <span class="provider-pill">
+        <img class="brand-mark" src="./assets/brands/lmstudio.svg" alt="" width="20" height="20" aria-hidden="true" />
+        LM Studio
+      </span>
+    </div>
+  </section>
+
+  <section class="meet-buzz reveal" id="meet-buzz" aria-label="Meet Buzz">
+    <div class="meet-layout">
+    <div class="meet-stage">
+      <div class="meet-ring open" id="meet-ring">
+        <svg class="meet-orbit" viewBox="0 0 360 360" aria-hidden="true">
+          <circle cx="180" cy="180" r="132" fill="none" stroke="rgba(163,230,53,0.32)" stroke-width="1.5" stroke-dasharray="3 7"/>
+        </svg>
+        <button type="button" class="mb-act is-on" data-act="shot" style="--i:0" aria-label="Screenshot">
+          <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2-2v-2"/></svg>
+          <i class="ti ti-screenshot" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mb-act" data-act="meet" style="--i:1" aria-label="Record meeting">
+          <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10l5-2v8l-5-2z"/></svg>
+          <i class="ti ti-video" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mb-act" data-act="say" style="--i:2" aria-label="Dictation">
+          <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6z"/></svg>
+          <i class="ti ti-message" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mb-act mb-act-close" data-act="close" style="--i:3" aria-label="Close">
+          <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mb-act" data-act="desk" style="--i:4" aria-label="Desktop overlay">
+          <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+          <i class="ti ti-device-desktop" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mb-act" data-act="rec" style="--i:5" aria-label="Record message">
+          <svg class="mb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>
+          <i class="ti ti-microphone" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mb-orb" id="meet-core" aria-label="Open the Buzz ring" aria-expanded="true">
+          <span class="landing-buzz-phone" aria-hidden="true">
+            <span class="landing-buzz-antenna"></span>
+            <span class="landing-buzz-screen">
+              <span class="landing-buzz-eye"></span>
+              <span class="landing-buzz-eye"></span>
+            </span>
+            <span class="landing-buzz-pad">
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </span>
+          </span>
+        </button>
+      </div>
+      <p class="meet-stage-hint"><button type="button" id="meet-hint-btn">Click it.</button> The ring opens as in the office.</p>
+    </div>
+    <div class="meet-copy">
+      <div class="meet-badges">
+        <span>As in the office</span>
+        <span class="meet-badge-muted">In the demo</span>
+      </div>
+      <h2>Meet Buzz.</h2>
+      <p class="section-lead">A small phone that floats over the floor. Click it, a ring opens, and whatever it catches goes to Abby with one line from you. You see it before it goes.</p>
+      <ul class="meet-bullets">
+        <li><strong>Screenshot.</strong> Drag a box, add a line, Send. On Desktop the picture stays on your disk and Abby gets the path. In the browser you see it first, then the office stores a copy so she can see it.</li>
+        <li><strong>Record message.</strong> Speak, read it over, then it goes.</li>
+        <li><strong>Record meeting.</strong> The room in parts, transcribed as they land on the office speech endpoint.</li>
+        <li><strong>Dictation.</strong> Every capture opens a note card with a mic in it.</li>
+        <li><strong>Leave invisible.</strong> Desktop Buzz can stay out of every screen share and recording.</li>
+      </ul>
+      <p class="meet-note">One capture path for every AI on the floor. You keep the subscriptions you already have; Buzz just puts the work in one place so you spend less time (and less overlap) herding them.</p>
+      <a class="btn btn-primary" href="/office?demo=1&amp;buzz=screenshot">Try it in the office</a>
+    </div>
+    </div>
+    <div class="meet-previews">
+      <article class="meet-preview">
+        <header>Buzz note <span>before it goes</span></header>
+        <p>Screenshot of the floor — one line for Abby. On Desktop she gets the path. In the browser the office stores a copy after you send.</p>
+        <footer><span>Send to Abby</span></footer>
+      </article>
+      <article class="meet-preview">
+        <header>Meeting — live <span>transcribed as it lands</span></header>
+        <p>The room in parts. Each chunk hits the workbench as text, so you can leave and still have the trail when you come back.</p>
+        <footer><span>Recording…</span></footer>
+      </article>
+    </div>
+  </section>
+
   <section class="crew-section" id="crew" aria-label="Meet the crew">
     <div class="crew-head">
       <h2>Meet a few on the floor</h2>
@@ -3027,78 +4135,70 @@
         </div>
       </aside>
     </div>
-    <p class="crew-keyhint">Tip: keys 1–4 select crew · B buzzes the phone &amp; opens the demo</p>
+    <p class="crew-keyhint">Pick someone, then open the live demo</p>
   </section>
 
-  <section class="why-strip reveal" aria-label="Why Denizen">
-    <div class="why-strip-head">
-      <h2>Why a floor beats a feed</h2>
-      <p>One glance instead of three dashboards — ask Lucy above for the long version.</p>
-    </div>
-    <div class="why-pills">
-      <div class="why-pill">
-        <span class="why-num">01</span>
-        <div>
-          <strong>Status at a glance</strong>
-          <span>Who’s working, stuck, or escalated — before you open logs.</span>
-        </div>
-      </div>
-      <div class="why-pill">
-        <span class="why-num">02</span>
-        <div>
-          <strong>Roles &amp; memory</strong>
-          <span>Each agent has a job and context — coworkers, not chat tabs.</span>
-        </div>
-      </div>
-      <div class="why-pill">
-        <span class="why-num">03</span>
-        <div>
-          <strong>Real outcomes</strong>
-          <span>Mail, code, security, research — tied to a live work trail.</span>
-        </div>
-      </div>
+  <section class="faq-strip reveal" id="faq" aria-label="Questions">
+    <p class="section-kicker">Questions</p>
+    <h2>Ask before you walk in.</h2>
+    <p class="section-lead">Lucy at the desk will talk you through it. The short version is here.</p>
+    <div class="faq-list">
+      <details open>
+        <summary>What problem does this solve?</summary>
+        <p>Your agents do real work, but you only see it as text. Denizen puts that work on a floor you can watch: who’s idle, who’s shipping, who needs you.</p>
+      </details>
+      <details>
+        <summary>How is this different from logs or a dashboard?</summary>
+        <p>Logs say something happened. Dashboards pile up metrics. Denizen is spatial — you read the room like a manager walking the floor, then open the trail only when you need it.</p>
+      </details>
+      <details>
+        <summary>Do I need new AI subscriptions?</summary>
+        <p>No. Connect the models you already pay for. Less tab-hopping and less overlap, because Claude, ChatGPT, Cursor, and the rest share one office.</p>
+      </details>
+      <details>
+        <summary>Is Buzz free?</summary>
+        <p>Yes. Buzz is part of the office — screenshot, record, meeting, dictation. Desktop adds always-on-top and leave-invisible. Nothing about Buzz is locked behind a paid plan.</p>
+      </details>
+      <details>
+        <summary>Does my code leave the laptop?</summary>
+        <p>Souls and memory live on disk. Desktop screen and files are off / ask / trusted. A hosted office still needs a copy of a browser screenshot so Abby can see it — that is written down in TELEMETRY.md.</p>
+      </details>
+      <details>
+        <summary>How do I start?</summary>
+        <p>Open the live demo — no account. Watch the floor move, Buzz a note to Abby, then sign in when you want the workbench, CRM, and a station on your machine.</p>
+      </details>
+      <details>
+        <summary>Who is this for?</summary>
+        <p>Solo builders juggling agents, teams that hand off work, and ops folks who want patrols and escalations visible — not buried in another tile.</p>
+      </details>
     </div>
   </section>
 
-  <section class="biz-strip" id="for-teams" aria-label="Who Denizen is for">
-    <p class="biz-strip-kicker">For operators · teams · advisors</p>
-    <h2>AI business in a box — with a human in the loop.</h2>
+  <section class="biz-strip" id="for-teams" aria-label="How to start">
+    <p class="biz-strip-kicker">Demo · Team · Desktop</p>
+    <h2>Same office. Three doors.</h2>
     <p class="biz-strip-lead">
-      Denizen is a <strong>visual operating layer for AI agents</strong>: a staffed digital office where agents do real work
-      (research, intake, security, code, CRM-facing tasks) and <strong>you supervise like a manager</strong> —
-      not another chatbot, not a black-box automation.
+      Walk the floor free. Sign in for the workbench, CRM, and Connect AI.
+      Install Desktop when you want Buzz over every app and a station on your machine.
     </p>
     <div class="biz-grid">
       <article class="biz-card">
-        <h3>Who it’s for</h3>
-        <p>Teams running multiple AI agents who need visibility and control — ops, founders, and orgs that can’t manage work from logs alone.</p>
+        <h3>Live demo</h3>
+        <p>Open the floor — no account. Watch staff work. Buzz a note to Abby. Throwaway session.</p>
       </article>
       <article class="biz-card">
-        <h3>Human in the loop</h3>
-        <p>Agents act on the floor. You walk in, talk to them, approve escalations, and jump in when judgment is required. Autonomy with oversight.</p>
+        <h3>Team</h3>
+        <p>Workbench, Meridian CRM, Connect AI, handoffs, and in-office Buzz. Your identity and memory persist.</p>
       </article>
       <article class="biz-card">
-        <h3>What you get</h3>
-        <p>Live office UI, role-based agents, work trails, and a path from open demo → full office → desktop — built in Oklahoma City.</p>
+        <h3>Desktop</h3>
+        <p>Pair a station. Local models, screen/files with off / ask / trusted, and an always-on-top Buzz overlay.</p>
       </article>
-    </div>
-    <div class="biz-packages" aria-label="Ways to start">
-      <div class="biz-pkg">
-        <strong>Live demo</strong>
-        Open the floor free — no account required.
-      </div>
-      <div class="biz-pkg">
-        <strong>Full office</strong>
-        Sign in for the complete multi-agent environment.
-      </div>
-      <div class="biz-pkg">
-        <strong>Desktop / private</strong>
-        Run closer to your machine and stack when you need control.
-      </div>
     </div>
     <div class="biz-actions">
       <a class="btn btn-primary" href="/office?demo=1" data-tour-demo>Open live demo</a>
       <a class="btn btn-ghost" href="/office?login=1">Full office</a>
+      <a class="btn btn-ghost" href="desktop/download.html">Download Desktop</a>
       <a class="btn btn-discord" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">
         <i class="ti ti-brand-discord" aria-hidden="true"></i>
         Talk to us on Discord
@@ -3111,9 +4211,60 @@
     </p>
   </section>
 
+  <section class="privacy-strip reveal" id="privacy" aria-label="Privacy">
+    <h2>Local-capable. Human-gated.</h2>
+    <p class="section-lead">Souls and memory live on disk. Desktop permissions are explicit. High-impact actions wait for you. Optional mesh is opt-in — not a promise that nothing ever leaves.</p>
+    <div class="privacy-grid">
+      <article class="privacy-card">
+        <h3>Your keys</h3>
+        <p>Connect AI uses the subscription you already have. Local LM Studio stays on your machines.</p>
+      </article>
+      <article class="privacy-card">
+        <h3>Approvals</h3>
+        <p>Code, email, and desktop control surface as proposals. Nothing high-impact happens silently.</p>
+      </article>
+      <article class="privacy-card">
+        <h3>Your identity</h3>
+        <p>Team sessions are yours — not the host’s. Pair Desktop to your real account, not a demo guest.</p>
+      </article>
+    </div>
+    <div class="privacy-wire" aria-label="What travels">
+      <article>
+        <h3>What Abby sees</h3>
+        <ul>
+          <li>Your note, and a transcript if you spoke</li>
+          <li>Desktop: a path under buzz-captures on your disk</li>
+          <li>Browser: a stored copy so she can look at the shot</li>
+        </ul>
+      </article>
+      <article>
+        <h3>What the wire sees</h3>
+        <ul>
+          <li>A session token, not a card number</li>
+          <li>Operator telemetry: counts, latency, 240-character previews — on the office host</li>
+          <li>MCP audit: tool name, not the body of the ask</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="coming-strip reveal" id="coming" aria-label="Coming soon">
+    <h2>Coming</h2>
+    <div class="coming-grid">
+      <article class="coming-card">
+        <h3>Lid-closed jobs</h3>
+        <p>Station work that keeps going after the laptop sleeps.</p>
+      </article>
+      <article class="coming-card">
+        <h3>Remote office</h3>
+        <p>Your floor from a phone app, wherever you are.</p>
+      </article>
+    </div>
+  </section>
+
   <section class="cta-final reveal">
-    <h2>See the office live</h2>
-    <p class="cta-lead">Watch agents walk, work, and escalate in real time — no account needed.</p>
+    <h2>You do the work only you can do.</h2>
+    <p class="cta-lead">The office does the rest. Buzz in and watch them walk.</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="/office?demo=1" data-tour-demo>Open live demo</a>
       <a class="btn btn-discord" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">
@@ -3138,6 +4289,7 @@
     <a href="/office?demo=1" data-tour-demo>Live demo</a>
     · <a href="/office?login=1">Full office</a>
     · <a href="desktop/download.html">Desktop</a>
+    · <a href="docs/TELEMETRY.md">Telemetry</a>
     · <a href="#for-teams">For teams</a>
     <br />
     <a class="footer-discord" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">
@@ -3167,6 +4319,50 @@
         return false;
       }
     })();
+
+    // /office exists on the Node server. Static previews (python -m http.server,
+    // file://, opening landing.html directly) 404 that path — send people to
+    // the sibling office page instead.
+    function officeHref(query) {
+      let q = String(query == null ? 'demo=1' : query).replace(/^\?/, '').trim();
+      if (!q) q = 'demo=1';
+      const path = String(location.pathname || '/').replace(/\\/g, '/');
+      const onStatic = /landing\.html$/i.test(path) || location.protocol === 'file:';
+      if (onStatic) {
+        try { return new URL('index.html?' + q, location.href).href; }
+        catch (_) { return 'index.html?' + q; }
+      }
+      return '/office?' + q;
+    }
+    function officeHrefFromLink(href) {
+      try {
+        const u = new URL(String(href || ''), location.href);
+        return officeHref(u.search.replace(/^\?/, ''));
+      } catch (_) {
+        const q = String(href || '').split('?')[1] || 'demo=1';
+        return officeHref(q);
+      }
+    }
+    function wireOfficeLinks() {
+      document.querySelectorAll('a[href]').forEach((a) => {
+        const href = a.getAttribute('href') || '';
+        if (!/(?:^|\/)office(?:\/|\?|$)/.test(href)) return;
+        a.setAttribute('href', officeHrefFromLink(href));
+      });
+    }
+    wireOfficeLinks();
+    document.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.button !== 0) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = e.target && e.target.closest && e.target.closest('a[href]');
+      if (!a) return;
+      if (a.id === 'hero-buzz' || a.classList.contains('hero-buzz')) return;
+      if (a.target && a.target !== '_self') return;
+      const href = a.getAttribute('href') || '';
+      if (!/(?:^|\/)office(?:\/|\?|$)/.test(href)) return;
+      e.preventDefault();
+      location.assign(officeHrefFromLink(href));
+    });
 
     // ── living atmosphere (scroll-friendly: no per-frame work while scrolling) ──
     (function initCursorHeat() {
@@ -3358,7 +4554,7 @@
           : '<i class="ti ti-volume-off" aria-hidden="true"></i>';
         soundToggle.title = soundOn
           ? 'Sound on — click to mute'
-          : 'Muted — press B or talk to Lucy to enable';
+          : 'Muted — click to enable';
         soundToggle.setAttribute('aria-label', soundOn ? 'Mute sound' : 'Enable sound');
       }
     }
@@ -3950,7 +5146,7 @@
               lucyUserInteracted = true;
               enableSoundFromGesture();
               completeTourStep('lucy');
-              window.location.href = c.href;
+              window.location.assign(officeHrefFromLink(c.href));
             };
           } else {
             btn.onclick = () => showNode(c.next, { fromUser: true });
@@ -4204,12 +5400,7 @@
 
     function resolveBuzzHref() {
       const raw = (buzz?.getAttribute('href') || BUZZ_HREF).trim() || BUZZ_HREF;
-      // Never navigate to bare /office on a static file server (404)
-      if (raw === '/office' || raw.startsWith('/office?')) {
-        const q = raw.includes('?') ? raw.slice(raw.indexOf('?')) : '?demo=1';
-        return `index.html${q === '?' ? '?demo=1' : q}`;
-      }
-      return raw;
+      return officeHrefFromLink(raw);
     }
 
     function ringBuzz(thenGo) {
@@ -4225,7 +5416,7 @@
         buzz.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
       } catch (_) {}
 
-      const idleBubble = 'Ready to buzz you in · press B';
+      const idleBubble = 'Ready to buzz you in';
       // Restart CSS animation cleanly every time
       buzz.classList.remove('is-ringing');
       void buzz.offsetWidth;
@@ -4343,6 +5534,92 @@
       // Safety: never leave bottom sections stuck at opacity 0
       setTimeout(() => revealEls.forEach(markVisible), 2500);
     }
+
+    (function offerStage() {
+      const tabs = Array.from(document.querySelectorAll('.offer-tabs [role="tab"]'));
+      const panels = Array.from(document.querySelectorAll('.offer-preview [role="tabpanel"]'));
+      if (!tabs.length || !panels.length) return;
+      const select = (id, opts) => {
+        tabs.forEach((tab) => {
+          const on = tab.dataset.offer === id;
+          tab.setAttribute('aria-selected', on ? 'true' : 'false');
+          tab.tabIndex = on ? 0 : -1;
+          tab.classList.toggle('is-on', on);
+        });
+        panels.forEach((panel) => {
+          const on = panel.dataset.offer === id;
+          panel.classList.toggle('is-on', on);
+          if (on) panel.removeAttribute('hidden');
+          else panel.setAttribute('hidden', '');
+        });
+        if (opts && opts.focus) {
+          const t = tabs.find((tab) => tab.dataset.offer === id);
+          t?.focus();
+        }
+      };
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => select(tab.dataset.offer));
+        tab.addEventListener('pointerenter', (e) => {
+          if (e.pointerType === 'mouse') select(tab.dataset.offer);
+        });
+        tab.addEventListener('keydown', (e) => {
+          const i = tabs.indexOf(tab);
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            select(tabs[(i + 1) % tabs.length].dataset.offer, { focus: true });
+          }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            select(tabs[(i - 1 + tabs.length) % tabs.length].dataset.offer, { focus: true });
+          }
+        });
+      });
+      select('floor');
+    })();
+
+    (function meetBuzz() {
+      const ring = document.getElementById('meet-ring');
+      const core = document.getElementById('meet-core');
+      const hint = document.getElementById('meet-hint-btn');
+      if (!ring || !core) return;
+      const officeAct = {
+        shot: 'screenshot',
+        rec: 'record',
+        say: 'dictate',
+        meet: 'meeting',
+      };
+      const setOpen = (open) => {
+        ring.classList.toggle('open', open);
+        core.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      const goOffice = (act) => {
+        window.location.assign(officeHref(`demo=1&buzz=${encodeURIComponent(act)}`));
+      };
+      core.addEventListener('click', () => setOpen(!ring.classList.contains('open')));
+      hint?.addEventListener('click', () => setOpen(true));
+      ring.querySelectorAll('.mb-act').forEach((el) => {
+        el.addEventListener('click', () => {
+          if (el.dataset.act === 'close') {
+            setOpen(false);
+            return;
+          }
+          ring.querySelectorAll('.mb-act').forEach((btn) => {
+            btn.classList.toggle('is-on', btn === el);
+          });
+          setOpen(true);
+          if (el.dataset.act === 'desk') {
+            if (window.DenizenDesktop?.buzzOverlayToggle) {
+              window.DenizenDesktop.buzzOverlayToggle(true);
+              return;
+            }
+            window.location.href = 'desktop/download.html';
+            return;
+          }
+          const act = officeAct[el.dataset.act];
+          if (act) goOffice(act);
+        });
+      });
+    })();
 
   })();
   </script>
