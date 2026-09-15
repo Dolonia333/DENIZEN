@@ -174,6 +174,7 @@ const platformBridge   = require('./src/platform-bridge');
 const denizenCredits   = require('./src/denizen-credits');
 const { mountComputeRoutes } = require('./src/denizen-compute-routes');
 const { mountCrmRoutes } = require('./src/denizen-crm-routes');
+const { mountStudioBoardRoutes } = require('./src/denizen-studio-board-routes');
 const { mountN8nRoutes } = require('./src/n8n-routes');
 const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
 const { startJennyDurableLoop } = require('./src/npc-jenny-durable-loop');
@@ -1880,6 +1881,11 @@ const handleCrmRoutes = mountCrmRoutes({
   readJsonBody: _readJsonBody,
   npcBrains,
   broadcastToOffice: _broadcastToOffice,
+});
+
+const handleStudioBoardRoutes = mountStudioBoardRoutes({
+  verifyVisitorSession: _verifyVisitorSession,
+  readJsonBody: _readJsonBody,
 });
 
 const handleN8nRoutes = mountN8nRoutes();
@@ -3868,6 +3874,18 @@ const server = http.createServer((req, res) => {
   if (urlPath.startsWith('/api/office/')) {
     (async () => {
       await handleOfficeProgressRoutes(req, res);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath.startsWith('/api/studio-board/')) {
+    (async () => {
+      await handleStudioBoardRoutes(req, res);
     })().catch((err) => {
       if (!res.writableEnded) {
         res.writeHead(500, { 'Content-Type': 'application/json' });

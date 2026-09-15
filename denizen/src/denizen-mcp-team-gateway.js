@@ -12,6 +12,7 @@ const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
 const mcpResources = require('./denizen-mcp-resources.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
+const mcpStudioBoardTools = require('./denizen-mcp-studio-board-tools.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
@@ -140,6 +141,7 @@ const TEAM_TOOL_DEFINITIONS = [
   ...mcpCursorTools.CURSOR_TOOL_DEFINITIONS,
   ...mcpMentorTools.toolsForGateway(),
   ...mcpCrmTools.CRM_TOOL_DEFINITIONS,
+  ...mcpStudioBoardTools.STUDIO_BOARD_TOOL_DEFINITIONS,
 ];
 
 const TEAM_RESOURCES = [
@@ -446,6 +448,9 @@ async function callToolImpl(scope, name, args) {
       }
       if (mcpCrmTools.isCrmTool(name)) {
         return mcpCrmTools.callTool(scope, name, args);
+      }
+      if (mcpStudioBoardTools.isStudioBoardTool(name)) {
+        return mcpStudioBoardTools.callTool(scope, name, args);
       }
       if (mcpMeshTools.isMeshTool(name)) {
         return mcpMeshTools.callTool(scope, name, args);
