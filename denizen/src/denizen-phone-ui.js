@@ -159,6 +159,8 @@
       available: () => true },
     { id: 'crm', tabler: 'address-book', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
       available: () => true },
+    { id: 'studioboard', tabler: 'layout-kanban', icon: '📋', label: 'Studio Board', type: 'navigate', url: '/studio-board/', c: ['#2a6a55', '#163a2f'],
+      available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
       c: ['#34d399', '#047857'],
       open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
@@ -248,8 +250,8 @@
   const MAX_DOCK_APPS = 4;
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workflow', 'profile'];
   /** Prefer these near the top of the home grid (first page / less scroll). */
-  const PRIORITY_GRID_IDS = ['discordmap', 'discordcmds', 'crm', 'tour', 'npcteam', 'market', 'station', 'compute'];
-  const LAYOUT_VERSION = 3;
+  const PRIORITY_GRID_IDS = ['discordmap', 'discordcmds', 'crm', 'studioboard', 'tour', 'npcteam', 'market', 'station', 'compute'];
+  const LAYOUT_VERSION = 5; // v5: surface Studio Board next to CRM
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {
@@ -3325,6 +3327,7 @@
     settingsEl.innerHTML = '<iframe class="dzp-workflow-frame" src="/workflow-dashboard.html?embed=1" title="Office workflow tools"></iframe>';
     document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
   }
+
 
   function renderSettings(app) {
     setAppOpenUi(app);

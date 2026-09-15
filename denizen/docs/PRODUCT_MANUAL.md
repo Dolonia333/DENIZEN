@@ -64,7 +64,7 @@ persona ("soul"), memory, and goals.
 ## 4. The Denizen OS phone (mobile + desktop)
 
 Tap the **📱 button** to open the in-world phone — a concept "Denizen OS" home
-screen with apps for Chat, the CRM, Compute, Profile, Settings, and more. Apps
+screen with apps for Chat, the CRM, Studio Board, Compute, Profile, Settings, and more. Apps
 open as panels; favorites sit in the dock. Use it as the fast way to reach any
 tool without hunting the toolbar. (Legacy toolbar: add `?phonemode=0` to the URL.)
 
@@ -117,6 +117,15 @@ custom fields, **and** reshapes the dashboard with industry-specific widgets.
 - **AI assistant** — ask the CRM copilot to summarize, suggest actions, draft.
 - **Calendar** — connect Google/Microsoft to sync meetings.
 - **Data Management** — import/export, load demo data, restore.
+
+## 6b. Studio Board (Agency Tracker)
+
+Open **Studio Board** from the phone (or go to `/studio-board/`). Like CRM, it opens as
+its own full-page app — not an in-phone iframe. It's a Monday.com-style work board for
+agency pipelines: **Calendar**, **Table**, **Board**, **My Day**, **Team**, **Activity**,
+and **Settings**. Create tasks, filter by type, save views, and reset demo data. Use
+**← Back to office** to return to Denizen. Progress is stored in the browser
+(`localStorage`) so the board survives reloads on that device.
 
 ---
 
