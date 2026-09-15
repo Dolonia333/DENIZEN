@@ -2233,15 +2233,14 @@ class PlayerChat {
       #player-chat-header {
         position: relative;
         display: grid;
-        grid-template-columns: 40px minmax(0, 1fr) 32px;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
         grid-template-areas:
-          "avatar main close"
-          "actions actions actions"
+          "avatar main actions"
           "chip chip chip";
         align-items: center;
         column-gap: 8px;
-        row-gap: 6px;
-        padding: 16px 10px 10px;
+        row-gap: 4px;
+        padding: 14px 10px 10px;
         border-bottom: 2px solid var(--pc-border);
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
@@ -2253,16 +2252,16 @@ class PlayerChat {
       #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: center; }
       #player-chat-header .chat-header-main { grid-area: main; min-width: 0; }
       #player-chat-header #denizen-visitor-assistant-chip { grid-area: chip; }
-      #player-chat-close-btn { grid-area: close; }
       #player-chat-header-actions {
         grid-area: actions;
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: flex-start;
-        gap: 6px;
-        max-width: none;
+        justify-content: flex-end;
+        align-content: flex-start;
+        gap: 4px;
+        max-width: min(52vw, 180px);
         min-width: 0;
       }
       #player-chat-header-actions > button {
@@ -2274,14 +2273,12 @@ class PlayerChat {
       }
       /* Touch: keep a single thin toolbar row — never stack action chips vertically */
       html.denizen-touch #player-chat-header {
-        grid-template-columns: 34px minmax(0, 1fr) 32px;
-        grid-template-areas:
-          "avatar main close"
-          "actions actions actions";
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        grid-template-areas: "avatar main actions";
         align-items: center;
         column-gap: 6px;
-        row-gap: 6px;
-        padding: 12px 8px 8px;
+        row-gap: 0;
+        padding: 10px 8px 6px;
       }
       html.denizen-touch #player-chat-header .pc-header-avatar {
         width: 34px;
@@ -2292,10 +2289,10 @@ class PlayerChat {
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: flex-start;
-        max-width: none;
+        justify-content: flex-end;
+        max-width: min(46vw, 152px);
         width: auto;
-        gap: 4px;
+        gap: 3px;
       }
       html.denizen-touch #player-chat-header-actions > button {
         width: auto;
@@ -3251,8 +3248,9 @@ class PlayerChat {
             <span class="target" id="player-chat-target">Messages</span>
             <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
           </div>
-          <div id="player-chat-header-actions"></div>
-          <button type="button" id="player-chat-close-btn" aria-label="Close chat">✕</button>
+          <div id="player-chat-header-actions">
+            <button type="button" id="player-chat-close-btn" aria-label="Close chat">✕</button>
+          </div>
         </div>
         <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
         ${PlayerChat._composerHtml()}
