@@ -694,7 +694,230 @@ class AgentOfficeManager {
       loop: true,
       callback: () => this._tickAmbientCoffeeFavor(),
     });
+    // Living office: couches, plants, whiteboards, Abby invites, walk-ins.
+    this.scene.time.delayedCall(70000, () => this._tickLivingOfficeBehaviors());
+    this.scene.time.addEvent({
+      delay: 110000,
+      loop: true,
+      callback: () => this._tickLivingOfficeBehaviors(),
+    });
   }
+
+
+  /**
+   * Is Abby currently too busy for a walk-in chat?
+   */
+  _isAbbyBusy() {
+    const abbyKey = 'xp_abby';
+    const abby = this.agents?.get(abbyKey);
+    if (!abby) return true;
+    const busy = new Set([
+      'meeting', 'ceo_conversation', 'task_override', 'tour_guide',
+      'engaging', 'reporting', 'whiteboard',
+    ]);
+    if (busy.has(abby.status)) return true;
+    const sprite = this.actions?._getNpc?.(abbyKey);
+    if (sprite?._purposefulWalkUntil && sprite._purposefulWalkUntil > Date.now()) return true;
+    return false;
+  }
+
+  /**
+   * Walk-in: approach Abby's office. If free → quick office chat.
+   * If busy → Lucy takes a message and queues a directive onto Abby's work chain.
+   */
+  _handleManagerOfficeWalkIn(npcKey, agent, message) {
+    const abbyKey = 'xp_abby';
+    const lucyKey = 'xp_lucy';
+    const visitorName = this.NPC_NAMES?.[npcKey] || npcKey;
+    const note = message || `${visitorName} stopped by your office.`;
+
+    const finishVisit = (delayMs = 20000) => {
+      this.scene.time.delayedCall(delayMs, () => {
+        if (!agent) return;
+        if (['ceo_conversation', 'task_override', 'meeting'].includes(agent.status)) return;
+        if (agent.assignedDesk) {
+          this.actions.useComputer(npcKey, agent.assignedDesk);
+          agent.status = 'working';
+        } else {
+          agent.status = 'idle';
+        }
+      });
+    };
+
+    const approach = (typeof this.actions.approachManagerOffice === 'function')
+      ? this.actions.approachManagerOffice(npcKey)
+      : this.actions.goToRoom(npcKey, 'manager_office');
+
+    Promise.resolve(approach).then(() => {
+      if (!this._isAbbyBusy()) {
+        const abby = this.agents.get(abbyKey);
+        if (abby) abby.status = 'meeting';
+        agent.status = 'meeting';
+        if (typeof this.actions.inviteToManagerOffice === 'function') {
+          this.actions.inviteToManagerOffice(abbyKey, [npcKey]);
+        } else {
+          this.actions.goToRoom(abbyKey, 'manager_office');
+          this.actions.goToRoom(npcKey, 'manager_office');
+        }
+        this.scene.time.delayedCall(3500, () => {
+          this.actions.speakTo?.(abbyKey, npcKey, 'Come on in — what do you need?');
+          if (message) {
+            this.scene.time.delayedCall(2000, () => this.actions.speakTo?.(npcKey, abbyKey, message));
+          }
+        });
+        finishVisit(35000);
+        return;
+      }
+
+      // Busy → Lucy takes it and queues onto Abby's directive chain.
+      agent.status = 'visiting';
+      try { this.actions.standUp(lucyKey); } catch (_) {}
+      this.actions.goToRoom?.(lucyKey, 'reception');
+      const visitLucy = this.actions.visit?.(npcKey, lucyKey)
+        || this.actions.goToRoom?.(npcKey, 'reception');
+      Promise.resolve(visitLucy).then(() => {
+        this.actions.speakTo?.(npcKey, lucyKey,
+          message || 'Is Abby free? I need a quick word.');
+        this.scene.time.delayedCall(1800, () => {
+          this.actions.speakTo?.(lucyKey, npcKey,
+            "She's tied up — I'll put it on her list and she'll work it in order.");
+          this.actions.emote?.(lucyKey, '✓');
+          this._send({
+            type: 'npc_assign_directive',
+            from: 'Lucy',
+            to: 'Abby',
+            task: `[Walk-in from ${visitorName}] ${note}`,
+            urgent: false,
+          });
+          const lucyAgent = this.agents.get(lucyKey);
+          if (lucyAgent?.assignedDesk) {
+            this.scene.time.delayedCall(1200, () => {
+              this.actions.useComputer(lucyKey, lucyAgent.assignedDesk);
+              lucyAgent.status = 'working';
+            });
+          }
+        });
+        finishVisit(18000);
+      });
+    }).catch(() => finishVisit(5000));
+  }
+
+  /**
+   * Ambient living-office: couch chill, plants, whiteboards, Abby invites, walk-ins.
+   */
+  _tickLivingOfficeBehaviors() {
+    if (!this.agents || !this.actions) return;
+    if (this._simHostKnown && !this._isSimHost) return;
+
+    const busy = new Set([
+      'task_override', 'tour_guide', 'engaging', 'securing', 'honeypot',
+      'reporting', 'ceo_conversation', 'meeting', 'whiteboard', 'tending',
+    ]);
+
+    // Occasional Abby invite (1–3 people).
+    if (Math.random() < 0.22) {
+      const abbyKey = 'xp_abby';
+      const abby = this.agents.get(abbyKey);
+      if (abby && !busy.has(abby.status) && !this._isAbbyBusy()) {
+        const pool = [...this.agents.entries()].filter(([k, a]) =>
+          k !== abbyKey && a && !busy.has(a.status)
+          && !['security', 'receptionist'].includes(a.role)
+        );
+        if (pool.length) {
+          const n = Math.min(pool.length, 1 + Math.floor(Math.random() * 3));
+          const guests = [];
+          const copy = pool.slice();
+          while (guests.length < n && copy.length) {
+            const i = Math.floor(Math.random() * copy.length);
+            guests.push(copy.splice(i, 1)[0][0]);
+          }
+          abby.status = 'meeting';
+          guests.forEach((k) => { const a = this.agents.get(k); if (a) a.status = 'meeting'; });
+          try { this.actions.standUp(abbyKey); } catch (_) {}
+          if (typeof this.actions.inviteToManagerOffice === 'function') {
+            this.actions.inviteToManagerOffice(abbyKey, guests);
+          }
+          this.scene.time.delayedCall(48000, () => {
+            const back = (k) => {
+              const a = this.agents.get(k);
+              if (!a?.assignedDesk) return;
+              if (busy.has(a.status) && a.status !== 'meeting') return;
+              try {
+                this.actions.useComputer(k, a.assignedDesk);
+                a.status = 'working';
+              } catch (_) {}
+            };
+            back(abbyKey);
+            guests.forEach(back);
+          });
+          return;
+        }
+      }
+    }
+
+    const candidates = [];
+    this.agents.forEach((agent, npcKey) => {
+      if (!agent || busy.has(agent.status)) return;
+      if (!this.actions._getNpc?.(npcKey)) return;
+      candidates.push(npcKey);
+    });
+    if (!candidates.length) return;
+    if (Math.random() > 0.7) return;
+
+    const howMany = Math.min(candidates.length, 1 + Math.floor(Math.random() * 2));
+    for (let n = 0; n < howMany; n++) {
+      const idx = Math.floor(Math.random() * candidates.length);
+      const npcKey = candidates.splice(idx, 1)[0];
+      const agent = this.agents.get(npcKey);
+      if (!agent) continue;
+      const roll = Math.random();
+      try { this.actions.standUp(npcKey); } catch (_) {}
+      const sprite = this.actions._getNpc?.(npcKey);
+      if (sprite) sprite._purposefulWalkUntil = Date.now() + 40000;
+
+      if (roll < 0.28 && this.actions.chillInBreakroom) {
+        agent.status = 'break';
+        this.actions.chillInBreakroom(npcKey);
+        if (Math.random() < 0.4 && candidates.length) {
+          const buddyKey = candidates.pop();
+          const buddy = this.agents.get(buddyKey);
+          if (buddy && !busy.has(buddy.status)) {
+            buddy.status = 'break';
+            try { this.actions.standUp(buddyKey); } catch (_) {}
+            this.actions.chillInBreakroom(buddyKey);
+            this.scene.time.delayedCall(30000, () => {
+              if (buddy.assignedDesk && buddy.status === 'break') {
+                this.actions.useComputer(buddyKey, buddy.assignedDesk);
+                buddy.status = 'working';
+              }
+            });
+          }
+        }
+      } else if (roll < 0.48 && this.actions.waterPlant) {
+        agent.status = 'tending';
+        this.actions.waterPlant(npcKey);
+      } else if (roll < 0.68 && this.actions.useWhiteboard) {
+        agent.status = 'whiteboard';
+        this.actions.useWhiteboard(npcKey);
+      } else if (roll < 0.82) {
+        this._handleManagerOfficeWalkIn(npcKey, agent, null);
+        continue;
+      } else {
+        agent.status = 'break';
+        (this.actions.goToCoffee?.(npcKey) || this.actions.goToBreakroom?.(npcKey));
+      }
+
+      this.scene.time.delayedCall(28000 + Math.random() * 16000, () => {
+        if (busy.has(agent.status) && !['break', 'tending', 'whiteboard', 'visiting'].includes(agent.status)) return;
+        if (!agent.assignedDesk) { agent.status = 'idle'; return; }
+        try {
+          this.actions.useComputer(npcKey, agent.assignedDesk);
+          agent.status = 'working';
+        } catch (_) {}
+      });
+    }
+  }
+
 
   _ambientReleaseWalkers(count = 1) {
     if (!this.agents || !this.actions) return;
@@ -1261,12 +1484,19 @@ class AgentOfficeManager {
             npc.sprite.ai.nextWanderAt = 0;
           }
         }
-        if (roll < 0.35) {
+        if (roll < 0.28) {
           npc.agent.status = 'break';
-          this.actions.goToBreakroom?.(npc.key);
-        } else if (roll < 0.55) {
+          if (this.actions.chillInBreakroom) this.actions.chillInBreakroom(npc.key);
+          else this.actions.goToBreakroom?.(npc.key);
+        } else if (roll < 0.42) {
           npc.agent.status = 'break';
           this.actions.goToCoffee?.(npc.key);
+        } else if (roll < 0.52 && this.actions.waterPlant) {
+          npc.agent.status = 'tending';
+          this.actions.waterPlant(npc.key);
+        } else if (roll < 0.62 && this.actions.useWhiteboard) {
+          npc.agent.status = 'whiteboard';
+          this.actions.useWhiteboard(npc.key);
         } else if (roll < 0.8) {
           npc.agent.status = 'wandering';
           const rooms = ['open_office', 'reception', 'breakroom', 'conference'];
@@ -2063,7 +2293,7 @@ class AgentOfficeManager {
       else if (/desk/i.test(id))               kind = 'desk';
       else if (/chair|seat|stool/i.test(id))   kind = 'chair';
       else if (/whiteboard|board/i.test(id))   kind = 'whiteboard';
-      else if (/plant|pot/i.test(id))          continue; // decor clutter
+      else if (/plant|pot|flora|fern/i.test(id)) kind = 'plant';
       else continue; // skip anything we can't label usefully
       scored.push({ kind, d });
     }
@@ -2371,7 +2601,13 @@ class AgentOfficeManager {
           this.actions.goToBreakroom(breakTargetKey);
         }
 
-        this.actions.goToBreakroom(npcKey);
+        // Prefer couch chill so breakroom feels lived-in (solo or with a friend).
+        if (typeof this.actions.chillInBreakroom === 'function') {
+          this.actions.chillInBreakroom(npcKey);
+          if (breakTargetKey) this.actions.chillInBreakroom(breakTargetKey);
+        } else {
+          this.actions.goToBreakroom(npcKey);
+        }
 
         if (message) {
           this.scene.time.delayedCall(3000, () => {
@@ -2583,6 +2819,99 @@ class AgentOfficeManager {
             agent.status = 'working';
           }
         });
+        break;
+      }
+
+
+      case 'tend_plant': {
+        agent.status = 'tending';
+        this.actions.standUp(npcKey);
+        if (typeof this.actions.waterPlant === 'function') {
+          this.actions.waterPlant(npcKey);
+        } else {
+          this.actions.goToBreakroom(npcKey);
+        }
+        if (message) {
+          this.scene.time.delayedCall(2500, () => this.actions.speak(npcKey, message));
+        }
+        this.scene.time.delayedCall(14000, () => {
+          if (agent.assignedDesk) {
+            this.actions.useComputer(npcKey, agent.assignedDesk);
+            agent.status = 'working';
+          }
+        });
+        break;
+      }
+
+      case 'whiteboard': {
+        agent.status = 'whiteboard';
+        this.actions.standUp(npcKey);
+        if (typeof this.actions.useWhiteboard === 'function') {
+          this.actions.useWhiteboard(npcKey, message || null);
+        } else {
+          this.actions.goToRoom(npcKey, 'conference');
+        }
+        if (message) {
+          this.scene.time.delayedCall(3000, () => this.actions.think(npcKey, message));
+        }
+        this.scene.time.delayedCall(16000, () => {
+          if (agent.assignedDesk) {
+            this.actions.useComputer(npcKey, agent.assignedDesk);
+            agent.status = 'working';
+          }
+        });
+        break;
+      }
+
+      case 'office_invite': {
+        // Abby (or another manager) collects 1–3 people into manager_office.
+        agent.status = 'meeting';
+        this.actions.standUp(npcKey);
+        const inviteKeys = [];
+        const explicit = findTargetKey(target);
+        if (explicit) inviteKeys.push(explicit);
+        // Fill up to 1–3 attendees from free workers.
+        if (inviteKeys.length < 2) {
+          const extras = [...this.agents.entries()]
+            .filter(([k, a]) => k !== npcKey && !inviteKeys.includes(k)
+              && a && !['meeting', 'ceo_conversation', 'task_override', 'tour_guide'].includes(a.status))
+            .map(([k]) => k);
+          while (inviteKeys.length < Math.min(3, 1 + Math.floor(Math.random() * 3)) && extras.length) {
+            const idx = Math.floor(Math.random() * extras.length);
+            inviteKeys.push(extras.splice(idx, 1)[0]);
+          }
+        }
+        inviteKeys.forEach((k) => {
+          const a = this.agents.get(k);
+          if (a) a.status = 'meeting';
+        });
+        if (typeof this.actions.inviteToManagerOffice === 'function') {
+          this.actions.inviteToManagerOffice(npcKey, inviteKeys);
+        } else {
+          this.actions.goToRoom(npcKey, 'manager_office');
+          inviteKeys.forEach((k) => this.actions.goToRoom(k, 'manager_office'));
+        }
+        if (message) {
+          this.scene.time.delayedCall(5000, () => this.actions.speak(npcKey, message));
+        }
+        this.scene.time.delayedCall(45000, () => {
+          const wrap = (k, ag) => {
+            if (!ag?.assignedDesk) { if (ag) ag.status = 'idle'; return; }
+            if (['ceo_conversation', 'task_override'].includes(ag.status)) return;
+            this.actions.useComputer(k, ag.assignedDesk);
+            ag.status = 'working';
+          };
+          wrap(npcKey, agent);
+          inviteKeys.forEach((k) => wrap(k, this.agents.get(k)));
+        });
+        break;
+      }
+
+      case 'office_visit': {
+        // Walk-in to Abby's office. If she's busy, Lucy takes a message → directive.
+        agent.status = 'visiting';
+        this.actions.standUp(npcKey);
+        this._handleManagerOfficeWalkIn(npcKey, agent, message);
         break;
       }
 
