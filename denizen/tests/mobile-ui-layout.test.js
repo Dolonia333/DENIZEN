@@ -20,11 +20,13 @@ describe('mobile UI layout fixes', () => {
     assert.match(chat, /padding-top:\s*10px/);
   });
 
-  it('Projects and Connect AI mount into header-actions', () => {
+  it('Projects, Connect AI, and Hand off mount into header-actions', () => {
     const projects = read('src/visitor-projects-ui.js');
     const mcp = read('src/visitor-mcp-connect-ui.js');
+    const handoff = read('src/visitor-handoff-ui.js');
     assert.match(projects, /player-chat-header-actions/);
     assert.match(mcp, /player-chat-header-actions/);
+    assert.match(handoff, /player-chat-header-actions/);
   });
 
   it('HQ PASS login card is the sticky-button scroll container', () => {
