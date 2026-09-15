@@ -83,6 +83,20 @@ describe('mobile UI layout fixes', () => {
     assert.match(html, /#game-container canvas \{[^}]*display:\s*block;/s);
   });
 
+  it('portrait phones center the HQ map box, then pin top when chat opens', () => {
+    const mobile = read('src/mobile-controls.js');
+    assert.match(
+      mobile,
+      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?align-items:\s*center/
+    );
+    assert.match(
+      mobile,
+      /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
+    );
+    const html = read('index.html');
+    assert.match(html, /mobile-controls\.js\?v=hqMid1/);
+  });
+
   it('speech bubbles nudge away from neighbors', () => {
     const actions = read('src/agent-actions.js');
     assert.match(actions, /Nudge up when another live bubble/);
