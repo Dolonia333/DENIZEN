@@ -308,10 +308,16 @@ YOUR JOB — create a LIVING office:
   async _tryRecoverFromDemoLoop() {
     if (!this._usingDemoLoop) return false;
     try {
+      // _callLmStudio rejects on any provider failure (unreachable, cooldown,
+      // HTTP error), so a non-empty reply means the director path works again.
+      // Don't insist on the literal word "OK": the probe carries the director
+      // system prompt, so healthy models answer with JSON commands — the old
+      // /\bok\b/ check kept Abby in the scripted loop forever once LM Studio
+      // came back.
       const text = await this._callLmStudio([
         { role: 'user', content: 'Reply with exactly the word OK and nothing else.' },
       ]);
-      if (!text || !/\bok\b/i.test(String(text).slice(0, 40))) return false;
+      if (!String(text || '').trim()) return false;
       console.log('[CofounderAgent] LM Studio recovered — exiting demo think loop');
       this.stop();
       this._usingDemoLoop = false;
