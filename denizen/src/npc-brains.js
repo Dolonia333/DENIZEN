@@ -3346,6 +3346,10 @@ ACTION MEANINGS:
 - work: heads-down at your desk (DEFAULT — choose this most cycles)
 - talk/collaborate/report: interact with a specific coworker (set target) — then return to desk
 - break/coffee: breakroom only when fatigued — return to desk after
+- tend_plant: water or check a potted plant (living office care)
+- whiteboard: sketch or write on a whiteboard / cork board
+- office_invite: (Abby/managers) bring 1–3 people into manager_office for a huddle
+- office_visit: walk to Abby's office; if busy, leave a note with Lucy (secretary) for her todo chain
 - check/read: bookshelf research — return to desk after
 - observe: only when you need fresh info before a decision
 - visit: rare — only if target asked for help; return to desk after
@@ -7240,7 +7244,7 @@ ${brain.voiceAnchor || ''}`;
 NpcBrainManager.DECISION_SCHEMA = {
   type: 'object',
   properties: {
-    action: { type: 'string', enum: ['talk', 'collaborate', 'report', 'work', 'break', 'coffee', 'check', 'read', 'visit', 'wander', 'meeting', 'run_skill', 'idle'] },
+    action: { type: 'string', enum: ['talk', 'collaborate', 'report', 'work', 'break', 'coffee', 'check', 'read', 'visit', 'wander', 'meeting', 'run_skill', 'idle', 'tend_plant', 'whiteboard', 'office_invite', 'office_visit'] },
     thought: { type: 'string' },
     message: { type: 'string' },
     target: { type: 'string' },

@@ -1075,6 +1075,22 @@ class AgentActions {
     });
   }
 
+
+  /**
+   * visitCoworker(npcKey, targetNpcKey?) - Drop by a coworker.
+   * If no target is given, pick a random other NPC who is currently in the scene.
+   */
+  visitCoworker(npcKey, targetNpcKey = null) {
+    if (!targetNpcKey) {
+      const others = (this.scene.npcs || [])
+        .map(n => n.texture?.key)
+        .filter(k => k && k !== npcKey);
+      if (!others.length) return this.goToRoom(npcKey, 'open_office');
+      targetNpcKey = others[Math.floor(Math.random() * others.length)];
+    }
+    return this.visit(npcKey, targetNpcKey);
+  }
+
   /**
    * goToRoom(npcKey, roomKey) - Walk to center of a named room
    */
@@ -1631,6 +1647,251 @@ class AgentActions {
   /**
    * Update all visual elements positions (call from scene update)
    */
+
+  // ---- Living-office furniture verbs ----
+
+  /**
+   * Find furniture matching a kind regex, optionally constrained to a room.
+   * Returns the interactable entry or null.
+   */
+  _findFurnitureByKind(kindRe, roomKey = null) {
+    const items = this.scene?._interactables || [];
+    const room = roomKey ? this.ROOMS[roomKey] : null;
+    const matches = [];
+    for (const it of items) {
+      if (!it?.sprite || !it.id) continue;
+      if (!kindRe.test(String(it.id)) && !(it.def?.name && kindRe.test(String(it.def.name)))) continue;
+      if (room) {
+        const x = it.sprite.x, y = it.sprite.y;
+        if (x < room.xMin || x > room.xMax || y < room.yMin || y > room.yMax) continue;
+      }
+      matches.push(it);
+    }
+    if (!matches.length) return null;
+    return matches[Math.floor(Math.random() * matches.length)];
+  }
+
+  /**
+   * Walk up to furniture, stand in front, face it, then resolve.
+   */
+  _approachFurniture(npcKey, furniture, { offsetY = 20, dwellMs = 2500, face = 'up', onArrive = null } = {}) {
+    return this.queueAction(npcKey, () => new Promise((resolve) => {
+      const npc = this._getNpc(npcKey);
+      if (!npc || !furniture?.sprite) { resolve(); return; }
+      if (this._sittingNpcs.has(npcKey)) this._standUpNpc(npcKey);
+
+      let tx = furniture.sprite.x;
+      let ty = furniture.sprite.y + offsetY;
+      const pf = this.scene?._pathfinder;
+      if (pf?.findWalkableNear) {
+        const s = pf.findWalkableNear(tx, ty, 40);
+        if (s) { tx = s.x; ty = s.y; }
+      }
+
+      npc.ai.mode = 'agent_task';
+      npc.ai.taskTarget = { x: tx, y: ty };
+      npc.ai.taskState = 'walking';
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        try { check.remove(); } catch (_) {}
+        npc.body?.setVelocity?.(0, 0);
+        npc.ai.taskState = 'arrived';
+        npc.anims?.stop?.();
+        if (face === 'up') npc.setFrame?.(12);
+        else if (face === 'down') npc.setFrame?.(0);
+        else if (face === 'left') npc.setFrame?.(4);
+        else npc.setFrame?.(8);
+        npc.ai.facing = face;
+        try { onArrive?.(npc, furniture); } catch (_) {}
+        this.scene.time.delayedCall(dwellMs, () => resolve());
+      };
+
+      const check = this.scene.time.addEvent({
+        delay: 100,
+        loop: true,
+        callback: () => {
+          if (Math.hypot(tx - npc.x, ty - npc.y) <= 18) finish();
+        },
+      });
+      this.scene.time.delayedCall(8000, finish);
+    }));
+  }
+
+  /**
+   * waterPlant(npcKey) - Walk to a potted plant and "water" it.
+   */
+  waterPlant(npcKey) {
+    const plant = this._findFurnitureByKind(/plant|flora|pot|fern|bush/i);
+    if (!plant) {
+      // No plant placed — still look purposeful: short breakroom stretch.
+      return this.goToBreakroom(npcKey).then(() => this.emote(npcKey, '💧'));
+    }
+    return this._approachFurniture(npcKey, plant, {
+      offsetY: 22,
+      dwellMs: 3200,
+      face: 'up',
+      onArrive: () => {
+        this._showEmote?.(this._getNpc(npcKey), npcKey, '💧');
+      },
+    }).then(() => {
+      const npc = this._getNpc(npcKey);
+      if (npc) this._showSpeechBubble?.(npc, npcKey, 'Looking healthy.', 'speech', 2000);
+    });
+  }
+
+  /**
+   * useWhiteboard(npcKey, note?) - Walk to a whiteboard / cork board and sketch.
+   */
+  useWhiteboard(npcKey, note = null) {
+    const board = this._findFurnitureByKind(/whiteboard|cork|board|chart/i)
+      || this._findFurnitureByKind(/whiteboard|cork|board|chart/i, 'conference')
+      || this._findFurnitureByKind(/whiteboard|cork|board|chart/i, 'open_office');
+    if (!board) {
+      return this.goToRoom(npcKey, 'conference').then(() => this.think(npcKey, note || 'Sketching ideas…'));
+    }
+    return this._approachFurniture(npcKey, board, {
+      offsetY: 24,
+      dwellMs: 4500,
+      face: 'up',
+      onArrive: () => {
+        this._showEmote?.(this._getNpc(npcKey), npcKey, '✎');
+      },
+    }).then(() => this.think(npcKey, note || 'Jotting this down…'));
+  }
+
+  /**
+   * Find an unoccupied couch/sofa (prefers breakroom).
+   */
+  _findFreeCouch(preferRoom = 'breakroom') {
+    const items = this.scene?._interactables || [];
+    const room = this.ROOMS[preferRoom];
+    const occupied = new Set();
+    this._sittingNpcs.forEach((data) => {
+      if (data.chairSprite) occupied.add(data.chairSprite);
+    });
+    const couches = items.filter((it) => {
+      if (!it?.sprite) return false;
+      const id = String(it.id || '');
+      const name = String(it.def?.name || '');
+      const isCouch = /couch|sofa|loveseat|bench/i.test(id) || /couch|sofa/i.test(name)
+        || (it.def?.type === 'seat' && /couch|sofa/i.test(id));
+      if (!isCouch) return false;
+      if (occupied.has(it.sprite)) return false;
+      if (room) {
+        const x = it.sprite.x, y = it.sprite.y;
+        if (x < room.xMin - 20 || x > room.xMax + 20 || y < room.yMin - 20 || y > room.yMax + 40) {
+          return false;
+        }
+      }
+      return true;
+    });
+    if (!couches.length) return null;
+    return couches[Math.floor(Math.random() * couches.length)];
+  }
+
+  /**
+   * chillInBreakroom(npcKey) - Go chill: sit on a couch when free, else hang near one.
+   * Supports multiple people — each picks a free couch/spot.
+   */
+  chillInBreakroom(npcKey) {
+    if (this._sittingNpcs.has(npcKey)) this._standUpNpc(npcKey);
+    const couch = this._findFreeCouch('breakroom');
+    if (couch) {
+      return this.sitAt(npcKey, couch.instanceId || couch.id).then(() => {
+        this.emote(npcKey, 'happy');
+      });
+    }
+    // Soft lounge near coffee / room center if no free couch.
+    return this.goToBreakroom(npcKey).then(() => {
+      const npc = this._getNpc(npcKey);
+      if (!npc) return;
+      npc.ai.taskState = 'chilling';
+      this.emote(npcKey, 'happy');
+    });
+  }
+
+  /**
+   * Find seats inside manager_office for 1:1 / small group.
+   */
+  _findManagerOfficeSeats() {
+    const room = this.ROOMS.manager_office;
+    if (!room || !this.scene?._interactables) return [];
+    const occupied = new Set();
+    this._sittingNpcs.forEach((data) => {
+      if (data.chairSprite) occupied.add(data.chairSprite);
+    });
+    return this.scene._interactables.filter((it) => {
+      if (!it?.sprite) return false;
+      const isSeat = it.def?.type === 'seat' || /chair|seat|stool|couch|sofa/i.test(String(it.id || ''));
+      if (!isSeat) return false;
+      const x = it.sprite.x, y = it.sprite.y;
+      if (x < room.xMin || x > room.xMax || y < room.yMin || y > room.yMax) return false;
+      return !occupied.has(it.sprite);
+    }).sort((a, b) => a.sprite.x - b.sprite.x || a.sprite.y - b.sprite.y);
+  }
+
+  /**
+   * inviteToManagerOffice(hostKey, guestKeys) - Host (usually Abby) collects
+   * 1–3 people and brings them into the manager office for a sit-down.
+   */
+  inviteToManagerOffice(hostKey, guestKeys = []) {
+    const guests = (guestKeys || []).filter((k) => k && k !== hostKey).slice(0, 3);
+    if (!guests.length) return this.goToRoom(hostKey, 'manager_office');
+
+    const chain = Promise.resolve();
+    // Host stands and greets the first guest, then everyone files into the office.
+    return chain
+      .then(() => this.standUp(hostKey))
+      .then(() => this.visit(hostKey, guests[0]))
+      .then(() => this.speakTo(hostKey, guests[0], guests.length > 1
+        ? 'Got a minute? Quick huddle in my office.'
+        : 'Got a minute? Step into my office.'))
+      .then(() => {
+        const moves = [this.goToRoom(hostKey, 'manager_office')];
+        guests.forEach((g, i) => {
+          moves.push(
+            this.standUp(g).then(() =>
+              this.scene.time.delayedCall
+                ? new Promise((r) => this.scene.time.delayedCall(400 * (i + 1), r))
+                : Promise.resolve()
+            ).then(() => this.goToRoom(g, 'manager_office'))
+          );
+        });
+        return Promise.all(moves);
+      })
+      .then(() => {
+        const seats = this._findManagerOfficeSeats();
+        const sitters = [hostKey, ...guests];
+        const sits = [];
+        sitters.forEach((k, i) => {
+          if (seats[i]) sits.push(this.sitAt(k, seats[i].instanceId || seats[i].id));
+        });
+        return Promise.all(sits);
+      });
+  }
+
+  /**
+   * approachManagerOffice(npcKey) - Walk toward Abby's office (doorway area).
+   * Caller decides busy-gate / conversation.
+   */
+  approachManagerOffice(npcKey) {
+    if (this._sittingNpcs.has(npcKey)) this._standUpNpc(npcKey);
+    const room = this.ROOMS.manager_office;
+    // Doorway approach on the open-office side of the manager office.
+    let x = (room?.xMin || 880) - 24;
+    let y = ((room?.yMin || 80) + (room?.yMax || 240)) / 2;
+    const pf = this.scene?._pathfinder;
+    if (pf?.findWalkableNear) {
+      const s = pf.findWalkableNear(x, y, 48);
+      if (s) { x = s.x; y = s.y; }
+    }
+    return this.walkTo(npcKey, x, y);
+  }
+
+
   update() {
     // Keep "follow me" NPCs glued to the player.
     this._tickFollow();
