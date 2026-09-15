@@ -128,7 +128,8 @@ and **Settings**. Create tasks, filter by type, save views, and reset demo data.
 
 When you're signed into a **team** office, the board syncs to your org
 (`GET|PUT /api/studio-board/workspace`) so teammates and MCP agents share the same
-truth. Offline/demo still falls back to browser storage.
+truth. Offline/demo still falls back to browser storage. **My Day** matches your
+Denizen login to a board person (or offers “Use my login”).
 
 **MCP (ChatGPT / Cursor / team token)** — same pattern as CRM. Prefer
 `studio_board_working_set` first, then:
@@ -137,13 +138,17 @@ truth. Offline/demo still falls back to browser storage.
 |------|---------|
 | `studio_board_working_set` | Open / overdue / stuck + people + stages |
 | `studio_board_brief` | Short briefing for standup |
-| `studio_board_list_tasks` | Filtered task list |
-| `studio_board_get_task` | Full task detail |
-| `studio_board_upsert_task` | Create or update a task |
-| `studio_board_advance_task` | Move to next (or explicit) stage |
-| `studio_board_assign_task` | Assign to a person |
+| `studio_board_list_tasks` / `get_task` | Filtered list or full task detail |
+| `studio_board_upsert_task` / `delete_task` | Create, update, or delete |
+| `studio_board_advance_task` / `assign_task` | Move stage / assign |
 | `studio_board_add_comment` | Comment on a task |
-| `studio_board_list_people` / `studio_board_upsert_person` | Team strip |
+| `studio_board_add_subtask` / `toggle_subtask` / `delete_subtask` | Checklist items |
+| `studio_board_list_events` / `upsert_event` / `delete_event` | Meetings & follow-ups |
+| `studio_board_list_people` / `upsert_person` / `delete_person` | Team strip |
+| `studio_board_list_notes` / `send_note` | Teammate inbox notes |
+| `studio_board_get_config` / `update_config` | Categories & pipeline |
+| `studio_board_standup` | Standup or weekly recap text |
+| `studio_board_my_day` | Overdue / due today / meetings for a person |
 
 ---
 
