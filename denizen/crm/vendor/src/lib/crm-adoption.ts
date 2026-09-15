@@ -41,7 +41,11 @@ export function validateContact(contact: Partial<Contact>, policy: TeamPolicy): 
 export function filterMyDeals(deals: Deal[], userName: string): Deal[] {
   const me = userName.trim().toLowerCase();
   if (!me) return deals;
-  return deals.filter((d) => !d.ownerId || d.ownerId.toLowerCase() === me);
+  return deals.filter((d) => {
+    const owner = (d.ownerId || "").toLowerCase();
+    if (!owner) return false;
+    return owner === me || owner.includes(me) || me.includes(owner);
+  });
 }
 
 export function filterMyTasks(tasks: Task[], userName: string): Task[] {
