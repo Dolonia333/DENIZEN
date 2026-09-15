@@ -2914,7 +2914,12 @@ class PlayerChat {
         z-index: 2147483630 !important;
       }
       html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel {
-        top: calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + 10px) !important;
+        /* Prefer live game-frame bottom (set by mobile-controls); fall back to 16:9 estimate */
+        top: calc(
+          var(--denizen-game-frame-bottom,
+            calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
+          ) + 8px
+        ) !important;
       }
       html.denizen-touch.denizen-tablet.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
         top: auto !important;
@@ -2997,9 +3002,10 @@ class PlayerChat {
       }
       html.denizen-touch .pc-composer-bar { padding: 6px 8px; }
       html.denizen-touch #player-chat-input {
-        min-height: 28px;
+        min-height: 36px;
         font-size: 16px;
-        padding: 10px 6px;
+        line-height: 1.35;
+        padding: 8px 6px;
       }
       html.denizen-touch #player-chat-send,
       html.denizen-touch #player-chat-speak {
