@@ -113,6 +113,102 @@ const CRM_TOOL_DEFINITIONS = [
       },
     },
   },
+  {
+    name: 'crm_upsert_contact',
+    description:
+      'Create or update a CRM contact. Pass id/email to update; omit id to create. Prefer crm_working_set first.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'number', description: 'Existing contact id (update)' },
+        contact_id: { type: 'number', description: 'Alias for id' },
+        name: { type: 'string' },
+        email: { type: 'string' },
+        company: { type: 'string' },
+        phone: { type: 'string' },
+        status: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  },
+  {
+    name: 'crm_upsert_deal',
+    description:
+      'Create or update a CRM deal. Pass deal_id to update; omit to create. Prefer crm_working_set first.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        deal_id: { type: 'number' },
+        id: { type: 'number' },
+        title: { type: 'string' },
+        contact: { type: 'string' },
+        company: { type: 'string' },
+        value: { type: 'number' },
+        stage: { type: 'string' },
+        health: { type: 'string' },
+        close_date: { type: 'string' },
+        notes: { type: 'string' },
+        studio_task_ids: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  },
+  {
+    name: 'crm_move_deal',
+    description: 'Move a CRM deal to a pipeline stage (requires deal_id + stage).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        deal_id: { type: 'number' },
+        id: { type: 'number' },
+        title: { type: 'string' },
+        stage: { type: 'string', description: 'Target stage e.g. Qualified, Proposal, Closed Won' },
+      },
+      required: ['stage'],
+    },
+  },
+  {
+    name: 'crm_upsert_task',
+    description: 'Create a CRM follow-up task (title required). Optional deal_id / contact.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        contact: { type: 'string' },
+        deal_id: { type: 'number' },
+        due: { type: 'string', description: 'YYYY-MM-DD' },
+        priority: { type: 'string' },
+        notes: { type: 'string' },
+      },
+      required: ['title'],
+    },
+  },
+  {
+    name: 'crm_complete_task',
+    description: 'Close (or delete) a CRM task by id or title match.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task_id: { type: 'number' },
+        id: { type: 'number' },
+        title: { type: 'string', description: 'Title match if id unknown' },
+        delete: { type: 'boolean', description: 'Delete instead of mark done' },
+      },
+    },
+  },
+  {
+    name: 'crm_add_note',
+    description: 'Add a CRM note on a contact (and optionally associate context).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string' },
+        contact: { type: 'string', description: 'Contact name' },
+        contact_id: { type: 'number' },
+        type: { type: 'string' },
+      },
+      required: ['text'],
+    },
+  },
 ];
 
 function configure(deps = {}) {
@@ -175,6 +271,114 @@ async function toolParkDeal(scope, args = {}) {
       reason: args?.reason || args?.parkReason,
       actor: scope?.npc_key || 'mcp',
     });
+    return { ok: true, ...result };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+async function toolUpsertContact(scope, args = {}) {
+  const orgId = resolveOrgId(scope);
+  if (!orgId) return { ok: false, error: 'org_id unavailable' };
+  const identityId = scope?.identity_id || null;
+  const crmSkills = require('./denizen-crm-skills');
+  try {
+    const id = args?.id ?? args?.contact_id ?? args?.contactId;
+    if (id != null || args?.email) {
+      // Prefer update when id/email matches an existing contact
+      try {
+        const updated = await crmSkills.updateContact(orgId, {
+          contactId: id,
+          ...args,
+        }, identityId);
+        return { ok: true, updated: true, ...updated };
+      } catch (err) {
+        if (id != null) return { ok: false, error: err?.message || String(err) };
+        // fall through to create when email not found
+      }
+    }
+    const created = await crmMutations.addContact(orgId, args || {}, identityId);
+    return { ok: true, created: true, ...created };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+async function toolUpsertDeal(scope, args = {}) {
+  const orgId = resolveOrgId(scope);
+  if (!orgId) return { ok: false, error: 'org_id unavailable' };
+  const identityId = scope?.identity_id || null;
+  try {
+    const dealId = args?.deal_id ?? args?.dealId ?? args?.id;
+    if (dealId != null) {
+      const updated = await crmMutations.updateDeal(orgId, { ...args, deal_id: dealId }, identityId);
+      return { ok: true, updated: true, ...updated };
+    }
+    if (!args?.title) return { ok: false, error: 'title required to create a deal' };
+    const created = await crmMutations.addDeal(orgId, args || {}, identityId);
+    return { ok: true, created: !created.deal || created.summary?.includes('Created'), ...created };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+async function toolMoveDeal(scope, args = {}) {
+  const orgId = resolveOrgId(scope);
+  if (!orgId) return { ok: false, error: 'org_id unavailable' };
+  try {
+    const crmSkills = require('./denizen-crm-skills');
+    const result = await crmSkills.moveDeal(orgId, {
+      deal_id: args?.deal_id ?? args?.dealId ?? args?.id,
+      dealId: args?.deal_id ?? args?.dealId ?? args?.id,
+      title: args?.title,
+      stage: args?.stage,
+    }, scope?.identity_id || null);
+    return { ok: true, ...result };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+async function toolUpsertTask(scope, args = {}) {
+  const orgId = resolveOrgId(scope);
+  if (!orgId) return { ok: false, error: 'org_id unavailable' };
+  try {
+    const result = await crmMutations.addTask(orgId, {
+      title: args?.title,
+      contact: args?.contact,
+      due: args?.due,
+      priority: args?.priority,
+      notes: args?.notes,
+      deal_id: args?.deal_id ?? args?.dealId,
+      dealId: args?.deal_id ?? args?.dealId,
+    }, scope?.identity_id || null);
+    return { ok: true, created: true, ...result };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+async function toolCompleteTask(scope, args = {}) {
+  const orgId = resolveOrgId(scope);
+  if (!orgId) return { ok: false, error: 'org_id unavailable' };
+  try {
+    const result = await crmMutations.closeTask(orgId, {
+      task_id: args?.task_id ?? args?.taskId ?? args?.id,
+      title: args?.title,
+      delete: args?.delete === true,
+    }, scope?.identity_id || null);
+    return { ok: true, ...result };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+async function toolAddNote(scope, args = {}) {
+  const orgId = resolveOrgId(scope);
+  if (!orgId) return { ok: false, error: 'org_id unavailable' };
+  try {
+    const crmSkills = require('./denizen-crm-skills');
+    const result = await crmSkills.addNote(orgId, args || {}, scope?.identity_id || null);
     return { ok: true, ...result };
   } catch (err) {
     return { ok: false, error: err?.message || String(err) };
@@ -251,6 +455,12 @@ async function callTool(scope, name, args) {
 
   if (name === 'crm_working_set') return toolWorkingSet(scope, args);
   if (name === 'crm_park_deal') return toolParkDeal(scope, args);
+  if (name === 'crm_upsert_contact') return toolUpsertContact(scope, args);
+  if (name === 'crm_upsert_deal') return toolUpsertDeal(scope, args);
+  if (name === 'crm_move_deal') return toolMoveDeal(scope, args);
+  if (name === 'crm_upsert_task') return toolUpsertTask(scope, args);
+  if (name === 'crm_complete_task') return toolCompleteTask(scope, args);
+  if (name === 'crm_add_note') return toolAddNote(scope, args);
   if (name === 'send_draft') return toolSendDraft(scope, args);
 
   if (!_runSkill) {

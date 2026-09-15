@@ -118,6 +118,19 @@ custom fields, **and** reshapes the dashboard with industry-specific widgets.
 - **Calendar** — connect Google/Microsoft to sync meetings.
 - **Data Management** — import/export, load demo data, restore.
 
+**MCP** — prefer `crm_working_set` (or `agency_working_set` with Studio Board) first:
+
+| Tool | Purpose |
+|------|---------|
+| `crm_working_set` / `crm_pipeline_brief` | Live pipeline + at-risk (read) |
+| `crm_list_tasks` | Open CRM follow-ups |
+| `crm_upsert_contact` / `crm_upsert_deal` / `crm_move_deal` | First-class CRM writes |
+| `crm_upsert_task` / `crm_complete_task` / `crm_add_note` | Tasks + notes |
+| `crm_park_deal` | Park scrape/research to watchlist |
+| `crm_draft_email` / `send_draft` / `mail_policy_status` | Mail under policy |
+
+CRM deals may carry optional `studio_task_ids`; Studio Board tasks may carry optional `deal_id` / `contact_id` so sales and delivery stay linked without merging the apps.
+
 ## 6b. Studio Board (Agency Tracker)
 
 Open **Studio Board** from the phone (or go to `/studio-board/`). Like CRM, it opens as
@@ -135,7 +148,7 @@ automations); members keep full task CRUD. Offline/demo still falls back to brow
 storage. **My Day** matches your Denizen login to a board person (or offers “Use my login”).
 
 **MCP (ChatGPT / Cursor / team token)** — same pattern as CRM. Prefer
-`studio_board_working_set` first, then:
+`studio_board_working_set` first (or `agency_working_set` when coordinating sales + delivery), then:
 
 | Tool | Purpose |
 |------|---------|
@@ -155,6 +168,14 @@ storage. **My Day** matches your Denizen login to a board person (or offers “U
 | `studio_board_list_automations` / `upsert_automation` | When→then rules |
 | `studio_board_standup` | Standup or weekly recap text |
 | `studio_board_my_day` | Overdue / due today / meetings for a person |
+
+**Agency (CRM ↔ Board)** — use when coordinating both systems:
+
+| Tool | Purpose |
+|------|---------|
+| `agency_working_set` | Joint CRM + Board brief + linked pairs |
+| `agency_link_deal_task` | Bind deal ↔ board task both ways |
+| `agency_handoff_won_deal` | Closed Won → create linked delivery task |
 
 ---
 
