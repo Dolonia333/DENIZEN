@@ -163,6 +163,15 @@ async function updateDeal(orgId, params = {}, identityId = null) {
       : {}),
     ...(params.notes != null ? { notes: String(params.notes).slice(0, 2000) } : {}),
     ...(params.status != null ? { status: String(params.status) } : {}),
+    ...(params.company != null ? { company: String(params.company) } : {}),
+    ...(params.title != null && String(params.title).trim() ? { title: String(params.title).trim() } : {}),
+    ...(params.studio_task_ids != null || params.studioTaskIds != null
+      ? {
+        studioTaskIds: Array.isArray(params.studio_task_ids || params.studioTaskIds)
+          ? [...(params.studio_task_ids || params.studioTaskIds)].map(String)
+          : [],
+      }
+      : {}),
   };
   deals[idx] = updated;
   const next = { ...state, deals };
@@ -198,6 +207,9 @@ async function addTask(orgId, params = {}, identityId = null) {
     priority: String(params.priority || 'Medium'),
     done: false,
     notes: String(params.notes || params.task || '').slice(0, 500),
+    ...(params.dealId != null || params.deal_id != null
+      ? { dealId: params.dealId ?? params.deal_id }
+      : {}),
   };
   tasks.push(task);
   const next = { ...state, tasks };
@@ -420,12 +432,16 @@ async function addDeal(orgId, params = {}, identityId = null) {
     id: nextId(deals),
     title,
     contact: String(params.contact || '').trim(),
+    company: String(params.company || '').trim(),
     value: Number(params.value) || 0,
     stage: String(params.stage || 'Qualified'),
     probability: Number(params.probability) || 30,
-    closeDate: String(params.closeDate || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)),
+    closeDate: String(params.closeDate || params.close_date || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)),
     daysInStage: 0,
     health: String(params.health || 'good'),
+    studioTaskIds: Array.isArray(params.studio_task_ids || params.studioTaskIds)
+      ? [...(params.studio_task_ids || params.studioTaskIds)].map(String)
+      : [],
   };
   deals.push(deal);
   const next = { ...state, deals };

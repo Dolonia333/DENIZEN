@@ -79,6 +79,8 @@ const STUDIO_BOARD_TOOL_DEFINITIONS = [
         group_id: { type: 'string', description: 'Group id (active/backlog/custom)' },
         fields: { type: 'object', description: 'Custom column values keyed by column id' },
         blocked_by: { type: 'array', items: { type: 'string' }, description: 'Blocking task ids' },
+        deal_id: { type: 'string', description: 'Optional linked CRM deal id' },
+        contact_id: { type: 'string', description: 'Optional linked CRM contact id' },
       },
       required: ['title'],
     },

@@ -175,6 +175,8 @@ function summarizeDeal(d) {
     health: d.health,
     closeDate: d.closeDate || '',
     tags: d.tags || [],
+    studio_task_ids: Array.isArray(d.studioTaskIds) ? d.studioTaskIds.map(String)
+      : (Array.isArray(d.studio_task_ids) ? d.studio_task_ids.map(String) : []),
   };
 }
 
@@ -184,7 +186,7 @@ function summarizeTask(t) {
     title: t.title,
     due: t.due,
     contact: t.contact || '',
-    dealId: t.dealId,
+    dealId: t.dealId ?? t.deal_id ?? null,
     priority: t.priority,
   };
 }

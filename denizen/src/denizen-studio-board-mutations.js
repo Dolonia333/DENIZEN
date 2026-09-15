@@ -234,6 +234,8 @@ function summarizeTask(t) {
     group_id: t.groupId || t.group_id || null,
     blocked_by: Array.isArray(t.blockedBy) ? t.blockedBy : [],
     fields: t.fields && typeof t.fields === 'object' ? t.fields : {},
+    deal_id: t.dealId ?? t.deal_id ?? null,
+    contact_id: t.contactId ?? t.contact_id ?? null,
     block_reason: t.blockReason || null,
     comments: Array.isArray(t.comments) ? t.comments.length : 0,
     subtasks: Array.isArray(t.subtasks) ? t.subtasks.length : 0,
@@ -324,6 +326,8 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
       statusSince: todayISO(),
       fields: input.fields && typeof input.fields === 'object' ? input.fields : {},
       blockedBy: Array.isArray(input.blocked_by || input.blockedBy) ? (input.blocked_by || input.blockedBy) : [],
+      dealId: input.deal_id ?? input.dealId ?? null,
+      contactId: input.contact_id ?? input.contactId ?? null,
       log: [],
       comments: [],
       subtasks: Array.isArray(input.subtasks) ? input.subtasks : [],
@@ -348,6 +352,12 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
       task.groupId = input.group_id || input.groupId || null;
     }
     if (input.notes != null) task.notes = String(input.notes).slice(0, 4000);
+    if (input.deal_id != null || input.dealId != null) {
+      task.dealId = input.deal_id ?? input.dealId;
+    }
+    if (input.contact_id != null || input.contactId != null) {
+      task.contactId = input.contact_id ?? input.contactId;
+    }
     if (input.assignee != null) {
       const p = findPerson(state, input.assignee);
       task.assignee = p?.id || input.assignee || null;
