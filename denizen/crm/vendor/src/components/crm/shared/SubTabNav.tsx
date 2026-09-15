@@ -1,6 +1,7 @@
 /**
  * Shared SubTabNav — reusable pill-style sub-tab navigation
  * used within consolidated sections (Sales, Schedule).
+ * Horizontally scrollable on narrow screens so Calendar stays one-thumb reachable.
  */
 import { T } from "@/lib/crm-data";
 
@@ -18,14 +19,27 @@ interface Props {
 
 export function SubTabNav({ tabs, active, onSelect }: Props) {
   return (
-    <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 6,
+        marginBottom: 20,
+        flexWrap: "nowrap",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
+        paddingBottom: 2,
+        maxWidth: "100%",
+      }}
+    >
       {tabs.map(t => (
         <button
           key={t.key}
           type="button"
           onClick={() => onSelect(t.key)}
           style={{
-            padding: "7px 16px",
+            padding: "8px 14px",
             borderRadius: "9999px",
             fontSize: 12,
             fontWeight: 600,
@@ -34,6 +48,8 @@ export function SubTabNav({ tabs, active, onSelect }: Props) {
             border: `1px solid ${active === t.key ? `${T.accent}66` : T.bg4}`,
             cursor: "pointer",
             transition: "all 0.15s ease",
+            whiteSpace: "nowrap",
+            flex: "0 0 auto",
           }}
         >
           {t.icon} {t.label}
