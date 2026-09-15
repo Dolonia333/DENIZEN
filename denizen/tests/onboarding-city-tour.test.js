@@ -26,16 +26,16 @@ describe('Denizen office onboarding', () => {
     const source = read('src/visitor-onboarding.js');
     const steps = arrayBlock(source, 'STEP_DEFS');
 
-    assert.equal(countStepIds(steps), 6);
+    // Welcome → Buzz → assistant. City Power is the Power Tour's job.
+    assert.equal(countStepIds(steps), 3);
     assert.match(source, /Hey — I work here too\. Use me\./);
     assert.match(source, /Denizen starts as an AI office you can actually see/);
     assert.match(source, /stay close to what happens next/);
     assert.match(source, /They move to a desk and keep the work visible/);
-    assert.match(source, /See the work happen\./);
     assert.match(source, /Hey — I work here too\./);
     assert.match(source, /I'm Buzz — your office key/);
-    assert.match(source, /Your Citizen ID keeps that relationship connected/);
-    assert.match(source, /Power the city from your office\./);
+    assert.match(source, /your Citizen ID keeps that relationship connected/);
+    assert.doesNotMatch(steps, /City Power|Power the city/);
     assert.match(source, /--onb-accent: #7dd3fc/);
     assert.match(source, /--onb-amber: #f59e0b/);
     assert.match(source, /font-family: var\(--onb-mono\)/);

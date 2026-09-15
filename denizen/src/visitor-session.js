@@ -1890,7 +1890,12 @@
         if (busy) return;
         const input = modalEl.querySelector('#denizen-visitor-name-input');
         const btn = modalEl.querySelector('#denizen-visitor-name-continue');
-        const name = String(input?.value || '').trim();
+        let name = String(input?.value || '').trim();
+        if (!name && pendingAccess?.accessMethod === 'demo') {
+          // Name is optional for guests; the suffix keeps several guests on
+          // the floor distinguishable.
+          name = `Guest ${Math.floor(100 + Math.random() * 900)}`;
+        }
         if (!name) {
           input?.focus();
           return;
@@ -2159,8 +2164,10 @@
       async function handleAction(action) {
         const { demoSlug } = accessCtx();
         if (action === 'path-demo') {
+          // Guests go straight to a one-field (optional) name step. Email is
+          // asked later, in "Save your demo progress", once there's progress.
           pendingAccess = { accessMethod: 'demo', orgSlug: demoSlug, tier: 'demo' };
-          step = 'demo-email';
+          step = 'name';
           render();
           return;
         }
@@ -2195,31 +2202,12 @@
           finishCreateTeam();
           return;
         }
-        if (action === 'submit-demo-email') {
-          if (busy) return;
-          const emailEl = modalEl.querySelector('#denizen-visitor-email-input');
-          const errEl = modalEl.querySelector('#denizen-vis-error');
-          const email = String(emailEl?.value || '').trim().toLowerCase();
-          if (!email || !email.includes('@')) {
-            if (errEl) {
-              errEl.textContent = 'Enter a valid email';
-              errEl.hidden = false;
-            }
-            emailEl?.focus();
-            return;
-          }
-          if (errEl) errEl.hidden = true;
-          pendingAccess = { ...pendingAccess, email };
-          step = 'name';
-          render();
-          return;
-        }
         if (action === 'back') {
           if (step === 'name') {
-            if (pendingAccess?.accessMethod === 'demo') step = 'demo-email';
+            if (pendingAccess?.accessMethod === 'demo') step = 'choose';
             else step = 'login';
           } else if (step === 'demo-login') {
-            step = pendingAccess?.accessMethod === 'demo' ? 'demo-email' : 'choose';
+            step = 'choose';
           } else if (step === 'join-team' || step === 'create-team' || step === 'team-created') {
             step = 'login';
           } else {
@@ -2303,8 +2291,7 @@
         const tag = e.target?.tagName;
         if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
         e.preventDefault();
-        if (step === 'demo-email') handleAction('submit-demo-email');
-        else if (step === 'login') handleAction('submit-login');
+        if (step === 'login') handleAction('submit-login');
         else if (step === 'demo-login') handleAction('submit-demo-login');
         else if (step === 'join-team') handleAction('submit-join-team');
         else if (step === 'create-team') handleAction('submit-create-team');
@@ -2424,28 +2411,17 @@
             </div>
           `;
           focusAfter = true;
-        } else if (step === 'demo-email') {
-          modalEl.innerHTML = `
-            <div class="vis-card">
-              <button type="button" class="vis-back" data-action="back">← Back</button>
-              <h2>Demo</h2>
-              <p>Enter your email so we can save your progress. After you explore a bit, you can create a username and password.</p>
-              <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="you@email.com" autocomplete="email" inputmode="email" />
-              <button type="button" id="denizen-visitor-name-continue" data-action="submit-demo-email">Continue</button>
-              <div class="vis-link-row">Already created a demo account? <button type="button" class="vis-link" data-action="path-demo-login">Log in</button></div>
-            </div>
-          `;
-          focusAfter = true;
         } else if (step === 'name') {
+          const guest = pendingAccess?.accessMethod === 'demo';
           modalEl.innerHTML = `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Welcome to Denizen</h2>
-              <p>What's your name?</p>
-              <input class="vis-input" id="denizen-visitor-name-input" type="text" maxlength="64" placeholder="Your name" autocomplete="name" />
+              <p>${guest ? 'What should the office call you? You can skip this.' : "What's your name?"}</p>
+              <input class="vis-input" id="denizen-visitor-name-input" type="text" maxlength="64" placeholder="${guest ? 'Your name (optional)' : 'Your name'}" autocomplete="name" />
               <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <button type="button" id="denizen-visitor-name-continue" data-action="submit-name">Continue</button>
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-name">${guest ? 'Walk in' : 'Continue'}</button>
+              ${guest ? '<div class="vis-link-row">Already created a demo account? <button type="button" class="vis-link" data-action="path-demo-login">Log in</button></div>' : ''}
             </div>
           `;
           focusAfter = true;
@@ -2530,6 +2506,7 @@
           <input class="vis-input" id="denizen-demo-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
           <input class="vis-input" id="denizen-demo-password-input" type="password" maxlength="128" placeholder="${passwordPlaceholder()}" autocomplete="new-password" />
           <input class="vis-input" id="denizen-demo-password2-input" type="password" maxlength="128" placeholder="Confirm password" autocomplete="new-password" />
+          <input class="vis-input" id="denizen-demo-email-input" type="email" maxlength="120" placeholder="Email (optional)" autocomplete="email" inputmode="email" />
           <button type="button" id="denizen-visitor-name-continue">Create account</button>
           <div class="vis-link-row"><button type="button" class="vis-link" data-demo-skip>Not now</button></div>
         </div>
@@ -2554,6 +2531,14 @@
         const username = String(overlay.querySelector('#denizen-demo-username-input')?.value || '').trim();
         const password = String(overlay.querySelector('#denizen-demo-password-input')?.value || '');
         const password2 = String(overlay.querySelector('#denizen-demo-password2-input')?.value || '');
+        const email = String(overlay.querySelector('#denizen-demo-email-input')?.value || '').trim().toLowerCase();
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          if (errEl) {
+            errEl.textContent = 'That email looks off — fix it or leave it blank.';
+            errEl.hidden = false;
+          }
+          return;
+        }
         if (!username || password.length < minPasswordLen()) {
           if (errEl) {
             errEl.textContent = `Choose a username and password (${minPasswordLen()}+ characters).`;
@@ -2584,6 +2569,15 @@
             display_name: displayName,
             demo_username: data.username || username,
           });
+          if (email) {
+            // register-demo takes no email; the session sync merges it into
+            // session metadata (the same path the old up-front email step used).
+            touchSession(displayName, {
+              email,
+              tier: tier || 'demo',
+              accessMethod: accessMethod || 'demo',
+            }).catch(() => {});
+          }
           try {
             document.dispatchEvent(new CustomEvent('denizen-demo-account-created', {
               detail: { username: data.username || username },

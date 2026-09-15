@@ -159,16 +159,9 @@
 
   function arrivalTips() {
     return [
-      'Denizen starts as an AI office you can actually see.',
-      'Meet the residents, give them real work, and stay close to what happens next.',
-    ];
-  }
-
-  function officeTips() {
-    return [
+      'Denizen starts as an AI office you can actually see — give the residents real work and stay close to what happens next.',
       moveLine(),
       'Ask a resident for help. They move to a desk and keep the work visible while it happens.',
-      'Blocked or finished, the office shows you the state of the job.',
     ];
   }
 
@@ -180,36 +173,21 @@
     ];
   }
 
+  /** Last step — also carries the old "ready" wrap-up. */
   function claimTips() {
     return [
       claimLine(),
-      'Your assistant becomes a familiar home base who remembers your work and helps you navigate the office.',
-      'Your Citizen ID keeps that relationship connected when you return.',
-    ];
-  }
-
-  function powerTips() {
-    return [
-      'City Power is optional. Denizen Desktop turns your office machine into a station for background city work while it is idle.',
-      'Your everyday use always comes first, and you can pause City Power anytime.',
-      'Contributing available capacity earns credits for your office.',
-    ];
-  }
-
-  function readyTips() {
-    if (isDemoVisitor()) {
-      return [
-        'Start with one useful office task and watch Denizen respond.',
-        'This preview is yours to explore. The city is the next level when you are ready to make your place permanent.',
-      ];
-    }
-    return [
-      'Start with one useful office task and watch Denizen respond.',
-      'Your phone, assistant, and Citizen ID will keep your place familiar as your office grows toward the city.',
+      'Your assistant remembers your work, and your Citizen ID keeps that relationship connected when you return.',
+      isDemoVisitor()
+        ? 'This preview is yours to explore. Make your place permanent whenever you are ready.'
+        : 'Start with one useful office task and watch Denizen respond.',
     ];
   }
 
   /** @type {Array<{ id: string, icon: string, anchor: string, title: string, tips: string[] | (() => string[]), upgradeAction?: boolean }>} */
+  // Three stops, first run only. City Power moved out: team members get the
+  // Power Tour (visitor-superuser-onboarding.js) once Desktop is linked, and
+  // everyone has the City Power app on the phone.
   const STEP_DEFS = [
     {
       id: 'arrival',
@@ -217,13 +195,6 @@
       anchor: 'center',
       title: 'Welcome home.',
       tips: arrivalTips,
-    },
-    {
-      id: 'office',
-      icon: '⌂',
-      anchor: 'game',
-      title: 'See the work happen.',
-      tips: officeTips,
     },
     {
       id: 'phone',
@@ -238,20 +209,6 @@
       anchor: 'claim',
       title: 'Choose your assistant.',
       tips: claimTips,
-    },
-    {
-      id: 'power',
-      icon: '◇',
-      anchor: 'phone-power',
-      title: 'Power the city from your office.',
-      tips: powerTips,
-    },
-    {
-      id: 'ready',
-      icon: '✓',
-      anchor: 'center',
-      title: 'Your place is ready.',
-      tips: readyTips,
       upgradeAction: true,
     },
   ];
