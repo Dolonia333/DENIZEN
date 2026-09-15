@@ -2236,9 +2236,9 @@ class PlayerChat {
         grid-template-areas:
           "avatar main actions"
           "chip chip chip";
-        align-items: start;
+        align-items: center;
         column-gap: 8px;
-        row-gap: 6px;
+        row-gap: 4px;
         padding: 14px 10px 10px;
         border-bottom: 2px solid var(--pc-border);
         background:
@@ -2260,20 +2260,92 @@ class PlayerChat {
         justify-content: flex-end;
         align-content: flex-start;
         gap: 4px;
-        max-width: min(48vw, 168px);
+        max-width: min(52vw, 180px);
         min-width: 0;
       }
+      /* Touch: keep a single thin toolbar row — never stack action chips vertically */
+      html.denizen-touch #player-chat-header {
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        grid-template-areas: "avatar main actions";
+        align-items: center;
+        column-gap: 6px;
+        row-gap: 0;
+        padding: 10px 8px 6px;
+      }
+      html.denizen-touch #player-chat-header .pc-header-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+      }
       html.denizen-touch #player-chat-header-actions {
-        flex-direction: column;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        max-width: none;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        max-width: min(46vw, 152px);
         width: auto;
+        gap: 3px;
       }
       html.denizen-touch #player-chat-header-actions > button {
-        width: 100%;
+        width: auto;
+        max-width: 100%;
+        padding: 4px 6px;
+        min-height: 28px;
+        font-size: 8px;
+        line-height: 1.1;
         justify-content: center;
         text-align: center;
+      }
+      /* Float assistant chip over the message log so it does not inflate the header */
+      html.denizen-touch #player-chat-header #denizen-visitor-assistant-chip {
+        position: absolute;
+        left: 8px;
+        top: calc(100% + 6px);
+        z-index: 4;
+        grid-area: unset;
+        max-width: calc(100% - 16px);
+        pointer-events: auto;
+      }
+      html.denizen-touch #player-chat-log {
+        padding-top: 30px;
+      }
+      /* Compact labels on narrow phones so the right column stays one short row */
+      html.denizen-touch.denizen-phone #denizen-visitor-mcp-connect-btn {
+        font-size: 0 !important;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-mcp-connect-btn::after {
+        content: "AI";
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-handoff-btn {
+        font-size: 0 !important;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-handoff-btn::after {
+        content: "Hand";
+        font-size: 9px;
+        font-weight: 800;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-projects-btn {
+        font-size: 0 !important;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-projects-btn::after {
+        content: "Proj";
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-briefing-btn {
+        font-size: 0 !important;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-briefing-btn::after {
+        content: "Brief";
+        font-size: 9px;
+        font-weight: 800;
+      }
+      html.denizen-touch.denizen-phone #denizen-visitor-team-mcp-btn {
+        display: none !important;
       }
       /* Never let action chips land inside the name column */
       #player-chat-header .chat-header-main > #denizen-visitor-mcp-connect-btn,
@@ -3031,12 +3103,13 @@ class PlayerChat {
       html.denizen-touch #player-chat-log {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
         flex: 1 1 auto;
         min-height: 0;
         max-height: none;
         line-height: 1.45;
-        padding: 12px;
+        /* Top padding reserves room for the floating assistant chip */
+        padding: 30px 12px 12px;
         -webkit-overflow-scrolling: touch;
       }
       html.denizen-touch #player-chat-log:empty::before {
@@ -3055,19 +3128,44 @@ class PlayerChat {
         color: #64748b;
         font-size: 11px;
       }
+      html.denizen-touch #player-chat-log .msg {
+        max-width: 88%;
+        padding: 10px 12px;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      html.denizen-touch #player-chat-log .msg.you {
+        border-radius: 4px;
+        background: #7dd3fc;
+        color: #0b1220;
+      }
+      html.denizen-touch #player-chat-log .msg.npc,
+      html.denizen-touch #player-chat-log .msg.typing {
+        border-radius: 4px;
+        background: #1e293b;
+        font-family: var(--pc-mono);
+      }
       html.denizen-touch #player-chat-log .msg.system {
         box-shadow: none;
       }
       html.denizen-touch #player-chat-log .msg.system.error .text { color: #fecaca; }
       html.denizen-touch .pc-composer-shell {
-        padding: 10px;
+        padding: 8px 10px 10px;
       }
-      html.denizen-touch .pc-composer-bar { padding: 6px 8px; }
+      html.denizen-touch .pc-composer-bar {
+        padding: 6px 10px;
+        border-radius: 999px;
+        min-height: 44px;
+        gap: 8px;
+      }
       html.denizen-touch #player-chat-input {
-        min-height: 36px;
+        min-height: 32px;
         font-size: 16px;
         line-height: 1.35;
-        padding: 8px 6px;
+        padding: 6px 4px;
+      }
+      html.denizen-touch #player-chat-attach {
+        border-radius: 999px;
       }
       html.denizen-touch #player-chat-send,
       html.denizen-touch #player-chat-speak {
@@ -3077,40 +3175,46 @@ class PlayerChat {
         height: 40px;
         min-height: 40px;
         padding: 0;
-        border-radius: 6px;
+        border-radius: 999px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         white-space: nowrap;
       }
       html.denizen-touch #player-chat-send {
-        background: linear-gradient(180deg, #bae6fd, #7dd3fc);
-        color: #0b1220;
+        background: linear-gradient(180deg, #4ade80, #16a34a);
+        color: #052e16;
+        border-color: #020617;
+        box-shadow: 2px 2px 0 #020617;
       }
       html.denizen-touch #player-chat-speak { background: transparent; }
       html.denizen-touch #player-chat-speak .pc-speak-label { display: none; }
       html.denizen-touch #player-chat-header {
-        padding: 12px 10px 8px;
+        padding: 10px 8px 6px;
         font-size: 13px;
-        align-items: flex-start;
+        align-items: center;
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
           rgba(2, 6, 23, 0.55);
       }
       html.denizen-touch #player-chat-header-actions {
-        max-width: min(56%, 190px);
+        max-width: min(46vw, 152px);
       }
       html.denizen-touch #player-chat-header .target {
         display: block;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 15px;
+        font-size: 16px;
+        font-weight: 800;
+        line-height: 1.15;
       }
       html.denizen-touch #player-chat-header .pc-header-status {
         font-size: 10px;
-        line-height: 1.25;
-        white-space: normal;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       html.denizen-touch.denizen-chat-open #game-container,
       html.denizen-touch.denizen-chat-open #game-container canvas {

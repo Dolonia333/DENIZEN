@@ -33,8 +33,8 @@
       }
       #${BTN_ID}:hover { background: rgba(96, 165, 250, 0.28); }
       html.denizen-touch #${BTN_ID} {
-        padding: 6px 8px;
-        min-height: 32px;
+        padding: 4px 6px;
+        min-height: 28px;
       }
       #denizen-visitor-team-mcp-btn {
         margin: 0;
@@ -50,8 +50,8 @@
         touch-action: manipulation;
       }
       html.denizen-touch #denizen-visitor-team-mcp-btn {
-        padding: 6px 8px;
-        min-height: 32px;
+        padding: 4px 6px;
+        min-height: 28px;
       }
       #${MODAL_ID} {
         position: fixed;

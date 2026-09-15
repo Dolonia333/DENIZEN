@@ -20,6 +20,30 @@ describe('mobile UI layout fixes', () => {
     assert.match(chat, /padding-top:\s*10px/);
   });
 
+  it('touch header stays a single thin row with horizontal actions', () => {
+    const chat = read('src/player-chat.js');
+    assert.match(
+      chat,
+      /html\.denizen-touch #player-chat-header \{[\s\S]*?grid-template-areas:\s*"avatar main actions"/
+    );
+    const actionBlocks = [...chat.matchAll(
+      /html\.denizen-touch #player-chat-header-actions \{([^}]+)\}/g
+    )].map((m) => m[1]);
+    assert.ok(actionBlocks.length >= 1, 'expected touch header-actions rules');
+    assert.ok(
+      actionBlocks.some((block) => /flex-direction:\s*row/.test(block)),
+      'touch header-actions should use a horizontal row'
+    );
+    assert.ok(
+      actionBlocks.every((block) => !/flex-direction:\s*column/.test(block)),
+      'touch header-actions must not stack buttons in a column'
+    );
+    assert.match(chat, /Float assistant chip over the message log/);
+    assert.match(chat, /padding:\s*30px 12px 12px/);
+    assert.match(chat, /border-radius:\s*999px/);
+    assert.match(chat, /#4ade80,\s*#16a34a/);
+  });
+
   it('Projects, Connect AI, Hand off, and Briefing mount into header-actions', () => {
     const projects = read('src/visitor-projects-ui.js');
     const mcp = read('src/visitor-mcp-connect-ui.js');
