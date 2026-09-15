@@ -48,3 +48,67 @@ describe('cofounder demo-loop recovery', () => {
     assert.equal(agent.buildDirectorHealth().offline, true);
   });
 });
+
+/** Parse a director reply and return the dispatched [action, agentId, params]. */
+function dispatched(reply) {
+  const agent = new CofounderAgent();
+  const sent = [];
+  agent._broadcast = (msg) => sent.push(msg);
+  agent._parseAndDispatch(reply);
+  return sent.map((m) => [m.action, m.agentId, m.params]);
+}
+
+describe('cofounder reply parsing', () => {
+  it('keeps the requested array format working', () => {
+    assert.deepEqual(
+      dispatched('[{"action":"speakTo","agentId":"Abby","params":{"target":"Marcus","text":"Hi"}},'
+        + '{"action":"callMeeting","agentId":"Abby","params":{"attendees":["Alex","Bob"]}}]'),
+      [['speakTo', 'Abby', { target: 'Marcus', text: 'Hi' }],
+        ['callMeeting', 'Abby', { attendees: ['Alex', 'Bob'] }]],
+    );
+  });
+
+  it('keeps a single command object that contains an array', () => {
+    assert.deepEqual(
+      dispatched('{"name": "callMeeting", "parameters": {"attendees": ["Abby", "Marcus"]}}'),
+      [['callMeeting', 'Abby', { attendees: ['Abby', 'Marcus'] }]],
+    );
+  });
+
+  it("keeps a single command whose text contains '['", () => {
+    assert.deepEqual(
+      dispatched('{"name": "speakTo", "parameters": {"target": "Alex", "text": "Check the [auth] PR"}}'),
+      [['speakTo', 'Abby', { target: 'Alex', text: 'Check the [auth] PR' }]],
+    );
+  });
+
+  it("salvages back-to-back objects even when one contains '['", () => {
+    assert.deepEqual(
+      dispatched('{"name": "speakTo", "parameters": {"target": "Alex", "text": "Hi"}}\n'
+        + '{"name": "callMeeting", "parameters": {"attendees": ["Alex"]}}'),
+      [['speakTo', 'Abby', { target: 'Alex', text: 'Hi' }],
+        ['callMeeting', 'Abby', { attendees: ['Alex'] }]],
+    );
+  });
+
+  it('unwraps Llama tool-call nesting (parameters.agentId + parameters.params)', () => {
+    assert.deepEqual(
+      dispatched('{"name": "speakTo", "parameters": {"agentId": "Roki", "params": {"target": "Alex", "text": "Hey"}}}'),
+      [['speakTo', 'Roki', { target: 'Alex', text: 'Hey' }]],
+    );
+  });
+
+  it('maps speaker/listener to agentId/target', () => {
+    assert.deepEqual(
+      dispatched('{"name": "speakTo", "parameters": {"speaker": "Abby", "listener": "Roki", "text": "Status?"}}'),
+      [['speakTo', 'Abby', { target: 'Roki', text: 'Status?' }]],
+    );
+  });
+
+  it('still reads prose-wrapped arrays', () => {
+    assert.deepEqual(
+      dispatched('Sure, here you go:\n```json\n[{"action":"standUp","agentId":"Alex","params":{}}]\n```'),
+      [['standUp', 'Alex', {}]],
+    );
+  });
+});
