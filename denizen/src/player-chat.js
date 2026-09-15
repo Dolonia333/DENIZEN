@@ -2867,6 +2867,16 @@ class PlayerChat {
       html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel {
         top: calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + 10px) !important;
       }
+      /* Phone mode (the default), portrait: dock under the HQ frame and take
+         the rest of the screen. It was a fixed 320px sheet at the bottom with
+         ~290px of empty skyline between it and the game. Not when the chat is
+         hosted inside the Buzz phone app (data-denizen-phone-app="chat"). */
+      html.denizen-touch.denizen-phone.denizen-portrait.denizen-phone-mode.denizen-chat-open:not([data-denizen-phone-app]) #player-chat-panel {
+        top: calc(var(--denizen-frame-bottom, 230px) + 10px) !important;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
+        height: auto !important;
+        max-height: none !important;
+      }
       html.denizen-touch.denizen-tablet.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
         top: auto !important;
         bottom: calc(var(--denizen-dock-height, 44px) + 12px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;

@@ -845,6 +845,28 @@
     sync();
   }
 
+  /**
+   * Publish the HQ frame's bottom edge as --denizen-frame-bottom so portrait
+   * panels (chat, work feed) can dock right under the game instead of leaving
+   * the lower ~70% of the phone as empty skyline. Measured, not calc'd — the
+   * frame's padding/margins differ from the CSS size math by a few px.
+   */
+  function installFrameBottomSync() {
+    const frame = document.getElementById('game-frame');
+    if (!frame) return;
+    let last = '';
+    const sync = () => {
+      const px = `${Math.round(frame.getBoundingClientRect().bottom)}px`;
+      if (px === last) return; // only write on change — observers watch <html>
+      last = px;
+      document.documentElement.style.setProperty('--denizen-frame-bottom', px);
+    };
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(sync).observe(frame);
+    window.addEventListener('resize', sync, { passive: true });
+    window.addEventListener('orientationchange', () => setTimeout(sync, 150));
+    sync();
+  }
+
   function boot() {
     injectStyles();
     buildRotateHint();
@@ -853,6 +875,7 @@
     buildTapMoveInteract();
     removeCeoUiArtifacts();
     installKeyboardViewportSync();
+    installFrameBottomSync();
     syncLayoutClasses();
 
     window.addEventListener('orientationchange', () => {

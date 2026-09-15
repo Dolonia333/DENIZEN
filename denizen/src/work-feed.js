@@ -43,6 +43,20 @@ class WorkFeedPanel {
     this._createDOM();
     this._createToggleButton();
     this._bindKeys();
+
+    // Portrait phones: the feed docks under the game (CSS below) and starts
+    // open, so the space under the 16:9 frame shows the work instead of
+    // empty skyline. Hiding it with the Feed pill is remembered.
+    if (WorkFeedPanel._isPortraitPhone() && !WorkFeedPanel._dockDismissed()) this.show();
+  }
+
+  static _isPortraitPhone() {
+    const c = document.documentElement.classList;
+    return c.contains('denizen-phone') && c.contains('denizen-portrait');
+  }
+
+  static _dockDismissed() {
+    try { return localStorage.getItem('denizen-feed-dock-hidden') === '1'; } catch (_) { return false; }
   }
 
   // ------------------------------------------------------------------
@@ -90,6 +104,9 @@ class WorkFeedPanel {
   toggle() {
     if (this._visible) this.hide();
     else this.show();
+    if (WorkFeedPanel._isPortraitPhone()) {
+      try { localStorage.setItem('denizen-feed-dock-hidden', this._visible ? '0' : '1'); } catch (_) {}
+    }
   }
 
   /**
@@ -254,6 +271,37 @@ class WorkFeedPanel {
           font-style: italic;
           text-align: center;
         }
+        .wf-empty-cta {
+          margin-top: 10px;
+          padding: 6px 14px;
+          font: 600 11px/1.3 system-ui, sans-serif;
+          font-style: normal;
+          color: #0b1220;
+          background: #7dd3fc;
+          border: 1px solid #020617;
+          border-radius: 999px;
+          cursor: pointer;
+        }
+        html.denizen-phone.denizen-portrait .wf-empty-cta { font-size: 13px; padding: 10px 20px; min-height: 44px; }
+        /* Portrait phone: dock under the HQ frame (--denizen-frame-bottom
+           comes from mobile-controls.js), full width, clear of Buzz/Speak. */
+        html.denizen-phone.denizen-portrait #denizen-work-feed {
+          top: calc(var(--denizen-frame-bottom, 230px) + 10px) !important;
+          left: 8px;
+          right: 8px;
+          width: auto;
+          max-height: calc(100dvh - var(--denizen-frame-bottom, 230px) - 124px);
+          font-size: 12px;
+        }
+        html.denizen-phone.denizen-portrait #denizen-work-feed-header { font-size: 11px; padding: 8px 10px; }
+        html.denizen-phone.denizen-portrait #denizen-work-feed-header .wf-hint { display: none; }
+        html.denizen-phone.denizen-portrait .wf-entry { padding: 4px 10px; }
+        html.denizen-phone.denizen-portrait .wf-entry .wf-note { font-size: 12px; }
+        html.denizen-phone.denizen-portrait #denizen-work-feed-empty {
+          font-size: 13px;
+          padding: 18px 16px;
+          line-height: 1.5;
+        }
         #denizen-work-feed-toggle {
           position: fixed;
           top: max(8px, env(safe-area-inset-top, 0px));
@@ -350,7 +398,18 @@ class WorkFeedPanel {
     if (visible.length === 0) {
       const empty = document.createElement('div');
       empty.id = 'denizen-work-feed-empty';
-      empty.textContent = 'No activity yet';
+      empty.textContent = 'Nothing shipped yet — tap a resident on the floor and ask them for something.';
+      // Give the empty state somewhere to go — except in the spectator-only
+      // public demo (?demo=1), where chat is off.
+      if (window.__DenizenPlayerChat?.open && !globalThis.DenizenPublicDemo?.active) {
+        const cta = document.createElement('button');
+        cta.type = 'button';
+        cta.className = 'wf-empty-cta';
+        cta.textContent = 'Open chat';
+        cta.addEventListener('click', () => window.__DenizenPlayerChat?.open?.());
+        empty.appendChild(document.createElement('br'));
+        empty.appendChild(cta);
+      }
       this._list.appendChild(empty);
       return;
     }
