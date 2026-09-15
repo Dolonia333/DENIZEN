@@ -589,7 +589,7 @@ async function handleHttpRequest(req, res) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {}, resources: {} },
-        serverInfo: { name: 'denizen-team', version: '1.1.0' },
+        serverInfo: { name: 'denizen-team', version: '1.3.0' },
       },
     }));
     return;
