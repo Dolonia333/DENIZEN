@@ -248,6 +248,12 @@ class OfficePathfinder {
     this.buildFromScene(scene);
   }
 
+  /** Legacy alias used by furniture placement hooks. */
+  rebuildFromScene(scene) {
+    this.buildFromScene(scene);
+    this.carveDoorwayGaps?.();
+  }
+
   /**
    * Find the nearest walkable pixel location to (px, py) within maxRadiusPx.
    * Spirals outward through grid cells. Returns { x, y } pixel center, or null.
@@ -440,9 +446,9 @@ class OfficePathfinder {
    */
   _blockRect(px, py, pw, ph) {
     const cs = this.cellSize;
-    // Leave shoulder room around furniture. Doorways are carved again after
-    // the grid builds, so this can be wider without sealing room entrances.
-    const pad = 8;
+    // Light shoulder so A* stays off furniture without sealing narrow aisles.
+    // Doorways are carved again after buildFromScene.
+    const pad = 4;
     const x0 = Math.max(0, Math.floor((px - pad) / cs));
     const y0 = Math.max(0, Math.floor((py - pad) / cs));
     const x1 = Math.min(this.cols - 1, Math.floor((px + pw + pad) / cs));

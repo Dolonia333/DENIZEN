@@ -45,7 +45,12 @@ function applySavedPlacementsToScene(scene, savedPlacements) {
     }
     refreshFurnitureDepth(entry);
   });
-  if (scene.pathfinder?.rebuildFromScene) scene.pathfinder.rebuildFromScene(scene);
+  // Keep the walk grid in sync with dragged furniture (property is _pathfinder).
+  if (scene._pathfinder?.buildFromScene) {
+    scene._pathfinder.buildFromScene(scene);
+    scene._pathfinder.carveDoorwayGaps?.();
+    scene._npcPoiDirty = true;
+  }
   scene._depthDirty = true;
 }
 
@@ -2819,16 +2824,21 @@ class OfficeScene extends Phaser.Scene {
     // ~40%: hang out at a furniture spot (coffee corner, shelf, plant, …)
     if (roll < 0.65 && this._npcPoiSpots.length) {
       const spot = this._npcPoiSpots[Math.floor(Math.random() * this._npcPoiSpots.length)];
-      const pos = pf?.findWalkableNear?.(spot.x, spot.y, 40) || spot;
-      return { pos, dwellMs: Phaser.Math.Between(5000, 14000) };
+      // Never aim at raw furniture pixels — that parks NPCs inside colliders.
+      const pos = pf?.findWalkableNear?.(spot.x, spot.y, 56)
+        || pf?.findWalkableNear?.(spot.x, spot.y, 96)
+        || pf?.sampleSafeWalkTarget?.(npc.x, npc.y, 120, 12);
+      if (pos) return { pos, dwellMs: Phaser.Math.Between(5000, 14000) };
     }
 
     // Rest: a short aimless stroll with a brief pause at the end.
-    let pos = pf?.sampleSafeWalkTarget?.(npc.x, npc.y, 180, 14) || null;
+    let pos = pf?.sampleSafeWalkTarget?.(npc.x, npc.y, 140, 14) || null;
     if (!pos) {
       const wx = Phaser.Math.Between(140, 1140);
       const wy = Phaser.Math.Between(170, 620);
-      pos = pf?.findWalkableNear?.(wx, wy, 48) || { x: wx, y: wy };
+      pos = pf?.findWalkableNear?.(wx, wy, 64)
+        || pf?.findWalkableNear?.(npc.x, npc.y, 80)
+        || { x: npc.x, y: npc.y };
     }
     return { pos, dwellMs: Phaser.Math.Between(1800, 5200) };
   }
@@ -3434,11 +3444,12 @@ class OfficeScene extends Phaser.Scene {
                       message: 'immobile watchdog fired after 2.2s while wanting to move',
                     });
                   }
-                  // Soft recovery: nudge + nearby repath. Hard unstick + office-wide
-                  // random targets looked like a mid-walk teleport/respawn.
+                  // Escalate: soft nudge → nearby tile → walkable escape farther away.
+                  // Never "arrive" in place — that looked like NPCs freezing mid-aisle.
                   ai._immobileStrikes = (ai._immobileStrikes || 0) + 1;
+                  const strikes = ai._immobileStrikes;
                   const pfStuck = npc._pathFollower;
-                  if (pfStuck && typeof pfStuck.forceUnstick === 'function' && ai._immobileStrikes >= 3) {
+                  if (pfStuck && typeof pfStuck.forceUnstick === 'function' && strikes >= 3) {
                     pfStuck.forceUnstick(null);
                   } else if (npc.body) {
                     npc.x += (Math.random() - 0.5) * 10;
@@ -3446,16 +3457,25 @@ class OfficeScene extends Phaser.Scene {
                     npc.body.setVelocity(0, 0);
                   }
                   if (this._pathfinder && npc.ai) {
-                    // findWalkableNear stays local; sampleSafeWalkTarget is office-wide.
-                    const near = this._pathfinder.findWalkableNear(npc.x, npc.y, 48)
-                      || this._pathfinder.findWalkableNear(npc.x, npc.y, 96)
-                      || { x: npc.x + (Math.random() - 0.5) * 40, y: npc.y + (Math.random() - 0.5) * 40 };
-                    npc.ai.wanderTarget = near;
-                    npc.ai.nextWanderAt = now + 400;
+                    let escape = null;
+                    if (strikes >= 2) {
+                      // Walk (not teleport) to a clear tile away from the jam.
+                      escape = this._pathfinder.sampleSafeWalkTarget(npc.x, npc.y, 100, 16)
+                        || this._pathfinder.findWalkableNear(npc.x, npc.y, 140);
+                    }
+                    if (!escape) {
+                      escape = this._pathfinder.findWalkableNear(npc.x, npc.y, 48)
+                        || this._pathfinder.findWalkableNear(npc.x, npc.y, 96)
+                        || { x: npc.x + (Math.random() - 0.5) * 40, y: npc.y + (Math.random() - 0.5) * 40 };
+                    }
+                    npc.ai.wanderTarget = escape;
+                    npc.ai.nextWanderAt = now + 350;
                     npc.ai.mode = 'wander';
                     npc.ai.taskState = null;
                     npc.ai.taskTarget = null;
-                    if (npc._pathFollower) npc._pathFollower.navigateTo(near.x, near.y);
+                    npc.ai._poi = null;
+                    npc.ai._poiArrived = false;
+                    if (npc._pathFollower) npc._pathFollower.navigateTo(escape.x, escape.y);
                   }
                   ai._immobileCheck = { x: npc.x, y: npc.y, t: now, time: 0 };
                 }
@@ -3628,9 +3648,19 @@ class OfficeScene extends Phaser.Scene {
               const sep = _applySeparation(npc, vel.vx, vel.vy);
               _setSmoothVel(npc, sep.vx, sep.vy);
             } else {
-              // Arrived (or path lost close enough) — settle in.
+              // Path follower returns null on arrival AND on give-up. Only dwell
+              // when actually near the destination — otherwise retry a new POI.
               npc.body.setVelocity(0, 0);
-              _arriveAtPoi();
+              const dest = ai.wanderTarget || ai._poi?.pos;
+              const distLeft = dest ? Math.hypot(dest.x - npc.x, dest.y - npc.y) : 0;
+              if (distLeft <= 28) {
+                _arriveAtPoi();
+              } else {
+                ai._poi = null;
+                ai._poiArrived = false;
+                ai.wanderTarget = null;
+                ai.nextWanderAt = now + 220;
+              }
             }
           } else if (!usePathfinding) {
             const dx = ai.wanderTarget.x - npc.x;
@@ -3646,12 +3676,16 @@ class OfficeScene extends Phaser.Scene {
               _arriveAtPoi();
             }
           } else {
-            // Not navigating — either dwelling at a POI (rest until the
-            // dwell timer elapses) or the path failed (retry soon).
+            // Not navigating — dwell only after a real arrival; otherwise retry.
             npc.body.setVelocity(0, 0);
             if (!ai._poiArrived) {
-              if (ai._poi) _arriveAtPoi();
-              else ai.nextWanderAt = Math.min(ai.nextWanderAt || 0, now + 280);
+              const dest = ai.wanderTarget || ai._poi?.pos;
+              const distLeft = dest ? Math.hypot(dest.x - npc.x, dest.y - npc.y) : Infinity;
+              if (ai._poi && distLeft <= 28) _arriveAtPoi();
+              else {
+                ai._poi = null;
+                ai.nextWanderAt = Math.min(ai.nextWanderAt || 0, now + 280);
+              }
             }
           }
         }
