@@ -5,6 +5,9 @@
  */
 
 const boardStore = require('./denizen-studio-board-store');
+const boardActivity = require('./denizen-studio-board-activity');
+const boardAcl = require('./denizen-studio-board-acl');
+const boardAutomations = require('./denizen-studio-board-automations');
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -22,6 +25,8 @@ function ensureArrays(task) {
   task.log = Array.isArray(task.log) ? task.log : [];
   task.comments = Array.isArray(task.comments) ? task.comments : [];
   task.subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];
+  task.fields = task.fields && typeof task.fields === 'object' ? task.fields : {};
+  task.blockedBy = Array.isArray(task.blockedBy) ? task.blockedBy : [];
   if (task.remind === undefined) task.remind = true;
   if (!task.statusSince) task.statusSince = todayISO();
   return task;
@@ -31,6 +36,31 @@ function logEvt(task, who, text) {
   ensureArrays(task);
   task.log.push({ ts: Date.now(), who, text: String(text || '').slice(0, 240) });
   if (task.log.length > 50) task.log = task.log.slice(-50);
+}
+
+function act(state, who, text, task) {
+  boardActivity.appendActivity(state, {
+    who,
+    text,
+    taskId: task?.id || null,
+    title: task?.title || null,
+  });
+}
+
+function wouldCycle(tasks, taskId, blockedByIds) {
+  const byId = new Map((tasks || []).map((t) => [String(t.id), t]));
+  const targets = (blockedByIds || []).map(String);
+  const stack = [...targets];
+  const seen = new Set();
+  while (stack.length) {
+    const id = stack.pop();
+    if (id === String(taskId)) return true;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const t = byId.get(id);
+    for (const b of t?.blockedBy || []) stack.push(String(b));
+  }
+  return false;
 }
 
 function findTask(state, id) {
@@ -200,6 +230,10 @@ function summarizeTask(t) {
     status: t.status,
     priority: t.priority || null,
     due: t.due || null,
+    start: t.start || null,
+    group_id: t.groupId || t.group_id || null,
+    blocked_by: Array.isArray(t.blockedBy) ? t.blockedBy : [],
+    fields: t.fields && typeof t.fields === 'object' ? t.fields : {},
     block_reason: t.blockReason || null,
     comments: Array.isArray(t.comments) ? t.comments.length : 0,
     subtasks: Array.isArray(t.subtasks) ? t.subtasks.length : 0,
@@ -216,6 +250,16 @@ async function loadState(orgId) {
 
 async function saveState(orgId, state, identityId, opts = {}) {
   return boardStore.upsertWorkspace(orgId, state, identityId, opts);
+}
+
+async function commit(orgId, state, identityId, row, extra = {}) {
+  const saved = await saveState(orgId, state, identityId, {
+    ifUpdatedAt: row?.updated_at || null,
+  });
+  if (saved?.conflict) {
+    return { ok: false, error: 'workspace conflict — reload and retry', code: 'CONFLICT' };
+  }
+  return { ok: true, updated_at: saved?.updated_at, ...extra };
 }
 
 async function listTasks(orgId, filters = {}) {
@@ -263,6 +307,7 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
   const id = String(input.id || input.task_id || input.taskId || '').trim();
   let task = id ? findTask(state, id) : null;
   const creating = !task;
+  let statusFrom = null;
   if (creating) {
     task = ensureArrays({
       id: id || uid(),
@@ -273,8 +318,12 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
       status: input.status || defaultStatus(state),
       priority: input.priority || 'normal',
       due: input.due || null,
+      start: input.start || null,
+      groupId: input.group_id || input.groupId || 'active',
       notes: String(input.notes || '').slice(0, 4000),
       statusSince: todayISO(),
+      fields: input.fields && typeof input.fields === 'object' ? input.fields : {},
+      blockedBy: Array.isArray(input.blocked_by || input.blockedBy) ? (input.blocked_by || input.blockedBy) : [],
       log: [],
       comments: [],
       subtasks: Array.isArray(input.subtasks) ? input.subtasks : [],
@@ -285,6 +334,7 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
       if (p) task.assignee = p.id;
     }
     logEvt(task, who, 'Created via MCP');
+    act(state, who, `Created “${task.title}”`, task);
     state.tasks = [...(state.tasks || []), task];
   } else {
     ensureArrays(task);
@@ -293,26 +343,52 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
     if (input.type != null) task.type = input.type;
     if (input.priority != null) task.priority = input.priority;
     if (input.due != null) task.due = input.due || null;
+    if (input.start != null) task.start = input.start || null;
+    if (input.group_id != null || input.groupId != null) {
+      task.groupId = input.group_id || input.groupId || null;
+    }
     if (input.notes != null) task.notes = String(input.notes).slice(0, 4000);
     if (input.assignee != null) {
       const p = findPerson(state, input.assignee);
       task.assignee = p?.id || input.assignee || null;
       logEvt(task, who, `Assignee → ${task.assignee || 'unassigned'}`);
+      act(state, who, `Assignee → ${task.assignee || 'unassigned'}`, task);
     }
     if (input.status != null && input.status !== task.status) {
+      statusFrom = task.status;
       logEvt(task, who, `Status: ${task.status} → ${input.status}`);
+      act(state, who, `Status: ${task.status} → ${input.status}`, task);
       task.status = input.status;
       task.statusSince = todayISO();
     }
     if (Array.isArray(input.subtasks)) task.subtasks = input.subtasks;
+    if (input.fields && typeof input.fields === 'object') {
+      task.fields = { ...task.fields, ...input.fields };
+    }
+    if (input.blocked_by != null || input.blockedBy != null) {
+      const next = Array.isArray(input.blocked_by || input.blockedBy)
+        ? (input.blocked_by || input.blockedBy).map(String)
+        : [];
+      if (wouldCycle(state.tasks, task.id, next)) {
+        return { ok: false, error: 'blockedBy would create a cycle' };
+      }
+      task.blockedBy = next;
+    }
   }
-  const saved = await saveState(orgId, state, identityId, {
-    ifUpdatedAt: row?.updated_at || null,
+  if (statusFrom != null) {
+    boardAutomations.runRules(state, {
+      kind: 'status_changed',
+      task,
+      from: statusFrom,
+      to: task.status,
+      who,
+    });
+  }
+  const saved = await commit(orgId, state, identityId, row, {
+    created: creating,
+    task: summarizeTask(task),
   });
-  if (saved?.conflict) {
-    return { ok: false, error: 'workspace conflict — reload and retry', code: 'CONFLICT' };
-  }
-  return { ok: true, created: creating, task: summarizeTask(task), updated_at: saved?.updated_at };
+  return saved;
 }
 
 async function advanceTask(orgId, input = {}, identityId = null, actor = {}) {
@@ -321,6 +397,18 @@ async function advanceTask(orgId, input = {}, identityId = null, actor = {}) {
   if (!task) return { ok: false, error: 'task not found' };
   const who = actorName(actor);
   ensureArrays(task);
+  // Block advance when open blockers remain
+  const openBlockers = (task.blockedBy || []).filter((bid) => {
+    const bt = findTask(state, bid);
+    return bt && !isFinalStage(state, bt.status);
+  });
+  if (openBlockers.length && !input.force) {
+    return {
+      ok: false,
+      error: `waiting on ${openBlockers.length} blocker(s)`,
+      blocked_by: openBlockers,
+    };
+  }
   let next = input.status || input.to || input.next_status || null;
   if (!next) {
     const stages = state.config?.stages || [];
@@ -329,7 +417,9 @@ async function advanceTask(orgId, input = {}, identityId = null, actor = {}) {
   }
   if (!next) return { ok: false, error: 'no next stage' };
   const reason = input.reason || input.block_reason || input.blockReason || null;
+  const from = task.status;
   logEvt(task, who, `Status: ${task.status} → ${next}`);
+  act(state, who, `Status: ${from} → ${next}`, task);
   if (isBlockedStage(state, next) && !isBlockedStage(state, task.status)) {
     task.preBlockStatus = task.status;
   }
@@ -337,11 +427,14 @@ async function advanceTask(orgId, input = {}, identityId = null, actor = {}) {
   task.statusSince = todayISO();
   if (isBlockedStage(state, next)) task.blockReason = reason || 'No reason given';
   else delete task.blockReason;
-  const saved = await saveState(orgId, state, identityId, {
-    ifUpdatedAt: row?.updated_at || null,
+  boardAutomations.runRules(state, {
+    kind: 'status_changed',
+    task,
+    from,
+    to: next,
+    who,
   });
-  if (saved?.conflict) return { ok: false, error: 'workspace conflict', code: 'CONFLICT' };
-  return { ok: true, task: summarizeTask(task), updated_at: saved?.updated_at };
+  return commit(orgId, state, identityId, row, { task: summarizeTask(task) });
 }
 
 async function assignTask(orgId, input = {}, identityId = null, actor = {}) {
@@ -361,11 +454,11 @@ async function addComment(orgId, input = {}, identityId = null, actor = {}) {
   ensureArrays(task);
   task.comments.push({ id: uid(), ts: Date.now(), who, text: text.slice(0, 2000) });
   logEvt(task, who, 'Comment added');
-  const saved = await saveState(orgId, state, identityId, {
-    ifUpdatedAt: row?.updated_at || null,
+  act(state, who, 'commented', task);
+  return commit(orgId, state, identityId, row, {
+    task: summarizeTask(task),
+    comment_count: task.comments.length,
   });
-  if (saved?.conflict) return { ok: false, error: 'workspace conflict', code: 'CONFLICT' };
-  return { ok: true, task: summarizeTask(task), comment_count: task.comments.length };
 }
 
 async function upsertPerson(orgId, input = {}, identityId = null) {
@@ -423,17 +516,17 @@ async function listPeople(orgId) {
   };
 }
 
-async function deleteTask(orgId, input = {}, identityId = null) {
+async function deleteTask(orgId, input = {}, identityId = null, actor = {}) {
   const { state, row } = await loadState(orgId);
   const id = String(input.id || input.task_id || input.taskId || '').trim();
   const task = findTask(state, id);
   if (!task) return { ok: false, error: 'task not found' };
   state.tasks = (state.tasks || []).filter((t) => String(t.id) !== id);
-  const saved = await saveState(orgId, state, identityId, {
-    ifUpdatedAt: row?.updated_at || null,
+  act(state, actorName(actor), `Deleted “${task.title || id}”`, task);
+  return commit(orgId, state, identityId, row, {
+    deleted: id,
+    title: task.title || null,
   });
-  if (saved?.conflict) return { ok: false, error: 'workspace conflict', code: 'CONFLICT' };
-  return { ok: true, deleted: id, title: task.title || null, updated_at: saved?.updated_at };
 }
 
 async function deletePerson(orgId, input = {}, identityId = null) {
@@ -631,7 +724,7 @@ async function sendNote(orgId, input = {}, identityId = null, actor = {}) {
 }
 
 function getConfigFromState(state) {
-  const cfg = state.config || {};
+  const cfg = boardStore.migrateConfig(state.config || {}) || {};
   return {
     team_name: cfg.teamName || null,
     team_sub: cfg.teamSub || null,
@@ -639,6 +732,10 @@ function getConfigFromState(state) {
     template_id: cfg.templateId || null,
     categories: Array.isArray(cfg.categories) ? cfg.categories : [],
     stages: Array.isArray(cfg.stages) ? cfg.stages : [],
+    columns: Array.isArray(cfg.columns) ? cfg.columns : [],
+    groups: Array.isArray(cfg.groups) ? cfg.groups : [],
+    automations: Array.isArray(cfg.automations) ? cfg.automations : [],
+    acl: cfg.acl || { owners: [], admins: [] },
   };
 }
 
@@ -647,7 +744,7 @@ async function getConfig(orgId) {
   return { ok: true, ...getConfigFromState(state) };
 }
 
-async function updateConfig(orgId, input = {}, identityId = null) {
+async function updateConfig(orgId, input = {}, identityId = null, actor = {}) {
   const { state, row } = await loadState(orgId);
   if (!state.config || typeof state.config !== 'object') {
     state.config = {
@@ -662,6 +759,21 @@ async function updateConfig(orgId, input = {}, identityId = null) {
       ],
     };
   }
+  boardAcl.seedOwnerIfEmpty(state.config, {
+    identityId,
+    identity_id: identityId,
+    ...actor,
+  });
+  const adminErr = boardAcl.requireAdmin(state.config, {
+    identityId,
+    identity_id: identityId,
+    ...actor,
+  });
+  // MCP actors with crm_write bypass UI ACL; only enforce when actor.enforceAcl
+  if (actor.enforceAcl && adminErr) {
+    return { ok: false, error: adminErr.message, code: 'FORBIDDEN' };
+  }
+  boardStore.migrateConfig(state.config);
   if (input.team_name != null || input.teamName != null) {
     state.config.teamName = String(input.team_name || input.teamName || 'Team Board').slice(0, 80);
   }
@@ -696,11 +808,14 @@ async function updateConfig(orgId, input = {}, identityId = null) {
     stages.splice(insertAt, 0, rowStage);
     state.config.stages = stages;
   }
-  const saved = await saveState(orgId, state, identityId, {
-    ifUpdatedAt: row?.updated_at || null,
-  });
-  if (saved?.conflict) return { ok: false, error: 'workspace conflict', code: 'CONFLICT' };
-  return { ok: true, ...getConfigFromState(state), updated_at: saved?.updated_at };
+  if (input.acl && typeof input.acl === 'object') {
+    state.config.acl = {
+      owners: Array.isArray(input.acl.owners) ? input.acl.owners.map(String) : state.config.acl.owners,
+      admins: Array.isArray(input.acl.admins) ? input.acl.admins.map(String) : state.config.acl.admins,
+    };
+  }
+  act(state, actorName(actor), 'Updated board config');
+  return commit(orgId, state, identityId, row, getConfigFromState(state));
 }
 
 function dayDiff(iso) {
@@ -796,6 +911,183 @@ async function myDay(orgId, input = {}, actor = {}) {
   };
 }
 
+/* ---- Columns / fields (PR2) ---- */
+
+async function listColumns(orgId) {
+  const { state } = await loadState(orgId);
+  const cfg = getConfigFromState(state);
+  return { ok: true, columns: cfg.columns, groups: cfg.groups };
+}
+
+async function upsertColumn(orgId, input = {}, identityId = null, actor = {}) {
+  const { state, row } = await loadState(orgId);
+  if (!state.config) state.config = {};
+  boardStore.migrateConfig(state.config);
+  const cols = state.config.columns || [];
+  const id = String(input.id || input.column_id || '').trim() || uid();
+  let col = cols.find((c) => String(c.id) === id);
+  const creating = !col;
+  const type = String(input.type || col?.type || 'text').toLowerCase();
+  const allowed = new Set(['status', 'person', 'date', 'number', 'dropdown', 'checkbox', 'link', 'file', 'formula', 'text']);
+  if (!allowed.has(type)) return { ok: false, error: `unsupported column type: ${type}` };
+  if (creating) {
+    col = {
+      id,
+      name: String(input.name || 'Column').slice(0, 80),
+      type,
+      options: Array.isArray(input.options) ? input.options : [],
+      formula: input.formula || null,
+      width: input.width || null,
+      system: false,
+    };
+    cols.push(col);
+  } else {
+    if (input.name != null) col.name = String(input.name).slice(0, 80);
+    if (input.type != null) col.type = type;
+    if (input.options != null) col.options = Array.isArray(input.options) ? input.options : col.options;
+    if (input.formula != null) col.formula = input.formula;
+    if (input.width != null) col.width = input.width;
+  }
+  state.config.columns = cols;
+  act(state, actorName(actor), `${creating ? 'Added' : 'Updated'} column “${col.name}”`);
+  return commit(orgId, state, identityId, row, { column: col, created: creating });
+}
+
+async function setField(orgId, input = {}, identityId = null, actor = {}) {
+  const { state, row } = await loadState(orgId);
+  const task = findTask(state, input.id || input.task_id || input.taskId);
+  if (!task) return { ok: false, error: 'task not found' };
+  const columnId = String(input.column_id || input.columnId || input.field || '').trim();
+  if (!columnId) return { ok: false, error: 'column_id required' };
+  ensureArrays(task);
+  const prev = task.fields[columnId];
+  task.fields[columnId] = input.value;
+  const who = actorName(actor);
+  logEvt(task, who, `Field ${columnId} updated`);
+  act(state, who, `Field ${columnId} updated`, task);
+  boardAutomations.runRules(state, {
+    kind: 'field_changed',
+    task,
+    columnId,
+    from: prev,
+    to: input.value,
+    who,
+  });
+  return commit(orgId, state, identityId, row, { task: summarizeTask(task) });
+}
+
+/* ---- Timeline / blockers (PR3) ---- */
+
+async function setDates(orgId, input = {}, identityId = null, actor = {}) {
+  const { state, row } = await loadState(orgId);
+  const task = findTask(state, input.id || input.task_id || input.taskId);
+  if (!task) return { ok: false, error: 'task not found' };
+  const who = actorName(actor);
+  ensureArrays(task);
+  if (input.start != null) task.start = input.start || null;
+  if (input.due != null) {
+    task.due = input.due || null;
+    logEvt(task, who, `Due → ${task.due || 'none'}`);
+    act(state, who, `Due → ${task.due || 'none'}`, task);
+  }
+  return commit(orgId, state, identityId, row, { task: summarizeTask(task) });
+}
+
+async function setBlockers(orgId, input = {}, identityId = null, actor = {}) {
+  const { state, row } = await loadState(orgId);
+  const task = findTask(state, input.id || input.task_id || input.taskId);
+  if (!task) return { ok: false, error: 'task not found' };
+  const next = Array.isArray(input.blocked_by || input.blockedBy)
+    ? (input.blocked_by || input.blockedBy).map(String)
+    : [];
+  if (wouldCycle(state.tasks, task.id, next)) {
+    return { ok: false, error: 'blockedBy would create a cycle' };
+  }
+  ensureArrays(task);
+  task.blockedBy = next;
+  const who = actorName(actor);
+  logEvt(task, who, `Blockers → ${next.length ? next.join(',') : 'none'}`);
+  act(state, who, `Blockers updated (${next.length})`, task);
+  return commit(orgId, state, identityId, row, { task: summarizeTask(task) });
+}
+
+async function timeline(orgId, input = {}) {
+  const { state } = await loadState(orgId);
+  boardAutomations.sweepDuePassed(state, 'Automation');
+  const from = String(input.from || todayISO());
+  const days = Math.min(Math.max(Number(input.days) || 28, 7), 90);
+  const end = new Date(`${from}T00:00:00`);
+  end.setDate(end.getDate() + days);
+  const to = end.toISOString().slice(0, 10);
+  const bars = (state.tasks || [])
+    .filter((t) => t.due || t.start)
+    .filter((t) => !isFinalStage(state, t.status) || input.include_done)
+    .map((t) => {
+      const due = t.due || t.start;
+      let start = t.start;
+      if (!start && t.due) {
+        const d = new Date(`${t.due}T00:00:00`);
+        d.setDate(d.getDate() - 2);
+        start = d.toISOString().slice(0, 10);
+      }
+      return {
+        ...summarizeTask(t),
+        start,
+        due,
+        in_window: String(due) >= from && String(start || due) <= to,
+      };
+    })
+    .filter((t) => t.in_window)
+    .sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')));
+  return { ok: true, from, to, days, tasks: bars };
+}
+
+/* ---- Automations (PR4) ---- */
+
+async function listAutomations(orgId) {
+  const { state } = await loadState(orgId);
+  return { ok: true, automations: boardAutomations.listAutomations(state) };
+}
+
+async function upsertAutomation(orgId, input = {}, identityId = null, actor = {}) {
+  const { state, row } = await loadState(orgId);
+  if (!state.config) state.config = {};
+  boardStore.migrateConfig(state.config);
+  const list = state.config.automations || [];
+  const id = String(input.id || input.automation_id || '').trim() || uid();
+  let rule = list.find((r) => String(r.id) === id);
+  const creating = !rule;
+  if (creating) {
+    rule = {
+      id,
+      name: String(input.name || 'Automation').slice(0, 80),
+      enabled: input.enabled !== false,
+      when: input.when || { type: 'status_changed' },
+      then: Array.isArray(input.then) ? input.then : [],
+    };
+    list.push(rule);
+  } else {
+    if (input.name != null) rule.name = String(input.name).slice(0, 80);
+    if (input.enabled != null) rule.enabled = !!input.enabled;
+    if (input.when != null) rule.when = input.when;
+    if (input.then != null) rule.then = Array.isArray(input.then) ? input.then : rule.then;
+  }
+  state.config.automations = list;
+  act(state, actorName(actor), `${creating ? 'Added' : 'Updated'} automation “${rule.name}”`);
+  return commit(orgId, state, identityId, row, { automation: rule, created: creating });
+}
+
+async function listOrgActivity(orgId, filters = {}) {
+  const { state } = await loadState(orgId);
+  const items = boardActivity.listActivity(state);
+  const limit = Math.min(Math.max(Number(filters.limit) || 50, 1), 200);
+  return { ok: true, count: items.length, activity: items.slice(0, limit) };
+}
+
+async function patchTaskEntity(orgId, taskId, patch = {}, identityId = null, actor = {}) {
+  return upsertTask(orgId, { id: taskId, ...patch }, identityId, actor);
+}
+
 module.exports = {
   buildWorkingSet,
   summarizeTask,
@@ -825,4 +1117,18 @@ module.exports = {
   loadState,
   standupText,
   recapText,
+  listColumns,
+  upsertColumn,
+  setField,
+  setDates,
+  setBlockers,
+  timeline,
+  listAutomations,
+  upsertAutomation,
+  listOrgActivity,
+  patchTaskEntity,
+  wouldCycle,
+  boardAcl,
+  boardActivity,
+  boardAutomations,
 };

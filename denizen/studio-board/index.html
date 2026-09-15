@@ -242,6 +242,17 @@ tr.trow.r-done:hover{opacity:1}
 /* ===== team features ===== */
 .sharedbadge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--sage);font-weight:500;white-space:nowrap}
 .sharedbadge .dot{width:6px;height:6px;border-radius:50%;background:#5FBF97;box-shadow:0 0 6px rgba(95,191,151,.8)}
+.presence-strip{display:flex;flex-wrap:wrap;gap:4px;max-width:280px;align-items:center}
+.presence-chip{font-size:10px;padding:2px 7px;border-radius:999px;background:var(--surface-2);color:var(--ink);border:1px solid var(--hairline);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.tl-wrap{overflow:auto;padding:8px}
+.tl-head,.tl-row{display:flex;align-items:stretch;gap:8px;min-width:max-content}
+.tl-label{width:180px;flex:0 0 180px;font-size:12px;padding:6px 4px;cursor:pointer}
+.tl-days,.tl-track{position:relative;display:flex;height:28px}
+.tl-day{flex:0 0 auto;font-size:10px;color:var(--sage);border-left:1px solid var(--hairline-2);padding-left:2px}
+.tl-track{background:repeating-linear-gradient(90deg,transparent,transparent 27px,var(--hairline-2) 27px,var(--hairline-2) 28px);border-radius:6px;margin:4px 0}
+.tl-bar{position:absolute;top:4px;height:20px;border-radius:5px;cursor:grab;opacity:.9}
+.tl-block{margin-left:6px;color:#B14D3C;font-size:10px}
+.tl-zoom{display:flex;gap:6px;align-items:center}
 .stat{cursor:pointer;transition:background .12s}
 .stat:hover{background:var(--surface-2)}
 .stat.on{box-shadow:inset 0 -2px 0 var(--accent)}
@@ -786,6 +797,9 @@ body.standalone{min-height:100vh}
         <button class="viewtab" role="tab" data-view="board" onclick="setView('board')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="18" rx="1"/><rect x="10" y="3" width="6" height="12" rx="1"/><rect x="17" y="3" width="4" height="16" rx="1"/></svg>Board
         </button>
+        <button class="viewtab" role="tab" data-view="timeline" onclick="setView('timeline')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/><circle cx="21" cy="6" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="18" cy="18" r="1.5"/></svg>Timeline
+        </button>
         <button class="viewtab" role="tab" data-view="myday" onclick="setView('myday')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>My Day
         </button>
@@ -801,6 +815,7 @@ body.standalone{min-height:100vh}
       </nav>
       <div class="bar-actions">
         <span class="sharedbadge" title="Everyone using this artifact sees and edits this same board"><span class="dot"></span>Shared board</span>
+        <div class="presence-strip" id="presenceStrip" title="Who is on the board right now"></div>
         <div class="people-strip" id="peopleStrip"></div>
         <button class="newbtn" onclick="openTask()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New task
@@ -936,9 +951,10 @@ body.standalone{min-height:100vh}
     <div class="modal-body">
       <div class="kbgrid">
         <span class="kbk">1</span><span>Calendar</span><span class="kbk">2</span><span>Table</span>
-        <span class="kbk">3</span><span>Board</span><span class="kbk">4</span><span>My Day</span>
-        <span class="kbk">5</span><span>Team</span><span class="kbk">6</span><span>Activity</span>
-        <span class="kbk">N</span><span>New task</span><span class="kbk">/</span><span>Search</span>
+        <span class="kbk">3</span><span>Board</span><span class="kbk">4</span><span>Timeline</span>
+        <span class="kbk">5</span><span>My Day</span><span class="kbk">6</span><span>Team</span>
+        <span class="kbk">7</span><span>Activity</span><span class="kbk">N</span><span>New task</span>
+        <span class="kbk">/</span><span>Search</span>
         <span class="kbk">J K</span><span>Move down / up (table)</span><span class="kbk">E</span><span>Advance focused task</span>
         <span class="kbk">O</span><span>Open focused task</span><span class="kbk">?</span><span>This help</span>
       </div>
@@ -1195,7 +1211,33 @@ function meName(){ const p=personById(me.id); return p ? p.name.split(' ')[0] : 
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function addDays(iso,n){ const [y,m,d]=iso.split('-').map(Number); const x=new Date(y,m-1,d+n);
   return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
-function normalize(list){ (list||[]).forEach(t=>{ t.log=t.log||[]; t.comments=t.comments||[]; t.subtasks=t.subtasks||[]; if(t.remind===undefined) t.remind=true; if(!t.statusSince) t.statusSince=todayISO(); }); }
+function normalize(list){ (list||[]).forEach(t=>{
+  t.log=t.log||[]; t.comments=t.comments||[]; t.subtasks=t.subtasks||[];
+  t.fields=t.fields&&typeof t.fields==='object'?t.fields:{};
+  t.blockedBy=Array.isArray(t.blockedBy)?t.blockedBy:[];
+  if(!t.groupId) t.groupId='active';
+  if(t.remind===undefined) t.remind=true;
+  if(!t.statusSince) t.statusSince=todayISO();
+}); }
+function ensureBoardConfig(){
+  if(!state.config||typeof state.config!=='object') state.config={};
+  if(!Array.isArray(state.config.columns)) state.config.columns=[];
+  if(!Array.isArray(state.config.groups)) state.config.groups=[{id:'active',name:'Active'},{id:'backlog',name:'Backlog'}];
+  if(!Array.isArray(state.config.automations)) state.config.automations=[];
+  if(!state.config.acl||typeof state.config.acl!=='object') state.config.acl={owners:[],admins:[]};
+  if(!Array.isArray(state.activity)) state.activity=[];
+}
+function isBoardAdmin(){
+  ensureBoardConfig();
+  const keys=[];
+  if(loginProfile?.identity_id) keys.push(String(loginProfile.identity_id).toLowerCase());
+  if(loginProfile?.email) keys.push(String(loginProfile.email).toLowerCase());
+  if(me.id) keys.push(String(me.id).toLowerCase());
+  const owners=(state.config.acl.owners||[]).map(x=>String(x).toLowerCase());
+  const admins=(state.config.acl.admins||[]).map(x=>String(x).toLowerCase());
+  if(!owners.length && !admins.length) return true; /* empty ACL = first users can set up */
+  return keys.some(k=>owners.includes(k)||admins.includes(k));
+}
 function sinceDays(t){ return Math.max(0,-dayDiff(t.statusSince||todayISO())); }
 function ageChip(t){
   if(isFinalStage(t.status)) return '';
@@ -1209,9 +1251,19 @@ function progressBadge(t){ const p=subProgress(t); if(!p) return '';
   const pct=Math.round(p.done/p.total*100);
   return `<span class="subbadge${p.done===p.total?' full':''}" title="${p.done}/${p.total} subtasks done"><span class="subbar"><span style="width:${pct}%"></span></span>${p.done}/${p.total}</span>`; }
 function isStuck(t){ return isBlockedStage(t.status) || isStale(t); }
-function logEvt(t,text){ (t.log=t.log||[]).push({ts:Date.now(),who:meName(),text}); if(t.log.length>50) t.log=t.log.slice(-50); }
+function logEvt(t,text){
+  (t.log=t.log||[]).push({ts:Date.now(),who:meName(),text});
+  if(t.log.length>50) t.log=t.log.slice(-50);
+  ensureBoardConfig();
+  state.activity=[{id:'act_'+uid(),ts:Date.now(),who:meName(),text:String(text||''),taskId:t.id,title:t.title},...(state.activity||[])].slice(0,200);
+}
 function setStatus(t,ns,reason){
   if(t.status===ns){ if(isBlockedStage(ns)&&reason) t.blockReason=reason; return; }
+  const blockers=openBlockers(t);
+  if(blockers.length && !isBlockedStage(ns)){
+    toast('Waiting on '+blockers.length+' blocker(s)');
+    return;
+  }
   logEvt(t,'Status: '+t.status+' \u2192 '+ns);
   if(isBlockedStage(ns) && !isBlockedStage(t.status)) t.preBlockStatus=t.status;
   t.status=ns; t.statusSince=todayISO();
@@ -1317,10 +1369,15 @@ const uid = () => Math.random().toString(36).slice(2,9);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ============ Persistence ============ */
-let dirty=false; /* user changed data this session — never overwrite with hydration */
+let dirty=false; /* local unsaved entity edits pending push */
 let remoteUpdatedAt=null;
 let remoteSyncEnabled=false;
 let remoteSaveTimer=null;
+let remotePollTimer=null;
+let pendingPatches={}; /* taskId -> partial fields awaiting rebase */
+let boardPresence=[];
+let boardIsAdmin=true;
+ui.tlZoom = ui.tlZoom || 28;
 
 function readVisitorSession(){
   try{
@@ -1332,23 +1389,69 @@ function readVisitorSession(){
   return null;
 }
 
+function authHeaders(sess){
+  return {
+    'X-Session-Id':sess.session_id,
+    'X-Session-Token':sess.session_token||'',
+    'Authorization':'Bearer '+(sess.session_token||''),
+  };
+}
+
 async function fetchRemoteWorkspace(){
   const sess=readVisitorSession();
   if(!sess) return null;
   const url='/api/studio-board/workspace?session_id='+encodeURIComponent(sess.session_id);
-  const res=await fetch(url,{
-    headers:{
-      'X-Session-Id':sess.session_id,
-      'X-Session-Token':sess.session_token||'',
-      'Authorization':'Bearer '+(sess.session_token||''),
-    },
-  });
+  const res=await fetch(url,{ headers:authHeaders(sess) });
   if(!res.ok) return null;
   const data=await res.json();
   if(!data || !data.ok || !data.state) return null;
   remoteSyncEnabled=true;
   remoteUpdatedAt=data.updated_at||null;
+  if(typeof data.is_admin==='boolean') boardIsAdmin=data.is_admin;
+  if(Array.isArray(data.presence)) boardPresence=data.presence;
+  if(Array.isArray(data.activity) && data.activity.length) state.activity=data.activity;
   return data;
+}
+
+function mergeEntityLists(localList, remoteList, pendingMap){
+  const byId=new Map();
+  (remoteList||[]).forEach(x=>{ if(x&&x.id!=null) byId.set(String(x.id), {...x}); });
+  (localList||[]).forEach(x=>{
+    if(!x||x.id==null) return;
+    const id=String(x.id);
+    if(!byId.has(id) && dirty) byId.set(id, {...x}); /* keep local-only creates */
+  });
+  if(pendingMap){
+    Object.keys(pendingMap).forEach(id=>{
+      if(!byId.has(id)) return;
+      byId.set(id, {...byId.get(id), ...pendingMap[id]});
+    });
+  }
+  return [...byId.values()];
+}
+
+function rebaseFromRemote(remoteState, updatedAt){
+  if(!remoteState) return;
+  const keepDirty=dirty;
+  state.tasks=mergeEntityLists(state.tasks, remoteState.tasks, pendingPatches);
+  state.people=mergeEntityLists(state.people, remoteState.people, null);
+  state.events=mergeEntityLists(state.events, remoteState.events, null);
+  state.templates=remoteState.templates||state.templates||[];
+  state.notes=remoteState.notes||state.notes||[];
+  if(Array.isArray(remoteState.activity)) state.activity=remoteState.activity;
+  if(remoteState.config && Array.isArray(remoteState.config.categories) && Array.isArray(remoteState.config.stages) && remoteState.config.categories.length && remoteState.config.stages.length){
+    // Prefer remote config unless we have pending local config edits — use remote for foundation
+    if(!keepDirty || !Object.keys(pendingPatches).length){
+      state.config=remoteState.config;
+      TYPES=state.config.categories; STATUSES=state.config.stages; rebuildNextStep();
+    }
+  }
+  ensureBoardConfig();
+  normalize(state.tasks);
+  applyBrand();
+  if(updatedAt) remoteUpdatedAt=updatedAt;
+  renderPresenceStrip();
+  render();
 }
 
 async function pushRemoteWorkspace(){
@@ -1358,41 +1461,60 @@ async function pushRemoteWorkspace(){
     session_id:sess.session_id,
     session_token:sess.session_token,
     if_updated_at:remoteUpdatedAt,
-    state:{tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], config:state.config},
+    state:{tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], activity:state.activity||[], config:state.config},
   };
   const res=await fetch('/api/studio-board/workspace',{
     method:'PUT',
-    headers:{
-      'Content-Type':'application/json',
-      'X-Session-Id':sess.session_id,
-      'X-Session-Token':sess.session_token||'',
-    },
+    headers:{ 'Content-Type':'application/json', ...authHeaders(sess) },
     body:JSON.stringify(body),
   });
   const data=await res.json().catch(()=>({}));
   if(res.status===409 && data && data.state){
-    // Teammate wrote first — adopt server copy if we haven't typed more locally mid-flight.
-    if(!dirty){
-      applyRemoteState(data.state, data.updated_at);
-    }
+    rebaseFromRemote(data.state, data.updated_at);
+    // one retry after rebase
     remoteUpdatedAt=data.updated_at||remoteUpdatedAt;
+    pendingPatches={};
+    dirty=true;
+    const retry=await fetch('/api/studio-board/workspace',{
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', ...authHeaders(sess) },
+      body:JSON.stringify({
+        session_id:sess.session_id,
+        session_token:sess.session_token,
+        if_updated_at:remoteUpdatedAt,
+        state:{tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], activity:state.activity||[], config:state.config},
+      }),
+    });
+    const rd=await retry.json().catch(()=>({}));
+    if(retry.ok && rd.ok){
+      remoteUpdatedAt=rd.updated_at||remoteUpdatedAt;
+      dirty=false;
+      pendingPatches={};
+    } else {
+      toast('Could not sync — try again');
+    }
     return;
   }
   if(res.ok && data && data.ok){
     remoteUpdatedAt=data.updated_at||remoteUpdatedAt;
+    dirty=false;
+    pendingPatches={};
   }
 }
 
 function applyRemoteState(d, updatedAt){
   if(!d) return;
+  if(dirty){ rebaseFromRemote(d, updatedAt); return; }
   state.tasks=d.tasks||[];
   state.people=d.people||[];
   state.events=d.events||[];
   state.templates=d.templates||[];
   state.notes=d.notes||[];
+  if(Array.isArray(d.activity)) state.activity=d.activity;
   if(d.config && Array.isArray(d.config.categories) && Array.isArray(d.config.stages) && d.config.categories.length && d.config.stages.length){
     state.config=d.config; TYPES=state.config.categories; STATUSES=state.config.stages; rebuildNextStep();
   }
+  ensureBoardConfig();
   normalize(state.tasks); applyBrand(); render();
   if(updatedAt) remoteUpdatedAt=updatedAt;
 }
@@ -1405,13 +1527,70 @@ function scheduleRemoteSave(){
 
 async function save(){
   dirty=true;
-  try{ await window.storage.set(KEY, JSON.stringify({tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], config:state.config}), true); }
+  ensureBoardConfig();
+  try{ await window.storage.set(KEY, JSON.stringify({tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], activity:state.activity||[], config:state.config}), true); }
   catch(e){ console.warn('save failed', e); }
   scheduleRemoteSave();
 }
+
+async function heartbeatPresence(){
+  const sess=readVisitorSession();
+  if(!sess || !remoteSyncEnabled) return;
+  const editing=ui.editId?state.tasks.find(t=>t.id===ui.editId):null;
+  const person=me.id?state.people.find(p=>p.id===me.id):null;
+  try{
+    const res=await fetch('/api/studio-board/presence',{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', ...authHeaders(sess) },
+      body:JSON.stringify({
+        session_id:sess.session_id,
+        display_name:person?.name||loginProfile?.display_name||'Teammate',
+        viewing:true,
+        editing_task_id:editing?.id||null,
+        editing_title:editing?.title||null,
+      }),
+    });
+    const data=await res.json().catch(()=>({}));
+    if(data && Array.isArray(data.presence)){ boardPresence=data.presence; renderPresenceStrip(); }
+  }catch(e){}
+}
+
+function renderPresenceStrip(){
+  const el=document.getElementById('presenceStrip');
+  if(!el) return;
+  if(!boardPresence.length){ el.innerHTML=''; return; }
+  el.innerHTML=boardPresence.slice(0,6).map(p=>{
+    const edit=p.editing_title?` · editing ${esc(p.editing_title)}`:'';
+    return `<span class="presence-chip">${esc(p.display_name||'Teammate')}${edit}</span>`;
+  }).join('');
+}
+
+async function pollRemoteWorkspace(){
+  if(document.visibilityState==='hidden') return;
+  const data=await fetchRemoteWorkspace().catch(()=>null);
+  if(!data||!data.state) return;
+  if(data.updated_at && data.updated_at!==remoteUpdatedAt){
+    if(dirty) rebaseFromRemote(data.state, data.updated_at);
+    else applyRemoteState(data.state, data.updated_at);
+  } else {
+    if(Array.isArray(data.presence)){ boardPresence=data.presence; renderPresenceStrip(); }
+  }
+  await heartbeatPresence();
+}
+
+function startRemotePoll(){
+  clearInterval(remotePollTimer);
+  remotePollTimer=setInterval(()=>{ pollRemoteWorkspace().catch(()=>{}); }, 4000);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') pollRemoteWorkspace().catch(()=>{});
+  });
+}
+
 function markReady(){
   document.body.dataset.ready='1';
   bindMyDayIdentity().catch(()=>{});
+  startRemotePoll();
+  heartbeatPresence().catch(()=>{});
 }
 function hydrate(){
   /* Background: pull saved state without ever blocking the UI. Board lives in SHARED scope + org API. */
@@ -1572,6 +1751,7 @@ function render(){
   const v=document.getElementById('view');
   if(ui.view==='calendar') v.innerHTML=renderCalendar();
   else if(ui.view==='table') v.innerHTML=renderTable();
+  else if(ui.view==='timeline') v.innerHTML=renderTimeline();
   else if(ui.view==='myday') renderMyDay(v);
   else if(ui.view==='team') renderTeam(v);
   else if(ui.view==='activity') renderActivity(v);
@@ -1835,7 +2015,7 @@ function renderBoard(container){
     const cards=list.map(t=>{
       const dd=new Date(t.due+'T00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
       return `<div class="card" draggable="true" data-id="${t.id}" onclick="openTask('${t.id}')">
-        <div class="ctitle">${esc(t.title)}${isBlockedStage(t.status)&&t.blockReason?`<div class="breason">\u2691 ${esc(t.blockReason)}</div>`:''}</div>
+        <div class="ctitle">${esc(t.title)}${isBlockedStage(t.status)&&t.blockReason?`<div class="breason">\u2691 ${esc(t.blockReason)}</div>`:''}${openBlockers(t).length?`<div class="breason">waiting on ${openBlockers(t).length} blocker${openBlockers(t).length>1?'s':''}</div>`:''}</div>
         <div class="cmeta"><span class="chip typechip" style="background:${tint(typeHex(t.type),.12)};color:${typeHex(t.type)}">${t.type}</span>
           <span class="pill-prio prio-${t.priority}">${t.priority}</span>${ageChip(t)}${progressBadge(t)}</div>
         <div class="cbottom"><span class="cclient">${esc(t.client||'')} · ${dd}</span>${avatar(t.assignee)}</div></div>`;
@@ -2297,33 +2477,59 @@ function copyStandup(){
 
 /* ============ Settings ============ */
 function renderSettings(container){
+  ensureBoardConfig();
   const cfg=state.config||{teamName:'Team Board',teamSub:'',clientLabel:'Client'};
+  const admin=isBoardAdmin() || boardIsAdmin;
   const catRows=TYPES.map(c=>catRowHTML(c)).join('');
   const stageRows=STATUSES.map((s,i)=>stageRowHTML(s,i)).join('');
   const tplCards=Object.entries(TEMPLATES).map(([id,tp])=>tplCardHTML(id,tp)).join('');
+  const cols=(cfg.columns||[]).map(c=>`<div class="stgitemrow"><span class="stglabel">${esc(c.name)}</span><span class="stgcount">${esc(c.type)}</span>${admin?`<button class="dpdel" onclick="deleteColumn('${esc(c.id)}')">\u2715</button>`:''}</div>`).join('')||'<p class="stghint">No custom columns yet.</p>';
+  const autos=(cfg.automations||[]).map(a=>`<div class="stgitemrow"><span class="stglabel">${esc(a.name||a.id)}</span><span class="stgcount">${a.enabled===false?'off':'on'} · ${esc((a.when&&a.when.type)||'')}</span>${admin?`<button class="dpdel" onclick="deleteAutomation('${esc(a.id)}')">\u2715</button>`:''}</div>`).join('')||'<p class="stghint">No automations yet.</p>';
+  const groups=(cfg.groups||[]).map(g=>`<span class="flagchip on">${esc(g.name||g.id)}</span>`).join(' ');
+  const aclNote=`Owners: ${(cfg.acl?.owners||[]).join(', ')||'—'} · Admins: ${(cfg.acl?.admins||[]).join(', ')||'—'}`;
   container.innerHTML=`
     <div class="panel">
-      <h3>Team info</h3>
+      <h3>Team info ${admin?'':'<span class="stgcount">(view only)</span>'}</h3>
       <div class="row2">
-        <div class="field"><label for="stgTeamName">Team name</label><input type="text" id="stgTeamName" value="${esc(cfg.teamName)}"></div>
-        <div class="field"><label for="stgTeamSub">Subtitle</label><input type="text" id="stgTeamSub" value="${esc(cfg.teamSub)}"></div>
+        <div class="field"><label for="stgTeamName">Team name</label><input type="text" id="stgTeamName" value="${esc(cfg.teamName)}" ${admin?'':'disabled'}></div>
+        <div class="field"><label for="stgTeamSub">Subtitle</label><input type="text" id="stgTeamSub" value="${esc(cfg.teamSub)}" ${admin?'':'disabled'}></div>
       </div>
-      <div class="field"><label for="stgClientLabel">"Client" field label</label><input type="text" id="stgClientLabel" value="${esc(cfg.clientLabel)}" placeholder="e.g. Client, Account, Project, Department"></div>
-      <button class="btn-primary" onclick="saveTeamInfo()" style="margin-top:4px">Save team info</button>
+      <div class="field"><label for="stgClientLabel">"Client" field label</label><input type="text" id="stgClientLabel" value="${esc(cfg.clientLabel)}" placeholder="e.g. Client, Account, Project, Department" ${admin?'':'disabled'}></div>
+      <p class="stghint">${esc(aclNote)}</p>
+      ${admin?`<button class="btn-primary" onclick="saveTeamInfo()" style="margin-top:4px">Save team info</button>`:''}
+    </div>
+
+    <div class="panel">
+      <h3>Custom columns <span class="pc">${(cfg.columns||[]).length}</span></h3>
+      <p class="stghint">Monday-style fields on every task (date, number, dropdown, checkbox, link, file, formula).</p>
+      <div class="stglist">${cols}</div>
+      ${admin?`<div class="mdadd"><input type="text" id="newColName" placeholder="Column name\u2026"><select id="newColType"><option value="dropdown">dropdown</option><option value="number">number</option><option value="date">date</option><option value="checkbox">checkbox</option><option value="person">person</option><option value="link">link</option><option value="file">file</option><option value="formula">formula</option></select><button onclick="addColumn()">Add</button></div>`:''}
+    </div>
+
+    <div class="panel">
+      <h3>Groups</h3>
+      <p class="stghint">Task buckets for Table/Board. ${groups}</p>
+    </div>
+
+    <div class="panel">
+      <h3>Automations <span class="pc">${(cfg.automations||[]).length}</span></h3>
+      <p class="stghint">When status changes or due passes — notify assignee, move group, set field, comment, or create follow-up.</p>
+      <div class="stglist">${autos}</div>
+      ${admin?`<div class="mdadd"><input type="text" id="newAutoName" placeholder="Automation name\u2026" onkeydown="if(event.key==='Enter')addAutomation()"><button onclick="addAutomation()">Add status\u2192notify</button></div>`:''}
     </div>
 
     <div class="panel">
       <h3>Categories <span class="pc">${TYPES.length}</span></h3>
       <p class="stghint">The types of work your team tracks (shown as colored tags everywhere).</p>
       <div class="stglist">${catRows}</div>
-      <div class="mdadd"><input type="text" id="newCatName" placeholder="New category name\u2026" onkeydown="if(event.key==='Enter')addCategory()"><button onclick="addCategory()">Add</button></div>
+      ${admin?`<div class="mdadd"><input type="text" id="newCatName" placeholder="New category name\u2026" onkeydown="if(event.key==='Enter')addCategory()"><button onclick="addCategory()">Add</button></div>`:''}
     </div>
 
     <div class="panel">
       <h3>Pipeline stages <span class="pc">${STATUSES.length}</span></h3>
       <p class="stghint">Your workflow, in order. Mark one stage <b>Final</b> (counts as done) and optionally one <b>Blocked</b> (requires a reason).</p>
       <div class="stglist">${stageRows}</div>
-      <div class="mdadd"><input type="text" id="newStageName" placeholder="New stage name\u2026" onkeydown="if(event.key==='Enter')addStage()"><button onclick="addStage()">Add</button></div>
+      ${admin?`<div class="mdadd"><input type="text" id="newStageName" placeholder="New stage name\u2026" onkeydown="if(event.key==='Enter')addStage()"><button onclick="addStage()">Add</button></div>`:''}
     </div>
 
     <div class="panel">
@@ -2331,6 +2537,119 @@ function renderSettings(container){
       <p class="stghint">Switching templates replaces your categories, pipeline, and all tasks/events on the shared board with example data for that business type.</p>
       <div class="tplcards">${tplCards}</div>
     </div>`;
+}
+function addColumn(){
+  if(!isBoardAdmin() && !boardIsAdmin){ toast('Admin required'); return; }
+  ensureBoardConfig();
+  const name=(document.getElementById('newColName')?.value||'').trim();
+  const type=document.getElementById('newColType')?.value||'dropdown';
+  if(!name) return;
+  state.config.columns.push({id:uid(), name, type, options:[], system:false});
+  document.getElementById('newColName').value='';
+  save(); render(); toast('Column added');
+}
+function deleteColumn(id){
+  if(!isBoardAdmin() && !boardIsAdmin){ toast('Admin required'); return; }
+  ensureBoardConfig();
+  state.config.columns=(state.config.columns||[]).filter(c=>c.id!==id);
+  save(); render();
+}
+function addAutomation(){
+  if(!isBoardAdmin() && !boardIsAdmin){ toast('Admin required'); return; }
+  ensureBoardConfig();
+  const name=(document.getElementById('newAutoName')?.value||'').trim()||'Notify on Done';
+  const done=STATUSES.find(s=>s.final)?.id||'Done';
+  state.config.automations.push({
+    id:uid(), name, enabled:true,
+    when:{ type:'status_changed', to:done },
+    then:[{ type:'notify_assignee', text:`“${name}” fired — task marked ${done}` }],
+  });
+  const inp=document.getElementById('newAutoName'); if(inp) inp.value='';
+  save(); render(); toast('Automation added');
+}
+function deleteAutomation(id){
+  if(!isBoardAdmin() && !boardIsAdmin){ toast('Admin required'); return; }
+  ensureBoardConfig();
+  state.config.automations=(state.config.automations||[]).filter(a=>a.id!==id);
+  save(); render();
+}
+
+/* ============ Timeline / Gantt ============ */
+function taskStart(t){
+  if(t.start) return t.start;
+  if(!t.due) return null;
+  const d=new Date(t.due+'T00:00:00'); d.setDate(d.getDate()-2);
+  return d.toISOString().slice(0,10);
+}
+function openBlockers(t){
+  return (t.blockedBy||[]).filter(id=>{
+    const bt=state.tasks.find(x=>x.id===id);
+    return bt && !isFinalStage(bt.status);
+  });
+}
+function renderTimeline(){
+  ensureBoardConfig();
+  const days=ui.tlZoom||28;
+  const from=todayISO();
+  const fromD=new Date(from+'T00:00:00');
+  const tasks=visibleTasks().filter(t=>t.due||t.start);
+  if(!tasks.length && !anyFilter() && !ui.filters.search) return emptyState();
+  const dayW=28;
+  const width=days*dayW;
+  const heads=[];
+  for(let i=0;i<days;i++){
+    const d=new Date(fromD); d.setDate(d.getDate()+i);
+    const iso=d.toISOString().slice(0,10);
+    const label=d.getDate()===1||i===0?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):String(d.getDate());
+    heads.push(`<div class="tl-day" style="width:${dayW}px">${esc(label)}</div>`);
+  }
+  const rows=tasks.map(t=>{
+    const start=taskStart(t)||t.due;
+    const due=t.due||start;
+    const sOff=Math.round((new Date(start+'T00:00:00')-fromD)/86400000);
+    const eOff=Math.round((new Date(due+'T00:00:00')-fromD)/86400000);
+    const left=Math.max(0,sOff)*dayW;
+    const w=Math.max(dayW, (Math.max(sOff,0)<=days ? Math.min(days,eOff+1)-Math.max(0,sOff) : 0)*dayW);
+    const blockers=openBlockers(t);
+    const st=STATUSES.find(s=>s.id===t.status);
+    return `<div class="tl-row">
+      <div class="tl-label" onclick="openTask('${t.id}')">${esc(t.title)}${blockers.length?`<span class="tl-block" title="Waiting on blockers">\u2691 ${blockers.length}</span>`:''}</div>
+      <div class="tl-track" style="width:${width}px">
+        <div class="tl-bar" style="left:${left}px;width:${w}px;background:${st?.hex||'#3F6FA8'}" title="${esc(start)} \u2192 ${esc(due)}"
+          onpointerdown="tlDragStart(event,'${t.id}')"></div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="mdhead"><div class="mdgreet"><div><h2>Timeline</h2><div class="mdsum">${tasks.length} dated tasks · ${days}-day window</div></div></div>
+    <div class="tl-zoom"><button class="swap" onclick="ui.tlZoom=14;render()">2w</button><button class="swap" onclick="ui.tlZoom=28;render()">4w</button><button class="swap" onclick="ui.tlZoom=56;render()">8w</button></div></div>
+    <div class="tl-wrap panel">
+      <div class="tl-head"><div class="tl-label">&nbsp;</div><div class="tl-days" style="width:${width}px">${heads.join('')}</div></div>
+      ${rows||'<div class="empty"><h3>No dated tasks</h3><p>Add a due date to see work on the timeline.</p></div>'}
+    </div>`;
+}
+function tlDragStart(ev, id){
+  ev.preventDefault();
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  const startX=ev.clientX;
+  const origDue=t.due||taskStart(t);
+  const origStart=taskStart(t);
+  const onMove=(e)=>{
+    const delta=Math.round((e.clientX-startX)/28);
+    if(!delta && e.clientX===startX) return;
+    const shift=(iso,d)=>{ const x=new Date(iso+'T00:00:00'); x.setDate(x.getDate()+d); return x.toISOString().slice(0,10); };
+    if(origDue) t.due=shift(origDue, delta);
+    if(origStart) t.start=shift(origStart, delta);
+    pendingPatches[id]={ due:t.due, start:t.start };
+    render();
+  };
+  const onUp=()=>{
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    logEvt(t, `Due \u2192 ${t.due||'none'}`);
+    save();
+  };
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
 }
 function catRowHTML(c){
   const inUse=state.tasks.filter(t=>t.type===c.id).length;
@@ -2455,6 +2774,10 @@ function confirmLoadTemplate(id){
 
 /* ============ Activity feed ============ */
 function activityFeed(){
+  ensureBoardConfig();
+  if(Array.isArray(state.activity) && state.activity.length){
+    return state.activity.slice().sort((a,b)=>b.ts-a.ts);
+  }
   const items=[];
   state.tasks.forEach(t=>{
     (t.log||[]).forEach(l=>{ items.push({ts:l.ts, who:l.who, text:l.text, taskId:t.id, title:t.title}); });
@@ -2759,7 +3082,7 @@ function resetAll(){
     cb:async()=>{ state.tasks=[]; state.events=[]; state.notes=[]; await save(); render(); toast('Board cleared \u2014 setup kept'); }
   });
 }
-const VIEW_KEYS={'1':'calendar','2':'table','3':'board','4':'myday','5':'team','6':'activity'};
+const VIEW_KEYS={'1':'calendar','2':'table','3':'board','4':'timeline','5':'myday','6':'team','7':'activity'};
 function anyModalOpen(){ return ['overlay','pOverlay','cOverlay','kOverlay'].some(id=>document.getElementById(id).classList.contains('open')); }
 function kbMove(dir){
   if(ui.view!=='table'||!lastIds.length) return;
