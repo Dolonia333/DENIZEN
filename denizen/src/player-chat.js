@@ -332,6 +332,7 @@ class PlayerChat {
     try { globalThis.DenizenVoiceInput?.refreshSpeakFab?.(); } catch (_) {}
     if (next && window.__DenizenIsTouch) {
       globalThis.DenizenMobileSidebar?.close?.();
+      try { globalThis.DenizenMobilePlay?.syncGameFrameBottom?.(); } catch (_) {}
     }
     if (next) {
       if (!window.__DenizenIsTouch) this._input?.focus();
@@ -2920,6 +2921,22 @@ class PlayerChat {
             calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
           ) + 8px
         ) !important;
+      }
+      /* Phone-mode class can be on while FLOOR LINE is still a floor overlay (T key),
+         not docked inside the phone Chat app — close the gap under the game frame. */
+      html.denizen-touch.denizen-phone-mode.denizen-chat-open.denizen-portrait #player-chat-panel:not([data-phone-chat="1"]) {
+        top: calc(
+          var(--denizen-game-frame-bottom,
+            calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
+          ) + 8px
+        ) !important;
+        bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        width: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        z-index: 2147483630 !important;
       }
       html.denizen-touch.denizen-tablet.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
         top: auto !important;
