@@ -93,7 +93,7 @@
         './src/bouncer-client-init.js?v=sec3',
         './src/security-monitor.js?v=sec3',
         './src/robber-controller.js?v=sec3',
-        './src/work-feed.js?v=feed4dedupe',
+        './src/work-feed.js?v=feed5top',
         './src/content-pipeline-panel.js?v=cp2',
       ]);
       finishDeferred();

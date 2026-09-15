@@ -253,10 +253,6 @@
         max-width: min(360px, calc(100vw - 20px)) !important;
       }
 
-      #denizen-work-feed {
-        bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px)) !important;
-      }
-
       @media (max-width: 768px) {
         :root { --denizen-dock-height: 52px; }
         #${DOCK_ID} {

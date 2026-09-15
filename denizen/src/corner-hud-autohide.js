@@ -1,7 +1,8 @@
 /**
- * Auto-hide corner HUD controls (phone FAB + speak FAB) until hover.
+ * Auto-tuck corner HUD controls (phone FAB + speak FAB) until hover.
  * Applies on desktop/tablet (anything that is not a phone form-factor).
- * Buttons are fully invisible until the cursor enters that corner.
+ * Buttons rest half-tucked and dimmed, and slide out when the cursor
+ * enters that corner.
  */
 (function () {
   'use strict';
@@ -63,18 +64,19 @@
         transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
       }
 
-      /* Fully gone until corner HUD is open / hovered / listening */
+      /* Resting: peek — tucked half off-screen and dimmed, still clickable.
+         Fully hidden made Buzz (the main menu) and Speak undiscoverable on
+         desktop; a peek keeps the view clean but shows they exist. Slides
+         all the way out when the corner HUD opens / on hover / listening. */
       html:not(.denizen-phone).denizen-phone-mode:not(.denizen-corner-hud-open):not(.denizen-phone-open):not(.denizen-chat-open) #denizen-phone-fab:not(:hover):not(:focus-within) {
-        transform: translateX(120%) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        visibility: hidden !important;
+        /* px, not %: the FAB box is 168px wide with Buzz at its right end
+           (bubble space on the left), so a % tuck pushed Buzz fully off. */
+        transform: translateX(32px) !important;
+        opacity: 0.6 !important;
       }
       html:not(.denizen-phone).denizen-phone-mode:not(.denizen-corner-hud-open):not(.denizen-phone-open):not(.denizen-chat-open) #denizen-speak-fab:not(:hover):not(:focus-within):not(.listening) {
-        transform: translateX(-120%) !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        visibility: hidden !important;
+        transform: translateX(-46%) !important;
+        opacity: 0.6 !important;
       }
 
       html:not(.denizen-phone).denizen-corner-hud-open #denizen-phone-fab,

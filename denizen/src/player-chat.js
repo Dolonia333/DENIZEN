@@ -2996,6 +2996,43 @@ class PlayerChat {
         visibility: hidden !important;
         pointer-events: none !important;
       }
+      /* Labeled chat entry beside Feed / HQ — matches office-hq-panel.js's
+         pill, offset past it. Desktop only: touch reaches chat via Buzz. */
+      #denizen-chat-pill {
+        position: fixed;
+        top: max(8px, env(safe-area-inset-top, 0px));
+        left: calc(max(8px, env(safe-area-inset-left, 0px)) + 135px);
+        z-index: 100200;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(2, 6, 23, 0.75);
+        color: #94a3b8;
+        border: 1px solid #334155;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+        cursor: pointer;
+        user-select: none;
+      }
+      #denizen-chat-pill kbd {
+        font: inherit;
+        font-size: 10px;
+        padding: 0 4px;
+        border: 1px solid #334155;
+        border-radius: 3px;
+        color: #64748b;
+      }
+      #denizen-chat-pill:hover,
+      html.denizen-chat-open #denizen-chat-pill {
+        color: #dbeafe;
+        border-color: #60a5fa;
+      }
+      html.denizen-touch #denizen-chat-pill,
+      html.denizen-public-demo #denizen-chat-pill,
+      html[data-denizen-modal="open"] #denizen-chat-pill {
+        display: none;
+      }
     `;
     this._chatStyleInjected = true;
 
@@ -3034,6 +3071,20 @@ class PlayerChat {
       fab.title = 'Talk to NPCs (Enter or T also works)';
       document.body.appendChild(fab);
       this._fab = fab;
+    }
+
+    // #player-chat-fab lives in the bottom dock, which phone mode hides — so
+    // on desktop chat had no visible entry point at all. The public demo is
+    // spectator-only, so the pill is hidden there (CSS above).
+    if (!document.getElementById('denizen-chat-pill')) {
+      const pill = document.createElement('button');
+      pill.id = 'denizen-chat-pill';
+      pill.type = 'button';
+      const ti = globalThis.DenizenTablerIcons?.icon;
+      pill.innerHTML = `${ti ? ti('messages', { size: 14 }) : ''}Chat <kbd>T</kbd>`;
+      pill.title = 'Talk to the residents (Enter or T)';
+      pill.addEventListener('click', () => this.toggle());
+      document.body.appendChild(pill);
     }
 
     if (!document.getElementById('denizen-ws-banner')) {

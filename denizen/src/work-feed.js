@@ -53,6 +53,10 @@ class WorkFeedPanel {
     if (this._visible) return;
     this._visible = true;
     if (this._panel) {
+      // Open directly under the Feed button — it moves (the public demo
+      // banner nudges the top-left pills down), so measure at open time.
+      const r = this._toggleBtn?.getBoundingClientRect?.();
+      if (r && r.height) this._panel.style.top = `${Math.round(r.bottom + 6)}px`;
       this._panel.style.display = 'flex';
       // Small slide-in: start slightly left, animate to final position
       this._panel.style.transform = 'translateX(-20px)';
@@ -130,11 +134,14 @@ class WorkFeedPanel {
       style.textContent = `
         #denizen-work-feed {
           position: fixed;
-          bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px));
+          /* Under the Feed pill (show() refines this from the pill's rect).
+             It used to sit bottom-left above the dock, which phone mode hides,
+             so it opened in the opposite corner from its button. */
+          top: calc(max(8px, env(safe-area-inset-top, 0px)) + 32px);
           left: max(8px, env(safe-area-inset-left, 0px));
           width: 320px;
           max-height: 200px;
-          background: rgba(0, 0, 0, 0.75);
+          background: rgba(2, 6, 23, 0.96); /* opaque enough that the clock chip under it doesn't ghost through */
           border: 1px solid #1e293b;
           border-radius: 6px;
           display: none;
@@ -151,18 +158,18 @@ class WorkFeedPanel {
           align-items: center;
           padding: 4px 8px;
           border-bottom: 1px solid #1e293b;
-          color: #475569;
+          color: #64748b;
           font-size: 10px;
           flex-shrink: 0;
           user-select: none;
         }
         #denizen-work-feed-header .wf-title {
-          color: #64748b;
+          color: #94a3b8;
           letter-spacing: 0.05em;
           text-transform: uppercase;
         }
         #denizen-work-feed-header .wf-hint {
-          color: #334155;
+          color: #64748b;
           font-size: 9px;
         }
         #denizen-work-feed-list {
@@ -234,7 +241,7 @@ class WorkFeedPanel {
         }
         .wf-entry .wf-ts {
           flex-shrink: 0;
-          color: #334155;
+          color: #64748b;
           font-size: 9px;
           margin-left: 4px;
           min-width: 38px;
@@ -242,7 +249,7 @@ class WorkFeedPanel {
         }
         #denizen-work-feed-empty {
           padding: 12px 8px;
-          color: #334155;
+          color: #94a3b8;
           font-size: 10px;
           font-style: italic;
           text-align: center;
