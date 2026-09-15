@@ -1243,24 +1243,119 @@ const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 
 /* ============ Persistence ============ */
 let dirty=false; /* user changed data this session — never overwrite with hydration */
+let remoteUpdatedAt=null;
+let remoteSyncEnabled=false;
+let remoteSaveTimer=null;
+
+function readVisitorSession(){
+  try{
+    const raw=localStorage.getItem('denizen-visitor-session');
+    if(!raw) return null;
+    const d=JSON.parse(raw);
+    if(d && d.session_id && d.session_token) return d;
+  }catch(e){}
+  return null;
+}
+
+async function fetchRemoteWorkspace(){
+  const sess=readVisitorSession();
+  if(!sess) return null;
+  const url='/api/studio-board/workspace?session_id='+encodeURIComponent(sess.session_id);
+  const res=await fetch(url,{
+    headers:{
+      'X-Session-Id':sess.session_id,
+      'X-Session-Token':sess.session_token||'',
+      'Authorization':'Bearer '+(sess.session_token||''),
+    },
+  });
+  if(!res.ok) return null;
+  const data=await res.json();
+  if(!data || !data.ok || !data.state) return null;
+  remoteSyncEnabled=true;
+  remoteUpdatedAt=data.updated_at||null;
+  return data;
+}
+
+async function pushRemoteWorkspace(){
+  const sess=readVisitorSession();
+  if(!sess || !remoteSyncEnabled) return;
+  const body={
+    session_id:sess.session_id,
+    session_token:sess.session_token,
+    if_updated_at:remoteUpdatedAt,
+    state:{tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], config:state.config},
+  };
+  const res=await fetch('/api/studio-board/workspace',{
+    method:'PUT',
+    headers:{
+      'Content-Type':'application/json',
+      'X-Session-Id':sess.session_id,
+      'X-Session-Token':sess.session_token||'',
+    },
+    body:JSON.stringify(body),
+  });
+  const data=await res.json().catch(()=>({}));
+  if(res.status===409 && data && data.state){
+    // Teammate wrote first — adopt server copy if we haven't typed more locally mid-flight.
+    if(!dirty){
+      applyRemoteState(data.state, data.updated_at);
+    }
+    remoteUpdatedAt=data.updated_at||remoteUpdatedAt;
+    return;
+  }
+  if(res.ok && data && data.ok){
+    remoteUpdatedAt=data.updated_at||remoteUpdatedAt;
+  }
+}
+
+function applyRemoteState(d, updatedAt){
+  if(!d) return;
+  state.tasks=d.tasks||[];
+  state.people=d.people||[];
+  state.events=d.events||[];
+  state.templates=d.templates||[];
+  state.notes=d.notes||[];
+  if(d.config && Array.isArray(d.config.categories) && Array.isArray(d.config.stages) && d.config.categories.length && d.config.stages.length){
+    state.config=d.config; TYPES=state.config.categories; STATUSES=state.config.stages; rebuildNextStep();
+  }
+  normalize(state.tasks); applyBrand(); render();
+  if(updatedAt) remoteUpdatedAt=updatedAt;
+}
+
+function scheduleRemoteSave(){
+  if(!remoteSyncEnabled) return;
+  clearTimeout(remoteSaveTimer);
+  remoteSaveTimer=setTimeout(()=>{ pushRemoteWorkspace().catch(()=>{}); }, 450);
+}
+
 async function save(){
   dirty=true;
   try{ await window.storage.set(KEY, JSON.stringify({tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], config:state.config}), true); }
   catch(e){ console.warn('save failed', e); }
+  scheduleRemoteSave();
 }
 function markReady(){ document.body.dataset.ready='1'; }
 function hydrate(){
-  /* Background: pull saved state without ever blocking the UI. Board lives in SHARED scope. */
+  /* Background: pull saved state without ever blocking the UI. Board lives in SHARED scope + org API. */
   if(!window.storage || typeof window.storage.get!=='function'){ markReady(); return; }
   try{ window.storage.get(ME_KEY).then(r=>{ if(r&&r.value){ const d=JSON.parse(r.value); if(d&&d.id){ me.id=d.id; loadPersonal(); if(ui.view==='myday') render(); } } }).catch(()=>{}); }catch(e){}
   const timeout=new Promise(res=>setTimeout(()=>res('__timeout__'),2500));
   const fetchShared=window.storage.get(KEY,true).catch(()=>null);
-  Promise.race([fetchShared,timeout]).then(async r=>{
+  const fetchRemote=fetchRemoteWorkspace().catch(()=>null);
+  Promise.race([Promise.all([fetchShared, fetchRemote]),timeout]).then(async r=>{
     if(r==='__timeout__'){
       fetchShared.then(late=>{ applyStored(late,false); }).catch(()=>{});
+      fetchRemote.then(remote=>{ if(remote && remote.state && !dirty) applyRemoteState(remote.state, remote.updated_at); }).catch(()=>{});
       markReady(); return;
     }
-    if(r && r.value){ applyStored(r,true); markReady(); return; }
+    const [local, remote]=r||[];
+    if(remote && remote.state && ((remote.state.tasks&&remote.state.tasks.length)||(remote.state.people&&remote.state.people.length)||remote.state.config)){
+      applyRemoteState(remote.state, remote.updated_at);
+      // Keep local cache warm for offline.
+      try{ window.storage.set(KEY, JSON.stringify(remote.state), true); }catch(e){}
+      markReady(); return;
+    }
+    if(local && local.value){ applyStored(local,true); scheduleRemoteSave(); markReady(); return; }
     /* shared empty → migrate legacy personal board if one exists */
     let legacy=null; try{ legacy=await window.storage.get(KEY,false); }catch(e){}
     if(legacy && legacy.value){

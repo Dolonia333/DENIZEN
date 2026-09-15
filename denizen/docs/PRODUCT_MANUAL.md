@@ -124,8 +124,26 @@ Open **Studio Board** from the phone (or go to `/studio-board/`). Like CRM, it o
 its own full-page app — not an in-phone iframe. It's a Monday.com-style work board for
 agency pipelines: **Calendar**, **Table**, **Board**, **My Day**, **Team**, **Activity**,
 and **Settings**. Create tasks, filter by type, save views, and reset demo data. Use
-**← Back to office** to return to Denizen. Progress is stored in the browser
-(`localStorage`) so the board survives reloads on that device.
+**← Back to office** to return to Denizen.
+
+When you're signed into a **team** office, the board syncs to your org
+(`GET|PUT /api/studio-board/workspace`) so teammates and MCP agents share the same
+truth. Offline/demo still falls back to browser storage.
+
+**MCP (ChatGPT / Cursor / team token)** — same pattern as CRM. Prefer
+`studio_board_working_set` first, then:
+
+| Tool | Purpose |
+|------|---------|
+| `studio_board_working_set` | Open / overdue / stuck + people + stages |
+| `studio_board_brief` | Short briefing for standup |
+| `studio_board_list_tasks` | Filtered task list |
+| `studio_board_get_task` | Full task detail |
+| `studio_board_upsert_task` | Create or update a task |
+| `studio_board_advance_task` | Move to next (or explicit) stage |
+| `studio_board_assign_task` | Assign to a person |
+| `studio_board_add_comment` | Comment on a task |
+| `studio_board_list_people` / `studio_board_upsert_person` | Team strip |
 
 ---
 
