@@ -1219,6 +1219,81 @@ function setStatus(t,ns,reason){
 }
 function setMe(id){ me.id=id; try{ window.storage.set(ME_KEY, JSON.stringify({id})); }catch(e){} loadPersonal(); render(); }
 function clearMe(){ me.id=null; try{ window.storage.set(ME_KEY, JSON.stringify({id:null})); }catch(e){} render(); }
+
+let loginProfile=null; /* { display_name, email, identity_id } from /api/crm/session */
+async function fetchLoginProfile(){
+  const sess=readVisitorSession();
+  if(!sess) return null;
+  try{
+    const qs='?session_id='+encodeURIComponent(sess.session_id);
+    const res=await fetch('/api/crm/session'+qs,{
+      headers:{
+        'X-Session-Id':sess.session_id,
+        'X-Session-Token':sess.session_token||'',
+        'Authorization':'Bearer '+(sess.session_token||''),
+      },
+    });
+    if(!res.ok) return null;
+    const data=await res.json();
+    if(!data || !data.ok) return null;
+    loginProfile={
+      display_name:data.display_name||null,
+      email:data.email||null,
+      identity_id:data.identity_id||null,
+    };
+    return loginProfile;
+  }catch(e){ return null; }
+}
+function matchPersonFromLogin(profile){
+  if(!profile) return null;
+  const people=state.people||[];
+  const email=String(profile.email||'').trim().toLowerCase();
+  const id=String(profile.identity_id||'').trim();
+  const name=String(profile.display_name||'').trim().toLowerCase();
+  if(email){
+    const byEmail=people.find(p=>String(p.email||'').toLowerCase()===email);
+    if(byEmail) return byEmail;
+  }
+  if(id){
+    const byId=people.find(p=>String(p.identityId||p.identity_id||'')===id);
+    if(byId) return byId;
+  }
+  if(name){
+    const byName=people.find(p=>String(p.name||'').toLowerCase()===name)
+      || people.find(p=>String(p.name||'').toLowerCase().startsWith(name.split(/\s+/)[0]));
+    if(byName) return byName;
+  }
+  return null;
+}
+function ensurePersonFromLogin(profile){
+  if(!profile || !profile.display_name) return null;
+  let p=matchPersonFromLogin(profile);
+  if(p){
+    let changed=false;
+    if(profile.email && !p.email){ p.email=String(profile.email).toLowerCase(); changed=true; }
+    if(profile.identity_id && !(p.identityId||p.identity_id)){ p.identityId=profile.identity_id; changed=true; }
+    if(changed) save();
+    return p;
+  }
+  p={
+    id:uid(),
+    name:String(profile.display_name).slice(0,120),
+    role:'Team member',
+    color:AV_COLORS[(state.people||[]).length%AV_COLORS.length],
+  };
+  if(profile.email) p.email=String(profile.email).toLowerCase();
+  if(profile.identity_id) p.identityId=profile.identity_id;
+  state.people=[...(state.people||[]), p];
+  save();
+  return p;
+}
+async function bindMyDayIdentity(){
+  const profile=loginProfile||await fetchLoginProfile();
+  if(!profile) return;
+  if(me.id && personById(me.id)) return; /* already picked */
+  const p=ensurePersonFromLogin(profile);
+  if(p) setMe(p.id);
+}
 function greeting(){ const h=new Date().getHours(); return h<12?'Good morning':h<17?'Good afternoon':'Good evening'; }
 const cap = s => s[0].toUpperCase()+s.slice(1);
 const typeHex = id => (TYPES.find(t=>t.id===id)||TYPES[0]).hex;
@@ -1334,7 +1409,10 @@ async function save(){
   catch(e){ console.warn('save failed', e); }
   scheduleRemoteSave();
 }
-function markReady(){ document.body.dataset.ready='1'; }
+function markReady(){
+  document.body.dataset.ready='1';
+  bindMyDayIdentity().catch(()=>{});
+}
 function hydrate(){
   /* Background: pull saved state without ever blocking the UI. Board lives in SHARED scope + org API. */
   if(!window.storage || typeof window.storage.get!=='function'){ markReady(); return; }
@@ -2031,7 +2109,13 @@ function pushMyOverdue(){
 
 function renderMyDay(container){
   if(!me.id || !personById(me.id)){
-    container.innerHTML=`<div class="idpick"><h3>Who are you?</h3><p>Pick your name \u2014 Studio Board will open to your personal command center. This choice, your reminders, and notes are stored only on your device.</p>${state.people.map(p=>`<button class="pbtn" onclick="setMe('${p.id}')">${avatar(p.id)}<span>${esc(p.name)}</span></button>`).join('')}</div>`;
+    const hint=loginProfile&&loginProfile.display_name
+      ? `You're signed in as <b>${esc(loginProfile.display_name)}</b>${loginProfile.email?` (${esc(loginProfile.email)})`:''}. Pick or confirm your Studio Board name — reminders stay private on this device.`
+      : 'Pick your name — Studio Board will open to your personal command center. Reminders and private notes stay on this device; tasks sync with the team.';
+    const loginBtn=loginProfile&&loginProfile.display_name
+      ? `<button class="pbtn" onclick="bindMyDayIdentity()" style="border-color:var(--ink)"><span>Use my login · ${esc(loginProfile.display_name)}</span></button>`
+      : '';
+    container.innerHTML=`<div class="idpick"><h3>Who are you?</h3><p>${hint}</p>${loginBtn}${state.people.map(p=>`<button class="pbtn" onclick="setMe('${p.id}')">${avatar(p.id)}<span>${esc(p.name)}</span></button>`).join('')}</div>`;
     return;
   }
   const p=personById(me.id);
