@@ -513,12 +513,12 @@ html.embed .dz-app-chrome{display:none}
 .lean-cell.lc-metrics{grid-column:2;grid-row:2}
 .lean-cell.lc-uvp{
   grid-column:3;grid-row:1 / span 2;
-  background:
-    linear-gradient(180deg, rgba(42,106,85,.14) 0%, rgba(255,252,246,.96) 42%, #FFFCF6 100%);
-  border-color:rgba(42,106,85,.34);
+  /* Paper body — no green wash over the copy (readability first). */
+  background:linear-gradient(180deg, #FFFCF6 0%, var(--surface) 100%);
+  border-color:rgba(42,106,85,.38);
   box-shadow:
     0 1px 0 rgba(255,255,255,.7) inset,
-    0 0 0 1px rgba(42,106,85,.06),
+    inset 0 3px 0 0 var(--forest),
     0 6px 18px rgba(10,28,23,.10);
 }
 .lean-cell.lc-unfair{grid-column:4;grid-row:1}
@@ -547,11 +547,11 @@ html.embed .dz-app-chrome{display:none}
 .lean-cell textarea:focus{outline:none;box-shadow:none}
 .lean-cell textarea::placeholder{color:var(--muted-2);opacity:.85}
 .lean-cell.lc-uvp .lean-cell-head{
-  border-bottom-color:rgba(42,106,85,.14);
-  background:linear-gradient(90deg, rgba(184,135,27,.12), transparent 70%);
+  border-bottom-color:rgba(16,35,28,.08);
+  background:transparent;
   border-radius:12px 12px 0 0;
 }
-.lean-cell.lc-uvp .lean-cell-head h3{color:var(--forest)}
+.lean-cell.lc-uvp .lean-cell-head h3{color:var(--forest-2)}
 .lean-cell.lc-uvp textarea{font-size:13.5px;font-weight:550;color:var(--ink)}
 /* Mobile: keep classic 5×3 tablet — denser type so scaled view stays readable. */
 @media (max-width:900px){
