@@ -80,6 +80,7 @@ describe('denizen-crm-routes', () => {
       assert.equal(data.team_role, 'owner');
       assert.equal(data.can_approve_skills, true);
       assert.equal(data.is_owner, true);
+      assert.equal(data.crm_scope, 'org');
     } finally {
       teamAuth.canApproveSkillsForSession = origCan;
       teamAuth.maybeUpgradeSessionCeoPrincipal = origUpgrade;
@@ -144,6 +145,7 @@ describe('denizen-crm-routes', () => {
       assert.ok(data.routes.some((r) => r.includes('/api/crm/assist')));
       assert.ok(data.routes.some((r) => r.includes('/api/crm/assist/execute')));
       assert.ok(data.routes.some((r) => r.includes('/api/crm/my-day')));
+      assert.ok(data.routes.some((r) => r.includes('/api/crm/team/activity')));
     } finally {
       server.close();
     }

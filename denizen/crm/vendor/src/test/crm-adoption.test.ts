@@ -22,12 +22,14 @@ describe("crm-adoption", () => {
     expect(validateContact({ name: "A", email: "a@b.com" }, DEFAULT_TEAM_POLICY)).toEqual([]);
   });
 
-  it("filterMyDeals matches owner case-insensitively", () => {
+  it('filterMyDeals matches owner case-insensitively', () => {
     const deals: Deal[] = [
       { id: 1, title: "A", contact: "C", value: 1, stage: "Lead", probability: 10, closeDate: "", daysInStage: 0, health: "good", ownerId: "alex" },
       { id: 2, title: "B", contact: "C", value: 1, stage: "Lead", probability: 10, closeDate: "", daysInStage: 0, health: "good", ownerId: "Bob" },
+      { id: 3, title: "Unowned", contact: "C", value: 1, stage: "Lead", probability: 10, closeDate: "", daysInStage: 0, health: "good" },
     ];
     expect(filterMyDeals(deals, "Alex")).toHaveLength(1);
+    expect(filterMyDeals(deals, "Alex").map((d) => d.id)).toEqual([1]);
   });
 
   it("computeAdoptionMetrics flags inactive users", () => {

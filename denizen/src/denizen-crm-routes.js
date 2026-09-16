@@ -23,6 +23,7 @@ const sessionAuth = require('./visitor-session-auth');
 const visitorAccess = require('./visitor-access');
 const sessionCookie = require('./visitor-session-cookie');
 const teamAuth = require('./denizen-team-auth');
+const crmAccess = require('./denizen-crm-access');
 
 function sessionIdFrom(req, body, url) {
   return String(
@@ -237,13 +238,54 @@ async function resolveCrmActor(access, sessionId) {
   };
 }
 
-async function loadWorkspacePayload(orgId, access, pullSpine = true) {
+async function resolveCrmAccessScope(access, sessionId) {
+  const actor = await resolveCrmActor(access, sessionId);
+  const isDemo = isDemoAccess(access);
+  let role = actor.role || null;
+  if (!role && sessionId) {
+    try {
+      const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+        isCeoPrincipal: !!access.session?.metadata?.is_ceo_principal,
+      });
+      role = approval.role || role;
+    } catch (_) { /* optional */ }
+  }
+  if (isDemo) {
+    // Demo sandbox stays org-wide so the sample dataset remains usable.
+    return { actor: { ...actor, role: role || 'demo' }, orgWide: true, scope: 'org' };
+  }
+  const principal = await teamAuth.resolveCeoPrincipalForSession(sessionId, { access }).catch(() => null);
+  if (principal?.ceo || isCeoAccess(access, principal)) {
+    return { actor: { ...actor, role: role || 'owner' }, orgWide: true, scope: 'org' };
+  }
+  const orgWide = crmAccess.isOrgWideRole(role);
+  return {
+    actor: { ...actor, role: role || 'member' },
+    orgWide,
+    scope: orgWide ? 'org' : 'own',
+  };
+}
+
+async function loadWorkspacePayload(orgId, access, pullSpine = true, { sessionId = null, applyMemberScope = true } = {}) {
   const row = await crmStore.getWorkspace(orgId);
   let state = row?.state || {};
   if (pullSpine) {
     state = await crmSpine.enrichWorkspaceFromSpine(orgId, state);
   }
   const updatedByName = await resolveUpdatedByLabel(row?.updated_by);
+  let scope = 'org';
+  let filtered = false;
+  let actor = null;
+  if (applyMemberScope && sessionId) {
+    const accessScope = await resolveCrmAccessScope(access, sessionId);
+    actor = accessScope.actor;
+    const scoped = crmAccess.filterWorkspaceForAccess(state, accessScope.actor, {
+      orgWide: accessScope.orgWide,
+    });
+    state = scoped.state;
+    scope = scoped.scope;
+    filtered = !!scoped.filtered;
+  }
   return {
     org_id: orgId,
     org_slug: access.orgSlug || null,
@@ -254,6 +296,14 @@ async function loadWorkspacePayload(orgId, access, pullSpine = true) {
     updated_by: row?.updated_by || null,
     updated_by_name: updatedByName,
     empty: !crmStore.hasWorkspaceData(state),
+    crm_scope: scope,
+    scoped: filtered,
+    actor: actor ? {
+      user: actor.user,
+      email: actor.email || null,
+      role: actor.role || null,
+      identity_id: actor.identityId || null,
+    } : null,
   };
 }
 
@@ -292,6 +342,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'POST /api/crm/intake',
           'POST /api/crm/intake-handoff',
           'GET /api/crm/team',
+          'GET /api/crm/team/activity',
           'POST /api/crm/team/invite',
           'POST /api/crm/setup-wizard',
           'GET /api/crm/sam/search',
@@ -345,7 +396,14 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         const row = await crmStore.getWorkspace(orgId);
         const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') || 40)));
         const filterUser = String(url.searchParams.get('user') || '').trim().toLowerCase();
+        const accessScope = await resolveCrmAccessScope(access, sessionId);
         let audit = Array.isArray(row?.state?.auditLog) ? row.state.auditLog : [];
+        if (!accessScope.orgWide) {
+          const aliases = crmAccess.buildActorAliases(accessScope.actor);
+          audit = audit.filter((e) => crmAccess.matchesAlias(e.user, aliases)
+            || crmAccess.matchesAlias(e.email, aliases)
+            || crmAccess.matchesAlias(e.identityId, aliases));
+        }
         if (filterUser) {
           audit = audit.filter((e) => {
             const blob = `${e.user || ''} ${e.email || ''}`.toLowerCase();
@@ -358,6 +416,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           industry: row?.state?.industryConfig?.id || null,
           count: audit.length,
           entries: audit.slice(0, limit),
+          crm_scope: accessScope.scope,
         });
         return true;
       } catch (err) {
@@ -602,6 +661,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
             metadata: meta,
           }).catch(() => {});
         }
+        const teamRole = isDemo ? null : (approval.role === 'ceo' ? 'owner' : (approval.role || null));
+        const crmScope = isDemo || isCeo || crmAccess.isOrgWideRole(teamRole) ? 'org' : 'own';
         json(res, 200, {
           ok: true,
           session_id: sessionId,
@@ -614,7 +675,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           identity_id: identityId,
           ceo: isCeo,
           is_owner: isCeo || (!isDemo && approval.role === 'owner'),
-          team_role: isDemo ? null : (approval.role === 'ceo' ? 'owner' : (approval.role || null)),
+          team_role: teamRole,
+          crm_scope: crmScope,
           can_approve_skills: !!approval.allowed,
           tier: isDemo ? 'demo' : (isCeo ? 'ceo' : (principal?.tier || access.tier || null)),
           work_position: workPosition,
@@ -1226,6 +1288,44 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
       }
     }
 
+    if (path === '/api/crm/team/activity' && req.method === 'GET') {
+      try {
+        const body = {};
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const accessScope = await resolveCrmAccessScope(access, sessionId);
+        const row = await crmStore.getWorkspace(orgId);
+        const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') || 40)));
+        const accounts = await denizenDb._get(
+          `denizen_team_accounts?select=display_name,email,role&org_id=eq.${encodeURIComponent(orgId)}&order=display_name`,
+        ).catch(() => []);
+        const teamMembers = (accounts || [])
+          .map((a) => a.display_name)
+          .filter(Boolean);
+        const activity = crmAccess.buildTeamActivity(row?.state || {}, { limit, teamMembers });
+
+        // Members still get the team viewer feed (who is doing what) without
+        // receiving other people's CRM record payloads.
+        json(res, 200, {
+          ok: true,
+          org_id: orgId,
+          crm_scope: accessScope.scope,
+          viewer_role: accessScope.actor?.role || null,
+          ...activity,
+        });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
     if (path === '/api/crm/team' && req.method === 'GET') {
       try {
         const body = {};
@@ -1418,7 +1518,10 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           return true;
         }
         const pullSpine = url.searchParams.get('pull_spine') !== '0';
-        const payload = await loadWorkspacePayload(orgId, access, pullSpine);
+        const payload = await loadWorkspacePayload(orgId, access, pullSpine, {
+          sessionId,
+          applyMemberScope: true,
+        });
         json(res, 200, { ok: true, ...payload });
         return true;
       }
@@ -1436,10 +1539,18 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           json(res, 503, { ok: false, error: 'Database not configured' });
           return true;
         }
-        const state = crmStore.sanitizeState(body.state || body);
+        const accessScope = await resolveCrmAccessScope(access, sessionId);
         const identityId = access.session?.identity_id || null;
         const ifUpdatedAt = body.if_updated_at || body.ifUpdatedAt || null;
-        const actor = await resolveCrmActor(access, sessionId);
+        const actor = accessScope.actor;
+        let state = crmStore.sanitizeState(body.state || body);
+        if (!accessScope.orgWide) {
+          const existing = await crmStore.getWorkspace(orgId);
+          state = crmStore.sanitizeState(
+            crmAccess.mergeMemberWorkspace(existing?.state || {}, state, actor),
+          );
+        }
+
         const saved = await crmStore.upsertWorkspace(orgId, state, identityId, {
           ifUpdatedAt,
           actor,
@@ -1447,6 +1558,9 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         });
 
         if (saved?.conflict) {
+          const conflictScoped = crmAccess.filterWorkspaceForAccess(saved.state || {}, actor, {
+            orgWide: accessScope.orgWide,
+          });
           json(res, 409, {
             ok: false,
             error: 'Workspace was updated by a teammate — reloading latest copy',
@@ -1454,9 +1568,10 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
             org_id: orgId,
             org_slug: access.orgSlug || null,
             org_display_name: access.org?.display_name || null,
-            state: saved.state,
+            state: conflictScoped.state,
             updated_at: saved.updated_at,
             schema_version: saved.schema_version,
+            crm_scope: conflictScoped.scope,
           });
           return true;
         }
@@ -1473,6 +1588,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           updated_by_name: updatedByName,
           updated_by_email: actor.email || null,
           updated_by_role: actor.role || null,
+          crm_scope: accessScope.scope,
         });
         return true;
       }
@@ -1500,4 +1616,9 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
   };
 }
 
-module.exports = { mountCrmRoutes };
+module.exports = {
+  mountCrmRoutes,
+  // Exported for unit tests
+  resolveCrmAccessScope,
+  loadWorkspacePayload,
+};

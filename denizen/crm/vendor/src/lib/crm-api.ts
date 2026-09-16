@@ -40,6 +40,7 @@ export type CrmWorkspaceState = {
 };
 
 export type CrmTeamMember = { display_name: string; email: string; role: string; is_self?: boolean };
+export type CrmScope = "own" | "org";
 export type CrmSessionInfo = {
   display_name: string | null;
   username?: string | null;
@@ -50,7 +51,27 @@ export type CrmSessionInfo = {
   team_role?: string | null;
   can_approve_skills?: boolean;
   is_owner?: boolean;
+  crm_scope?: CrmScope | null;
+  identity_id?: string | null;
   work_position?: { title?: string | null } | null;
+};
+
+export type CrmTeamActivityItem = {
+  kind: "usage" | "audit" | string;
+  at: string | null;
+  user: string;
+  action: string;
+  entity?: string | null;
+  entityId?: number | string | null;
+  detail: string;
+};
+
+export type CrmTeamActivityResult = {
+  ok: boolean;
+  feed: CrmTeamActivityItem[];
+  by_user: { user: string; actions: number; lastAt: string | null; lastDetail: string | null }[];
+  crm_scope?: CrmScope | null;
+  viewer_role?: string | null;
 };
 
 const LEGACY_CEO_NAME = /^dolonia$/i;
@@ -619,7 +640,7 @@ export async function ensureDenizenSession(): Promise<SessionStore | null> {
 }
 
 export type CrmFetchResult =
-  | { ok: true; state: CrmWorkspaceState; orgSlug: string | null; orgDisplayName: string | null; empty: boolean; updatedAt: string | null; updatedByName?: string | null }
+  | { ok: true; state: CrmWorkspaceState; orgSlug: string | null; orgDisplayName: string | null; empty: boolean; updatedAt: string | null; updatedByName?: string | null; crmScope?: CrmScope | null }
   | { ok: false; reason: "no_session" | "no_org" | "error"; error?: string };
 
 export type CrmAssistAction = {
@@ -658,6 +679,7 @@ export async function fetchCrmWorkspace(): Promise<CrmFetchResult> {
       empty: !!data.empty,
       updatedAt: data.updated_at || null,
       updatedByName: data.updated_by_name || null,
+      crmScope: data.crm_scope === "own" ? "own" : "org",
     };
   } catch (err) {
     return { ok: false, reason: "error", error: err instanceof Error ? err.message : String(err) };
@@ -1231,6 +1253,8 @@ export async function fetchCrmSession(): Promise<CrmSessionInfo | null> {
       team_role: data.team_role || null,
       can_approve_skills: !!data.can_approve_skills,
       is_owner: demo ? false : !!data.is_owner,
+      crm_scope: data.crm_scope === "own" ? "own" : "org",
+      identity_id: data.identity_id || null,
       work_position: data.work_position || null,
     };
   } catch {
@@ -1272,6 +1296,28 @@ export async function fetchCrmTeam(): Promise<{ members: CrmTeamMember[]; self: 
     };
   } catch {
     return { members: [], self: { display_name: null, email: null } };
+  }
+}
+
+export async function fetchCrmTeamActivity(limit = 40): Promise<CrmTeamActivityResult> {
+  const session = await ensureDenizenSession();
+  if (!session?.session_id) {
+    return { ok: false, feed: [], by_user: [] };
+  }
+  try {
+    const qs = `?session_id=${encodeURIComponent(session.session_id)}&limit=${encodeURIComponent(String(limit))}`;
+    const res = await fetchWithTimeout(`/api/crm/team/activity${qs}`, { headers: authHeaders(session) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, feed: [], by_user: [] };
+    return {
+      ok: true,
+      feed: Array.isArray(data.feed) ? data.feed : [],
+      by_user: Array.isArray(data.by_user) ? data.by_user : [],
+      crm_scope: data.crm_scope === "own" ? "own" : "org",
+      viewer_role: data.viewer_role || null,
+    };
+  } catch {
+    return { ok: false, feed: [], by_user: [] };
   }
 }
 

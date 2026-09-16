@@ -21,6 +21,8 @@ export interface Deal {
   forecastCategory?: string; leadSource?: string; commissionRate?: number;
   customFieldValues?: Record<string, any>;
   ownerId?: string;
+  ownerIdentityId?: string;
+  ownerEmail?: string;
 }
 export interface Note { id: number; contact: string; text: string; date: string; type: string; }
 export interface Subtask { id: number; title: string; done: boolean; }

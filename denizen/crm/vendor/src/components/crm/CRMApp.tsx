@@ -19,7 +19,7 @@ import { CRM_ROLES, getRole, DEFAULT_ROLE_ID } from "@/lib/crm-roles";
 import { DEFAULT_LEAD_MODEL_STATE, type LeadModelState } from "@/lib/crm-lead-model";
 import { IndustryConfigBridge } from "@/lib/crm-industry-bridge";
 import type { ProspectorLead } from "./AIProspector";
-import { ensureDenizenSession, markCrmDemoLoaded, markCrmUserEdited, postCrmEvent, intakeHandoff, fetchCrmWorkspace, fetchCrmTeam, fetchCrmSession, fetchVisitorAssistant, isCeoPrincipalSession, resolveProfileDisplayName, type CrmSendEmailResult, type CrmWorkspaceState, type CrmTeamMember } from "@/lib/crm-api";
+import { ensureDenizenSession, markCrmDemoLoaded, markCrmUserEdited, postCrmEvent, intakeHandoff, fetchCrmWorkspace, fetchCrmTeam, fetchCrmSession, fetchVisitorAssistant, isCeoPrincipalSession, resolveProfileDisplayName, type CrmSendEmailResult, type CrmWorkspaceState, type CrmTeamMember, type CrmScope } from "@/lib/crm-api";
 import { appendAudit, restoreWorkspace, type ClearableEntity, type RestoreMode } from "@/lib/crm-data-management";
 import { EmailComposeModal, type ComposeSeed } from "./EmailComposeModal";
 import { CommandPalette } from "./CommandPalette";
@@ -283,6 +283,9 @@ export default function CRMApp() {
 
   const [denizenProfile, setDenizenProfile] = useState({ name: "Guest", role: "Team member" });
   const [claimedNpcKey, setClaimedNpcKey] = useState<string | null>(null);
+  const [crmScope, setCrmScope] = useState<CrmScope>("org");
+  const [selfIdentityId, setSelfIdentityId] = useState<string | null>(null);
+  const [canManageTeam, setCanManageTeam] = useState(true);
 
   const trackUsage = useCallback((action: string, entity?: string, entityId?: number) => {
     const user = denizenProfile.name || "Guest";
@@ -336,6 +339,10 @@ export default function CRMApp() {
       };
       setDenizenProfile({ name, role: roleLabel(info) });
       if (info.email) setSelfEmail(info.email);
+      setCrmScope(info.crm_scope === "own" ? "own" : "org");
+      setSelfIdentityId(info.identity_id || null);
+      const manage = !!(info.ceo || info.is_owner || ["owner", "admin", "ceo"].includes(String(info.team_role || "").toLowerCase()) || info.crm_scope !== "own");
+      setCanManageTeam(manage);
       setCrmTeam(team.members);
       if (team.self?.email) setSelfEmail(team.self.email);
     })();
@@ -639,6 +646,8 @@ export default function CRMApp() {
       value: Number(formData.value) || 0, stage: industryConfig.pipelineStages[0] || "Lead", probability: 10,
       closeDate: formData.closeDate || "", daysInStage: 0, health: "good",
       ownerId: formData.ownerId || denizenProfile.name,
+      ownerIdentityId: selfIdentityId || undefined,
+      ownerEmail: selfEmail || undefined,
       customFieldValues: extractCustomFields("deal"),
     };
     const missing = validateDeal(newDeal, policy);
@@ -777,6 +786,8 @@ export default function CRMApp() {
       value: Number(formData.value) || existing.value, closeDate: formData.closeDate || existing.closeDate,
       stage: formData.stage || existing.stage,
       ownerId: formData.ownerId || existing.ownerId || denizenProfile.name,
+      ownerIdentityId: existing.ownerIdentityId || selfIdentityId || undefined,
+      ownerEmail: existing.ownerEmail || selfEmail || undefined,
       customFieldValues: { ...(existing.customFieldValues || {}), ...extractCustomFields("deal") },
     };
     const missing = validateDeal(updated, policy);
@@ -1222,6 +1233,8 @@ export default function CRMApp() {
           teamPolicy={policy}
           usageLog={usageLog}
           currentUserName={denizenProfile.name}
+          crmScope={crmScope}
+          canManageTeam={canManageTeam}
           onUpdateDeals={(next) => { setDeals(next); trackUsage("bulk_assign_deals", "deal"); }}
           onUpdateTasks={(next) => { setTasks(next); trackUsage("bulk_create_tasks", "task"); }}
           onUpdatePolicy={(p) => { setTeamPolicy(p); trackUsage("policy_updated", "team"); }}
@@ -1468,6 +1481,20 @@ export default function CRMApp() {
         padding: isMobile ? "66px 14px 80px" : "28px 32px",
         ...(isMobile ? { width: "100%" } : {}),
       }}>
+        {crmScope === "own" && (
+          <div style={{
+            marginBottom: 14,
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: `1px solid ${T.bg3}`,
+            background: T.bg2,
+            fontSize: 12,
+            color: T.text2,
+          }}>
+            Showing <strong style={{ color: T.text0 }}>your CRM records only</strong>. AI assistants and owners still see the full org.
+            {" "}Open <button type="button" onClick={() => handleNavigate("team")} style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", padding: 0, fontSize: 12 }}>Team viewer</button> to see what everyone is doing.
+          </div>
+        )}
         <div key={tab} className="crm-page-fade">
           {renderTab()}
         </div>
