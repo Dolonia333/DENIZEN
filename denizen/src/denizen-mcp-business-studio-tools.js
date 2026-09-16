@@ -9,6 +9,7 @@ const progress = require('./denizen-business-studio-progress');
 const e3 = require('./denizen-business-studio-e3-template');
 const funding = require('./denizen-business-studio-funding');
 const chain = require('./denizen-business-studio-chain');
+const founderPack = require('./denizen-business-studio-founder-pack');
 const denizenDb = require('./denizen-db');
 
 const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
@@ -53,6 +54,25 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
         founder_name: { type: 'string' },
       },
       required: ['template_id'],
+    },
+  },
+  {
+    name: 'business_studio_apply_founder_pack',
+    description:
+      'Fill the org Business Studio with Dolonia / DENIZEN living materials: business profile, '
+      + 'E3 PAVE (Dana customer), Lean Canvas (campus mesh / strategic brief), moat, mentor advisor, '
+      + 'and document evidence. Use when the founder asks to update their account from E3 docs. '
+      + 'Requires crm_write. Does not invent interview outcomes.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        business_name: { type: 'string' },
+        founder_name: { type: 'string' },
+        fill_lean_canvas: { type: 'boolean', description: 'Default true' },
+        fill_pave: { type: 'boolean', description: 'Default true' },
+        fill_moat: { type: 'boolean', description: 'Default true' },
+        fill_evidence: { type: 'boolean', description: 'Default true' },
+      },
     },
   },
   {
@@ -287,6 +307,37 @@ async function callTool(scope, name, args = {}) {
     }
     const saved = await saveState(scope, state);
     return { ok: true, template: bundle.templateName, program_id: bundle.program.id, persist: saved, orgId };
+  }
+
+  if (name === 'business_studio_apply_founder_pack') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { state } = loaded;
+    let result;
+    try {
+      result = founderPack.applyFounderPack(state, {
+        businessName: args.business_name || args.businessName,
+        founderName: args.founder_name || args.founderName,
+        fillLeanCanvas: args.fill_lean_canvas !== false && args.fillLeanCanvas !== false,
+        fillPave: args.fill_pave !== false && args.fillPave !== false,
+        fillMoat: args.fill_moat !== false && args.fillMoat !== false,
+        fillEvidence: args.fill_evidence !== false && args.fillEvidence !== false,
+      });
+    } catch (err) {
+      return { ok: false, error: err?.message || String(err) };
+    }
+    const saved = await saveState(scope, result.state);
+    return {
+      ok: true,
+      business: result.business,
+      program_id: result.programId,
+      lean_canvas_boxes: result.leanFilled,
+      pave_fields: result.paveFilled,
+      persist: saved,
+      guidance:
+        'Lean Canvas = campus mesh / education strategic brief. '
+        + 'PAVE = Dana founder-operator for DENIZEN. Do not mix personas when summarizing.',
+    };
   }
 
   if (name === 'business_studio_add_evidence') {

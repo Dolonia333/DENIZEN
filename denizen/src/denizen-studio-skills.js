@@ -60,6 +60,7 @@ const BUSINESS_STUDIO_READ_SKILLS = Object.freeze([
 
 const BUSINESS_STUDIO_WRITE_SKILLS = Object.freeze([
   'business-studio-apply-program-template',
+  'business-studio-apply-founder-pack',
   'business-studio-add-evidence',
   'business-studio-revoke-evidence',
   'business-studio-upsert-task',

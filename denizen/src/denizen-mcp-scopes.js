@@ -93,6 +93,7 @@ const TOOL_SCOPE = Object.freeze({
   studio_board_set_blockers: 'crm_write',
   studio_board_upsert_automation: 'crm_write',
   business_studio_apply_program_template: 'crm_write',
+  business_studio_apply_founder_pack: 'crm_write',
   business_studio_add_evidence: 'crm_write',
   business_studio_revoke_evidence: 'crm_write',
   business_studio_upsert_task: 'crm_write',

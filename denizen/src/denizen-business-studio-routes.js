@@ -5,6 +5,7 @@ const studioStore = require('./denizen-business-studio-store');
 const e3 = require('./denizen-business-studio-e3-template');
 const progress = require('./denizen-business-studio-progress');
 const funding = require('./denizen-business-studio-funding');
+const founderPack = require('./denizen-business-studio-founder-pack');
 const denizenDb = require('./denizen-db');
 const sessionCookie = require('./visitor-session-cookie');
 const visitorAccess = require('./visitor-access');
@@ -135,6 +136,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
             'GET|PUT /api/business-studio/workspace',
             'GET /api/business-studio/templates',
             'POST /api/business-studio/programs/apply-template',
+            'POST /api/business-studio/apply-founder-pack',
             'GET /api/business-studio/progress',
             'GET /api/business-studio/explain',
             'POST /api/business-studio/advisors',
@@ -279,6 +281,55 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         }
 
         json(res, 200, { ok: true, bundle });
+        return true;
+      }
+
+      if (path === '/api/business-studio/apply-founder-pack' && req.method === 'POST') {
+        const body = await readJsonBody(req);
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgId(access);
+        const loaded = await loadOrgState(orgId);
+        const maybeAdvisor = findAdvisor(loaded.state, access);
+        if (!isFounderCapable(access, maybeAdvisor)) {
+          json(res, 403, { ok: false, error: 'Advisors cannot apply the founder pack' });
+          return true;
+        }
+        let result;
+        try {
+          result = founderPack.applyFounderPack(loaded.state, {
+            businessName: body.businessName || body.business_name,
+            founderName: body.founderName || body.founder_name,
+            fillLeanCanvas: body.fillLeanCanvas !== false && body.fill_lean_canvas !== false,
+            fillPave: body.fillPave !== false && body.fill_pave !== false,
+            fillMoat: body.fillMoat !== false && body.fill_moat !== false,
+            fillEvidence: body.fillEvidence !== false && body.fill_evidence !== false,
+          });
+        } catch (err) {
+          json(res, 400, { ok: false, error: err?.message || String(err) });
+          return true;
+        }
+        if (orgId && denizenDb.enabled && body.persist !== false) {
+          const saved = await persistOrgState(orgId, result.state, actorFromAccess(access).identityId);
+          json(res, 200, {
+            ok: true,
+            business: result.business,
+            program_id: result.programId,
+            lean_canvas_boxes: result.leanFilled,
+            pave_fields: result.paveFilled,
+            workspace: saved,
+          });
+          return true;
+        }
+        json(res, 200, {
+          ok: true,
+          mode: 'local',
+          business: result.business,
+          program_id: result.programId,
+          lean_canvas_boxes: result.leanFilled,
+          pave_fields: result.paveFilled,
+          state: result.state,
+        });
         return true;
       }
 

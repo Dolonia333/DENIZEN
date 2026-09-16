@@ -328,6 +328,7 @@ const STUDIO_SKILL_HINTS = [
   'business-studio-explain',
   'business-studio-funding-readiness',
   'business-studio-add-evidence',
+  'business-studio-apply-founder-pack',
 ];
 
 for (const name of Object.keys(BY_NAME)) {
