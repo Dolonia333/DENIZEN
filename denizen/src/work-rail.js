@@ -252,6 +252,7 @@
 
   function wireRailClicks(el, { onClose, setTabId }) {
     let lastActAt = 0;
+    let lastTabId = '';
     const mark = () => { lastActAt = Date.now(); };
     const recentlyHandled = () => Date.now() - lastActAt < 450;
 
@@ -309,14 +310,18 @@
     };
 
     // Direct per-tab binds — same path as phone Me tabs; survives iOS click-drop.
+    // Only suppress duplicate events for the *same* tab (pointerup + synthetic click),
+    // never block switching to a different section.
     const bindPress = window.DenizenTouchBind?.bindPress;
     el.querySelectorAll('[data-tab]').forEach((btn) => {
       const go = (e) => {
-        if (recentlyHandled()) return;
+        const id = btn.dataset.tab;
+        if (id === lastTabId && recentlyHandled()) return;
         e?.preventDefault?.();
         e?.stopPropagation?.();
+        lastTabId = id;
         mark();
-        setTabId(btn.dataset.tab);
+        setTabId(id);
       };
       if (bindPress) bindPress(btn, go, { stop: true });
       else btn.addEventListener('click', go);
@@ -339,6 +344,8 @@
       }
       if (e.target.closest?.('[data-tab]')) {
         // Fallback when TouchBind is unavailable and only click fired.
+        const tab = e.target.closest('[data-tab]');
+        lastTabId = tab.dataset.tab;
         activate(e);
         mark();
         return;
