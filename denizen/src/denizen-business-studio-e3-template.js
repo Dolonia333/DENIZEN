@@ -32,10 +32,10 @@ function buildE3Template(opts = {}) {
       stageId: 'validate',
       key: 'discovery_interviews',
       title: 'Customer discovery interviews',
-      description: 'Complete 10 interviews with CTE/IT decision makers.',
+      description: 'Complete 10 interviews with Dana-style founder-operators (3–8 person technical shops). Do not mix CareerTech into this E3 list.',
       evidenceType: 'interview',
       targetCount: 10,
-      linkedAssumptionKey: 'schools_hate_recurring_ai_cost',
+      linkedAssumptionKey: 'sessions_die_no_office',
     },
     {
       id: uid('req'),
@@ -53,7 +53,7 @@ function buildE3Template(opts = {}) {
       stageId: 'pilot',
       key: 'pilot_agreement',
       title: 'Pilot evaluation agreement',
-      description: 'At least one district/org agrees to evaluate a pilot.',
+      description: 'At least one Dana (or shop) agrees to evaluate a paid seat / pilot.',
       evidenceType: 'signed_pilot',
       targetCount: 1,
     },
@@ -138,8 +138,8 @@ function buildE3Template(opts = {}) {
   const assumptions = [
     {
       id: uid('asm'),
-      key: 'schools_hate_recurring_ai_cost',
-      title: 'Schools view recurring cloud AI/API expense as a meaningful barrier',
+      key: 'sessions_die_no_office',
+      title: 'Founder-operators lose work when AI chat sessions die — no shared memory or receipts',
       status: 'testing',
       confidence: 'insufficient',
       programId,
@@ -150,8 +150,8 @@ function buildE3Template(opts = {}) {
   const experiments = [
     {
       id: uid('exp'),
-      title: 'Interview 10 CTE/IT decision makers',
-      assumptionKey: 'schools_hate_recurring_ai_cost',
+      title: 'Interview 10 Dana founder-operators',
+      assumptionKey: 'sessions_die_no_office',
       status: 'active',
       targetCount: 10,
       completedCount: 0,
@@ -164,7 +164,7 @@ function buildE3Template(opts = {}) {
   const goals = [
     {
       id: uid('goal'),
-      title: 'Validate DENIZEN / Dolonia problem-solution fit for education buyers',
+      title: 'Validate DENIZEN problem-solution fit for Dana (founder-operator) buyers',
       status: 'active',
       programId,
       metricKeys: ['discovery_interviews'],

@@ -1388,9 +1388,9 @@ function buildE3Template(opts){
     {
       id:uid('req'),programId,stageId:'validate',key:'discovery_interviews',
       title:'Customer discovery interviews',
-      description:'Complete 10 interviews with target decision makers.',
+      description:'Complete 10 interviews with Dana-style founder-operators (3–8 person technical shops).',
       evidenceType:'interview',targetCount:10,
-      linkedAssumptionKey:'core_problem_assumption'
+      linkedAssumptionKey:'sessions_die_no_office'
     },
     {
       id:uid('req'),programId,stageId:'validate',key:'pave_part_b',
@@ -1401,7 +1401,7 @@ function buildE3Template(opts){
     {
       id:uid('req'),programId,stageId:'pilot',key:'pilot_agreement',
       title:'Pilot evaluation agreement',
-      description:'At least one org agrees to evaluate a pilot.',
+      description:'At least one Dana (or shop) agrees to evaluate a paid seat / pilot.',
       evidenceType:'document',targetCount:1
     }
   ];
@@ -1428,19 +1428,19 @@ function buildE3Template(opts){
   ];
 
   const assumptions=[{
-    id:uid('asm'),key:'core_problem_assumption',
-    title:'Target customers view the core problem as urgent enough to change tools',
+    id:uid('asm'),key:'sessions_die_no_office',
+    title:'Founder-operators lose work when AI chat sessions die — no shared memory or receipts',
     status:'testing',confidence:'insufficient',programId,createdAt:now
   }];
 
   const experiments=[{
-    id:uid('exp'),title:'Interview 10 target decision makers',
-    assumptionKey:'core_problem_assumption',status:'active',targetCount:10,completedCount:0,
+    id:uid('exp'),title:'Interview 10 Dana founder-operators',
+    assumptionKey:'sessions_die_no_office',status:'active',targetCount:10,completedCount:0,
     programId,method:'customer_interview',createdAt:now
   }];
 
   const goals=[{
-    id:uid('goal'),title:'Validate problem-solution fit for primary buyers',
+    id:uid('goal'),title:'Validate DENIZEN problem-solution fit for Dana buyers',
     status:'active',programId,metricKeys:['discovery_interviews'],createdAt:now
   }];
 
@@ -2063,6 +2063,61 @@ function applyE3Template(opts){
   scheduleSave();
   toast('Applied E3 / PAVE template');
 }
+
+/** One-shot: business + E3 + living PAVE + Lean Canvas + strategic moat (Dolonia docs). */
+function applyDoloniaFounderPack(){
+  const businessName='Dolonia (product: DENIZEN)';
+  const founderName='Zion Van Zandt and Shawnaya Williams';
+  state.business={
+    id:(state.business&&state.business.id)||uid('biz'),
+    name:businessName,
+    founderName:founderName,
+    createdAt:(state.business&&state.business.createdAt)||nowISO()
+  };
+  applyE3Template({businessName:businessName,founderName:founderName});
+  const prog=activeProgram();
+  if(prog){
+    prog.pave=Object.assign(emptyPave(), denizenPaveDraft(), {updatedAt:nowISO(), reviews:(prog.pave&&prog.pave.reviews)||[]});
+    prog.pave.snapshot=Object.assign({}, prog.pave.snapshot, {
+      company:businessName,
+      founders:founderName,
+      i2eAdvisor:'Srijita Ghosh (i2E) — Mentor Call A: Mon Aug 31, 1:00–1:45 PM CDT',
+      cohort:'i2E E3 Cohort 63'
+    });
+    prog.pave=syncPartBFromDiscovery(prog.pave, state, {force:true});
+    syncPavePartBEvidence(prog);
+  }
+  state.funding=state.funding||emptyFunding();
+  state.funding.leanCanvas=Object.assign(emptyLeanCanvas(), denizenLeanCanvasDraft(), {updatedAt:nowISO()});
+  syncLeanCanvasEvidence(state.funding.leanCanvas);
+  state.funding.moat=Object.assign({}, state.funding.moat||{}, {
+    primaryClaim:'Hardware sovereignty + opt-in campus mesh: local inference on idle lab hardware removes recurring cloud API cost and keeps student prompts on-campus (FERPA).',
+    primaryWhy:'Districts cannot sustain OpenAI/AWS token bills; FERPA blocks unvetted prompts; labs sit idle 16+ hours/day.',
+    primaryCopyDifficulty:'hard',
+    primaryMonthsToCopy:18
+  });
+  state.funding.capitalPlan=Object.assign({}, state.funding.capitalPlan||{}, {
+    stage:'pre_revenue',
+    pathwayStep:'readiness',
+    notes:'Education mesh: annual B2B SaaS + Perkins V / STEM grants. DENIZEN E3: find ten Danas ($49/team or $199/lab).'
+  });
+  state.advisors=state.advisors||[];
+  if(!state.advisors.some(function(a){return /Srijita/i.test(a.name||'');})){
+    state.advisors.push({
+      id:uid('adv'),
+      name:'Srijita Ghosh',
+      role:'i2E E3 Mentor',
+      org:'i2E',
+      notes:'Mentor Call A: Mon Aug 31, 1:00–1:45 PM CDT. Final PAVE advisor TBD.',
+      createdAt:nowISO()
+    });
+  }
+  logActivity('Applied Dolonia founder pack (Lean Canvas + PAVE + moat)');
+  scheduleSave();
+  ui.view='overview';
+  render();
+  toast('Dolonia account filled — Lean Canvas + PAVE + moat from your E3 docs');
+}
 function startBusiness(name, founder){
   state.business={
     id:uid('biz'),
@@ -2376,11 +2431,11 @@ function renderOnboarding(){
     +'</div>'
     +'<div class="welcome-body">'
     +'<div class="actions">'
-    +'<button type="button" class="btn btn-primary" data-action="start-business">Start your business</button>'
+    +'<button type="button" class="btn btn-primary" data-action="fill-dolonia-pack">Fill Dolonia account</button>'
     +'<button type="button" class="btn btn-forest" data-action="apply-e3-onboard">Apply E3 / PAVE</button>'
-    +'<button type="button" class="btn btn-ghost" data-action="import-stub">Import</button>'
+    +'<button type="button" class="btn" data-action="start-business">Start blank</button>'
     +'</div>'
-    +'<p class="field-hint">Import is Phase 2 — not built yet. PAVE is a living worksheet mentors can review anytime.</p>'
+    +'<p class="field-hint">Fill Dolonia account loads your Lean Canvas (campus mesh), living PAVE (Dana), moat, and E3 mentor from the E3 docs.</p>'
     +'</div></div></div>';
 }
 
@@ -2407,7 +2462,8 @@ function renderOverview(){
     +'<p>'+esc((b&&b.name)||'Your business')+' — command center for evidence-gated progress, not busywork.</p>'
     +'<div class="actions" style="margin-top:18px"><button type="button" class="btn btn-primary" data-action="quickadd">+ Add</button>'
     +'<button type="button" class="btn" data-nav="pave">PAVE workbook</button>'
-    +'<button type="button" class="btn" data-nav="funding">Funding readiness</button></div>'
+    +'<button type="button" class="btn" data-nav="funding">Funding readiness</button>'
+    +'<button type="button" class="btn btn-forest" data-action="fill-dolonia-pack">Refresh Dolonia pack</button></div>'
     +'</div>'
     +'<div class="hero-stat"><div><div class="big num">'+(prog.percent==null?'—':(prog.percent+'%'))+'</div>'
     +'<div class="label">Program progress · evidence only</div></div>'
@@ -3763,6 +3819,9 @@ document.addEventListener('click', function(e){
         {name:'name',label:'Business name',required:true},
         {name:'founder',label:'Founder name',required:true,value:'Founder'}
       ],function(d){ startBusiness(d.name,d.founder); });
+    }
+    if(a==='fill-dolonia-pack'){
+      applyDoloniaFounderPack();
     }
     if(a==='apply-e3' || a==='apply-e3-onboard'){
       if(!state.business){
