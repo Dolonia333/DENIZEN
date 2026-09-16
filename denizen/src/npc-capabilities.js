@@ -305,6 +305,31 @@ const CRM_READ_LINE = 'Read Meridian CRM — pipeline, tasks, setup progress, at
 const CRM_WRITE_LINE = 'Update Meridian CRM — add contacts, move deals, create tasks, apply industry templates';
 const CRM_ASK = ['Summarize our Meridian CRM', 'What CRM setup steps are left?', 'Show overdue CRM tasks'];
 
+const STUDIO_BOARD_READ_LINE = 'Read Studio Board — agency tracker tasks, people, events, timeline, columns, and automations (/studio-board/)';
+const STUDIO_BOARD_WRITE_LINE = 'Update Studio Board — upsert/advance tasks, assign people, comments, blockers, notes, columns';
+const BUSINESS_STUDIO_READ_LINE = 'Read Business Studio / Founder OS — PAVE programs, evidence chain, funding readiness, experiments (/business-studio/)';
+const BUSINESS_STUDIO_WRITE_LINE = 'Update Business Studio — apply program templates, attach/revoke evidence, goals, tasks, experiments';
+const STUDIO_ASK = [
+  'Show Studio Board working set',
+  'What is overdue on Studio Board?',
+  'Give me the Business Studio founder brief',
+  'What is our funding readiness in Business Studio?',
+];
+
+const STUDIO_SKILL_HINTS = [
+  'studio-board-working-set',
+  'studio-board-brief',
+  'studio-board-standup',
+  'studio-board-list-tasks',
+  'studio-board-upsert-task',
+  'studio-board-advance-task',
+  'business-studio-working-set',
+  'business-studio-brief',
+  'business-studio-explain',
+  'business-studio-funding-readiness',
+  'business-studio-add-evidence',
+];
+
 for (const name of Object.keys(BY_NAME)) {
   const cap = BY_NAME[name];
   if (!cap.canDo.includes(CRM_READ_LINE)) cap.canDo.push(CRM_READ_LINE);
@@ -313,12 +338,23 @@ for (const name of Object.keys(BY_NAME)) {
   if (persona?.setupOwner?.length) {
     cap.canDo.push(`Guide CRM onboarding: ${persona.setupOwner.join(', ')}`);
   }
+  if (!cap.canDo.includes(STUDIO_BOARD_READ_LINE)) cap.canDo.push(STUDIO_BOARD_READ_LINE);
+  if (!cap.canDo.includes(BUSINESS_STUDIO_READ_LINE)) cap.canDo.push(BUSINESS_STUDIO_READ_LINE);
+  // Writes advertised broadly; MCP token crm_write still gates mutations.
+  if (!cap.canDo.includes(STUDIO_BOARD_WRITE_LINE)) cap.canDo.push(STUDIO_BOARD_WRITE_LINE);
+  if (!cap.canDo.includes(BUSINESS_STUDIO_WRITE_LINE)) cap.canDo.push(BUSINESS_STUDIO_WRITE_LINE);
   for (const q of CRM_ASK) {
+    if (!cap.askMe.includes(q)) cap.askMe.push(q);
+  }
+  for (const q of STUDIO_ASK) {
     if (!cap.askMe.includes(q)) cap.askMe.push(q);
   }
   if (!cap.skills.includes('denizen-data')) cap.skills.push('denizen-data');
   if (!cap.skills.includes('consult-grok')) cap.skills.push('consult-grok');
   if (!cap.skills.includes('consult-mentors')) cap.skills.push('consult-mentors');
+  for (const s of STUDIO_SKILL_HINTS) {
+    if (!cap.skills.includes(s)) cap.skills.push(s);
+  }
 }
 
 const DISPLAY_NAMES = Object.keys(BY_NAME);

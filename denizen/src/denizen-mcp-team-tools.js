@@ -74,7 +74,8 @@ const TEAM_TOOL_DEFINITIONS = [
     name: 'team_standup',
     description:
       'One-call team sync: human presence (WS + MCP), your handoff inbox, Cursor work queue, '
-      + 'office directives, CRM task snapshot. Start every collaborative session with this.',
+      + 'office directives, CRM tasks, Studio Board brief, Business Studio founder brief. '
+      + 'Start every collaborative session with this.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -85,6 +86,10 @@ const TEAM_TOOL_DEFINITIONS = [
         include_cursor: {
           type: 'boolean',
           description: 'Include pending Cursor work (default true)',
+        },
+        include_studio: {
+          type: 'boolean',
+          description: 'Include Studio Board + Business Studio briefs (default true)',
         },
       },
     },
@@ -610,6 +615,7 @@ async function toolAcknowledgeHandoff(scope, args) {
 async function toolTeamStandup(scope, args = {}) {
   const includeCrm = args?.include_crm !== false;
   const includeCursor = args?.include_cursor !== false;
+  const includeStudio = args?.include_studio !== false;
   const sessionLinked = Boolean(scope?.session_id);
   if (scope?.npc_key) touchMcpPresenceByNpc(scope.npc_key);
 
@@ -668,6 +674,23 @@ async function toolTeamStandup(scope, args = {}) {
     }
   }
 
+  let studioBoard = null;
+  let businessStudio = null;
+  if (includeStudio) {
+    try {
+      const mcpStudioBoardTools = require('./denizen-mcp-studio-board-tools.js');
+      studioBoard = await mcpStudioBoardTools.callTool(scope, 'studio_board_brief', {});
+    } catch (e) {
+      studioBoard = { ok: false, error: e?.message || String(e) };
+    }
+    try {
+      const mcpBusinessStudioTools = require('./denizen-mcp-business-studio-tools.js');
+      businessStudio = await mcpBusinessStudioTools.callTool(scope, 'business_studio_brief', {});
+    } catch (e) {
+      businessStudio = { ok: false, error: e?.message || String(e) };
+    }
+  }
+
   const online = (team.teammates || []).filter((t) => t.online);
   const needsYou = (handoffs.handoffs || []).length;
   const pendingCursor = cursorWork?.count || cursorWork?.items?.length || 0;
@@ -695,11 +718,25 @@ async function toolTeamStandup(scope, args = {}) {
       detail: `${urgentDirs.length} urgent NPC directive(s)`,
     });
   }
+  if (studioBoard?.ok !== false && (studioBoard?.overdue_count || studioBoard?.stuck_count)) {
+    actionItems.push({
+      priority: 'normal',
+      action: 'studio-board-working-set',
+      detail: 'Studio Board has overdue/stuck work — run studio-board-working-set then update tasks',
+    });
+  }
+  if (businessStudio?.ok !== false && businessStudio?.recommended_next_action) {
+    actionItems.push({
+      priority: 'normal',
+      action: 'business-studio-working-set',
+      detail: `Business Studio next: ${String(businessStudio.recommended_next_action).slice(0, 160)}`,
+    });
+  }
   if (!actionItems.length) {
     actionItems.push({
       priority: 'low',
       action: 'none',
-      detail: 'No blocking handoffs or Cursor work — sync CRM / continue current task',
+      detail: 'No blocking handoffs or Cursor work — sync CRM / Studio Board / Business Studio',
     });
   }
 
@@ -740,6 +777,8 @@ async function toolTeamStandup(scope, args = {}) {
       summary: recentOutcomes.summary || null,
     },
     crm_tasks: crmTasks,
+    studio_board: studioBoard,
+    business_studio: businessStudio,
     inference: extras.inference,
     action_items: actionItems,
     next_poll: {

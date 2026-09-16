@@ -8,6 +8,7 @@
 const npcCapabilities = require('./npc-capabilities');
 const npcRoster = require('./npc-roster');
 const skillJobs = require('./denizen-mcp-skill-jobs');
+const studioSkills = require('./denizen-studio-skills');
 
 let _deps = {};
 
@@ -29,6 +30,10 @@ function resolveTargetNpc(nameOrKey) {
   if (byFolder) return byFolder.display;
   const byDisplay = (npcRoster.entries || []).find((e) => e.display.toLowerCase() === q);
   return byDisplay?.display || null;
+}
+
+function normalizeSkillName(skill) {
+  return String(skill || '').trim().toLowerCase().replace(/_/g, '-');
 }
 
 function listSkillsForNpc(npcKey) {
@@ -54,11 +59,15 @@ function listSkillsForNpc(npcKey) {
       }
     }
   }
+  // Studio Board + Business Studio — same dual path as CRM (MCP tools + run_skill aliases)
+  for (const s of studioSkills.skillsForNpc(npcKey, { canWrite: true })) {
+    skills.add(s);
+  }
   return [...skills].sort();
 }
 
 function assertSkillAllowed(npcKey, skill) {
-  const normalized = String(skill || '').trim().toLowerCase();
+  const normalized = normalizeSkillName(skill);
   if (!normalized) return { ok: false, error: 'skill required' };
   let crmPersonas;
   try {
@@ -68,9 +77,12 @@ function assertSkillAllowed(npcKey, skill) {
     crmPersonas = null;
   }
   const display = displayNameForKey(npcKey);
-  const capSkills = new Set(npcCapabilities.getCapabilities(display)?.skills || []);
+  const capSkills = new Set(
+    (npcCapabilities.getCapabilities(display)?.skills || []).map(normalizeSkillName),
+  );
   if (capSkills.has(normalized)) return { ok: true, skill: normalized };
   if (crmPersonas?.canNpcRunSkill(display, normalized)) return { ok: true, skill: normalized };
+  if (studioSkills.isStudioSkill(normalized)) return { ok: true, skill: normalized };
   return {
     ok: false,
     error: `skill not allowed for ${display}: ${normalized}`,
@@ -126,7 +138,7 @@ function sleep(ms) {
 async function toolRunSkill(scope, args) {
   const gate = assertSkillAllowed(scope.npc_key, args?.skill);
   if (!gate.ok) return gate;
-  if (typeof _deps.runNpcSkill !== 'function') {
+  if (typeof _deps.runNpcSkill !== 'function' && !studioSkills.isStudioSkill(gate.skill)) {
     return { ok: false, error: 'skill runner not configured on server' };
   }
 
@@ -148,11 +160,15 @@ async function toolRunSkill(scope, args) {
     sessionId: scope.session_id || null,
   });
 
-  const promise = Promise.resolve()
-    .then(() => _deps.runNpcSkill(display, gate.skill, params, {
+  const runSkillBody = studioSkills.isStudioSkill(gate.skill)
+    ? () => studioSkills.runStudioSkill(scope, gate.skill, params)
+    : () => _deps.runNpcSkill(display, gate.skill, params, {
       broadcast,
       sessionId: scope.session_id || null,
-    }))
+    });
+
+  const promise = Promise.resolve()
+    .then(runSkillBody)
     .then((result) => {
       skillJobs.completeJob(job.id, result || {});
       return result;

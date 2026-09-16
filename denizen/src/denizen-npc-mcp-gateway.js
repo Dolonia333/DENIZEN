@@ -707,14 +707,17 @@ async function handleRestSync(req, res, action) {
     if (action === 'team-standup') {
       let includeCrm = true;
       let includeCursor = true;
+      let includeStudio = true;
       try {
         const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
         if (u.searchParams.get('include_crm') === 'false') includeCrm = false;
         if (u.searchParams.get('include_cursor') === 'false') includeCursor = false;
+        if (u.searchParams.get('include_studio') === 'false') includeStudio = false;
       } catch (_) { /* keep defaults */ }
       const result = await callTool(scope, 'team_standup', {
         include_crm: includeCrm,
         include_cursor: includeCursor,
+        include_studio: includeStudio,
       });
       return sendJson(res, result?.ok ? 200 : 400, result);
     }
@@ -802,6 +805,9 @@ function buildOpenApiSpec(baseUrl) {
         'REST bridge for ChatGPT Custom GPT Actions. YOU execute work via runNpcSkill. '
         + 'Long work: runNpcSkill with wait=false → poll getSkillJob. '
         + 'Collaborate via getTeamStandup + listHandoffs + ackHandoff. '
+        + 'Operating surfaces: Meridian CRM (crm-*), Studio Board (studio-board-*), '
+        + 'Business Studio / Founder OS (business-studio-*). '
+        + 'Prefer *-working-set / *-brief before writes. '
         + 'assignNpcTask is blocked (queues slow local NPC). '
         + 'Mint a Standard/Full Connect AI token.',
       version: '2.0.0',
@@ -918,7 +924,10 @@ function buildOpenApiSpec(baseUrl) {
                   properties: {
                     skill: {
                       type: 'string',
-                      description: 'Skill name from listNpcSkills, e.g. research, web-search, crm-summary',
+                      description:
+                        'Skill from listNpcSkills. Examples: research, crm-summary, '
+                        + 'studio-board-working-set, studio-board-brief, studio-board-upsert-task, '
+                        + 'business-studio-working-set, business-studio-brief, business-studio-add-evidence',
                     },
                     params: {
                       type: 'object',
@@ -977,7 +986,7 @@ function buildOpenApiSpec(baseUrl) {
       '/api/npc-sync/team-standup': {
         get: {
           operationId: 'getTeamStandup',
-          summary: 'One-shot team sync: presence, handoff inbox, Cursor work, directives, CRM tasks',
+          summary: 'One-shot team sync: presence, handoffs, Cursor, CRM, Studio Board, Business Studio',
           parameters: [
             {
               name: 'include_crm',
@@ -986,6 +995,11 @@ function buildOpenApiSpec(baseUrl) {
             },
             {
               name: 'include_cursor',
+              in: 'query',
+              schema: { type: 'boolean', default: true },
+            },
+            {
+              name: 'include_studio',
               in: 'query',
               schema: { type: 'boolean', default: true },
             },
@@ -1073,9 +1087,12 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
           npcLabel: npcDisplayName(npcKey),
         }),
         'Never use assignNpcTask — it is blocked and only queues the slow local office AI.',
-        'Start collaborative sessions with getTeamStandup. Follow action_items. Poll listHandoffs; after you act, call ackHandoff.',
+        'Start collaborative sessions with getTeamStandup (includes CRM + Studio Board + Business Studio briefs). Follow action_items. Poll listHandoffs; after you act, call ackHandoff.',
         'Do work with runNpcSkill (default wait=false). If you get a job_id / status=running, poll getSkillJob until status is done or failed, then summarize output.',
-        'Start hard jobs with listNpcSkills, then runNpcSkill with a clear params object (query/task/note).',
+        'Operating surfaces via runNpcSkill: Meridian CRM (crm-*), Studio Board /studio-board/ (studio-board-*), Business Studio Founder OS /business-studio/ (business-studio-*).',
+        'Before creating Studio Board tasks: studio-board-working-set then studio-board-brief. Updates: studio-board-upsert-task, studio-board-advance-task, studio-board-assign-task, studio-board-add-comment.',
+        'Before changing Founder OS: business-studio-working-set / business-studio-brief. Evidence is gated — use business-studio-add-evidence / business-studio-explain; check business-studio-funding-readiness.',
+        'Start hard jobs with listNpcSkills, then runNpcSkill with a clear params object (query/task/note/id/title).',
         'Use getNpcStatus when you need NPC-only status. Use updateNpcMemory for lasting context. Use logNpcActivity after you finish.',
         'Prefer the Denizen MCP connector URL for full CRM / Studio Board / Business Studio tools when Custom GPT Actions are too thin.',
       ].join(' '),
