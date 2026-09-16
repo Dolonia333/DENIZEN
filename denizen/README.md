@@ -1,10 +1,12 @@
 # DENIZEN
 
-**Real-time visual observability layer for AI agents.** Watch autonomous AI agents collaborate, communicate, and execute tasks in a pixel-art office — every agent action rendered as NPC behavior you can see.
+**The office for your AI agents — Floor, Workbench, and Buzz.** Watch autonomous AI agents collaborate, communicate, and execute tasks in a pixel-art office — every agent action rendered as NPC behavior you can see.
 
 Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/) asset pack.
 
 ![Denizen Preview](assets/ref_Hu4Gzs.png)
+
+**Maintained dossier:** [docs/TECHNICAL_DOSSIER.md](docs/TECHNICAL_DOSSIER.md) (v1.8.0) · facts: [data/canonical/denizen-facts.json](data/canonical/denizen-facts.json)
 
 ---
 

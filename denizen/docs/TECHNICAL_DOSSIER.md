@@ -1,17 +1,16 @@
 # DENIZEN — Technical Dossier
 
-**Version 1.7.0 · source of record · verified against commit `d25bc7a2` (2026-07-24), surveyed 2026-07-25**
+**Version 1.8.0 · source of record · headline metrics re-measured at commit `1cab7977` (2026-09-16); subsystem deep-survey still anchored to `d25bc7a2` (2026-07-25) unless noted**
 
 This is the maintained, in-repo source for the DENIZEN Technical Dossier. The branded PDF is
 *rendered from this file plus `data/canonical/denizen-facts.json`* — it is not authored separately.
 Skin, tokens and the render chain are specified in [BRANDED_DOSSIER_SYSTEM.md](BRANDED_DOSSIER_SYSTEM.md).
 
-> **Why this file exists.** The previous dossier (v1.6.0, 57 pages) existed only as a PDF pinned to
-> commit `ae3ddf9` (2026-06-13). By the time it was next read, **236 commits and +266,389 / −10,739
-> lines** had landed and roughly a third of its headline numbers were wrong, with two entire product
-> lines missing. A document that cannot be regenerated from the repo will always drift. This one can.
-> See [Appendix E](#appendix-e--delta-from-v160) for the full delta and
-> [Appendix D](#appendix-d--verification-appendix) for the commands that reproduce every number below.
+> **Why this file exists.** The v1.6.0 PDF lived only as a standalone export pinned to `ae3ddf9`.
+> v1.7.0 moved the dossier into the repo. v1.8.0 catches the next product wave: **Buzz, Workbench,
+> Seat an AI, Studio Board, CRM member scope / team viewer, and living-office NPC behavior** — none
+> of which appear in the uploaded v1.6.0 PDF. See [Appendix E](#appendix-e--delta-from-v160) and
+> [Appendix E2](#appendix-e2--delta-from-v170) plus [Appendix D](#appendix-d--verification-appendix).
 
 ---
 
@@ -35,9 +34,10 @@ Skin, tokens and the render chain are specified in [BRANDED_DOSSIER_SYSTEM.md](B
 
 ### Provenance and honesty rules
 
-Every number in this document was read from the repository at `d25bc7a2` by nine independent
-subsystem surveys on 2026-07-25, each required to cite `file:line`. Where a survey and an existing doc
-disagreed, **the source tree won and the disagreement is recorded** rather than quietly resolved.
+Headline scale numbers (server LOC, module count, migrations, docs, test files, roster size) were
+re-measured at `1cab7977` on 2026-09-16. Deeper subsystem claims that are unchanged since July still
+cite the nine surveys at `d25bc7a2` (2026-07-25). Where a survey and an existing doc disagreed,
+**the source tree won and the disagreement is recorded** rather than quietly resolved.
 
 Status tags are used throughout and mean exactly this:
 
@@ -51,44 +51,43 @@ Status tags are used throughout and mean exactly this:
 
 **What this document does not claim.**
 
-- "Built" does not mean "applied to every production tenant." Production runs **47 of 51 migrations**
-  and lags the repo — see §7 and §8.
-- Test counts and LOC are pinned to `d25bc7a2`. Production is deployed by
-  `infra/deploy-denizen-to-nas.py` and patched by `hotfix-*.py`, so **the running system is routinely
-  ahead of both the last image and the last commit.** Do not quote these figures as production facts
-  without re-verifying.
+- "Built" does not mean "applied to every production tenant." Production previously lagged at
+  **47 of 51 migrations**; the repo now has **52** migrations — re-verify against the live NAS
+  before quoting applied counts (§7 / §8 / Part III M6).
+- Full suite pass/fail counts below that are still labeled July were **not** re-run for v1.8.0.
+  Headline LOC / file counts were. Production is deployed by `infra/deploy-denizen-to-nas.py` and
+  patched by `hotfix-*.py`, so **the running system is routinely ahead of both the last image and
+  the last commit.**
 - No revenue, fundraising, or customer-count figure appears here. Those are operator-supplied only.
-- The ~82.5% prediction-accuracy figure carried by earlier versions is **withdrawn pending
+- The ~82.5% prediction-accuracy figure carried by earlier versions remains **withdrawn pending
   re-derivation** — see §7.
-- Version 1.7.0 is a working label for the July 2026 feature set. Release numbering is the operator's call.
+- Version 1.8.0 is a working label for the September 2026 customer-surface wave. Release numbering
+  is the operator's call.
 
-### Current state at a glance — v1.7.0
+### Current state at a glance — v1.8.0
 
 | Metric | Value | Provenance |
 |---|---|---|
-| Tests executed | **1,439** in the `npm test` set · **1,581** across all three runners | live run, 89.9 s |
-| Tests passing | **1,432 pass / 7 fail / 6 failing files** — suite exits 1 | live run |
-| `server.js` | **13,537 lines**, raw `http.createServer`, no framework | measured |
-| Route templates | **331** across 20 prefix mounts, from 372 dispatch sites | measured |
-| `src/` modules | **334 top-level / 374 recursive**, 133,216 LOC — but **18 of the 30 largest are browser code** | measured |
-| Total JS | **246,487 LOC** across 846 tracked `.js`/`.mjs` files | measured |
-| Migrations | **51** ordered, additive-only · **47 applied in production** | measured |
-| Database tables | **77** created here, + 13 externally-owned platform tables altered | measured |
-| Agent roster | **18 live agents** (`src/npc-roster.js:8-27`) — 20 `SOUL.md` files exist, **2 are orphans** | measured |
-| Jelly skills | **29** (23 native + 6 vendor) | registry enumerated |
-| MCP tools | **38 distinct** — 22 baseline per NPC, 20 on the team gateway, + 8 resources | measured |
-| Discord commands | **130 registered** · 111 slash-capable against a 100 hard cap | manifest + live registry boot |
-| Compute mesh | Unbounded node model; **in practice one active general worker** | code + operator observation |
-| Clients | **3 shipped, 1 partial** — Android is not a Denizen client | measured |
-| City world | **6656 × 6400 px**, 1234 stamps, 13 districts, 11,811 asset PNGs | measured |
-| Env vars read | **455 distinct** (441 app config, ~57 real secrets) | measured, 3 access patterns |
-| Docs | **93** in `denizen/docs/` (177 `.md` repo-wide) | measured |
+| Pinned commit | **`1cab7977`** (master, 2026-09-16) | `git rev-parse` |
+| Commits since v1.7.0 pin | **119** · `+536k / −8k` lines across 469 files | `git log` / `git diff --shortstat` |
+| `server.js` | **13,929 lines**, raw `http.createServer`, no framework | measured |
+| `src/` modules | **394** `.js` files under `src/` | measured |
+| Total tracked JS | **257,563 LOC** across **886** tracked `.js`/`.mjs` files | `git ls-files \| xargs wc -l` |
+| Migrations | **52** ordered, additive-only | measured |
+| Agent roster | **18 live agents** (`src/npc-roster.js`) | measured |
+| Docs | **97** in `denizen/docs/` | measured |
+| Test files | **212** under `tests/` | measured |
+| Customer product objects | **Floor · Workbench · Buzz** (+ Seat an AI, Meridian CRM, Studio Board) | `landing.html`, shipped modules |
+| Tests (July baseline) | **1,432 pass / 7 fail** of 1,439 — suite exits 1 | live run at `d25bc7a2` — re-run before citing |
+| Jelly / MCP / Discord (July) | **29 skills · 38 MCP tools · 130 Discord commands** | July survey — re-enumerate before citing |
 
-**Known open items.** Production runs 47 of 51 migrations, so the outcome triggers, funnel views and
-platform bridge are **not live** — the facts→outcomes→predictions loop is not closed in production
-(§7). The desktop app has been unbuildable since 2026-06-30; root cause identified (§16). Seven tests
-fail. 64% of route dispatch sites carry no auth check (§3). There is no database backup (Part III M10).
-All of it is enumerated in [Appendix G](#appendix-g--open-defect-register).
+**Known open items.** Production previously ran 47 of 51 migrations; the repo now has **52** — confirm
+what is applied on the NAS before calling the spine "live" (§7). The desktop app was unbuildable as of
+the July survey (§16). Seven tests failed at the July baseline — re-run before claiming green. Auth
+coverage gaps and backup gaps remain in [Appendix G](#appendix-g--open-defect-register). Customer
+surfaces shipped since July (Buzz / Studio Board / Seat an AI) are **[DONE]** in the office chrome;
+mobile Buzz had a touch-ring regress that is fixed on `cursor/buzz-mobile-fix-f4a2` (PR #73) pending
+merge.
 
 ---
 
@@ -880,6 +879,29 @@ from key 6 onward because Support, Marketing and Team were inserted into `NAV_IT
 > and "software a business pays for." The agents get a real system of record to act on; the CRM gets an
 > autonomous team that works the pipeline. Each makes the other monetizable — which is exactly why the
 > UI-only surfaces need honest labels before this document goes to a buyer.
+
+## 09b · Customer product objects — Floor, Workbench, Buzz (+ Seat an AI, Studio Board)
+
+The public story on `landing.html` is three objects operators can point at, not sixteen internal
+subsystems. v1.8.0 records them because the July dossier never named them and the office chrome now
+ships them.
+
+| Object | What the operator sees | Status | Primary code |
+|---|---|---|---|
+| **The Floor** | Pixel office — agents at desks, status dots, walk-through observability | `[DONE]` | Phaser office + roster |
+| **The Workbench** | Orchestrator rail for Abby / Seat an AI / handoffs | `[DONE]` | `src/work-rail.js`, `/api/workbench` |
+| **Buzz** | Capture ring → note card → `/api/context-drop` to Abby (screenshot, record, dictate, meet) | `[DONE]` | `src/buzz-capture.js`, `src/context-drop.js`, desktop overlay |
+| **Seat an AI** | Drop Claude / ChatGPT / Cursor / Grok / LM Studio onto a desk | `[DONE]` | `src/seat-ai.js`, `/api/seat-ai` |
+| **Meridian CRM** | Embedded sales OS (§09) with member-scoped records + team activity viewer | `[DONE]` / `[PARTIAL]` deploy | `src/denizen-crm-*`, PR #67 |
+| **Studio Board** | Monday-parity agency board on the phone + MCP tools bound to CRM | `[DONE]` | `src/denizen-studio-board-*`, MCP studio/agency tools |
+
+**Buzz honesty notes.** Desktop Buzz can stay out of screen shares ("leave invisible"). On phones,
+display-capture APIs are skipped: Screenshot opens the photo/library picker on the same tap gesture;
+Meet falls back to mic-only recording; the ring no longer auto-closes on touch `pointerleave`
+(PR #73). Do not claim mobile screen-share capture.
+
+**Landing ↔ office.** PR #72 shipped the landing promises into the office so demo links
+(`?buzz=screenshot`, `?seat=1`) hit real surfaces instead of marketing-only HTML.
 
 ## 10 · Integrations — Jelly, MCP, email, federal, market
 
@@ -2305,15 +2327,49 @@ the 10-category threat catalog and Bouncer's investigate-not-just-alert design; 
 `placeTrade()` does not exist; the layer model's intent; zero-config first boot; the Part IV
 retrospective.
 
+## Appendix E2 · Delta from v1.7.0
+
+Pinned commit moved `d25bc7a2` (2026-07-24) → `1cab7977` (2026-09-16): **119 commits, +536,492 /
+−7,983 lines across 469 files.**
+
+### Headline scale (re-measured)
+
+| Claim in v1.7.0 | Actual at `1cab7977` | Δ |
+|---|---|---|
+| 13,537-line server | **13,929** | +392 |
+| 334 top-level `src/` modules | **394** `.js` under `src/` | +60 |
+| 246,487 LOC / 846 JS files | **257,563 LOC / 886** tracked JS | +~11k LOC |
+| 51 migrations | **52** | +1 |
+| 93 docs | **97** | +4 |
+| Customer objects unnamed | **Floor · Workbench · Buzz · Seat an AI · Studio Board** | new |
+
+### New product surfaces (missing from v1.6 PDF and under-documented in v1.7)
+
+| Surface | What shipped | Evidence |
+|---|---|---|
+| Buzz capture | Ring UI, context-drop to Abby, desktop overlay, mobile gesture/mic fixes | `src/buzz-capture.js`, PR #72/#73 |
+| Workbench rail | In-office orchestrator chip/rail | `src/work-rail.js` |
+| Seat an AI | Provider seating catalog + API | `src/seat-ai.js` |
+| Studio Board | Phone app + Monday parity + MCP + CRM agency link | PRs #60–#71 |
+| CRM member ACL / team viewer | Operator records scoped; AI/MCP org-wide; team activity | PR #67 |
+| Living office | Furniture use, unstuck walk map, no teleport-after-wander | PRs #56–#58 |
+| Mobile HQ / landing polish | Portrait map box, Buzz landing, phone login | PRs #55, landing commits |
+
+### Still true from v1.7 honesty rail
+
+Prediction accuracy remains withdrawn; desktop Electron was unbuildable in July; VisionClaw is still
+not counted as a Denizen client; do not claim "CI on every push" without checking current workflows;
+re-run Appendix D before quoting suite pass counts externally.
+
 ## Appendix F · Positioning language
 
-> **One-liner.** Denizen is the operating layer for your AI company — a pixel-art office where every
-> agent is a real, observable, accountable LLM teammate.
+> **One-liner.** Denizen is the operating layer for your AI company — Floor, Workbench, and Buzz —
+> a pixel-art office where every agent is a real, observable, accountable LLM teammate.
 
 | Audience | Line |
 |---|---|
 | Category | A real-time visual observability layer for AI agents |
-| For founders | Run an AI company you can actually watch — a full team working sales, support and ops, with one human in the loop |
+| For founders | Run an AI company you can actually watch — Floor for the team, Workbench for the work, Buzz to drop context |
 | For engineers | See the shape of your agent fleet's work, not a wall of logs — with approval gates on everything that mutates code or identity |
 | For Discord operators | Give your server a place your members can walk into, and moderation that actually holds — priced per server |
 | The wedge | Legible by default, safe by construction, portable to any vertical by editing a Markdown file |
@@ -2407,6 +2463,6 @@ injects "sixteen teammates" into every generic-pack soul prompt, and `src/demo-s
 
 ---
 
-**DENIZEN · v1.7.0 · source of record · `d25bc7a2` · surveyed 2026-07-25**
+**DENIZEN · v1.8.0 · source of record · headlines at `1cab7977` (2026-09-16) · deep survey `d25bc7a2` (2026-07-25)**
 Render via the `pdf-dossier` skill against `data/canonical/denizen-facts.json`.
 Approval required before any external send — see [BRANDED_DOSSIER_SYSTEM.md](BRANDED_DOSSIER_SYSTEM.md) §5.
