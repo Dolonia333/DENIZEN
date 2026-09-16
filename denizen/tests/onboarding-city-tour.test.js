@@ -63,7 +63,7 @@ describe('Denizen office onboarding', () => {
     assert.match(source, /label: 'Link Station'/);
     assert.match(source, /label: 'Office Tour'/);
     assert.match(source, /label: 'Workbench'/);
-    assert.match(source, /click to capture, hold for phone/);
+    assert.match(source, /click for capture, Apps on the ring for the phone/);
     assert.doesNotMatch(source, /label: 'Power Tour'/);
     assert.doesNotMatch(source, /label: 'Office Guide'/);
     assert.doesNotMatch(source, /id: 'meshtour'/);
