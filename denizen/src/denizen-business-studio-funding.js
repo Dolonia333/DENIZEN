@@ -15,10 +15,10 @@ const FUNDING_READINESS_SECTIONS = Object.freeze([
     id: 'problem',
     name: 'Problem / Product',
     items: [
-      { key: 'problem_need', title: 'Problem / Need', evidenceTypes: ['interview', 'document', 'survey'] },
-      { key: 'customer_definition', title: 'Customer Definition', evidenceTypes: ['interview', 'document'] },
+      { key: 'problem_need', title: 'Problem / Need', evidenceTypes: ['interview', 'document', 'survey'], completeLabel: 'Evidence' },
+      { key: 'customer_definition', title: 'Customer Definition', evidenceTypes: ['interview', 'document'], completeLabel: 'Evidence' },
       { key: 'customer_discovery', title: 'Customer Discovery', evidenceTypes: ['interview'], targetCount: 10 },
-      { key: 'product_solution', title: 'Product / Solution', evidenceTypes: ['document', 'technical_test', 'prototype'] },
+      { key: 'product_solution', title: 'Product / Solution', evidenceTypes: ['document', 'technical_test', 'prototype'], completeLabel: 'Prototype' },
       { key: 'pm_validation', title: 'Product-Market Validation', evidenceTypes: ['interview', 'signed_pilot', 'metric'] },
       { key: 'business_model', title: 'Business Model', evidenceTypes: ['document'] },
       { key: 'revenue_model', title: 'Revenue Model', evidenceTypes: ['document', 'metric'] },
@@ -31,7 +31,7 @@ const FUNDING_READINESS_SECTIONS = Object.freeze([
     items: [
       { key: 'tam', title: 'TAM', evidenceTypes: ['document', 'metric', 'market_sizing'] },
       { key: 'sam', title: 'SAM', evidenceTypes: ['document', 'metric', 'market_sizing'] },
-      { key: 'som', title: 'SOM', evidenceTypes: ['document', 'metric', 'market_sizing'] },
+      { key: 'som', title: 'SOM', evidenceTypes: ['document', 'metric', 'market_sizing'], warnMode: 'validation' },
       { key: 'market_growth', title: 'Market Growth', evidenceTypes: ['document', 'metric'] },
       { key: 'beachhead', title: 'Beachhead Market', evidenceTypes: ['interview', 'document'] },
     ],
@@ -160,36 +160,96 @@ function evaluateFundingItem(state, item, fundingOverrides = {}) {
   const override = fundingOverrides[item.key] || {};
   const target = Math.max(1, Number(item.targetCount) || 1);
   const count = Math.max(linked.length, Number(override.manualCount) || 0);
-  const complete = !!(override.markedComplete) || count >= target;
-  let status = 'not_started';
-  if (complete) status = 'complete';
-  else if (count > 0) status = 'in_progress';
-  else if (override.needsEvidence) status = 'needs_evidence';
-  else status = 'not_started';
+  // warnMode:validation (e.g. SOM) — evidence alone is not enough; founder must confirm or mark validated
+  const autoComplete = item.warnMode === 'validation'
+    ? !!(override.markedComplete || override.validated)
+    : (count >= target);
+  const complete = !!(override.markedComplete) || autoComplete;
 
-  // Discovery special case: always show X/Y
-  const label = item.targetCount
-    ? `${count} / ${target}`
-    : (complete ? 'Evidence' : (count > 0 ? 'In progress' : 'Not started'));
+  // Display vocabulary matches Founder OS checklist:
+  // ✓ Evidence | ✓ Prototype | 3 / 10 | ◐ In progress | ⚠ Needs evidence | ○
+  let status = 'not_started';
+  let mark = '○';
+  let label = '';
+
+  if (item.targetCount) {
+    // Counted requirements always show X / Y
+    label = `${count} / ${target}`;
+    if (complete) {
+      status = 'complete';
+      mark = '✓';
+    } else if (count > 0) {
+      status = 'in_progress';
+      mark = '◐';
+    } else {
+      status = 'not_started';
+      mark = '○';
+    }
+  } else if (complete) {
+    status = 'complete';
+    mark = '✓';
+    label = override.completeLabel || item.completeLabel || 'Evidence';
+  } else if (override.needsValidation || item.warnMode === 'validation') {
+    if (count > 0) {
+      status = 'needs_validation';
+      mark = '⚠';
+      label = 'Needs validation';
+    } else {
+      status = 'not_started';
+      mark = '○';
+      label = '';
+    }
+  } else if (count > 0) {
+    status = 'in_progress';
+    mark = '◐';
+    label = 'In progress';
+  } else if (override.needsEvidence) {
+    status = 'needs_evidence';
+    mark = '⚠';
+    label = 'Needs evidence';
+  } else {
+    status = 'not_started';
+    mark = '○';
+    label = '';
+  }
+
+  // Founder can explicitly flag incomplete items that need evidence
+  if (!complete && override.needsEvidence && count === 0 && !item.targetCount) {
+    status = 'needs_evidence';
+    mark = '⚠';
+    label = 'Needs evidence';
+  }
+
+  const display = label ? `${mark} ${label}` : mark;
 
   return {
     key: item.key,
     title: item.title,
     status,
-    count,
-    target,
-    complete,
+    mark,
     label,
+    display,
+    count,
+    target: item.targetCount ? target : null,
+    complete,
     evidenceIds: linked.map((e) => e.id),
     why: complete
-      ? `${count}/${target} linked evidence item(s) — founder may mark ready for investor review.`
+      ? `${count || 1} linked evidence item(s) — ${label || 'complete'}.`
       : count > 0
-        ? `${count}/${target} evidence linked; still insufficient.`
-        : `No evidence linked for "${item.title}". Attach interviews, documents, or metrics.`,
+        ? item.targetCount
+          ? `${count}/${target} evidence linked; still insufficient.`
+          : `${count} evidence linked — in progress, not yet investor-ready.`
+        : `No evidence linked for "${item.title}".`,
     recommendedAction: complete
       ? 'Keep evidence current; include in mentor/investor share pack.'
       : `Add evidence for ${item.title} (accepted types: ${(item.evidenceTypes || []).join(', ') || 'any'}).`,
   };
+}
+
+function classifyBucket(item) {
+  if (item.complete) return 'complete';
+  if (item.status === 'not_started') return 'not_started';
+  return 'needs_work'; // in_progress | needs_evidence | needs_validation | partial counts
 }
 
 function evaluateFundingReadiness(state) {
@@ -201,14 +261,14 @@ function evaluateFundingReadiness(state) {
       name: sec.name,
       items,
       completeCount: items.filter((i) => i.complete).length,
-      needsWorkCount: items.filter((i) => !i.complete && i.count > 0).length,
-      notStartedCount: items.filter((i) => i.status === 'not_started').length,
+      needsWorkCount: items.filter((i) => classifyBucket(i) === 'needs_work').length,
+      notStartedCount: items.filter((i) => classifyBucket(i) === 'not_started').length,
     };
   });
   const allItems = sections.flatMap((s) => s.items);
-  const complete = allItems.filter((i) => i.complete).length;
-  const needsWork = allItems.filter((i) => !i.complete && (i.count > 0 || i.status === 'in_progress' || i.status === 'needs_evidence')).length;
-  const notStarted = allItems.filter((i) => i.status === 'not_started').length;
+  const complete = allItems.filter((i) => classifyBucket(i) === 'complete').length;
+  const needsWork = allItems.filter((i) => classifyBucket(i) === 'needs_work').length;
+  const notStarted = allItems.filter((i) => classifyBucket(i) === 'not_started').length;
   return {
     generatedAt: new Date().toISOString(),
     sections,
@@ -218,7 +278,8 @@ function evaluateFundingReadiness(state) {
       notStarted,
       total: allItems.length,
       // Explicitly NOT a mysterious readiness %. Counts only.
-      summary: `${complete} complete · ${needsWork} need work · ${notStarted} not started`,
+      summary: `${complete} complete\n${needsWork} need work\n${notStarted} not started`,
+      summaryLine: `${complete} complete · ${needsWork} need work · ${notStarted} not started`,
       why: 'Counts items with linked evidence (or explicit founder mark). Tasks alone never count as funding readiness.',
     },
   };
@@ -343,6 +404,7 @@ module.exports = {
   defaultFundingSeed,
   evidenceForFundingItem,
   evaluateFundingItem,
+  classifyBucket,
   evaluateFundingReadiness,
   calculateMarketSizing,
   evaluateMoat,

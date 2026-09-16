@@ -256,12 +256,13 @@ describe('business-studio funding readiness', () => {
         { id: 'ev2', type: 'interview', fundingKey: 'customer_discovery', title: 'B' },
         { id: 'ev3', type: 'interview', fundingKey: 'customer_discovery', title: 'C' },
         { id: 'ev4', type: 'document', fundingKey: 'problem_need', title: 'Problem brief' },
+        { id: 'ev5', type: 'prototype', fundingKey: 'product_solution', title: 'Mesh prototype' },
       ],
       funding: funding.emptyFundingState(),
       tasks: [{ id: 't1', title: 'Contacted five schools', status: 'done' }],
     };
     const ready = funding.evaluateFundingReadiness(state);
-    assert.match(ready.overall.summary, /complete/);
+    assert.match(ready.overall.summaryLine, /complete/);
     assert.equal(ready.overall.total, funding.FUNDING_READINESS_SECTIONS.flatMap((s) => s.items).length);
     const disc = ready.sections
       .flatMap((s) => s.items)
@@ -269,9 +270,27 @@ describe('business-studio funding readiness', () => {
     assert.equal(disc.count, 3);
     assert.equal(disc.target, 10);
     assert.equal(disc.complete, false);
-    assert.match(disc.label, /3 \/ 10/);
-    // Completed tasks alone never flip discovery complete
-    assert.ok(ready.overall.complete >= 1); // problem_need has evidence
+    assert.equal(disc.display, '◐ 3 / 10');
+    const problem = ready.sections.flatMap((s) => s.items).find((i) => i.key === 'problem_need');
+    assert.equal(problem.display, '✓ Evidence');
+    const product = ready.sections.flatMap((s) => s.items).find((i) => i.key === 'product_solution');
+    assert.equal(product.display, '✓ Prototype');
+    assert.equal(ready.overall.complete, 2);
+    assert.equal(ready.overall.needsWork, 1); // discovery 3/10
+    assert.equal(ready.overall.notStarted, ready.overall.total - 3);
+  });
+
+  it('shows SOM as needs validation when partial evidence exists', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    const state = {
+      evidence: [{ id: 'ev', type: 'market_sizing', fundingKey: 'som', title: 'SOM draft' }],
+      funding: funding.emptyFundingState(),
+    };
+    const som = funding.evaluateFundingReadiness(state).sections
+      .flatMap((s) => s.items)
+      .find((i) => i.key === 'som');
+    assert.equal(som.display, '⚠ Needs validation');
+    assert.equal(som.status, 'needs_validation');
   });
 
   it('calculates TAM/SAM/SOM and warns on weak SOM', () => {
@@ -312,9 +331,11 @@ describe('business-studio static shell', () => {
     assert.match(html, /id:'mentors'/);
     assert.match(html, /id:'funding'/);
     assert.match(html, /Funding Readiness/);
+    assert.match(html, /fr-board|FUNDING READINESS/);
     assert.match(html, /Market Sizing/);
     assert.match(html, /Moat/);
     assert.match(html, /Discovery Lab/);
+    assert.match(html, /✓ Evidence|completeLabel:'Evidence'/);
     assert.match(html, /advisorMode|Advisor mode/);
     assert.match(html, /i2e-e3-pave|i2E E3/);
     assert.match(html, /data-why/);

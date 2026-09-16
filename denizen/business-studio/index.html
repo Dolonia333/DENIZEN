@@ -123,6 +123,32 @@ html.embed .dz-app-chrome{display:none}
 .health-card .hc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
 .health-card .hc-name{font-weight:600;font-size:13.5px}
 .health-card .hc-reason{color:var(--ink-2);font-size:12.5px;line-height:1.4}
+
+/* Funding Readiness checklist board */
+.fr-board{padding:18px 18px 16px}
+.fr-board-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.fr-kicker{font-size:13px;font-weight:750;letter-spacing:.08em;color:var(--gold)}
+.fr-rule{height:1px;margin-top:8px;background:linear-gradient(90deg,rgba(240,180,41,.55),transparent);max-width:280px}
+.fr-section{margin:0 0 16px}
+.fr-sec-title{font-size:11px;font-weight:750;letter-spacing:.1em;color:var(--muted);margin:0 0 6px}
+.fr-row{
+  display:flex;align-items:baseline;justify-content:space-between;gap:16px;width:100%;
+  padding:7px 2px;border:0;border-bottom:1px dotted rgba(184,204,220,.12);
+  background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer
+}
+.fr-row:hover{background:rgba(240,180,41,.04)}
+.fr-title{font-size:13.5px;color:var(--ink);flex:1;min-width:0}
+.fr-status{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:650}
+.fr-complete .fr-status{color:#7dcea0}
+.fr-needs_work .fr-status{color:#f0c96a}
+.fr-not_started .fr-status{color:var(--muted-2)}
+.fr-overall{margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}
+.fr-overall-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}
+.fr-overall-grid .fr-n{display:block;font-size:22px;font-weight:750;letter-spacing:-.03em;color:var(--gold)}
+@media (max-width:640px){
+  .fr-overall-grid{grid-template-columns:1fr}
+  .fr-row{padding:9px 0}
+}
 .status{
   display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;
   font-size:11px;font-weight:650;text-transform:capitalize;letter-spacing:.01em
@@ -707,8 +733,8 @@ function explainStatus(st, subject){
     return {
       kind:'funding',
       why:fr.overall.why,
-      reason:fr.overall.summary,
-      missing:fr.sections.flatMap(function(s){return s.items.filter(function(i){return !i.complete;}).map(function(i){return i.title;});}).slice(0,12),
+      reason:fr.overall.summaryLine||fr.overall.summary,
+      missing:fr.sections.flatMap(function(s){return s.items.filter(function(i){return !i.complete;}).map(function(i){return i.title+' — '+i.display;});}).slice(0,12),
       evidenceIds:[],
       recommendedAction:'Open Funding Readiness and attach evidence to gap items.'
     };
@@ -781,10 +807,10 @@ const NAV=[
 
 const FUNDING_SECTIONS=[
   {id:'problem',name:'Problem / Product',items:[
-    {key:'problem_need',title:'Problem / Need',evidenceTypes:['interview','document','survey']},
-    {key:'customer_definition',title:'Customer Definition',evidenceTypes:['interview','document']},
+    {key:'problem_need',title:'Problem / Need',evidenceTypes:['interview','document','survey'],completeLabel:'Evidence'},
+    {key:'customer_definition',title:'Customer Definition',evidenceTypes:['interview','document'],completeLabel:'Evidence'},
     {key:'customer_discovery',title:'Customer Discovery',evidenceTypes:['interview'],targetCount:10},
-    {key:'product_solution',title:'Product / Solution',evidenceTypes:['document','technical_test','prototype']},
+    {key:'product_solution',title:'Product / Solution',evidenceTypes:['document','technical_test','prototype'],completeLabel:'Prototype'},
     {key:'pm_validation',title:'Product-Market Validation',evidenceTypes:['interview','signed_pilot','metric']},
     {key:'business_model',title:'Business Model',evidenceTypes:['document']},
     {key:'revenue_model',title:'Revenue Model',evidenceTypes:['document','metric']},
@@ -793,7 +819,7 @@ const FUNDING_SECTIONS=[
   {id:'market',name:'Market',items:[
     {key:'tam',title:'TAM',evidenceTypes:['document','metric','market_sizing']},
     {key:'sam',title:'SAM',evidenceTypes:['document','metric','market_sizing']},
-    {key:'som',title:'SOM',evidenceTypes:['document','metric','market_sizing']},
+    {key:'som',title:'SOM',evidenceTypes:['document','metric','market_sizing'],warnMode:'validation'},
     {key:'market_growth',title:'Market Growth',evidenceTypes:['document','metric']},
     {key:'beachhead',title:'Beachhead Market',evidenceTypes:['interview','document']}
   ]},
@@ -868,22 +894,49 @@ function evaluateFundingItem(item){
   const override=(funding.items&&funding.items[item.key])||{};
   const target=Math.max(1, Number(item.targetCount)||1);
   const count=Math.max(linked.length, Number(override.manualCount)||0);
-  const complete=!!override.markedComplete || count>=target;
-  let status='not_started';
-  if(complete) status='complete';
-  else if(count>0) status='in_progress';
-  else if(override.needsEvidence) status='needs_evidence';
-  const label=item.targetCount ? (count+' / '+target) : (complete?'Evidence':(count>0?'In progress':'Not started'));
+  const autoComplete=item.warnMode==='validation'
+    ? !!(override.markedComplete||override.validated)
+    : (count>=target);
+  const complete=!!override.markedComplete || autoComplete;
+  let status='not_started', mark='○', label='';
+  if(item.targetCount){
+    label=count+' / '+target;
+    if(complete){ status='complete'; mark='✓'; }
+    else if(count>0){ status='in_progress'; mark='◐'; }
+    else { status='not_started'; mark='○'; }
+  } else if(complete){
+    status='complete'; mark='✓';
+    label=override.completeLabel||item.completeLabel||'Evidence';
+  } else if(override.needsValidation || item.warnMode==='validation'){
+    if(count>0){ status='needs_validation'; mark='⚠'; label='Needs validation'; }
+    else { status='not_started'; mark='○'; label=''; }
+  } else if(count>0){
+    status='in_progress'; mark='◐'; label='In progress';
+  } else if(override.needsEvidence){
+    status='needs_evidence'; mark='⚠'; label='Needs evidence';
+  } else {
+    status='not_started'; mark='○'; label='';
+  }
+  if(!complete && override.needsEvidence && count===0 && !item.targetCount){
+    status='needs_evidence'; mark='⚠'; label='Needs evidence';
+  }
+  const display=label ? (mark+' '+label) : mark;
   return {
-    key:item.key,title:item.title,status:status,count:count,target:target,complete:complete,label:label,
+    key:item.key,title:item.title,status:status,mark:mark,label:label,display:display,
+    count:count,target:item.targetCount?target:null,complete:complete,
     evidenceIds:linked.map(function(e){return e.id;}),
     why:complete
-      ? count+'/'+target+' linked evidence — ready for investor review when founder confirms.'
-      : (count>0 ? count+'/'+target+' evidence linked; still insufficient.' : 'No evidence linked for "'+item.title+'".'),
-    recommendedAction:complete
-      ? 'Keep evidence current.'
-      : 'Attach evidence for '+item.title+'.'
+      ? (count||1)+' linked evidence — '+(label||'complete')+'.'
+      : (count>0
+        ? (item.targetCount ? count+'/'+target+' evidence linked; still insufficient.' : count+' evidence linked — in progress.')
+        : 'No evidence linked for "'+item.title+'".'),
+    recommendedAction:complete?'Keep evidence current.':'Attach evidence for '+item.title+'.'
   };
+}
+function classifyFundingBucket(item){
+  if(item.complete) return 'complete';
+  if(item.status==='not_started') return 'not_started';
+  return 'needs_work';
 }
 function evaluateFundingReadiness(){
   const sections=FUNDING_SECTIONS.map(function(sec){
@@ -891,19 +944,20 @@ function evaluateFundingReadiness(){
     return {
       id:sec.id,name:sec.name,items:items,
       completeCount:items.filter(function(i){return i.complete;}).length,
-      needsWorkCount:items.filter(function(i){return !i.complete && i.count>0;}).length,
-      notStartedCount:items.filter(function(i){return i.status==='not_started';}).length
+      needsWorkCount:items.filter(function(i){return classifyFundingBucket(i)==='needs_work';}).length,
+      notStartedCount:items.filter(function(i){return classifyFundingBucket(i)==='not_started';}).length
     };
   });
   const all=sections.reduce(function(a,s){return a.concat(s.items);},[]);
-  const complete=all.filter(function(i){return i.complete;}).length;
-  const needsWork=all.filter(function(i){return !i.complete && i.count>0;}).length;
-  const notStarted=all.filter(function(i){return i.status==='not_started';}).length;
+  const complete=all.filter(function(i){return classifyFundingBucket(i)==='complete';}).length;
+  const needsWork=all.filter(function(i){return classifyFundingBucket(i)==='needs_work';}).length;
+  const notStarted=all.filter(function(i){return classifyFundingBucket(i)==='not_started';}).length;
   return {
     sections:sections,
     overall:{
       complete:complete,needsWork:needsWork,notStarted:notStarted,total:all.length,
-      summary:complete+' complete · '+needsWork+' need work · '+notStarted+' not started',
+      summary:complete+' complete\n'+needsWork+' need work\n'+notStarted+' not started',
+      summaryLine:complete+' complete · '+needsWork+' need work · '+notStarted+' not started',
       why:'Counts items with linked evidence (or founder mark). Tasks alone never count.'
     }
   };
@@ -1431,7 +1485,7 @@ function renderOverview(){
   const fr=evaluateFundingReadiness();
   html+='<div class="panel" style="margin-bottom:14px"><div class="meta-line"><h3 style="margin:0">Funding readiness</h3>'
     +'<button type="button" class="btn" data-nav="funding">Open checklist</button></div>'
-    +'<p style="color:var(--ink-2);margin:8px 0 0;font-size:13.5px">'+esc(fr.overall.summary)+'</p>'
+    +'<p style="color:var(--ink-2);margin:8px 0 0;font-size:13.5px">'+esc(fr.overall.summaryLine||fr.overall.summary)+'</p>'
     +'<p style="color:var(--muted);font-size:12px;margin:6px 0 0">'+esc(fr.overall.why)+'</p></div>';
 
   html+='<div class="grid grid-2" style="margin-bottom:14px">';
@@ -1880,29 +1934,37 @@ function renderSettings(){
 function renderFunding(){
   const fr=evaluateFundingReadiness();
   let html='<div class="page-head"><div><h2>Funding Readiness</h2>'
-    +'<p>Evidence-gated checklist — not an unexplained AI score. '+esc(fr.overall.summary)+'</p></div>'
+    +'<p>Evidence-gated checklist — never an unexplained AI score.</p></div>'
     +'<div class="actions"><button type="button" class="btn" data-nav="market">Market sizing</button>'
     +'<button type="button" class="btn" data-nav="moat">Moat</button>'
     +'<button type="button" class="btn" data-nav="discovery">Discovery Lab</button></div></div>';
-  html+='<div class="panel" style="margin-bottom:14px"><div class="meta-line"><span class="num">'+esc(fr.overall.summary)+'</span>'
-    +'<button type="button" class="btn btn-why" data-why="funding">WHY?</button></div>'
-    +'<p style="color:var(--muted);font-size:12.5px;margin-top:8px">'+esc(fr.overall.why)+'</p></div>';
+
+  html+='<div class="fr-board panel" style="margin-bottom:14px">'
+    +'<div class="fr-board-head"><div><div class="fr-kicker">FUNDING READINESS</div>'
+    +'<div class="fr-rule" aria-hidden="true"></div></div>'
+    +'<button type="button" class="btn btn-why" data-why="funding">WHY?</button></div>';
 
   fr.sections.forEach(function(sec){
-    html+='<div class="panel" style="margin-bottom:12px"><h3>'+esc(sec.name)
-      +' <span class="kbd">'+sec.completeCount+'/'+sec.items.length+'</span></h3><div class="list">';
+    html+='<div class="fr-section"><div class="fr-sec-title">'+esc(sec.name.toUpperCase())+'</div>';
     sec.items.forEach(function(item){
-      const chip=item.complete?'complete':(item.count>0?'in_progress':(item.targetCount?'needs_attention':'not_started'));
-      html+='<div class="row-item"><div><div class="rt">'+esc(item.title)+'</div>'
-        +'<div class="rm">'+esc(item.why)+'</div></div>'
-        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
-        +statusChip(chip)
-        +'<span class="num" style="font-size:12px">'+esc(item.label)+'</span>'
-        +'<button type="button" class="btn btn-sm" data-link-funding="'+esc(item.key)+'">Link evidence</button>'
-        +'</div></div>';
+      const bucket=classifyFundingBucket(item);
+      html+='<button type="button" class="fr-row fr-'+esc(bucket)+'" data-link-funding="'+esc(item.key)+'" title="'+esc(item.why)+'">'
+        +'<span class="fr-title">'+esc(item.title)+'</span>'
+        +'<span class="fr-status">'+esc(item.display)+'</span>'
+        +'</button>';
     });
-    html+='</div></div>';
+    html+='</div>';
   });
+
+  html+='<div class="fr-overall">'
+    +'<div class="fr-sec-title">OVERALL</div>'
+    +'<div class="fr-overall-grid">'
+    +'<div><span class="fr-n">'+fr.overall.complete+'</span> complete</div>'
+    +'<div><span class="fr-n">'+fr.overall.needsWork+'</span> need work</div>'
+    +'<div><span class="fr-n">'+fr.overall.notStarted+'</span> not started</div>'
+    +'</div>'
+    +'<p class="field-hint" style="margin-top:10px">'+esc(fr.overall.why)+' Tap a row to link evidence.</p>'
+    +'</div></div>';
 
   const cp=(state.funding&&state.funding.capitalPlan)||emptyFunding().capitalPlan;
   html+='<div class="panel"><h3>Capital plan</h3><div class="form-grid" id="capitalPlanForm">'
@@ -2038,6 +2100,41 @@ function renderMoat(){
   return html;
 }
 
+function renderInvestorSim(){
+  const qs=[
+    {npc:'Market',q:'How did you calculate your SOM?'},
+    {npc:'Customer',q:'Who actually writes the check?'},
+    {npc:'Finance',q:'What happens to runway if sales take six months longer?'},
+    {npc:'Technical',q:'Why can’t a larger competitor reproduce this?'},
+    {npc:'Investor',q:'What evidence proves customers will pay?'},
+    {npc:'Sales',q:'How long is the buying cycle?'}
+  ];
+  const unanswered=(state.funding&&state.funding.unansweredInvestorQuestions)||[];
+  let html='<div class="page-head"><div><h2>Investor Question Simulator</h2>'
+    +'<p>NPC-style challenges. Unanswered questions become Funding Readiness gaps — DENIZEN does not auto-decide viability.</p></div></div>';
+  html+='<div class="list">';
+  qs.forEach(function(row, idx){
+    const open=unanswered.find(function(u){return u.question===row.q && !u.answered;});
+    html+='<div class="row-item"><div><div class="rt">'+esc(row.npc)+' NPC</div>'
+      +'<div class="rm">'+esc(row.q)+'</div></div>'
+      +'<div style="display:flex;gap:6px">'
+      +(open?statusChip('needs_attention'):'')
+      +'<button type="button" class="btn btn-sm" data-action="mark-unanswered" data-payload="'+esc(row.q)+'" data-npc="'+esc(row.npc)+'">Mark unanswered</button>'
+      +'<button type="button" class="btn btn-sm btn-primary" data-action="answer-investor-q" data-payload="'+esc(row.q)+'">Record answer</button>'
+      +'</div></div>';
+  });
+  html+='</div>';
+  if(unanswered.length){
+    html+='<div class="panel" style="margin-top:14px"><h3>Gap list</h3><div class="list">';
+    unanswered.filter(function(u){return !u.answered;}).forEach(function(u){
+      html+='<div class="row-item"><div class="rt">'+esc(u.npc||'NPC')+': '+esc(u.question)+'</div>'
+        +statusChip('needs_attention')+'</div>';
+    });
+    html+='</div></div>';
+  }
+  return html;
+}
+
 /* ---------- 13. Main render ---------- */
 function render(){
   renderSidebar();
@@ -2060,6 +2157,7 @@ function render(){
     programs:renderPrograms,
     market:renderMarket,
     moat:renderMoat,
+    investorsim:renderInvestorSim,
     mentors:renderMentors,
     metrics:renderMetrics,
     crm:renderCrm,
@@ -2245,6 +2343,36 @@ document.addEventListener('click', function(e){
         syncMetricFromEvidence();
         logActivity('Interview evidence: '+d.title);
         scheduleSave(); render(); toast('Interview added');
+      });
+    }
+    if(a==='mark-unanswered'){
+      state.funding=state.funding||emptyFunding();
+      const q=act.getAttribute('data-payload')||'';
+      const npc=act.getAttribute('data-npc')||'NPC';
+      if(!q) return;
+      state.funding.unansweredInvestorQuestions=state.funding.unansweredInvestorQuestions||[];
+      if(!state.funding.unansweredInvestorQuestions.some(function(u){return u.question===q && !u.answered;})){
+        state.funding.unansweredInvestorQuestions.unshift({
+          id:uid('iq'),npc:npc,question:q,answered:false,createdAt:nowISO()
+        });
+      }
+      scheduleSave(); render(); toast('Added to gap list');
+    }
+    if(a==='answer-investor-q'){
+      const q=act.getAttribute('data-payload')||'';
+      promptForm('Record answer',[
+        {name:'answer',label:'Your answer / evidence note',type:'textarea',required:true}
+      ],function(d){
+        state.funding=state.funding||emptyFunding();
+        state.funding.unansweredInvestorQuestions=(state.funding.unansweredInvestorQuestions||[]).map(function(u){
+          if(u.question===q) return Object.assign({},u,{answered:true,answer:d.answer,answeredAt:nowISO()});
+          return u;
+        });
+        state.evidence.unshift({
+          id:uid('ev'),title:'Investor Q: '+q.slice(0,60),type:'document',
+          notes:d.answer,fundingKey:'investor_qa',linkedFundingKeys:['investor_qa'],createdAt:nowISO()
+        });
+        scheduleSave(); render(); toast('Answer recorded as evidence');
       });
     }
     if(a==='invite-advisor'){

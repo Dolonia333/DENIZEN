@@ -212,10 +212,10 @@ function businessHealth(state) {
       status: fr.notStarted === fr.total
         ? 'unknown'
         : (fr.needsWork + fr.notStarted > fr.complete ? 'needs_attention' : 'in_progress'),
-      reason: fr.summary,
+      reason: fr.summaryLine || fr.summary.replace(/\n/g, ' · '),
       evidenceIds: [],
       missing: fundingSummary.sections
-        .flatMap((s) => s.items.filter((i) => !i.complete).map((i) => i.title))
+        .flatMap((s) => s.items.filter((i) => !i.complete).map((i) => `${i.title} — ${i.display}`))
         .slice(0, 8),
       recommendedAction: 'Open Funding Readiness and attach evidence to gap items — not a vanity %.',
     });
