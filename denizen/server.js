@@ -11370,6 +11370,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   }
 
   // Business Studio — Founder OS at /business-studio/
+  // Phone app navigates here like CRM + Studio Board (full page), not an in-phone iframe.
   if (urlPath === '/business-studio' || urlPath.startsWith('/business-studio/')) {
     const BS_ROOT = path.join(ROOT, 'business-studio');
     let rel = urlPath.replace(/^\/business-studio\/?/, '') || 'index.html';

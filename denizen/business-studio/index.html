@@ -377,12 +377,25 @@ html.embed .dz-app-chrome{display:none}
    Single-file SPA: CSS above + JS sections below.
    ======================================================================== */
 
-/* ---------- 0. Embed / standalone ---------- */
+/* ---------- 0. Embed / standalone + phone session handoff ---------- */
 (function(){
   try{
     var q = new URLSearchParams(location.search);
     if(q.get('embed')==='1' || q.get('embed')==='true') document.documentElement.classList.add('embed');
     else document.body.classList.add('standalone');
+    // Phone navigate apps pass dz_sid / dz_stok (same as CRM).
+    var sid = q.get('dz_sid') || q.get('dz_session') || q.get('session_id');
+    var tok = q.get('dz_stok') || q.get('dz_token') || q.get('session_token');
+    if(sid || tok){
+      var raw = {};
+      try{ raw = JSON.parse(localStorage.getItem('denizen-visitor-session') || '{}') || {}; }catch(e){}
+      if(sid){ raw.session_id = sid; raw.sessionId = sid; }
+      if(tok){ raw.session_token = tok; raw.sessionToken = tok; }
+      localStorage.setItem('denizen-visitor-session', JSON.stringify(raw));
+      ['dz_sid','dz_session','dz_stok','dz_token','session_id','session_token'].forEach(function(k){ q.delete(k); });
+      var next = location.pathname + (q.toString() ? ('?' + q.toString()) : '') + location.hash;
+      history.replaceState({}, '', next);
+    }
   }catch(e){}
 })();
 
@@ -1074,7 +1087,11 @@ function readVisitorSession(){
     const raw=localStorage.getItem('denizen-visitor-session');
     if(!raw) return null;
     const d=JSON.parse(raw);
-    if(d && d.session_id) return d;
+    if(!d) return null;
+    const sid=d.session_id||d.sessionId||null;
+    const tok=d.session_token||d.sessionToken||null;
+    if(!sid) return null;
+    return Object.assign({}, d, { session_id:sid, session_token:tok });
   }catch(e){}
   return null;
 }

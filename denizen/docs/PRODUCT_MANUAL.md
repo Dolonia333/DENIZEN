@@ -64,7 +64,9 @@ persona ("soul"), memory, and goals.
 ## 4. The Denizen OS phone (mobile + desktop)
 
 Tap the **📱 button** to open the in-world phone — a concept "Denizen OS" home
-screen with apps for Chat, the CRM, Studio Board, Compute, Profile, Settings, and more. Apps
+screen with apps for Chat, the CRM, Studio Board, Business Studio, Compute, Profile, Settings, and more. Apps
+that need a full surface (CRM, Studio Board, Business Studio) navigate to their own page; everything else
+stays inside the phone HUD.
 open as panels; favorites sit in the dock. Use it as the fast way to reach any
 tool without hunting the toolbar. (Legacy toolbar: add `?phonemode=0` to the URL.)
 
@@ -179,6 +181,24 @@ storage. **My Day** matches your Denizen login to a board person (or offers “U
 | `agency_create_delivery_task` | Create linked delivery task from any deal |
 | `agency_handoff_won_deal` | Closed Won → create linked delivery task |
 | `agency_advance_deal_task` | Advance a linked board task |
+
+## 6c. Business Studio (Founder OS)
+
+Open **Business Studio** from the phone (next to CRM and Studio Board) or go to
+`/business-studio/`. Like CRM and Studio Board, it opens as its own full-page app —
+not an in-phone iframe. Use **← Back to office** to return to Denizen.
+
+It's an evidence-gated founder OS: programs (E3/PAVE as a template, not hard-coded),
+roadmap, goals, experiments, metrics, Funding Readiness, Market Sizing, Moat Builder,
+Discovery Lab, Capital Pathway, and Data Room. Mentor/investor views use ACL filters
+so shared advice never exposes private notes.
+
+When you're signed into a **team** office, the workspace syncs to your org
+(`GET|PUT /api/business-studio/workspace`) with mentor recommendation endpoints under
+`/api/business-studio/`. Offline/demo falls back to browser storage (`dz-bs:`).
+
+**MCP** — `business_studio_*` tools (working set, progress, evidence, funding) share
+the same team/NPC gateway scopes as CRM write tools where mutations are needed.
 
 ---
 
