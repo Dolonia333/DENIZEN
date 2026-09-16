@@ -306,12 +306,12 @@
     const list = [
       {
         id: 'screenshot',
-        label: 'Photo',
+        label: 'Shot',
         ico: 'ti-screenshot',
         svg: ICO.screenshot,
         title: isPhoneUi()
-          ? 'Photo — pick from camera roll, crop, then send to Abby'
-          : 'Screenshot — capture the screen, then send to Abby',
+          ? 'Screenshot — photo from the camera roll, crop, one line, Send to Abby'
+          : 'Screenshot — capture the screen, crop, one line, Send to Abby',
       },
       {
         id: 'meeting',
@@ -319,36 +319,48 @@
         ico: 'ti-video',
         svg: ICO.meeting,
         title: isPhoneUi()
-          ? 'Meet — record this mic; transcript lands in a Buzz note'
-          : 'Meet — record the meeting; transcript lands in a Buzz note',
+          ? 'Meet — record the room on this mic; audio lands in parts, then Send'
+          : 'Meet — record the room; audio lands in chunks and is transcribed as it goes',
       },
       {
         id: 'dictate',
         label: 'Say',
         ico: 'ti-message',
         svg: ICO.dictate,
-        title: 'Say — dictate a short instruction, then send to Abby',
+        title: 'Say — dictation into the note card; you read it, then Send',
       },
       {
         id: 'phone',
         label: 'Apps',
         ico: 'ti-device-mobile',
         svg: ICO.phone,
-        title: 'Apps — open the phone (chat, CRM, Studio Board, …)',
+        title: 'Apps — open the phone (chat, CRM, Workbench). Does not send Abby anything.',
       },
       {
         id: 'record',
-        label: 'Mic',
+        label: 'Record',
         ico: 'ti-microphone',
         svg: ICO.record,
-        title: 'Mic — record a voice note, then send to Abby',
+        title: 'Record — a voice memo for Abby. Shorter than Meet; no room-in-parts.',
       },
     ];
     if (!isPhoneUi()) {
       const desktop = !!window.DenizenDesktop?.buzzOverlayToggle;
       const extra = desktop
-        ? { id: 'invisible', label: 'Ghost', ico: 'ti-eye-off', svg: ICO.invisible, title: 'Leave invisible — stay out of screen share' }
-        : { id: 'desktop', label: 'Desktop', ico: 'ti-device-desktop', svg: ICO.desktop, title: 'Always-on-top Buzz overlay' };
+        ? {
+          id: 'invisible',
+          label: 'Ghost',
+          ico: 'ti-eye-off',
+          svg: ICO.invisible,
+          title: 'Ghost — leave invisible so Buzz stays out of screen share and recordings',
+        }
+        : {
+          id: 'desktop',
+          label: 'Desktop',
+          ico: 'ti-device-desktop',
+          svg: ICO.desktop,
+          title: 'Desktop — always-on-top Buzz overlay / download',
+        };
       list.splice(4, 0, extra);
     }
     return list;
@@ -358,30 +370,30 @@
     const k = String(kind || 'note');
     if (k === 'screenshot') {
       return {
-        title: 'Photo for Abby',
-        blurb: 'Crop looks good? Add one line, then Send.',
-        placeholder: 'What should they do with this?',
+        title: 'Screenshot',
+        blurb: 'You see it first. One line, then Send to Abby.',
+        placeholder: 'One line — what should they do with this?',
       };
     }
     if (k === 'meeting') {
       return {
-        title: 'Meeting capture',
-        blurb: 'Mic is recording — Stop, edit the note, then Send.',
-        placeholder: 'What came out of the meeting?',
+        title: 'Meet',
+        blurb: 'Live conversation — Stop when done, edit, then Send.',
+        placeholder: 'What came out of the room?',
       };
     }
     if (k === 'dictate') {
       return {
-        title: 'Say it',
-        blurb: 'Speak (or type). Stop when done, then Send to Abby.',
+        title: 'Say',
+        blurb: 'Dictation fills the line while you talk. Read it, then Send.',
         placeholder: 'One line — what should they do?',
       };
     }
     if (k === 'record') {
       return {
-        title: 'Voice note',
-        blurb: 'Recording — Stop, check the transcript, then Send.',
-        placeholder: 'Or type the instruction here…',
+        title: 'Record',
+        blurb: 'Voice memo — speak, Stop, read the transcript, Send.',
+        placeholder: 'Or type the memo here…',
       };
     }
     return {

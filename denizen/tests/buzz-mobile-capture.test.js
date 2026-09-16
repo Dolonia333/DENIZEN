@@ -66,10 +66,13 @@ describe('Buzz mobile capture', () => {
   it('labels ring actions and uses kind-specific Buzz note chrome', () => {
     assert.match(buzz, /bz-act-label/);
     assert.match(buzz, /function noteChrome/);
-    assert.match(buzz, /Photo for Abby/);
-    assert.match(buzz, /Meeting capture/);
-    assert.match(buzz, /Say it/);
-    assert.match(buzz, /Voice note/);
+    assert.match(buzz, /label: 'Shot'/);
+    assert.match(buzz, /label: 'Record'/);
+    assert.match(buzz, /title: 'Screenshot'/);
+    assert.match(buzz, /title: 'Meet'/);
+    assert.match(buzz, /title: 'Say'/);
+    assert.match(buzz, /title: 'Record'/);
     assert.match(buzz, /showBuzzToast/);
+    assert.match(buzz, /Shorter than Meet/);
   });
 });
