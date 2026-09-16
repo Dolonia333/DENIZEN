@@ -123,21 +123,57 @@
         background: transparent; border: 0; color: #94a3b8; cursor: pointer; font-size: 16px;
       }
       #${RAIL_ID} .wr-tabs,
-      #${PHONE_RAIL_ID} .wr-tabs {
+      #${PHONE_RAIL_ID} .wr-tabs,
+      #dzp-workbench-host .wr-tabs {
         display: flex; gap: 2px; padding: 8px 8px 0; overflow-x: auto;
         flex-shrink: 0;
+        position: relative;
+        z-index: 6;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
       }
       #${RAIL_ID} .wr-tabs button,
-      #${PHONE_RAIL_ID} .wr-tabs button {
-        flex: 1; border: 0; background: transparent; color: #94a3b8;
+      #${PHONE_RAIL_ID} .wr-tabs button,
+      #dzp-workbench-host .wr-tabs button {
+        flex: 1; border: 0 !important; background: transparent !important;
+        color: #94a3b8 !important;
         font-size: 11px; padding: 6px 4px; cursor: pointer;
-        border-bottom: 2px solid transparent;
-        min-height: 36px;
+        border-radius: 0 !important;
+        border-bottom: 2px solid transparent !important;
+        min-height: 40px;
         touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(163, 230, 53, 0.25);
+        pointer-events: auto !important;
+        position: relative;
+        z-index: 1;
+      }
+      /* Phone: large tappable chips — beat .dzp-settings button styles */
+      #${PHONE_RAIL_ID} .wr-tabs button,
+      #dzp-workbench-host .wr-tabs button {
+        flex: 0 0 auto;
+        min-width: 64px;
+        min-height: 44px;
+        padding: 12px 14px;
+        font-size: 13px;
+        font-weight: 700;
       }
       #${RAIL_ID} .wr-tabs button.active,
-      #${PHONE_RAIL_ID} .wr-tabs button.active {
-        color: #f1f5f9; border-bottom-color: #a3e635;
+      #${PHONE_RAIL_ID} .wr-tabs button.active,
+      #dzp-workbench-host .wr-tabs button.active {
+        color: #f1f5f9 !important;
+        border-bottom-color: #a3e635 !important;
+      }
+      #dzp-workbench-host .wr-tabs button:hover,
+      #${PHONE_RAIL_ID} .wr-tabs button:hover {
+        border-color: transparent !important;
+        border-bottom-color: transparent !important;
+        color: #e2e8f0 !important;
+      }
+      #dzp-workbench-host .wr-tabs button.active:hover,
+      #${PHONE_RAIL_ID} .wr-tabs button.active:hover {
+        border-bottom-color: #a3e635 !important;
+        color: #f1f5f9 !important;
       }
       #${RAIL_ID} .wr-body,
       #${PHONE_RAIL_ID} .wr-body {
@@ -215,22 +251,108 @@
   }
 
   function wireRailClicks(el, { onClose, setTabId }) {
-    el.addEventListener('click', (e) => {
-      const close = e.target.closest('[data-wr="close"]');
-      if (close) { onClose?.(); return; }
-      const tab = e.target.closest('[data-tab]');
-      if (tab) setTabId(tab.dataset.tab);
-      const send = e.target.closest('[data-wr="send"]');
-      if (send) void sendToAbby(el);
-      const crew = e.target.closest('[data-crew]');
-      if (crew) talkTo(crew.dataset.crew);
-      const mer = e.target.closest('[data-wr="crm"]');
-      if (mer) window.location.href = '/crm/';
-      const seat = e.target.closest('[data-wr="seat"]');
-      if (seat) globalThis.DenizenSeatAI?.open?.();
-      const memBtn = e.target.closest('[data-wr="memory-search"]');
-      if (memBtn) void searchMemory(el);
+    let lastActAt = 0;
+    const mark = () => { lastActAt = Date.now(); };
+    const recentlyHandled = () => Date.now() - lastActAt < 450;
+
+    const activate = (e) => {
+      const close = e.target.closest?.('[data-wr="close"]');
+      if (close) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        onClose?.();
+        return true;
+      }
+      const tab = e.target.closest?.('[data-tab]');
+      if (tab) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        setTabId(tab.dataset.tab);
+        return true;
+      }
+      const send = e.target.closest?.('[data-wr="send"]');
+      if (send) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        void sendToAbby(el);
+        return true;
+      }
+      const crew = e.target.closest?.('[data-crew]');
+      if (crew) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        talkTo(crew.dataset.crew);
+        return true;
+      }
+      const mer = e.target.closest?.('[data-wr="crm"]');
+      if (mer) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        window.location.href = '/crm/';
+        return true;
+      }
+      const seat = e.target.closest?.('[data-wr="seat"]');
+      if (seat) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        globalThis.DenizenSeatAI?.open?.();
+        return true;
+      }
+      const memBtn = e.target.closest?.('[data-wr="memory-search"]');
+      if (memBtn) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        void searchMemory(el);
+        return true;
+      }
+      return false;
+    };
+
+    // Direct per-tab binds — same path as phone Me tabs; survives iOS click-drop.
+    const bindPress = window.DenizenTouchBind?.bindPress;
+    el.querySelectorAll('[data-tab]').forEach((btn) => {
+      const go = (e) => {
+        if (recentlyHandled()) return;
+        e?.preventDefault?.();
+        e?.stopPropagation?.();
+        mark();
+        setTabId(btn.dataset.tab);
+      };
+      if (bindPress) bindPress(btn, go, { stop: true });
+      else btn.addEventListener('click', go);
     });
+
+    // pointerup is reliable on iOS; suppress the duplicate synthetic click.
+    el.addEventListener('pointerup', (e) => {
+      if (e.button != null && e.button !== 0) return;
+      if (recentlyHandled()) return;
+      // Tabs already have dedicated binds — skip so we don't double-switch.
+      if (e.target.closest?.('[data-tab]')) return;
+      if (!e.target.closest?.('button, [data-wr], [data-crew]')) return;
+      if (activate(e)) mark();
+    });
+    el.addEventListener('click', (e) => {
+      if (recentlyHandled()) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.target.closest?.('[data-tab]')) {
+        // Fallback when TouchBind is unavailable and only click fired.
+        activate(e);
+        mark();
+        return;
+      }
+      activate(e);
+    });
+
+    if (window.DenizenTouchBind?.delegatePress) {
+      window.DenizenTouchBind.delegatePress(el, '[data-wr], [data-crew]', (e, btn) => {
+        if (recentlyHandled()) return;
+        const fake = { target: btn, preventDefault() {}, stopPropagation() {} };
+        if (activate(fake)) mark();
+      }, { stop: true });
+    }
   }
 
   function buildChrome() {

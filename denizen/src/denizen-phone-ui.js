@@ -1698,11 +1698,25 @@
         overflow: hidden;
         background: #060c18;
       }
+      /* Workbench tabs are text chips — do not inherit settings button chrome. */
+      #${FRAME_ID} .dzp-settings.dzp-workbench .wr-tabs button {
+        border: 0 !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+      #${FRAME_ID} .dzp-settings.dzp-workbench .wr-tabs button:hover {
+        border-color: transparent !important;
+        color: #e2e8f0 !important;
+      }
       #${FRAME_ID} #dzp-workbench-host {
         flex: 1;
         min-height: 0;
         display: flex;
         flex-direction: column;
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
       }
       #${FRAME_ID} .dzp-workflow-frame {
         flex: 1;
@@ -3358,7 +3372,7 @@
       globalThis.DenizenWorkRail.mountPhone(host);
     } else {
       host.innerHTML = '<p class="v">Workbench is loading…</p>';
-      globalThis.DenizenLazyScripts?.load?.(['./src/work-rail.js?v=wr1']).then(() => {
+      globalThis.DenizenLazyScripts?.load?.(['./src/work-rail.js?v=wr6']).then(() => {
         globalThis.DenizenWorkRail?.mountPhone?.(host);
       });
     }

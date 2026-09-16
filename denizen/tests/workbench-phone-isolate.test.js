@@ -32,6 +32,15 @@ describe('Workbench phone isolate', () => {
     assert.match(phone, /mountPhone/);
   });
 
+  it('phone Workbench tabs use TouchBind and large hit targets', () => {
+    assert.match(rail, /DenizenTouchBind\?\.bindPress/);
+    assert.match(rail, /querySelectorAll\('\[data-tab\]'\)\.forEach/);
+    assert.match(rail, /min-width: 64px/);
+    assert.match(rail, /min-height: 44px/);
+    assert.match(rail, /#dzp-workbench-host \.wr-tabs button/);
+    assert.match(phone, /dzp-settings\.dzp-workbench \.wr-tabs button/);
+  });
+
   it('hides Levels when the laptop workbench rail is extended', () => {
     assert.match(
       chip,
