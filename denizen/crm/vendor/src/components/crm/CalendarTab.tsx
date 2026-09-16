@@ -920,15 +920,15 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
       {/* ── WEEK VIEW ── */}
       {viewMode === "week" && (
         <div style={{ ...S.card }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flex: isMobile ? "1 1 100%" : undefined, justifyContent: isMobile ? "center" : undefined }}>
               <button onClick={prevWeek} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>←</button>
-              <span style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>
-                {new Date(weekDates[0] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} – {new Date(weekDates[6] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              <span style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: T.text0, textAlign: "center", flex: isMobile ? 1 : undefined }}>
+                {new Date(weekDates[0] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} – {new Date(weekDates[6] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: isMobile ? undefined : "numeric" })}
               </span>
               <button onClick={nextWeek} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>→</button>
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flex: isMobile ? "1 1 100%" : undefined, justifyContent: isMobile ? "space-between" : undefined }}>
               <button onClick={() => setDayViewDate(todayStr)} style={{ fontSize: 11, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 10px", color: T.blue, cursor: "pointer" }}>This Week</button>
               <span style={{ fontSize: 12, color: T.text3 }}>{weekMeetings.length} meeting{weekMeetings.length !== 1 ? "s" : ""}</span>
             </div>
