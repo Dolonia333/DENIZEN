@@ -32,6 +32,21 @@
     cropOrigin: null,
   };
 
+  function isPhoneUi() {
+    return !!globalThis.DenizenDeviceProfile?.isPhone?.()
+      || document.documentElement.classList.contains('denizen-phone');
+  }
+
+  /** Touch devices fire pointerleave on lift — do not auto-dismiss the ring. */
+  function useHoverDismiss() {
+    if (isPhoneUi()) return false;
+    try {
+      if (window.matchMedia('(pointer: coarse)').matches) return false;
+      if (window.matchMedia('(hover: none)').matches) return false;
+    } catch (_) {}
+    return true;
+  }
+
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
     const s = document.createElement('style');
@@ -60,8 +75,14 @@
         right: 50% !important;
         bottom: 38% !important;
         transform: translateX(50%) !important;
+        /* Let taps reach ring actions under/around the centered mascot. */
+        pointer-events: none !important;
       }
       html.denizen-buzz-ring-open #denizen-phone-fab .dzp-fab-buzz-bubble {
+        display: none !important;
+      }
+      html.denizen-phone #${RING_ID} .bz-act[data-act="desktop"],
+      html.denizen-phone #${RING_ID} .bz-act[data-act="invisible"] {
         display: none !important;
       }
       #${RING_ID} .bz-orbit {
@@ -134,6 +155,14 @@
         font-family: "IBM Plex Sans", system-ui, sans-serif;
         overflow: hidden;
       }
+      html.denizen-phone #${NOTE_ID} {
+        right: max(10px, env(safe-area-inset-right));
+        left: max(10px, env(safe-area-inset-left));
+        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        width: auto;
+        max-height: min(70vh, calc(100dvh - 80px));
+      }
+      html.denizen-phone #${NOTE_ID} textarea { min-height: 64px; font-size: 16px; }
       #${NOTE_ID}.open { display: flex; flex-direction: column; }
       #${NOTE_ID} header {
         display: flex; align-items: center; justify-content: space-between;
@@ -175,9 +204,13 @@
       #${CROP_ID} {
         display: none; position: fixed; inset: 0; z-index: 2147483602;
         background: rgba(2,6,23,0.72); cursor: crosshair;
+        touch-action: none;
       }
       #${CROP_ID}.open { display: block; }
-      #${CROP_ID} img { position: absolute; inset: 0; margin: auto; max-width: 92vw; max-height: 88vh; }
+      #${CROP_ID} img {
+        position: absolute; inset: 0; margin: auto; max-width: 92vw; max-height: 88vh;
+        pointer-events: none; user-select: none; -webkit-user-select: none;
+      }
       #${CROP_ID} .bz-crop-box {
         position: absolute; border: 2px solid #a3e635; background: rgba(163,230,53,0.12);
         pointer-events: none;
@@ -185,6 +218,7 @@
       #${CROP_ID} p {
         position: absolute; left: 0; right: 0; bottom: 16px; margin: 0; text-align: center;
         color: #e2e8f0; font: 13px/1.4 "IBM Plex Sans", system-ui, sans-serif;
+        pointer-events: none;
       }
     `;
     document.head.appendChild(s);
@@ -206,18 +240,21 @@
   };
 
   function actions() {
-    const desktop = !!window.DenizenDesktop?.buzzOverlayToggle;
-    const extra = desktop
-      ? { id: 'invisible', label: 'Ghost', ico: 'ti-eye-off', svg: ICO.invisible, title: 'Leave invisible — stay out of screen share' }
-      : { id: 'desktop', label: 'Desktop', ico: 'ti-device-desktop', svg: ICO.desktop, title: 'Always-on-top Buzz overlay' };
-    return [
-      { id: 'screenshot', label: 'Screenshot', ico: 'ti-screenshot', svg: ICO.screenshot },
-      { id: 'meeting', label: 'Meet', ico: 'ti-video', svg: ICO.meeting, title: 'Record meeting — transcribed as it lands' },
+    const list = [
+      { id: 'screenshot', label: 'Screenshot', ico: 'ti-screenshot', svg: ICO.screenshot, title: isPhoneUi() ? 'Photo or screenshot from your camera roll' : 'Capture the screen' },
+      { id: 'meeting', label: 'Meet', ico: 'ti-video', svg: ICO.meeting, title: isPhoneUi() ? 'Record the meeting on this mic — transcribed as it lands' : 'Record meeting — transcribed as it lands' },
       { id: 'dictate', label: 'Say', ico: 'ti-message', svg: ICO.dictate },
       { id: 'phone', label: 'Apps', ico: 'ti-device-mobile', svg: ICO.phone, title: 'Open the phone — chat, CRM, and the rest of the apps' },
-      extra,
       { id: 'record', label: 'Record', ico: 'ti-microphone', svg: ICO.record },
     ];
+    if (!isPhoneUi()) {
+      const desktop = !!window.DenizenDesktop?.buzzOverlayToggle;
+      const extra = desktop
+        ? { id: 'invisible', label: 'Ghost', ico: 'ti-eye-off', svg: ICO.invisible, title: 'Leave invisible — stay out of screen share' }
+        : { id: 'desktop', label: 'Desktop', ico: 'ti-device-desktop', svg: ICO.desktop, title: 'Always-on-top Buzz overlay' };
+      list.splice(4, 0, extra);
+    }
+    return list;
   }
 
   function ringRadius() {
@@ -296,6 +333,7 @@
   function scheduleHide() {
     cancelHide();
     if (recentlyOpened()) return;
+    if (!useHoverDismiss()) return;
     if (noteEl?.classList.contains('open')) return;
     if (document.getElementById(CROP_ID)?.classList.contains('open')) return;
     leaveTimer = setTimeout(() => {
@@ -305,17 +343,38 @@
     }, 420);
   }
 
+  function ringActionsHtml() {
+    return actions().map((a) => {
+      const title = a.title ? ` title="${esc(a.title)}"` : '';
+      return `<button type="button" class="bz-act" data-act="${a.id}" aria-label="${esc(a.label)}"${title} role="menuitem">${a.svg}<i class="ti ${a.ico}" aria-hidden="true"></i></button>`;
+    }).join('');
+  }
+
+  function syncRingActions() {
+    if (!ringEl) return;
+    const ids = actions().map((a) => a.id).join(',');
+    if (ringEl.dataset.acts === ids) return;
+    ringEl.dataset.acts = ids;
+    const orbit = ringEl.querySelector('.bz-orbit');
+    ringEl.querySelectorAll('.bz-act').forEach((btn) => btn.remove());
+    ringEl.insertAdjacentHTML('beforeend', ringActionsHtml());
+    if (orbit && ringEl.firstElementChild !== orbit) {
+      ringEl.prepend(orbit);
+    }
+  }
+
   function buildRing() {
-    if (ringEl) return;
+    if (ringEl) {
+      syncRingActions();
+      return;
+    }
     ringEl = document.createElement('div');
     ringEl.id = RING_ID;
     ringEl.setAttribute('role', 'menu');
     ringEl.setAttribute('aria-label', 'Buzz capture');
+    ringEl.dataset.acts = actions().map((a) => a.id).join(',');
     ringEl.innerHTML = `<svg class="bz-orbit" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="118" fill="none" stroke="rgba(163,230,53,0.35)" stroke-width="1.5" stroke-dasharray="3 7"/></svg>`
-      + actions().map((a) => {
-        const title = a.title ? ` title="${esc(a.title)}"` : '';
-        return `<button type="button" class="bz-act" data-act="${a.id}" aria-label="${esc(a.label)}"${title} role="menuitem">${a.svg}<i class="ti ${a.ico}" aria-hidden="true"></i></button>`;
-      }).join('');
+      + ringActionsHtml();
     ringEl.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-act]');
       if (btn && !btn.disabled) {
@@ -325,6 +384,7 @@
     });
     ringEl.addEventListener('pointerenter', cancelHide);
     ringEl.addEventListener('pointerleave', (e) => {
+      if (!useHoverDismiss()) return;
       if (insideBuzz(e.relatedTarget)) return;
       scheduleHide();
     });
@@ -387,6 +447,7 @@
 
   function setRingOpen(open) {
     buildRing();
+    if (open) syncRingActions();
     ringEl.classList.toggle('open', !!open);
     document.documentElement.classList.toggle('denizen-buzz-ring-open', !!open);
     const fab = document.getElementById('denizen-phone-fab');
@@ -476,33 +537,38 @@
 
   async function captureScreenshot() {
     state.kind = 'screenshot';
+    // Mobile browsers lack reliable display capture, and awaiting getDisplayMedia
+    // burns the user gesture needed to open the photo picker.
+    if (isPhoneUi() || !navigator.mediaDevices?.getDisplayMedia) {
+      pickImageFile({ crop: true });
+      return;
+    }
     try {
-      if (navigator.mediaDevices?.getDisplayMedia) {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-        const track = stream.getVideoTracks()[0];
-        const video = document.createElement('video');
-        video.srcObject = stream;
-        video.muted = true;
-        await video.play();
-        await new Promise((r) => setTimeout(r, 60));
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 1280;
-        canvas.height = video.videoHeight || 720;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        track.stop();
-        stream.getTracks().forEach((t) => t.stop());
-        state.imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        state.imageName = 'buzz-screenshot.jpg';
-        openCropper(state.imageDataUrl);
-        return;
-      }
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const track = stream.getVideoTracks()[0];
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.muted = true;
+      await video.play();
+      await new Promise((r) => setTimeout(r, 60));
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      track.stop();
+      stream.getTracks().forEach((t) => t.stop());
+      state.imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      state.imageName = 'buzz-screenshot.jpg';
+      openCropper(state.imageDataUrl);
+      return;
     } catch (err) {
       if (err?.name === 'NotAllowedError') return;
     }
-    pickImageFile();
+    pickImageFile({ crop: true });
   }
 
-  function pickImageFile() {
+  function pickImageFile(opts = {}) {
+    const crop = opts.crop !== false;
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -513,7 +579,8 @@
       reader.onload = () => {
         state.imageDataUrl = String(reader.result || '');
         state.imageName = file.name || 'buzz-screenshot.jpg';
-        openNote('screenshot');
+        if (crop) openCropper(state.imageDataUrl);
+        else openNote('screenshot');
       };
       reader.readAsDataURL(file);
     };
@@ -552,34 +619,41 @@
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = CROP_ID;
-      overlay.innerHTML = '<img alt="Screenshot — drag a box" /><div class="bz-crop-box" hidden></div><p>Drag a box to crop · click or Esc to keep the full shot</p>';
-      overlay.addEventListener('mousedown', (e) => {
-        if (e.target.closest('p')) return;
-        state.cropOrigin = { x: e.clientX, y: e.clientY };
+      const hint = isPhoneUi()
+        ? 'Drag a box to crop · tap to keep the full shot'
+        : 'Drag a box to crop · click or Esc to keep the full shot';
+      overlay.innerHTML = `<img alt="Screenshot — drag a box" /><div class="bz-crop-box" hidden></div><p>${hint}</p>`;
+
+      const beginCrop = (clientX, clientY, target) => {
+        if (target?.closest?.('p')) return false;
+        state.cropOrigin = { x: clientX, y: clientY };
         const box = overlay.querySelector('.bz-crop-box');
         box.hidden = false;
-        box.style.left = `${e.clientX}px`;
-        box.style.top = `${e.clientY}px`;
+        box.style.left = `${clientX}px`;
+        box.style.top = `${clientY}px`;
         box.style.width = '0px';
         box.style.height = '0px';
-      });
-      overlay.addEventListener('mousemove', (e) => {
+        return true;
+      };
+
+      const moveCrop = (clientX, clientY) => {
         if (!state.cropOrigin) return;
         const box = overlay.querySelector('.bz-crop-box');
-        const x = Math.min(state.cropOrigin.x, e.clientX);
-        const y = Math.min(state.cropOrigin.y, e.clientY);
+        const x = Math.min(state.cropOrigin.x, clientX);
+        const y = Math.min(state.cropOrigin.y, clientY);
         box.style.left = `${x}px`;
         box.style.top = `${y}px`;
-        box.style.width = `${Math.abs(e.clientX - state.cropOrigin.x)}px`;
-        box.style.height = `${Math.abs(e.clientY - state.cropOrigin.y)}px`;
-      });
-      overlay.addEventListener('mouseup', async (e) => {
+        box.style.width = `${Math.abs(clientX - state.cropOrigin.x)}px`;
+        box.style.height = `${Math.abs(clientY - state.cropOrigin.y)}px`;
+      };
+
+      const endCrop = async (clientX, clientY) => {
         const origin = state.cropOrigin;
         state.cropOrigin = null;
         const box = overlay.querySelector('.bz-crop-box');
         const imgEl = overlay.querySelector('img');
-        const w = Math.abs((e.clientX) - (origin?.x || 0));
-        const h = Math.abs((e.clientY) - (origin?.y || 0));
+        const w = Math.abs(clientX - (origin?.x || 0));
+        const h = Math.abs(clientY - (origin?.y || 0));
         if (origin && w > 12 && h > 12) {
           try {
             const src = overlay.dataset.src || overlay.querySelector('img').src;
@@ -588,8 +662,35 @@
         }
         closeCrop();
         openNote('screenshot');
+      };
+
+      overlay.addEventListener('pointerdown', (e) => {
+        if (e.button != null && e.button !== 0) return;
+        if (!beginCrop(e.clientX, e.clientY, e.target)) return;
+        try { overlay.setPointerCapture(e.pointerId); } catch (_) {}
+        e.preventDefault();
+      });
+      overlay.addEventListener('pointermove', (e) => {
+        if (!state.cropOrigin) return;
+        moveCrop(e.clientX, e.clientY);
+        e.preventDefault();
+      });
+      overlay.addEventListener('pointerup', (e) => {
+        if (!state.cropOrigin && !overlay.querySelector('.bz-crop-box:not([hidden])')) return;
+        void endCrop(e.clientX, e.clientY);
+      });
+      overlay.addEventListener('pointercancel', (e) => {
+        if (!state.cropOrigin) return;
+        void endCrop(e.clientX, e.clientY);
       });
       document.body.appendChild(overlay);
+    } else {
+      const tip = overlay.querySelector('p');
+      if (tip) {
+        tip.textContent = isPhoneUi()
+          ? 'Drag a box to crop · tap to keep the full shot'
+          : 'Drag a box to crop · click or Esc to keep the full shot';
+      }
     }
     overlay.querySelector('img').src = dataUrl;
     overlay.dataset.src = dataUrl;
@@ -638,9 +739,64 @@
     return new MediaStream(tracks);
   }
 
+  async function startMicOnlyMeeting() {
+    closeRing();
+    let mic = null;
+    try {
+      mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      openNote('meeting');
+      const meta = noteEl?.querySelector('#bz-meta');
+      if (meta) meta.textContent = 'Microphone permission is needed to record a meeting.';
+      return;
+    }
+    state.meetingTracks = [...(mic?.getTracks?.() || [])];
+    const audioOnly = new MediaStream(mic.getAudioTracks());
+    if (!audioOnly.getAudioTracks().length) {
+      mic.getTracks().forEach((t) => t.stop());
+      openNote('meeting');
+      const meta = noteEl?.querySelector('#bz-meta');
+      if (meta) meta.textContent = 'No mic audio — add a line about the meeting, then Send.';
+      return;
+    }
+    const rec = new MediaRecorder(audioOnly);
+    state.chunks = [];
+    state.recorder = rec;
+    state.recording = true;
+    state.kind = 'meeting';
+    rec.ondataavailable = async (e) => {
+      if (!e.data?.size) return;
+      try {
+        const text = await transcribe(e.data);
+        appendTranscript(text);
+      } catch (err) {
+        const meta = noteEl?.querySelector('#bz-meta');
+        if (meta) meta.textContent = err.message || 'STT failed — keep talking or type the note';
+      }
+    };
+    rec.onstop = () => {
+      state.meetingTracks.forEach((t) => { try { t.stop(); } catch (_) {} });
+      state.meetingTracks = [];
+      mic?.getTracks?.().forEach((t) => t.stop());
+      state.recording = false;
+      noteEl?.classList.remove('recording');
+      const meta = noteEl?.querySelector('#bz-meta');
+      if (meta) meta.textContent = state.transcript ? 'Meeting transcript ready — edit before send' : 'Meeting captured — add a line, then Send';
+    };
+    rec.start(MEETING_CHUNK_MS);
+    openNote('meeting');
+    const meta = noteEl?.querySelector('#bz-meta');
+    if (meta) meta.textContent = 'Recording on this mic… Stop when you are done. Transcripts land in parts.';
+  }
+
   async function startMeeting() {
     if (state.recording) {
       stopRecording();
+      return;
+    }
+    // Phones rarely support getDisplayMedia; keep the gesture path on mic-only.
+    if (isPhoneUi() || !navigator.mediaDevices?.getDisplayMedia) {
+      await startMicOnlyMeeting();
       return;
     }
     closeRing();
@@ -649,9 +805,7 @@
       display = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
     } catch (err) {
       if (err?.name === 'NotAllowedError') return;
-      openNote('meeting');
-      const meta = noteEl?.querySelector('#bz-meta');
-      if (meta) meta.textContent = 'Screen share is needed to record a meeting.';
+      await startMicOnlyMeeting();
       return;
     }
     let mic = null;
@@ -908,6 +1062,12 @@
       return;
     }
     if (id === 'screenshot') {
+      // Keep the file picker on the same turn as the tap (mobile gesture).
+      if (isPhoneUi() || !navigator.mediaDevices?.getDisplayMedia) {
+        state.kind = 'screenshot';
+        pickImageFile({ crop: true });
+        return;
+      }
       void captureScreenshot();
       return;
     }
@@ -994,6 +1154,7 @@
       fab.dataset.bzWired = '1';
       fab.addEventListener('pointerenter', cancelHide);
       fab.addEventListener('pointerleave', (e) => {
+        if (!useHoverDismiss()) return;
         if (insideBuzz(e.relatedTarget)) return;
         scheduleHide();
       });

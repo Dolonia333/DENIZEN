@@ -113,6 +113,12 @@ describe('Denizen customer product surface', () => {
     assert.match(buzz, /\/api\/context-drop/);
     assert.match(buzz, /getDisplayMedia/);
     assert.match(buzz, /startMeeting/);
+    assert.match(buzz, /startMicOnlyMeeting/);
+    assert.match(buzz, /isPhoneUi/);
+    assert.match(buzz, /useHoverDismiss/);
+    assert.match(buzz, /pointer-events: none !important/);
+    assert.match(buzz, /pointerdown/);
+    assert.match(buzz, /pickImageFile\(\{ crop: true \}\)/);
     assert.match(buzz, /params.get\('buzz'\)/);
     assert.match(buzz, /class="bz-ico"/);
     assert.match(buzz, /-90 \+ \(360 \* i\)/);
@@ -121,6 +127,7 @@ describe('Denizen customer product surface', () => {
     assert.match(buzz, /DenizenPhoneUi\?\.open/);
     assert.match(buzz, /OPEN_GUARD_MS/);
     assert.match(buzz, /recentlyOpened/);
+    assert.match(buzz, /if \(!isPhoneUi\(\)\)/);
     const rail = read('src/work-rail.js');
     assert.match(rail, /Orchestrator|Abby/);
     assert.match(rail, /Seat an AI/);
