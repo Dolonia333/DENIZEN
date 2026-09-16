@@ -533,15 +533,21 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
           <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>Calendar</h1>
           <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Meetings, tasks, deals & booking</p>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{
+          display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap",
+          overflowX: isMobile ? "auto" : undefined, WebkitOverflowScrolling: "touch",
+          maxWidth: isMobile ? "100%" : undefined, paddingBottom: isMobile ? 2 : 0,
+        }}>
           {(["month", "week", "day", "agenda", "booking"] as ViewMode[]).map(v => (
             <button key={v} onClick={() => {
               setViewMode(v);
               if ((v === "day" || v === "week") && selectedDate) setDayViewDate(selectedDate);
             }} style={{
-              ...S.btnGhost, fontSize: isMobile ? 11 : 12, padding: isMobile ? "6px 10px" : "6px 14px",
+              ...S.btnGhost, fontSize: isMobile ? 11 : 12, padding: isMobile ? "7px 10px" : "6px 14px",
               background: viewMode === v ? T.accent : T.bg3, color: viewMode === v ? "#080d18" : T.text2,
               fontWeight: viewMode === v ? 700 : 500,
+              flex: isMobile ? "1 1 auto" : undefined,
+              minWidth: isMobile ? 0 : undefined,
             }}>
               {isMobile
                 ? (v === "month" ? "Month" : v === "week" ? "Week" : v === "day" ? "Day" : v === "agenda" ? "Agenda" : "Book")
@@ -633,7 +639,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
           <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
             {(["calendar", "day"] as const).map(p => (
               <button key={p} type="button" onClick={() => setMobilePanel(p)} style={{
-                flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 600, cursor: "pointer",
                 borderRadius: T.radius.md, border: `1px solid ${mobilePanel === p ? T.accent + "66" : T.bg4}`,
                 background: mobilePanel === p ? T.accent + "18" : T.bg3,
                 color: mobilePanel === p ? T.accent : T.text3,
@@ -685,7 +691,11 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                         const mc = meetingCounts[dateStr] || 0;
                         return (
                           <td key={dateStr}
-                            onClick={() => { const next = dateStr === selectedDate ? null : dateStr; setSelectedDate(next); if (next && isMobile) setMobilePanel("day"); }}
+                            onClick={() => {
+                              const next = dateStr === selectedDate ? null : dateStr;
+                              setSelectedDate(next);
+                              if (next && isMobile) setMobilePanel("day");
+                            }}
                             onDoubleClick={() => { setDayViewDate(dateStr); setViewMode("day"); }}
                             style={{
                               height: 72, padding: "6px 8px", verticalAlign: "top",
@@ -737,7 +747,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
           {/* Right panel */}
           {(!isMobile || mobilePanel === "day") && (
-          <div style={{ ...S.card, marginTop: isMobile ? 14 : 0 }}>
+          <div style={{ ...S.card, marginTop: isMobile ? 12 : 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>
                 {selectedDate ? new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "Select a date"}
@@ -919,6 +929,62 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             </div>
           </div>
 
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {weekDates.map((dateStr) => {
+                const d = new Date(dateStr + "T12:00:00");
+                const isToday = dateStr === todayStr;
+                const dayMeetings = weekMeetings.filter(m => m.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
+                return (
+                  <div key={dateStr} style={{
+                    borderRadius: T.radius.md,
+                    border: `1px solid ${isToday ? `${T.blue}55` : T.gridLine}`,
+                    background: isToday ? `${T.blue}10` : T.bg2,
+                    overflow: "hidden",
+                  }}>
+                    <button type="button" onClick={() => { setDayViewDate(dateStr); setViewMode("day"); }} style={{
+                      width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "12px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: isToday ? T.blue : T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                          {isToday ? "Today" : d.toLocaleDateString("en-US", { weekday: "long" })}
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, marginTop: 2 }}>
+                          {d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, color: T.text3, fontWeight: 600 }}>
+                        {dayMeetings.length} meeting{dayMeetings.length === 1 ? "" : "s"} · Open →
+                      </div>
+                    </button>
+                    {dayMeetings.length === 0 ? (
+                      <div style={{ padding: "0 14px 14px", fontSize: 12, color: T.text3 }}>No meetings</div>
+                    ) : (
+                      <div style={{ padding: "0 10px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+                        {dayMeetings.map(m => (
+                          <button key={m.id} type="button" onClick={() => openEditMeeting(m)} style={{
+                            display: "flex", gap: 10, alignItems: "flex-start", textAlign: "left",
+                            padding: "10px 12px", borderRadius: T.radius.sm, cursor: "pointer",
+                            border: `1px solid ${(MEETING_TYPE_COLORS[m.type] || T.purple)}33`,
+                            background: `${MEETING_TYPE_COLORS[m.type] || T.purple}12`,
+                            borderLeft: `3px solid ${MEETING_TYPE_COLORS[m.type] || T.purple}`,
+                          }}>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: T.text2, minWidth: 44 }}>{m.time}</span>
+                            <span style={{ flex: 1 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{m.title}</div>
+                              <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>{m.duration}m · {m.contact || m.type}</div>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+          <>
           {/* Day headers */}
           <div style={{ display: "grid", gridTemplateColumns: "56px repeat(7, 1fr)", gap: 0, borderBottom: `1px solid ${T.gridLineStrong}` }}>
             <div style={{ borderRight: `1px solid ${T.gridLine}` }} />
@@ -1053,6 +1119,8 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               );
             })()}
           </div>
+          </>
+          )}
         </div>
       )}
 
@@ -1199,7 +1267,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
       {/* ── NEW/EDIT MEETING MODAL ── */}
       {showNewMeeting && (
         <div style={S.modalBg} onClick={() => { setShowNewMeeting(false); resetForm(); }}>
-          <div style={{ ...S.modalBox, width: 520 }} onClick={e => e.stopPropagation()}>
+          <div style={{ ...S.modalBox, width: "min(520px, calc(100vw - 24px))", maxHeight: isMobile ? "min(90vh, 720px)" : undefined, overflowY: isMobile ? "auto" : undefined }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>
                 {editingMeeting ? "Edit Meeting" : "New Meeting"}
@@ -1221,7 +1289,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <input value={nmTitle} onChange={e => setNmTitle(e.target.value)} placeholder="e.g. Discovery Call — Acme Corp"
               style={{ ...S.input, marginBottom: 14 }} />
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
               <div>
                 <div style={{ ...S.label }}>Type</div>
                 <select value={nmType} onChange={e => setNmType(e.target.value)} style={{ ...S.input, marginBottom: 14 }}>
@@ -1240,7 +1308,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
               <div>
                 <div style={{ ...S.label }}>Date *</div>
                 <input type="date" value={nmDate} onChange={e => setNmDate(e.target.value)} style={{ ...S.input, marginBottom: 14 }} />
@@ -1277,7 +1345,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
             )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
               <div>
                 <div style={{ ...S.label }}>Contact</div>
                 <select value={nmContact} onChange={e => setNmContact(e.target.value)} style={{ ...S.input, marginBottom: 14 }}>
@@ -1334,7 +1402,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
       {/* ── BOOKING PAGE PREVIEW MODAL ── */}
       {showBookingPreview && (
         <div style={S.modalBg} onClick={() => setShowBookingPreview(false)}>
-          <div style={{ ...S.modalBox, width: 520 }} onClick={e => e.stopPropagation()}>
+          <div style={{ ...S.modalBox, width: "min(520px, calc(100vw - 24px))", maxHeight: isMobile ? "min(90vh, 720px)" : undefined, overflowY: isMobile ? "auto" : undefined }} onClick={e => e.stopPropagation()}>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>📅</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: T.text0 }}>Book a Meeting</div>
