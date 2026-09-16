@@ -471,78 +471,111 @@ html.embed .dz-app-chrome{display:none}
 .lean-wrap{display:flex;flex-direction:column;gap:12px}
 .lean-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);font-size:12.5px}
 .lean-meta strong{color:var(--forest);font-weight:700}
+.lean-fit-hint{display:none}
 .lean-stage{
   width:100%;
   overflow:hidden;
-  border-radius:16px;
-  /* height filled by fitBoardToStage() on narrow screens */
+  border-radius:18px;
 }
 .lean-canvas{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
-  grid-template-rows:minmax(160px,1.35fr) minmax(110px,.85fr) minmax(130px,1fr);
-  gap:0;
-  border:1px solid var(--line);
-  border-radius:16px;
+  grid-template-rows:minmax(168px,1.4fr) minmax(120px,.9fr) minmax(140px,1fr);
+  gap:8px;
+  padding:10px;
+  border:1px solid rgba(13,31,26,.35);
+  border-radius:18px;
   overflow:hidden;
-  background:var(--line);
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(184,135,27,.14), transparent 55%),
+    linear-gradient(165deg, #1A3F35 0%, #0F2A22 48%, #0A1C17 100%);
   min-height:min(72vh,720px);
-  box-shadow:var(--shadow-lift);
+  box-shadow:
+    var(--shadow-lift),
+    inset 0 1px 0 rgba(255,255,255,.08);
   width:100%;
   transform-origin:top left;
 }
 .lean-cell{
-  background:var(--surface);
+  background:linear-gradient(180deg, #FFFCF6 0%, var(--surface) 100%);
   display:flex;flex-direction:column;min-height:0;min-width:0;
-  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  border:1px solid rgba(16,35,28,.10);
+  border-radius:12px;
+  box-shadow:0 1px 0 rgba(255,255,255,.65) inset, 0 4px 14px rgba(10,28,23,.08);
+  transition:box-shadow .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
 }
-.lean-cell:nth-child(5n){border-right:none}
+.lean-cell:focus-within{
+  border-color:rgba(42,106,85,.45);
+  box-shadow:0 0 0 3px rgba(42,106,85,.18), 0 6px 18px rgba(10,28,23,.12);
+}
 .lean-cell.lc-problem{grid-column:1;grid-row:1 / span 2}
 .lean-cell.lc-solution{grid-column:2;grid-row:1}
 .lean-cell.lc-metrics{grid-column:2;grid-row:2}
-.lean-cell.lc-uvp{grid-column:3;grid-row:1 / span 2;background:linear-gradient(180deg,rgba(42,106,85,.10),var(--surface))}
+.lean-cell.lc-uvp{
+  grid-column:3;grid-row:1 / span 2;
+  background:
+    linear-gradient(180deg, rgba(42,106,85,.14) 0%, rgba(255,252,246,.96) 42%, #FFFCF6 100%);
+  border-color:rgba(42,106,85,.34);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.7) inset,
+    0 0 0 1px rgba(42,106,85,.06),
+    0 6px 18px rgba(10,28,23,.10);
+}
 .lean-cell.lc-unfair{grid-column:4;grid-row:1}
 .lean-cell.lc-channels{grid-column:4;grid-row:2}
 .lean-cell.lc-customers{grid-column:5;grid-row:1 / span 2}
-.lean-cell.lc-cost{grid-column:1 / span 3;grid-row:3;border-bottom:none}
-.lean-cell.lc-revenue{grid-column:4 / span 2;grid-row:3;border-bottom:none;border-right:none}
+.lean-cell.lc-cost{grid-column:1 / span 3;grid-row:3}
+.lean-cell.lc-revenue{grid-column:4 / span 2;grid-row:3}
 .lean-cell-head{
   display:flex;align-items:baseline;justify-content:space-between;gap:8px;
-  padding:10px 12px 4px;flex:none
+  padding:11px 12px 6px;flex:none;
+  border-bottom:1px solid rgba(16,35,28,.06);
 }
 .lean-cell-head h3{
-  margin:0;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
-  color:var(--forest);font-family:var(--font-display)
+  margin:0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--forest-2);font-family:var(--font-display)
 }
-.lean-cell-head span{font-size:10.5px;color:var(--muted-2);text-align:right;max-width:55%}
+.lean-cell-head span{
+  font-size:10.5px;color:var(--muted-2);text-align:right;max-width:52%;
+  line-height:1.25;font-weight:500
+}
 .lean-cell textarea{
   flex:1;min-height:0;border:none;border-radius:0;background:transparent;
-  padding:4px 12px 12px;font-size:12.5px;line-height:1.45;resize:none;
-  color:var(--ink)
+  padding:8px 12px 12px;font-size:12.5px;line-height:1.45;resize:none;
+  color:var(--ink);font-family:var(--font-sheet)
 }
-.lean-cell textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--forest-tint)}
-.lean-cell.lc-uvp textarea{font-size:13.5px;font-weight:550}
-/* Mobile: keep classic 5×3 tablet — scale to fit so all 9 boxes stay in view (no card stack). */
+.lean-cell textarea:focus{outline:none;box-shadow:none}
+.lean-cell textarea::placeholder{color:var(--muted-2);opacity:.85}
+.lean-cell.lc-uvp .lean-cell-head{
+  border-bottom-color:rgba(42,106,85,.14);
+  background:linear-gradient(90deg, rgba(184,135,27,.12), transparent 70%);
+  border-radius:12px 12px 0 0;
+}
+.lean-cell.lc-uvp .lean-cell-head h3{color:var(--forest)}
+.lean-cell.lc-uvp textarea{font-size:13.5px;font-weight:550;color:var(--ink)}
+/* Mobile: keep classic 5×3 tablet — denser type so scaled view stays readable. */
 @media (max-width:900px){
   .lean-fit-hint{
     display:block;font-size:11.5px;color:var(--muted);margin:0 0 6px;font-weight:600
   }
   .lean-stage{
-    border:1px solid var(--line);
+    border-radius:16px;
     box-shadow:var(--shadow-lift);
-    background:var(--line);
   }
   .lean-canvas{
-    width:820px;
-    min-width:820px;
-    min-height:540px;
-    border:none;border-radius:0;box-shadow:none;
+    width:860px;
+    min-width:860px;
+    min-height:560px;
+    gap:7px;
+    padding:9px;
+    border-radius:16px;
   }
-  .lean-cell-head{padding:6px 8px 2px}
-  .lean-cell-head h3{font-size:9.5px;letter-spacing:.04em}
+  .lean-cell{border-radius:10px}
+  .lean-cell-head{padding:8px 9px 4px}
+  .lean-cell-head h3{font-size:10px;letter-spacing:.07em}
   .lean-cell-head span{display:none}
-  .lean-cell textarea{padding:2px 8px 8px;font-size:10.5px;line-height:1.35}
-  .lean-cell.lc-uvp textarea{font-size:11px}
+  .lean-cell textarea{padding:5px 9px 9px;font-size:11.5px;line-height:1.38}
+  .lean-cell.lc-uvp textarea{font-size:12px}
 }
 @media (min-width:901px){
   .lean-fit-hint{display:none}
@@ -3299,7 +3332,7 @@ function renderLeanCanvas(){
   }
 
   html+='<p class="lean-fit-hint">Full 9-box canvas — scaled to fit your phone (same layout as desktop)</p>'
-    +'<div class="lean-stage" data-fit-stage data-fit-design-width="820">'
+    +'<div class="lean-stage" data-fit-stage data-fit-design-width="860">'
     +'<div class="lean-canvas" data-fit-board role="region" aria-label="Lean Canvas">'
     +cell('lc-problem','problem')
     +cell('lc-solution','solution')
@@ -3759,7 +3792,7 @@ function fitBoardToStage(stage){
   if(!stage) return;
   var board=stage.querySelector('[data-fit-board]');
   if(!board) return;
-  var designW=Number(stage.getAttribute('data-fit-design-width'))||820;
+  var designW=Number(stage.getAttribute('data-fit-design-width'))||860;
   var avail=stage.clientWidth;
   if(!avail){
     avail=(stage.parentElement&&stage.parentElement.clientWidth)||Math.max(0, window.innerWidth-28);

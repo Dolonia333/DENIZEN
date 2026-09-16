@@ -48,7 +48,7 @@ describe('Business Studio phone app', () => {
   it('keeps classic Lean Canvas grid on mobile (no card stack)', () => {
     const html = read('business-studio/index.html');
     assert.match(html, /lean-stage/);
-    assert.match(html, /data-fit-design-width="820"/);
+    assert.match(html, /data-fit-design-width="860"/);
     assert.match(html, /fitBoardToStage/);
     // Must not collapse the tablet into a column of cards on phone
     assert.doesNotMatch(
