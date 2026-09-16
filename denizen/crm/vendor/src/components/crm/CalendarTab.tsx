@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { T, S, fmt, MEETING_TEMPLATES, type Task, type Deal, type Meeting, type Contact } from "@/lib/crm-data";
 import {
@@ -1268,8 +1269,8 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
         </div>
       )}
 
-      {/* ── NEW/EDIT MEETING MODAL ── */}
-      {showNewMeeting && (
+      {/* ── NEW/EDIT MEETING MODAL (portaled so dock FAB cannot stack above it) ── */}
+      {showNewMeeting && createPortal(
         <div
           style={{
             ...S.modalBg,
@@ -1431,11 +1432,12 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               <button onClick={saveMeeting} style={{ ...S.btn, fontSize: 12, flex: isMobile ? "1 1 100%" : undefined }}>{editingMeeting ? "Save Changes" : "Create Meeting"}</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* ── BOOKING PAGE PREVIEW MODAL ── */}
-      {showBookingPreview && (
+      {showBookingPreview && createPortal(
         <div style={{ ...S.modalBg, zIndex: 10050, alignItems: isMobile ? "flex-end" : "center", padding: isMobile ? 0 : undefined }} onClick={() => setShowBookingPreview(false)}>
           <div style={{
             ...S.modalBox,
@@ -1470,7 +1472,8 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               <button onClick={() => setShowBookingPreview(false)} style={{ ...S.btnGhost, fontSize: 12 }}>Close Preview</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

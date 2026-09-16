@@ -49,8 +49,10 @@ describe('CRM calendar phone UX', () => {
     assert.match(calendarTab, /Meeting templates — own row/);
     assert.match(calendarTab, /flexWrap: "wrap"/);
     assert.match(calendarTab, /zIndex: 10050/);
+    assert.match(calendarTab, /createPortal/);
     assert.match(scheduleTab, /flexWrap: "wrap"/);
     assert.match(scheduleTab, /zIndex: 10050/);
+    assert.match(scheduleTab, /createPortal/);
   });
 
   it('uses short weekday headers and bottom-sheet modals on phone', () => {
@@ -63,5 +65,17 @@ describe('CRM calendar phone UX', () => {
   it('keeps schedule sub-nav horizontally scrollable on narrow screens', () => {
     assert.match(subTabNav, /overflowX: "auto"/);
     assert.match(subTabNav, /whiteSpace: "nowrap"/);
+  });
+
+  it('does not leave a transform on page fade that traps fixed modals', () => {
+    const css = fs.readFileSync(
+      path.join(__dirname, '../crm/vendor/src/index.css'),
+      'utf8',
+    );
+    assert.match(css, /\.crm-page-fade/);
+    assert.match(css, /@keyframes pageFade/);
+    // opacity-only keyframes — transform would make position:fixed modals
+    // resolve against the page wrapper instead of the viewport
+    assert.doesNotMatch(css, /@keyframes pageFade\s*\{[^}]*transform:/s);
   });
 });

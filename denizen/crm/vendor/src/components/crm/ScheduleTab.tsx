@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { T, S, MEETING_TEMPLATES, type Task, type Meeting, type Deal, type Contact, type Subtask } from "@/lib/crm-data";
 
@@ -232,7 +233,7 @@ function NewMeetingModal({ date, contacts, onSave, onClose }: {
     onClose();
   };
 
-  return (
+  return createPortal(
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 10050,
       display: "flex", alignItems: "flex-end", justifyContent: "center",
@@ -283,7 +284,8 @@ function NewMeetingModal({ date, contacts, onSave, onClose }: {
           <button onClick={onClose} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -1115,7 +1117,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
 
       {/* ═══════════ MODALS ═══════════ */}
       {/* Quick Add Task */}
-      {showQuickAdd && (
+      {showQuickAdd && createPortal(
         <div onClick={() => setShowQuickAdd(false)} style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 10050,
           display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(8px)", padding: 0,
@@ -1148,7 +1150,8 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
               <button onClick={() => setShowQuickAdd(false)} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* New Meeting */}

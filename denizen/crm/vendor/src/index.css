@@ -109,13 +109,13 @@
     border-radius: 8px;
   }
 
-  /* Route/page fade transition */
+  /* Route/page fade — opacity only so fixed overlays aren't trapped in a transform containing block */
   .crm-page-fade {
     animation: pageFade 0.2s ease-out both;
   }
   @keyframes pageFade {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* Active nav pill style */
