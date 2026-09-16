@@ -34,6 +34,14 @@ describe('Buzz mobile capture', () => {
     assert.match(buzz, /if \(!isPhoneUi\(\)\)/);
     assert.match(buzz, /data-act="desktop"/);
     assert.match(buzz, /pointer-events: none !important/);
+    assert.match(buzz, /z-index: 2147483645/);
+    assert.match(buzz, /pointerup/);
     assert.match(buzz, /syncRingActions/);
+    const corner = fs.readFileSync(path.join(ROOT, 'src', 'corner-hud-autohide.js'), 'utf8');
+    assert.match(corner, /denizen-buzz-ring-open[\s\S]*?pointer-events: none !important/);
+    assert.doesNotMatch(
+      corner,
+      /html\.denizen-buzz-ring-open #denizen-phone-fab[\s\S]*?pointer-events: auto !important/,
+    );
   });
 });

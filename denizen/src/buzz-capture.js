@@ -56,15 +56,23 @@
         position: fixed;
         width: 320px;
         height: 320px;
-        z-index: 2147483600;
+        z-index: 2147483645;
         pointer-events: none;
+        touch-action: manipulation;
       }
       #${RING_ID}.open { pointer-events: auto; }
-      #${RING_ID}.open .bz-act { pointer-events: auto; }
+      #${RING_ID}.open .bz-act {
+        pointer-events: auto;
+        z-index: 2;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(163, 230, 53, 0.35);
+      }
       html.denizen-buzz-ring-open #denizen-phone-fab {
         width: 72px !important;
         height: 96px !important;
-        z-index: 2147483601 !important;
+        /* Keep mascot under ring actions so taps always hit .bz-act. */
+        z-index: 2147483590 !important;
+        pointer-events: none !important;
       }
       html.denizen-buzz-ring-open:not(.denizen-phone) #denizen-phone-fab {
         right: 168px !important;
@@ -75,7 +83,6 @@
         right: 50% !important;
         bottom: 38% !important;
         transform: translateX(50%) !important;
-        /* Let taps reach ring actions under/around the centered mascot. */
         pointer-events: none !important;
       }
       html.denizen-buzz-ring-open #denizen-phone-fab .dzp-fab-buzz-bubble {
@@ -375,12 +382,28 @@
     ringEl.dataset.acts = actions().map((a) => a.id).join(',');
     ringEl.innerHTML = `<svg class="bz-orbit" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="118" fill="none" stroke="rgba(163,230,53,0.35)" stroke-width="1.5" stroke-dasharray="3 7"/></svg>`
       + ringActionsHtml();
+    let lastActAt = 0;
+    const activate = (e) => {
+      const btn = e.target.closest?.('[data-act]');
+      if (!btn || btn.disabled) return false;
+      e.preventDefault();
+      e.stopPropagation();
+      lastActAt = Date.now();
+      onAction(btn.dataset.act);
+      return true;
+    };
+    // pointerup is reliable on iOS; suppress the duplicate synthetic click.
+    ringEl.addEventListener('pointerup', (e) => {
+      if (e.button != null && e.button !== 0) return;
+      activate(e);
+    });
     ringEl.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-act]');
-      if (btn && !btn.disabled) {
-        onAction(btn.dataset.act);
+      if (Date.now() - lastActAt < 450) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
       }
-      // Empty ring space is the FAB teleport target — never close on background click.
+      activate(e);
     });
     ringEl.addEventListener('pointerenter', cancelHide);
     ringEl.addEventListener('pointerleave', (e) => {
@@ -450,6 +473,9 @@
     if (open) syncRingActions();
     ringEl.classList.toggle('open', !!open);
     document.documentElement.classList.toggle('denizen-buzz-ring-open', !!open);
+    try {
+      if (window.game?.input) window.game.input.enabled = !open;
+    } catch (_) {}
     const fab = document.getElementById('denizen-phone-fab');
     if (fab) {
       if (open) {

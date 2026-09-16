@@ -84,9 +84,10 @@
         bottom: 152px !important;
         transform: none !important;
         opacity: 1 !important;
-        pointer-events: auto !important;
+        /* Must not steal taps from Buzz ring actions (FAB sits above the ring). */
+        pointer-events: none !important;
         visibility: visible !important;
-        z-index: 2147483646 !important;
+        z-index: 2147483590 !important;
       }
       html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab,
       html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab:hover,
@@ -94,6 +95,8 @@
         right: 50% !important;
         bottom: 38% !important;
         transform: translateX(50%) !important;
+        pointer-events: none !important;
+        z-index: 2147483590 !important;
       }
       #denizen-speak-fab { display: none !important; }
       /* Keep slide-in transform; scale lives on inner .dzp-fab-buzz so Buzz stays crisp */
