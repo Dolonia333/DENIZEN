@@ -1,18 +1,20 @@
 # DENIZEN
 
-**Real-time visual observability layer for AI agents.** Watch autonomous AI agents collaborate, communicate, and execute tasks in a pixel-art office — every agent action rendered as NPC behavior you can see.
+**The office for your AI agents — Floor, Workbench, and Buzz.** Watch autonomous AI agents collaborate, communicate, and execute tasks in a pixel-art office — every agent action rendered as NPC behavior you can see. Drop context with Buzz, seat the models you already pay for, and run Meridian CRM + Studio Board from the same phone chrome.
 
 ![Denizen Preview](denizen/assets/ref_Hu4Gzs.png)
 
-> The project itself lives in [`denizen/`](denizen/) — that subdirectory is the actual application. The full documentation, including the deep dive on every feature, lives at **[denizen/README.md](denizen/README.md)**.
+> The project itself lives in [`denizen/`](denizen/) — that subdirectory is the actual application. The full documentation, including the deep dive on every feature, lives at **[denizen/README.md](denizen/README.md)**. The maintained technical dossier is **[denizen/docs/TECHNICAL_DOSSIER.md](denizen/docs/TECHNICAL_DOSSIER.md)** (v1.8.0).
 
 ---
 
 ## The 30-second version
 
-Denizen renders AI agent workflows as a living pixel-art office. 16 NPCs are real AI agents — each one has a personality (`SOUL.md`), a persistent memory (`MEMORY.md`), and a job. They walk around, talk, sit at desks, run meetings, write reports, file bug reports, and execute real tools — and you watch them do it in real time. Instead of staring at terminal logs or dashboards, you see the *shape* of what your agents are doing.
+Denizen renders AI agent workflows as a living pixel-art office. Eighteen NPCs are real AI agents — each one has a personality (`SOUL.md`), a persistent memory (`MEMORY.md`), and a job. They walk around, talk, sit at desks, run meetings, write reports, file bug reports, and execute real tools — and you watch them do it in real time. Instead of staring at terminal logs or dashboards, you see the *shape* of what your agents are doing.
 
-**Built with:** Node.js 22+, Phaser 3, WebSocket, LM Studio (local), Claude / Grok / Gemini / Kimi (cloud), Kali Linux (security + compute mesh), Tailscale (home fleet).
+**Product objects:** **Floor** (the office), **Workbench** (orchestrator rail), **Buzz** (capture → Abby), plus **Seat an AI**, **Meridian CRM**, and **Studio Board**.
+
+**Built with:** Node.js 22+, Phaser 3, WebSocket, LM Studio (local), Claude / Grok (cloud & CLI bridges), Kali Linux (security + compute mesh), Tailscale (home fleet).
 
 ## Repository layout
 
@@ -35,7 +37,7 @@ npm install
 npm start
 ```
 
-Open **http://localhost:8080**. You should see 16 NPCs moving around, talking, taking breaks.
+Open **http://localhost:8080**. You should see the office NPCs moving around, talking, taking breaks. Public landing: `landing.html` / your hosted demo URL.
 
 No API keys needed — Denizen runs in zero-config demo mode out of the box with smart scripted fallback responses. Configure real AI providers (Claude, Grok, LM Studio) for live agent behavior. See [denizen/README.md → Configuration](denizen/README.md#configuration) for setup.
 
