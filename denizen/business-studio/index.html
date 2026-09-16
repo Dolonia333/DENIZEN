@@ -372,6 +372,61 @@ html.embed .dz-app-chrome{display:none}
   }
   .lean-cell textarea{min-height:100px;resize:vertical}
 }
+
+/* ===== Living PAVE workbook ===== */
+.pave-wrap{display:flex;flex-direction:column;gap:14px}
+.pave-banner{
+  padding:14px 16px;border-radius:var(--radius);border:1px solid rgba(42,106,85,.35);
+  background:linear-gradient(135deg,rgba(42,106,85,.16),rgba(240,180,41,.06));
+}
+.pave-banner strong{color:var(--gold)}
+.pave-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.pave-tab{
+  padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);
+  font-size:12.5px;font-weight:600;color:var(--ink-2)
+}
+.pave-tab:hover{border-color:var(--muted);color:var(--ink)}
+.pave-tab.active{background:var(--gold-dim);border-color:rgba(240,180,41,.45);color:var(--gold)}
+.pave-tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted-2);margin-right:6px}
+.pave-tab.done .dot{background:var(--ok)}
+.pave-tab.living .dot{background:var(--gold)}
+.pave-section{padding:0}
+.pave-section-head{margin-bottom:12px}
+.pave-section-head h3{margin:0 0 4px;font-size:16px;font-family:var(--font-display)}
+.pave-section-head p{margin:0;color:var(--muted);font-size:13px}
+.pave-field{
+  margin-bottom:14px;padding:12px 14px;border-radius:10px;border:1px solid var(--line-2);
+  background:rgba(22,32,48,.55)
+}
+.pave-field-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.pave-field-head label{font-size:12.5px;font-weight:650;color:var(--ink-2);margin:0}
+.pave-field textarea,.pave-field input{width:100%}
+.pave-field.has-review{border-color:rgba(240,180,41,.4);box-shadow:inset 3px 0 0 var(--gold)}
+.pave-reviews{margin-top:10px;display:grid;gap:8px}
+.pave-review{
+  padding:10px 12px;border-radius:8px;background:var(--bg-2);border:1px solid rgba(240,180,41,.22)
+}
+.pave-review .pr-kind{font-size:10.5px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:var(--gold)}
+.pave-review .pr-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.pave-review .pr-text{margin-top:6px;font-size:13px;color:var(--ink);line-height:1.45}
+.pave-review.resolved{opacity:.65;border-color:var(--line)}
+.pave-risk-table,.pave-market-table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:12.5px}
+.pave-risk-table th,.pave-market-table th,.pave-risk-table td,.pave-market-table td{
+  border:1px solid var(--line);padding:6px;vertical-align:top;background:var(--surface)
+}
+.pave-risk-table th,.pave-market-table th{background:var(--surface-2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.pave-risk-table input,.pave-risk-table textarea,.pave-market-table input{
+  width:100%;border:none;background:transparent;padding:4px;min-height:0;border-radius:0
+}
+.pave-risk-table textarea{min-height:56px}
+.pave-living-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;
+  background:var(--gold-dim);color:var(--gold);font-size:11px;font-weight:700}
+.pave-discovery-bar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+  padding:12px 14px;margin-bottom:12px;border-radius:10px;border:1px dashed rgba(240,180,41,.35);
+  background:rgba(240,180,41,.06)
+}
+
 .chip{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--forest-tint);color:#9fd4be}
 .kbd{font-size:11px;color:var(--muted)}
 
@@ -576,6 +631,336 @@ function leanCanvasPlainText(c){
     return f.title+'\n'+(String(c[f.key]||'').trim()||'—');
   }).join('\n\n');
 }
+
+/* ---------- Living PAVE workbook (mirrors denizen-business-studio-pave.js) ---------- */
+function emptyRiskRow(){ return {risk:'',why:'',mitigate:''}; }
+function emptyMarketRow(){ return {customers:'',acv:'',size:''}; }
+function emptyPave(){
+  return {
+    snapshot:{company:'',founders:'',i2eAdvisor:'',cohort:'',productDescription:''},
+    partA:{customer:'',problem:'',currentAlternative:'',solution:'',valueProposition:'',salesCycle:''},
+    partB:{targetPersona:'',interviewGoal:'10+',interviewsCompletedNote:'',summaryOfCalls:'',expectedFindings:'',unexpectedFindings:'',personaDecision:'',customerDiscovery:'',interviewRecords:[]},
+    partC:{
+      directCompetitors:'',indirectCompetitors:'',potentialCompetitors:'',statusQuo:'',competitiveMatrix:'',
+      shortTermAdvantages:'',longTermAdvantages:'',competitorAdvantages:'',competitiveResponse:'',distributionAccess:'',
+      risks:[emptyRiskRow(),emptyRiskRow(),emptyRiskRow()],
+      marketSizing:{tam:emptyMarketRow(),sam:emptyMarketRow(),som:emptyMarketRow()},
+      revenueYear1:'',revenueYear2:'',revenueYear3:'',futureSegments:'',risksText:''
+    },
+    partD:{foundingTeam:'',teamGaps:'',gapStrategy:'',pitch90:''},
+    final:{discoveredRisks:'',recommendedNextSteps:'',advisorOutcome:''},
+    reviews:[], updatedAt:null, living:true
+  };
+}
+const PAVE_SECTIONS=[
+  {id:'snapshot',title:'Company Snapshot',when:'Complete at the start of the cohort',living:false,fields:[
+    {key:'snapshot.company',label:'Company name',kind:'text'},
+    {key:'snapshot.founders',label:'Founder(s)',kind:'text'},
+    {key:'snapshot.i2eAdvisor',label:'i2E advisor / E3 mentor',kind:'text'},
+    {key:'snapshot.cohort',label:'Cohort / dates',kind:'textarea'},
+    {key:'snapshot.productDescription',label:'Product description (1–2 sentences)',kind:'textarea'}
+  ]},
+  {id:'partA',title:'Part A — After Workshop A',when:'Complete before Mentor Call A · Customer, value proposition, sales cycle',living:false,fields:[
+    {key:'partA.customer',label:'Our customer (the person who pays) is',kind:'textarea'},
+    {key:'partA.problem',label:'Their problem is',kind:'textarea'},
+    {key:'partA.currentAlternative',label:'They currently solve it by',kind:'textarea'},
+    {key:'partA.solution',label:'Our product solves it by',kind:'textarea'},
+    {key:'partA.valueProposition',label:'Value proposition — With [company], [customer] can…',kind:'textarea'},
+    {key:'partA.salesCycle',label:'Sales cycle (diagram or text map)',kind:'textarea'}
+  ]},
+  {id:'partB',title:'Part B — After Workshop B',when:'Living section — keep updating as you finish more interviews',living:true,fields:[
+    {key:'partB.targetPersona',label:'Target persona / segment (one at a time — don’t mix)',kind:'textarea'},
+    {key:'partB.interviewGoal',label:'Interview goal',kind:'text'},
+    {key:'partB.interviewsCompletedNote',label:'Interviews completed so far (notes)',kind:'textarea'},
+    {key:'partB.summaryOfCalls',label:'Summary of calls',kind:'textarea'},
+    {key:'partB.expectedFindings',label:'Expected — what matched your assumptions',kind:'textarea'},
+    {key:'partB.unexpectedFindings',label:'Unexpected — what surprised you',kind:'textarea'},
+    {key:'partB.personaDecision',label:'So what? Does the persona still hold, or do you need to pivot?',kind:'textarea'}
+  ]},
+  {id:'partC',title:'Part C — After Workshop C',when:'Complete before Mentor Call C · Competition, risks, market size',living:false,fields:[
+    {key:'partC.directCompetitors',label:'Direct competitors',kind:'textarea'},
+    {key:'partC.indirectCompetitors',label:'Indirect competitors',kind:'textarea'},
+    {key:'partC.potentialCompetitors',label:'Potential competitors',kind:'textarea'},
+    {key:'partC.statusQuo',label:'Status quo (what most customers use today)',kind:'textarea'},
+    {key:'partC.competitiveMatrix',label:'Competitive matrix',kind:'textarea'},
+    {key:'partC.shortTermAdvantages',label:'Short-term competitive advantages',kind:'textarea'},
+    {key:'partC.longTermAdvantages',label:'Long-term competitive advantages (moat — “first mover” doesn’t count)',kind:'textarea'},
+    {key:'partC.competitorAdvantages',label:'Advantages your competitors will keep',kind:'textarea'},
+    {key:'partC.competitiveResponse',label:'Likely competitive response — and how you’ll handle it',kind:'textarea'},
+    {key:'partC.distributionAccess',label:'Do you have access to the existing distribution channel? How?',kind:'textarea'},
+    {key:'partC.revenueYear1',label:'Year 1 expected revenue',kind:'text'},
+    {key:'partC.revenueYear2',label:'Year 2 expected revenue',kind:'text'},
+    {key:'partC.revenueYear3',label:'Year 3 expected revenue',kind:'text'},
+    {key:'partC.futureSegments',label:'Future verticals / segments',kind:'textarea'}
+  ]},
+  {id:'partD',title:'Part D — After Workshop D',when:'Complete before Mentor Call D · Founding team and 90-second pitch',living:false,fields:[
+    {key:'partD.foundingTeam',label:'Current team & roles',kind:'textarea'},
+    {key:'partD.teamGaps',label:'Biggest gap (capability you can’t cover yourself)',kind:'textarea'},
+    {key:'partD.gapStrategy',label:'How you’ll fill it',kind:'textarea'},
+    {key:'partD.pitch90',label:'Your 90-second pitch',kind:'textarea'}
+  ]},
+  {id:'final',title:'Final PAVE Meeting',when:'Completed with your i2E advisor at the final PAVE meeting',living:false,fields:[
+    {key:'final.discoveredRisks',label:'Discovered risks',kind:'textarea'},
+    {key:'final.recommendedNextSteps',label:'Recommended next steps (capital / advisory path)',kind:'textarea'},
+    {key:'final.advisorOutcome',label:'Advisor outcome / notes',kind:'textarea'}
+  ]}
+];
+function coercePaveStr(v){
+  if(v==null) return '';
+  if(typeof v==='string') return v;
+  if(Array.isArray(v)) return v.map(function(x){return typeof x==='string'?x:String((x&&(x.name||x.title))||x||'');}).filter(Boolean).join('\n');
+  if(typeof v==='object') return String(v.text||v.label||'');
+  return String(v);
+}
+function sanitizePaveRisks(raw, legacyText){
+  var rows=[];
+  if(Array.isArray(raw)){
+    rows=raw.map(function(r){return {risk:coercePaveStr(r&&r.risk),why:coercePaveStr(r&&(r.why||r.whyRisk)),mitigate:coercePaveStr(r&&(r.mitigate||r.mitigation))};});
+  }
+  while(rows.length<3) rows.push(emptyRiskRow());
+  if(!rows.some(function(r){return r.risk||r.why||r.mitigate;}) && legacyText){
+    rows[0]={risk:coercePaveStr(legacyText),why:'',mitigate:''};
+  }
+  return rows.slice(0,8);
+}
+function sanitizePaveMarketRow(raw, legacy){
+  if(raw && typeof raw==='object' && !Array.isArray(raw)){
+    return {customers:coercePaveStr(raw.customers||raw.count),acv:coercePaveStr(raw.acv||raw.annual),size:coercePaveStr(raw.size||raw.marketSize)};
+  }
+  if(typeof raw==='string' || typeof legacy==='string') return {customers:'',acv:'',size:coercePaveStr(raw||legacy)};
+  return emptyMarketRow();
+}
+function sanitizePave(raw){
+  var out=emptyPave();
+  if(!raw||typeof raw!=='object') return out;
+  var snap=raw.snapshot||{};
+  out.snapshot.company=coercePaveStr(snap.company);
+  out.snapshot.founders=coercePaveStr(snap.founders||snap.founder);
+  out.snapshot.i2eAdvisor=coercePaveStr(snap.i2eAdvisor||snap.advisor);
+  out.snapshot.cohort=coercePaveStr(snap.cohort||snap.program);
+  out.snapshot.productDescription=coercePaveStr(snap.productDescription||snap.product);
+  var a=raw.partA||{};
+  out.partA.customer=coercePaveStr(a.customer); out.partA.problem=coercePaveStr(a.problem);
+  out.partA.currentAlternative=coercePaveStr(a.currentAlternative); out.partA.solution=coercePaveStr(a.solution);
+  out.partA.valueProposition=coercePaveStr(a.valueProposition); out.partA.salesCycle=coercePaveStr(a.salesCycle);
+  var b=raw.partB||{};
+  out.partB.targetPersona=coercePaveStr(b.targetPersona);
+  out.partB.interviewGoal=coercePaveStr(b.interviewGoal)||'10+';
+  out.partB.interviewsCompletedNote=coercePaveStr(b.interviewsCompletedNote||b.interviewsCompleted);
+  out.partB.summaryOfCalls=coercePaveStr(b.summaryOfCalls||b.customerDiscovery);
+  out.partB.expectedFindings=coercePaveStr(b.expectedFindings);
+  out.partB.unexpectedFindings=coercePaveStr(b.unexpectedFindings);
+  out.partB.personaDecision=coercePaveStr(b.personaDecision);
+  out.partB.customerDiscovery=coercePaveStr(b.customerDiscovery);
+  out.partB.interviewRecords=Array.isArray(b.interviewRecords)?b.interviewRecords:[];
+  var c=raw.partC||{};
+  var competition=(c.competition&&typeof c.competition==='object')?c.competition:{};
+  out.partC.directCompetitors=coercePaveStr(c.directCompetitors||competition.direct);
+  out.partC.indirectCompetitors=coercePaveStr(c.indirectCompetitors||competition.indirect);
+  out.partC.potentialCompetitors=coercePaveStr(c.potentialCompetitors||competition.potential);
+  out.partC.statusQuo=coercePaveStr(c.statusQuo||competition.statusQuo);
+  out.partC.competitiveMatrix=coercePaveStr(c.competitiveMatrix);
+  out.partC.shortTermAdvantages=coercePaveStr(c.shortTermAdvantages);
+  out.partC.longTermAdvantages=coercePaveStr(c.longTermAdvantages);
+  out.partC.competitorAdvantages=coercePaveStr(c.competitorAdvantages);
+  out.partC.competitiveResponse=coercePaveStr(c.competitiveResponse);
+  out.partC.distributionAccess=coercePaveStr(c.distributionAccess);
+  out.partC.risks=sanitizePaveRisks(c.risks, typeof c.risks==='string'?c.risks:c.risksText);
+  out.partC.risksText=coercePaveStr(typeof c.risks==='string'?c.risks:c.risksText);
+  var ms=c.marketSizing||{};
+  out.partC.marketSizing={
+    tam:sanitizePaveMarketRow(ms.tam, typeof ms.tam==='string'?ms.tam:''),
+    sam:sanitizePaveMarketRow(ms.sam, typeof ms.sam==='string'?ms.sam:''),
+    som:sanitizePaveMarketRow(ms.som, typeof ms.som==='string'?ms.som:'')
+  };
+  var rev=c.revenueProjections;
+  if(rev&&typeof rev==='object'){
+    out.partC.revenueYear1=coercePaveStr(rev.year1||rev.y1);
+    out.partC.revenueYear2=coercePaveStr(rev.year2||rev.y2);
+    out.partC.revenueYear3=coercePaveStr(rev.year3||rev.y3);
+  } else {
+    out.partC.revenueYear1=coercePaveStr(c.revenueYear1);
+    out.partC.revenueYear2=coercePaveStr(c.revenueYear2);
+    out.partC.revenueYear3=coercePaveStr(c.revenueYear3);
+    if(!out.partC.revenueYear1 && typeof rev==='string') out.partC.revenueYear1=rev;
+  }
+  out.partC.futureSegments=coercePaveStr(c.futureSegments);
+  var d=raw.partD||{};
+  out.partD.foundingTeam=coercePaveStr(d.foundingTeam); out.partD.teamGaps=coercePaveStr(d.teamGaps);
+  out.partD.gapStrategy=coercePaveStr(d.gapStrategy); out.partD.pitch90=coercePaveStr(d.pitch90);
+  var f=raw.final||{};
+  out.final.discoveredRisks=coercePaveStr(f.discoveredRisks);
+  out.final.recommendedNextSteps=coercePaveStr(f.recommendedNextSteps);
+  out.final.advisorOutcome=coercePaveStr(f.advisorOutcome);
+  out.reviews=Array.isArray(raw.reviews)?raw.reviews.map(function(r){
+    return {
+      id:r.id||uid('prv'), fieldPath:coercePaveStr(r.fieldPath||r.path),
+      kind:['why','suggest','note'].indexOf(r.kind)>=0?r.kind:'note',
+      text:coercePaveStr(r.text||r.body), authorName:coercePaveStr(r.authorName||r.advisorName||'Mentor'),
+      authorRole:coercePaveStr(r.authorRole||r.role||'mentor'), createdAt:r.createdAt||null,
+      resolved:!!r.resolved, founderReply:coercePaveStr(r.founderReply)
+    };
+  }).filter(function(r){return r.fieldPath&&r.text;}):[];
+  out.updatedAt=raw.updatedAt||null;
+  out.living=raw.living!==false;
+  return out;
+}
+function denizenPaveDraft(){
+  return sanitizePave({
+    snapshot:{
+      company:'Dolonia (product: DENIZEN)',
+      founders:'Zion Van Zandt and Shawnaya Williams',
+      i2eAdvisor:'Final PAVE advisor TBD. E3 mentor: Srijita Ghosh (Mentor Call A: Mon Aug 31, 1:00–1:45 PM CDT).',
+      cohort:'i2E E3 Cohort 63. Workshop A completed Thu Aug 27, 2026. Feedback session Fri Aug 28. Mentor Call A Mon Aug 31.',
+      productDescription:'DENIZEN is a visual AI operating environment: a persistent pixel-art office where named agents keep memory, use real tools (CRM, mail drafts, GitHub/Cursor, MCP), and leave receipts when work finishes. It is built so a small team can see whether agents did real work — not just chat.'
+    },
+    partA:{
+      customer:'Dana — founder-operator of a 3–8 person technical shop (Oklahoma / similar) who already pays for ChatGPT, Claude, or Cursor. Title: founder / head of ops. B2B. Dana writes the card; Dana is not a school district and not i2E.',
+      problem:'Every AI session dies. Work lives in chat tabs. There is no shared memory, no audit of what an agent actually did, and no working set of real accounts — so the team cannot tell chatbots from operators.',
+      currentAlternative:'Stacked chat tabs + a CRM nobody trusts + Slack/Notion notes + hoping a VA or intern follows up. Status quo is ChatGPT/Claude/Cursor with no office, no outcomes ledger, and no durable agent when the window closes.',
+      solution:'Putting persistent agents in one office Dana can watch. Agents keep memory, run allowed tools, park junk off the sales board, and write outcomes. Faster than hiring a coordinator; clearer than another chatbot; cheaper than a full ops hire. Mail stays gated until Dana says send.',
+      valueProposition:'With DENIZEN, Dana can: (1) See which agent is on and what it last finished. (2) Keep a sales board that only shows live humans and next verbs. (3) Leave an agent on overnight without this chat staying open. (4) Draft follow-ups without auto-sending mail. (5) Hand a coding fix to Cursor and get a closed ticket. (6) Prove to a partner or mentor what ran, with receipts — not vibes.',
+      salesCycle:'Text map until we draw it. DENIZEN in the center. USER: Dana plus one technical operator. DECIDES AND PAYS: Dana on a card ($49/team or $199/lab). CYCLE TODAY: demo office → one real account → weekly receipt → paid seat.'
+    },
+    partB:{
+      targetPersona:'Same as Part A: Dana, founder-operator of a 3–8 person technical shop. Do not mix CareerTech, OMES, and E3 into this list.',
+      interviewGoal:'10+',
+      interviewsCompletedNote:'0 of 10. Start after Mentor Call A. Interviews are discovery calls, not CRM deals.',
+      summaryOfCalls:'None yet. Workshop A only.',
+      expectedFindings:'TBD after first interviews.',
+      unexpectedFindings:'TBD after first interviews.',
+      personaDecision:'Hold Dana as the paying persona until 5 interviews say otherwise. 1921 / OMES / RM Cyber is a separate capture motion under the parent company — not this E3 customer.'
+    },
+    partC:{
+      directCompetitors:'ChatGPT / Claude Teams / Cursor background agents. (Workshop C — refine.)',
+      indirectCompetitors:'Notion AI, HubSpot + a VA, Slack bots, n8n dashboards with no office.',
+      potentialCompetitors:'Any lab that wraps MCP + a game skin. Open-source agent dashboards.',
+      statusQuo:'A pile of chat tabs and a CRM they ignore.',
+      competitiveMatrix:'Paste your competitive matrix here.',
+      shortTermAdvantages:'Working office + durable NPC + outcomes ledger + mail default-deny + a CRM that parks scrape junk.',
+      longTermAdvantages:'Persistent identity + tool policy + visual audit trail on a stack we operate. First-mover is not the moat.',
+      competitorAdvantages:'Model quality, distribution, and brand of OpenAI / Anthropic / Cursor.',
+      competitiveResponse:'They ship “agents” inside the chat product. We stay the visible office + policy + receipts layer, not another model.',
+      distributionAccess:'Not yet. Channel today is founder-led demo. 1921 gov channel is a different product motion — do not mix into E3 distribution.',
+      risks:[
+        {risk:'Wrong buyer (district / gov vs Dana)',why:'Burns cohort weeks on non-payers',mitigate:'One persona at a time; park 1921 under parent'},
+        {risk:'Chatbots “good enough”',why:'No urgency to switch',mitigate:'Lead with receipts + overnight agent, not chat quality'},
+        {risk:'Mail / security veto',why:'IT blocks agents',mitigate:'Default-deny mail; human gate on send'}
+      ],
+      marketSizing:{tam:{customers:'',acv:'',size:'TBD — Workshop C'},sam:{customers:'',acv:'',size:'TBD — Workshop C'},som:{customers:'',acv:'',size:'TBD — Workshop C'}},
+      futureSegments:'After Dana: multi-seat shops, then 1921 capture visibility as a separate line — not Year-1 E3 TAM.'
+    },
+    partD:{
+      foundingTeam:'Zion Van Zandt — founder, systems / product / infrastructure.\nShawnaya Williams — co-founder, software / product.\nAngela Van Zandt — 1921 Holding Co. (parent; not E3 product owner).\nDr. Ed Van Zandt — engineering advisor.',
+      teamGaps:'Repeatable sales motion and customer-discovery interviews (10+). Also: a durable runner that does useful work, not just presence ticks.',
+      gapStrategy:'Lean on E3 mentor (Srijita) + do the 10 interviews ourselves this cohort. Do not hire a salesperson before Dana exists as a real buyer.',
+      pitch90:'Founders of small technical teams already pay for chatbots that forget everything when the tab closes. DENIZEN is a visual office where named agents keep memory, use real tools, and leave receipts. We are not selling i2E a product. We are finding ten Danas.'
+    },
+    final:{discoveredRisks:'[completed in the meeting]',recommendedNextSteps:'[completed in the meeting]',advisorOutcome:''},
+    living:true
+  });
+}
+function paveGet(obj, path){
+  return String(path||'').split('.').reduce(function(cur,key){return cur==null?undefined:cur[key];}, obj);
+}
+function paveFilledCount(pave){
+  var p=sanitizePave(pave), n=0;
+  PAVE_SECTIONS.forEach(function(sec){
+    sec.fields.forEach(function(f){ if(String(paveGet(p,f.key)||'').trim().length>=8) n++; });
+  });
+  (p.partC.risks||[]).forEach(function(r){ if(String(r.risk||'').trim().length>=4) n++; });
+  ['tam','sam','som'].forEach(function(layer){
+    var row=p.partC.marketSizing[layer]||{};
+    if([row.customers,row.acv,row.size].some(function(x){return String(x||'').trim().length>=2;})) n++;
+  });
+  return n;
+}
+function paveSectionProgress(pave, sectionId){
+  var p=sanitizePave(pave);
+  var sec=PAVE_SECTIONS.find(function(s){return s.id===sectionId;});
+  if(!sec) return {filled:0,total:0,complete:false};
+  var filled=0, total=sec.fields.length;
+  sec.fields.forEach(function(f){ if(String(paveGet(p,f.key)||'').trim().length>=8) filled++; });
+  if(sectionId==='partC'){
+    total+=6;
+    (p.partC.risks||[]).forEach(function(r){ if(String(r.risk||'').trim().length>=4) filled++; });
+    ['tam','sam','som'].forEach(function(layer){
+      var row=p.partC.marketSizing[layer]||{};
+      if([row.customers,row.acv,row.size].some(function(x){return String(x||'').trim().length>=2;})) filled++;
+    });
+  }
+  return {filled:filled,total:total,complete:filled>=Math.max(1,Math.ceil(total*0.6))};
+}
+function pavePartBIsSubstantial(pave){
+  var p=sanitizePave(pave);
+  return String(p.partB.targetPersona||'').trim().length>=12 && (
+    String(p.partB.summaryOfCalls||'').trim().length>=12 ||
+    String(p.partB.expectedFindings||'').trim().length>=12 ||
+    String(p.partB.personaDecision||'').trim().length>=12
+  );
+}
+function countDiscoveryInterviews(st){
+  return (st.evidence||[]).filter(function(e){
+    if(!e||e.revoked||e.status==='revoked') return false;
+    var type=String(e.type||e.evidenceType||'').toLowerCase();
+    if(type==='interview') return true;
+    if(e.requirementKey==='discovery_interviews') return true;
+    return false;
+  }).length;
+}
+function syncPartBFromDiscovery(pave, st, opts){
+  opts=opts||{};
+  var p=sanitizePave(pave);
+  var count=countDiscoveryInterviews(st);
+  var goal=Number(String(p.partB.interviewGoal||'10').replace(/[^\d]/g,''))||10;
+  var autoNote=count+' of '+goal+'. Interviews are discovery calls, not CRM deals.';
+  var note=String(p.partB.interviewsCompletedNote||'');
+  if(!note || /^0 of \d+/i.test(note.trim()) || /TBD|None yet|Start after/i.test(note) || opts.force){
+    p.partB.interviewsCompletedNote=autoNote;
+  }
+  if(opts.refreshSummary){
+    var interviews=(st.evidence||[]).filter(function(e){
+      return e && !e.revoked && e.status!=='revoked' && String(e.type||'').toLowerCase()==='interview';
+    });
+    if(interviews.length){
+      p.partB.summaryOfCalls=interviews.slice(0,20).map(function(e,i){
+        var notes=String(e.notes||e.description||e.summary||'').trim();
+        return (i+1)+'. '+(e.title||('Interview '+(i+1)))+(notes?' — '+notes.slice(0,220):'');
+      }).join('\n');
+    }
+  }
+  if(!p.partB.customerDiscovery && p.partB.summaryOfCalls) p.partB.customerDiscovery=p.partB.summaryOfCalls;
+  p.updatedAt=nowISO();
+  return p;
+}
+function syncPavePartBEvidence(prog){
+  if(!prog||!prog.pave) return;
+  var pave=sanitizePave(prog.pave);
+  var substantial=pavePartBIsSubstantial(pave);
+  state.evidence=state.evidence||[];
+  var ev=state.evidence.find(function(e){return e&&e.source==='pave_part_b'&&e.programId===prog.id&&!e.revoked;});
+  var text=['PAVE Part B — Customer Discovery','Persona: '+pave.partB.targetPersona,'Interviews: '+pave.partB.interviewsCompletedNote,'Summary: '+pave.partB.summaryOfCalls,'Expected: '+pave.partB.expectedFindings,'Unexpected: '+pave.partB.unexpectedFindings,'Decision: '+pave.partB.personaDecision].join('\n');
+  var req=((prog.requirements)||[]).find(function(r){return r.key==='pave_part_b';});
+  if(!substantial){
+    if(ev){ ev.revoked=true; ev.status='revoked'; ev.revokedAt=nowISO(); ev.revokeReason='PAVE Part B no longer substantial'; }
+    return;
+  }
+  if(ev){
+    ev.title='PAVE Part B — Discovery findings'; ev.notes=text; ev.description=text;
+    ev.requirementKey='pave_part_b'; ev.linkedRequirementIds=req?[req.id]:(ev.linkedRequirementIds||[]);
+    ev.programId=prog.id; ev.type='document'; ev.updatedAt=nowISO();
+  } else {
+    state.evidence.unshift({
+      id:uid('ev'), title:'PAVE Part B — Discovery findings', type:'document', notes:text, description:text,
+      requirementKey:'pave_part_b', linkedRequirementIds:req?[req.id]:[], programId:prog.id,
+      source:'pave_part_b', createdAt:nowISO(), status:'active', revoked:false
+    });
+  }
+}
+function reviewsForPaveField(pave, fieldPath){
+  return (sanitizePave(pave).reviews||[]).filter(function(r){return r.fieldPath===fieldPath;});
+}
+
 function emptyState(){
   return {
     business:null,
@@ -736,14 +1121,15 @@ function buildE3Template(opts){
     ['n_evidence','n_decision'],['n_decision','n_milestone'],['n_milestone','n_outcome']
   ].map(function(pair,i){ return {id:'e_'+i,from:pair[0],to:pair[1]}; });
 
-  const pave={
-    snapshot:{company:businessName,founder:founderName,program:'i2E E3'},
+  const pave=sanitizePave({
+    snapshot:{company:businessName,founders:founderName,i2eAdvisor:opts.advisor||'',cohort:opts.cohort||'i2E E3',productDescription:''},
     partA:{customer:'',problem:'',currentAlternative:'',solution:'',valueProposition:'',salesCycle:''},
-    partB:{customerDiscovery:'',targetPersona:'',interviewGoal:'10 decision makers',interviewRecords:[],expectedFindings:'',unexpectedFindings:'',personaDecision:''},
-    partC:{competition:{direct:[],indirect:[],potential:[],statusQuo:''},competitiveMatrix:'',shortTermAdvantages:'',longTermAdvantages:'',risks:'',marketSizing:{tam:'',sam:'',som:''},revenueProjections:'',futureSegments:''},
+    partB:{targetPersona:'',interviewGoal:'10+',interviewsCompletedNote:'',summaryOfCalls:'',expectedFindings:'',unexpectedFindings:'',personaDecision:'',customerDiscovery:'',interviewRecords:[]},
+    partC:emptyPave().partC,
     partD:{foundingTeam:founderName,teamGaps:'',gapStrategy:'',pitch90:''},
-    final:{discoveredRisks:'',recommendedNextSteps:'',advisorOutcome:''}
-  };
+    final:{discoveredRisks:'',recommendedNextSteps:'',advisorOutcome:''},
+    reviews:[], living:true
+  });
 
   return {
     templateId:'i2e-e3-pave',
@@ -947,6 +1333,7 @@ const NAV=[
   {id:'overview',label:'Overview',ico:'◎',group:'Command'},
   {id:'funding',label:'Funding Readiness',ico:'◈',group:'Command'},
   {id:'leancanvas',label:'Lean Canvas',ico:'▦',group:'Command'},
+  {id:'pave',label:'PAVE Workbook',ico:'▤',group:'Command'},
   {id:'strategy',label:'Strategy',ico:'◈',group:'Command'},
   {id:'roadmap',label:'Roadmap',ico:'⟶',group:'Command'},
   {id:'goals',label:'Goals',ico:'◎',group:'Execute'},
@@ -1156,7 +1543,7 @@ function calcMarketSizing(ms){
 }
 
 let state=emptyState();
-let ui={view:'overview',selectedProgramId:null,selectedNodeId:null};
+let ui={view:'overview',selectedProgramId:null,selectedNodeId:null,paveSection:'snapshot'};
 let remoteSyncEnabled=false;
 let remoteUpdatedAt=null;
 let saveTimer=null;
@@ -1800,21 +2187,16 @@ function renderPrograms(){
     });
     html+='</div>';
 
-    // PAVE editor
+    // PAVE living workbook link
     if(p.pave){
-      html+='<h3 style="margin-top:16px">PAVE</h3>';
-      html+='<div class="form-grid" data-pave-program="'+esc(p.id)+'">';
-      html+='<label>Part A — Customer / Problem / Solution<textarea data-pave="partA.customer" placeholder="Customer">'+esc((p.pave.partA&&p.pave.partA.customer)||'')+'</textarea>'
-        +'<textarea data-pave="partA.problem" placeholder="Problem" style="margin-top:6px">'+esc((p.pave.partA&&p.pave.partA.problem)||'')+'</textarea>'
-        +'<textarea data-pave="partA.solution" placeholder="Solution" style="margin-top:6px">'+esc((p.pave.partA&&p.pave.partA.solution)||'')+'</textarea></label>';
-      html+='<label>Part B — Discovery<textarea data-pave="partB.customerDiscovery" placeholder="Discovery notes">'+esc((p.pave.partB&&p.pave.partB.customerDiscovery)||'')+'</textarea>'
-        +'<textarea data-pave="partB.targetPersona" placeholder="Target persona" style="margin-top:6px">'+esc((p.pave.partB&&p.pave.partB.targetPersona)||'')+'</textarea></label>';
-      html+='<label>Part C — Competition & Market<textarea data-pave="partC.competitiveMatrix" placeholder="Competitive notes">'+esc((p.pave.partC&&p.pave.partC.competitiveMatrix)||'')+'</textarea>'
-        +'<textarea data-pave="partC.risks" placeholder="Risks" style="margin-top:6px">'+esc((p.pave.partC&&p.pave.partC.risks)||'')+'</textarea></label>';
-      html+='<label>Part D — Team & Pitch<textarea data-pave="partD.foundingTeam" placeholder="Founding team">'+esc((p.pave.partD&&p.pave.partD.foundingTeam)||'')+'</textarea>'
-        +'<textarea data-pave="partD.pitch90" placeholder="90-second pitch" style="margin-top:6px">'+esc((p.pave.partD&&p.pave.partD.pitch90)||'')+'</textarea></label>';
-      html+='<button type="button" class="btn btn-forest" data-save-pave="'+esc(p.id)+'">Save PAVE</button>';
-      html+='</div>';
+      const pv=sanitizePave(p.pave);
+      const filled=paveFilledCount(pv);
+      const openReviews=(pv.reviews||[]).filter(function(r){return !r.resolved;}).length;
+      html+='<h3 style="margin-top:16px">PAVE workbook</h3>';
+      html+='<div class="panel"><p>Fill this as you go through workshops — mentors review fields, ask WHY, and suggest pivots anytime. Part B stays living as interviews continue.</p>'
+        +'<div class="meta-line"><span><strong class="num">'+filled+'</strong> fields with substance</span>'
+        +(openReviews?'<span class="chip">'+openReviews+' open mentor review'+(openReviews===1?'':'s')+'</span>':'')
+        +'<button type="button" class="btn btn-primary" data-nav="pave">Open PAVE workbook</button></div></div>';
     }
     html+='</div>';
   });
@@ -2074,6 +2456,10 @@ function renderMentors(){
   }
 
   // Recommendations
+  html+='<div class="panel" style="margin-bottom:14px"><h3>PAVE workbook</h3>'
+    +'<p class="rm">Mentors review the living PAVE worksheet, ask WHY on fields, and suggest pivots anytime in the cohort.</p>'
+    +'<button type="button" class="btn btn-forest" data-nav="pave">Open PAVE workbook</button></div>';
+
   html+='<div class="panel"><h3>Mentor recommendations</h3>';
   if(advisor){
     html+='<div class="form-grid" style="margin-bottom:14px">'
@@ -2167,6 +2553,182 @@ function renderSettings(){
   html+='<div class="panel"><h3>Danger zone</h3>'
     +'<button type="button" class="btn btn-danger" data-action="reset-workspace">Reset local workspace</button></div>';
   return html;
+}
+
+function renderPave(){
+  const prog=activeProgram();
+  const advisor=isAdvisorMode();
+  if(!prog){
+    return '<div class="page-head"><div><h2>PAVE Workbook</h2><p>Living E3 worksheet — fill through workshops; mentors review and ask WHY.</p></div></div>'
+      +'<div class="empty"><strong>No active program</strong>Apply the E3 / PAVE template first.'
+      +'<div class="actions" style="justify-content:center;margin-top:12px"><button type="button" class="btn btn-primary" data-action="apply-e3">Apply E3 / PAVE</button></div></div>';
+  }
+  if(!prog.pave) prog.pave=emptyPave();
+  let pave=sanitizePave(prog.pave);
+  pave=syncPartBFromDiscovery(pave, state, {force:false});
+  prog.pave=pave;
+
+  const sectionId=ui.paveSection||'snapshot';
+  const sec=PAVE_SECTIONS.find(function(s){return s.id===sectionId;})||PAVE_SECTIONS[0];
+  const filled=paveFilledCount(pave);
+  const openReviews=(pave.reviews||[]).filter(function(r){return !r.resolved;}).length;
+  const interviewCount=countDiscoveryInterviews(state);
+
+  let html='<div class="page-head"><div><h2>PAVE Workbook</h2>'
+    +'<p>Dropbox-style living worksheet. After each workshop, complete that week’s section before your mentor call. Mentors can ask WHY on any field and suggest a pivot anytime in the cohort.</p></div>'
+    +'<div class="actions">'
+    +'<button type="button" class="btn" data-action="pave-load-denizen">Load DENIZEN draft</button>'
+    +'<button type="button" class="btn" data-nav="programs">Programs</button>'
+    +'<button type="button" class="btn btn-primary" data-action="pave-save">Save PAVE</button>'
+    +'</div></div>';
+
+  html+='<div class="pave-wrap" data-pave-program="'+esc(prog.id)+'">';
+  html+='<div class="pave-banner">Fill this in as you go. By the end of the cohort this is your finished PAVE — the basis for your final meeting with your i2E advisor. '
+    +'<strong>'+esc(prog.name||'Program')+'</strong> · <span class="num">'+filled+'</span> fields with substance'
+    +(openReviews?' · <span class="chip">'+openReviews+' open mentor questions</span>':'')
+    +(pave.updatedAt?' · saved '+esc(fmtDate(pave.updatedAt)):'')
+    +'</div>';
+
+  html+='<div class="pave-tabs" role="tablist">';
+  PAVE_SECTIONS.forEach(function(s){
+    const progSec=paveSectionProgress(pave, s.id);
+    const cls=['pave-tab'];
+    if(s.id===sec.id) cls.push('active');
+    if(progSec.complete) cls.push('done');
+    if(s.living) cls.push('living');
+    html+='<button type="button" class="'+cls.join(' ')+'" data-action="pave-section" data-payload="'+esc(s.id)+'">'
+      +'<span class="dot" aria-hidden="true"></span>'+esc(s.title.replace(/^Part /,'P').replace('Company Snapshot','Snapshot').replace('Final PAVE Meeting','Final'))
+      +'</button>';
+  });
+  html+='</div>';
+
+  html+='<div class="panel pave-section"><div class="pave-section-head"><h3>'+esc(sec.title)
+    +(sec.living?' <span class="pave-living-chip">Living</span>':'')
+    +'</h3><p>'+esc(sec.when)+'</p></div>';
+
+  if(sec.id==='partB'){
+    html+='<div class="pave-discovery-bar"><div><strong class="num">'+interviewCount+'</strong> discovery interviews in Evidence ledger'
+      +'<div class="field-hint">Part B stays open through the rest of the cohort — refresh after each call.</div></div>'
+      +'<div class="actions">'
+      +'<button type="button" class="btn btn-sm" data-nav="discovery">Discovery Lab</button>'
+      +'<button type="button" class="btn btn-sm btn-forest" data-action="pave-sync-discovery">Refresh from evidence</button>'
+      +'</div></div>';
+  }
+
+  sec.fields.forEach(function(f){
+    const val=paveGet(pave, f.key)||'';
+    const revs=reviewsForPaveField(pave, f.key);
+    const open=revs.filter(function(r){return !r.resolved;});
+    html+='<div class="pave-field'+(open.length?' has-review':'')+'" data-pave-field="'+esc(f.key)+'">'
+      +'<div class="pave-field-head"><label for="pave-'+esc(f.key)+'">'+esc(f.label)+'</label>'
+      +'<div class="actions">'
+      +(advisor
+        ? '<button type="button" class="btn btn-sm btn-why" data-action="pave-ask-why" data-payload="'+esc(f.key)+'">Ask WHY</button>'
+          +'<button type="button" class="btn btn-sm" data-action="pave-suggest" data-payload="'+esc(f.key)+'">Suggest</button>'
+        : (open.length?'<span class="chip">'+open.length+' mentor note'+(open.length===1?'':'s')+'</span>':''))
+      +'</div></div>';
+    if(f.kind==='text'){
+      html+='<input id="pave-'+esc(f.key)+'" data-pave="'+esc(f.key)+'" value="'+esc(val)+'"/>';
+    } else {
+      html+='<textarea id="pave-'+esc(f.key)+'" data-pave="'+esc(f.key)+'" rows="3">'+esc(val)+'</textarea>';
+    }
+    if(revs.length){
+      html+='<div class="pave-reviews">';
+      revs.forEach(function(r){
+        html+='<div class="pave-review'+(r.resolved?' resolved':'')+'">'
+          +'<div class="pr-kind">'+esc(r.kind==='why'?'WHY?':(r.kind==='suggest'?'Suggestion':'Note'))+'</div>'
+          +'<div class="pr-meta">'+esc(r.authorName)+' · '+esc(r.authorRole)+(r.createdAt?' · '+esc(fmtDate(r.createdAt)):'')+'</div>'
+          +'<div class="pr-text">'+esc(r.text)+'</div>';
+        if(r.founderReply) html+='<div class="pr-text" style="margin-top:6px;color:var(--ink-2)"><em>Founder reply:</em> '+esc(r.founderReply)+'</div>';
+        if(!advisor && !r.resolved){
+          html+='<div class="actions" style="margin-top:8px">'
+            +'<button type="button" class="btn btn-sm" data-action="pave-reply-review" data-payload="'+esc(r.id)+'">Reply & resolve</button>'
+            +'</div>';
+        }
+        if(advisor && !r.resolved){
+          html+='<div class="actions" style="margin-top:8px">'
+            +'<button type="button" class="btn btn-sm" data-action="pave-resolve-review" data-payload="'+esc(r.id)+'">Mark resolved</button>'
+            +'</div>';
+        }
+        html+='</div>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+
+  if(sec.id==='partC'){
+    html+='<h3 style="margin:8px 0 6px;font-size:13px;color:var(--muted)">Risks — name the elephants before an investor does</h3>';
+    html+='<table class="pave-risk-table"><thead><tr><th>Risk</th><th>Why it’s a risk</th><th>How you’ll mitigate</th></tr></thead><tbody>';
+    (pave.partC.risks||[]).forEach(function(row,i){
+      html+='<tr>'
+        +'<td><textarea data-pave-risk="'+i+'" data-col="risk" rows="2">'+esc(row.risk||'')+'</textarea></td>'
+        +'<td><textarea data-pave-risk="'+i+'" data-col="why" rows="2">'+esc(row.why||'')+'</textarea></td>'
+        +'<td><textarea data-pave-risk="'+i+'" data-col="mitigate" rows="2">'+esc(row.mitigate||'')+'</textarea></td>'
+        +'</tr>';
+    });
+    html+='</tbody></table>';
+    html+='<h3 style="margin:8px 0 6px;font-size:13px;color:var(--muted)">Market size — nesting circles (# customers × annual $ / customer)</h3>';
+    html+='<table class="pave-market-table"><thead><tr><th>Market</th><th># of customers</th><th>Annual $ / customer</th><th>Market size $</th></tr></thead><tbody>';
+    [['tam','TAM (total available)'],['sam','SAM (serviceable)'],['som','SOM (your realistic reach)']].forEach(function(pair){
+      var row=pave.partC.marketSizing[pair[0]]||emptyMarketRow();
+      html+='<tr><td>'+esc(pair[1])+'</td>'
+        +'<td><input data-pave-market="'+pair[0]+'" data-col="customers" value="'+esc(row.customers||'')+'"/></td>'
+        +'<td><input data-pave-market="'+pair[0]+'" data-col="acv" value="'+esc(row.acv||'')+'"/></td>'
+        +'<td><input data-pave-market="'+pair[0]+'" data-col="size" value="'+esc(row.size||'')+'"/></td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+
+  html+='</div></div>';
+  return html;
+}
+
+function readPaveFromDom(prog){
+  var pave=sanitizePave((prog&&prog.pave)||{});
+  var wrap=document.querySelector('[data-pave-program]');
+  if(!wrap) return pave;
+  wrap.querySelectorAll('[data-pave]').forEach(function(inp){
+    setNested(pave, inp.getAttribute('data-pave'), inp.value);
+  });
+  wrap.querySelectorAll('[data-pave-risk]').forEach(function(inp){
+    var i=Number(inp.getAttribute('data-pave-risk'));
+    var col=inp.getAttribute('data-col');
+    if(!pave.partC.risks[i]) pave.partC.risks[i]=emptyRiskRow();
+    pave.partC.risks[i][col]=inp.value;
+  });
+  wrap.querySelectorAll('[data-pave-market]').forEach(function(inp){
+    var layer=inp.getAttribute('data-pave-market');
+    var col=inp.getAttribute('data-col');
+    if(!pave.partC.marketSizing[layer]) pave.partC.marketSizing[layer]=emptyMarketRow();
+    pave.partC.marketSizing[layer][col]=inp.value;
+  });
+  if(pave.partB.summaryOfCalls && !pave.partB.customerDiscovery){
+    pave.partB.customerDiscovery=pave.partB.summaryOfCalls;
+  }
+  pave.updatedAt=nowISO();
+  return sanitizePave(pave);
+}
+
+function saveActivePave(opts){
+  opts=opts||{};
+  var prog=activeProgram();
+  if(!prog){ toast('Apply E3 / PAVE first'); return null; }
+  prog.pave=readPaveFromDom(prog);
+  if(opts.syncDiscovery) prog.pave=syncPartBFromDiscovery(prog.pave, state, opts.syncDiscovery);
+  syncPavePartBEvidence(prog);
+  // Mark deliverables loosely when sections have substance
+  (prog.deliverables||[]).forEach(function(d){
+    var map={snapshot:'snapshot',part_a:'partA',part_b:'partB',part_c:'partC',part_d:'partD',final:'final'};
+    var sid=map[d.section];
+    if(!sid) return;
+    var sp=paveSectionProgress(prog.pave, sid);
+    if(sp.complete && d.status!=='done') d.status='in_progress';
+    if(sp.filled>=sp.total && sp.total>0) d.status='done';
+  });
+  logActivity(opts.activity||'Saved PAVE workbook');
+  scheduleSave();
+  return prog;
 }
 
 function renderLeanCanvas(){
@@ -2664,6 +3226,7 @@ function render(){
     overview:renderOverview,
     funding:renderFunding,
     leancanvas:renderLeanCanvas,
+    pave:renderPave,
     strategy:renderStrategy,
     roadmap:renderRoadmap,
     goals:renderGoals,
@@ -2766,11 +3329,11 @@ document.addEventListener('click', function(e){
         ],function(d){
           startBusiness(d.name,d.founder);
           applyE3Template({businessName:d.name,founderName:d.founder});
-          setView('programs');
+          setView('pave');
         });
       } else {
         applyE3Template();
-        setView('programs');
+        setView('pave');
       }
     }
     if(a==='lean-save'){
@@ -2795,6 +3358,84 @@ document.addEventListener('click', function(e){
       state.funding.leanCanvas=emptyLeanCanvas();
       syncLeanCanvasEvidence(state.funding.leanCanvas);
       scheduleSave(); render(); toast('Canvas cleared');
+    }
+    if(a==='pave-section'){
+      saveActivePave({activity:'Autosaved PAVE before section change'});
+      ui.paveSection=act.getAttribute('data-payload')||'snapshot';
+      render();
+    }
+    if(a==='pave-save'){
+      const prog=saveActivePave({activity:'Saved PAVE workbook ('+paveFilledCount((activeProgram()||{}).pave)+' fields)'});
+      render();
+      toast(prog && pavePartBIsSubstantial(prog.pave)
+        ? 'PAVE saved — Part B linked to discovery evidence'
+        : 'PAVE saved');
+    }
+    if(a==='pave-load-denizen'){
+      const prog=activeProgram();
+      if(!prog){ toast('Apply E3 / PAVE first'); return; }
+      prog.pave=Object.assign(emptyPave(), denizenPaveDraft(), {updatedAt:nowISO(), reviews:(prog.pave&&prog.pave.reviews)||[]});
+      prog.pave=syncPartBFromDiscovery(prog.pave, state, {force:true});
+      syncPavePartBEvidence(prog);
+      logActivity('Loaded DENIZEN PAVE draft');
+      scheduleSave(); render(); toast('DENIZEN PAVE draft loaded — edit any section, then Save');
+    }
+    if(a==='pave-sync-discovery'){
+      const prog=saveActivePave({
+        syncDiscovery:{force:true, refreshSummary:true},
+        activity:'Refreshed PAVE Part B from discovery evidence'
+      });
+      render();
+      toast(prog ? ('Part B updated from '+countDiscoveryInterviews(state)+' interviews') : 'No program');
+    }
+    if(a==='pave-ask-why' || a==='pave-suggest'){
+      const fieldPath=act.getAttribute('data-payload')||'';
+      const kind=a==='pave-ask-why'?'why':'suggest';
+      promptForm(kind==='why'?'Ask WHY on this field':'Suggest a change',[
+        {name:'text',label:kind==='why'?'Why are you thinking this way? What evidence?':'Suggestion for the founder',required:true}
+      ],function(d){
+        const prog=activeProgram();
+        if(!prog) return;
+        prog.pave=readPaveFromDom(prog);
+        const review={
+          id:uid('prv'), fieldPath:fieldPath, kind:kind, text:d.text,
+          authorName:'Mentor', authorRole:'mentor', createdAt:nowISO(), resolved:false, founderReply:''
+        };
+        prog.pave.reviews=[review].concat(prog.pave.reviews||[]);
+        prog.pave.updatedAt=nowISO();
+        state.comments=state.comments||[];
+        state.comments.unshift({
+          id:uid('cmt'), text:d.text, targetType:'pave_field', targetId:prog.id+':'+fieldPath,
+          authorName:'Mentor', authorRole:'mentor', visibility:'shared', resolved:false, createdAt:nowISO(),
+          kind:kind
+        });
+        logActivity((kind==='why'?'Mentor WHY on ':'Mentor suggestion on ')+fieldPath);
+        scheduleSave(); render(); toast(kind==='why'?'WHY question added':'Suggestion added');
+      });
+    }
+    if(a==='pave-reply-review'){
+      const rid=act.getAttribute('data-payload');
+      promptForm('Reply to mentor',[
+        {name:'reply',label:'Your reply (why you think this way / what you’ll change)',required:true}
+      ],function(d){
+        const prog=activeProgram();
+        if(!prog||!prog.pave) return;
+        prog.pave=readPaveFromDom(prog);
+        const r=(prog.pave.reviews||[]).find(function(x){return x.id===rid;});
+        if(r){ r.founderReply=d.reply; r.resolved=true; }
+        prog.pave.updatedAt=nowISO();
+        logActivity('Replied to mentor PAVE review');
+        scheduleSave(); render(); toast('Reply saved — direction can change anytime');
+      });
+    }
+    if(a==='pave-resolve-review'){
+      const prog=activeProgram();
+      if(!prog||!prog.pave) return;
+      prog.pave=readPaveFromDom(prog);
+      const r=(prog.pave.reviews||[]).find(function(x){return x.id===act.getAttribute('data-payload');});
+      if(r) r.resolved=true;
+      prog.pave.updatedAt=nowISO();
+      scheduleSave(); render(); toast('Review marked resolved');
     }
     if(a==='import-stub') toast('Import is Phase 2 — not built yet');
     if(a==='quickadd') quickAddMenu();
@@ -3117,16 +3758,7 @@ document.addEventListener('click', function(e){
   }
   const savePave=e.target.closest('[data-save-pave]');
   if(savePave){
-    const pid=savePave.getAttribute('data-save-pave');
-    const prog=state.programs.find(function(x){return x.id===pid;});
-    const wrap=document.querySelector('[data-pave-program="'+pid+'"]');
-    if(prog && wrap){
-      if(!prog.pave) prog.pave={};
-      wrap.querySelectorAll('[data-pave]').forEach(function(inp){
-        setNested(prog.pave, inp.getAttribute('data-pave'), inp.value);
-      });
-      scheduleSave(); toast('PAVE saved');
-    }
+    setView('pave');
     return;
   }
   const node=e.target.closest('[data-node]');

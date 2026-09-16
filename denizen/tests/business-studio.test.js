@@ -347,6 +347,9 @@ describe('business-studio static shell', () => {
     assert.match(html, /Business Studio/);
     assert.match(html, /id:'overview'/);
     assert.match(html, /id:'leancanvas'/);
+    assert.match(html, /id:'pave'/);
+    assert.match(html, /PAVE Workbook|pave-wrap|Living section/);
+    assert.match(html, /pave-ask-why|Ask WHY/);
     assert.match(html, /lean-canvas/);
     assert.match(html, /Load DENIZEN draft/);
     assert.match(html, /uniqueValueProposition/);
@@ -383,5 +386,75 @@ describe('business-studio lean canvas', () => {
     assert.match(draft.problem, /API Cost Trap/);
     assert.match(draft.uniqueValueProposition, /zero marginal cloud cost/i);
     assert.match(funding.leanCanvasPlainText(draft), /Customer Segments/);
+  });
+});
+
+describe('business-studio living PAVE workbook', () => {
+  it('models full Snapshot / A–D / Final and DENIZEN draft', () => {
+    const pave = require('../src/denizen-business-studio-pave');
+    assert.ok(pave.PAVE_SECTIONS.length >= 6);
+    assert.equal(pave.paveFilledCount(pave.emptyPave()), 0);
+    const draft = pave.denizenPaveDraft();
+    assert.match(draft.snapshot.company, /DENIZEN/);
+    assert.match(draft.partA.customer, /Dana/);
+    assert.match(draft.partB.targetPersona, /Dana/);
+    assert.ok(draft.living !== false);
+    assert.ok(Array.isArray(draft.partC.risks));
+    assert.ok(draft.partC.risks.length >= 3);
+    assert.match(draft.partD.pitch90, /ten Danas/i);
+    assert.ok(pave.paveFilledCount(draft) > 20);
+    assert.ok(pave.pavePartBIsSubstantial(draft));
+  });
+
+  it('keeps Part B living from discovery evidence and mentors ask WHY', () => {
+    const pave = require('../src/denizen-business-studio-pave');
+    const e3 = require('../src/denizen-business-studio-e3-template');
+    const bundle = e3.applyProgramTemplate('i2e-e3-pave', {
+      businessName: 'Dolonia / DENIZEN',
+      founderName: 'Zion',
+    });
+    assert.ok(bundle.program.pave?.snapshot);
+    assert.ok(bundle.program.pave?.partA?.customer !== undefined);
+    assert.equal(bundle.program.pave.partC.risks.length, 3);
+
+    let workbook = pave.denizenPaveDraft();
+    const state = {
+      programs: [{ ...bundle.program, pave: workbook }],
+      evidence: [
+        { id: 'ev1', type: 'interview', title: 'Dana #1', notes: 'Wants overnight agent', requirementKey: 'discovery_interviews' },
+        { id: 'ev2', type: 'interview', title: 'Dana #2', notes: 'Mail must stay gated', requirementKey: 'discovery_interviews' },
+      ],
+    };
+    workbook = pave.syncPartBFromDiscovery(workbook, state, { force: true, refreshSummary: true });
+    assert.match(workbook.partB.interviewsCompletedNote, /2 of 10/);
+    assert.match(workbook.partB.summaryOfCalls, /Dana #1/);
+
+    const { pave: withReview, review } = pave.addPaveReview(workbook, {
+      fieldPath: 'partA.customer',
+      kind: 'why',
+      text: 'Why Dana and not a district buyer?',
+      authorName: 'Srijita',
+    });
+    assert.equal(review.kind, 'why');
+    assert.equal(pave.openPaveReviews(withReview).length, 1);
+    assert.equal(pave.reviewsForField(withReview, 'partA.customer').length, 1);
+
+    const prog = { ...bundle.program, pave: withReview, requirements: bundle.program.requirements };
+    pave.syncPavePartBEvidence(state, prog);
+    assert.ok(state.evidence.some((e) => e.source === 'pave_part_b' && !e.revoked));
+  });
+
+  it('sanitizes legacy thin PAVE shapes', () => {
+    const pave = require('../src/denizen-business-studio-pave');
+    const legacy = pave.sanitizePave({
+      snapshot: { company: 'X', founder: 'Y', program: 'E3' },
+      partB: { customerDiscovery: 'Heard cost pain', targetPersona: 'CTE director' },
+      partC: { risks: 'Burn risk', marketSizing: { tam: 'big', sam: 'med', som: 'small' } },
+    });
+    assert.equal(legacy.snapshot.founders, 'Y');
+    assert.equal(legacy.snapshot.cohort, 'E3');
+    assert.match(legacy.partB.summaryOfCalls, /cost pain/);
+    assert.match(legacy.partC.risks[0].risk, /Burn/);
+    assert.equal(legacy.partC.marketSizing.tam.size, 'big');
   });
 });

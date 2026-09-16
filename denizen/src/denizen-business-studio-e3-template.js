@@ -5,6 +5,8 @@
  * Template-driven — not hard-coded into the UI shell.
  */
 
+const paveMod = require('./denizen-business-studio-pave');
+
 function uid(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -222,47 +224,25 @@ function buildE3Template(opts = {}) {
     ['n_milestone', 'n_outcome'],
   ].map(([from, to], i) => ({ id: `e_${i}`, from, to }));
 
-  const pave = {
-    snapshot: { company: businessName, founder: founderName, program: 'i2E E3' },
-    partA: {
-      customer: '',
-      problem: '',
-      currentAlternative: '',
-      solution: '',
-      valueProposition: '',
-      salesCycle: '',
+  const pave = paveMod.sanitizePave({
+    ...paveMod.emptyPave(),
+    snapshot: {
+      company: businessName,
+      founders: founderName,
+      i2eAdvisor: opts.advisor || '',
+      cohort: opts.cohort || 'i2E E3',
+      productDescription: '',
     },
     partB: {
-      customerDiscovery: '',
-      targetPersona: '',
-      interviewGoal: '10 CTE/IT decision makers',
-      interviewRecords: [],
-      expectedFindings: '',
-      unexpectedFindings: '',
-      personaDecision: '',
-    },
-    partC: {
-      competition: { direct: [], indirect: [], potential: [], statusQuo: '' },
-      competitiveMatrix: '',
-      shortTermAdvantages: '',
-      longTermAdvantages: '',
-      risks: '',
-      marketSizing: { tam: '', sam: '', som: '' },
-      revenueProjections: '',
-      futureSegments: '',
+      ...paveMod.emptyPave().partB,
+      interviewGoal: '10+',
     },
     partD: {
+      ...paveMod.emptyPave().partD,
       foundingTeam: founderName,
-      teamGaps: '',
-      gapStrategy: '',
-      pitch90: '',
     },
-    final: {
-      discoveredRisks: '',
-      recommendedNextSteps: '',
-      advisorOutcome: '',
-    },
-  };
+    living: true,
+  });
 
   return {
     templateId: 'i2e-e3-pave',
@@ -340,4 +320,7 @@ module.exports = {
   listProgramTemplates,
   applyProgramTemplate,
   PROGRAM_TEMPLATES,
+  emptyPave: paveMod.emptyPave,
+  sanitizePave: paveMod.sanitizePave,
+  denizenPaveDraft: paveMod.denizenPaveDraft,
 };
