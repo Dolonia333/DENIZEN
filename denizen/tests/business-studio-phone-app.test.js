@@ -68,4 +68,27 @@ describe('Business Studio phone app', () => {
       /\.sc-hub,\.sc-role\{position:relative;left:auto!important/,
     );
   });
+
+  it('keeps phone chrome in landscape (no desktop sidebar takeover)', () => {
+    const html = read('business-studio/index.html');
+    // Short landscape phones are often >720px wide — must still hide sidebar
+    assert.match(
+      html,
+      /@media \(max-width:720px\), \(orientation:landscape\) and \(max-height:520px\)/,
+    );
+    assert.match(html, /\.sidebar\{display:none\}/);
+    // Bottom nav must not be force-hidden on landscape phones
+    assert.match(
+      html,
+      /@media \(min-width:721px\) and \(min-height:521px\)\{\s*\.bottom-nav/,
+    );
+    assert.doesNotMatch(
+      html,
+      /@media \(min-width:721px\)\{\s*\.bottom-nav,\.more-sheet\{display:none!important\}/,
+    );
+    assert.match(html, /orientationchange/);
+    assert.match(html, /visualViewport/);
+    assert.match(html, /data-fit-mode="contain"/);
+    assert.match(html, /pave-banner\{display:none\}/);
+  });
 });
