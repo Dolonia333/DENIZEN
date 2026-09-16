@@ -241,6 +241,40 @@ const CONTRACTS = {
     inject_template: '[BROWSER] {{task}}: {{output}}',
   },
 
+  'web-search': {
+    id: 'web-search',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', minLength: 1 },
+        q: { type: 'string', minLength: 1 },
+        topic: { type: 'string', minLength: 1 },
+        url: { type: 'string', minLength: 1 },
+        directUrl: { type: 'string', minLength: 1 },
+        // openOnly is CEO chat only — blocked for autonomous think loops in jelly
+        openOnly: { type: 'boolean' },
+      },
+      anyOf: [
+        { required: ['query'] },
+        { required: ['q'] },
+        { required: ['topic'] },
+        { required: ['url'] },
+        { required: ['directUrl'] },
+      ],
+    },
+    timeout_ms: 120_000,
+    cooldown_ms: 20_000,
+    preferred_tier: 'main',
+    output_shape: {
+      type: 'object',
+      properties: {
+        ok: { type: 'boolean' },
+        output: { type: 'string' },
+      },
+    },
+    inject_template: '[WEB] {{query}}: {{output}}',
+  },
+
   'health-check': {
     id: 'health-check',
     input_schema: {
@@ -419,6 +453,13 @@ function _normalizeArgs(skillId, args) {
   }
   if (id === 'browserclaw') {
     if (!a.task) a.task = a.query || a.q || (a.url ? `Open ${a.url}` : '');
+  }
+  if (id === 'web-search') {
+    if (!a.query) a.query = a.q || a.topic || '';
+    // Strip openOnly from autonomous skill args — CEO chat sets it explicitly via API
+    if (a.openOnly === true && !a.query && !a.url && !a.directUrl) {
+      delete a.openOnly;
+    }
   }
   if (id === 'job-pipeline') {
     if (!a.query) a.query = a.q || '';

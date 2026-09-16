@@ -1514,6 +1514,8 @@ class NpcBrainManager {
 
     const sig = JSON.stringify({
       action: decision.action,
+      skill: decision.skill || decision.skillParams?.skill || '',
+      query: String(decision.skillParams?.query || decision.skillParams?.q || '').slice(0, 80),
       target: decision.target || '',
       taskPhase: decision.taskPhase || ''
     });

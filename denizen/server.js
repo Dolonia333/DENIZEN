@@ -308,7 +308,7 @@ function _readSearchResult(id, timeoutMs = 120000) {
 }
 
 function lucyBrowserUntilClose() {
-  return String(process.env.LUCY_BROWSER_UNTIL_CLOSE || 'true').toLowerCase() !== 'false';
+  return String(process.env.LUCY_BROWSER_UNTIL_CLOSE || 'false').toLowerCase() !== 'false';
 }
 
 /** Headed browser only when this machine has a display (local Windows/Mac). NAS Docker uses headless + mirror panel. */
