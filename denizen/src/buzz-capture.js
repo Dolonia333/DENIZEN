@@ -191,13 +191,16 @@
   }
 
   let leaveTimer = null;
+  let openedAt = 0;
   const RING_SIZE = 320;
+  const OPEN_GUARD_MS = 500;
   const ICO = {
     screenshot: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M4 16v2a2 2 0 0 0 2 2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M16 20h2a2 2 0 0 0 2-2v-2"/></svg>',
     record: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>',
     dictate: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6z"/></svg>',
     meeting: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2"/><path d="M16 10l5-2v8l-5-2z"/></svg>',
     hide: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    phone: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>',
     desktop: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>',
     invisible: '<svg class="bz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A9 9 0 0 1 12 5c5 0 9 4.5 9 7-0.3.8-1.2 2.2-2.8 3.4"/><path d="M6.1 6.1C4.2 7.5 3 9.2 3 12c0 2.5 4 7 9 7 1.4 0 2.7-.3 3.9-.9"/></svg>',
   };
@@ -211,7 +214,7 @@
       { id: 'screenshot', label: 'Screenshot', ico: 'ti-screenshot', svg: ICO.screenshot },
       { id: 'meeting', label: 'Meet', ico: 'ti-video', svg: ICO.meeting, title: 'Record meeting — transcribed as it lands' },
       { id: 'dictate', label: 'Say', ico: 'ti-message', svg: ICO.dictate },
-      { id: 'hide', label: 'Close', ico: 'ti-x', svg: ICO.hide },
+      { id: 'phone', label: 'Apps', ico: 'ti-device-mobile', svg: ICO.phone, title: 'Open the phone — chat, CRM, and the rest of the apps' },
       extra,
       { id: 'record', label: 'Record', ico: 'ti-microphone', svg: ICO.record },
     ];
@@ -286,12 +289,18 @@
     }
   }
 
+  function recentlyOpened() {
+    return openedAt > 0 && (Date.now() - openedAt) < OPEN_GUARD_MS;
+  }
+
   function scheduleHide() {
     cancelHide();
+    if (recentlyOpened()) return;
     if (noteEl?.classList.contains('open')) return;
     if (document.getElementById(CROP_ID)?.classList.contains('open')) return;
     leaveTimer = setTimeout(() => {
       leaveTimer = null;
+      if (recentlyOpened()) return;
       closeRing();
     }, 420);
   }
@@ -311,9 +320,8 @@
       const btn = e.target.closest('[data-act]');
       if (btn && !btn.disabled) {
         onAction(btn.dataset.act);
-        return;
       }
-      closeRing();
+      // Empty ring space is the FAB teleport target — never close on background click.
     });
     ringEl.addEventListener('pointerenter', cancelHide);
     ringEl.addEventListener('pointerleave', (e) => {
@@ -391,6 +399,7 @@
       }
     }
     if (open) {
+      openedAt = Date.now();
       cancelHide();
       const place = () => layoutRing();
       requestAnimationFrame(() => {
@@ -877,6 +886,11 @@
       closeRing();
       return;
     }
+    if (id === 'phone') {
+      closeRing();
+      globalThis.DenizenPhoneUi?.open?.();
+      return;
+    }
     if (id === 'desktop') {
       closeRing();
       if (window.DenizenDesktop?.buzzOverlayToggle) {
@@ -970,7 +984,7 @@
     if (wireDismiss.bound) return;
     wireDismiss.bound = true;
     document.addEventListener('pointerdown', (e) => {
-      if (!isRingOpen()) return;
+      if (!isRingOpen() || recentlyOpened()) return;
       if (insideBuzz(e.target)) return;
       closeRing();
     }, true);

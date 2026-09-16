@@ -43,6 +43,9 @@
       #${MODAL_ID} .seat-row .seat-state { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #64748b; }
       #${MODAL_ID} .seat-row.is-seated { border-color: rgba(163,230,53,0.4); }
       #${MODAL_ID} .seat-row.is-seated .seat-state { color: #a3e635; }
+      #${MODAL_ID} .seat-row.is-found { border-color: rgba(163,230,53,0.55); box-shadow: 0 0 0 1px rgba(163,230,53,0.28); }
+      #${MODAL_ID} .seat-row.is-found .seat-state { color: #a3e635; }
+      #${MODAL_ID} .seat-row.is-highlight { outline: 2px solid #a3e635; }
       #${MODAL_ID} .seat-row button, #${MODAL_ID} .seat-close {
         border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; font-weight: 700;
       }
@@ -99,7 +102,19 @@
     }
   }
 
-  function render(status) {
+  function seatQuery() {
+    try {
+      const params = new URL(window.location.href).searchParams;
+      return {
+        open: params.get('seat') === '1',
+        provider: String(params.get('provider') || '').toLowerCase().trim(),
+      };
+    } catch (_) {
+      return { open: false, provider: '' };
+    }
+  }
+
+  function render(status, opts = {}) {
     injectStyles();
     overlay?.remove();
     overlay = document.createElement('div');
@@ -107,20 +122,30 @@
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-label', 'Seat an AI');
     const providers = status?.providers || [];
+    const highlight = String(opts.highlight || '').toLowerCase();
+    const foundAny = providers.some((p) => p.detected && !p.seated);
     overlay.innerHTML = `
       <div class="seat-card">
         <button type="button" class="seat-close" data-seat="close">Close</button>
         <h3>Seat the AIs you already pay for</h3>
-        <p class="seat-lead">Nothing new to buy. Detect what is on this machine, then connect it to a desk. Abby keeps routing; spend and destructive work still wait for you.</p>
+        <p class="seat-lead">${foundAny
+          ? 'Found on this machine — nothing new to buy. Seat what we detected, then Abby keeps routing.'
+          : 'Nothing new to buy. Detect what is on this machine, then connect it to a desk. Abby keeps routing; spend and destructive work still wait for you.'}</p>
         <div class="seat-grid">
           ${providers.map((p) => {
             const seated = p.seated ? 'Seated' : (p.detected ? 'Found on this machine' : 'Not seated');
+            const rowClass = [
+              'seat-row',
+              p.seated ? 'is-seated' : '',
+              p.detected && !p.seated ? 'is-found' : '',
+              highlight && highlight === p.id ? 'is-highlight' : '',
+            ].filter(Boolean).join(' ');
             const action = p.connect === 'later'
               ? '<button type="button" disabled>Coming</button>'
               : p.seated
                 ? '<button type="button" data-seat-id="' + p.id + '">Manage</button>'
                 : '<button type="button" data-seat-id="' + p.id + '">Seat</button>';
-            return `<div class="seat-row${p.seated ? ' is-seated' : ''}">
+            return `<div class="${rowClass}">
               <div>
                 <b>${p.label}</b>
                 <small>${p.desk} · ${p.hint}</small>
@@ -145,11 +170,12 @@
     document.body.appendChild(overlay);
   }
 
-  async function open() {
+  async function open(opts = {}) {
     injectStyles();
+    const highlight = String(opts.highlight || seatQuery().provider || '');
     try {
       const status = await loadStatus();
-      render(status.ok ? status : { providers: [] });
+      render(status.ok ? status : { providers: [] }, { highlight });
     } catch (err) {
       render({
         providers: [
@@ -159,7 +185,10 @@
           { id: 'grok', label: 'Grok', desk: 'Grok', connect: 'npc', hint: 'Grok CLI', seated: false },
           { id: 'lmstudio', label: 'LM Studio', desk: 'Local models', connect: 'local', hint: 'Port 1234', seated: false },
         ],
-      });
+      }, { highlight });
+    }
+    if (highlight) {
+      overlay?.querySelector('.seat-row.is-highlight')?.scrollIntoView({ block: 'nearest' });
     }
   }
 
@@ -170,8 +199,9 @@
 
   function boot() {
     try {
-      if (new URL(window.location.href).searchParams.get('seat') === '1') {
-        setTimeout(() => open(), 900);
+      const q = seatQuery();
+      if (q.open) {
+        setTimeout(() => open({ highlight: q.provider }), 900);
       }
     } catch (_) {}
   }

@@ -65,6 +65,41 @@ describe('Denizen customer product surface', () => {
     assert.ok(fs.existsSync(path.join(ROOT, 'docs', 'TELEMETRY.md')));
   });
 
+  it('landing conversion doors: hero, how, seat, team, buyer FAQ', () => {
+    const html = read('landing.html');
+    assert.match(html, /class="hero-actions"/);
+    assert.match(html, /Open live demo/);
+    assert.match(html, /Download Desktop/);
+    assert.match(html, /No new subscriptions\. Named staff/);
+    assert.match(html, /id="how-you-start"/);
+    assert.match(html, /Walk in\. Seat an AI\. Buzz Abby/);
+    assert.match(html, /id="seat-ais"/);
+    assert.match(html, /Import never auto-runs/);
+    assert.match(html, /Talk to Zion on Discord/);
+    assert.match(html, /What does it cost\?/);
+    assert.match(html, /Do I need Desktop\?/);
+    assert.match(html, /Does the laptop have to stay on\?/);
+    assert.match(html, /Do I pay for new models\?/);
+    assert.match(html, /Brief Abby in the office/);
+    assert.match(html, /class="hud-actions"/);
+    assert.match(html, /id="tour-step-how-you-start"/);
+    assert.match(html, /id="tour-step-seat-ais"/);
+    assert.match(html, /id="tour-step-meet-buzz"/);
+    assert.match(html, /function tourShouldFade/);
+    assert.match(html, /TOUR_STEPS = \['how-you-start', 'seat-ais', 'meet-buzz'\]/);
+    assert.doesNotMatch(html, /id="tour-step-compare"/);
+    assert.match(html, /translate\(-50%, -50%\) rotate\(calc\(var\(--i\) \* 60deg - 90deg\)\)/);
+    assert.doesNotMatch(html, /id="your-ais"/);
+    assert.doesNotMatch(html, /Michael/);
+    assert.doesNotMatch(html, /Stapler/);
+    assert.doesNotMatch(html, /\bclones?\b/i);
+    assert.doesNotMatch(html, /\$\d/);
+    const faqIdx = html.indexOf('id="faq"');
+    const privacyIdx = html.indexOf('id="privacy"');
+    const comingIdx = html.indexOf('id="coming"');
+    assert.ok(privacyIdx > 0 && faqIdx > privacyIdx && faqIdx < comingIdx, 'FAQ after privacy, before coming');
+  });
+
   it('office chrome loads Buzz capture and the workbench rail', () => {
     const index = read('index.html');
     assert.match(index, /buzz-capture\.js/);
@@ -82,6 +117,10 @@ describe('Denizen customer product surface', () => {
     assert.match(buzz, /class="bz-ico"/);
     assert.match(buzz, /-90 \+ \(360 \* i\)/);
     assert.doesNotMatch(buzz, /Meeting record — Desktop soon/);
+    assert.match(buzz, /id: 'phone'/);
+    assert.match(buzz, /DenizenPhoneUi\?\.open/);
+    assert.match(buzz, /OPEN_GUARD_MS/);
+    assert.match(buzz, /recentlyOpened/);
     const rail = read('src/work-rail.js');
     assert.match(rail, /Orchestrator|Abby/);
     assert.match(rail, /Seat an AI/);
@@ -98,5 +137,48 @@ describe('Denizen customer product surface', () => {
     assert.match(overlay, /alwaysOnTop/);
     assert.match(overlay, /buzz-overlay\.html/);
     assert.match(overlay, /setInvisible/);
+  });
+
+  it('landing boots once per session and does not auto-start Lucy', () => {
+    const html = read('landing.html');
+    assert.match(html, /sessionStorage\.getItem\(BOOT_KEY\)/);
+    assert.match(html, /sessionStorage\.setItem\(BOOT_KEY/);
+    assert.doesNotMatch(html, /sessionStorage\.removeItem\('denizen-landing-boot'\)/);
+    assert.match(html, /CLICK TO SKIP/);
+    assert.match(html, /Click to talk — Lucy is at the desk/);
+    assert.match(html, /Lucy talks only after the visitor clicks reception/);
+    assert.match(html, /howInView/);
+    assert.match(html, /max-width: 960px\) \{\s*\.tour-bar \{ display: none/);
+    assert.match(html, /max-width: 900px\) \{\s*\.how-beats \{ grid-template-columns: 1fr/);
+    assert.match(html, /Lid-closed jobs/);
+    assert.match(html, /id="coming"[\s\S]*Talk to Zion on Discord →[\s\S]*Remote office/);
+    assert.match(html, /provider=cursor/);
+    assert.match(html, /provider=claude/);
+    assert.match(html, /provider=grok/);
+    assert.match(html, /provider=lmstudio/);
+  });
+
+  it('download page falls back to Discord when installers 404', () => {
+    const html = read('desktop/download.html');
+    assert.match(html, /method:\s*['"]HEAD['"]/);
+    assert.match(html, /Talk to Zion on Discord/);
+    assert.match(html, /discord\.gg\/999pPp6yMu/);
+    assert.match(html, /desktop\//);
+    assert.match(html, /aria-disabled/);
+    assert.match(html, /--lime/);
+    assert.match(html, /Syne/);
+    assert.match(html, /download-fallback/);
+  });
+
+  it('desktop first launch can open Seat an AI for detected providers', () => {
+    const main = read('desktop/main.js');
+    assert.match(main, /consumeSeatPrompt/);
+    assert.match(main, /anySeatAiDetected/);
+    assert.match(main, /searchParams\.set\(['"]seat['"], ['"]1['"]\)/);
+    const seat = read('src/seat-ai.js');
+    assert.match(seat, /params\.get\('provider'\)/);
+    assert.match(seat, /is-found/);
+    assert.match(seat, /Found on this machine/);
+    assert.match(seat, /is-highlight/);
   });
 });
