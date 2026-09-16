@@ -1061,6 +1061,7 @@ export default function CRMApp() {
 
   const SIDEBAR_W = 220;
   const denizenPhoneHref = "/?phone=1";
+  const studioBoardHref = "/studio-board/";
 
   const handleUpdateTask = useCallback((t: Task) => {
     setTasks(prev => {
@@ -1436,6 +1437,27 @@ export default function CRMApp() {
         }}>
           {syncLabel}
         </div>
+
+        <a
+          href={studioBoardHref}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginTop: 8,
+            padding: "10px 12px",
+            borderRadius: T.radius.md,
+            border: `1px solid ${T.bg4}`,
+            background: T.bg2,
+            color: T.text2,
+            fontSize: 12,
+            fontWeight: 600,
+            textDecoration: "none",
+          }}
+        >
+          <span style={{ fontSize: 14, color: T.accent }}>▦</span>
+          <span>Studio Board</span>
+        </a>
 
         <a
           href={denizenPhoneHref}

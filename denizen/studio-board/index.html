@@ -1396,7 +1396,7 @@ function tint(hex,a){ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&25
 
 /* ============ State ============ */
 let state = {tasks:[], people:[], events:[], templates:[], notes:[], config:null};
-let ui = {view:'calendar', calY:0, calM:0, filters:{client:'all',assignee:'all',type:'all',search:''},
+let ui = {view:'calendar', calY:0, calM:0, filters:{client:'all',assignee:'all',type:'all',search:'',deal:null},
           editId:null, draft:{}, pColor:AV_COLORS[0]};
 ui.statFilter=null;
 ui.sel=new Set();
@@ -1632,6 +1632,23 @@ function markReady(){
   bindMyDayIdentity().catch(()=>{});
   startRemotePoll();
   heartbeatPresence().catch(()=>{});
+  applyCrmDeepLink();
+}
+function applyCrmDeepLink(){
+  try{
+    const q=new URLSearchParams(location.search);
+    const deal=q.get('deal');
+    const task=q.get('task');
+    if(deal){
+      ui.filters.deal=deal;
+      ui.view='table';
+      render();
+      toast('Filtered to CRM deal #'+deal);
+    }
+    if(task){
+      setTimeout(()=>openTask(task), 80);
+    }
+  }catch(e){}
 }
 function hydrate(){
   /* Background: pull saved state without ever blocking the UI. Board lives in SHARED scope + org API. */
@@ -1687,10 +1704,12 @@ function seed(){ loadTemplate('media', true); }
 /* ============ Helpers ============ */
 function visibleTasks(){
   const f=ui.filters, q=f.search.trim().toLowerCase();
+  const dealFilter=f.deal!=null && f.deal!=='' ? String(f.deal) : null;
   return state.tasks.filter(t=>
     (f.client==='all'||t.client===f.client) &&
     (f.assignee==='all'||t.assignee===f.assignee) &&
     (f.type==='all'||t.type===f.type) &&
+    (!dealFilter || String(t.dealId??t.deal_id??'')===dealFilter) &&
     (!q || t.title.toLowerCase().includes(q) || (t.client||'').toLowerCase().includes(q)));
 }
 const personById = id => state.people.find(p=>p.id===id);
@@ -1700,7 +1719,7 @@ function avatar(id,cls=''){
   if(!p) return `<span class="av ${cls}" style="background:#A9B8AE" title="Unassigned">?</span>`;
   return `<span class="av ${cls}" style="background:${p.color}" title="${esc(p.name)}">${initials(p.name)}</span>`;
 }
-function anyFilter(){ const f=ui.filters; return f.client!=='all'||f.assignee!=='all'||f.type!=='all'; }
+function anyFilter(){ const f=ui.filters; return f.client!=='all'||f.assignee!=='all'||f.type!=='all'||(f.deal!=null&&f.deal!==''); }
 
 /* ============ Chrome ============ */
 function renderChrome(){
@@ -3020,7 +3039,7 @@ function markSeen(silent){
 /* ============ Empty states ============ */
 function emptyState(){ return `<div class="empty"><h3>No tasks yet</h3><p>Add your first piece of work and it'll show up across every view.</p><button onclick="openTask()">Create a task</button></div>`; }
 function noResults(){ return `<div class="empty"><h3>Nothing matches</h3><p>Try clearing a filter or your search.</p><button onclick="clearFilters()">Clear filters</button></div>`; }
-function clearFilters(){ ui.filters={client:'all',assignee:'all',type:'all',search:''}; ui.statFilter=null; document.getElementById('search').value=''; render(); }
+function clearFilters(){ ui.filters={client:'all',assignee:'all',type:'all',search:'',deal:null}; ui.statFilter=null; document.getElementById('search').value=''; render(); }
 
 /* ============ Task modal ============ */
 function openTask(id=null, presetDate=null, presetStatus=null){

@@ -24,6 +24,7 @@ const visitorAccess = require('./visitor-access');
 const sessionCookie = require('./visitor-session-cookie');
 const teamAuth = require('./denizen-team-auth');
 const crmAccess = require('./denizen-crm-access');
+const agencyBridge = require('./denizen-agency-bridge');
 
 function sessionIdFrom(req, body, url) {
   return String(
@@ -347,6 +348,11 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'POST /api/crm/setup-wizard',
           'GET /api/crm/sam/search',
           'POST /api/crm/sam/ingest',
+          'GET /api/crm/deals/:dealId/studio-tasks',
+          'POST /api/crm/deals/:dealId/studio-tasks',
+          'POST /api/crm/deals/:dealId/studio-tasks/link',
+          'POST /api/crm/deals/:dealId/studio-tasks/unlink',
+          'POST /api/crm/deals/:dealId/studio-tasks/:taskId/advance',
         ],
       });
       return true;
@@ -1603,6 +1609,164 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
       return true;
     }
     return true;
+    }
+
+    // ── CRM ↔ Studio Board agency routes (shared bridge with MCP) ──
+    const dealStudioListMatch = path.match(/^\/api\/crm\/deals\/([^/]+)\/studio-tasks$/);
+    if (dealStudioListMatch && req.method === 'GET') {
+      try {
+        const dealId = decodeURIComponent(dealStudioListMatch[1]);
+        const body = {};
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const result = await agencyBridge.listTasksForDeal(orgId, dealId);
+        json(res, result.ok ? 200 : 404, result);
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    if (dealStudioListMatch && req.method === 'POST') {
+      try {
+        const dealId = decodeURIComponent(dealStudioListMatch[1]);
+        const body = await readJsonBody(req, 64 * 1024).catch(() => ({}));
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const actor = await resolveCrmActor(access, sessionId);
+        const result = await agencyBridge.createDeliveryFromDeal(orgId, {
+          dealId,
+          title: body.title || null,
+          assignee: body.assignee || null,
+          status: body.status || null,
+          due: body.due || null,
+          notes: body.notes || null,
+          markWon: !!body.mark_won || !!body.markWon,
+          identityId: actor.identityId || access.session?.identity_id || null,
+          actor: {
+            npc_key: 'crm',
+            displayName: actor.user,
+            user: actor.user,
+            identityId: actor.identityId || null,
+          },
+        });
+        json(res, result.ok ? 200 : 400, result);
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    const dealStudioLinkMatch = path.match(/^\/api\/crm\/deals\/([^/]+)\/studio-tasks\/link$/);
+    if (dealStudioLinkMatch && req.method === 'POST') {
+      try {
+        const dealId = decodeURIComponent(dealStudioLinkMatch[1]);
+        const body = await readJsonBody(req, 32 * 1024).catch(() => ({}));
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const actor = await resolveCrmActor(access, sessionId);
+        const taskId = String(body.studio_task_id || body.studioTaskId || body.task_id || '').trim();
+        const result = await agencyBridge.linkDealTask(orgId, {
+          dealId,
+          taskId,
+          contactId: body.contact_id ?? body.contactId ?? null,
+          identityId: actor.identityId || access.session?.identity_id || null,
+          actor: {
+            npc_key: 'crm',
+            displayName: actor.user,
+            user: actor.user,
+            identityId: actor.identityId || null,
+          },
+        });
+        json(res, result.ok ? 200 : 400, result);
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    const dealStudioUnlinkMatch = path.match(/^\/api\/crm\/deals\/([^/]+)\/studio-tasks\/unlink$/);
+    if (dealStudioUnlinkMatch && req.method === 'POST') {
+      try {
+        const dealId = decodeURIComponent(dealStudioUnlinkMatch[1]);
+        const body = await readJsonBody(req, 32 * 1024).catch(() => ({}));
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const actor = await resolveCrmActor(access, sessionId);
+        const taskId = String(body.studio_task_id || body.studioTaskId || body.task_id || '').trim();
+        const result = await agencyBridge.unlinkDealTask(orgId, {
+          dealId,
+          taskId,
+          identityId: actor.identityId || access.session?.identity_id || null,
+        });
+        json(res, result.ok ? 200 : 400, result);
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    const dealStudioAdvanceMatch = path.match(/^\/api\/crm\/deals\/([^/]+)\/studio-tasks\/([^/]+)\/advance$/);
+    if (dealStudioAdvanceMatch && req.method === 'POST') {
+      try {
+        const dealId = decodeURIComponent(dealStudioAdvanceMatch[1]);
+        const taskId = decodeURIComponent(dealStudioAdvanceMatch[2]);
+        const body = await readJsonBody(req, 32 * 1024).catch(() => ({}));
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const actor = await resolveCrmActor(access, sessionId);
+        const result = await agencyBridge.advanceDealTask(orgId, {
+          dealId,
+          taskId,
+          status: body.status || null,
+          identityId: actor.identityId || access.session?.identity_id || null,
+          actor: {
+            npc_key: 'crm',
+            displayName: actor.user,
+            user: actor.user,
+            identityId: actor.identityId || null,
+          },
+        });
+        json(res, result.ok ? 200 : 400, result);
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
     }
 
     json(res, 404, {

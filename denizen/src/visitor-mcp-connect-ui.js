@@ -284,6 +284,7 @@
 
   const JOB_CATEGORIES = [
     { label: 'CRM', tools: ['crm_working_set', 'crm_pipeline_brief', 'business_context_brief', 'crm_list_tasks', 'crm_draft_email', 'mail_policy_status', 'send_draft', 'crm_park_deal'] },
+    { label: 'Agency (CRM ↔ Board)', tools: ['agency_working_set', 'agency_list_deal_tasks', 'agency_link_deal_task', 'agency_unlink_deal_task', 'agency_create_delivery_task', 'agency_handoff_won_deal', 'agency_advance_deal_task'] },
     { label: 'Studio Board', tools: ['studio_board_working_set', 'studio_board_brief', 'studio_board_list_tasks', 'studio_board_get_task', 'studio_board_upsert_task', 'studio_board_advance_task', 'studio_board_assign_task', 'studio_board_add_comment', 'studio_board_list_people', 'studio_board_upsert_person'] },
     { label: 'Coding & skills', tools: ['run_skill', 'list_skills'] },
     {

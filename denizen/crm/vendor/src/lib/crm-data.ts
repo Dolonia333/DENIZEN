@@ -23,6 +23,8 @@ export interface Deal {
   ownerId?: string;
   ownerIdentityId?: string;
   ownerEmail?: string;
+  /** Linked Studio Board task ids (synced with task.dealId via agency bridge). */
+  studioTaskIds?: string[];
 }
 export interface Note { id: number; contact: string; text: string; date: string; type: string; }
 export interface Subtask { id: number; title: string; done: boolean; }
