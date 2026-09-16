@@ -23,6 +23,7 @@ const mcpMeshTools = require('./denizen-mcp-mesh-tools.js');
 const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const mcpResources = require('./denizen-mcp-resources.js');
+const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
@@ -421,19 +422,15 @@ async function handleRpc(scope, req, res, message, sessionId) {
     const sid = sessionId || crypto.randomBytes(16).toString('hex');
     _sessions.set(sid, { scope, at: Date.now() });
     if (sessionId) res.setHeader('Mcp-Session-Id', sid);
-    const capabilities = { tools: {} };
-    // Expose telemetry as first-class resource for external AIs (Claude, Cursor, etc.)
-    // This decouples the Intelligence Spine from local filesystem.
-    if (scope.npc_key === 'grok') {
-      capabilities.resources = {};
-    }
+    const capabilities = { tools: {}, resources: {} };
     return sendJson(res, 200, {
       jsonrpc: '2.0',
       id,
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities,
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.2.0' },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.3.0' },
+        instructions: mcpProductMap.mcpInitializeInstructions({ mode: 'npc' }),
       },
     });
   }
@@ -468,15 +465,16 @@ async function handleRpc(scope, req, res, message, sessionId) {
     }
   }
 
-  // MCP Resources: telemetry spine (full + per-NPC templates)
+  // MCP Resources: product map for every NPC + telemetry spine for Grok
   if (method === 'resources/list') {
-    if (scope.npc_key !== 'grok') {
-      return sendJson(res, 200, { jsonrpc: '2.0', id, result: { resources: [] } });
+    const resources = [...mcpProductMap.productResourcesList()];
+    if (scope.npc_key === 'grok') {
+      resources.push(...mcpResources.grokResourcesList(), ...mcpResources.mentorResourcesList());
     }
     return sendJson(res, 200, {
       jsonrpc: '2.0',
       id,
-      result: { resources: [...mcpResources.grokResourcesList(), ...mcpResources.mentorResourcesList()] },
+      result: { resources },
     });
   }
 
@@ -498,6 +496,21 @@ async function handleRpc(scope, req, res, message, sessionId) {
 
   if (method === 'resources/read') {
     const uri = params?.uri;
+    const productText = mcpProductMap.readProductResource(uri);
+    if (productText != null) {
+      const meta = mcpProductMap.PRODUCT_RESOURCES.find((r) => r.uri === uri);
+      return sendJson(res, 200, {
+        jsonrpc: '2.0',
+        id,
+        result: {
+          contents: [{
+            uri,
+            mimeType: meta?.mimeType || 'application/json',
+            text: productText,
+          }],
+        },
+      });
+    }
     if (mcpResources.canReadTelemetry(scope, uri)) {
       try {
         const text = mcpResources.readResource(uri);
@@ -1056,13 +1069,15 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
         'Paste the gpt_instructions below — YOU run skills async; never assignNpcTask; poll team standup',
       ],
       gpt_instructions: [
-        `You ARE the connected brain for ${npcDisplayName(npcKey)} in Denizen.`,
+        mcpProductMap.chatgptProductInstructions({
+          npcLabel: npcDisplayName(npcKey),
+        }),
         'Never use assignNpcTask — it is blocked and only queues the slow local office AI.',
         'Start collaborative sessions with getTeamStandup. Follow action_items. Poll listHandoffs; after you act, call ackHandoff.',
         'Do work with runNpcSkill (default wait=false). If you get a job_id / status=running, poll getSkillJob until status is done or failed, then summarize output.',
         'Start hard jobs with listNpcSkills, then runNpcSkill with a clear params object (query/task/note).',
         'Use getNpcStatus when you need NPC-only status. Use updateNpcMemory for lasting context. Use logNpcActivity after you finish.',
-        'If you see scope_denied, tell the user to mint a Connect AI token with Standard or Full access.',
+        'Prefer the Denizen MCP connector URL for full CRM / Studio Board / Business Studio tools when Custom GPT Actions are too thin.',
       ].join(' '),
     },
     claude_ai: {
@@ -1171,7 +1186,8 @@ function buildConnectInfo(npcKey, baseUrl) {
       chatgpt: 'Custom GPT Actions via openapi_url + Bearer token',
       claude_ai: 'Claude.ai MCP connector at mcp_url + Bearer token',
     },
-    instructions: 'Create a token via POST /api/mcp/tokens (team session required), then choose Cursor/API, ChatGPT, or Claude.ai in Connect AI.',
+    instructions: mcpProductMap.mcpInitializeInstructions({ mode: 'npc' }),
+    product_map: mcpProductMap.productMapJson(),
   };
 }
 

@@ -3466,7 +3466,7 @@
     if (!host) return;
     try {
       if (!globalThis.DenizenVisitorMcpConnectUI?.renderSettingsPanel) {
-        await globalThis.DenizenLazyScripts?.load?.(['./src/visitor-mcp-connect-ui.js?v=mcp7jobs']);
+        await globalThis.DenizenLazyScripts?.load?.(['./src/visitor-mcp-connect-ui.js?v=mcp8map']);
         globalThis.DenizenVisitorMcpConnectUI?.attach?.();
       }
       await globalThis.DenizenVisitorMcpConnectUI?.renderSettingsPanel?.(host);

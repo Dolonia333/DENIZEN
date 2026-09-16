@@ -15,6 +15,7 @@ const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
 const mcpStudioBoardTools = require('./denizen-mcp-studio-board-tools.js');
 const mcpBusinessStudioTools = require('./denizen-mcp-business-studio-tools.js');
 const mcpAgencyTools = require('./denizen-mcp-agency-tools.js');
+const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
@@ -149,6 +150,7 @@ const TEAM_TOOL_DEFINITIONS = [
 ];
 
 const TEAM_RESOURCES = [
+  ...mcpProductMap.productResourcesList(),
   {
     uri: 'team://roster',
     name: 'team_roster',
@@ -412,6 +414,8 @@ async function toolListJobs() {
 }
 
 async function readResource(scope, uri) {
+  const product = mcpProductMap.readProductResource(uri);
+  if (product != null) return product;
   if (uri === 'team://roster') {
     const team = await mcpTeamTools.callTool(scope, 'list_team', {});
     return JSON.stringify(team, null, 2);
@@ -514,7 +518,8 @@ function buildConnectInfo(baseUrl) {
     tools: TEAM_TOOL_DEFINITIONS.map((t) => t.name),
     scopes: mcpScopes.ALL_SCOPES,
     resources: TEAM_RESOURCES.map((r) => r.uri),
-    instructions: 'Create via POST /api/mcp/team-tokens (team session). Operate the whole office from one connection.',
+    instructions: mcpProductMap.mcpInitializeInstructions({ mode: 'team' }),
+    product_map: mcpProductMap.productMapJson(),
   };
 }
 
@@ -594,7 +599,8 @@ async function handleHttpRequest(req, res) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {}, resources: {} },
-        serverInfo: { name: 'denizen-team', version: '1.3.0' },
+        serverInfo: { name: 'denizen-team', version: '1.4.0' },
+        instructions: mcpProductMap.mcpInitializeInstructions({ mode: 'team' }),
       },
     }));
     return;
@@ -642,12 +648,14 @@ async function handleHttpRequest(req, res) {
       }));
       return;
     }
+    const meta = TEAM_RESOURCES.find((r) => r.uri === uri);
+    const mimeType = meta?.mimeType || (String(uri).endsWith('.md') ? 'text/markdown' : 'application/json');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       jsonrpc: '2.0',
       id,
       result: {
-        contents: [{ uri, mimeType: 'application/json', text }],
+        contents: [{ uri, mimeType, text }],
       },
     }));
     return;

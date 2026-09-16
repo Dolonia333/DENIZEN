@@ -283,10 +283,10 @@
   }
 
   const JOB_CATEGORIES = [
-    { label: 'CRM', tools: ['crm_working_set', 'crm_pipeline_brief', 'business_context_brief', 'crm_list_tasks', 'crm_draft_email', 'mail_policy_status', 'send_draft', 'crm_park_deal'] },
+    { label: 'CRM (sell)', tools: ['crm_working_set', 'crm_pipeline_brief', 'business_context_brief', 'crm_list_tasks', 'crm_upsert_contact', 'crm_upsert_deal', 'crm_move_deal', 'crm_upsert_task', 'crm_complete_task', 'crm_add_note', 'crm_draft_email', 'mail_policy_status', 'send_draft', 'crm_park_deal'] },
     { label: 'Agency (CRM ↔ Board)', tools: ['agency_working_set', 'agency_list_deal_tasks', 'agency_link_deal_task', 'agency_unlink_deal_task', 'agency_create_delivery_task', 'agency_handoff_won_deal', 'agency_advance_deal_task'] },
-    { label: 'Studio Board', tools: ['studio_board_working_set', 'studio_board_brief', 'studio_board_list_tasks', 'studio_board_get_task', 'studio_board_upsert_task', 'studio_board_advance_task', 'studio_board_assign_task', 'studio_board_add_comment', 'studio_board_list_people', 'studio_board_upsert_person'] },
-    { label: 'Business Studio', tools: ['business_studio_working_set', 'business_studio_brief', 'business_studio_explain', 'business_studio_list_programs', 'business_studio_funding_readiness', 'business_studio_apply_program_template', 'business_studio_add_evidence', 'business_studio_upsert_task', 'business_studio_upsert_goal', 'business_studio_create_experiment'] },
+    { label: 'Studio Board (deliver)', tools: ['studio_board_working_set', 'studio_board_brief', 'studio_board_my_day', 'studio_board_list_tasks', 'studio_board_get_task', 'studio_board_upsert_task', 'studio_board_advance_task', 'studio_board_assign_task', 'studio_board_add_comment', 'studio_board_list_people', 'studio_board_upsert_person', 'studio_board_standup', 'studio_board_timeline'] },
+    { label: 'Business Studio (prove)', tools: ['business_studio_working_set', 'business_studio_brief', 'business_studio_explain', 'business_studio_list_programs', 'business_studio_chain_status', 'business_studio_funding_readiness', 'business_studio_apply_program_template', 'business_studio_add_evidence', 'business_studio_revoke_evidence', 'business_studio_upsert_task', 'business_studio_upsert_goal', 'business_studio_create_experiment'] },
     { label: 'Coding & skills', tools: ['run_skill', 'list_skills'] },
     {
       label: 'Team & tasks',
@@ -329,7 +329,7 @@
 
   function formatJobSummary(tools) {
     if (!Array.isArray(tools) || !tools.length) {
-      return 'CRM · coding · research · team handoffs';
+      return 'CRM · Studio Board · Business Studio · agency · skills';
     }
     const set = new Set(tools);
     const labels = JOB_CATEGORIES
@@ -339,7 +339,7 @@
   }
 
   const SCOPE_PRESET_OPTIONS = [
-    { id: 'full', label: 'Full access', hint: 'read · skills · CRM · handoffs · delegate · compute' },
+    { id: 'full', label: 'Full access', hint: 'read · skills · CRM/Board/Founder writes · handoffs · delegate · compute' },
     { id: 'standard', label: 'Standard', hint: 'read · skills · handoffs' },
     { id: 'read', label: 'Read only', hint: 'status · memory sync · no skills' },
   ];
@@ -441,7 +441,7 @@
 
     if (!cards.length) {
       hostEl.innerHTML = `
-        <p class="mcp-set-hint">Connect Cursor or Claude to Denizen for CRM, coding, research, and office jobs — one MCP URL.</p>
+        <p class="mcp-set-hint">Connect Cursor, Claude, or ChatGPT to Denizen — CRM (sell), Studio Board (deliver), Business Studio (prove), plus coding and office skills.</p>
         <p class="mcp-set-empty">Claim an assistant in chat first, then return here to connect.</p>`;
       renderOptionalAddons(hostEl, { prominent: true });
       return;
@@ -457,7 +457,7 @@
     }));
 
     hostEl.innerHTML = `
-      <p class="mcp-set-hint">Your Denizen URL runs CRM, coding-agent, research, mockups, and team jobs via <code>run_skill</code> — connect once in Cursor or Claude.</p>
+      <p class="mcp-set-hint">Your Denizen URL exposes CRM, Studio Board, Business Studio, and agency tools — plus <code>run_skill</code> for coding/research. Prefer <strong>Full access</strong> so ChatGPT can write, not only read.</p>
       <div class="mcp-set" id="mcp-set-denizen"></div>
       <div id="mcp-set-addons"></div>`;
     const denizenHost = hostEl.querySelector('#mcp-set-denizen');
@@ -727,7 +727,7 @@
       <div class="mcp-card">
         <h3>Connect your AI to ${displayName}</h3>
         <p class="mcp-scope-line">Token scopes: ${escHtml(scopeLine)}</p>
-        <p>CRM, coding, research, and team jobs run through this connection (<code>run_skill</code>, CRM tools).</p>
+        <p>CRM sells, Studio Board delivers, Business Studio proves with evidence, Agency links deals↔tasks. Reads work on Standard; writes need Full (<code>crm_write</code>).</p>
         <div class="mcp-rh-box" style="margin:10px 0;padding:10px 12px;border:1px solid rgba(251,191,36,0.35);border-radius:10px;background:rgba(251,191,36,0.06);">
           <strong style="color:#fbbf24;">Robinhood (optional, separate)</strong>
           <p style="margin:6px 0 8px;color:#94a3b8;font-size:12px;line-height:1.45;">Trading-only second MCP for live quotes &amp; portfolio (Roki). Not included in the Denizen URL — add manually in Cursor if you want it.</p>
