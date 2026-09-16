@@ -533,6 +533,23 @@ tr.trow.kbfocus{box-shadow:inset 3px 0 0 var(--accent);background:var(--accent-t
 .ndx:hover{background:var(--surface-2);color:var(--ink)}
 @media(max-width:560px){.mdnudge{flex-wrap:wrap}.ndbtn{order:3}}
 
+/* ===== overdue reschedule modal ===== */
+.rsauto{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--hairline);background:var(--accent-tint);color:var(--accent);cursor:pointer;transition:.12s}
+.rsauto:hover{border-color:rgba(42,106,85,.35);background:rgba(42,106,85,.18)}
+.rsauto b{font-size:14px;font-weight:600}
+.rsauto span{font-size:12px;color:var(--ink-2);font-weight:400;line-height:1.4}
+.rslbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:4px 0 2px}
+.rslist{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;padding-right:2px}
+.rsslot{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--hairline);background:var(--surface-2);cursor:pointer;transition:.12s}
+.rsslot:hover{border-color:var(--accent);background:var(--accent-tint)}
+.rsslot .rswhen{flex:1;min-width:0}
+.rsslot .rsday{font-size:13.5px;font-weight:600;color:var(--ink)}
+.rsslot .rsmeta{font-size:11.5px;color:var(--muted);margin-top:1px}
+.rsslot .rstime{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent);flex:none}
+.rsempty{font-size:13px;color:var(--muted-2);padding:10px 4px}
+.mdrow .mdresched{padding:4px 10px;border-radius:980px;font-size:11px;font-weight:600;color:var(--t-video);background:rgba(201,79,56,.12);flex:none;white-space:nowrap;border:1px solid transparent}
+.mdrow .mdresched:hover{border-color:rgba(201,79,56,.3);background:rgba(201,79,56,.18)}
+
 /* ===== team notes + event notes ===== */
 .ncitem{display:flex;align-items:flex-start;gap:10px;padding:9px 6px;border-bottom:1px solid var(--hairline-2);border-radius:8px}
 .ncitem:last-of-type{border-bottom:none}
@@ -958,6 +975,30 @@ body.standalone{min-height:100vh}
         <span class="kbk">J K</span><span>Move down / up (table)</span><span class="kbk">E</span><span>Advance focused task</span>
         <span class="kbk">O</span><span>Open focused task</span><span class="kbk">?</span><span>This help</span>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overdue reschedule modal -->
+<div class="overlay" id="rsOverlay">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:460px">
+    <div class="modal-head">
+      <h2 id="rs-title">Reschedule overdue</h2>
+      <button class="x" onclick="closeReschedule()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p id="rs-sub" style="margin:0;color:var(--ink-2);font-size:13.5px;line-height:1.5"></p>
+      <button type="button" class="rsauto" id="rs-auto" onclick="autoRescheduleNext()">
+        <b>Auto — next available time</b>
+        <span id="rs-auto-hint">Places this on the next free slot on your schedule.</span>
+      </button>
+      <div class="rslbl">Open availabilities on your schedule</div>
+      <div class="rslist" id="rs-list"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeReschedule()">Cancel</button>
     </div>
   </div>
 </div>
@@ -2270,10 +2311,87 @@ window.addEventListener('resize',()=>{ if(ui.view!=='myday') return;
   clearTimeout(mdResizeT); mdResizeT=setTimeout(()=>mdApplyLayout(),120); });
 
 /* ============ My Day command center ============ */
+const SCHEDULE = { workdays:[1,2,3,4,5], startHour:9, endHour:17, slotMins:30, blockMins:30 };
+
+function parseHM(t){
+  if(!t) return null;
+  const [h,m]=String(t).split(':').map(Number);
+  if(Number.isNaN(h)) return null;
+  return h*60+(m||0);
+}
+function fmtHM(mins){
+  const h=Math.floor(mins/60), m=mins%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+function fmtSlotLabel(time){
+  const mins=parseHM(time); if(mins==null) return time;
+  const h=Math.floor(mins/60), m=mins%60;
+  const ap=h>=12?'PM':'AM'; const hh=((h+11)%12)+1;
+  return m?`${hh}:${String(m).padStart(2,'0')} ${ap}`:`${hh} ${ap}`;
+}
+function busyBlocksOn(dateStr){
+  return eventsOn(dateStr).filter(e=>e.kind==='meeting'&&e.time).map(e=>{
+    const start=parseHM(e.time);
+    const dur=e.duration||SCHEDULE.blockMins;
+    return {start, end:start+dur};
+  }).filter(b=>b.start!=null);
+}
+function openSlotsOn(dateStr, reserved){
+  const d=new Date(dateStr+'T12:00:00');
+  if(!SCHEDULE.workdays.includes(d.getDay())) return [];
+  const busy=[...busyBlocksOn(dateStr), ...(reserved||[])];
+  const slots=[];
+  const start=SCHEDULE.startHour*60, end=SCHEDULE.endHour*60;
+  for(let t=start; t+SCHEDULE.blockMins<=end; t+=SCHEDULE.slotMins){
+    const conflict=busy.some(b=>t<b.end && (t+SCHEDULE.blockMins)>b.start);
+    if(conflict) continue;
+    /* skip past times on today */
+    if(dateStr===todayISO()){
+      const now=new Date(); const nowM=now.getHours()*60+now.getMinutes();
+      if(t<=nowM) continue;
+    }
+    slots.push(fmtHM(t));
+  }
+  return slots;
+}
+function findOpenAvailabilities(limit=16, daysAhead=21, reservedByDate){
+  const out=[];
+  for(let i=0; i<daysAhead && out.length<limit; i++){
+    const date=addDays(todayISO(), i);
+    const reserved=(reservedByDate&&reservedByDate[date])||[];
+    const slots=openSlotsOn(date, reserved);
+    const meets=eventsOn(date).filter(e=>e.kind==='meeting').length;
+    for(const time of slots){
+      if(out.length>=limit) break;
+      const dt=new Date(date+'T12:00:00');
+      const dayName=dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      const reason=meets===0?'Open day — no meetings'
+        :meets<=2?`Light schedule · ${meets} meeting${meets>1?'s':''}`
+        :'Open slot between meetings';
+      out.push({date, time, dayName, reason, meets});
+    }
+  }
+  return out;
+}
+function nextAvailableSlot(reservedByDate){
+  const list=findOpenAvailabilities(1, 28, reservedByDate);
+  return list[0]||null;
+}
+function reserveSlot(map, date, time){
+  const start=parseHM(time);
+  if(start==null) return;
+  (map[date]=map[date]||[]).push({start, end:start+SCHEDULE.blockMins});
+}
+
+ui.rsTaskIds=null;
+function overdueMine(){
+  return state.tasks.filter(t=>t.assignee===me.id && !isFinalStage(t.status) && dayDiff(t.due)<0)
+    .sort((a,b)=>a.due<b.due?-1:1);
+}
 function mdNudgeHTML(overdue,dueToday,meetings){
   if(!ui.mdNudge) return '';
   if(overdue.length){
-    return `<div class="mdnudge warn"><span class="ndico">\u2600</span><div class="ndtxt"><b>${overdue.length} task${overdue.length>1?'s are':' is'} overdue.</b> Reschedule to clear the decks, or tackle them from Focus below.</div><button class="ndbtn" onclick="pushMyOverdue()">Reschedule all to today</button><button class="ndx" onclick="dismissNudge()" title="Dismiss">\u2715</button></div>`;
+    return `<div class="mdnudge warn"><span class="ndico">\u2600</span><div class="ndtxt"><b>${overdue.length} task${overdue.length>1?'s are':' is'} overdue.</b> Auto-reschedule to the next free slot, or pick an open time on your schedule.</div><button class="ndbtn" onclick="openReschedule()">Reschedule\u2026</button><button class="ndx" onclick="dismissNudge()" title="Dismiss">\u2715</button></div>`;
   }
   if(dueToday.length){
     return `<div class="mdnudge"><span class="ndico">\u2600</span><div class="ndtxt"><b>${dueToday.length} due today${meetings.length?` and ${meetings.length} meeting${meetings.length>1?'s':''}`:''}.</b> Nothing overdue \u2014 plan your day from the panels below.</div><button class="ndx" onclick="dismissNudge()" title="Dismiss">\u2715</button></div>`;
@@ -2281,11 +2399,76 @@ function mdNudgeHTML(overdue,dueToday,meetings){
   return '';
 }
 function dismissNudge(){ ui.mdNudge=false; render(); }
-function pushMyOverdue(){
-  const mine=state.tasks.filter(t=>t.assignee===me.id && !isFinalStage(t.status) && dayDiff(t.due)<0);
-  mine.forEach(t=>{ t.due=todayISO(); logEvt(t,'Due \u2192 '+todayISO()+' (rescheduled)'); });
-  save(); render();
+function openReschedule(taskId){
+  const mine=overdueMine();
+  const ids=taskId ? [taskId] : mine.map(t=>t.id);
+  const tasks=ids.map(id=>state.tasks.find(t=>t.id===id)).filter(Boolean);
+  if(!tasks.length){ toast('Nothing overdue to reschedule'); return; }
+  ui.rsTaskIds=tasks.map(t=>t.id);
+  const next=nextAvailableSlot();
+  document.getElementById('rs-title').textContent = tasks.length===1 ? 'Reschedule overdue' : `Reschedule ${tasks.length} overdue`;
+  document.getElementById('rs-sub').textContent = tasks.length===1
+    ? `"${tasks[0].title}" is ${-dayDiff(tasks[0].due)}d overdue. Choose the next free slot or pick from open times on your schedule.`
+    : `${tasks.length} overdue tasks. Auto places each on the next free slots, or pick one open time to start packing from.`;
+  document.getElementById('rs-auto-hint').textContent = next
+    ? `Next free: ${next.dayName} · ${fmtSlotLabel(next.time)}${tasks.length>1?' (then the next open slots)':''}`
+    : 'No open workday slots found in the next few weeks — free up a meeting or widen your week.';
+  const list=findOpenAvailabilities(14);
+  const box=document.getElementById('rs-list');
+  box.innerHTML = list.length
+    ? list.map(s=>`<button type="button" class="rsslot" onclick="pickRescheduleSlot('${s.date}','${s.time}')">
+        <div class="rswhen"><div class="rsday">${esc(s.dayName)}</div><div class="rsmeta">${esc(s.reason)}</div></div>
+        <span class="rstime">${esc(fmtSlotLabel(s.time))}</span>
+      </button>`).join('')
+    : `<div class="rsempty">No open availabilities on your schedule right now.</div>`;
+  document.getElementById('rsOverlay').classList.add('open');
 }
+function closeReschedule(){
+  document.getElementById('rsOverlay').classList.remove('open');
+  ui.rsTaskIds=null;
+}
+function applySlotToTask(t, date, time){
+  t.due=date;
+  t.dueTime=time;
+  logEvt(t,`Due \u2192 ${date} ${time} (rescheduled)`);
+}
+function autoRescheduleNext(){
+  const ids=ui.rsTaskIds||[];
+  const tasks=ids.map(id=>state.tasks.find(t=>t.id===id)).filter(Boolean);
+  if(!tasks.length){ closeReschedule(); return; }
+  const reserved={};
+  let placed=0;
+  tasks.forEach(t=>{
+    const slot=nextAvailableSlot(reserved);
+    if(!slot) return;
+    applySlotToTask(t, slot.date, slot.time);
+    reserveSlot(reserved, slot.date, slot.time);
+    placed++;
+  });
+  save(); closeReschedule(); render();
+  if(!placed) toast('No open slots available');
+  else if(placed<tasks.length) toast(`Rescheduled ${placed} of ${tasks.length} — schedule filled up`);
+  else if(placed===1) toast(`Rescheduled to ${tasks[0].due} ${fmtSlotLabel(tasks[0].dueTime)}`);
+  else toast(`Rescheduled ${placed} tasks to open slots`);
+}
+function pickRescheduleSlot(date, time){
+  const ids=ui.rsTaskIds||[];
+  const tasks=ids.map(id=>state.tasks.find(t=>t.id===id)).filter(Boolean);
+  if(!tasks.length){ closeReschedule(); return; }
+  const reserved={}; reserveSlot(reserved, date, time);
+  applySlotToTask(tasks[0], date, time);
+  for(let i=1;i<tasks.length;i++){
+    const slot=nextAvailableSlot(reserved);
+    if(!slot) break;
+    applySlotToTask(tasks[i], slot.date, slot.time);
+    reserveSlot(reserved, slot.date, slot.time);
+  }
+  save(); closeReschedule(); render();
+  if(tasks.length===1) toast(`Rescheduled to ${date} ${fmtSlotLabel(time)}`);
+  else toast(`Rescheduled ${tasks.length} tasks starting ${date} ${fmtSlotLabel(time)}`);
+}
+/* legacy alias used by older nudge markup */
+function pushMyOverdue(){ openReschedule(); }
 
 function renderMyDay(container){
   if(!me.id || !personById(me.id)){
@@ -2321,13 +2504,17 @@ function renderMyDay(container){
 
   const taskLine=(t,tag)=>{
     const due=relDue(t); const next=NEXT_STEP[t.status];
+    const isOver=dayDiff(t.due)<0;
     const act=next?`<button class="mdact" title="Move to ${esc(next[1])}" onclick="event.stopPropagation();advance('${t.id}')">${next[0]}</button>`:'';
+    const resched=isOver?`<button class="mdresched" title="Reschedule to an open slot" onclick="event.stopPropagation();openReschedule('${t.id}')">Reschedule</button>`:'';
+    const timeBit=t.dueTime&&!isOver?`<span class="mdclient" style="max-width:none">${esc(fmtSlotLabel(t.dueTime))}</span>`:'';
     return `<div class="mdrow" onclick="openTask('${t.id}')">
       <span class="ddot" style="background:${typeHex(t.type)}"></span>
       <span class="mdtitle">${esc(t.title)}${progressBadge(t)}${isBlockedStage(t.status)&&t.blockReason?`<span class="mdblk">\u2691 ${esc(t.blockReason)}</span>`:''}</span>
       <span class="mdclient">${esc(t.client||'')}</span>
+      ${timeBit}
       <span class="t-date ${due.cls}" style="width:auto">${due.html}</span>
-      ${act}</div>`;
+      ${resched}${act}</div>`;
   };
 
   const focusHtml = focus.length
@@ -3083,7 +3270,7 @@ function resetAll(){
   });
 }
 const VIEW_KEYS={'1':'calendar','2':'table','3':'board','4':'timeline','5':'myday','6':'team','7':'activity'};
-function anyModalOpen(){ return ['overlay','pOverlay','cOverlay','kOverlay'].some(id=>document.getElementById(id).classList.contains('open')); }
+function anyModalOpen(){ return ['overlay','pOverlay','cOverlay','kOverlay','rsOverlay'].some(id=>document.getElementById(id).classList.contains('open')); }
 function kbMove(dir){
   if(ui.view!=='table'||!lastIds.length) return;
   let i=lastIds.indexOf(ui.kbRow);
@@ -3098,7 +3285,7 @@ function kbAct(which){
   else if(which==='advance' && NEXT_STEP[t.status]) advance(t.id);
 }
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ closeModal(); closePerson(); closeConfirm(); document.getElementById('kOverlay').classList.remove('open'); return; }
+  if(e.key==='Escape'){ closeModal(); closePerson(); closeConfirm(); closeReschedule(); document.getElementById('kOverlay').classList.remove('open'); return; }
   const typing=/input|textarea|select/i.test(document.activeElement.tagName);
   if(typing || e.metaKey || e.ctrlKey || e.altKey) return;
   if(e.key==='?'){ e.preventDefault(); document.getElementById('kOverlay').classList.toggle('open'); return; }
@@ -3114,6 +3301,7 @@ document.addEventListener('keydown',e=>{
 document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
 document.getElementById('pOverlay').addEventListener('click',e=>{ if(e.target.id==='pOverlay') closePerson(); });
 document.getElementById('cOverlay').addEventListener('click',e=>{ if(e.target.id==='cOverlay') closeConfirm(); });
+document.getElementById('rsOverlay').addEventListener('click',e=>{ if(e.target.id==='rsOverlay') closeReschedule(); });
 
 /* ============ Init ============ */
 (function init(){
