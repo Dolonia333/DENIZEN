@@ -68,10 +68,10 @@ describe('Buzz mobile capture', () => {
     assert.match(buzz, /function noteChrome/);
     assert.match(buzz, /label: 'Shot'/);
     assert.match(buzz, /label: 'Record'/);
-    assert.match(buzz, /title: 'Screenshot'/);
-    assert.match(buzz, /title: 'Meet'/);
-    assert.match(buzz, /title: 'Say'/);
-    assert.match(buzz, /title: 'Record'/);
+    assert.match(buzz, /you see it before it goes/);
+    assert.match(buzz, /office stores a copy so Abby can see it/);
+    assert.match(buzz, /Recording meeting… Transcripts land in parts/);
+    assert.match(buzz, /Drag a box to crop · click or Esc to keep the full shot/);
     assert.match(buzz, /showBuzzToast/);
     assert.match(buzz, /Shorter than Meet/);
   });

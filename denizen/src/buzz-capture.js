@@ -234,8 +234,8 @@
       #${NOTE_ID}.recording [data-note="stop"] { display: inline-flex; }
       #${NOTE_ID}.recording [data-note="send"] { display: none; }
       /* Keep Discard reachable while recording so the sheet is never a dead end. */
-      html.denizen-phone #${NOTE_ID} footer { justify-content: space-between; }
-      html.denizen-phone #${NOTE_ID} [data-note="discard"] { order: -1; margin-right: auto; }
+      html.denizen-phone #${NOTE_ID} footer { justify-content: flex-end; flex-wrap: wrap; }
+      html.denizen-phone #${NOTE_ID} [data-note="discard"] { margin-right: auto; }
       html.denizen-buzz-note-open #denizen-phone-fab,
       html.denizen-buzz-note-open #denizen-phone-fab:hover,
       html.denizen-buzz-note-open #denizen-phone-fab:focus-within {
@@ -367,40 +367,21 @@
   }
 
   function noteChrome(kind) {
+    // Card chrome is always the same gold Buzz note; kind only changes meta / placeholder.
     const k = String(kind || 'note');
     if (k === 'screenshot') {
-      return {
-        title: 'Screenshot',
-        blurb: 'You see it first. One line, then Send to Abby.',
-        placeholder: 'One line — what should they do with this?',
-      };
+      return { placeholder: 'One line — what should they do?' };
     }
     if (k === 'meeting') {
-      return {
-        title: 'Meet',
-        blurb: 'Live conversation — Stop when done, edit, then Send.',
-        placeholder: 'What came out of the room?',
-      };
+      return { placeholder: 'One line — what should they do?' };
     }
     if (k === 'dictate') {
-      return {
-        title: 'Say',
-        blurb: 'Dictation fills the line while you talk. Read it, then Send.',
-        placeholder: 'One line — what should they do?',
-      };
+      return { placeholder: 'One line — what should they do?' };
     }
     if (k === 'record') {
-      return {
-        title: 'Record',
-        blurb: 'Voice memo — speak, Stop, read the transcript, Send.',
-        placeholder: 'Or type the memo here…',
-      };
+      return { placeholder: 'One line — what should they do?' };
     }
-    return {
-      title: 'Buzz note',
-      blurb: 'You see it before it goes.',
-      placeholder: 'One line — what should they do?',
-    };
+    return { placeholder: 'One line — what should they do?' };
   }
 
   function ringRadius() {
@@ -575,8 +556,8 @@
       <textarea id="bz-note" placeholder="One line — what should they do?" maxlength="4000"></textarea>
       <div class="bz-meta" id="bz-meta"></div>
       <footer>
-        <button type="button" data-note="discard">Discard</button>
         <button type="button" data-note="mic" title="Dictation">Mic</button>
+        <button type="button" data-note="discard">Discard</button>
         <button type="button" data-note="stop">Stop</button>
         <button type="button" class="primary" data-note="send">Send</button>
       </footer>
@@ -689,11 +670,12 @@
     const chrome = noteChrome(state.kind);
     const titleEl = noteEl.querySelector('#bz-title');
     const blurbEl = noteEl.querySelector('#bz-blurb');
-    if (titleEl) titleEl.textContent = chrome.title;
-    if (blurbEl) blurbEl.textContent = ` — ${chrome.blurb}`;
+    // Office / Desktop / landing deep-link all share this card chrome.
+    if (titleEl) titleEl.textContent = 'Buzz note';
+    if (blurbEl) blurbEl.textContent = ' — you see it before it goes';
     const ta = noteEl.querySelector('#bz-note');
     ta.value = state.note || '';
-    ta.placeholder = chrome.placeholder;
+    ta.placeholder = chrome.placeholder || 'One line — what should they do?';
     const preview = noteEl.querySelector('#bz-preview');
     if (state.imageDataUrl) {
       preview.src = state.imageDataUrl;
@@ -705,16 +687,16 @@
     const meta = [];
     if (state.transcript) meta.push('Transcript ready');
     if (state.recording) {
-      if (state.kind === 'meeting') meta.push('Recording meeting…');
-      else if (state.kind === 'dictate') meta.push('Listening…');
-      else meta.push('Recording…');
+      if (state.kind === 'meeting') meta.push('Recording meeting… Transcripts land in parts.');
+      else if (state.kind === 'dictate') meta.push('Dictating…');
+      else meta.push('Recording… Stop when you are done.');
     }
     if (state.imageDataUrl && window.DenizenDesktop?.buzzSaveCapture) {
       meta.push('Saved on this disk; Abby gets the path');
     } else if (state.imageDataUrl) {
-      meta.push('Preview below — Send when ready');
+      meta.push('You see it first; the office stores a copy so Abby can see it');
     }
-    noteEl.querySelector('#bz-meta').textContent = meta.join(' · ') || chrome.blurb;
+    noteEl.querySelector('#bz-meta').textContent = meta.join(' · ');
     noteEl.classList.toggle('recording', !!state.recording);
     closeRing();
     setTimeout(() => ta?.focus(), 40);
@@ -1021,7 +1003,7 @@
     rec.start(MEETING_CHUNK_MS);
     openNote('meeting');
     const meta = noteEl?.querySelector('#bz-meta');
-    if (meta) meta.textContent = 'Recording on this mic… Stop when you are done. Transcripts land in parts.';
+    if (meta) meta.textContent = 'Recording on this mic… Transcripts land in parts.';
   }
 
   async function startMeeting() {
@@ -1097,7 +1079,7 @@
     rec.start(MEETING_CHUNK_MS);
     openNote('meeting');
     const meta = noteEl?.querySelector('#bz-meta');
-    if (meta) meta.textContent = 'Recording meeting… Stop when you are done. Transcripts land in parts.';
+    if (meta) meta.textContent = 'Recording meeting… Transcripts land in parts.';
   }
 
   function clearSpeechRec() {
@@ -1138,7 +1120,7 @@
           const ta = noteEl?.querySelector('#bz-note');
           if (ta && interim) ta.placeholder = interim;
           const meta = noteEl?.querySelector('#bz-meta');
-          if (meta) meta.textContent = interim ? `Dictating… ${interim}` : 'Dictating… Stop when you are done';
+          if (meta) meta.textContent = interim ? `Dictating… ${interim}` : 'Dictating…';
         };
         // Browser speech often fails (no permission, unsupported locale, headless).
         // Clear the half-started speech session before falling back to mic capture —
@@ -1154,7 +1136,7 @@
         rec.start();
         openNote('dictate');
         const meta = noteEl?.querySelector('#bz-meta');
-        if (meta) meta.textContent = 'Dictating… written down as you speak. Stop when you are done.';
+        if (meta) meta.textContent = 'Dictating…';
         return;
       } catch (_) {
         abandonSpeechForMic();
@@ -1243,8 +1225,8 @@
     const meta = noteEl?.querySelector('#bz-meta');
     if (meta) {
       meta.textContent = kind === 'record'
-        ? 'Recording… Stop when you are done'
-        : 'Dictating… Stop when you are done';
+        ? 'Recording… Stop when you are done.'
+        : 'Dictating…';
     }
     noteEl?.classList.add('recording');
     clearTimeout(state.recTimer);
