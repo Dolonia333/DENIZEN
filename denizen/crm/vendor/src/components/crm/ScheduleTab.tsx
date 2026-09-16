@@ -1,4 +1,3 @@
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useMemo } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { T, S, MEETING_TEMPLATES, type Task, type Meeting, type Deal, type Contact, type Subtask } from "@/lib/crm-data";
