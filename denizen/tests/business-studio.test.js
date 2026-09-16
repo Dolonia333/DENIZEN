@@ -308,13 +308,28 @@ describe('business-studio funding readiness', () => {
     assert.ok(calc.warnings.some((w) => /SOM/i.test(w)));
   });
 
-  it('treats first-mover-only moat as needing evidence', () => {
+  it('builds data room readiness from funding evidence', () => {
     const funding = require('../src/denizen-business-studio-funding');
-    const evaled = funding.evaluateMoat({
+    const state = {
+      evidence: [
+        { id: '1', type: 'document', fundingKey: 'founders', title: 'Team' },
+        { id: '2', type: 'document', fundingKey: 'tam', title: 'TAM' },
+      ],
+      funding: funding.emptyFundingState(),
+    };
+    const room = funding.evaluateDataRoom(state);
+    assert.ok(room.sections.some((s) => s.id === 'company'));
+    assert.match(room.overall.summary, /ready|partial|empty/);
+  });
+
+  it('capital pathway suggests types by stage', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    const brief = funding.capitalPathwayBrief({
+      funding: { ...funding.emptyFundingState(), capitalPlan: { stage: 'pre_revenue', uses: [], types: [] } },
       evidence: [],
-      funding: { moat: { primaryClaim: 'First mover', sources: {} } },
     });
-    assert.ok(evaled.sources.every((s) => s.defensibility === 'needs_more_evidence' || s.status === 'none'));
+    assert.ok(brief.suggestedTypes.includes('Accelerator'));
+    assert.ok(brief.pathway.some((p) => p.id === 'diligence'));
   });
 });
 
@@ -333,8 +348,12 @@ describe('business-studio static shell', () => {
     assert.match(html, /Funding Readiness/);
     assert.match(html, /fr-board|FUNDING READINESS/);
     assert.match(html, /Market Sizing/);
+    assert.match(html, /ms-nest|ms-tam/);
     assert.match(html, /Moat/);
+    assert.match(html, /CAN A COMPETITOR COPY IT/);
     assert.match(html, /Discovery Lab/);
+    assert.match(html, /Data Room/);
+    assert.match(html, /Capital Pathway|id:'capital'/);
     assert.match(html, /✓ Evidence|completeLabel:'Evidence'/);
     assert.match(html, /advisorMode|Advisor mode/);
     assert.match(html, /i2e-e3-pave|i2E E3/);

@@ -149,6 +149,33 @@ html.embed .dz-app-chrome{display:none}
   .fr-overall-grid{grid-template-columns:1fr}
   .fr-row{padding:9px 0}
 }
+
+/* Nested TAM / SAM / SOM diagram */
+.ms-nest{display:flex;justify-content:center;padding:8px 0 18px}
+.ms-tam,.ms-sam,.ms-som{
+  border:1px solid var(--line);border-radius:14px;padding:14px 16px;position:relative
+}
+.ms-tam{background:rgba(240,180,41,.06);width:min(100%,420px)}
+.ms-sam{background:rgba(42,106,85,.16);margin:14px 10px 4px;width:auto}
+.ms-som{background:rgba(61,155,116,.22);margin:12px 8px 2px}
+.ms-label{font-size:11px;font-weight:750;letter-spacing:.08em;color:var(--gold)}
+.ms-value{font-size:20px;font-weight:750;letter-spacing:-.03em;margin-top:4px}
+.ms-hint{color:var(--muted);font-size:12px;margin-top:4px;line-height:1.35}
+.jenny-box{border:1px solid rgba(240,180,41,.28);background:rgba(240,180,41,.07);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.jenny-box h3{margin:0 0 8px;font-size:13px;color:var(--gold)}
+.jenny-box li{margin:0 0 6px;color:var(--ink-2);font-size:13px;line-height:1.4}
+.moat-flow{display:grid;gap:8px;margin:12px 0}
+.moat-flow .step{padding:10px 12px;border-left:2px solid var(--gold);background:var(--surface-2);border-radius:0 10px 10px 0}
+.moat-flow .step .k{font-size:10px;letter-spacing:.08em;font-weight:750;color:var(--muted)}
+.pathway-rail{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 14px}
+.pathway-rail .step{
+  padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:11.5px;font-weight:650;color:var(--muted)
+}
+.pathway-rail .step.on{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.check-grid label{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2)}
+.dr-sec{margin-bottom:12px}
+.dr-sec h3{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .status{
   display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;
   font-size:11px;font-weight:650;text-transform:capitalize;letter-spacing:.01em
@@ -415,8 +442,10 @@ function emptyFunding(){
   return {
     items:{},
     marketSizing:{tamOrgs:null,samOrgs:null,somPct:null,acv:null,geography:'',buyerWho:'',sources:{tam:'',sam:'',som:''},calculated:null},
-    moat:{sources:{},primaryClaim:''},
-    capitalPlan:{stage:'pre_revenue',amountNeeded:null,uses:[],types:[],notes:''},
+    moat:{sources:{},primaryClaim:'',primaryWhy:'',primaryCopyDifficulty:'',primaryMonthsToCopy:null},
+    capitalPlan:{stage:'pre_revenue',amountNeeded:null,uses:[],types:[],notes:'',pathwayStep:'readiness'},
+    discoveryLab:{personas:[],hypotheses:[]},
+    dataRoom:{sharedWithInvestors:{}},
     unansweredInvestorQuestions:[]
   };
 }
@@ -465,6 +494,13 @@ function sanitizeState(raw){
         sources:Object.assign({}, (emptyFunding().moat.sources||{}), (raw.funding.moat&&raw.funding.moat.sources)||{})
       }),
       capitalPlan:Object.assign({}, emptyFunding().capitalPlan, raw.funding.capitalPlan||{}),
+      discoveryLab:{
+        personas:Array.isArray(raw.funding.discoveryLab&&raw.funding.discoveryLab.personas)?raw.funding.discoveryLab.personas:[],
+        hypotheses:Array.isArray(raw.funding.discoveryLab&&raw.funding.discoveryLab.hypotheses)?raw.funding.discoveryLab.hypotheses:[]
+      },
+      dataRoom:{
+        sharedWithInvestors:Object.assign({}, (emptyFunding().dataRoom.sharedWithInvestors||{}), (raw.funding.dataRoom&&raw.funding.dataRoom.sharedWithInvestors)||{})
+      },
       unansweredInvestorQuestions:Array.isArray(raw.funding.unansweredInvestorQuestions)
         ? raw.funding.unansweredInvestorQuestions : []
     };
@@ -792,6 +828,8 @@ const NAV=[
   {id:'programs',label:'Programs',ico:'▦',group:'Programs'},
   {id:'market',label:'Market Sizing',ico:'◎',group:'Programs'},
   {id:'moat',label:'Moat Builder',ico:'⬡',group:'Programs'},
+  {id:'capital',label:'Capital Pathway',ico:'$',group:'Programs'},
+  {id:'dataroom',label:'Data Room',ico:'▤',group:'Programs'},
   {id:'investorsim',label:'Investor Stress-Test',ico:'◎',group:'Programs'},
   {id:'mentors',label:'Mentors',ico:'◎',group:'People'},
   {id:'metrics',label:'Metrics',ico:'▦',group:'Measure'},
@@ -964,7 +1002,7 @@ function evaluateFundingReadiness(){
 }
 function calcMarketSizing(ms){
   const tamOrgs=Number(ms.tamOrgs), samOrgs=Number(ms.samOrgs), somPct=Number(ms.somPct), acv=Number(ms.acv);
-  const out={tamValue:null,samValue:null,somOrgs:null,somValue:null,warnings:[]};
+  const out={tamValue:null,samValue:null,somOrgs:null,somValue:null,warnings:[],jenny:[]};
   if(isFinite(tamOrgs)&&isFinite(acv)) out.tamValue=tamOrgs*acv;
   if(isFinite(samOrgs)&&isFinite(acv)) out.samValue=samOrgs*acv;
   if(isFinite(samOrgs)&&isFinite(somPct)){
@@ -975,6 +1013,16 @@ function calcMarketSizing(ms){
   if(!(ms.sources&&ms.sources.tam)) out.warnings.push('TAM source missing.');
   if(!(ms.sources&&ms.sources.sam)) out.warnings.push('SAM source missing.');
   if(!(ms.sources&&ms.sources.som)) out.warnings.push('SOM assumption source missing.');
+  if(!ms.buyerWho) out.warnings.push('Buyer definition missing — who exactly buys this?');
+  if(!ms.geography) out.warnings.push('Geography missing — where can you sell today?');
+  out.jenny=out.warnings.map(function(w){
+    if(/TAM source/i.test(w)) return 'Jenny: Your TAM number is not sourced yet — investors will ask where it came from.';
+    if(/SAM source/i.test(w)) return 'Jenny: SAM needs a source (geography + segment definition).';
+    if(/SOM/i.test(w)) return 'Jenny: Your TAM may be sourced, but your SOM assumes a capture rate without supporting evidence.';
+    if(/Buyer/i.test(w)) return 'Jenny: Who exactly writes the check? Name the economic buyer.';
+    if(/Geography/i.test(w)) return 'Jenny: What geography can you currently sell into?';
+    return 'Jenny: '+w;
+  });
   return out;
 }
 
@@ -995,6 +1043,11 @@ function isAdvisorMode(){
   const q=new URLSearchParams(location.search);
   if(q.get('view')==='advisor') return true;
   return !!(state.config && state.config.advisorMode);
+}
+function isInvestorMode(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('view')==='investor') return true;
+  return !!(state.config && state.config.investorMode);
 }
 function logActivity(text, meta){
   state.activity.unshift({id:uid('act'),text:text,meta:meta||null,at:nowISO()});
@@ -1967,43 +2020,88 @@ function renderFunding(){
     +'</div></div>';
 
   const cp=(state.funding&&state.funding.capitalPlan)||emptyFunding().capitalPlan;
-  html+='<div class="panel"><h3>Capital plan</h3><div class="form-grid" id="capitalPlanForm">'
-    +'<label>Stage<select name="stage">'
-    +['pre_revenue','validation','pilot','growth'].map(function(s){
-      return '<option value="'+s+'"'+(cp.stage===s?' selected':'')+'>'+s+'</option>';
-    }).join('')
-    +'</select></label>'
-    +'<label>Amount needed ($)<input name="amountNeeded" type="number" value="'+(cp.amountNeeded!=null?esc(String(cp.amountNeeded)):'')+'"/></label>'
-    +'<label>Notes<textarea name="notes">'+esc(cp.notes||'')+'</textarea></label>'
-    +'<button type="button" class="btn btn-primary" data-action="save-capital-plan">Save capital plan</button>'
-    +'</div><p class="field-hint">E3 does not guarantee funding — this tracks pathway readiness and gaps.</p></div>';
+  html+='<div class="panel"><div class="meta-line"><h3 style="margin:0">Capital pathway</h3>'
+    +'<button type="button" class="btn" data-nav="capital">Open full pathway</button></div>'
+    +'<p class="field-hint" style="margin-top:8px">Stage: '+esc(cp.stage||'pre_revenue')
+    +(cp.amountNeeded!=null?' · Need $'+Number(cp.amountNeeded).toLocaleString():'')
+    +' — E3 does not guarantee funding.</p></div>';
   return html;
 }
 
 function renderDiscovery(){
   const interviews=(state.evidence||[]).filter(function(e){return e.type==='interview';});
   const tags={};
+  let pricingAsked=0, pilotRequested=0, economicBuyers=0;
   interviews.forEach(function(ev){
-    (ev.insightTags||ev.findings||[]).forEach(function(t){
+    const list=[].concat(ev.insightTags||[], ev.findings||[]);
+    list.forEach(function(t){
       const key=String(t).trim();
       if(!key) return;
       if(!tags[key]) tags[key]={tag:key,count:0,evidenceIds:[]};
       tags[key].count+=1;
       tags[key].evidenceIds.push(ev.id);
+      if(/pric/i.test(key)) pricingAsked+=1;
+      if(/pilot/i.test(key)) pilotRequested+=1;
     });
+    if(ev.economicBuyer || /economic|buyer|writes the check/i.test(String(ev.persona||''))) economicBuyers+=1;
   });
   const patterns=Object.keys(tags).map(function(k){return tags[k];}).sort(function(a,b){return b.count-a.count;});
   const exp=(state.experiments||[]).find(function(e){return /interview|discovery/i.test(e.title);});
   const target=exp?Math.max(1,Number(exp.targetCount)||10):10;
+  const lab=(state.funding&&state.funding.discoveryLab)||{personas:[],hypotheses:[]};
+  const hypotheses=(lab.hypotheses&&lab.hypotheses.length)?lab.hypotheses:state.assumptions;
 
   let html='<div class="page-head"><div><h2>Customer Discovery Lab</h2>'
-    +'<p>Persona → hypothesis → interview → insights → evidence → assumption update. DENIZEN organizes counts — you decide.</p></div>'
-    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="add-interview">+ Interview</button></div></div>';
+    +'<p>Persona → hypothesis → interview → insights → evidence → pattern detection → assumption update. DENIZEN organizes counts — you decide.</p></div>'
+    +'<div class="actions">'
+    +'<button type="button" class="btn" data-action="add-persona">+ Persona</button>'
+    +'<button type="button" class="btn" data-action="add-hypothesis">+ Hypothesis</button>'
+    +'<button type="button" class="btn btn-primary" data-action="add-interview">+ Interview</button></div></div>';
 
-  html+='<div class="panel" style="margin-bottom:14px"><h3>Progress</h3>'
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Pipeline</h3>'
+    +'<div class="pathway-rail">'
+    +['Persona','Hypothesis','Interview target','Interview','Insights','Evidence','Patterns','Assumption update']
+      .map(function(s,i){return '<span class="step'+(i<=Math.min(7, interviews.length?5:1)?' on':'')+'">'+s+'</span>';}).join('')
+    +'</div>'
     +'<div class="meta-line"><span class="num">'+interviews.length+' / '+target+' interviews</span>'
-    +'<button type="button" class="btn btn-why" data-why="category:customer_discovery">WHY?</button></div>'
-    +'<p style="color:var(--muted);font-size:12.5px;margin-top:8px">Finishing tasks is not validation. Tag insights on each interview.</p></div>';
+    +'<button type="button" class="btn btn-why" data-why="category:customer_discovery">WHY?</button></div></div>';
+
+  html+='<div class="grid grid-3" style="margin-bottom:14px">'
+    +'<div class="panel"><h3>Pricing asked</h3><p class="num">'+pricingAsked+'</p></div>'
+    +'<div class="panel"><h3>Pilot interest</h3><p class="num">'+pilotRequested+'</p></div>'
+    +'<div class="panel"><h3>Economic buyers</h3><p class="num">'+economicBuyers+'</p></div></div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Personas</h3>';
+  if(!(lab.personas||[]).length) html+='<div class="empty">No personas yet.</div>';
+  else {
+    html+='<div class="list">';
+    lab.personas.forEach(function(p){
+      html+='<div class="row-item"><div><div class="rt">'+esc(p.name)+'</div><div class="rm">'+esc(p.notes||'')+'</div></div></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Hypothesis support</h3>';
+  if(!hypotheses.length) html+='<div class="empty">No hypotheses / assumptions yet.</div>';
+  else {
+    html+='<div class="list">';
+    hypotheses.forEach(function(h){
+      const title=h.title||h.key||'Hypothesis';
+      const match=patterns.find(function(p){
+        return String(p.tag).toLowerCase().indexOf(String(title).toLowerCase().slice(0,12))>=0;
+      });
+      const count=match?match.count:0;
+      const support=count===0?'weak':(count/Math.max(1,interviews.length)<0.3?'weak':'emerging');
+      html+='<div class="row-item"><div><div class="rt">'+esc(title)+'</div>'
+        +'<div class="rm">'+(count===0
+          ? 'Your hypothesis currently has weak interview support.'
+          : count+'/'+interviews.length+' interviews mentioned related signals — not auto-validated.')+'</div></div>'
+        +statusChip(support)+'</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
 
   html+='<div class="panel" style="margin-bottom:14px"><h3>Insight patterns</h3>';
   if(!patterns.length){
@@ -2011,8 +2109,8 @@ function renderDiscovery(){
   } else {
     html+='<div class="list">';
     patterns.forEach(function(p){
-      html+='<div class="row-item"><div class="rt">'+esc(p.tag)+'</div>'
-        +'<span class="num">'+p.count+'/'+interviews.length+'</span></div>';
+      html+='<div class="row-item"><div class="rt">'+esc(p.count)+'/'+interviews.length+' mentioned '+esc(p.tag)+'</div>'
+        +'<span class="num">'+p.count+'</span></div>';
     });
     html+='</div>';
   }
@@ -2024,7 +2122,7 @@ function renderDiscovery(){
     html+='<div class="list">';
     interviews.forEach(function(ev){
       html+='<div class="row-item"><div><div class="rt">'+esc(ev.title)+'</div>'
-        +'<div class="rm">'+esc(((ev.insightTags||[]).join(' · '))||ev.notes||ev.description||'')+'</div></div>'
+        +'<div class="rm">'+esc(ev.persona?('Persona: '+ev.persona+' · '):'')+esc(((ev.insightTags||[]).join(' · '))||ev.notes||ev.description||'')+'</div></div>'
         +statusChip('interview')+'</div>';
     });
     html+='</div>';
@@ -2033,34 +2131,48 @@ function renderDiscovery(){
   return html;
 }
 
+function moneyFmt(n){
+  if(n==null || !isFinite(n)) return '—';
+  return '$'+Math.round(n).toLocaleString();
+}
 function renderMarket(){
   const ms=(state.funding&&state.funding.marketSizing)||emptyFunding().marketSizing;
   const calc=calcMarketSizing(ms);
+  const jenny=(calc.jenny||calc.warnings||[]).map(function(w){
+    if(/^Jenny:/.test(w)) return w;
+    if(/SOM capture|SOM assumption/i.test(w)) return 'Jenny: Your TAM may be sourced, but your SOM assumes a capture rate without supporting evidence.';
+    if(/TAM source/i.test(w)) return 'Jenny: Your TAM number is not sourced yet — investors will ask where it came from.';
+    return 'Jenny: '+w;
+  });
   let html='<div class="page-head"><div><h2>Market Sizing Builder</h2>'
-    +'<p>TAM → SAM → SOM from org count × ACV. Sources required — mentors can challenge each assumption.</p></div></div>';
+    +'<p>Who buys · how many · geography · realistic reach · ACV. Sources required — mentors challenge assumptions.</p></div></div>';
 
-  html+='<div class="grid grid-2" style="margin-bottom:14px">'
-    +'<div class="panel"><h3>TAM</h3><p class="num">'+(calc.tamValue!=null?('$'+Math.round(calc.tamValue).toLocaleString()):'—')+'</p>'
-    +'<p class="rm">All applicable organizations × ACV</p></div>'
-    +'<div class="panel"><h3>SAM</h3><p class="num">'+(calc.samValue!=null?('$'+Math.round(calc.samValue).toLocaleString()):'—')+'</p>'
-    +'<p class="rm">Customers you can serve</p></div>'
-    +'<div class="panel"><h3>SOM orgs</h3><p class="num">'+(calc.somOrgs!=null?Math.round(calc.somOrgs).toLocaleString():'—')+'</p>'
-    +'<p class="rm">Realistic reach</p></div>'
-    +'<div class="panel"><h3>SOM $</h3><p class="num">'+(calc.somValue!=null?('$'+Math.round(calc.somValue).toLocaleString()):'—')+'</p>'
-    +'<p class="rm">Capture × ACV</p></div></div>';
+  html+='<div class="ms-nest"><div class="ms-tam">'
+    +'<div class="ms-label">TAM</div>'
+    +'<div class="ms-value">'+moneyFmt(calc.tamValue)+'</div>'
+    +'<div class="ms-hint">All applicable organizations'+(ms.tamOrgs!=null?' · '+Number(ms.tamOrgs).toLocaleString()+' orgs':'')+'</div>'
+    +'<div class="ms-sam">'
+    +'<div class="ms-label">SAM</div>'
+    +'<div class="ms-value">'+moneyFmt(calc.samValue)+'</div>'
+    +'<div class="ms-hint">Customers we can serve'+(ms.samOrgs!=null?' · '+Number(ms.samOrgs).toLocaleString()+' orgs':'')+(ms.geography?' · '+esc(ms.geography):'')+'</div>'
+    +'<div class="ms-som">'
+    +'<div class="ms-label">SOM</div>'
+    +'<div class="ms-value">'+moneyFmt(calc.somValue)+'</div>'
+    +'<div class="ms-hint">Real reach'+(calc.somOrgs!=null?' · ~'+Math.round(calc.somOrgs).toLocaleString()+' orgs':'')+(ms.somPct!=null?' · '+ms.somPct+'%':'')+'</div>'
+    +'</div></div></div></div>';
 
-  if(calc.warnings.length){
-    html+='<div class="panel" style="margin-bottom:14px;border-color:rgba(240,160,144,.35)"><h3>Challenges</h3><ul style="margin:0;padding-left:18px;color:var(--ink-2);font-size:13px">';
-    calc.warnings.forEach(function(w){ html+='<li>'+esc(w)+'</li>'; });
+  if(jenny.length){
+    html+='<div class="jenny-box"><h3>Jenny challenges</h3><ul style="margin:0;padding-left:18px">';
+    jenny.forEach(function(w){ html+='<li>'+esc(w)+'</li>'; });
     html+='</ul></div>';
   }
 
   html+='<div class="panel"><h3>Inputs</h3><div class="form-grid" id="marketSizingForm">'
-    +'<div class="form-row"><label>Who buys?<input name="buyerWho" value="'+esc(ms.buyerWho||'')+'"/></label>'
-    +'<label>Geography<input name="geography" value="'+esc(ms.geography||'')+'"/></label></div>'
-    +'<div class="form-row"><label>TAM orgs<input name="tamOrgs" type="number" value="'+(ms.tamOrgs!=null?esc(String(ms.tamOrgs)):'')+'"/></label>'
-    +'<label>SAM orgs<input name="samOrgs" type="number" value="'+(ms.samOrgs!=null?esc(String(ms.samOrgs)):'')+'"/></label></div>'
-    +'<div class="form-row"><label>SOM capture %<input name="somPct" type="number" value="'+(ms.somPct!=null?esc(String(ms.somPct)):'')+'"/></label>'
+    +'<div class="form-row"><label>Who exactly buys this?<input name="buyerWho" value="'+esc(ms.buyerWho||'')+'"/></label>'
+    +'<label>Geography you can sell into<input name="geography" value="'+esc(ms.geography||'')+'"/></label></div>'
+    +'<div class="form-row"><label>How many exist? (TAM orgs)<input name="tamOrgs" type="number" value="'+(ms.tamOrgs!=null?esc(String(ms.tamOrgs)):'')+'"/></label>'
+    +'<label>How many can you serve? (SAM orgs)<input name="samOrgs" type="number" value="'+(ms.samOrgs!=null?esc(String(ms.samOrgs)):'')+'"/></label></div>'
+    +'<div class="form-row"><label>Realistic reach % (SOM)<input name="somPct" type="number" value="'+(ms.somPct!=null?esc(String(ms.somPct)):'')+'"/></label>'
     +'<label>Annual contract value $<input name="acv" type="number" value="'+(ms.acv!=null?esc(String(ms.acv)):'')+'"/></label></div>'
     +'<label>TAM source<textarea name="srcTam">'+(esc((ms.sources&&ms.sources.tam)||''))+'</textarea></label>'
     +'<label>SAM source<textarea name="srcSam">'+(esc((ms.sources&&ms.sources.sam)||''))+'</textarea></label>'
@@ -2072,11 +2184,31 @@ function renderMarket(){
 
 function renderMoat(){
   const moat=(state.funding&&state.funding.moat)||emptyFunding().moat;
+  const primaryEv=(state.evidence||[]).filter(function(e){
+    return e.moatKey==='primary' || (Array.isArray(e.linkedMoatKeys)&&e.linkedMoatKeys.includes('primary'));
+  });
+  const months=Number(moat.primaryMonthsToCopy);
+  let verdict='Needs more evidence';
+  if(primaryEv.length>=2 && isFinite(months) && months>=12 && moat.primaryCopyDifficulty){
+    verdict='Defensible claim (still founder/mentor judgment)';
+  } else if(primaryEv.length>=1 || moat.primaryClaim){
+    verdict='Advantage — not yet a moat';
+  }
+
   let html='<div class="page-head"><div><h2>Moat / Defensibility Builder</h2>'
-    +'<p>First-mover does not count as a long-term advantage. Advantage ≠ moat until copy difficulty is evidenced.</p></div></div>';
-  html+='<div class="panel" style="margin-bottom:14px"><label>Primary claim<textarea id="moatPrimaryClaim">'+esc(moat.primaryClaim||'')+'</textarea></label>'
-    +'<button type="button" class="btn btn-primary" style="margin-top:8px" data-action="save-moat-claim">Save claim</button></div>';
-  html+='<div class="list">';
+    +'<p>First-mover does not count. Advantage ≠ moat until copy difficulty is evidenced.</p></div></div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Primary claim flow</h3><div class="moat-flow">'
+    +'<div class="step"><div class="k">CLAIM</div><textarea id="moatPrimaryClaim" rows="2">'+esc(moat.primaryClaim||'')+'</textarea></div>'
+    +'<div class="step"><div class="k">WHY?</div><textarea id="moatPrimaryWhy" rows="2">'+esc(moat.primaryWhy||'')+'</textarea></div>'
+    +'<div class="step"><div class="k">EVIDENCE</div><div class="rm">'+(primaryEv.length?primaryEv.map(function(e){return e.title;}).join(' · '):'None linked yet — add evidence with moat tag.')+'</div>'
+    +'<button type="button" class="btn btn-sm" style="margin-top:8px" data-action="link-moat-primary">Link evidence</button></div>'
+    +'<div class="step"><div class="k">CAN A COMPETITOR COPY IT?</div><input id="moatPrimaryCopy" value="'+esc(moat.primaryCopyDifficulty||'')+'" placeholder="e.g. Hard — needs mesh + cost structure"/></div>'
+    +'<div class="step"><div class="k">HOW LONG WOULD IT TAKE?</div><input id="moatPrimaryMonths" type="number" value="'+(moat.primaryMonthsToCopy!=null?esc(String(moat.primaryMonthsToCopy)):'')+'" placeholder="Months"/></div>'
+    +'<div class="step"><div class="k">DEFENSIBILITY</div><strong>'+esc(verdict)+'</strong></div>'
+    +'</div><button type="button" class="btn btn-primary" data-action="save-moat-claim">Save claim flow</button></div>';
+
+  html+='<div class="panel"><h3>Defensibility sources</h3><div class="list">';
   MOAT_SOURCES.forEach(function(src){
     const row=(moat.sources&&moat.sources[src.key])||{};
     const linked=(state.evidence||[]).filter(function(e){
@@ -2085,18 +2217,127 @@ function renderMoat(){
     });
     let status=row.status||'none';
     if(linked.length && status==='none') status='partial';
-    html+='<div class="panel" style="margin-bottom:10px"><div class="meta-line"><strong>'+esc(src.title)+'</strong>'+statusChip(status)+'</div>'
+    const mark=status==='strong'?'✓':(status==='partial'?'◐':'○');
+    html+='<div class="panel" style="margin-bottom:10px"><div class="meta-line"><strong>'+esc(src.title)+'</strong>'
+      +'<span class="num">'+mark+'</span></div>'
       +'<div class="form-grid" style="margin-top:8px">'
       +'<label>Status<select data-moat-status="'+esc(src.key)+'">'
       +['none','partial','strong'].map(function(s){return '<option value="'+s+'"'+(status===s?' selected':'')+'>'+s+'</option>';}).join('')
       +'</select></label>'
       +'<label>Months for competitor to copy<input type="number" data-moat-months="'+esc(src.key)+'" value="'+(row.monthsToCopy!=null?esc(String(row.monthsToCopy)):'')+'"/></label>'
       +'<label>Claim<textarea data-moat-claim="'+esc(src.key)+'">'+esc(row.claim||'')+'</textarea></label>'
-      +'<div class="rm">Evidence linked: '+linked.length+' — '+esc(linked.length?'Advantage not yet moat until copy difficulty is evidenced.':'No evidence yet.')+'</div>'
+      +'<div class="rm">Evidence: '+linked.length+' — '+esc(linked.length?'Advantage not yet moat until copy difficulty is evidenced.':'No evidence yet.')+'</div>'
       +'<button type="button" class="btn btn-sm" data-save-moat="'+esc(src.key)+'">Save</button>'
       +'</div></div>';
   });
-  html+='</div>';
+  html+='</div></div>';
+  return html;
+}
+
+const CAPITAL_USES=['Product','Pilot','Hiring','Sales','Equipment','Other'];
+const CAPITAL_TYPES=['Bootstrapping','Customer Revenue','Grants','Loans','Accelerator','Angel','SAFE','Convertible Note','Equity'];
+const CAPITAL_PATHWAY=[
+  {id:'readiness',label:'Readiness'},
+  {id:'gaps',label:'Gaps'},
+  {id:'paths',label:'Potential Funding Paths'},
+  {id:'requirements',label:'Requirements'},
+  {id:'application',label:'Application / Introduction'},
+  {id:'diligence',label:'Due Diligence'},
+  {id:'outcome',label:'Outcome'}
+];
+
+function renderCapital(){
+  const cp=(state.funding&&state.funding.capitalPlan)||emptyFunding().capitalPlan;
+  const fr=evaluateFundingReadiness();
+  const unanswered=((state.funding&&state.funding.unansweredInvestorQuestions)||[]).filter(function(q){return !q.answered;});
+  const gaps=fr.sections.flatMap(function(s){return s.items.filter(function(i){return !i.complete;}).map(function(i){return i.title;});}).slice(0,8)
+    .concat(unanswered.map(function(q){return 'Unanswered: '+q.question;}));
+  const step=cp.pathwayStep||'readiness';
+  let html='<div class="page-head"><div><h2>Capital Pathway</h2>'
+    +'<p>Idea → E3/validation → funding readiness → advisory programs → capital → scale. E3 does not guarantee investment.</p></div></div>';
+  html+='<div class="panel" style="margin-bottom:14px"><div class="pathway-rail">'
+    +CAPITAL_PATHWAY.map(function(p){
+      return '<span class="step'+(p.id===step?' on':'')+'" data-action="set-pathway-step" data-payload="'+p.id+'">'+esc(p.label)+'</span>';
+    }).join('')
+    +'</div></div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Capital plan</h3><div class="form-grid" id="capitalPlanForm">'
+    +'<label>Where are you now?<select name="stage">'
+    +[['pre_revenue','Pre-revenue / Validation'],['validation','Customer Validation'],['pilot','Pilot'],['growth','Growth']].map(function(pair){
+      return '<option value="'+pair[0]+'"'+(cp.stage===pair[0]?' selected':'')+'>'+pair[1]+'</option>';
+    }).join('')
+    +'</select></label>'
+    +'<label>How much capital do you need? ($)<input name="amountNeeded" type="number" value="'+(cp.amountNeeded!=null?esc(String(cp.amountNeeded)):'')+'"/></label>'
+    +'<div><div class="rm" style="margin-bottom:6px">What will it accomplish?</div><div class="check-grid" id="capitalUses">'
+    +CAPITAL_USES.map(function(u){
+      const on=(cp.uses||[]).indexOf(u)>=0;
+      return '<label><input type="checkbox" value="'+esc(u)+'"'+(on?' checked':'')+'/> '+esc(u)+'</label>';
+    }).join('')
+    +'</div></div>'
+    +'<div><div class="rm" style="margin-bottom:6px">What type could fit?</div><div class="check-grid" id="capitalTypes">'
+    +CAPITAL_TYPES.map(function(u){
+      const on=(cp.types||[]).indexOf(u)>=0;
+      return '<label><input type="checkbox" value="'+esc(u)+'"'+(on?' checked':'')+'/> '+esc(u)+'</label>';
+    }).join('')
+    +'</div></div>'
+    +'<label>Notes<textarea name="notes">'+esc(cp.notes||'')+'</textarea></label>'
+    +'<button type="button" class="btn btn-primary" data-action="save-capital-plan">Save capital plan</button>'
+    +'</div></div>';
+
+  html+='<div class="panel"><h3>Gaps feeding this pathway</h3>';
+  if(!gaps.length) html+='<div class="empty">No open funding gaps — keep evidence current.</div>';
+  else {
+    html+='<div class="list">';
+    gaps.forEach(function(g){ html+='<div class="row-item"><div class="rt">'+esc(g)+'</div>'+statusChip('needs_attention')+'</div>'; });
+    html+='</div>';
+  }
+  html+='<p class="field-hint" style="margin-top:10px">Unanswered investor stress-test questions automatically join this gap list.</p></div>';
+  return html;
+}
+
+function renderDataRoom(){
+  const fr=evaluateFundingReadiness();
+  const byKey={};
+  fr.sections.forEach(function(s){ s.items.forEach(function(i){ byKey[i.key]=i; }); });
+  const sections=[
+    {id:'company',name:'Company',keys:['founders','roles','lean_canvas','exec_summary']},
+    {id:'market',name:'Market',keys:['tam','sam','som','market_growth','beachhead']},
+    {id:'product',name:'Product',keys:['problem_need','product_solution','pm_validation']},
+    {id:'customers',name:'Customers',keys:['customer_definition','customer_discovery','economic_buyer']},
+    {id:'financials',name:'Financials',keys:['forecast_3y','cash_flow','burn','runway','unit_economics','financial_model']},
+    {id:'team',name:'Team',keys:['founders','roles','critical_gaps','hiring_plan','advisors']},
+    {id:'legal',name:'Legal',keys:['use_of_funds']},
+    {id:'ip',name:'IP',keys:['moat','defensibility_evidence']},
+    {id:'traction',name:'Traction',keys:['pilot_strategy','revenue_model','pricing_validation']},
+    {id:'fundraise',name:'Fundraise',keys:['pitch_deck','pitch_90','pitch_5m','investor_qa','data_room']}
+  ];
+  const share=((state.funding&&state.funding.dataRoom)||{}).sharedWithInvestors||{};
+  let ready=0,partial=0,empty=0;
+  let html='<div class="page-head"><div><h2>Data Room Readiness</h2>'
+    +'<p>Company → Market → Product → Customers → Financials → Team → Legal → IP → Traction → Fundraise. Show what’s missing — then share an Investor View.</p></div>'
+    +'<div class="actions"><label class="toggle"><input type="checkbox" id="investorViewToggle"'+(isInvestorMode()?' checked':'')+'/> Investor view</label></div></div>';
+
+  sections.forEach(function(sec){
+    const items=sec.keys.map(function(k){return byKey[k]||{key:k,title:k,complete:false,display:'○'};});
+    const present=items.filter(function(i){return i.complete;}).length;
+    if(present===items.length) ready+=1;
+    else if(present>0) partial+=1;
+    else empty+=1;
+    const st=present===items.length?'ready':(present>0?'partial':'empty');
+    html+='<div class="panel dr-sec"><h3>'+esc(sec.name)+' <span class="kbd">'+present+'/'+items.length+' '+st+'</span></h3><div class="list">';
+    items.forEach(function(item){
+      const shared=!!share[item.key];
+      html+='<div class="row-item"><div><div class="rt">'+esc(item.title)+'</div>'
+        +'<div class="rm">'+esc(item.display)+(shared?' · shared with investors':'')+'</div></div>'
+        +'<label class="toggle" style="margin:0"><input type="checkbox" data-investor-share="'+esc(item.key)+'"'+(shared?' checked':'')+'/> Share</label></div>';
+    });
+    html+='</div></div>';
+  });
+  html+='<div class="panel"><div class="fr-overall-grid">'
+    +'<div><span class="fr-n">'+ready+'</span> sections ready</div>'
+    +'<div><span class="fr-n">'+partial+'</span> partial</div>'
+    +'<div><span class="fr-n">'+empty+'</span> empty</div></div>'
+    +'<p class="field-hint" style="margin-top:10px">Mentor sees coaching. Investor sees only shared diligence. Founder sees everything.</p></div>';
   return html;
 }
 
@@ -2157,6 +2398,8 @@ function render(){
     programs:renderPrograms,
     market:renderMarket,
     moat:renderMoat,
+    capital:renderCapital,
+    dataroom:renderDataRoom,
     investorsim:renderInvestorSim,
     mentors:renderMentors,
     metrics:renderMetrics,
@@ -2281,14 +2524,23 @@ document.addEventListener('click', function(e){
       state.funding=state.funding||emptyFunding();
       const form=document.getElementById('capitalPlanForm');
       if(!form) return;
+      const useBox=document.getElementById('capitalUses');
+      const typeBox=document.getElementById('capitalTypes');
       state.funding.capitalPlan={
         stage:(form.querySelector('[name=stage]')||{}).value||'pre_revenue',
         amountNeeded:Number((form.querySelector('[name=amountNeeded]')||{}).value)||null,
-        uses:state.funding.capitalPlan.uses||[],
-        types:state.funding.capitalPlan.types||[],
-        notes:(form.querySelector('[name=notes]')||{}).value||''
+        uses:useBox?Array.prototype.map.call(useBox.querySelectorAll('input:checked'),function(el){return el.value;}):(state.funding.capitalPlan.uses||[]),
+        types:typeBox?Array.prototype.map.call(typeBox.querySelectorAll('input:checked'),function(el){return el.value;}):(state.funding.capitalPlan.types||[]),
+        notes:(form.querySelector('[name=notes]')||{}).value||'',
+        pathwayStep:(state.funding.capitalPlan&&state.funding.capitalPlan.pathwayStep)||'readiness'
       };
       scheduleSave(); toast('Capital plan saved'); render();
+    }
+    if(a==='set-pathway-step'){
+      state.funding=state.funding||emptyFunding();
+      state.funding.capitalPlan=state.funding.capitalPlan||emptyFunding().capitalPlan;
+      state.funding.capitalPlan.pathwayStep=act.getAttribute('data-payload')||'readiness';
+      scheduleSave(); render();
     }
     if(a==='save-market-sizing'){
       state.funding=state.funding||emptyFunding();
@@ -2309,14 +2561,52 @@ document.addEventListener('click', function(e){
       };
       next.calculated=calcMarketSizing(next);
       state.funding.marketSizing=next;
-      // Link market sizing evidence markers (does not auto-complete without explicit evidence rows)
       scheduleSave(); toast('Market sizing saved'); render();
     }
     if(a==='save-moat-claim'){
       state.funding=state.funding||emptyFunding();
-      state.funding.moat=state.funding.moat||{sources:{},primaryClaim:''};
+      state.funding.moat=state.funding.moat||emptyFunding().moat;
       state.funding.moat.primaryClaim=(document.getElementById('moatPrimaryClaim')||{}).value||'';
-      scheduleSave(); toast('Moat claim saved'); render();
+      state.funding.moat.primaryWhy=(document.getElementById('moatPrimaryWhy')||{}).value||'';
+      state.funding.moat.primaryCopyDifficulty=(document.getElementById('moatPrimaryCopy')||{}).value||'';
+      const monthsRaw=(document.getElementById('moatPrimaryMonths')||{}).value;
+      state.funding.moat.primaryMonthsToCopy=monthsRaw!==''&&monthsRaw!=null?Number(monthsRaw):null;
+      scheduleSave(); toast('Moat claim flow saved'); render();
+    }
+    if(a==='link-moat-primary'){
+      const opts=(state.evidence||[]).map(function(ev){return {value:ev.id,label:ev.title+' ('+ev.type+')'};});
+      if(!opts.length){ toast('Add evidence first'); setView('evidence'); return; }
+      promptForm('Link evidence to primary moat claim',[
+        {name:'evidenceId',label:'Evidence',type:'select',options:opts,required:true}
+      ],function(d){
+        const ev=state.evidence.find(function(x){return x.id===d.evidenceId;});
+        if(!ev) return;
+        ev.moatKey='primary';
+        ev.linkedMoatKeys=Array.from(new Set([].concat(ev.linkedMoatKeys||[],['primary'])));
+        scheduleSave(); render(); toast('Evidence linked to moat claim');
+      });
+    }
+    if(a==='add-persona'){
+      promptForm('Add persona',[
+        {name:'name',label:'Persona name',required:true},
+        {name:'notes',label:'Notes',type:'textarea'}
+      ],function(d){
+        state.funding=state.funding||emptyFunding();
+        state.funding.discoveryLab=state.funding.discoveryLab||{personas:[],hypotheses:[]};
+        state.funding.discoveryLab.personas.push({id:uid('per'),name:d.name,notes:d.notes||'',createdAt:nowISO()});
+        scheduleSave(); render(); toast('Persona added');
+      });
+    }
+    if(a==='add-hypothesis'){
+      promptForm('Add discovery hypothesis',[
+        {name:'title',label:'Hypothesis',required:true},
+        {name:'notes',label:'Notes',type:'textarea'}
+      ],function(d){
+        state.funding=state.funding||emptyFunding();
+        state.funding.discoveryLab=state.funding.discoveryLab||{personas:[],hypotheses:[]};
+        state.funding.discoveryLab.hypotheses.push({id:uid('hyp'),title:d.title,notes:d.notes||'',createdAt:nowISO()});
+        scheduleSave(); render(); toast('Hypothesis added');
+      });
     }
     if(a==='add-interview'){
       promptForm('Add discovery interview',[
@@ -2608,6 +2898,7 @@ document.addEventListener('change', function(e){
   if(e.target && e.target.id==='advisorModeToggle'){
     state.config=state.config||emptyConfig();
     state.config.advisorMode=!!e.target.checked;
+    if(state.config.advisorMode) state.config.investorMode=false;
     try{
       const u=new URL(location.href);
       if(state.config.advisorMode) u.searchParams.set('view','advisor');
@@ -2615,6 +2906,18 @@ document.addEventListener('change', function(e){
       history.replaceState(null,'',u);
     }catch(err){}
     scheduleSave(); render();
+  }
+  if(e.target && e.target.id==='investorViewToggle'){
+    state.config=state.config||emptyConfig();
+    state.config.investorMode=!!e.target.checked;
+    if(state.config.investorMode) state.config.advisorMode=false;
+    try{
+      const u=new URL(location.href);
+      if(state.config.investorMode) u.searchParams.set('view','investor');
+      else u.searchParams.delete('view');
+      history.replaceState(null,'',u);
+    }catch(err){}
+    scheduleSave(); render(); toast(state.config.investorMode?'Investor view on — only shared diligence':'Investor view off');
   }
   if(e.target && e.target.id==='setAdvisorMode'){
     state.config=state.config||emptyConfig();
@@ -2632,6 +2935,14 @@ document.addEventListener('change', function(e){
       scheduleSave();
     }
   }
+  if(e.target && e.target.hasAttribute('data-investor-share')){
+    const key=e.target.getAttribute('data-investor-share');
+    state.funding=state.funding||emptyFunding();
+    state.funding.dataRoom=state.funding.dataRoom||{sharedWithInvestors:{}};
+    state.funding.dataRoom.sharedWithInvestors=state.funding.dataRoom.sharedWithInvestors||{};
+    state.funding.dataRoom.sharedWithInvestors[key]=!!e.target.checked;
+    scheduleSave();
+  }
 });
 
 /* ---------- 15. Boot ---------- */
@@ -2644,6 +2955,11 @@ document.addEventListener('change', function(e){
       state.config=state.config||emptyConfig();
       state.config.advisorMode=true;
       ui.view='mentors';
+    }
+    if(q.get('view')==='investor'){
+      state.config=state.config||emptyConfig();
+      state.config.investorMode=true;
+      ui.view='dataroom';
     }
   }catch(e){}
   render();

@@ -126,6 +126,20 @@ function sanitizeState(raw) {
         sources: { ...(out.funding.moat?.sources || {}), ...(raw.funding.moat?.sources || {}) },
       },
       capitalPlan: { ...(out.funding.capitalPlan || {}), ...(raw.funding.capitalPlan || {}) },
+      discoveryLab: {
+        personas: Array.isArray(raw.funding.discoveryLab?.personas)
+          ? raw.funding.discoveryLab.personas
+          : (out.funding.discoveryLab?.personas || []),
+        hypotheses: Array.isArray(raw.funding.discoveryLab?.hypotheses)
+          ? raw.funding.discoveryLab.hypotheses
+          : (out.funding.discoveryLab?.hypotheses || []),
+      },
+      dataRoom: {
+        sharedWithInvestors: {
+          ...(out.funding.dataRoom?.sharedWithInvestors || {}),
+          ...(raw.funding.dataRoom?.sharedWithInvestors || {}),
+        },
+      },
       unansweredInvestorQuestions: Array.isArray(raw.funding.unansweredInvestorQuestions)
         ? raw.funding.unansweredInvestorQuestions
         : (out.funding.unansweredInvestorQuestions || []),
@@ -251,6 +265,51 @@ function filterStateForAdvisor(state, advisor) {
   return out;
 }
 
+/** Investor view — only diligence items explicitly shared in Data Room. */
+function filterStateForInvestor(state, advisor) {
+  const s = sanitizeState(state);
+  const shareMap = s.funding?.dataRoom?.sharedWithInvestors || {};
+  const out = emptyState();
+  out.business = s.business ? {
+    id: s.business.id,
+    name: s.business.name,
+    founderName: s.business.founderName,
+  } : null;
+  out.config = {
+    investorMode: true,
+    mentorShareDefaults: s.config?.mentorShareDefaults || {},
+  };
+  // Funding readiness items that are shared; strip private capital notes by default
+  const funding = s.funding || emptyState().funding;
+  out.funding = {
+    ...emptyState().funding,
+    items: Object.fromEntries(
+      Object.entries(funding.items || {}).filter(([key]) => shareMap[key] === true),
+    ),
+    marketSizing: shareMap.tam || shareMap.sam || shareMap.som ? funding.marketSizing : emptyState().funding.marketSizing,
+    moat: shareMap.moat || shareMap.defensibility_evidence ? funding.moat : emptyState().funding.moat,
+    capitalPlan: shareMap.use_of_funds ? funding.capitalPlan : emptyState().funding.capitalPlan,
+    dataRoom: { sharedWithInvestors: { ...shareMap } },
+    unansweredInvestorQuestions: [],
+  };
+  out.evidence = (s.evidence || []).filter((e) => {
+    const keys = [].concat(e.fundingKey || [], e.linkedFundingKeys || []);
+    return keys.some((k) => shareMap[k] === true);
+  });
+  out.metrics = (s.metrics || []).filter((m) => m.sharedWithInvestors === true || m.sharedWithAdvisors === true);
+  out.programs = shareMap.lean_canvas || shareMap.exec_summary
+    ? (s.programs || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      templateId: p.templateId,
+      status: p.status,
+      pave: advisor?.share?.pave === false ? null : p.pave,
+    }))
+    : [];
+  out.comments = (s.comments || []).filter((c) => c.visibility === 'investor' || c.visibility === 'shared');
+  return out;
+}
+
 module.exports = {
   SCHEMA_VERSION,
   TABLE,
@@ -261,4 +320,5 @@ module.exports = {
   getWorkspace,
   upsertWorkspace,
   filterStateForAdvisor,
+  filterStateForInvestor,
 };

@@ -165,7 +165,9 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         let state = row?.state || studioStore.emptyState();
         const advisor = findAdvisor(state, access);
         const role = String(advisor?.role || '').toLowerCase();
-        if (isAdvisorRole(role)) {
+        if (role === 'investor' || role === 'viewer') {
+          state = studioStore.filterStateForInvestor(state, advisor);
+        } else if (role === 'mentor' || role === 'advisor') {
           state = studioStore.filterStateForAdvisor(state, advisor);
         }
         json(res, 200, {
@@ -527,6 +529,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           marketSizing: funding.calculateMarketSizing(loaded.state.funding?.marketSizing || {}),
           moat: funding.evaluateMoat(loaded.state),
           discovery: funding.discoveryPatterns(loaded.state),
+          dataRoom: funding.evaluateDataRoom(loaded.state),
+          capital: funding.capitalPathwayBrief(loaded.state),
           capitalPlan: loaded.state.funding?.capitalPlan || funding.emptyFundingState().capitalPlan,
         });
         return true;

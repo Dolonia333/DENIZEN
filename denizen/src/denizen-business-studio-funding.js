@@ -126,8 +126,11 @@ function emptyFundingState() {
       calculated: null,
     },
     moat: {
-      sources: {}, // key -> { status: none|partial|strong, claim, copyDifficulty, monthsToCopy, evidenceIds[] }
+      sources: {}, // key -> { status, claim, why, copyDifficulty, monthsToCopy, evidenceIds[] }
       primaryClaim: '',
+      primaryWhy: '',
+      primaryCopyDifficulty: '',
+      primaryMonthsToCopy: null,
     },
     capitalPlan: {
       stage: 'pre_revenue',
@@ -135,6 +138,14 @@ function emptyFundingState() {
       uses: [],
       types: [],
       notes: '',
+      pathwayStep: 'readiness', // readiness|gaps|paths|requirements|application|diligence|outcome
+    },
+    discoveryLab: {
+      personas: [],
+      hypotheses: [],
+    },
+    dataRoom: {
+      sharedWithInvestors: {},
     },
     unansweredInvestorQuestions: [],
   };
@@ -321,7 +332,180 @@ function calculateMarketSizing(input = {}) {
   if (!input.sources?.tam) out.warnings.push('TAM source missing.');
   if (!input.sources?.sam) out.warnings.push('SAM source missing.');
   if (!input.sources?.som) out.warnings.push('SOM assumption source missing.');
+  if (!out.inputs.buyerWho) out.warnings.push('Buyer definition missing — who exactly buys this?');
+  if (!out.inputs.geography) out.warnings.push('Geography missing — where can you sell today?');
+  // Jenny-style challenge lines (advisory, not auto-verdicts)
+  out.jenny = out.warnings.map((w) => {
+    if (/TAM source/i.test(w)) return 'Jenny: Your TAM number is not sourced yet — investors will ask where it came from.';
+    if (/SAM source/i.test(w)) return 'Jenny: SAM needs a source (geography + segment definition).';
+    if (/SOM assumption|SOM capture/i.test(w)) {
+      return 'Jenny: Your TAM may be sourced, but your SOM assumes a capture rate without supporting evidence.';
+    }
+    if (/Buyer definition/i.test(w)) return 'Jenny: Who exactly writes the check? Name the economic buyer.';
+    if (/Geography/i.test(w)) return 'Jenny: What geography can you currently sell into?';
+    return `Jenny: ${w}`;
+  });
   return out;
+}
+
+const DATA_ROOM_SECTIONS = Object.freeze([
+  { id: 'company', name: 'Company', fundingKeys: ['founders', 'roles', 'lean_canvas', 'exec_summary'] },
+  { id: 'market', name: 'Market', fundingKeys: ['tam', 'sam', 'som', 'market_growth', 'beachhead'] },
+  { id: 'product', name: 'Product', fundingKeys: ['problem_need', 'product_solution', 'pm_validation'] },
+  { id: 'customers', name: 'Customers', fundingKeys: ['customer_definition', 'customer_discovery', 'economic_buyer'] },
+  { id: 'financials', name: 'Financials', fundingKeys: ['forecast_3y', 'cash_flow', 'burn', 'runway', 'unit_economics', 'financial_model'] },
+  { id: 'team', name: 'Team', fundingKeys: ['founders', 'roles', 'critical_gaps', 'hiring_plan', 'advisors'] },
+  { id: 'legal', name: 'Legal', fundingKeys: ['use_of_funds'] },
+  { id: 'ip', name: 'IP', fundingKeys: ['moat', 'defensibility_evidence'] },
+  { id: 'traction', name: 'Traction', fundingKeys: ['pilot_strategy', 'revenue_model', 'pricing_validation'] },
+  { id: 'fundraise', name: 'Fundraise', fundingKeys: ['pitch_deck', 'pitch_90', 'pitch_5m', 'investor_qa', 'data_room'] },
+]);
+
+const CAPITAL_USES = Object.freeze(['Product', 'Pilot', 'Hiring', 'Sales', 'Equipment', 'Other']);
+const CAPITAL_TYPES = Object.freeze([
+  'Bootstrapping', 'Customer Revenue', 'Grants', 'Loans', 'Accelerator',
+  'Angel', 'SAFE', 'Convertible Note', 'Equity',
+]);
+const CAPITAL_PATHWAY = Object.freeze([
+  { id: 'readiness', label: 'Readiness' },
+  { id: 'gaps', label: 'Gaps' },
+  { id: 'paths', label: 'Potential Funding Paths' },
+  { id: 'requirements', label: 'Requirements' },
+  { id: 'application', label: 'Application / Introduction' },
+  { id: 'diligence', label: 'Due Diligence' },
+  { id: 'outcome', label: 'Outcome' },
+]);
+
+function evaluateDataRoom(state) {
+  const readiness = evaluateFundingReadiness(state);
+  const byKey = Object.fromEntries(
+    readiness.sections.flatMap((s) => s.items).map((i) => [i.key, i]),
+  );
+  const share = state.funding?.dataRoom?.sharedWithInvestors || {};
+  const sections = DATA_ROOM_SECTIONS.map((sec) => {
+    const items = (sec.fundingKeys || []).map((key) => {
+      const item = byKey[key] || {
+        key, title: key, complete: false, display: '○', status: 'not_started',
+      };
+      return {
+        ...item,
+        sharedWithInvestors: share[key] === true,
+      };
+    });
+    const present = items.filter((i) => i.complete).length;
+    const missing = items.filter((i) => !i.complete);
+    return {
+      id: sec.id,
+      name: sec.name,
+      items,
+      present,
+      total: items.length,
+      missingTitles: missing.map((m) => m.title),
+      status: present === items.length ? 'ready' : (present > 0 ? 'partial' : 'empty'),
+    };
+  });
+  const ready = sections.filter((s) => s.status === 'ready').length;
+  const partial = sections.filter((s) => s.status === 'partial').length;
+  const empty = sections.filter((s) => s.status === 'empty').length;
+  return {
+    sections,
+    overall: {
+      ready,
+      partial,
+      empty,
+      total: sections.length,
+      summary: `${ready} sections ready · ${partial} partial · ${empty} empty`,
+      why: 'Data Room readiness mirrors Funding Readiness evidence — never invents diligence completeness.',
+    },
+  };
+}
+
+function capitalPathwayBrief(state) {
+  const plan = state.funding?.capitalPlan || emptyFundingState().capitalPlan;
+  const readiness = evaluateFundingReadiness(state);
+  const unanswered = (state.funding?.unansweredInvestorQuestions || []).filter((q) => !q.answered);
+  const gaps = [
+    ...readiness.sections.flatMap((s) => s.items.filter((i) => !i.complete).map((i) => i.title)).slice(0, 8),
+    ...unanswered.map((q) => `Unanswered: ${q.question}`),
+  ];
+  const suggestedTypes = [];
+  if (plan.stage === 'pre_revenue' || plan.stage === 'validation') {
+    suggestedTypes.push('Bootstrapping', 'Grants', 'Accelerator', 'Angel');
+  } else if (plan.stage === 'pilot') {
+    suggestedTypes.push('Customer Revenue', 'Accelerator', 'SAFE', 'Angel');
+  } else {
+    suggestedTypes.push('SAFE', 'Convertible Note', 'Equity', 'Customer Revenue');
+  }
+  return {
+    plan,
+    uses: CAPITAL_USES,
+    types: CAPITAL_TYPES,
+    pathway: CAPITAL_PATHWAY,
+    gaps,
+    suggestedTypes,
+    note: 'E3 does not guarantee investment — this organizes pathway readiness and next introductions.',
+  };
+}
+
+function discoveryPatterns(state) {
+  const interviews = (state.evidence || []).filter((e) => e.type === 'interview');
+  const tags = {};
+  let pricingAsked = 0;
+  let pilotRequested = 0;
+  let economicBuyers = 0;
+  for (const ev of interviews) {
+    const tagList = [...(ev.insightTags || []), ...(ev.findings || [])].map((t) => String(t).trim()).filter(Boolean);
+    for (const key of tagList) {
+      tags[key] = tags[key] || { tag: key, count: 0, evidenceIds: [] };
+      tags[key].count += 1;
+      tags[key].evidenceIds.push(ev.id);
+      if (/pric/i.test(key)) pricingAsked += 1;
+      if (/pilot/i.test(key)) pilotRequested += 1;
+    }
+    if (ev.economicBuyer || /economic|buyer|writes the check/i.test(String(ev.persona || ''))) {
+      economicBuyers += 1;
+    }
+  }
+  const patterns = Object.values(tags).sort((a, b) => b.count - a.count);
+  const exp = (state.experiments || []).find((e) => /interview|discovery/i.test(e.title)) || null;
+  const target = exp ? Math.max(1, Number(exp.targetCount) || 10) : 10;
+  const hypotheses = state.funding?.discoveryLab?.hypotheses || state.assumptions || [];
+  const hypothesisSupport = hypotheses.map((h) => {
+    const key = h.key || h.id || h.title;
+    const match = patterns.find((p) =>
+      String(p.tag).toLowerCase().includes(String(h.title || h.key || '').toLowerCase().slice(0, 12))
+      || (h.key && String(p.tag).toLowerCase().includes(String(h.key).toLowerCase()))
+    );
+    const count = match?.count || 0;
+    return {
+      id: h.id || h.key,
+      title: h.title || h.key,
+      mentionCount: count,
+      interviewCount: interviews.length,
+      support: count === 0 ? 'weak' : (count / Math.max(1, interviews.length) < 0.3 ? 'weak' : 'emerging'),
+      note: count === 0
+        ? `Your hypothesis "${h.title || h.key}" currently has weak interview support.`
+        : `${count}/${interviews.length} interviews mentioned related signals — not auto-validated.`,
+    };
+  });
+  return {
+    interviewCount: interviews.length,
+    target,
+    patterns: patterns.map((p) => ({
+      ...p,
+      ratioLabel: `${p.count}/${interviews.length || target} mentioned ${p.tag}`,
+    })),
+    signals: {
+      pricingAsked,
+      pilotRequested,
+      economicBuyers,
+    },
+    hypothesisSupport,
+    personas: state.funding?.discoveryLab?.personas || [],
+    why: interviews.length
+      ? `${interviews.length} interviews tagged. Patterns are counts — DENIZEN does not decide viability.`
+      : 'No interview evidence yet. Tag insights on each interview to see patterns.',
+  };
 }
 
 function evaluateMoat(state) {
@@ -343,53 +527,51 @@ function evaluateMoat(state) {
     } else if (linked.length >= 1) {
       defensibility = 'advantage_not_yet_moat';
     }
+    const mark = status === 'strong' ? '✓' : (status === 'partial' ? '◐' : '○');
     return {
       key: src.key,
       title: src.title,
       status,
+      mark,
       claim: row.claim || '',
+      why: row.why || '',
       copyDifficulty: row.copyDifficulty || '',
       monthsToCopy: Number.isFinite(copyMonths) ? copyMonths : null,
       evidenceIds: linked.map((e) => e.id),
       defensibility,
-      why: linked.length
+      note: linked.length
         ? `${linked.length} evidence linked. Advantage ≠ moat until copy difficulty is evidenced.`
         : 'No evidence. First-mover alone is not a long-term advantage.',
     };
   });
+
+  const primaryEvidence = (state.evidence || []).filter((e) =>
+    e.moatKey === 'primary' || (Array.isArray(e.linkedMoatKeys) && e.linkedMoatKeys.includes('primary'))
+  );
+  const primaryMonths = Number(moat.primaryMonthsToCopy);
+  let primaryDefensibility = 'needs_more_evidence';
+  if (primaryEvidence.length >= 2 && Number.isFinite(primaryMonths) && primaryMonths >= 12 && moat.primaryCopyDifficulty) {
+    primaryDefensibility = 'defensible_claim';
+  } else if (primaryEvidence.length >= 1 || moat.primaryClaim) {
+    primaryDefensibility = 'advantage_not_yet_moat';
+  }
+
   return {
     primaryClaim: moat.primaryClaim || '',
+    primaryWhy: moat.primaryWhy || '',
+    primaryCopyDifficulty: moat.primaryCopyDifficulty || '',
+    primaryMonthsToCopy: Number.isFinite(primaryMonths) ? primaryMonths : null,
+    primaryEvidenceIds: primaryEvidence.map((e) => e.id),
+    primaryDefensibility,
+    primaryNote: primaryDefensibility === 'defensible_claim'
+      ? 'Claim has evidence and copy difficulty — still founder/mentor judgment.'
+      : 'Something can be an advantage without being a moat. First-mover does not count.',
     sources,
     summary: {
       strong: sources.filter((s) => s.status === 'strong').length,
       partial: sources.filter((s) => s.status === 'partial').length,
       none: sources.filter((s) => s.status === 'none').length,
     },
-  };
-}
-
-function discoveryPatterns(state) {
-  const interviews = (state.evidence || []).filter((e) => e.type === 'interview');
-  const tags = {};
-  for (const ev of interviews) {
-    for (const t of (ev.insightTags || ev.findings || [])) {
-      const key = String(t).trim();
-      if (!key) continue;
-      tags[key] = tags[key] || { tag: key, count: 0, evidenceIds: [] };
-      tags[key].count += 1;
-      tags[key].evidenceIds.push(ev.id);
-    }
-  }
-  const patterns = Object.values(tags).sort((a, b) => b.count - a.count);
-  const exp = (state.experiments || []).find((e) => /interview|discovery/i.test(e.title)) || null;
-  const target = exp ? Math.max(1, Number(exp.targetCount) || 10) : 10;
-  return {
-    interviewCount: interviews.length,
-    target,
-    patterns,
-    why: interviews.length
-      ? `${interviews.length} interviews tagged. Patterns are counts — not automatic validation.`
-      : 'No interview evidence yet. Tag insights on each interview to see patterns.',
   };
 }
 
@@ -400,6 +582,10 @@ function defaultFundingSeed() {
 module.exports = {
   FUNDING_READINESS_SECTIONS,
   MOAT_SOURCES,
+  DATA_ROOM_SECTIONS,
+  CAPITAL_USES,
+  CAPITAL_TYPES,
+  CAPITAL_PATHWAY,
   emptyFundingState,
   defaultFundingSeed,
   evidenceForFundingItem,
@@ -409,5 +595,7 @@ module.exports = {
   calculateMarketSizing,
   evaluateMoat,
   discoveryPatterns,
+  evaluateDataRoom,
+  capitalPathwayBrief,
   uid,
 };

@@ -75,12 +75,14 @@ Mentor task suggestions → founder accept/decline → task created.
 **Phase 1 (this PR):** Foundation — shell, dashboard, programs/E3, goals,
 assumptions/experiments/evidence, roadmap, strategy map, mentor ACL,
 comments/recommendations, metrics, CRM/Studio deep links, explainability,
-**Funding Readiness** (evidence-gated checklist), Market Sizing Builder,
-Moat Builder, Customer Discovery Lab, Capital Plan.
+**Funding Readiness** checklist, **Market Sizing** (nested TAM/SAM/SOM + Jenny
+challenges), **Moat Builder** (claim→why→evidence→copy→defensibility),
+**Discovery Lab**, **Capital Pathway**, **Data Room** + Investor View ACL,
+Investor Stress-Test gap list.
 
 **Phase 2 (scaffolded, not claimed complete):** Template gallery, workbook
 engine, finance sheets, diagrams, report builder, document import,
-Investor Question Simulator NPCs, Data Room packer.
+full NPC-orchestrated investor simulator, Bridge2 program template.
 
 **Phase 3–4:** Contextual Jenny, document→plan extraction, meeting prep,
 scenario modeling, portfolio mentor view.
