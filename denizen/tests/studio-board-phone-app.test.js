@@ -39,4 +39,16 @@ describe('Studio Board phone app', () => {
     const idx = read('index.html');
     assert.match(idx, /denizen-phone-ui\.js\?v=phone\d+\w*/);
   });
+
+  it('keeps the calendar in frame on phone with a compact shell', () => {
+    const html = read('studio-board/index.html');
+    assert.match(html, /viewport-fit=cover/);
+    assert.match(html, /@media \(max-width:720px\)/);
+    assert.match(html, /\.view\{[\s\S]*?min-height:0[\s\S]*?overflow:auto/);
+    assert.match(html, /board-overview/);
+    assert.match(html, /phone-pulse/);
+    assert.match(html, /syncPhoneChrome/);
+    assert.match(html, /env\(safe-area-inset-bottom/);
+    assert.match(html, /\.sharedbadge,\.presence-strip,\.people-strip\{display:none/);
+  });
 });

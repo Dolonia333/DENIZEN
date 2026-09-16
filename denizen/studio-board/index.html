@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Studio Board — Agency Tracker · Denizen</title>
 <style>
 :root{
@@ -222,7 +222,7 @@ tr.trow.r-done:hover{opacity:1}
 .modal-head .x svg{width:13px;height:13px}
 .modal-body{padding:6px 22px 20px;display:flex;flex-direction:column;gap:15px}
 .field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:-.005em}
-.field input[type=text],.field textarea,.field select,.field input[type=date]{width:100%;padding:9px 12px;border:1px solid var(--hairline);border-radius:10px;background:#FFFFFF;transition:.15s}
+.field input[type=text],.field textarea,.field select,.field input[type=date],.field input[type=time],.field input[type=number]{width:100%;padding:9px 12px;border:1px solid var(--hairline);border-radius:10px;background:#FFFFFF;transition:.15s}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(42,106,85,.16)}
 .field textarea{resize:vertical;min-height:64px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -352,6 +352,54 @@ tr.trow.r-done:hover{opacity:1}
 .calmode{display:inline-flex;border:1px solid rgba(143,174,159,.35);border-radius:980px;overflow:hidden;margin-left:6px}
 .calmode button{padding:6px 11px;font-size:11.5px;color:var(--sage);font-weight:500}
 .calmode button.on{background:var(--bone);color:var(--forest);font-weight:600}
+
+/* Calendar interactivity: heat, drag, carry-forward, day ops */
+.cal-cell{position:relative}
+.cal-cell .heat{position:absolute;left:0;right:0;top:0;height:3px;border-radius:0;pointer-events:none;opacity:.9}
+.cal-cell.load1 .heat{background:rgba(42,106,85,.35)}
+.cal-cell.load2 .heat{background:rgba(210,142,46,.55)}
+.cal-cell.load3 .heat{background:rgba(201,79,56,.65)}
+.cal-cell.conflict .heat{background:linear-gradient(90deg,#C94F38,#D28E2E)}
+.cal-cell.cal-drop,.adc.cal-drop,.wk-col.cal-drop{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-tint)}
+.evt[draggable="true"]{cursor:grab}
+.evt[draggable="true"]:active{cursor:grabbing}
+.evt.carry{border-style:dashed;opacity:.95}
+.evt.blocked-cue{box-shadow:inset 0 0 0 1px rgba(177,77,60,.45)}
+.cal-carry{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;
+  border-radius:12px;background:rgba(201,79,56,.08);border:1px solid rgba(201,79,56,.22);
+}
+.cal-carry b{color:var(--t-video)}
+.cal-carry .cc-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.cal-carry button{
+  padding:6px 12px;border-radius:980px;font-size:12px;font-weight:600;
+  background:var(--accent);color:#F4F2EA;border:0;
+}
+.cal-carry button.ghost{background:transparent;color:var(--accent);border:1px solid rgba(42,106,85,.35)}
+.dpops{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.dpops button{
+  font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:6px;
+  background:var(--surface-2);border:1px solid var(--hairline);color:var(--ink-2);
+}
+.dpops button:hover{border-color:var(--accent);color:var(--accent)}
+.dpops .adv{background:var(--accent-tint);color:var(--accent);border-color:transparent}
+.dpops .rs{color:var(--t-video)}
+.wk-evt.wk-task{background:var(--ec-bg,var(--accent-tint));color:var(--ec,var(--accent));border-left:3px solid var(--ec,var(--accent))}
+.wk-evt.wk-task b{color:inherit;opacity:.85}
+.wk-load{display:block;font-size:9px;font-weight:700;color:var(--muted-2);margin-top:2px}
+.wkd.hot .wk-load{color:#96660F}
+.wkd.busy .wk-load{color:#C94F38}
+.dpedit{font-size:10.5px;color:var(--accent);background:var(--accent-tint);border-radius:6px;padding:2px 7px;flex:none;font-weight:600}
+.dpedit:hover{background:rgba(42,106,85,.2)}
+.mt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.mt-grid{grid-template-columns:1fr}}
+.cal-legend-heat{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted);margin:0 0 10px}
+.cal-legend-heat i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.cal-legend-heat .h1{background:rgba(42,106,85,.35)}
+.cal-legend-heat .h2{background:rgba(210,142,46,.55)}
+.cal-legend-heat .h3{background:rgba(201,79,56,.65)}
+.cal-legend-heat .hc{background:linear-gradient(90deg,#C94F38,#D28E2E)}
+
 .wk{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;flex:1 1 560px;min-width:0}
 .wk-head,.wk-allday,.wk-body{display:grid;grid-template-columns:52px repeat(7,1fr)}
 .wk-head{border-bottom:1px solid var(--hairline)}
@@ -778,15 +826,104 @@ html.embed .people-strip{display:none}
 
 /* Full-page Denizen app chrome (CRM-style standalone) */
 .dz-app-chrome{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;
-  padding:8px 14px;background:#0D1F1A;border-bottom:1px solid rgba(143,174,159,.28);
-  font-family:var(--font-ui)}
+  padding:8px 14px;padding-top:max(8px,env(safe-area-inset-top));background:#0D1F1A;border-bottom:1px solid rgba(143,174,159,.28);
+  font-family:var(--font-ui);flex-shrink:0}
 .dz-app-chrome a{color:#F4F2EA;text-decoration:none;font-size:12.5px;font-weight:600;
-  padding:6px 10px;border-radius:8px;border:1px solid rgba(143,174,159,.35)}
+  padding:6px 10px;border-radius:8px;border:1px solid rgba(143,174,159,.35);white-space:nowrap}
 .dz-app-chrome a:hover{background:rgba(232,230,220,.10);border-color:#F4F2EA}
-.dz-app-chrome .dz-app-title{color:#8FAE9F;font-size:12px;margin-left:4px}
-.dz-app-chrome .dz-app-spacer{flex:1}
+.dz-app-chrome .dz-app-title{color:#8FAE9F;font-size:12px;margin-left:4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dz-app-chrome .dz-app-spacer{flex:1;min-width:8px}
 html.embed .dz-app-chrome{display:none}
 body.standalone{min-height:100vh}
+
+/* Compact phone pulse + overview toggle (desktop: pulse hidden, overview always open) */
+.phone-pulse{display:none}
+.board-overview > summary{display:none;list-style:none}
+.board-overview > summary::-webkit-details-marker{display:none}
+
+/* ===== Phone / narrow — keep calendar in the first viewport ===== */
+@media (max-width:720px){
+  html,body{height:100%;height:100dvh;overflow:hidden}
+  body.standalone{
+    display:flex;flex-direction:column;min-height:100dvh;height:100dvh;
+    overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .app{flex:1;min-height:0;height:auto;overflow:hidden}
+  .appbar{position:relative;z-index:20;flex-shrink:0}
+  .dz-app-chrome{position:relative;padding:6px 10px;padding-top:max(6px,env(safe-area-inset-top));gap:8px}
+  .dz-app-chrome a{padding:5px 8px;font-size:12px}
+  .dz-app-chrome .dz-app-title{font-size:11px;max-width:42vw}
+
+  .bar-top{padding:8px 10px 6px;flex-wrap:nowrap;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .bar-top::-webkit-scrollbar{display:none}
+  .bar-tools{
+    padding:0 10px 8px;flex-wrap:wrap;gap:6px 8px;
+    overflow:visible;
+  }
+  .brand small{display:none}
+  .brand h1{font-size:14px}
+  .brand .mark{width:26px;height:26px}
+  .brand{flex:0 0 auto}
+  .viewtabs{flex:1 1 auto;min-width:0}
+  .bar-actions{margin-left:0;flex:0 0 auto;gap:6px}
+  .sharedbadge,.presence-strip,.people-strip{display:none!important}
+  .newbtn{padding:7px 11px;font-size:12.5px}
+  .newbtn .newbtn-full{display:none}
+  .newbtn .newbtn-short{display:inline}
+  .filters{display:flex;width:100%;flex:1 1 100%;gap:6px}
+  .filtsel{flex:1 1 0;min-width:0;max-width:none;width:auto;padding:6px 22px 6px 8px;font-size:12px}
+  .calnav{flex:1 1 auto;min-width:0;justify-content:flex-start}
+  .calnav .mlabel{min-width:0;font-size:13px;flex:0 1 auto}
+  .calnav .todaybtn{padding:5px 9px;font-size:11.5px}
+  .calmode{margin-left:auto}
+  .search{flex:1 1 100%;min-width:0;margin-left:0;order:5}
+  .resetbtn{display:none}
+
+  /* One-line pulse; full stats/legend/quick-add behind <details> */
+  .phone-pulse{
+    display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;
+    padding:7px 10px;background:var(--surface);border-bottom:1px solid var(--hairline);
+    font-size:12px;color:var(--ink-2);font-weight:500;position:relative;z-index:2;
+  }
+  .phone-pulse .pp-warn{color:var(--t-video);font-weight:600}
+  .phone-pulse .pp-spacer{flex:1;min-width:8px}
+  .phone-pulse button{
+    flex:0 0 auto;padding:5px 11px;border-radius:980px;font-size:11.5px;font-weight:600;
+    border:1px solid var(--hairline);background:var(--surface-2);color:var(--ink);touch-action:manipulation;
+  }
+  .board-overview{flex-shrink:0;border-bottom:1px solid var(--hairline-2)}
+  .board-overview > summary{
+    display:none; /* toggled via .phone-pulse button */
+  }
+  .board-overview:not([open]) .stats,
+  .board-overview:not([open]) .legend,
+  .board-overview:not([open]) .qwrap{display:none}
+  .board-overview[open] .stats{display:flex}
+  .stats .stat{flex:1 1 33%;min-width:0;padding:8px 10px}
+  .stats .stat .v{font-size:16px}
+  .legend{padding:6px 10px}
+  .qwrap{padding:6px 10px}
+  #quickadd{font-size:16px;max-width:none} /* 16px avoids iOS zoom */
+
+  .view{
+    flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
+    padding:8px 8px calc(12px + env(safe-area-inset-bottom,0px));
+  }
+  .cal-cell{min-height:52px;padding:4px 2px}
+  .cal-head div{padding:6px 2px;font-size:10px}
+  .calwrap .cal-grid{flex:1 1 auto}
+  /* Dot-first calendar pills — titles live in the day panel / tooltips */
+  .evt{padding:2px 4px;font-size:10px;gap:3px;border-left-width:2px}
+  .evt .etitle,.evt.evm b,.evt.evf{display:none}
+  .evt .edot{width:7px;height:7px}
+  .evt.evm{display:flex;justify-content:center}
+  .evt.evm::before{content:attr(data-time);font-size:9px;font-weight:700;color:#CFE3D6}
+  .more{font-size:9.5px;padding:0 2px}
+}
+@media (min-width:721px){
+  .newbtn .newbtn-short{display:none}
+  .board-overview{display:contents}
+}
 </style>
 </head>
 <body>
@@ -834,8 +971,8 @@ body.standalone{min-height:100vh}
         <span class="sharedbadge" title="Everyone using this artifact sees and edits this same board"><span class="dot"></span>Shared board</span>
         <div class="presence-strip" id="presenceStrip" title="Who is on the board right now"></div>
         <div class="people-strip" id="peopleStrip"></div>
-        <button class="newbtn" onclick="openTask()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New task
+        <button class="newbtn" onclick="openTask()" aria-label="New task">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="newbtn-full">New task</span><span class="newbtn-short">New</span>
         </button>
       </div>
     </div>
@@ -861,13 +998,17 @@ body.standalone{min-height:100vh}
     </div>
   </header>
 
-  <div class="stats" id="stats"></div>
-  <div class="legend">
-    <span class="lbl">Types</span>
-    <span id="legend" style="display:contents"></span>
-    <span id="savedviews" class="svwrap"></span>
-  </div>
-  <div class="qwrap"><input id="quickadd" placeholder='Quick add — e.g. "Nike teaser edit @Devon fri #video !high"' autocomplete="off"></div>
+  <div class="phone-pulse" id="phonePulse" aria-live="polite"></div>
+  <details class="board-overview" id="boardOverview" open>
+    <summary>Overview</summary>
+    <div class="stats" id="stats"></div>
+    <div class="legend">
+      <span class="lbl">Types</span>
+      <span id="legend" style="display:contents"></span>
+      <span id="savedviews" class="svwrap"></span>
+    </div>
+    <div class="qwrap"><input id="quickadd" placeholder='Quick add — e.g. "Nike teaser edit @Devon fri #video !high"' autocomplete="off"></div>
+  </details>
 
   <main class="view" id="view"></main>
 </div>
@@ -999,6 +1140,37 @@ body.standalone{min-height:100vh}
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeReschedule()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meeting edit modal -->
+<div class="overlay" id="mtOverlay">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:440px">
+    <div class="modal-head">
+      <h2>Edit meeting</h2>
+      <button class="x" onclick="closeMeetingEdit()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="me-id">
+      <div class="field"><label for="me-title">Title</label><input type="text" id="me-title"></div>
+      <div class="mt-grid">
+        <div class="field"><label for="me-date">Date</label><input type="date" id="me-date"></div>
+        <div class="field"><label for="me-time">Time</label><input type="time" id="me-time"></div>
+        <div class="field"><label for="me-duration">Duration (min)</label><input type="number" id="me-duration" min="15" step="15" value="30"></div>
+        <div class="field"><label for="me-client">Client</label><input type="text" id="me-client" list="me-clients" placeholder="Optional"></div>
+      </div>
+      <datalist id="me-clients"></datalist>
+      <div class="field"><label for="me-note">Note</label><textarea id="me-note" rows="2" placeholder="Agenda, dial-in,…"></textarea></div>
+      <label class="dprep"><input type="checkbox" id="me-rep"> Repeat weekly</label>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" style="color:var(--t-video)" onclick="deleteMeetingFromEdit()">Delete</button>
+      <span style="flex:1"></span>
+      <button class="btn-ghost" onclick="closeMeetingEdit()">Cancel</button>
+      <button class="btn-primary" onclick="saveMeetingEdit()">Save</button>
     </div>
   </div>
 </div>
@@ -1721,6 +1893,38 @@ function renderStats(){
     cell('overdue','Overdue','#C94F38',c.overdue,true)+
     cell('shipped','Shipped','#2A6A55',c.shipped)+
     cell('stuck','Stuck','#B14D3C',c.stuck,true);
+  const pulse=document.getElementById('phonePulse');
+  if(pulse){
+    const ov=document.getElementById('boardOverview');
+    const open=!!ov?.open;
+    pulse.innerHTML =
+      `<span>${c.all} active</span>`+
+      (c.overdue?`<span class="pp-warn">${c.overdue} overdue</span>`:'')+
+      (c.inflight?`<span>${c.inflight} in flight</span>`:'')+
+      `<span class="pp-spacer"></span>`+
+      `<button type="button" id="phoneOverviewBtn" aria-expanded="${open?'true':'false'}">${open?'Hide overview':'Overview'}</button>`;
+    document.getElementById('phoneOverviewBtn')?.addEventListener('click',toggleBoardOverview);
+  }
+}
+function toggleBoardOverview(){
+  const ov=document.getElementById('boardOverview');
+  if(!ov) return;
+  ov.open=!ov.open;
+  renderStats();
+}
+function syncPhoneChrome(){
+  const narrow=window.matchMedia('(max-width:720px)').matches;
+  const ov=document.getElementById('boardOverview');
+  if(!ov) return;
+  if(narrow){
+    if(ov.dataset.phoneInit!=='1'){
+      ov.open=false;
+      ov.dataset.phoneInit='1';
+    }
+  }else{
+    ov.open=true;
+    ov.dataset.phoneInit='';
+  }
 }
 const STAT_DEFS={inflight:t=>t.status===inFlightStageId(),
   waiting:t=>isWaitingStage(t.status),
@@ -1784,6 +1988,7 @@ function render(){
   else if(ui.view==='activity') renderActivity(v);
   else if(ui.view==='settings') renderSettings(v);
   else renderBoard(v);
+  if(ui.view==='calendar') wireCalInteractions();
 }
 
 /* ============ Calendar ============ */
@@ -1793,7 +1998,11 @@ function monthLabel(){
     const f=d=>new Date(d+'T00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
     return f(st)+' \u2013 '+f(en);
   }
-  return new Date(ui.calY,ui.calM,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const narrow=window.matchMedia('(max-width:720px)').matches;
+  return new Date(ui.calY,ui.calM,1).toLocaleDateString('en-US',{
+    month: narrow ? 'short' : 'long',
+    year: 'numeric',
+  });
 }
 function shiftMonth(d){
   if(ui.calMode==='week'){
@@ -1806,6 +2015,85 @@ function shiftMonth(d){
 function weekStart(iso){ const d=new Date(iso+'T00:00'); return addDays(iso,-d.getDay()); }
 function setCalMode(m){ ui.calMode=m; render(); }
 function goToday(){ const n=new Date(); ui.calY=n.getFullYear(); ui.calM=n.getMonth(); ui.selDate=todayISO(); render(); }
+function dayLoadMeta(tasksOnDay){
+  const open=tasksOnDay.filter(t=>!isFinalStage(t.status));
+  const n=open.length;
+  const conflict=open.some(t=>isStuck(t)||dayDiff(t.due)<0);
+  let load='';
+  if(n>=5) load='load3';
+  else if(n>=3) load='load2';
+  else if(n>=1) load='load1';
+  return {n, conflict, cls:`${load}${conflict?' conflict':''}`.trim()};
+}
+function overdueOpenTasks(){
+  return visibleTasks().filter(t=>!isFinalStage(t.status)&&dayDiff(t.due)<0)
+    .sort((a,b)=>a.due<b.due?-1:1);
+}
+function calCarryHTML(){
+  const overdue=overdueOpenTasks();
+  if(!overdue.length) return '';
+  return `<div class="cal-carry" role="status">
+    <div><b>${overdue.length} overdue</b> — carried onto Today until rescheduled. Drag onto a day or open Reschedule.</div>
+    <div class="cc-actions">
+      <button type="button" class="ghost" onclick="goToday()">Jump to today</button>
+      <button type="button" onclick="openReschedule()">Reschedule\u2026</button>
+    </div>
+  </div>`;
+}
+function calHeatLegend(){
+  return `<div class="cal-legend-heat" aria-hidden="true">
+    <span><i class="h1"></i>Light</span><span><i class="h2"></i>Busy</span><span><i class="h3"></i>Heavy</span><span><i class="hc"></i>Conflict / overdue</span>
+    <span style="margin-left:auto;opacity:.85">Drag a task onto a day to move its due date</span>
+  </div>`;
+}
+function calTaskPill(t, {carry=false}={}){
+  const stuck=isStuck(t);
+  const cls=['evt', isFinalStage(t.status)?'done':'', carry?'carry':'', stuck?'blocked-cue':''].filter(Boolean).join(' ');
+  const tip=esc(t.title)+(t.client?` \u00b7 ${esc(t.client)}`:'')+(carry?' \u00b7 overdue':'')+(stuck?' \u00b7 blocked/stale':'');
+  return `<div class="${cls}" draggable="true" data-task-id="${t.id}" style="--ec:${typeHex(t.type)};--ec-bg:${tint(typeHex(t.type),.12)}"
+    ondragstart="calDragStart(event,'${t.id}')" onclick="event.stopPropagation();openTask('${t.id}')" title="${tip}">
+    <span class="edot"></span><span class="etitle">${esc(t.title)}</span></div>`;
+}
+function calDragStart(e, id){
+  e.stopPropagation();
+  try{ e.dataTransfer.setData('text/task-id', id); e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed='move'; }catch(_){}
+  e.currentTarget.classList.add('dragging');
+}
+function calMoveTask(id, dateStr){
+  const t=state.tasks.find(x=>x.id===id); if(!t||!dateStr) return;
+  if(t.due===dateStr) return;
+  const prev=t.due;
+  t.due=dateStr;
+  pendingPatches[id]={ due:t.due, start:t.start, dueTime:t.dueTime };
+  logEvt(t, `Due ${prev||'\u2014'} \u2192 ${dateStr} (calendar)`);
+  save(); render();
+  toast(`Moved to ${dateStr}`);
+}
+function wireCalInteractions(){
+  const root=document.getElementById('view'); if(!root) return;
+  root.querySelectorAll('[data-date]').forEach(cell=>{
+    cell.addEventListener('dragover',e=>{
+      if(!e.dataTransfer) return;
+      e.preventDefault(); e.dataTransfer.dropEffect='move';
+      cell.classList.add('cal-drop');
+    });
+    cell.addEventListener('dragleave',()=>cell.classList.remove('cal-drop'));
+    cell.addEventListener('drop',e=>{
+      e.preventDefault(); e.stopPropagation();
+      cell.classList.remove('cal-drop');
+      const id=(e.dataTransfer.getData('text/task-id')||e.dataTransfer.getData('text/plain')||'').trim();
+      const date=cell.dataset.date;
+      if(id&&date) calMoveTask(id, date);
+    });
+  });
+}
+function filterClient(client){
+  if(!client) return;
+  ui.filters.client=client;
+  const el=document.getElementById('f-client'); if(el) el.value=client;
+  toast(`Filtered to ${client}`);
+  render();
+}
 function renderCalendar(){
   if(ui.calMode==='week') return renderWeek();
   const first=new Date(ui.calY,ui.calM,1), start=first.getDay();
@@ -1814,6 +2102,7 @@ function renderCalendar(){
   const todayStr=todayISO();
   const q=ui.filters.search.trim().toLowerCase();
   const tasks=visibleTasks();
+  const overdue=overdueOpenTasks();
   const evsAll=(state.events||[]).filter(e=>!q||e.title.toLowerCase().includes(q));
   if(!tasks.length && !evsAll.length && !ui.filters.search && !anyFilter()) return emptyState();
   const byDate={}; tasks.forEach(t=>{ (byDate[t.due]=byDate[t.due]||[]).push(t); });
@@ -1824,60 +2113,88 @@ function renderCalendar(){
     if(i<start){ dim=true; dnum=prevDays-start+i+1; dateStr=new Date(ui.calY,ui.calM-1,dnum).toISOString().slice(0,10); }
     else if(i>=start+days){ dim=true; dnum=i-start-days+1; dateStr=new Date(ui.calY,ui.calM+1,dnum).toISOString().slice(0,10); }
     else { dnum=i-start+1; dateStr=new Date(ui.calY,ui.calM,dnum).toISOString().slice(0,10); }
-    const isToday=dateStr===todayStr, list=byDate[dateStr]||[], evl=evOn(dateStr);
+    const isToday=dateStr===todayStr;
+    const dueList=byDate[dateStr]||[];
+    const carry=isToday?overdue.filter(t=>t.due!==todayStr):[];
+    const shownTasks=[...carry.map(t=>({t,carry:true})), ...dueList.map(t=>({t,carry:false}))];
+    const load=dayLoadMeta([...dueList, ...carry]);
+    const evl=evOn(dateStr);
     const meets=evl.filter(x=>x.kind==='meeting').sort((a,b)=>(a.time||'').localeCompare(b.time||''));
     const fups=evl.filter(x=>x.kind==='followup');
     const pills=[
-      ...meets.map(ev=>`<div class="evt evm" onclick="event.stopPropagation();selectDay('${dateStr}')" title="${esc(ev.title)}">${ev.time?`<b>${ev.time}</b> `:''}${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span></div>`),
-      ...list.map(t=>`<div class="evt ${isFinalStage(t.status)?'done':''}" style="--ec:${typeHex(t.type)};--ec-bg:${tint(typeHex(t.type),.12)}" onclick="event.stopPropagation();openTask('${t.id}')" title="${esc(t.title)}"><span class="edot"></span><span class="etitle">${esc(t.title)}</span></div>`),
+      ...meets.map(ev=>`<div class="evt evm" data-time="${esc(ev.time||'')}" onclick="event.stopPropagation();openMeetingEdit('${ev.id}')" title="${esc(ev.title)}">${ev.time?`<b>${ev.time}</b> `:''}${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span></div>`),
+      ...shownTasks.map(({t,carry})=>calTaskPill(t,{carry})),
       ...fups.map(ev=>`<div class="evt evf ${ev.done?'done':''}" onclick="event.stopPropagation();selectDay('${dateStr}')" title="${esc(ev.title)}">\u2691 <span class="etitle">${esc(ev.title)}</span></div>`)
     ];
     const shown=pills.slice(0,3).join('');
     const more=pills.length>3?`<div class="more">${pills.length-3} more</div>`:'';
-    cells+=`<div class="cal-cell ${dim?'dim':''} ${isToday?'today':''} ${dateStr===ui.selDate?'sel':''}" onclick="selectDay('${dateStr}')">
-      <div class="daynum">${dnum}</div>${shown}${more}</div>`;
+    cells+=`<div class="cal-cell ${dim?'dim':''} ${isToday?'today':''} ${dateStr===ui.selDate?'sel':''} ${load.cls}" data-date="${dateStr}" onclick="selectDay('${dateStr}')">
+      <span class="heat"></span><div class="daynum">${dnum}</div>${shown}${more}</div>`;
   }
-  return `<div class="calwrap"><div class="cal-grid"><div class="cal-head">${dh}</div><div class="cal-body">${cells}</div></div>${dayPanelHTML(ui.selDate)}</div>`;
+  return `${calCarryHTML()}${calHeatLegend()}<div class="calwrap"><div class="cal-grid"><div class="cal-head">${dh}</div><div class="cal-body">${cells}</div></div>${dayPanelHTML(ui.selDate)}</div>`;
 }
 function renderWeek(){
   const start=weekStart(ui.selDate);
   const daysArr=[...Array(7)].map((_,i)=>addDays(start,i));
   const todayStr=todayISO();
   const tasks=visibleTasks();
+  const overdue=overdueOpenTasks();
   const hours=[...Array(12)].map((_,i)=>i+8);
   const H=48, TOP0=8*60, SPAN=12*60, BODYH=hours.length*H;
-  const heads=daysArr.map(d=>{const dt=new Date(d+'T00:00');
-    return `<div class="wkd ${d===todayStr?'today':''} ${d===ui.selDate?'sel':''}" onclick="selectDay('${d}')"><div class="dw">${dt.toLocaleDateString('en-US',{weekday:'short'})}</div><div class="dn">${dt.getDate()}</div></div>`;}).join('');
+  const heads=daysArr.map(d=>{
+    const dt=new Date(d+'T00:00');
+    const dayTasks=tasks.filter(t=>t.due===d);
+    const carry=d===todayStr?overdue.filter(t=>t.due!==todayStr):[];
+    const load=dayLoadMeta([...dayTasks,...carry]);
+    const hot=load.cls.includes('load2')||load.cls.includes('load3')||load.conflict;
+    return `<div class="wkd ${d===todayStr?'today':''} ${d===ui.selDate?'sel':''} ${hot?'hot':''} ${load.cls.includes('load3')||load.conflict?'busy':''}" data-date="${d}" onclick="selectDay('${d}')"><div class="dw">${dt.toLocaleDateString('en-US',{weekday:'short'})}</div><div class="dn">${dt.getDate()}</div>${load.n?`<span class="wk-load">${load.n} task${load.n>1?'s':''}</span>`:''}</div>`;
+  }).join('');
   const allday=daysArr.map(d=>{
-    const list=tasks.filter(t=>t.due===d);
+    const list=tasks.filter(t=>t.due===d && !t.dueTime);
+    const timedIds=new Set(tasks.filter(t=>t.due===d && t.dueTime).map(t=>t.id));
+    const carry=d===todayStr?overdue.filter(t=>t.due!==todayStr && !timedIds.has(t.id)):[];
     const evl=evOn(d);
     const fups=evl.filter(e=>e.kind==='followup');
     const untimed=evl.filter(e=>e.kind==='meeting'&&!e.time);
     const pills=[
-      ...untimed.map(ev=>`<div class="evt evm" onclick="event.stopPropagation();selectDay('${d}')">${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span></div>`),
-      ...list.map(t=>`<div class="evt ${isFinalStage(t.status)?'done':''}" style="--ec:${typeHex(t.type)};--ec-bg:${tint(typeHex(t.type),.12)}" onclick="event.stopPropagation();openTask('${t.id}')"><span class="edot"></span><span class="etitle">${esc(t.title)}</span></div>`),
+      ...untimed.map(ev=>`<div class="evt evm" onclick="event.stopPropagation();openMeetingEdit('${ev.id}')">${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span></div>`),
+      ...carry.map(t=>calTaskPill(t,{carry:true})),
+      ...list.map(t=>calTaskPill(t)),
       ...fups.map(ev=>`<div class="evt evf ${ev.done?'done':''}" onclick="event.stopPropagation();selectDay('${d}')">\u2691 <span class="etitle">${esc(ev.title)}</span></div>`)
     ];
     const shown=pills.slice(0,3).join('');
     const more=pills.length>3?`<div class="more">+${pills.length-3}</div>`:'';
-    return `<div class="adc" onclick="selectDay('${d}')">${shown}${more}</div>`;
+    return `<div class="adc" data-date="${d}" onclick="selectDay('${d}')">${shown}${more}</div>`;
   }).join('');
   const gutter=`<div class="wk-gutter" style="position:relative;height:${BODYH}px">${hours.map((h,i)=>`<div style="top:${i*H}px">${h===12?'12 PM':h>12?(h-12)+' PM':h+' AM'}</div>`).join('')}</div>`;
   const cols=daysArr.map(d=>{
     const meets=evOn(d).filter(e=>e.kind==='meeting'&&e.time).sort((a,b)=>a.time.localeCompare(b.time));
-    const chips=meets.map(ev=>{
-      const [hh,mm]=ev.time.split(':').map(Number);
-      let top=((hh*60+mm)-TOP0)/SPAN*BODYH;
-      top=Math.max(0,Math.min(BODYH-40,top));
-      return `<div class="wk-evt" style="top:${top}px" onclick="event.stopPropagation();selectDay('${d}')" title="${esc(ev.title)}"><b>${ev.time}</b>${ev.repeat?'<span class="rep">\u21bb </span>':''}${esc(ev.title)}</div>`;
+    const timedTasks=tasks.filter(t=>t.due===d && t.dueTime).sort((a,b)=>a.dueTime.localeCompare(b.dueTime));
+    const place=(hm)=>{
+      const [hh,mm]=String(hm).split(':').map(Number);
+      let top=((hh*60+(mm||0))-TOP0)/SPAN*BODYH;
+      return Math.max(0,Math.min(BODYH-40,top));
+    };
+    const meetChips=meets.map(ev=>{
+      const top=place(ev.time);
+      const dur=ev.duration||SCHEDULE.blockMins;
+      const h=Math.max(28, Math.min(120, (dur/SPAN)*BODYH));
+      return `<div class="wk-evt" style="top:${top}px;min-height:${h}px" onclick="event.stopPropagation();openMeetingEdit('${ev.id}')" title="${esc(ev.title)}"><b>${ev.time}</b>${ev.repeat?'<span class="rep">\u21bb </span>':''}${esc(ev.title)}${ev.client?` · ${esc(ev.client)}`:''}</div>`;
+    }).join('');
+    const taskChips=timedTasks.map(t=>{
+      const top=place(t.dueTime);
+      const who=(personById(t.assignee)||{}).name||'';
+      return `<div class="wk-evt wk-task" draggable="true" data-task-id="${t.id}" data-date="${d}" style="top:${top}px;--ec:${typeHex(t.type)};--ec-bg:${tint(typeHex(t.type),.18)}"
+        ondragstart="calDragStart(event,'${t.id}')" onclick="event.stopPropagation();openTask('${t.id}')" title="${esc(t.title)}${who?' · '+esc(who):''}">
+        <b>${esc(t.dueTime)}</b>${esc(t.title)}${who?` · ${esc(who.split(' ')[0])}`:''}</div>`;
     }).join('');
     let nowHtml='';
     if(d===todayStr){ const n=new Date(); const mins=n.getHours()*60+n.getMinutes();
       if(mins>=TOP0&&mins<=TOP0+SPAN){ nowHtml=`<div class="nowline" style="top:${(mins-TOP0)/SPAN*BODYH}px"></div>`; } }
-    return `<div class="wk-col ${d===todayStr?'today':''}" onclick="selectDay('${d}')" style="height:${BODYH}px">${nowHtml}${chips}</div>`;
+    return `<div class="wk-col ${d===todayStr?'today':''}" data-date="${d}" onclick="selectDay('${d}')" style="height:${BODYH}px">${nowHtml}${meetChips}${taskChips}</div>`;
   }).join('');
   const wk=`<div class="wk"><div class="wk-head"><div></div>${heads}</div><div class="wk-allday"><div class="adlbl">All-day</div>${allday}</div><div class="wk-body">${gutter}${cols}</div></div>`;
-  return `<div class="calwrap">${wk}${dayPanelHTML(ui.selDate)}</div>`;
+  return `${calCarryHTML()}${calHeatLegend()}<div class="calwrap">${wk}${dayPanelHTML(ui.selDate)}</div>`;
 }
 function eventsOn(dateStr){
   return (state.events||[]).filter(e=>{
@@ -1895,17 +2212,39 @@ function evOn(dateStr){
 }
 function dayPanelHTML(dateStr){
   const tasks=visibleTasks().filter(t=>t.due===dateStr);
+  const todayStr=todayISO();
+  const carry=dateStr===todayStr?overdueOpenTasks().filter(t=>t.due!==todayStr):[];
+  const panelTasks=[...carry, ...tasks.filter(t=>!carry.some(c=>c.id===t.id))];
   const evs=evOn(dateStr);
   const meets=evs.filter(e=>e.kind==='meeting').sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const fups=evs.filter(e=>e.kind==='followup');
   const d=new Date(dateStr+'T00:00');
-  const isToday=dateStr===todayISO();
-  const trow=t=>`<div class="dpitem" onclick="openTask('${t.id}')"><span class="ddot" style="background:${typeHex(t.type)}"></span><span class="dptxt ${dayDiff(t.due)<0&&!isFinalStage(t.status)?'late':''}">${esc(t.title)}</span>${avatar(t.assignee)}</div>`;
-  const mrow=e=>`<div class="dpitem evrow" data-id="${e.id}"><span class="dptime">${e.time||'\u2014'}</span><span class="dptxt">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.client?` <span class="dpc">${esc(e.client)}</span>`:''}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpnote${e.note?' has':''}" onclick="editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpdel" onclick="delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
-  const frow=e=>`<div class="dpitem evrow" data-id="${e.id}"><input type="checkbox" class="cbx"${e.done?' checked':''} onclick="toggleFollow('${e.id}')"><span class="dptxt ${e.done?'done':''} ${!e.done&&dateStr<todayISO()?'late':''}">${esc(e.title)}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpnote${e.note?' has':''}" onclick="editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpconv" title="Convert to task" onclick="convertFollow('${e.id}')">\u2192 task</button><button class="dpdel" onclick="delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
+  const isToday=dateStr===todayStr;
+  const clients=[...new Set(panelTasks.map(t=>t.client).filter(Boolean))];
+  const trow=t=>{
+    const late=dayDiff(t.due)<0&&!isFinalStage(t.status);
+    const next=NEXT_STEP[t.status];
+    const ops=`<div class="dpops" onclick="event.stopPropagation()">
+      ${next?`<button type="button" class="adv" onclick="advance('${t.id}')">${esc(next[0])}</button>`:''}
+      <button type="button" class="rs" onclick="openReschedule('${t.id}')">Reschedule</button>
+      ${t.client?`<button type="button" onclick="filterClient('${esc(t.client)}')">Client</button>`:''}
+    </div>`;
+    return `<div class="dpitem" style="flex-wrap:wrap;align-items:flex-start" onclick="openTask('${t.id}')">
+      <span class="ddot" style="background:${typeHex(t.type)};margin-top:6px"></span>
+      <div style="flex:1;min-width:0">
+        <div class="dptxt ${late?'late':''}" style="white-space:normal">${late?'\u23F3 ':''}${esc(t.title)}${t.dueTime?` <span class="dpc">${esc(t.dueTime)}</span>`:''}${t.client?` <span class="dpc">${esc(t.client)}</span>`:''}</div>
+        ${ops}
+      </div>
+      ${avatar(t.assignee)}
+    </div>`;
+  };
+  const mrow=e=>`<div class="dpitem evrow" data-id="${e.id}"><span class="dptime">${e.time||'\u2014'}</span><span class="dptxt">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.client?` <span class="dpc">${esc(e.client)}</span>`:''}${e.duration?` <span class="dpc">${e.duration}m</span>`:''}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpedit" onclick="event.stopPropagation();openMeetingEdit('${e.id}')" title="Edit meeting">Edit</button><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
+  const frow=e=>`<div class="dpitem evrow" data-id="${e.id}"><input type="checkbox" class="cbx"${e.done?' checked':''} onclick="event.stopPropagation();toggleFollow('${e.id}')"><span class="dptxt ${e.done?'done':''} ${!e.done&&dateStr<todayISO()?'late':''}">${esc(e.title)}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpconv" title="Convert to task" onclick="event.stopPropagation();convertFollow('${e.id}')">\u2192 task</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
+  const clientBar=clients.length?`<div class="dpops" style="margin:6px 0 2px">${clients.map(c=>`<button type="button" onclick="filterClient('${esc(c)}')">Filter ${esc(c)}</button>`).join('')}</div>`:'';
   return `<aside class="daypanel">
     <div class="dphead"><div><div class="dpday">${d.toLocaleDateString('en-US',{weekday:'long'})}</div><div class="dpdate">${d.toLocaleDateString('en-US',{month:'long',day:'numeric'})}${isToday?' \u00b7 Today':''}</div></div><button class="backtriage" id="dpAddTask" onclick="openTask(null,ui.selDate)">+ Task</button></div>
-    <div class="dpsec"><h4>Tasks due <span>${tasks.length}</span></h4>${tasks.map(trow).join('')||'<div class="dpempty">None due</div>'}</div>
+    ${clientBar}
+    <div class="dpsec"><h4>Tasks due <span>${panelTasks.length}</span></h4>${panelTasks.map(trow).join('')||'<div class="dpempty">None due</div>'}</div>
     <div class="dpsec"><h4>Meetings <span>${meets.length}</span></h4>${meets.map(mrow).join('')||'<div class="dpempty">No meetings</div>'}
       <div class="dpadd"><input type="time" id="mtTime"><input type="text" id="mtTitle" placeholder="Add meeting\u2026" onkeydown="if(event.key==='Enter')addEvent('meeting')"><button id="mtAdd" onclick="addEvent('meeting')">+</button></div>
       <label class="dprep"><input type="checkbox" id="mtRep"> Repeat weekly</label></div>
@@ -1931,6 +2270,50 @@ function convertFollow(id){
   document.getElementById('m-title').value=e.title;
 }
 function delEvent(id){ state.events=(state.events||[]).filter(x=>x.id!==id); save(); render(); }
+function openMeetingEdit(id){
+  const e=(state.events||[]).find(x=>x.id===id); if(!e||e.kind!=='meeting'){ selectDay(ui.selDate); return; }
+  document.getElementById('me-id').value=e.id;
+  document.getElementById('me-title').value=e.title||'';
+  document.getElementById('me-date').value=e.date||ui.selDate;
+  document.getElementById('me-time').value=e.time||'';
+  document.getElementById('me-duration').value=e.duration||SCHEDULE.blockMins||30;
+  document.getElementById('me-client').value=e.client||'';
+  document.getElementById('me-note').value=e.note||'';
+  document.getElementById('me-rep').checked=e.repeat==='weekly';
+  const dl=document.getElementById('me-clients');
+  if(dl){
+    const clients=[...new Set(state.tasks.map(t=>t.client).filter(Boolean))].sort();
+    dl.innerHTML=clients.map(c=>`<option value="${esc(c)}"></option>`).join('');
+  }
+  document.getElementById('mtOverlay').classList.add('open');
+}
+function closeMeetingEdit(){ document.getElementById('mtOverlay').classList.remove('open'); }
+function saveMeetingEdit(){
+  const id=document.getElementById('me-id').value;
+  const e=(state.events||[]).find(x=>x.id===id); if(!e) return;
+  const title=(document.getElementById('me-title').value||'').trim();
+  if(!title){ toast('Meeting needs a title'); return; }
+  e.title=title;
+  e.date=document.getElementById('me-date').value||e.date;
+  const time=document.getElementById('me-time').value;
+  if(time) e.time=time; else delete e.time;
+  const dur=parseInt(document.getElementById('me-duration').value,10);
+  if(dur>0) e.duration=dur; else delete e.duration;
+  const client=(document.getElementById('me-client').value||'').trim();
+  if(client) e.client=client; else delete e.client;
+  const note=(document.getElementById('me-note').value||'').trim();
+  if(note) e.note=note; else delete e.note;
+  if(document.getElementById('me-rep').checked) e.repeat='weekly'; else delete e.repeat;
+  ui.selDate=e.date;
+  save(); closeMeetingEdit(); render();
+  toast('Meeting updated');
+}
+function deleteMeetingFromEdit(){
+  const id=document.getElementById('me-id').value;
+  if(!id) return;
+  delEvent(id);
+  closeMeetingEdit();
+}
 
 /* ============ Table ============ */
 let sortKey='due', sortDir=1, tableMode='triage';
@@ -2387,15 +2770,16 @@ function mdNudgeHTML(overdue,dueToday,meetings){
 function dismissNudge(){ ui.mdNudge=false; render(); }
 function openReschedule(taskId){
   const mine=overdueMine();
-  const ids=taskId ? [taskId] : mine.map(t=>t.id);
+  const openAll=overdueOpenTasks();
+  const ids=taskId ? [taskId] : (mine.length?mine:openAll).map(t=>t.id);
   const tasks=ids.map(id=>state.tasks.find(t=>t.id===id)).filter(Boolean);
   if(!tasks.length){ toast('Nothing overdue to reschedule'); return; }
   ui.rsTaskIds=tasks.map(t=>t.id);
   const next=nextAvailableSlot();
-  document.getElementById('rs-title').textContent = tasks.length===1 ? 'Reschedule overdue' : `Reschedule ${tasks.length} overdue`;
+  document.getElementById('rs-title').textContent = tasks.length===1 ? 'Reschedule' : `Reschedule ${tasks.length} tasks`;
   document.getElementById('rs-sub').textContent = tasks.length===1
-    ? `"${tasks[0].title}" is ${-dayDiff(tasks[0].due)}d overdue. Choose the next free slot or pick from open times on your schedule.`
-    : `${tasks.length} overdue tasks. Auto places each on the next free slots, or pick one open time to start packing from.`;
+    ? `"${tasks[0].title}" — choose the next free slot or pick from open times on your schedule.`
+    : `${tasks.length} tasks. Auto places each on the next free slots, or pick one open time to start packing from.`;
   document.getElementById('rs-auto-hint').textContent = next
     ? `Next free: ${next.dayName} · ${fmtSlotLabel(next.time)}${tasks.length>1?' (then the next open slots)':''}`
     : 'No open workday slots found in the next few weeks — free up a meeting or widen your week.';
@@ -3260,7 +3644,7 @@ function resetAll(){
   });
 }
 const VIEW_KEYS={'1':'calendar','2':'table','3':'board','4':'timeline','5':'myday','6':'team','7':'activity'};
-function anyModalOpen(){ return ['overlay','pOverlay','cOverlay','kOverlay','rsOverlay'].some(id=>document.getElementById(id).classList.contains('open')); }
+function anyModalOpen(){ return ['overlay','pOverlay','cOverlay','kOverlay','rsOverlay','mtOverlay'].some(id=>document.getElementById(id)?.classList.contains('open')); }
 function kbMove(dir){
   if(ui.view!=='table'||!lastIds.length) return;
   let i=lastIds.indexOf(ui.kbRow);
@@ -3275,7 +3659,7 @@ function kbAct(which){
   else if(which==='advance' && NEXT_STEP[t.status]) advance(t.id);
 }
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){ closeModal(); closePerson(); closeConfirm(); closeReschedule(); document.getElementById('kOverlay').classList.remove('open'); return; }
+  if(e.key==='Escape'){ closeModal(); closePerson(); closeConfirm(); closeReschedule(); closeMeetingEdit(); document.getElementById('kOverlay').classList.remove('open'); return; }
   const typing=/input|textarea|select/i.test(document.activeElement.tagName);
   if(typing || e.metaKey || e.ctrlKey || e.altKey) return;
   if(e.key==='?'){ e.preventDefault(); document.getElementById('kOverlay').classList.toggle('open'); return; }
@@ -3292,14 +3676,17 @@ document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id=
 document.getElementById('pOverlay').addEventListener('click',e=>{ if(e.target.id==='pOverlay') closePerson(); });
 document.getElementById('cOverlay').addEventListener('click',e=>{ if(e.target.id==='cOverlay') closeConfirm(); });
 document.getElementById('rsOverlay').addEventListener('click',e=>{ if(e.target.id==='rsOverlay') closeReschedule(); });
+document.getElementById('mtOverlay')?.addEventListener('click',e=>{ if(e.target.id==='mtOverlay') closeMeetingEdit(); });
 
 /* ============ Init ============ */
 (function init(){
   try{
     /* Paint immediately — first render never waits on storage. */
     const n=new Date(); ui.calY=n.getFullYear(); ui.calM=n.getMonth();
+    syncPhoneChrome();
     seed(); normalize(state.tasks); applyBrand(); render();
     hydrate(); /* background: swap in saved data when (and if) it arrives */
+    window.addEventListener('resize',()=>{ syncPhoneChrome(); renderStats(); });
   }catch(e){
     document.body.innerHTML='<div style="font-family:-apple-system,sans-serif;padding:40px;text-align:center;color:#0D1F1A">'+
       '<h2 style="font-weight:600">Something went wrong loading Studio Board</h2>'+
