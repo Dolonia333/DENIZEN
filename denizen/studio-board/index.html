@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Studio Board — Agency Tracker · Denizen</title>
 <style>
 :root{
@@ -778,15 +778,104 @@ html.embed .people-strip{display:none}
 
 /* Full-page Denizen app chrome (CRM-style standalone) */
 .dz-app-chrome{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;
-  padding:8px 14px;background:#0D1F1A;border-bottom:1px solid rgba(143,174,159,.28);
-  font-family:var(--font-ui)}
+  padding:8px 14px;padding-top:max(8px,env(safe-area-inset-top));background:#0D1F1A;border-bottom:1px solid rgba(143,174,159,.28);
+  font-family:var(--font-ui);flex-shrink:0}
 .dz-app-chrome a{color:#F4F2EA;text-decoration:none;font-size:12.5px;font-weight:600;
-  padding:6px 10px;border-radius:8px;border:1px solid rgba(143,174,159,.35)}
+  padding:6px 10px;border-radius:8px;border:1px solid rgba(143,174,159,.35);white-space:nowrap}
 .dz-app-chrome a:hover{background:rgba(232,230,220,.10);border-color:#F4F2EA}
-.dz-app-chrome .dz-app-title{color:#8FAE9F;font-size:12px;margin-left:4px}
-.dz-app-chrome .dz-app-spacer{flex:1}
+.dz-app-chrome .dz-app-title{color:#8FAE9F;font-size:12px;margin-left:4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dz-app-chrome .dz-app-spacer{flex:1;min-width:8px}
 html.embed .dz-app-chrome{display:none}
 body.standalone{min-height:100vh}
+
+/* Compact phone pulse + overview toggle (desktop: pulse hidden, overview always open) */
+.phone-pulse{display:none}
+.board-overview > summary{display:none;list-style:none}
+.board-overview > summary::-webkit-details-marker{display:none}
+
+/* ===== Phone / narrow — keep calendar in the first viewport ===== */
+@media (max-width:720px){
+  html,body{height:100%;height:100dvh;overflow:hidden}
+  body.standalone{
+    display:flex;flex-direction:column;min-height:100dvh;height:100dvh;
+    overflow:hidden;padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .app{flex:1;min-height:0;height:auto;overflow:hidden}
+  .appbar{position:relative;z-index:20;flex-shrink:0}
+  .dz-app-chrome{position:relative;padding:6px 10px;padding-top:max(6px,env(safe-area-inset-top));gap:8px}
+  .dz-app-chrome a{padding:5px 8px;font-size:12px}
+  .dz-app-chrome .dz-app-title{font-size:11px;max-width:42vw}
+
+  .bar-top{padding:8px 10px 6px;flex-wrap:nowrap;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .bar-top::-webkit-scrollbar{display:none}
+  .bar-tools{
+    padding:0 10px 8px;flex-wrap:wrap;gap:6px 8px;
+    overflow:visible;
+  }
+  .brand small{display:none}
+  .brand h1{font-size:14px}
+  .brand .mark{width:26px;height:26px}
+  .brand{flex:0 0 auto}
+  .viewtabs{flex:1 1 auto;min-width:0}
+  .bar-actions{margin-left:0;flex:0 0 auto;gap:6px}
+  .sharedbadge,.presence-strip,.people-strip{display:none!important}
+  .newbtn{padding:7px 11px;font-size:12.5px}
+  .newbtn .newbtn-full{display:none}
+  .newbtn .newbtn-short{display:inline}
+  .filters{display:flex;width:100%;flex:1 1 100%;gap:6px}
+  .filtsel{flex:1 1 0;min-width:0;max-width:none;width:auto;padding:6px 22px 6px 8px;font-size:12px}
+  .calnav{flex:1 1 auto;min-width:0;justify-content:flex-start}
+  .calnav .mlabel{min-width:0;font-size:13px;flex:0 1 auto}
+  .calnav .todaybtn{padding:5px 9px;font-size:11.5px}
+  .calmode{margin-left:auto}
+  .search{flex:1 1 100%;min-width:0;margin-left:0;order:5}
+  .resetbtn{display:none}
+
+  /* One-line pulse; full stats/legend/quick-add behind <details> */
+  .phone-pulse{
+    display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;
+    padding:7px 10px;background:var(--surface);border-bottom:1px solid var(--hairline);
+    font-size:12px;color:var(--ink-2);font-weight:500;position:relative;z-index:2;
+  }
+  .phone-pulse .pp-warn{color:var(--t-video);font-weight:600}
+  .phone-pulse .pp-spacer{flex:1;min-width:8px}
+  .phone-pulse button{
+    flex:0 0 auto;padding:5px 11px;border-radius:980px;font-size:11.5px;font-weight:600;
+    border:1px solid var(--hairline);background:var(--surface-2);color:var(--ink);touch-action:manipulation;
+  }
+  .board-overview{flex-shrink:0;border-bottom:1px solid var(--hairline-2)}
+  .board-overview > summary{
+    display:none; /* toggled via .phone-pulse button */
+  }
+  .board-overview:not([open]) .stats,
+  .board-overview:not([open]) .legend,
+  .board-overview:not([open]) .qwrap{display:none}
+  .board-overview[open] .stats{display:flex}
+  .stats .stat{flex:1 1 33%;min-width:0;padding:8px 10px}
+  .stats .stat .v{font-size:16px}
+  .legend{padding:6px 10px}
+  .qwrap{padding:6px 10px}
+  #quickadd{font-size:16px;max-width:none} /* 16px avoids iOS zoom */
+
+  .view{
+    flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
+    padding:8px 8px calc(12px + env(safe-area-inset-bottom,0px));
+  }
+  .cal-cell{min-height:52px;padding:4px 2px}
+  .cal-head div{padding:6px 2px;font-size:10px}
+  .calwrap .cal-grid{flex:1 1 auto}
+  /* Dot-first calendar pills — titles live in the day panel / tooltips */
+  .evt{padding:2px 4px;font-size:10px;gap:3px;border-left-width:2px}
+  .evt .etitle,.evt.evm b,.evt.evf{display:none}
+  .evt .edot{width:7px;height:7px}
+  .evt.evm{display:flex;justify-content:center}
+  .evt.evm::before{content:attr(data-time);font-size:9px;font-weight:700;color:#CFE3D6}
+  .more{font-size:9.5px;padding:0 2px}
+}
+@media (min-width:721px){
+  .newbtn .newbtn-short{display:none}
+  .board-overview{display:contents}
+}
 </style>
 </head>
 <body>
@@ -834,8 +923,8 @@ body.standalone{min-height:100vh}
         <span class="sharedbadge" title="Everyone using this artifact sees and edits this same board"><span class="dot"></span>Shared board</span>
         <div class="presence-strip" id="presenceStrip" title="Who is on the board right now"></div>
         <div class="people-strip" id="peopleStrip"></div>
-        <button class="newbtn" onclick="openTask()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New task
+        <button class="newbtn" onclick="openTask()" aria-label="New task">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="newbtn-full">New task</span><span class="newbtn-short">New</span>
         </button>
       </div>
     </div>
@@ -861,13 +950,17 @@ body.standalone{min-height:100vh}
     </div>
   </header>
 
-  <div class="stats" id="stats"></div>
-  <div class="legend">
-    <span class="lbl">Types</span>
-    <span id="legend" style="display:contents"></span>
-    <span id="savedviews" class="svwrap"></span>
-  </div>
-  <div class="qwrap"><input id="quickadd" placeholder='Quick add — e.g. "Nike teaser edit @Devon fri #video !high"' autocomplete="off"></div>
+  <div class="phone-pulse" id="phonePulse" aria-live="polite"></div>
+  <details class="board-overview" id="boardOverview" open>
+    <summary>Overview</summary>
+    <div class="stats" id="stats"></div>
+    <div class="legend">
+      <span class="lbl">Types</span>
+      <span id="legend" style="display:contents"></span>
+      <span id="savedviews" class="svwrap"></span>
+    </div>
+    <div class="qwrap"><input id="quickadd" placeholder='Quick add — e.g. "Nike teaser edit @Devon fri #video !high"' autocomplete="off"></div>
+  </details>
 
   <main class="view" id="view"></main>
 </div>
@@ -1721,6 +1814,38 @@ function renderStats(){
     cell('overdue','Overdue','#C94F38',c.overdue,true)+
     cell('shipped','Shipped','#2A6A55',c.shipped)+
     cell('stuck','Stuck','#B14D3C',c.stuck,true);
+  const pulse=document.getElementById('phonePulse');
+  if(pulse){
+    const ov=document.getElementById('boardOverview');
+    const open=!!ov?.open;
+    pulse.innerHTML =
+      `<span>${c.all} active</span>`+
+      (c.overdue?`<span class="pp-warn">${c.overdue} overdue</span>`:'')+
+      (c.inflight?`<span>${c.inflight} in flight</span>`:'')+
+      `<span class="pp-spacer"></span>`+
+      `<button type="button" id="phoneOverviewBtn" aria-expanded="${open?'true':'false'}">${open?'Hide overview':'Overview'}</button>`;
+    document.getElementById('phoneOverviewBtn')?.addEventListener('click',toggleBoardOverview);
+  }
+}
+function toggleBoardOverview(){
+  const ov=document.getElementById('boardOverview');
+  if(!ov) return;
+  ov.open=!ov.open;
+  renderStats();
+}
+function syncPhoneChrome(){
+  const narrow=window.matchMedia('(max-width:720px)').matches;
+  const ov=document.getElementById('boardOverview');
+  if(!ov) return;
+  if(narrow){
+    if(ov.dataset.phoneInit!=='1'){
+      ov.open=false;
+      ov.dataset.phoneInit='1';
+    }
+  }else{
+    ov.open=true;
+    ov.dataset.phoneInit='';
+  }
 }
 const STAT_DEFS={inflight:t=>t.status===inFlightStageId(),
   waiting:t=>isWaitingStage(t.status),
@@ -1793,7 +1918,11 @@ function monthLabel(){
     const f=d=>new Date(d+'T00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
     return f(st)+' \u2013 '+f(en);
   }
-  return new Date(ui.calY,ui.calM,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const narrow=window.matchMedia('(max-width:720px)').matches;
+  return new Date(ui.calY,ui.calM,1).toLocaleDateString('en-US',{
+    month: narrow ? 'short' : 'long',
+    year: 'numeric',
+  });
 }
 function shiftMonth(d){
   if(ui.calMode==='week'){
@@ -1828,7 +1957,7 @@ function renderCalendar(){
     const meets=evl.filter(x=>x.kind==='meeting').sort((a,b)=>(a.time||'').localeCompare(b.time||''));
     const fups=evl.filter(x=>x.kind==='followup');
     const pills=[
-      ...meets.map(ev=>`<div class="evt evm" onclick="event.stopPropagation();selectDay('${dateStr}')" title="${esc(ev.title)}">${ev.time?`<b>${ev.time}</b> `:''}${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span></div>`),
+      ...meets.map(ev=>`<div class="evt evm" data-time="${esc(ev.time||'')}" onclick="event.stopPropagation();selectDay('${dateStr}')" title="${esc(ev.title)}">${ev.time?`<b>${ev.time}</b> `:''}${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span></div>`),
       ...list.map(t=>`<div class="evt ${isFinalStage(t.status)?'done':''}" style="--ec:${typeHex(t.type)};--ec-bg:${tint(typeHex(t.type),.12)}" onclick="event.stopPropagation();openTask('${t.id}')" title="${esc(t.title)}"><span class="edot"></span><span class="etitle">${esc(t.title)}</span></div>`),
       ...fups.map(ev=>`<div class="evt evf ${ev.done?'done':''}" onclick="event.stopPropagation();selectDay('${dateStr}')" title="${esc(ev.title)}">\u2691 <span class="etitle">${esc(ev.title)}</span></div>`)
     ];
@@ -3298,8 +3427,10 @@ document.getElementById('rsOverlay').addEventListener('click',e=>{ if(e.target.i
   try{
     /* Paint immediately — first render never waits on storage. */
     const n=new Date(); ui.calY=n.getFullYear(); ui.calM=n.getMonth();
+    syncPhoneChrome();
     seed(); normalize(state.tasks); applyBrand(); render();
     hydrate(); /* background: swap in saved data when (and if) it arrives */
+    window.addEventListener('resize',()=>{ syncPhoneChrome(); renderStats(); });
   }catch(e){
     document.body.innerHTML='<div style="font-family:-apple-system,sans-serif;padding:40px;text-align:center;color:#0D1F1A">'+
       '<h2 style="font-weight:600">Something went wrong loading Studio Board</h2>'+
