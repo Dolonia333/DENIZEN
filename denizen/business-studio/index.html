@@ -810,6 +810,7 @@ async function fetchRemoteWorkspace(){
 async function pushRemoteWorkspace(){
   const sess=readVisitorSession();
   if(!sess || !remoteSyncEnabled) return;
+  if(isAdvisorMode()) return; // mentors use scoped POST endpoints, never overwrite workspace
   try{
     const res=await fetch('/api/business-studio/workspace',{
       method:'PUT',
@@ -843,7 +844,29 @@ async function bootstrapSync(){
     } else if(localHas){
       await pushRemoteWorkspace();
     }
+    if(remote.viewer && remote.viewer.role && /mentor|advisor|investor|viewer/i.test(remote.viewer.role)){
+      state.config=state.config||{};
+      state.config.advisorMode=true;
+    }
   }
+}
+async function postStudioApi(path, payload){
+  const sess=readVisitorSession();
+  if(!sess || !remoteSyncEnabled) return null;
+  const res=await fetch(path,{
+    method:'POST',
+    headers:Object.assign({'Content-Type':'application/json'}, authHeaders(sess)),
+    body:JSON.stringify(Object.assign({
+      session_id:sess.session_id,
+      session_token:sess.session_token
+    }, payload||{}))
+  });
+  const data=await res.json().catch(function(){return {};});
+  if(!res.ok || data.ok===false){
+    throw new Error(data.error||('API '+res.status));
+  }
+  if(data.updated_at) remoteUpdatedAt=data.updated_at;
+  return data;
 }
 
 /* ---------- 8. Mutations ---------- */
@@ -1805,11 +1828,22 @@ document.addEventListener('click', function(e){
       const email=form.querySelector('[name=email]').value.trim();
       const role=form.querySelector('[name=role]').value;
       if(!name||!email){ toast('Name and email required'); return; }
-      state.advisors.push({
+      const advisor={
         id:uid('adv'),name:name,email:email,role:role,
         share:Object.assign({}, (state.config&&state.config.mentorShareDefaults)||{}),
         invitedAt:nowISO()
-      });
+      };
+      if(remoteSyncEnabled){
+        postStudioApi('/api/business-studio/advisors',{name:name,email:email,role:role,share:advisor.share})
+          .then(function(data){
+            if(data.advisors) state.advisors=data.advisors;
+            else state.advisors.unshift(advisor);
+            persistLocal(); render(); toast('Advisor invited');
+          })
+          .catch(function(err){ toast(err.message||'Invite failed'); });
+        return;
+      }
+      state.advisors.push(advisor);
       logActivity('Invited advisor '+name);
       scheduleSave(); render(); toast('Advisor invited');
     }
@@ -1817,6 +1851,15 @@ document.addEventListener('click', function(e){
       const title=(document.getElementById('recTitle')||{}).value||'';
       const body=(document.getElementById('recBody')||{}).value||'';
       if(!title.trim()){ toast('Title required'); return; }
+      if(remoteSyncEnabled){
+        postStudioApi('/api/business-studio/recommendations',{title:title.trim(),body:body.trim()})
+          .then(function(data){
+            if(data.recommendation) state.recommendations.unshift(data.recommendation);
+            persistLocal(); render(); toast('Recommendation added');
+          })
+          .catch(function(err){ toast(err.message||'Recommendation failed'); });
+        return;
+      }
       state.recommendations.unshift({
         id:uid('rec'),title:title.trim(),body:body.trim(),
         advisorName:'Advisor',advisorEmail:'',status:'pending',
@@ -1910,23 +1953,43 @@ document.addEventListener('click', function(e){
   }
   const ar=e.target.closest('[data-accept-rec]');
   if(ar){
-    const r=state.recommendations.find(function(x){return x.id===ar.getAttribute('data-accept-rec');});
-    if(r){
-      r.status='accepted';
-      state.tasks.unshift({
-        id:uid('task'),title:r.title,status:'todo',priority:'medium',due:null,
-        source:'mentor_recommendation',recommendationId:r.id,createdAt:nowISO(),
-        notes:r.body
-      });
-      logActivity('Accepted mentor recommendation');
-      scheduleSave(); render(); toast('Accepted — task created');
+    const id=ar.getAttribute('data-accept-rec');
+    const r=state.recommendations.find(function(x){return x.id===id;});
+    if(!r) return;
+    if(remoteSyncEnabled){
+      postStudioApi('/api/business-studio/recommendations/respond',{id:id,decision:'accepted'})
+        .then(function(data){
+          r.status='accepted';
+          if(data.task) state.tasks.unshift(data.task);
+          persistLocal(); render(); toast('Accepted — task created');
+        })
+        .catch(function(err){ toast(err.message||'Accept failed'); });
+      return;
     }
+    r.status='accepted';
+    state.tasks.unshift({
+      id:uid('task'),title:r.title,status:'todo',priority:'medium',due:null,
+      source:'mentor_recommendation',recommendationId:r.id,createdAt:nowISO(),
+      notes:r.body
+    });
+    logActivity('Accepted mentor recommendation');
+    scheduleSave(); render(); toast('Accepted — task created');
     return;
   }
   const dr=e.target.closest('[data-decline-rec]');
   if(dr){
-    const r=state.recommendations.find(function(x){return x.id===dr.getAttribute('data-decline-rec');});
-    if(r){ r.status='declined'; scheduleSave(); render(); toast('Declined'); }
+    const id=dr.getAttribute('data-decline-rec');
+    const r=state.recommendations.find(function(x){return x.id===id;});
+    if(!r) return;
+    if(remoteSyncEnabled){
+      postStudioApi('/api/business-studio/recommendations/respond',{id:id,decision:'declined'})
+        .then(function(){
+          r.status='declined'; persistLocal(); render(); toast('Declined');
+        })
+        .catch(function(err){ toast(err.message||'Decline failed'); });
+      return;
+    }
+    r.status='declined'; scheduleSave(); render(); toast('Declined');
     return;
   }
   const da=e.target.closest('[data-del-advisor]');

@@ -163,6 +163,8 @@
       available: () => true },
     { id: 'studioboard', tabler: 'layout-kanban', icon: '📋', label: 'Studio Board', type: 'navigate', url: '/studio-board/', c: ['#2a6a55', '#163a2f'],
       available: () => true },
+    { id: 'businessstudio', tabler: 'building-skyscraper', icon: '🏛️', label: 'Business Studio', type: 'navigate', url: '/business-studio/', c: ['#f0b429', '#2a6a55'],
+      available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
       c: ['#34d399', '#047857'],
       open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
@@ -253,8 +255,8 @@
   const MAX_DOCK_APPS = 4;
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workbench', 'profile'];
   /** Prefer these near the top of the home grid (first page / less scroll). */
-  const PRIORITY_GRID_IDS = ['workbench', 'crm', 'studioboard', 'compute', 'station', 'npcteam', 'tour', 'discordmap', 'discordcmds', 'market', 'approvals'];
-  const LAYOUT_VERSION = 6; // v6: Workbench + Studio Board next to CRM
+  const PRIORITY_GRID_IDS = ['workbench', 'crm', 'studioboard', 'businessstudio', 'compute', 'station', 'npcteam', 'tour', 'discordmap', 'discordcmds', 'market', 'approvals'];
+  const LAYOUT_VERSION = 7; // v7: Business Studio (Founder OS) next to CRM + Studio Board
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {

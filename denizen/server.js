@@ -175,6 +175,7 @@ const denizenCredits   = require('./src/denizen-credits');
 const { mountComputeRoutes } = require('./src/denizen-compute-routes');
 const { mountCrmRoutes } = require('./src/denizen-crm-routes');
 const { mountStudioBoardRoutes } = require('./src/denizen-studio-board-routes');
+const { mountBusinessStudioRoutes } = require('./src/denizen-business-studio-routes');
 const { mountN8nRoutes } = require('./src/n8n-routes');
 const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
 const { startJennyDurableLoop } = require('./src/npc-jenny-durable-loop');
@@ -1887,6 +1888,11 @@ const handleCrmRoutes = mountCrmRoutes({
 });
 
 const handleStudioBoardRoutes = mountStudioBoardRoutes({
+  verifyVisitorSession: _verifyVisitorSession,
+  readJsonBody: _readJsonBody,
+});
+
+const handleBusinessStudioRoutes = mountBusinessStudioRoutes({
   verifyVisitorSession: _verifyVisitorSession,
   readJsonBody: _readJsonBody,
 });
@@ -3889,6 +3895,18 @@ const server = http.createServer((req, res) => {
   if (urlPath.startsWith('/api/studio-board/')) {
     (async () => {
       await handleStudioBoardRoutes(req, res);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath.startsWith('/api/business-studio/')) {
+    (async () => {
+      await handleBusinessStudioRoutes(req, res);
     })().catch((err) => {
       if (!res.writableEnded) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -11342,6 +11360,49 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   if (urlPath === '/studio-board.html') {
     res.writeHead(302, { Location: '/studio-board/' });
     res.end();
+    return;
+  }
+
+  if (urlPath === '/business-studio.html') {
+    res.writeHead(302, { Location: '/business-studio/' });
+    res.end();
+    return;
+  }
+
+  // Business Studio — Founder OS at /business-studio/
+  if (urlPath === '/business-studio' || urlPath.startsWith('/business-studio/')) {
+    const BS_ROOT = path.join(ROOT, 'business-studio');
+    let rel = urlPath.replace(/^\/business-studio\/?/, '') || 'index.html';
+    if (rel.endsWith('/')) rel += 'index.html';
+    const filePath = path.resolve(BS_ROOT, rel);
+    const inside = path.relative(BS_ROOT, filePath);
+    if (inside.startsWith('..') || path.isAbsolute(inside)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+    const sendBs = (target) => {
+      fs.readFile(target, (err, data) => {
+        if (err) {
+          if (target !== path.join(BS_ROOT, 'index.html')) {
+            sendBs(path.join(BS_ROOT, 'index.html'));
+            return;
+          }
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('Business Studio not found');
+          return;
+        }
+        const ext = path.extname(target).toLowerCase() || '.html';
+        const headers = {
+          'Content-Type': MIME[ext] || 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          Pragma: 'no-cache',
+        };
+        res.writeHead(200, headers);
+        res.end(data);
+      });
+    };
+    sendBs(path.extname(rel) ? filePath : path.join(BS_ROOT, 'index.html'));
     return;
   }
 

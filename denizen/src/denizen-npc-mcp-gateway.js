@@ -17,6 +17,7 @@ const mcpMarketTools = require('./denizen-mcp-market-tools.js');
 const mcpTeamTools = require('./denizen-mcp-team-tools.js');
 const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
 const mcpStudioBoardTools = require('./denizen-mcp-studio-board-tools.js');
+const mcpBusinessStudioTools = require('./denizen-mcp-business-studio-tools.js');
 const mcpAgencyTools = require('./denizen-mcp-agency-tools.js');
 const mcpMeshTools = require('./denizen-mcp-mesh-tools.js');
 const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
@@ -320,6 +321,9 @@ async function callToolImpl(scope, name, args) {
   if (mcpStudioBoardTools.isStudioBoardTool(name)) {
     return mcpStudioBoardTools.callTool(scope, name, args);
   }
+  if (mcpBusinessStudioTools.isBusinessStudioTool(name)) {
+    return mcpBusinessStudioTools.callTool(scope, name, args);
+  }
   if (mcpAgencyTools.isAgencyTool(name)) {
     return mcpAgencyTools.callTool(scope, name, args);
   }
@@ -398,6 +402,7 @@ function toolsForScope(scope) {
     base.push(...mcpTeamTools.toolsForNpc(scope.npc_key));
     base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
     base.push(...mcpStudioBoardTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpBusinessStudioTools.toolsForNpc(scope.npc_key));
     base.push(...mcpAgencyTools.toolsForNpc(scope.npc_key));
     base.push(...mcpMarketTools.toolsForNpc(scope.npc_key));
     base.push(...mcpMeshTools.toolsForNpc(scope.npc_key));
