@@ -234,7 +234,7 @@ describe('npc-mcp-gateway', () => {
   it('buildOpenApiSpec documents REST sync paths', () => {
     const spec = gateway.buildOpenApiSpec('http://localhost:8080');
     assert.equal(spec.openapi, '3.1.0');
-    assert.equal(spec.info.version, '2.0.0');
+    assert.equal(spec.info.version, '2.1.0');
     assert.ok(spec.paths['/api/npc-sync/status']);
     assert.ok(spec.paths['/api/npc-sync/list-skills']);
     assert.ok(spec.paths['/api/npc-sync/skill-job']);
