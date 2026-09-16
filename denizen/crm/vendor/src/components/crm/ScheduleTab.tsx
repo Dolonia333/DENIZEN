@@ -1,3 +1,4 @@
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useMemo } from "react";
 import { T, S, MEETING_TEMPLATES, type Task, type Meeting, type Deal, type Contact, type Subtask } from "@/lib/crm-data";
 
@@ -300,7 +301,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
   const [dragTask, setDragTask] = useState<Task | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const isMobile = useIsMobile();
 
   const getStatus = (t: Task): string => t.status || (t.done ? "done" : "todo");
 
@@ -522,8 +523,8 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
             {/* ── LEFT: Calendar ── */}
             {(!isMobile || mobilePanel === "calendar") && (
               <div style={{ ...glassCard(), overflow: "hidden" }}>
-                <div style={{ padding: "14px 18px", borderBottom: `1px solid ${T.bg4}`, display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ display: "flex", gap: 3 }}>
+                <div style={{ padding: "14px 18px", borderBottom: `1px solid ${T.bg4}`, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
                     {(["month", "week", "day"] as CalView[]).map(v => (
                       <button key={v} onClick={() => setCalView(v)} style={{
                         padding: "5px 12px", borderRadius: T.radius.full, fontSize: 11, fontWeight: 600, cursor: "pointer",
@@ -536,7 +537,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                   </div>
                   <div style={{ flex: 1 }} />
                   {calView === "month" && (
-                    <>{navBtn(prev, "‹")}<span style={{ fontSize: 14, fontWeight: 700, color: T.text0, minWidth: 130, textAlign: "center" }}>{monthName} {year}</span>{navBtn(next, "›")}</>
+                    <>{navBtn(prev, "‹")}<span style={{ fontSize: 14, fontWeight: 700, color: T.text0, minWidth: isMobile ? 0 : 130, textAlign: "center", whiteSpace: "nowrap" }}>{monthName} {year}</span>{navBtn(next, "›")}</>
                   )}
                   {calView === "week" && (
                     <>{navBtn(prevWeek, "‹")}<span style={{ fontSize: 12, fontWeight: 600, color: T.text0 }}>{new Date(weekDates[0] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {new Date(weekDates[6] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>{navBtn(nextWeek, "›")}</>
@@ -569,7 +570,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                           {cells.slice(rowIdx * 7, rowIdx * 7 + 7).map((day, colIdx) => {
                             const isLastRow = rowIdx === Math.ceil(cells.length / 7) - 1;
                             const cellStyle: React.CSSProperties = {
-                              height: 88, padding: "6px 8px", verticalAlign: "top",
+                              height: isMobile ? 64 : 88, padding: isMobile ? "4px 4px" : "6px 8px", verticalAlign: "top",
                               borderRight: colIdx < 6 ? `1px solid ${T.gridLine}` : "none",
                               borderBottom: !isLastRow ? `1px solid ${T.gridLine}` : "none",
                             };
@@ -613,6 +614,16 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                     {taskCount > 0 && <div style={{ width: 5, height: 5, borderRadius: "50%", background: events.some(e => e.type === "overdue") ? "#ef4444" : T.accent }} />}
                                   </div>
                                 </div>
+                                {isMobile ? (
+                                  <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 2 }}>
+                                    {events.slice(0, 4).map((ev, i) => (
+                                      <div key={i} title={ev.label} style={{ width: 6, height: 6, borderRadius: "50%", background: ev.color }} />
+                                    ))}
+                                    {events.length > 4 && (
+                                      <span style={{ fontSize: 8, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>+{events.length - 4}</span>
+                                    )}
+                                  </div>
+                                ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                   {events.slice(0, 2).map((ev, i) => (
                                     <div key={i} style={{
@@ -628,6 +639,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                     </span>
                                   )}
                                 </div>
+                                )}
                               </td>
                             );
                           })}

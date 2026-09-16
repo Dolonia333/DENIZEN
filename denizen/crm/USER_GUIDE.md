@@ -282,6 +282,8 @@ Three **sub-tabs:**
 | View | What it does |
 |------|----------------|
 | Month / Week / Day / Agenda | Calendar layouts |
+| **Layer chips** | Toggle Meetings / Tasks / Overdue / Deal closes so the grid stays readable |
+| **This-week strip** | Counts for meetings, open tasks, overdue, deal closes, and busy days (2+ meetings) |
 | **Connect Google** | OAuth — sync Google Calendar events into meetings |
 | **Connect Outlook** | OAuth — sync Microsoft calendar |
 | **Sync** | Pull external events after connected |
@@ -387,6 +389,8 @@ Three **sub-tabs:**
 ## 14. Analytics
 
 **Purpose:** Funnel and revenue charts from live workspace data.
+
+The **Conversion Funnel** shows cumulative reach **and** step-to-step conversion (plus drop-off) in a detail table. Pipeline charts / velocity include deal counts and a stage occupancy ladder.
 
 | Charts / metrics | Source |
 |------------------|--------|
@@ -599,3 +603,9 @@ Mobile: swipe bottom bar to change main tab.
 ---
 
 *Meridian CRM — Sales Manager edition. Hosted on Denizen. Vendor source: `crm/vendor/` (from [remix-of-deal-weaver](https://github.com/kaiser-create/remix-of-deal-weaver)).*
+
+
+### Mobile schedule & analytics
+
+On phones, Calendar switches between **month grid** and **day detail** instead of a clipped two-column layout. Schedule month cells use color dots (not truncated title chips). Analytics KPI cards stay in a 2-up grid with ring accents, and charts show clear empty states when there is no contact or snapshot data yet.
+

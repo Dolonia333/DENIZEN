@@ -10,16 +10,25 @@ type StageRow = { name: string; value: number; count: number; fill: string };
 type TrendRow = { month: string; revenue: number; pipeline: number };
 type HealthRow = { name: string; value: number; fill: string };
 
-const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) => {
+const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string; payload?: Record<string, unknown> }[]; label?: string }) => {
   if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload || {};
+  const count = typeof row.count === "number" ? row.count : null;
+  const healthShare = typeof row.value === "number" && payload[0]?.name !== "Value" ? null : null;
   return (
-    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 11 }}>
-      <div style={{ color: T.text3, marginBottom: 4 }}>{label}</div>
+    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 11, minWidth: 140 }}>
+      <div style={{ color: T.text3, marginBottom: 4, fontWeight: 600 }}>{label}</div>
       {payload.map((p, i) => (
-        <div key={i} style={{ color: p.color, fontWeight: 600 }}>
+        <div key={i} style={{ color: p.color, fontWeight: 600, marginBottom: 2 }}>
           {p.name}: {typeof p.value === "number" && p.value > 100 ? fmt(p.value) : p.value}
         </div>
       ))}
+      {count != null && (
+        <div style={{ color: T.text3, marginTop: 4 }}>{count} deal{count === 1 ? "" : "s"} in stage</div>
+      )}
+      {typeof row.avgProbability === "number" && (
+        <div style={{ color: T.text3 }}>Avg probability {row.avgProbability}%</div>
+      )}
     </div>
   );
 };
@@ -101,7 +110,12 @@ export function DashboardCharts({
         <div style={cardStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Pipeline by Stage</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Pipeline by Stage</div>
+                <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+                  {stageData.reduce((s, r) => s + (r.count || 0), 0)} open deals · hover for value + count
+                </div>
+              </div>
               <button
                 onClick={() => shareToGlobalChat({
                   title: "Pipeline by Stage", type: "chart", color: T.purple,

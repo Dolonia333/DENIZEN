@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type CSSProperties } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { T, S, fmt, MEETING_TEMPLATES, type Task, type Deal, type Meeting, type Contact } from "@/lib/crm-data";
 import {
   fetchCalendarStatus,
@@ -83,7 +84,11 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [layers, setLayers] = useState({ meetings: true, tasks: true, deals: true, overdue: true });
+  const toggleLayer = (key: keyof typeof layers) => setLayers(prev => ({ ...prev, [key]: !prev[key] }));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+  const [mobilePanel, setMobilePanel] = useState<"calendar" | "day">("calendar");
   const [dayViewDate, setDayViewDate] = useState(
     `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
   );
@@ -196,26 +201,51 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
   // Build events map
   const eventsMap = useMemo(() => {
-    const map: Record<string, { label: string; type: string; color: string; priority?: string; meeting?: Meeting }[]> = {};
+    const map: Record<string, { label: string; type: string; color: string; priority?: string; meeting?: Meeting; meta?: string }[]> = {};
     const add = (date: string, ev: typeof map[string][0]) => {
       if (!date) return;
       if (!map[date]) map[date] = [];
       map[date].push(ev);
     };
-    tasks.forEach(t => {
-      if (!t.done) {
-        const isOverdue = t.due && new Date(t.due) < today;
-        add(t.due, { label: t.title, type: isOverdue ? "overdue" : "task", color: isOverdue ? T.red : t.priority === "High" ? T.orange : T.blue, priority: t.priority });
-      }
-    });
-    deals.filter(d => !["Closed Won", "Closed Lost"].includes(d.stage)).forEach(d => {
-      add(d.closeDate, { label: `Close: ${d.title}`, type: "deal", color: T.accent });
-    });
-    expandedMeetings.forEach(m => {
-      add(m.date, { label: `${m.time} ${m.title}`, type: "meeting", color: MEETING_TYPE_COLORS[m.type] || T.purple, meeting: m });
-    });
+    if (layers.tasks || layers.overdue) {
+      tasks.forEach(t => {
+        if (t.done) return;
+        const isOverdue = !!(t.due && new Date(t.due) < today);
+        if (isOverdue && !layers.overdue) return;
+        if (!isOverdue && !layers.tasks) return;
+        add(t.due, {
+          label: t.title,
+          type: isOverdue ? "overdue" : "task",
+          color: isOverdue ? T.red : t.priority === "High" ? T.orange : T.blue,
+          priority: t.priority,
+          meta: isOverdue ? "Overdue task" : `${t.priority || "Normal"} priority`,
+        });
+      });
+    }
+    if (layers.deals) {
+      deals.filter(d => !["Closed Won", "Closed Lost"].includes(d.stage)).forEach(d => {
+        const close = d.closeDate;
+        add(close, {
+          label: `Close: ${d.title}`,
+          type: "deal",
+          color: d.health === "at-risk" ? T.red : T.accent,
+          meta: `${d.stage} · $${Number(d.value || 0).toLocaleString()} · ${d.probability || 0}%`,
+        });
+      });
+    }
+    if (layers.meetings) {
+      expandedMeetings.forEach(m => {
+        add(m.date, {
+          label: `${m.time} ${m.title}`,
+          type: "meeting",
+          color: MEETING_TYPE_COLORS[m.type] || T.purple,
+          meeting: m,
+          meta: `${m.type || "meeting"} · ${m.duration || 30}m${m.contact ? ` · ${m.contact}` : ""}`,
+        });
+      });
+    }
     return map;
-  }, [tasks, deals, expandedMeetings, today]);
+  }, [tasks, deals, expandedMeetings, today, layers]);
 
   const selectedEvents = selectedDate ? eventsMap[selectedDate] || [] : [];
 
@@ -509,11 +539,13 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               setViewMode(v);
               if ((v === "day" || v === "week") && selectedDate) setDayViewDate(selectedDate);
             }} style={{
-              ...S.btnGhost, fontSize: 12, padding: "6px 14px",
+              ...S.btnGhost, fontSize: isMobile ? 11 : 12, padding: isMobile ? "6px 10px" : "6px 14px",
               background: viewMode === v ? T.accent : T.bg3, color: viewMode === v ? "#080d18" : T.text2,
               fontWeight: viewMode === v ? 700 : 500,
             }}>
-              {v === "month" ? "📅 Month" : v === "week" ? "📆 Week" : v === "day" ? "🕐 Day" : v === "agenda" ? "📋 Agenda" : "🔗 Booking"}
+              {isMobile
+                ? (v === "month" ? "Month" : v === "week" ? "Week" : v === "day" ? "Day" : v === "agenda" ? "Agenda" : "Book")
+                : (v === "month" ? "📅 Month" : v === "week" ? "📆 Week" : v === "day" ? "🕐 Day" : v === "agenda" ? "📋 Agenda" : "🔗 Booking")}
             </button>
           ))}
           <button onClick={() => openNewMeeting(selectedDate || dayViewDate || todayStr)} style={{ ...S.btn, fontSize: 12, padding: "6px 14px" }}>+ Meeting</button>
@@ -521,8 +553,96 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
       </div>
 
       {/* ── MONTH VIEW ── */}
-      {viewMode === "month" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
+      
+      {/* Layer filters + this-week snapshot */}
+      {(() => {
+        const weekStart = (() => {
+          const d = new Date(dayViewDate + "T12:00:00");
+          d.setDate(d.getDate() - d.getDay());
+          return d;
+        })();
+        const weekDates = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(weekStart);
+          d.setDate(d.getDate() + i);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        });
+        const inWeek = (date: string) => weekDates.includes(date);
+        let meetingsN = 0, tasksN = 0, overdueN = 0, dealsN = 0, conflictDays = 0;
+        Object.entries(eventsMap).forEach(([date, evts]) => {
+          if (!inWeek(date)) return;
+          const types = evts.map(e => e.type);
+          meetingsN += types.filter(t => t === "meeting").length;
+          tasksN += types.filter(t => t === "task").length;
+          overdueN += types.filter(t => t === "overdue").length;
+          dealsN += types.filter(t => t === "deal").length;
+          if (types.filter(t => t === "meeting").length >= 2) conflictDays++;
+        });
+        const chips: { key: keyof typeof layers; label: string; color: string; count: number }[] = [
+          { key: "meetings", label: "Meetings", color: T.purple, count: meetingsN },
+          { key: "tasks", label: "Tasks", color: T.blue, count: tasksN },
+          { key: "overdue", label: "Overdue", color: T.red, count: overdueN },
+          { key: "deals", label: "Deal closes", color: T.accent, count: dealsN },
+        ];
+        return (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+              {chips.map(c => (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => toggleLayer(c.key)}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "5px 10px", borderRadius: 999, cursor: "pointer", fontSize: 11, fontWeight: 600,
+                    border: `1px solid ${layers[c.key] ? c.color + "66" : T.bg4}`,
+                    background: layers[c.key] ? c.color + "18" : T.bg3,
+                    color: layers[c.key] ? c.color : T.text3,
+                    opacity: layers[c.key] ? 1 : 0.55,
+                  }}
+                >
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.color }} />
+                  {c.label}
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10 }}>{c.count}</span>
+                </button>
+              ))}
+            </div>
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8,
+              padding: "10px 12px", borderRadius: T.radius?.md || 10, background: T.bg2, border: `1px solid ${T.bg4}`,
+            }}>
+              {[
+                { label: "This week meetings", value: String(meetingsN), color: T.purple },
+                { label: "Open tasks due", value: String(tasksN), color: T.blue },
+                { label: "Overdue", value: String(overdueN), color: overdueN ? T.red : T.text3 },
+                { label: "Deal closes", value: String(dealsN), color: T.accent },
+                { label: "Busy days (2+ mtgs)", value: String(conflictDays), color: conflictDays ? T.orange : T.text3 },
+              ].map(s => (
+                <div key={s.label}>
+                  <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.label}</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: s.color, fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+{viewMode === "month" && (
+        <>
+        {isMobile && (
+          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+            {(["calendar", "day"] as const).map(p => (
+              <button key={p} type="button" onClick={() => setMobilePanel(p)} style={{
+                flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                borderRadius: T.radius.md, border: `1px solid ${mobilePanel === p ? T.accent + "66" : T.bg4}`,
+                background: mobilePanel === p ? T.accent + "18" : T.bg3,
+                color: mobilePanel === p ? T.accent : T.text3,
+              }}>{p === "calendar" ? "📅 Calendar" : "🗓 Day detail"}</button>
+            ))}
+          </div>
+        )}
+        <div style={{ display: isMobile ? "block" : "grid", gridTemplateColumns: "1fr 380px", gap: 14 }}>
+          {(!isMobile || mobilePanel === "calendar") && (
           <div style={{ ...S.card }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <button onClick={prev} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "6px 12px", color: T.text2, cursor: "pointer", fontSize: 13 }}>←</button>
@@ -565,7 +685,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                         const mc = meetingCounts[dateStr] || 0;
                         return (
                           <td key={dateStr}
-                            onClick={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}
+                            onClick={() => { const next = dateStr === selectedDate ? null : dateStr; setSelectedDate(next); if (next && isMobile) setMobilePanel("day"); }}
                             onDoubleClick={() => { setDayViewDate(dateStr); setViewMode("day"); }}
                             style={{
                               height: 72, padding: "6px 8px", verticalAlign: "top",
@@ -613,9 +733,11 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
             </div>
           </div>
+          )}
 
           {/* Right panel */}
-          <div style={{ ...S.card }}>
+          {(!isMobile || mobilePanel === "day") && (
+          <div style={{ ...S.card, marginTop: isMobile ? 14 : 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>
                 {selectedDate ? new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "Select a date"}
@@ -658,8 +780,9 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                     )}
                   </div>
                   <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>
-                    {ev.type === "meeting" && ev.meeting ? `${ev.meeting.duration}min · ${ev.meeting.type} · ${ev.meeting.contact || "No contact"}` :
-                     ev.type === "deal" ? "Deal closing" : ev.type === "overdue" ? "⚠ Overdue" : `${ev.priority || "Medium"} priority task`}
+                    {ev.meta
+                      || (ev.type === "meeting" && ev.meeting ? `${ev.meeting.duration}min · ${ev.meeting.type} · ${ev.meeting.contact || "No contact"}` :
+                     ev.type === "deal" ? "Deal closing" : ev.type === "overdue" ? "⚠ Overdue" : `${ev.priority || "Medium"} priority task`)}
                   </div>
                   {ev.meeting && (
                     <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
@@ -675,7 +798,9 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
             ))}
           </div>
+          )}
         </div>
+        </>
       )}
 
       {/* ── DAY VIEW ── */}
@@ -993,7 +1118,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
       {/* ── BOOKING VIEW ── */}
       {viewMode === "booking" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
           <div style={{ ...S.card }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, marginBottom: 16 }}>🔗 Booking Page</div>
             <div style={{ ...S.label }}>Your Booking Link</div>

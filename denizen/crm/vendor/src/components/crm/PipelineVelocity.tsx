@@ -92,6 +92,40 @@ export function PipelineVelocity({ deals }: Props) {
         </ResponsiveContainer>
       </div>
 
+
+      {/* Current-stage conversion ladder (snapshot, not historical cohort) */}
+      <div style={{
+        background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
+        border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: "16px", marginBottom: 16,
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: T.text1, marginBottom: 4 }}>Stage occupancy ladder</div>
+        <div style={{ fontSize: 11, color: T.text3, marginBottom: 12 }}>
+          Share of open deals currently sitting in each stage (live snapshot — not historical cohort conversion)
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {velocityData.map((v, i) => {
+            const openTotal = velocityData.reduce((s, x) => s + x.count, 0) || 1;
+            const share = Math.round((v.count / openTotal) * 100);
+            const next = velocityData[i + 1];
+            const step = next && v.count ? Math.round((next.count / v.count) * 100) : null;
+            return (
+              <div key={`ladder-${v.stage}`}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
+                  <span style={{ color: T.text1, fontWeight: 600 }}>{v.stage}</span>
+                  <span style={{ color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>
+                    {v.count} · {share}% of open
+                    {step != null ? ` · → next ${step}%` : ""}
+                  </span>
+                </div>
+                <div style={{ height: 6, background: T.bg4, borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: `${share}%`, height: "100%", background: v.color, borderRadius: 3 }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Stage detail cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {velocityData.map(v => {
