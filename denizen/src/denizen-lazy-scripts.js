@@ -83,7 +83,7 @@
       ]);
       await loadParallel([
         './src/tabler-icons.js?v=ti6',
-        './src/office-hq/office-level-chip.js?v=lvl4',
+        './src/office-hq/office-level-chip.js?v=lvl5',
         './src/office-hq/office-hq-panel.js?v=hq2',
         './src/visitor-desktop-pairing.js?v=pair3',
         './src/visitor-credits-chip.js?v=node7',

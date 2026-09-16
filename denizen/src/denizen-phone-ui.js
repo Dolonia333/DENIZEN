@@ -1702,6 +1702,7 @@
         flex: 1;
         min-height: 0;
         display: flex;
+        flex-direction: column;
       }
       #${FRAME_ID} .dzp-workflow-frame {
         flex: 1;
