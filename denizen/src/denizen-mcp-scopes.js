@@ -47,6 +47,7 @@ const TOOL_SCOPE = Object.freeze({
   business_studio_explain: 'read',
   business_studio_list_programs: 'read',
   business_studio_funding_readiness: 'read',
+  business_studio_chain_status: 'read',
   get_market_quote: 'read',
   get_market_portfolio: 'read',
   market_watch: 'read',

@@ -8,6 +8,7 @@ const studioStore = require('./denizen-business-studio-store');
 const progress = require('./denizen-business-studio-progress');
 const e3 = require('./denizen-business-studio-e3-template');
 const funding = require('./denizen-business-studio-funding');
+const chain = require('./denizen-business-studio-chain');
 const denizenDb = require('./denizen-db');
 
 const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
@@ -54,7 +55,10 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   },
   {
     name: 'business_studio_add_evidence',
-    description: 'Attach real evidence (interview, document, meeting, metric, manual). Never fabricate.',
+    description:
+      'Attach real evidence (interview, document, meeting, metric, manual). Never fabricate. '
+      + 'Interviews auto-link discovery experiment + requirement + Funding Readiness customer_discovery when an E3 program is active. '
+      + 'Optional contact_id stores a CRM relation without inventing CRM data.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -64,9 +68,23 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
         experiment_id: { type: 'string' },
         requirement_key: { type: 'string' },
         assumption_key: { type: 'string' },
+        funding_key: { type: 'string' },
+        funding_keys: { type: 'array', items: { type: 'string' } },
+        contact_id: { type: 'string' },
+        contact_name: { type: 'string' },
+        persona: { type: 'string' },
+        insight_tags: { type: 'array', items: { type: 'string' } },
       },
       required: ['title', 'type'],
     },
+  },
+  {
+    name: 'business_studio_chain_status',
+    description:
+      'READ-ONLY end-to-end chain snapshot: discovery experiment counts, program requirement %, '
+      + 'milestone/goal derived status, Funding Readiness customer_discovery, CRM-linked evidence, and next actions. '
+      + 'Use after attaching evidence to explain what changed.',
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'business_studio_upsert_task',
@@ -179,11 +197,13 @@ async function callTool(scope, name, args = {}) {
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state, local } = loaded;
     const health = progress.businessHealth(state);
+    const snap = chain.chainSnapshot(state);
     return {
       ok: true,
       local,
       business: state.business,
       health,
+      chain: snap,
       open_tasks: (state.tasks || []).filter((t) => t.status !== 'done').slice(0, 20),
       experiments: health.experiments,
       evidence_recent: (state.evidence || []).slice(0, 10),
@@ -195,10 +215,18 @@ async function callTool(scope, name, args = {}) {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
     const health = progress.businessHealth(loaded.state);
+    const snap = chain.chainSnapshot(loaded.state);
     const attn = (health.categories || []).filter((c) => c.status === 'needs_attention');
     return {
       ok: true,
       program: health.program,
+      chain: {
+        discovery_interviews: snap.metricDiscoveryInterviews,
+        funding_customer_discovery: snap.fundingCustomerDiscovery,
+        experiment: snap.experiment,
+        milestones: snap.milestones,
+        goals: snap.goals,
+      },
       needs_attention: attn,
       next_actions: attn.map((c) => ({
         category: c.name,
@@ -257,21 +285,45 @@ async function callTool(scope, name, args = {}) {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
-    const ev = {
-      id: uid('ev'),
-      title: String(args.title || '').trim(),
-      type: String(args.type || 'manual').trim(),
-      description: String(args.description || ''),
-      createdAt: new Date().toISOString(),
-      linkedExperimentIds: args.experiment_id ? [args.experiment_id] : [],
-      experimentId: args.experiment_id || null,
-      requirementKey: args.requirement_key || null,
-      linkedAssumptionKeys: args.assumption_key ? [args.assumption_key] : [],
-    };
-    if (!ev.title) return { ok: false, error: 'title required' };
-    state.evidence = [ev, ...(state.evidence || [])];
+    let result;
+    try {
+      result = chain.attachEvidence(state, {
+        title: args.title,
+        type: args.type,
+        description: args.description,
+        notes: args.description || args.notes,
+        experimentId: args.experiment_id || args.experimentId,
+        requirementKey: args.requirement_key || args.requirementKey,
+        assumptionKey: args.assumption_key || args.assumptionKey,
+        fundingKey: args.funding_key || args.fundingKey,
+        fundingKeys: args.funding_keys || args.fundingKeys,
+        contactId: args.contact_id || args.contactId,
+        contactName: args.contact_name || args.contactName,
+        persona: args.persona,
+        insightTags: args.insight_tags || args.insightTags,
+        source: 'mcp',
+      });
+    } catch (err) {
+      return { ok: false, error: err?.message || String(err) };
+    }
     const saved = await saveState(scope, state);
-    return { ok: true, evidence: ev, persist: saved };
+    return {
+      ok: true,
+      evidence: result.evidence,
+      links: result.links,
+      chain: result.chain,
+      persist: saved,
+    };
+  }
+
+  if (name === 'business_studio_chain_status') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    return {
+      ok: true,
+      chain: chain.chainSnapshot(loaded.state),
+      guidance: 'Use this to explain what changed after evidence was attached. Do not invent counts.',
+    };
   }
 
   if (name === 'business_studio_upsert_task') {

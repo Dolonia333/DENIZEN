@@ -222,14 +222,18 @@ describe('business-studio MCP tools + scopes', () => {
 
   it('maps business studio tools into read / crm_write scopes', () => {
     const scopes = require('../src/denizen-mcp-scopes');
+    const tools = require('../src/denizen-mcp-business-studio-tools');
     assert.equal(scopes.requiredScope('business_studio_working_set'), 'read');
     assert.equal(scopes.requiredScope('business_studio_brief'), 'read');
     assert.equal(scopes.requiredScope('business_studio_explain'), 'read');
     assert.equal(scopes.requiredScope('business_studio_list_programs'), 'read');
+    assert.equal(scopes.requiredScope('business_studio_funding_readiness'), 'read');
+    assert.equal(scopes.requiredScope('business_studio_chain_status'), 'read');
     assert.equal(scopes.requiredScope('business_studio_apply_program_template'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_add_evidence'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_upsert_task'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_create_experiment'), 'crm_write');
+    assert.ok(tools.isBusinessStudioTool('business_studio_chain_status'));
   });
 });
 

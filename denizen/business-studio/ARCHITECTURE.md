@@ -30,8 +30,10 @@ Execution → Evidence → Outcomes → Metrics → Strategy updates.
 - `src/denizen-business-studio-routes.js` — `/api/business-studio/*`
 - `src/denizen-business-studio-e3-template.js` — i2E E3 / PAVE program template
 - `src/denizen-business-studio-progress.js` — explainable health/progress
-- `src/denizen-mcp-business-studio-tools.js` — MCP tools
+- `src/denizen-business-studio-chain.js` — SoT evidence linker (experiment ↔ requirement ↔ milestone ↔ goal ↔ funding ↔ CRM relation)
+- `src/denizen-mcp-business-studio-tools.js` — MCP tools (`business_studio_chain_status`, linked `add_evidence`)
 - Migration: `denizen_business_studio_workspaces`
+- Tests: `tests/business-studio-e2e-chain.test.js` — judge completion by information flow, not screens
 
 ## Data model (workspace JSON blob)
 

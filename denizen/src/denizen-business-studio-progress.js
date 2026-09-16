@@ -221,10 +221,20 @@ function businessHealth(state) {
     });
   } catch (_) { /* optional module */ }
 
+  let milestones = [];
+  let goals = [];
+  try {
+    const chain = require('./denizen-business-studio-chain');
+    milestones = (state.milestones || []).map((m) => chain.milestoneProgress(state, m));
+    goals = (state.goals || []).map((g) => chain.goalProgress(state, g));
+  } catch (_) { /* optional */ }
+
   return {
     generatedAt: new Date().toISOString(),
     program: prog,
     experiments,
+    milestones,
+    goals,
     categories,
     funding: fundingSummary,
     openTaskCount: openTasks.length,

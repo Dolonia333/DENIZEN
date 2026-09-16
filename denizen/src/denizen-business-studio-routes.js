@@ -72,6 +72,18 @@ function findAdvisor(state, access) {
   return (state.advisors || []).find((a) => String(a.email || '').toLowerCase() === email) || null;
 }
 
+function viewerState(state, access) {
+  const advisor = findAdvisor(state, access);
+  const role = String(advisor?.role || '').toLowerCase();
+  if (role === 'investor' || role === 'viewer') {
+    return { state: studioStore.filterStateForInvestor(state, advisor), advisor, role };
+  }
+  if (role === 'mentor' || role === 'advisor') {
+    return { state: studioStore.filterStateForAdvisor(state, advisor), advisor, role };
+  }
+  return { state, advisor, role: role || 'member' };
+}
+
 function isAdvisorRole(role) {
   const r = String(role || '').toLowerCase();
   return r === 'mentor' || r === 'advisor' || r === 'investor' || r === 'viewer';
@@ -163,13 +175,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         }
         const row = await studioStore.getWorkspace(orgId);
         let state = row?.state || studioStore.emptyState();
-        const advisor = findAdvisor(state, access);
-        const role = String(advisor?.role || '').toLowerCase();
-        if (role === 'investor' || role === 'viewer') {
-          state = studioStore.filterStateForInvestor(state, advisor);
-        } else if (role === 'mentor' || role === 'advisor') {
-          state = studioStore.filterStateForAdvisor(state, advisor);
-        }
+        const viewed = viewerState(state, access);
+        state = viewed.state;
         json(res, 200, {
           ok: true,
           mode: 'cloud',
@@ -178,7 +185,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           updated_at: row?.updated_at || null,
           schema_version: row?.schema_version || studioStore.SCHEMA_VERSION,
           viewer: {
-            role: role || 'member',
+            role: viewed.role || 'member',
             email: actorFromAccess(access).email,
             displayName: actorFromAccess(access).displayName,
           },
@@ -281,7 +288,12 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
         const loaded = await loadOrgState(orgId);
-        json(res, 200, { ok: true, health: progress.businessHealth(loaded.state) });
+        const viewed = viewerState(loaded.state, access);
+        json(res, 200, {
+          ok: true,
+          health: progress.businessHealth(viewed.state),
+          viewer_role: viewed.role,
+        });
         return true;
       }
 
@@ -291,8 +303,13 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
         const loaded = await loadOrgState(orgId);
+        const viewed = viewerState(loaded.state, access);
         const subject = url.searchParams.get('subject') || 'program';
-        json(res, 200, { ok: true, explanation: progress.explainStatus(loaded.state, subject) });
+        json(res, 200, {
+          ok: true,
+          explanation: progress.explainStatus(viewed.state, subject),
+          viewer_role: viewed.role,
+        });
         return true;
       }
 
@@ -523,15 +540,17 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
         const loaded = await loadOrgState(orgId);
+        const viewed = viewerState(loaded.state, access);
         json(res, 200, {
           ok: true,
-          readiness: funding.evaluateFundingReadiness(loaded.state),
-          marketSizing: funding.calculateMarketSizing(loaded.state.funding?.marketSizing || {}),
-          moat: funding.evaluateMoat(loaded.state),
-          discovery: funding.discoveryPatterns(loaded.state),
-          dataRoom: funding.evaluateDataRoom(loaded.state),
-          capital: funding.capitalPathwayBrief(loaded.state),
-          capitalPlan: loaded.state.funding?.capitalPlan || funding.emptyFundingState().capitalPlan,
+          readiness: funding.evaluateFundingReadiness(viewed.state),
+          marketSizing: funding.calculateMarketSizing(viewed.state.funding?.marketSizing || {}),
+          moat: funding.evaluateMoat(viewed.state),
+          discovery: funding.discoveryPatterns(viewed.state),
+          dataRoom: funding.evaluateDataRoom(viewed.state),
+          capital: funding.capitalPathwayBrief(viewed.state),
+          capitalPlan: viewed.state.funding?.capitalPlan || funding.emptyFundingState().capitalPlan,
+          viewer_role: viewed.role,
         });
         return true;
       }
@@ -604,4 +623,5 @@ module.exports = {
   isAdvisorRole,
   findAdvisor,
   isFounderCapable,
+  viewerState,
 };

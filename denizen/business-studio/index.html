@@ -1408,37 +1408,64 @@ function openCreateEvidence(){
     {name:'type',label:'Type',type:'select',options:['interview','document','metric','meeting','manual']},
     {name:'experimentId',label:'Link to experiment',type:'select',options:expOpts},
     {name:'requirementId',label:'Link to requirement',type:'select',options:reqOpts},
+    {name:'fundingKey',label:'Funding readiness key (optional)',hint:'e.g. customer_discovery — interviews auto-link when type=interview'},
+    {name:'contactId',label:'CRM contact id (optional)'},
     {name:'notes',label:'Notes',type:'textarea'}
   ],function(data){
-    const ev={
-      id:uid('ev'),title:data.title,type:data.type||'manual',notes:data.notes||'',
-      experimentId:data.experimentId||null,
-      linkedExperimentIds:data.experimentId?[data.experimentId]:[],
-      linkedRequirementIds:data.requirementId?[data.requirementId]:[],
-      requirementKey:null,
-      linkedAssumptionKeys:[],
-      createdAt:nowISO()
-    };
+    const isInterview=data.type==='interview';
+    let experimentId=data.experimentId||null;
+    let requirementKey=null;
+    let linkedRequirementIds=data.requirementId?[data.requirementId]:[];
+    let linkedAssumptionKeys=[];
+    let fundingKey=data.fundingKey||null;
+    if(isInterview && !experimentId){
+      const exp=(state.experiments||[]).find(function(x){return /interview|discovery/i.test(x.title);});
+      if(exp) experimentId=exp.id;
+    }
     if(data.requirementId && prog){
       const req=(prog.requirements||[]).find(function(r){return r.id===data.requirementId;});
       if(req){
-        ev.requirementKey=req.key;
-        if(req.linkedAssumptionKey) ev.linkedAssumptionKeys=[req.linkedAssumptionKey];
+        requirementKey=req.key;
+        if(req.linkedAssumptionKey) linkedAssumptionKeys=[req.linkedAssumptionKey];
+      }
+    } else if(isInterview){
+      const req=((prog&&prog.requirements)||[]).find(function(r){return r.key==='discovery_interviews';});
+      if(req){
+        requirementKey=req.key;
+        linkedRequirementIds=[req.id];
+        if(req.linkedAssumptionKey) linkedAssumptionKeys=[req.linkedAssumptionKey];
       }
     }
-    if(data.experimentId){
-      const exp=state.experiments.find(function(e){return e.id===data.experimentId;});
-      if(exp && exp.assumptionKey) ev.linkedAssumptionKeys=[exp.assumptionKey];
-      // bump completedCount but NEVER auto-validate assumption
+    if(isInterview && !fundingKey) fundingKey='customer_discovery';
+    const ev={
+      id:uid('ev'),title:data.title,type:data.type||'manual',notes:data.notes||'',
+      experimentId:experimentId,
+      linkedExperimentIds:experimentId?[experimentId]:[],
+      linkedRequirementIds:linkedRequirementIds,
+      requirementKey:requirementKey,
+      linkedAssumptionKeys:linkedAssumptionKeys,
+      fundingKey:fundingKey,
+      linkedFundingKeys:fundingKey?[fundingKey]:[],
+      contactId:data.contactId||null,
+      createdAt:nowISO()
+    };
+    if(experimentId){
+      const exp=state.experiments.find(function(e){return e.id===experimentId;});
+      if(exp && exp.assumptionKey && !ev.linkedAssumptionKeys.length) ev.linkedAssumptionKeys=[exp.assumptionKey];
       if(exp){
         const ep=experimentProgress(exp, Object.assign({},state,{evidence:state.evidence.concat([ev])}));
         exp.completedCount=ep.count;
         const asm=state.assumptions.find(function(a){return a.key===exp.assumptionKey;});
         if(asm){
           asm.confidence=ep.complete?'sufficient_to_decide':'insufficient';
-          // status stays testing — founder must decide
         }
       }
+    }
+    if(ev.contactId){
+      state.relations=state.relations||[];
+      state.relations.unshift({
+        id:uid('rel'),kind:'crm_contact',contactId:ev.contactId,evidenceId:ev.id,createdAt:ev.createdAt
+      });
     }
     state.evidence.unshift(ev);
     syncMetricFromEvidence();
@@ -1679,7 +1706,7 @@ function renderPrograms(){
 }
 
 function renderGoals(){
-  let html='<div class="page-head"><div><h2>Goals</h2><p>Outcomes you are steering toward.</p></div>'
+  let html='<div class="page-head"><div><h2>Goals</h2><p>Outcomes linked to metrics / requirements — status moves when evidence moves.</p></div>'
     +'<div class="actions"><button type="button" class="btn btn-primary" data-action="create-goal">Create goal</button></div></div>';
   if(!state.goals.length){
     html+='<div class="empty"><strong>No goals yet</strong>Create a goal or apply the E3 template.</div>';
@@ -1687,8 +1714,22 @@ function renderGoals(){
   }
   html+='<div class="list">';
   state.goals.forEach(function(g){
+    const keys=g.metricKeys||[];
+    const bits=[];
+    keys.forEach(function(k){
+      const met=(state.metrics||[]).find(function(m){return m.key===k;});
+      if(met) bits.push(met.name+': '+(met.current||0)+'/'+(met.target||1));
+      else {
+        const prog=activeProgram();
+        const req=((prog&&prog.requirements)||[]).find(function(r){return r.key===k;});
+        if(req){
+          const rp=requirementProgress(state,req);
+          bits.push(req.title+': '+rp.count+'/'+rp.target);
+        }
+      }
+    });
     html+='<div class="row-item"><div><div class="rt">'+esc(g.title)+'</div>'
-      +'<div class="rm">'+fmtDate(g.createdAt)+'</div></div>'
+      +'<div class="rm">'+(bits.length?esc(bits.join(' · ')):fmtDate(g.createdAt))+'</div></div>'
       +'<div class="row-actions">'+statusChip(g.status)
       +'<button type="button" class="btn btn-sm" data-goal-status="'+esc(g.id)+'" data-status="done">Done</button>'
       +'<button type="button" class="btn btn-sm btn-danger" data-del-goal="'+esc(g.id)+'">Delete</button></div></div>';
@@ -1820,9 +1861,20 @@ function renderRoadmap(){
   else {
     html+='<div class="list">';
     ms.forEach(function(m){
+      const keys=m.requirementKeys||[];
+      const reqs=(prog.requirements||[]).filter(function(r){return keys.indexOf(r.key)>=0;});
+      const rps=reqs.map(function(r){return requirementProgress(state,r);});
+      let derived=m.status;
+      let why='';
+      if(rps.length){
+        if(rps.every(function(r){return r.complete;})){ derived='complete'; why='All linked requirements evidenced.'; }
+        else if(rps.some(function(r){return r.count>0;})){ derived='active'; why=rps.filter(function(r){return !r.complete;}).map(function(r){return r.title+' '+r.count+'/'+r.target;}).join('; '); }
+        else { why='Waiting on: '+rps.map(function(r){return r.title;}).join(', '); }
+      }
       html+='<div class="row-item"><div><div class="rt">'+esc(m.title)+'</div>'
-        +(m.blockedReason?'<div class="rm">'+esc(m.blockedReason)+'</div>':'')
-        +'</div>'+statusChip(m.status)+'</div>';
+        +(why?'<div class="rm">'+esc(why)+'</div>':'')
+        +(m.blockedReason && derived==='blocked'?'<div class="rm">'+esc(m.blockedReason)+'</div>':'')
+        +'</div>'+statusChip(derived)+'</div>';
     });
     html+='</div>';
   }
@@ -2629,27 +2681,77 @@ document.addEventListener('click', function(e){
       promptForm('Add discovery interview',[
         {name:'title',label:'Interview title',required:true,value:'Interview — '},
         {name:'persona',label:'Persona / role'},
+        {name:'contactId',label:'CRM contact id (optional)',hint:'Links this interview to a CRM contact without inventing CRM data'},
+        {name:'contactName',label:'Contact name (optional)'},
         {name:'insights',label:'Insight tags (comma-separated)',hint:'e.g. Problem A, pricing asked, wants pilot'},
         {name:'notes',label:'Notes',type:'textarea'}
       ],function(d){
         const tags=String(d.insights||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
-        const exp=(state.experiments||[]).find(function(x){return /interview|discovery/i.test(x.title);});
+        const exp=(state.experiments||[]).find(function(x){return /interview|discovery/i.test(x.title);})
+          ||(state.experiments||[]).find(function(x){return x.method==='customer_interview';});
+        const prog=activeProgram();
+        const req=((prog&&prog.requirements)||[]).find(function(r){return r.key==='discovery_interviews';});
+        const assumptionKey=(exp&&exp.assumptionKey)||(req&&req.linkedAssumptionKey)||null;
         const ev={
           id:uid('ev'),title:d.title,type:'interview',notes:d.notes||'',
           persona:d.persona||'',insightTags:tags,findings:tags,
           fundingKey:'customer_discovery',linkedFundingKeys:['customer_discovery'],
           experimentId:exp?exp.id:null,
           linkedExperimentIds:exp?[exp.id]:[],
-          createdAt:nowISO()
+          requirementKey:req?req.key:'discovery_interviews',
+          linkedRequirementIds:req?[req.id]:[],
+          linkedAssumptionKeys:assumptionKey?[assumptionKey]:[],
+          contactId:d.contactId||null,
+          contactName:d.contactName||null,
+          createdAt:nowISO(),
+          source:'discovery_lab'
         };
         state.evidence.unshift(ev);
+        if(ev.contactId){
+          state.relations=state.relations||[];
+          state.relations.unshift({
+            id:uid('rel'),kind:'crm_contact',contactId:ev.contactId,contactName:ev.contactName,
+            evidenceId:ev.id,createdAt:ev.createdAt
+          });
+        }
         if(exp){
           const ep=experimentProgress(exp, state);
           exp.completedCount=ep.count;
+          const asm=(state.assumptions||[]).find(function(a){return a.key===exp.assumptionKey;});
+          if(asm){
+            asm.confidence=ep.complete?'sufficient_to_decide':'insufficient';
+            if(asm.status!=='validated') asm.status='testing';
+          }
         }
+        // Derive milestone status from requirement evidence
+        (state.milestones||[]).forEach(function(m){
+          const keys=m.requirementKeys||[];
+          if(!keys.length||!prog) return;
+          const reqs=(prog.requirements||[]).filter(function(r){return keys.indexOf(r.key)>=0;});
+          const rps=reqs.map(function(r){return requirementProgress(state,r);});
+          if(rps.length && rps.every(function(r){return r.complete;})) m.status='complete';
+          else if(rps.some(function(r){return r.count>0;})) m.status='active';
+        });
+        (state.goals||[]).forEach(function(g){
+          const keys=g.metricKeys||[];
+          if(!keys.length) return;
+          const metOk=keys.every(function(k){
+            const met=(state.metrics||[]).find(function(m){return m.key===k;});
+            if(met){
+              const n=(state.evidence||[]).filter(function(e){return e.type==='interview';}).length;
+              if(met.source==='evidence' && met.key==='discovery_interviews'){
+                return n>=Math.max(1,Number(met.target)||1);
+              }
+              return Number(met.current)>=Math.max(1,Number(met.target)||1);
+            }
+            const rq=((prog&&prog.requirements)||[]).find(function(r){return r.key===k;});
+            return rq?requirementProgress(state,rq).complete:true;
+          });
+          if(metOk) g.status='complete';
+        });
         syncMetricFromEvidence();
         logActivity('Interview evidence: '+d.title);
-        scheduleSave(); render(); toast('Interview added');
+        scheduleSave(); render(); toast('Interview added — chain updated');
       });
     }
     if(a==='mark-unanswered'){
