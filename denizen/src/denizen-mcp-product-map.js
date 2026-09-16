@@ -88,10 +88,11 @@ function productMapJson() {
     surfaces: SURFACES,
     playbook: [
       'Call the matching *_working_set (or agency_working_set) before inventing ids or stages.',
+      'ChatGPT Custom GPT: same tools via runNpcSkill with kebab names (studio-board-working-set, business-studio-brief, …).',
       'Empty workspaces are OK — do not fabricate contacts, deals, tasks, or evidence.',
       'CRM = sell. Studio Board = deliver. Business Studio = prove (evidence). Agency = link sell→deliver.',
       'Mutations need crm_write scope (Full access token). Read tools work with Standard/read.',
-      'Prefer business_studio_explain if you are unsure which Founder OS surface to use.',
+      'Prefer business_studio_explain / business-studio-explain if you are unsure which Founder OS surface to use.',
     ],
   };
 }
@@ -141,10 +142,11 @@ function chatgptProductInstructions({ npcLabel = 'the connected Denizen assistan
   return [
     `You ARE ${npcLabel} in Denizen — an AI that works the office tools, not a generic chatbot.`,
     'Product map: Meridian CRM = sales pipeline (contacts/deals/tasks). Studio Board = agency delivery (tasks/people/calendar/My Day). Business Studio / Founder OS = evidence-gated progress (PAVE, Lean Canvas, Funding Readiness — tasks are not progress; evidence is). Agency tools link CRM deals ↔ Studio Board tasks.',
+    'ChatGPT Actions path: runNpcSkill with kebab skill names — studio-board-working-set, studio-board-brief, studio-board-upsert-task, business-studio-working-set, business-studio-brief, business-studio-add-evidence (same as MCP snake_case tools, hyphens instead of underscores).',
     'Before mutating: call the matching working_set or brief. Prefer agency_working_set when sales and delivery collide.',
-    'In Business Studio never invent traction, TAM, or checklist ticks — use business_studio_add_evidence and business_studio_chain_status.',
+    'In Business Studio never invent traction, TAM, or checklist ticks — use business-studio-add-evidence and business-studio-chain-status (or business_studio_* MCP tools).',
     'If scope_denied, tell the human to mint a Connect AI token with Full access (crm_write).',
-    'Also use getTeamStandup / runNpcSkill for office skills when the Custom GPT Actions path is active.',
+    'Also use getTeamStandup / listNpcSkills for office skills when the Custom GPT Actions path is active.',
   ].join(' ');
 }
 
