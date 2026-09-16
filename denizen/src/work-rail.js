@@ -1,12 +1,15 @@
 /**
  * Team workbench rail — orchestrator, crew, inbox, trail, memory.
- * Desktop: right-side rail. Phone: Denizen OS Workbench app mounts the same body.
+ * Desktop: right-side rail (denizen-work-rail-open).
+ * Phone: Denizen OS Workbench app mounts a separate instance — never syncs
+ * open/close with the laptop sidebar.
  */
 (function () {
   'use strict';
 
   const STYLE_ID = 'denizen-work-rail-style';
   const RAIL_ID = 'denizen-work-rail';
+  const PHONE_RAIL_ID = 'denizen-work-rail-phone';
   const TAB_ID = 'denizen-work-rail-tab';
   const STORAGE_KEY = 'denizen-work-rail-open';
   const TABS = [
@@ -18,8 +21,12 @@
   ];
 
   let railEl = null;
+  let phoneRailEl = null;
   let tabEl = null;
   let currentTab = 'orchestrator';
+  let phoneTab = 'orchestrator';
+  let phoneMounted = false;
+  let desktopOpenBeforePhone = false;
   let snapshot = { directives: [], drops: [], orchestrator: 'Abby' };
 
   function isTouchPhone() {
@@ -30,10 +37,17 @@
     return !!globalThis.DenizenVisitorSession?.isDemo?.();
   }
 
+  function isDesktopRailOpen() {
+    return document.documentElement.classList.contains('denizen-work-rail-open');
+  }
+
   function injectStyles() {
-    if (document.getElementById(STYLE_ID)) return;
-    const s = document.createElement('style');
-    s.id = STYLE_ID;
+    let s = document.getElementById(STYLE_ID);
+    if (!s) {
+      s = document.createElement('style');
+      s.id = STYLE_ID;
+      document.head.appendChild(s);
+    }
     s.textContent = `
       #${TAB_ID} {
         position: fixed;
@@ -55,7 +69,8 @@
         cursor: pointer;
       }
       html.denizen-phone #${TAB_ID},
-      html.denizen-work-rail-open #${TAB_ID} { display: none; }
+      html.denizen-work-rail-open #${TAB_ID},
+      html.denizen-work-rail-phone #${TAB_ID} { display: none; }
       #${RAIL_ID} {
         position: fixed;
         top: 0;
@@ -72,58 +87,126 @@
         backdrop-filter: blur(10px);
       }
       html.denizen-work-rail-open #${RAIL_ID} { display: flex; }
-      html.denizen-phone #${RAIL_ID} {
-        position: relative; inset: auto; width: 100%; height: 100%;
-        border: 0; background: transparent;
+      /* Phone shell mounts its own instance — never the desktop fixed rail. */
+      #${PHONE_RAIL_ID} {
+        display: none;
+        flex-direction: column;
+        position: relative;
+        inset: auto;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border: 0;
+        background: transparent;
+        color: #e2e8f0;
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        z-index: auto;
       }
-      html.denizen-phone #dzp-workbench-host #${RAIL_ID} {
+      #dzp-workbench-host #${PHONE_RAIL_ID} {
         display: flex;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
       }
-      #${RAIL_ID} .wr-head {
+      #${PHONE_RAIL_ID} .wr-close { display: none; }
+      #${RAIL_ID} .wr-head,
+      #${PHONE_RAIL_ID} .wr-head {
         display: flex; align-items: center; justify-content: space-between;
         padding: 10px 12px 8px; border-bottom: 1px solid rgba(148,163,184,0.14);
       }
-      #${RAIL_ID} .wr-head h2 {
+      #${RAIL_ID} .wr-head h2,
+      #${PHONE_RAIL_ID} .wr-head h2 {
         margin: 0; font-size: 13px; letter-spacing: 0.08em;
         text-transform: uppercase; color: #a3e635;
       }
       #${RAIL_ID} .wr-close {
         background: transparent; border: 0; color: #94a3b8; cursor: pointer; font-size: 16px;
       }
-      #${RAIL_ID} .wr-tabs {
+      #${RAIL_ID} .wr-tabs,
+      #${PHONE_RAIL_ID} .wr-tabs,
+      #dzp-workbench-host .wr-tabs {
         display: flex; gap: 2px; padding: 8px 8px 0; overflow-x: auto;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 6;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
       }
-      #${RAIL_ID} .wr-tabs button {
-        flex: 1; border: 0; background: transparent; color: #94a3b8;
+      #${RAIL_ID} .wr-tabs button,
+      #${PHONE_RAIL_ID} .wr-tabs button,
+      #dzp-workbench-host .wr-tabs button {
+        flex: 1; border: 0 !important; background: transparent !important;
+        color: #94a3b8 !important;
         font-size: 11px; padding: 6px 4px; cursor: pointer;
-        border-bottom: 2px solid transparent;
+        border-radius: 0 !important;
+        border-bottom: 2px solid transparent !important;
+        min-height: 40px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(163, 230, 53, 0.25);
+        pointer-events: auto !important;
+        position: relative;
+        z-index: 1;
       }
-      #${RAIL_ID} .wr-tabs button.active {
-        color: #f1f5f9; border-bottom-color: #a3e635;
+      /* Phone: large tappable chips — beat .dzp-settings button styles */
+      #${PHONE_RAIL_ID} .wr-tabs button,
+      #dzp-workbench-host .wr-tabs button {
+        flex: 0 0 auto;
+        min-width: 64px;
+        min-height: 44px;
+        padding: 12px 14px;
+        font-size: 13px;
+        font-weight: 700;
       }
-      #${RAIL_ID} .wr-body {
-        flex: 1; overflow: auto; padding: 12px;
+      #${RAIL_ID} .wr-tabs button.active,
+      #${PHONE_RAIL_ID} .wr-tabs button.active,
+      #dzp-workbench-host .wr-tabs button.active {
+        color: #f1f5f9 !important;
+        border-bottom-color: #a3e635 !important;
       }
-      #${RAIL_ID} .wr-empty { color: #94a3b8; font-size: 13px; line-height: 1.5; }
-      #${RAIL_ID} .wr-card {
+      #dzp-workbench-host .wr-tabs button:hover,
+      #${PHONE_RAIL_ID} .wr-tabs button:hover {
+        border-color: transparent !important;
+        border-bottom-color: transparent !important;
+        color: #e2e8f0 !important;
+      }
+      #dzp-workbench-host .wr-tabs button.active:hover,
+      #${PHONE_RAIL_ID} .wr-tabs button.active:hover {
+        border-bottom-color: #a3e635 !important;
+        color: #f1f5f9 !important;
+      }
+      #${RAIL_ID} .wr-body,
+      #${PHONE_RAIL_ID} .wr-body {
+        flex: 1; overflow: auto; padding: 12px; min-height: 0;
+      }
+      #${RAIL_ID} .wr-empty,
+      #${PHONE_RAIL_ID} .wr-empty { color: #94a3b8; font-size: 13px; line-height: 1.5; }
+      #${RAIL_ID} .wr-card,
+      #${PHONE_RAIL_ID} .wr-card {
         border: 1px solid rgba(80,110,160,0.2); border-radius: 10px;
         padding: 10px 12px; margin-bottom: 8px; background: rgba(2,6,23,0.4);
       }
-      #${RAIL_ID} .wr-card b { color: #f8fafc; }
-      #${RAIL_ID} .wr-card small { color: #94a3b8; }
-      #${RAIL_ID} textarea, #${RAIL_ID} input[type="text"] {
+      #${RAIL_ID} .wr-card b,
+      #${PHONE_RAIL_ID} .wr-card b { color: #f8fafc; }
+      #${RAIL_ID} .wr-card small,
+      #${PHONE_RAIL_ID} .wr-card small { color: #94a3b8; }
+      #${RAIL_ID} textarea, #${RAIL_ID} input[type="text"],
+      #${PHONE_RAIL_ID} textarea, #${PHONE_RAIL_ID} input[type="text"] {
         width: 100%; box-sizing: border-box; border-radius: 8px;
         border: 1px solid #334155; background: #020617; color: #e2e8f0;
         padding: 8px; font: 13px/1.4 inherit;
       }
-      #${RAIL_ID} .wr-send {
+      #${RAIL_ID} .wr-send,
+      #${PHONE_RAIL_ID} .wr-send {
         margin-top: 8px; border: 0; border-radius: 999px; padding: 7px 14px;
         background: #a3e635; color: #052e16; font-weight: 700; cursor: pointer;
       }
-      #${RAIL_ID} .wr-crew {
+      #${RAIL_ID} .wr-crew,
+      #${PHONE_RAIL_ID} .wr-crew {
         display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
       }
-      #${RAIL_ID} .wr-crew button {
+      #${RAIL_ID} .wr-crew button,
+      #${PHONE_RAIL_ID} .wr-crew button {
         text-align: left; border-radius: 8px; border: 1px solid #1e293b;
         background: #0b1220; color: #e2e8f0; padding: 8px; cursor: pointer;
       }
@@ -147,7 +230,6 @@
         right: calc(min(380px, 42vw) + 16px) !important;
       }
     `;
-    document.head.appendChild(s);
   }
 
   function esc(value) {
@@ -155,36 +237,140 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   }
 
+  function railMarkup({ closeable }) {
+    return `
+      <div class="wr-head">
+        <h2>Workbench</h2>
+        ${closeable ? '<button type="button" class="wr-close" data-wr="close" aria-label="Close workbench">✕</button>' : '<span></span>'}
+      </div>
+      <div class="wr-tabs" role="tablist" aria-label="Workbench tabs">
+        ${TABS.map((t) => `<button type="button" role="tab" data-tab="${t.id}">${t.label}</button>`).join('')}
+      </div>
+      <div class="wr-body" data-wr-body></div>
+    `;
+  }
+
+  function wireRailClicks(el, { onClose, setTabId }) {
+    let lastActAt = 0;
+    let lastTabId = '';
+    const mark = () => { lastActAt = Date.now(); };
+    const recentlyHandled = () => Date.now() - lastActAt < 450;
+
+    const activate = (e) => {
+      const close = e.target.closest?.('[data-wr="close"]');
+      if (close) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        onClose?.();
+        return true;
+      }
+      const tab = e.target.closest?.('[data-tab]');
+      if (tab) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        setTabId(tab.dataset.tab);
+        return true;
+      }
+      const send = e.target.closest?.('[data-wr="send"]');
+      if (send) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        void sendToAbby(el);
+        return true;
+      }
+      const crew = e.target.closest?.('[data-crew]');
+      if (crew) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        talkTo(crew.dataset.crew);
+        return true;
+      }
+      const mer = e.target.closest?.('[data-wr="crm"]');
+      if (mer) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        window.location.href = '/crm/';
+        return true;
+      }
+      const seat = e.target.closest?.('[data-wr="seat"]');
+      if (seat) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        globalThis.DenizenSeatAI?.open?.();
+        return true;
+      }
+      const memBtn = e.target.closest?.('[data-wr="memory-search"]');
+      if (memBtn) {
+        e.preventDefault?.();
+        e.stopPropagation?.();
+        void searchMemory(el);
+        return true;
+      }
+      return false;
+    };
+
+    // Direct per-tab binds — same path as phone Me tabs; survives iOS click-drop.
+    // Only suppress duplicate events for the *same* tab (pointerup + synthetic click),
+    // never block switching to a different section.
+    const bindPress = window.DenizenTouchBind?.bindPress;
+    el.querySelectorAll('[data-tab]').forEach((btn) => {
+      const go = (e) => {
+        const id = btn.dataset.tab;
+        if (id === lastTabId && recentlyHandled()) return;
+        e?.preventDefault?.();
+        e?.stopPropagation?.();
+        lastTabId = id;
+        mark();
+        setTabId(id);
+      };
+      if (bindPress) bindPress(btn, go, { stop: true });
+      else btn.addEventListener('click', go);
+    });
+
+    // pointerup is reliable on iOS; suppress the duplicate synthetic click.
+    el.addEventListener('pointerup', (e) => {
+      if (e.button != null && e.button !== 0) return;
+      if (recentlyHandled()) return;
+      // Tabs already have dedicated binds — skip so we don't double-switch.
+      if (e.target.closest?.('[data-tab]')) return;
+      if (!e.target.closest?.('button, [data-wr], [data-crew]')) return;
+      if (activate(e)) mark();
+    });
+    el.addEventListener('click', (e) => {
+      if (recentlyHandled()) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.target.closest?.('[data-tab]')) {
+        // Fallback when TouchBind is unavailable and only click fired.
+        const tab = e.target.closest('[data-tab]');
+        lastTabId = tab.dataset.tab;
+        activate(e);
+        mark();
+        return;
+      }
+      activate(e);
+    });
+
+    if (window.DenizenTouchBind?.delegatePress) {
+      window.DenizenTouchBind.delegatePress(el, '[data-wr], [data-crew]', (e, btn) => {
+        if (recentlyHandled()) return;
+        const fake = { target: btn, preventDefault() {}, stopPropagation() {} };
+        if (activate(fake)) mark();
+      }, { stop: true });
+    }
+  }
+
   function buildChrome() {
     if (railEl) return;
     railEl = document.createElement('aside');
     railEl.id = RAIL_ID;
     railEl.setAttribute('aria-label', 'Workbench');
-    railEl.innerHTML = `
-      <div class="wr-head">
-        <h2>Workbench</h2>
-        <button type="button" class="wr-close" data-wr="close" aria-label="Close workbench">✕</button>
-      </div>
-      <div class="wr-tabs" role="tablist">
-        ${TABS.map((t) => `<button type="button" role="tab" data-tab="${t.id}">${t.label}</button>`).join('')}
-      </div>
-      <div class="wr-body" id="denizen-work-rail-body"></div>
-    `;
-    railEl.addEventListener('click', (e) => {
-      const close = e.target.closest('[data-wr="close"]');
-      if (close) { closeRail(); return; }
-      const tab = e.target.closest('[data-tab]');
-      if (tab) setTab(tab.dataset.tab);
-      const send = e.target.closest('[data-wr="send"]');
-      if (send) void sendToAbby();
-      const crew = e.target.closest('[data-crew]');
-      if (crew) talkTo(crew.dataset.crew);
-      const mer = e.target.closest('[data-wr="crm"]');
-      if (mer) window.location.href = '/crm/';
-      const seat = e.target.closest('[data-wr="seat"]');
-      if (seat) globalThis.DenizenSeatAI?.open?.();
-      const memBtn = e.target.closest('[data-wr="memory-search"]');
-      if (memBtn) void searchMemory();
+    railEl.innerHTML = railMarkup({ closeable: true });
+    wireRailClicks(railEl, {
+      onClose: closeRail,
+      setTabId: (id) => setTab(id, railEl, 'desktop'),
     });
     document.body.appendChild(railEl);
 
@@ -197,12 +383,29 @@
     document.body.appendChild(tabEl);
   }
 
-  function setTab(id) {
-    currentTab = TABS.some((t) => t.id === id) ? id : 'orchestrator';
-    railEl?.querySelectorAll('[data-tab]').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.tab === currentTab);
+  function buildPhoneChrome() {
+    if (phoneRailEl) return phoneRailEl;
+    phoneRailEl = document.createElement('aside');
+    phoneRailEl.id = PHONE_RAIL_ID;
+    phoneRailEl.setAttribute('aria-label', 'Workbench');
+    phoneRailEl.innerHTML = railMarkup({ closeable: false });
+    wireRailClicks(phoneRailEl, {
+      onClose: null,
+      setTabId: (id) => setTab(id, phoneRailEl, 'phone'),
     });
-    renderBody();
+    return phoneRailEl;
+  }
+
+  function setTab(id, targetEl, scope) {
+    const next = TABS.some((t) => t.id === id) ? id : 'orchestrator';
+    if (scope === 'phone') phoneTab = next;
+    else currentTab = next;
+    const el = targetEl || (scope === 'phone' ? phoneRailEl : railEl);
+    const active = scope === 'phone' ? phoneTab : currentTab;
+    el?.querySelectorAll('[data-tab]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === active);
+    });
+    renderBody(el, active);
   }
 
   function demoGateHtml() {
@@ -210,10 +413,12 @@
     return `<p class="wr-empty">Demo can watch the floor. <a href="/office?login=1" style="color:#a3e635">Sign in</a> for the full workbench — directives, approvals, CRM, and Connect AI.</p>`;
   }
 
-  function renderBody() {
-    const body = railEl?.querySelector('#denizen-work-rail-body');
+  function renderBody(el, tabId) {
+    const body = el?.querySelector('[data-wr-body]');
     if (!body) return;
-    if (currentTab === 'orchestrator') {
+    const tab = tabId || currentTab;
+    body.classList.remove('denizen-work-rail-host');
+    if (tab === 'orchestrator') {
       const dirs = snapshot.directives || [];
       const leash = snapshot.leash;
       body.innerHTML = `
@@ -234,7 +439,7 @@
       `;
       return;
     }
-    if (currentTab === 'crew') {
+    if (tab === 'crew') {
       const crew = snapshot.crew?.length
         ? snapshot.crew
         : (globalThis.DenizenNpcRoster?.displayNames || []).map((n) => ({ name: n, seated: false, status: 'empty' }));
@@ -252,7 +457,7 @@
       `;
       return;
     }
-    if (currentTab === 'inbox') {
+    if (tab === 'inbox') {
       const drops = snapshot.drops || [];
       const handoffs = snapshot.handoffs || [];
       const approvals = snapshot.approvals || [];
@@ -279,22 +484,27 @@
       try { globalThis.DenizenProposals?.show?.(); } catch (_) {}
       return;
     }
-    if (currentTab === 'trail') {
-      body.classList.add('denizen-work-rail-host');
-      body.innerHTML = '<p class="wr-empty">Live work trail. Tab still toggles the floating feed.</p>';
-      const feed = document.getElementById('denizen-work-feed');
-      if (feed) {
-        body.appendChild(feed);
-        feed.style.display = 'flex';
+    if (tab === 'trail') {
+      // Only the desktop rail hosts the floating work feed node.
+      if (el === railEl) {
+        body.classList.add('denizen-work-rail-host');
+        body.innerHTML = '<p class="wr-empty">Live work trail. Tab still toggles the floating feed.</p>';
+        const feed = document.getElementById('denizen-work-feed');
+        if (feed) {
+          body.appendChild(feed);
+          feed.style.display = 'flex';
+        }
+      } else {
+        body.innerHTML = '<p class="wr-empty">Live work trail stays on the laptop rail. Use Abby / Crew / Inbox here on the phone.</p>';
       }
       return;
     }
-    if (currentTab === 'memory') {
+    if (tab === 'memory') {
       const assistant = globalThis.DenizenVisitorSession?.getAssistant?.();
       const rows = snapshot.memory || [];
       body.innerHTML = `
         <p class="wr-empty">Markdown memory from souls on disk. Search the palace, then open a desk.</p>
-        <input type="text" id="wr-memory-q" placeholder="Search memory" />
+        <input type="text" data-wr-memory-q placeholder="Search memory" />
         <button type="button" class="wr-send" data-wr="memory-search">Search</button>
         ${assistant ? `<div class="wr-card"><b>${esc(assistant.assistant_name || assistant.npc_key)}</b><div>Your claimed assistant keeps memory across sessions.</div></div>` : ''}
         ${rows.length ? rows.map((m) => `
@@ -319,19 +529,19 @@
       const json = await res.json().catch(() => ({}));
       if (res.ok && json.ok) snapshot = json;
     } catch (_) {}
-    if (railEl && document.documentElement.classList.contains('denizen-work-rail-open')) {
-      renderBody();
-    }
+    if (isDesktopRailOpen() && railEl) renderBody(railEl, currentTab);
+    if (phoneMounted && phoneRailEl) renderBody(phoneRailEl, phoneTab);
   }
 
-  async function searchMemory() {
-    const q = String(railEl?.querySelector('#wr-memory-q')?.value || '').trim();
-    currentTab = 'memory';
+  async function searchMemory(el) {
+    const q = String(el?.querySelector('[data-wr-memory-q], #wr-memory-q')?.value || '').trim();
+    if (el === phoneRailEl) phoneTab = 'memory';
+    else currentTab = 'memory';
     await refresh({ q });
   }
 
-  async function sendToAbby() {
-    const ta = railEl?.querySelector('#wr-note');
+  async function sendToAbby(el) {
+    const ta = el?.querySelector('#wr-note');
     const note = String(ta?.value || '').trim();
     if (!note) return;
     const sess = globalThis.DenizenVisitorSession;
@@ -366,7 +576,7 @@
     buildChrome();
     document.documentElement.classList.add('denizen-work-rail-open');
     try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
-    setTab(currentTab);
+    setTab(currentTab, railEl, 'desktop');
     void refresh();
   }
 
@@ -374,33 +584,51 @@
     document.documentElement.classList.remove('denizen-work-rail-open');
     try { localStorage.setItem(STORAGE_KEY, '0'); } catch (_) {}
     const feed = document.getElementById('denizen-work-feed');
-    if (feed && feed.parentElement?.id === 'denizen-work-rail-body') {
+    if (feed && feed.parentElement?.hasAttribute?.('data-wr-body')) {
       document.body.appendChild(feed);
     }
   }
 
   function toggleRail() {
-    if (document.documentElement.classList.contains('denizen-work-rail-open')) closeRail();
+    if (isDesktopRailOpen()) closeRail();
     else openRail();
   }
 
+  /**
+   * Phone app: mount an independent workbench with Abby/Crew/Inbox tabs.
+   * Does not open, close, or steal the laptop sidebar — even if it is already extended.
+   */
   function mountPhone(host) {
     injectStyles();
-    buildChrome();
+    if (!isTouchPhone()) buildChrome();
     if (!host) return;
+    desktopOpenBeforePhone = isDesktopRailOpen();
+    phoneMounted = true;
+    document.documentElement.classList.add('denizen-work-rail-phone');
+    // Keep desktop open flag exactly as it was — phone must not sync it.
+    if (desktopOpenBeforePhone) {
+      document.documentElement.classList.add('denizen-work-rail-open');
+    } else {
+      document.documentElement.classList.remove('denizen-work-rail-open');
+    }
+    const phone = buildPhoneChrome();
     host.innerHTML = '';
-    host.appendChild(railEl);
-    document.documentElement.classList.add('denizen-work-rail-open');
-    setTab(currentTab);
+    host.appendChild(phone);
+    setTab(phoneTab, phone, 'phone');
     void refresh();
   }
 
   function unmountPhone() {
-    if (!railEl) return;
-    if (railEl.parentElement && railEl.parentElement.id === 'dzp-workbench-host') {
-      document.body.appendChild(railEl);
+    phoneMounted = false;
+    document.documentElement.classList.remove('denizen-work-rail-phone');
+    if (phoneRailEl?.parentElement) {
+      phoneRailEl.parentElement.removeChild(phoneRailEl);
     }
-    if (isTouchPhone()) {
+    // Restore laptop sidebar exactly how it was before the phone app opened.
+    if (desktopOpenBeforePhone) {
+      document.documentElement.classList.add('denizen-work-rail-open');
+      if (railEl) setTab(currentTab, railEl, 'desktop');
+    } else {
       document.documentElement.classList.remove('denizen-work-rail-open');
     }
   }
@@ -418,7 +646,8 @@
     });
     document.addEventListener('denizen-buzz-drop', () => {
       currentTab = 'inbox';
-      if (document.documentElement.classList.contains('denizen-work-rail-open')) void refresh();
+      phoneTab = 'inbox';
+      if (isDesktopRailOpen() || phoneMounted) void refresh();
     });
   }
 

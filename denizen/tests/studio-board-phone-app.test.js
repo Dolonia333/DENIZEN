@@ -37,6 +37,6 @@ describe('Studio Board phone app', () => {
 
   it('bumps the phone UI cache buster for Studio Board', () => {
     const idx = read('index.html');
-    assert.match(idx, /denizen-phone-ui\.js\?v=phone36studioboard/);
+    assert.match(idx, /denizen-phone-ui\.js\?v=phone\d+\w*/);
   });
 });

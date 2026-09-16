@@ -74,6 +74,10 @@
         opacity: 0.35;
         pointer-events: none;
       }
+      /* Laptop workbench sidebar covers the top-right — hide Levels while it is out. */
+      html.denizen-work-rail-open:not(.denizen-phone) #${CHIP_ID} {
+        display: none !important;
+      }
       #${TOAST_ID} {
         position: fixed;
         top: calc(max(14px, env(safe-area-inset-top, 0px)) + 48px);
