@@ -3931,7 +3931,6 @@ document.addEventListener('change', function(e){
   loadLocal();
   try{
     const q=new URLSearchParams(location.search);
-    if(q.get('tab') && NAV.some(function(n){return n.id===q.get('tab');})) ui.view=q.get('tab');
     if(q.get('view')==='advisor'){
       state.config=state.config||emptyConfig();
       state.config.advisorMode=true;
@@ -3942,6 +3941,8 @@ document.addEventListener('change', function(e){
       state.config.investorMode=true;
       ui.view='dataroom';
     }
+    // tab wins so mentors can deep-link into PAVE / Lean Canvas while in advisor mode
+    if(q.get('tab') && NAV.some(function(n){return n.id===q.get('tab');})) ui.view=q.get('tab');
   }catch(e){}
   render();
   bootstrapSync().then(function(){ render(); }).catch(function(){});
