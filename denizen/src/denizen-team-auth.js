@@ -43,6 +43,11 @@ function normalizeUsername(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function looksLikeEmail(value) {
+  const s = String(value || '').trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
 async function resolveTeamOrg() {
   const org = await denizenDb._get(
     `denizen_organizations?select=id,slug,display_name,settings&slug=eq.${encodeURIComponent(promptTuning.teamOrgSlug)}&limit=1`,
@@ -106,17 +111,19 @@ async function findTeamAccount({ orgId, email, username } = {}) {
   if (!orgId) return null;
   const normalizedEmail = String(email || '').trim().toLowerCase();
   const normalizedUsername = normalizeUsername(username);
-  if (normalizedUsername) {
-    const byUser = await denizenDb._get(
-      `denizen_team_accounts?select=*&org_id=eq.${encodeURIComponent(orgId)}&username=eq.${encodeURIComponent(normalizedUsername)}&limit=1`,
-    );
-    if (byUser?.[0]) return byUser[0];
-  }
+  // Prefer email when provided — unique per org and avoids binding the wrong
+  // row when the typed username belongs to a different teammate.
   if (normalizedEmail) {
     const byEmail = await denizenDb._get(
       `denizen_team_accounts?select=*&org_id=eq.${encodeURIComponent(orgId)}&email=eq.${encodeURIComponent(normalizedEmail)}&limit=1`,
     );
     if (byEmail?.[0]) return byEmail[0];
+  }
+  if (normalizedUsername) {
+    const byUser = await denizenDb._get(
+      `denizen_team_accounts?select=*&org_id=eq.${encodeURIComponent(orgId)}&username=eq.${encodeURIComponent(normalizedUsername)}&limit=1`,
+    );
+    if (byUser?.[0]) return byUser[0];
   }
   return null;
 }
@@ -147,6 +154,15 @@ function isTeamOwnerAccount(account) {
   return String(account.role || '').toLowerCase() === 'owner';
 }
 
+function toPublicTeamAccount(account) {
+  if (!account) return null;
+  const {
+    password_hash: _passwordHash,
+    ...safe
+  } = account;
+  return safe;
+}
+
 async function sessionBundle(account, org, accessMethod, source) {
   const isOwner = isTeamOwnerAccount(account);
   const grantAccessMethod = isOwner ? 'owner_login' : accessMethod;
@@ -174,7 +190,7 @@ async function sessionBundle(account, org, accessMethod, source) {
   }
 
   return {
-    account,
+    account: toPublicTeamAccount(account),
     org_slug: org.slug,
     tier: isOwner ? 'ceo' : 'team',
     access_grant,
@@ -330,8 +346,13 @@ async function loginTeamAccount({
   password,
   teamCode,
 } = {}) {
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  const user = String(username || '').trim();
+  let normalizedEmail = String(email || '').trim().toLowerCase();
+  let user = String(username || '').trim();
+  // People often paste their work email into the username field.
+  if (!normalizedEmail && looksLikeEmail(user)) {
+    normalizedEmail = user.toLowerCase();
+    user = '';
+  }
   const pass = String(password || '');
   const code = String(teamCode || '').trim();
 
@@ -349,7 +370,10 @@ async function loginTeamAccount({
   } else {
     const matches = await findTeamAccountByEmail(normalizedEmail);
     if (!matches.length) {
-      throw new TeamAuthError('Account not found — join with a team code first', 'NOT_FOUND');
+      throw new TeamAuthError(
+        'No team account for that email — use Join a team with your invite code, or Create a team',
+        'NOT_FOUND',
+      );
     }
     if (matches.length > 1) {
       throw new TeamAuthError('Multiple teams use this email — enter your team code', 'BAD_INPUT');
@@ -362,25 +386,13 @@ async function loginTeamAccount({
 
   let account = await findTeamAccount({ orgId: org.id, email: normalizedEmail, username: user });
 
-  if (!account && code && normalizedEmail) {
-    const role = await resolveTeamMemberRole(normalizedEmail, org.id);
-    const rows = await denizenDb._post(
-      'denizen_team_accounts',
-      {
-        org_id: org.id,
-        email: normalizedEmail,
-        display_name: user || normalizedEmail.split('@')[0],
-        username: normalizeUsername(user || normalizedEmail.split('@')[0]),
-        password_hash: pass ? hashPassword(pass) : null,
-        role,
-      },
-      { prefer: 'return=representation' },
-    );
-    account = rows?.[0];
-  }
-
+  // Never mint accounts during login — wrong password + team code + email used to
+  // silently create a new member row. Joining must go through Join a team.
   if (!account) {
-    throw new TeamAuthError('Account not found — join with your team code first', 'NOT_FOUND');
+    throw new TeamAuthError(
+      'Account not found — use Join a team with your team code (username + email + password), or Create a team if you are starting fresh',
+      'NOT_FOUND',
+    );
   }
 
   assertPassword(account, pass);
@@ -583,4 +595,7 @@ module.exports = {
   resolveTeamMemberRole,
   orgHasSkillApprover,
   APPROVER_ROLES,
+  looksLikeEmail,
+  normalizeUsername,
+  findTeamAccount,
 };

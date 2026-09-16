@@ -2022,11 +2022,17 @@
         const codeEl = modalEl.querySelector('#denizen-visitor-team-code-input');
         const btn = modalEl.querySelector('#denizen-visitor-name-continue');
         const errEl = modalEl.querySelector('#denizen-vis-error');
-        const username = String(usernameEl?.value || '').trim();
+        const usernameRaw = String(usernameEl?.value || '').trim();
         const password = String(passwordEl?.value || '');
-        const email = String(emailEl?.value || '').trim().toLowerCase();
+        let email = String(emailEl?.value || '').trim().toLowerCase();
         const teamCode = String(codeEl?.value || '').trim();
-        if (!username) {
+        // Email pasted into the username field still counts as email login.
+        let username = usernameRaw;
+        if (!email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usernameRaw)) {
+          email = usernameRaw.toLowerCase();
+          username = usernameRaw;
+        }
+        if (!username && !email) {
           usernameEl?.focus();
           return;
         }
@@ -2049,12 +2055,12 @@
             return;
           }
           const data = await teamAuthRequest('/api/visitor/auth/login', {
-            username,
+            username: username || undefined,
             password,
             email: email || undefined,
             team_code: teamCode || undefined,
           });
-          finishTeamAuth(data, username);
+          finishTeamAuth(data, username || email.split('@')[0]);
         } catch (err) {
           if (errEl) {
             errEl.textContent = err?.message || 'Login failed';
@@ -2407,15 +2413,14 @@
               <h2>Login</h2>
               <p>Sign in with your username and password. Use your team code or email to find your workspace.</p>
               <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" />
+              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username (or email)" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" />
               <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="Password" name="password" autocomplete="current-password" />
               <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" name="team-code" autocomplete="off" data-1p-ignore="true" data-lpignore="true" data-form-type="other" />
               <p class="vis-or">or</p>
-              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Email" name="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" />
+              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Work email" name="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" />
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-login">Log in</button>
-              <div class="vis-link-row">No team yet? <button type="button" class="vis-link" data-action="goto-create-team">Create a team</button></div>
-              <div class="vis-link-row">Have a code but no account? <button type="button" class="vis-link" data-action="goto-join-team">Join a team</button></div>
-              <div class="vis-link-row">On a demo account? <button type="button" class="vis-link" data-action="goto-join-team">Join your team</button></div>
+              <div class="vis-link-row">No account yet? <button type="button" class="vis-link" data-action="goto-join-team">Join a team</button> · <button type="button" class="vis-link" data-action="goto-create-team">Create a team</button></div>
+              <div class="vis-link-row">On a demo account? <button type="button" class="vis-link" data-action="goto-join-team">Join your team</button> (demo logins do not carry over)</div>
             </div>
           `;
           focusAfter = true;
