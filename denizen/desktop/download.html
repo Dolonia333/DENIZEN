@@ -4,59 +4,121 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Download Denizen Desktop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+    :root {
+      color-scheme: dark;
+      --ink: #060b16;
+      --ink-2: #0a1220;
+      --cream: #f4efe4;
+      --lime: #a3e635;
+      --lime-bright: #bef264;
+      --text-body: #d6d3c7;
+      --text-muted: #94a3b8;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "IBM Plex Sans", system-ui, sans-serif;
+      --display: "Syne", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
       display: grid;
       place-items: center;
+      font-family: var(--sans);
       background:
-        radial-gradient(circle at 18% 10%, rgba(70, 201, 150, 0.13), transparent 28%),
-        linear-gradient(145deg, #061012, #091518 48%, #071113);
-      color: #f4f7f5;
+        radial-gradient(circle at 18% 10%, rgba(163, 230, 53, 0.12), transparent 28%),
+        linear-gradient(145deg, #060b16, #0a1220 48%, #071018);
+      color: var(--cream);
     }
     .card {
       width: min(680px, calc(100vw - 32px));
-      border: 1px solid rgba(180, 210, 201, 0.18);
+      border: 1px solid rgba(163, 230, 53, 0.22);
       border-radius: 22px;
       padding: 38px;
-      background: rgba(9, 22, 24, 0.96);
+      background: rgba(6, 12, 24, 0.96);
       box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
     }
-    .eyebrow { color: #7ee3bd; font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
-    h1 { margin: 10px 0 12px; font-size: 38px; letter-spacing: -0.04em; }
-    p { margin: 0 0 16px; color: #9eaaa5; line-height: 1.6; }
+    .eyebrow {
+      color: var(--lime);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 10px 0 12px;
+      font-family: var(--display);
+      font-size: clamp(28px, 5vw, 38px);
+      letter-spacing: -0.04em;
+    }
+    p { margin: 0 0 16px; color: var(--text-body); line-height: 1.6; }
     .downloads { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 24px; }
     a.btn, button.btn {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       text-decoration: none;
-      border: 1px solid rgba(180, 210, 201, 0.18);
-      background: #142225;
-      color: #f4f7f5;
+      border: 1px solid rgba(163, 230, 53, 0.22);
+      background: #0f172a;
+      color: var(--cream);
       border-radius: 10px;
       padding: 12px 18px;
       font-size: 14px;
+      font-family: var(--sans);
       cursor: pointer;
     }
-    a.btn.primary { background: #7ee3bd; border-color: #7ee3bd; color: #06120f; font-weight: 800; }
-    a.btn.recommended { box-shadow: 0 0 0 2px rgba(126, 227, 189, 0.35); }
+    a.btn.primary { background: var(--lime); border-color: var(--lime); color: #052e16; font-weight: 800; }
+    a.btn.recommended { box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.35); }
     a.btn[aria-disabled="true"] { opacity: 0.45; pointer-events: none; cursor: not-allowed; }
+    a.btn-discord { background: #5865f2; border-color: #5865f2; color: #fff; font-weight: 700; }
     ol {
       margin: 0;
       padding-left: 20px;
-      color: #cbd5d1;
+      color: var(--cream);
       line-height: 1.6;
     }
     ol li { margin-bottom: 8px; }
     .platform-steps { display: none; margin-top: 8px; }
     .platform-steps.active { display: block; }
-    .note { font-size: 12px; color: #71817b; margin-top: 20px; }
-    .detected { font-size: 12px; color: #7ee3bd; margin-bottom: 8px; }
+    .note { font-size: 12px; color: var(--text-muted); margin-top: 20px; font-family: var(--mono); }
+    .detected { font-size: 12px; color: var(--lime); margin-bottom: 8px; font-family: var(--mono); }
+    .fallback {
+      display: none;
+      margin: 0 0 20px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(163, 230, 53, 0.28);
+      background: rgba(163, 230, 53, 0.08);
+    }
+    .fallback.is-on { display: block; }
+    .fallback h2 {
+      margin: 0 0 8px;
+      font-family: var(--display);
+      font-size: 1.05rem;
+    }
+    .fallback p { margin: 0 0 12px; }
+    .fallback code {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--lime-bright);
+    }
+    .back {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--lime);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .back:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="card">
+    <a class="back" href="../landing.html">← Denizen</a>
     <div class="eyebrow">Build your station</div>
     <h1>Bring Denizen home.</h1>
     <p>
@@ -65,7 +127,13 @@
 
     <div class="detected" id="detected-platform" hidden></div>
 
-    <div class="downloads">
+    <div class="fallback" id="download-fallback">
+      <h2>Installers are not on this host yet</h2>
+      <p>A missing file converts worse than a conversation. Talk to Zion on Discord, or build from <code>desktop/</code> in the repo.</p>
+      <a class="btn btn-discord" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">Talk to Zion on Discord</a>
+    </div>
+
+    <div class="downloads" id="download-buttons">
       <a class="btn" id="btn-windows" href="/desktop/releases/Denizen-Setup.exe">Download for Windows</a>
       <a class="btn" id="btn-mac" href="/desktop/releases/Denizen.dmg">Download for macOS</a>
       <a class="btn" id="btn-linux" href="/desktop/releases/Denizen.AppImage">Download for Linux</a>
@@ -91,7 +159,7 @@
     </div>
 
     <p class="note" id="download-status-note">
-      Windows 10+, macOS 11+, or a modern 64-bit Linux distribution. Installers are served from your city server mirror. Future updates download inside Denizen and install when the app restarts. City Power is optional and can be paused at any time.
+      Windows 10+, macOS 11+, or a modern 64-bit Linux distribution. Installers are served from your city server mirror or GitHub latest. If a file 404s, Talk to Zion on Discord or build from <code>desktop/</code>.
     </p>
   </div>
   <script>
@@ -107,13 +175,35 @@
       const detected = document.getElementById('detected-platform');
       const primaryId = os === 'mac' ? 'btn-mac' : os === 'linux' ? 'btn-linux' : 'btn-windows';
       const statusNote = document.getElementById('download-status-note');
+      const fallback = document.getElementById('download-fallback');
+      const GITHUB = {
+        windows: 'https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen-Setup.exe',
+        mac: 'https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.dmg',
+        linux: 'https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.AppImage',
+      };
+
+      function setDisabled(el, off, title) {
+        if (!el) return;
+        if (off) {
+          el.setAttribute('aria-disabled', 'true');
+          if (title) el.title = title;
+        } else {
+          el.removeAttribute('aria-disabled');
+          el.removeAttribute('title');
+        }
+      }
+
+      function showFallback(on, note) {
+        if (fallback) fallback.classList.toggle('is-on', !!on);
+        if (note && statusNote) statusNote.textContent = note;
+      }
 
       function highlightPrimary() {
         ['btn-windows', 'btn-mac', 'btn-linux'].forEach((id) => {
           const el = document.getElementById(id);
           if (!el) return;
-          el.classList.toggle('primary', id === primaryId);
-          el.classList.toggle('recommended', id === primaryId);
+          el.classList.toggle('primary', id === primaryId && el.getAttribute('aria-disabled') !== 'true');
+          el.classList.toggle('recommended', id === primaryId && el.getAttribute('aria-disabled') !== 'true');
         });
         if (labels[os]) {
           detected.hidden = false;
@@ -124,11 +214,66 @@
         if (steps) steps.classList.add('active');
       }
 
+      async function probeUrl(href) {
+        if (!href) return { ok: false, known: true };
+        try {
+          const u = new URL(href, location.href);
+          const same = u.origin === location.origin;
+          const res = await fetch(u.href, {
+            method: 'HEAD',
+            mode: same ? 'same-origin' : 'cors',
+            redirect: 'follow',
+          });
+          return { ok: res.ok, known: true };
+        } catch (_) {
+          try {
+            const u = new URL(href, location.href);
+            // Cross-origin hosts (GitHub) often block HEAD. Navigation can still work.
+            if (u.origin !== location.origin) return { ok: true, known: false };
+          } catch (__) {}
+          return { ok: false, known: true };
+        }
+      }
+
+      async function verifyButtons() {
+        const ids = ['btn-windows', 'btn-mac', 'btn-linux'];
+        const results = await Promise.all(ids.map(async (id) => {
+          const el = document.getElementById(id);
+          const href = el && el.getAttribute('href');
+          const probe = await probeUrl(href);
+          return { id, el, probe };
+        }));
+        let live = 0;
+        let knownDead = 0;
+        let unknown = 0;
+        results.forEach(({ el, probe }) => {
+          if (!el) return;
+          if (probe.ok && probe.known) {
+            live += 1;
+            setDisabled(el, false);
+          } else if (probe.ok && !probe.known) {
+            unknown += 1;
+            setDisabled(el, false);
+          } else {
+            knownDead += 1;
+            setDisabled(el, true, 'Installer not available at this URL yet');
+          }
+        });
+        if (live === 0 && unknown === 0) {
+          showFallback(true, 'No installer file answered HEAD. Talk to Zion on Discord, or build from desktop/.');
+        } else if (knownDead > 0 || unknown > 0) {
+          showFallback(true, 'If a download 404s, Talk to Zion on Discord or build from desktop/.');
+        } else {
+          showFallback(false);
+        }
+        highlightPrimary();
+      }
+
       function applyUrls(data) {
         const map = {
-          'btn-windows': data.windows,
-          'btn-mac': data.mac || data.macos,
-          'btn-linux': data.linux,
+          'btn-windows': data.windows || GITHUB.windows,
+          'btn-mac': data.mac || data.macos || GITHUB.mac,
+          'btn-linux': data.linux || GITHUB.linux,
         };
         const local = data.local_mirror || {};
         const localById = {
@@ -140,14 +285,10 @@
           const el = document.getElementById(id);
           if (!el || !href) return;
           el.href = href;
-          const mirrored = localById[id];
-          // Prefer mirror; if this platform is not mirrored, keep link but note it.
-          if (data.local_mirror && mirrored === false) {
-            el.setAttribute('aria-disabled', 'true');
-            el.title = 'Installer not mirrored on this city server yet';
+          if (data.local_mirror && localById[id] === false && String(href).indexOf('/desktop/releases/') !== -1) {
+            setDisabled(el, true, 'Installer not mirrored on this city server yet');
           } else {
-            el.removeAttribute('aria-disabled');
-            el.removeAttribute('title');
+            setDisabled(el, false);
           }
         });
         if (local.windows || local.mac || local.linux) {
@@ -155,18 +296,18 @@
         } else if (data.mirror_base) {
           statusNote.textContent = 'City mirror configured — waiting for installer files on the server.';
         } else {
-          statusNote.textContent = 'Ask your city operator to mirror desktop installers under /desktop/releases/.';
+          statusNote.textContent = 'GitHub latest if the file exists; otherwise Talk to Zion on Discord or build from desktop/.';
         }
-        highlightPrimary();
       }
 
       fetch('/api/visitor/desktop-downloads', { credentials: 'same-origin' })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.ok) applyUrls(data);
-          else highlightPrimary();
+          else applyUrls({ windows: GITHUB.windows, mac: GITHUB.mac, linux: GITHUB.linux });
         })
-        .catch(() => highlightPrimary());
+        .catch(() => applyUrls({ windows: GITHUB.windows, mac: GITHUB.mac, linux: GITHUB.linux }))
+        .then(() => verifyButtons());
     })();
   </script>
 </body>

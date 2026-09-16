@@ -3667,8 +3667,8 @@
     fabEl.type = 'button';
     fabEl.innerHTML = '<span class="dzp-fab-badge"></span>';
     ensurePhoneFabIcon();
-    fabEl.title = 'Buzz — click to capture, hold for phone';
-    fabEl.setAttribute('aria-label', 'Buzz capture ring. Hold to open phone');
+    fabEl.title = 'Buzz — click for capture, Apps on the ring for the phone';
+    fabEl.setAttribute('aria-label', 'Buzz capture ring. Choose Apps on the ring for the phone');
     bindBuzzFab(fabEl);
     document.body.appendChild(fabEl);
   }

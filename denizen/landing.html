@@ -534,6 +534,35 @@
         0 0 0 1px rgba(125, 211, 252, 0.4),
         0 0 32px rgba(56, 189, 248, 0.4);
     }
+    .hud-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .hud-ghost {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 9px 12px;
+      color: #7dd3fc;
+      border: 2px solid #020617;
+      background: rgba(2, 6, 23, 0.55);
+      box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.35), 2px 2px 0 #020617;
+      border-radius: 4px;
+      white-space: nowrap;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    .hud-ghost:hover {
+      background: rgba(125, 211, 252, 0.12);
+    }
+    .hud-nav-extra { display: none; }
 
     /* ── sound toggle (corner) ── */
     .sound-toggle {
@@ -703,7 +732,7 @@
     }
     .tour-bar.is-fading {
       opacity: 0;
-      transform: translateY(-50%) translateX(-6px);
+      transform: translateY(-50%) translateX(-12px);
       pointer-events: none;
     }
 
@@ -788,31 +817,26 @@
     }
 
     @media (max-width: 960px) {
-      .tour-bar {
-        left: 8px;
-        width: 40px;
-        padding: 8px 5px;
-      }
-      .tour-label { font-size: 0.55rem; letter-spacing: 0.06em; }
-      .tour-label em { display: block; }
-      .tour-msg { display: none; }
-      .tour-step { justify-content: center; padding: 5px 3px; }
-      .tour-step span.label { display: none; }
-      .tour-track { height: 48px; margin-bottom: 6px; }
+      .tour-bar { display: none; } /* rail overlaps How cards below this width */
     }
     @media (max-width: 640px) {
       .tour-bar {
-        top: auto;
-        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-        left: 10px;
-        transform: none;
+        top: calc(56px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
         width: auto;
-        max-width: calc(100vw - 56px);
+        max-width: calc(100vw - 24px);
         flex-direction: row;
         display: flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 8px;
+        padding: 6px 10px;
+      }
+      .tour-bar.is-fading {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-8px);
       }
       .tour-bar-top { margin: 0; min-width: 2.5rem; }
       .tour-track {
@@ -850,6 +874,7 @@
     .speech-choices button:focus-visible,
     .btn:focus-visible,
     .hud-enter:focus-visible,
+    .hud-ghost:focus-visible,
     .sound-toggle:focus-visible,
     .split-handle:focus-visible {
       outline: 2px solid var(--lime);
@@ -895,7 +920,7 @@
         padding:
           calc(88px + env(safe-area-inset-top, 0px))
           max(12px, var(--page-gutter))
-          32px;
+          calc(72px + env(safe-area-inset-bottom, 0px));
         justify-content: flex-start;
       }
       .hero-city { height: min(28vh, 220px); opacity: 0.65; }
@@ -1187,6 +1212,14 @@
       color: #7dd3fc;
       border-bottom-color: rgba(125, 211, 252, 0.5);
     }
+    .hero-trust {
+      margin: 12px 0 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      max-width: 46ch;
+      line-height: 1.5;
+      animation: landing-rise 700ms 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
     .btn {
       font-family: var(--display);
       font-weight: 700;
@@ -1226,6 +1259,24 @@
     .btn-ghost:hover {
       background: rgba(125, 211, 252, 0.12);
       box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.5), 2px 3px 0 #020617;
+    }
+    .btn-discord {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #5865f2;
+      color: #fff;
+      border: 2px solid #020617;
+      box-shadow: 2px 2px 0 #020617, 0 8px 20px rgba(88, 101, 242, 0.28);
+      border-radius: 4px;
+    }
+    .btn-discord:hover {
+      filter: brightness(1.08);
+      color: #fff;
+    }
+    .btn-discord .ti {
+      font-size: 1.15em;
+      line-height: 1;
     }
 
     @keyframes landing-rise {
@@ -1598,6 +1649,7 @@
       .hero-actions { justify-content: center; }
       .hero-enter-hint { text-align: center; }
       .hero-signin-line { text-align: center; }
+      .hero-trust { text-align: center; }
       .hero-buzz {
         order: -1;
         transform: rotate(-2deg);
@@ -1722,7 +1774,7 @@
       }
     }
     @media (prefers-reduced-motion: reduce) {
-      .hero-brand, .hero-tagline, .hero-copy h1, .hero-sub, .hero-actions, .hero-enter-hint, .hero-signin-line,
+      .hero-brand, .hero-tagline, .hero-copy h1, .hero-sub, .hero-actions, .hero-enter-hint, .hero-signin-line, .hero-trust,
       .hero-buzz, .landing-buzz, .landing-buzz-phone, .landing-buzz-eye,
       .hero-buzz .landing-buzz-antenna::after {
         animation: none !important;
@@ -2121,7 +2173,16 @@
       gap: 10px;
       margin-top: auto;
       padding-top: 8px;
+      align-items: center;
     }
+    .crew-brief-abby {
+      font-family: var(--display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--lime-bright);
+      text-decoration: none;
+    }
+    .crew-brief-abby:hover { text-decoration: underline; }
     .crew-keyhint {
       font-family: var(--mono);
       font-size: 12px;
@@ -2253,6 +2314,7 @@
       gap: clamp(12px, 2.5vw, 20px);
       align-items: end;
       padding: 0 var(--page-gutter);
+      cursor: pointer;
     }
     .reception-npc {
       position: relative;
@@ -2571,6 +2633,21 @@
       line-height: 1.55;
       color: var(--text-body);
     }
+    .biz-card p + p { margin-top: 10px; }
+    .biz-card-cta a,
+    .biz-card-note a {
+      color: var(--lime);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .biz-card-cta a:hover,
+    .biz-card-note a:hover { text-decoration: underline; }
+    .biz-card-note,
+    .biz-card-note a {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
     .biz-packages {
       display: flex;
       flex-wrap: wrap;
@@ -2617,7 +2694,7 @@
     .biz-note a { color: var(--lime); text-decoration: none; }
     .biz-note a:hover { text-decoration: underline; }
 
-    .product-views, .offers-section, .providers-strip, .meet-buzz, .privacy-strip, .coming-strip {
+    .product-views, .offers-section, .how-strip, .seat-ais, .providers-strip, .meet-buzz, .privacy-strip, .coming-strip {
       width: calc(100% - (var(--page-gutter) * 2));
       max-width: 1080px;
       margin: 0 auto var(--section-y);
@@ -2628,9 +2705,10 @@
     }
     .meet-layout {
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) minmax(0, 1.08fr);
+      grid-template-columns: minmax(280px, 1fr) minmax(0, 1fr);
       gap: 28px 40px;
       align-items: center;
+      justify-content: center;
     }
     .meet-copy { min-width: 0; }
     .meet-badges {
@@ -2656,12 +2734,60 @@
       border-color: rgba(148, 163, 184, 0.28);
       background: rgba(15, 23, 42, 0.5);
     }
-    .product-views h2, .offers-section h2, .providers-strip h2, .meet-buzz h2, .privacy-strip h2, .coming-strip h2 {
+    .product-views h2, .offers-section h2, .how-strip h2, .seat-ais h2, .providers-strip h2, .meet-buzz h2, .privacy-strip h2, .coming-strip h2 {
       font-family: var(--display);
       font-size: clamp(1.4rem, 3.4vw, 2rem);
       margin: 0 0 10px;
       color: var(--cream);
     }
+    .how-strip, .seat-ais {
+      scroll-margin-top: 96px;
+    }
+    .how-strip .section-kicker,
+    .seat-ais .section-kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin: 0 0 8px;
+    }
+    .how-beats,
+    .seat-ais-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .how-beats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .seat-ais-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .how-beat, .seat-card {
+      min-width: 0;
+      padding: 16px 16px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(80, 110, 160, 0.18);
+      background: rgba(6, 12, 24, 0.72);
+    }
+    .how-beat .kicker, .seat-card .kicker {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin-bottom: 6px;
+    }
+    .how-beat h3, .seat-card h3 {
+      margin: 0 0 8px;
+      font-family: var(--display);
+      font-size: 1rem;
+      color: var(--cream);
+    }
+    .how-beat p, .seat-card p {
+      margin: 0 0 12px;
+      color: var(--text-body);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      overflow-wrap: break-word;
+    }
+    .seat-card .provider-pill { margin-bottom: 10px; }
     .section-lead {
       margin: 0 0 18px;
       max-width: 56ch;
@@ -3168,24 +3294,22 @@
     .meet-stage {
       position: relative;
       min-height: 460px;
-      margin: 0;
-      padding: 36px 20px 52px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
       border-radius: 22px;
       border: 1px solid #e4ddd0;
       background:
-        radial-gradient(ellipse 70% 70% at 50% 42%, rgba(255,255,255,0.65), transparent 62%),
+        radial-gradient(ellipse 70% 70% at 50% 50%, rgba(255,255,255,0.65), transparent 62%),
         #f3eee4;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
       overflow: visible;
     }
     .meet-stage-hint {
       position: absolute;
       left: 0;
       right: 0;
-      bottom: 16px;
+      bottom: 14px;
       margin: 0;
       text-align: center;
       font-family: var(--mono);
@@ -3206,9 +3330,9 @@
     }
     .meet-ring {
       position: relative;
-      width: min(360px, 78vw);
-      height: min(360px, 78vw);
-      flex: 0 0 auto;
+      width: min(360px, 72vw);
+      height: min(360px, 72vw);
+      margin: 0 auto;
     }
     .meet-orbit {
       position: absolute;
@@ -3300,7 +3424,7 @@
       top: 50%;
       width: 64px;
       height: 64px;
-      margin: -32px 0 0 -32px;
+      margin: 0;
       border: 0;
       border-radius: 50%;
       background: #f8f4ec;
@@ -3312,7 +3436,7 @@
       cursor: pointer;
       opacity: 0;
       pointer-events: none;
-      transform: rotate(calc(var(--i) * 60deg - 90deg)) translate(0) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(0.4);
+      transform: translate(-50%, -50%) rotate(calc(var(--i) * 60deg - 90deg)) translate(0) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(0.4);
       transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, box-shadow 0.15s ease;
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
       z-index: 2;
@@ -3329,7 +3453,7 @@
     .meet-ring.open .mb-act {
       opacity: 1;
       pointer-events: auto;
-      transform: rotate(calc(var(--i) * 60deg - 90deg)) translate(min(132px, 36vw)) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(1);
+      transform: translate(-50%, -50%) rotate(calc(var(--i) * 60deg - 90deg)) translate(min(132px, 34vw)) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(1);
     }
     .meet-ring.open .mb-act:nth-child(2) { transition-delay: 0.02s; }
     .meet-ring.open .mb-act:nth-child(3) { transition-delay: 0.05s; }
@@ -3422,7 +3546,7 @@
       padding: 5px 10px;
     }
     @media (max-width: 900px) {
-      .meet-layout, .meet-previews { grid-template-columns: 1fr; }
+      .meet-layout, .meet-previews, .how-beats { grid-template-columns: 1fr; }
       .meet-stage { min-height: 400px; }
       .view-grid, .offer-grid, .privacy-grid, .privacy-wire, .coming-grid {
         grid-template-columns: 1fr;
@@ -3435,10 +3559,10 @@
       .meet-ring .mb-act {
         width: 48px;
         height: 48px;
-        margin: -24px 0 0 -24px;
+        margin: 0;
       }
       .meet-ring.open .mb-act {
-        transform: rotate(calc(var(--i) * 60deg - 90deg)) translate(min(108px, 30vw)) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(1);
+        transform: translate(-50%, -50%) rotate(calc(var(--i) * 60deg - 90deg)) translate(min(108px, 30vw)) rotate(calc(-1 * (var(--i) * 60deg - 90deg))) scale(1);
       }
       .meet-ring .mb-orb .landing-buzz-phone {
         width: 72px;
@@ -3446,8 +3570,18 @@
       }
     }
 
+    @media (min-width: 961px) and (max-width: 1320px) {
+      .how-strip, .seat-ais {
+        padding-left: 148px;
+        box-sizing: border-box;
+      }
+    }
+    @media (max-width: 900px) {
+      .how-beats { grid-template-columns: 1fr; }
+    }
     @media (max-width: 720px) {
       .biz-grid { grid-template-columns: 1fr; }
+      .seat-ais-grid { grid-template-columns: 1fr; }
       .biz-actions .btn {
         width: 100%;
         justify-content: center;
@@ -3518,6 +3652,8 @@
         align-items: center;
         padding: 10px 12px;
       }
+      .hud-ghost { display: none; }
+      .hud-nav-extra { display: flex; }
       .hud-top { padding: calc(8px + env(safe-area-inset-top, 0px)) var(--page-gutter) 8px; gap: 8px; }
       .crew-section,
       #crew { width: calc(100% - (var(--page-gutter) * 2)); }
@@ -3545,7 +3681,7 @@
       .biz-pkg { flex: 1 1 100%; }
       .share-card { margin-bottom: 24px; }
       /* Keep CTAs thumb-friendly without giant empty bands */
-      .btn, .hud-enter {
+      .btn, .hud-enter, .hud-ghost {
         min-height: 44px;
         box-sizing: border-box;
       }
@@ -3673,36 +3809,42 @@
         <i class="ti ti-menu-2" aria-hidden="true"></i>
       </button>
       <nav class="hud-nav" id="hud-nav" aria-label="Page sections">
-        <a href="#compare">Compare</a>
-        <a href="#lucy">Lucy</a>
-        <a href="#crew">Crew</a>
-        <a href="#for-teams">For teams</a>
+        <a href="#how-you-start">How</a>
+        <a href="#seat-ais">Seat</a>
+        <a href="#meet-buzz">Buzz</a>
+        <a href="#for-teams">Teams</a>
+        <a class="hud-nav-extra" href="desktop/download.html">Download</a>
+        <a class="hud-nav-extra" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">Discord</a>
       </nav>
     </div>
-    <a class="hud-enter" href="/office?demo=1" data-tour-demo>OPEN LIVE DEMO →</a>
+    <div class="hud-actions">
+      <a class="hud-ghost" href="desktop/download.html">Download</a>
+      <a class="hud-ghost" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">Discord</a>
+      <a class="hud-enter" href="/office?demo=1" data-tour-demo>OPEN LIVE DEMO →</a>
+    </div>
   </header>
 
   <!-- lobby tour XP -->
-  <div class="tour-bar" id="tour-bar" role="status" aria-live="polite" aria-label="Lobby tour progress">
+  <div class="tour-bar" id="tour-bar" role="status" aria-live="polite" aria-label="Landing tour progress">
     <div class="tour-bar-top">
       <span class="tour-label">Tour <em id="tour-count">0/3</em></span>
-      <span class="tour-msg" id="tour-msg">Explore the lobby</span>
+      <span class="tour-msg" id="tour-msg">Walk in, seat, Buzz</span>
     </div>
     <div class="tour-track" aria-hidden="true">
       <div class="tour-fill" id="tour-fill"></div>
     </div>
     <div class="tour-steps">
-      <div class="tour-step" data-step="compare" id="tour-step-compare">
+      <div class="tour-step" data-step="how-you-start" id="tour-step-how-you-start">
         <span class="tick" aria-hidden="true"></span>
-        <span class="label">Compare</span>
+        <span class="label">How</span>
       </div>
-      <div class="tour-step" data-step="lucy" id="tour-step-lucy">
+      <div class="tour-step" data-step="seat-ais" id="tour-step-seat-ais">
         <span class="tick" aria-hidden="true"></span>
-        <span class="label">Lucy</span>
+        <span class="label">Seat</span>
       </div>
-      <div class="tour-step" data-step="crew" id="tour-step-crew">
+      <div class="tour-step" data-step="meet-buzz" id="tour-step-meet-buzz">
         <span class="tick" aria-hidden="true"></span>
-        <span class="label">Crew</span>
+        <span class="label">Buzz</span>
       </div>
     </div>
   </div>
@@ -3724,7 +3866,12 @@
         <div class="hero-tagline">The office for your AI agents</div>
         <h1>An office you can actually <em>see</em>.</h1>
         <p class="hero-sub">You do the work only you can do. The office does the rest — and you can <strong>see</strong> it.</p>
-        <p class="hero-enter-hint">Click Buzz to walk in</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/office?demo=1" data-tour-demo>Open live demo</a>
+          <a class="btn btn-ghost" href="desktop/download.html">Download Desktop</a>
+        </div>
+        <p class="hero-trust">No new subscriptions. Named staff. You gate code, mail, and desktop.</p>
+        <p class="hero-enter-hint">Or click Buzz to walk in</p>
       </div>
       <a class="hero-buzz" href="/office?demo=1" id="hero-buzz" aria-label="Buzz the lobby phone — open live demo">
         <div class="landing-buzz-bubble" id="hero-buzz-bubble">Ready to buzz you in</div>
@@ -3785,7 +3932,7 @@
     <p class="split-hint">move cursor to compare · <span id="split-pct">50</span>% floor</p>
 
     <!-- Lucy reception -->
-    <div class="reception" id="lucy">
+    <div class="reception" id="lucy" role="button" tabindex="0" aria-label="Talk to Lucy at the front desk">
       <div class="reception-npc">
         <div class="npc-portrait npc-portrait--lg" role="img" aria-label="Lucy">
           <img src="./assets/Lucy.png" alt="" loading="lazy" decoding="async" />
@@ -3793,9 +3940,35 @@
       </div>
       <div class="speech" id="speech">
         <div class="name">Lucy · Front desk</div>
-        <div id="speech-text"></div>
+        <div id="speech-text">Click to talk — Lucy is at the desk.</div>
         <div class="speech-choices" id="speech-choices"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="how-strip reveal" id="how-you-start" aria-label="How you start">
+    <p class="section-kicker">How you start</p>
+    <h2>Walk in. Seat an AI. Buzz Abby.</h2>
+    <p class="section-lead">Three beats. No new subscriptions. You still gate code, mail, and desktop.</p>
+    <div class="how-beats">
+      <article class="how-beat">
+        <div class="kicker">01</div>
+        <h3>Walk in</h3>
+        <p>Open the floor with no account. Named staff are already at desks. Watch who is working before you sign in.</p>
+        <a class="offer-try" href="/office?demo=1" data-tour-demo>Open live demo →</a>
+      </article>
+      <article class="how-beat">
+        <div class="kicker">02</div>
+        <h3>Seat an AI</h3>
+        <p>Put Cursor, Claude, Grok, or LM Studio at a named desk. Nothing auto-runs — you click Seat.</p>
+        <a class="offer-try" href="#seat-ais">See the desks →</a>
+      </article>
+      <article class="how-beat">
+        <div class="kicker">03</div>
+        <h3>Buzz Abby</h3>
+        <p>Screenshot or speak. You see the note first, then it hits her workbench — not a mystery chat.</p>
+        <a class="offer-try" href="#meet-buzz">Meet Buzz →</a>
+      </article>
     </div>
   </section>
 
@@ -3959,38 +4132,43 @@
     </div>
   </section>
 
-  <section class="providers-strip reveal" id="your-ais" aria-label="Your AIs">
+  <section class="seat-ais reveal" id="seat-ais" aria-label="Seat an AI">
+    <p class="section-kicker">Seat an AI</p>
     <h2>Your subscriptions. Their desks.</h2>
-    <p class="section-lead">Claude, ChatGPT, Cursor, Grok, Gemini, Kimi, LM Studio — one floor instead of a stack of tabs.</p>
-    <div class="provider-pills" aria-label="Supported providers">
-      <span class="provider-pill">
-        <img class="brand-mark" src="./assets/brands/anthropic.svg" alt="" width="20" height="20" aria-hidden="true" />
-        Claude
-      </span>
-      <span class="provider-pill">
-        <img class="brand-mark" src="./assets/brands/openai.svg" alt="" width="20" height="20" aria-hidden="true" />
-        ChatGPT
-      </span>
-      <span class="provider-pill">
-        <img class="brand-mark" src="./assets/brands/cursor.svg" alt="" width="20" height="20" aria-hidden="true" />
-        Cursor
-      </span>
-      <span class="provider-pill">
-        <img class="brand-mark" src="./assets/brands/xai.svg" alt="" width="20" height="20" aria-hidden="true" />
-        Grok
-      </span>
-      <span class="provider-pill">
-        <img class="brand-mark" src="./assets/brands/gemini.svg" alt="" width="20" height="20" aria-hidden="true" />
-        Gemini
-      </span>
-      <span class="provider-pill">
-        <img class="brand-mark" src="./assets/brands/kimi.svg" alt="" width="20" height="20" aria-hidden="true" />
-        Kimi
-      </span>
-      <span class="provider-pill">
-        <img class="brand-mark" src="./assets/brands/lmstudio.svg" alt="" width="20" height="20" aria-hidden="true" />
-        LM Studio
-      </span>
+    <p class="section-lead">Nothing new to buy. Import never auto-runs — you click Seat.</p>
+    <div class="seat-ais-grid">
+      <article class="seat-card">
+        <span class="provider-pill">
+          <img class="brand-mark" src="./assets/brands/cursor.svg" alt="" width="20" height="20" />
+          Cursor
+        </span>
+        <h3>Cursor</h3>
+        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=cursor">Seat in demo →</a>
+      </article>
+      <article class="seat-card">
+        <span class="provider-pill">
+          <img class="brand-mark" src="./assets/brands/anthropic.svg" alt="" width="20" height="20" />
+          Claude
+        </span>
+        <h3>Claude</h3>
+        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=claude">Seat in demo →</a>
+      </article>
+      <article class="seat-card">
+        <span class="provider-pill">
+          <img class="brand-mark" src="./assets/brands/xai.svg" alt="" width="20" height="20" />
+          Grok
+        </span>
+        <h3>Grok</h3>
+        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=grok">Seat in demo →</a>
+      </article>
+      <article class="seat-card">
+        <span class="provider-pill">
+          <img class="brand-mark" src="./assets/brands/lmstudio.svg" alt="" width="20" height="20" />
+          LM Studio
+        </span>
+        <h3>LM Studio</h3>
+        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=lmstudio">Seat in demo →</a>
+      </article>
     </div>
   </section>
 
@@ -4132,53 +4310,18 @@
         <div class="crew-detail-actions">
           <a class="btn btn-primary" href="/office?demo=1">Watch in demo</a>
           <button type="button" class="btn btn-ghost" id="crew-ask-lucy">Ask Lucy about them</button>
+          <a class="crew-brief-abby" href="/office?demo=1" data-tour-demo>Brief Abby in the office</a>
         </div>
       </aside>
     </div>
     <p class="crew-keyhint">Pick someone, then open the live demo</p>
   </section>
 
-  <section class="faq-strip reveal" id="faq" aria-label="Questions">
-    <p class="section-kicker">Questions</p>
-    <h2>Ask before you walk in.</h2>
-    <p class="section-lead">Lucy at the desk will talk you through it. The short version is here.</p>
-    <div class="faq-list">
-      <details open>
-        <summary>What problem does this solve?</summary>
-        <p>Your agents do real work, but you only see it as text. Denizen puts that work on a floor you can watch: who’s idle, who’s shipping, who needs you.</p>
-      </details>
-      <details>
-        <summary>How is this different from logs or a dashboard?</summary>
-        <p>Logs say something happened. Dashboards pile up metrics. Denizen is spatial — you read the room like a manager walking the floor, then open the trail only when you need it.</p>
-      </details>
-      <details>
-        <summary>Do I need new AI subscriptions?</summary>
-        <p>No. Connect the models you already pay for. Less tab-hopping and less overlap, because Claude, ChatGPT, Cursor, and the rest share one office.</p>
-      </details>
-      <details>
-        <summary>Is Buzz free?</summary>
-        <p>Yes. Buzz is part of the office — screenshot, record, meeting, dictation. Desktop adds always-on-top and leave-invisible. Nothing about Buzz is locked behind a paid plan.</p>
-      </details>
-      <details>
-        <summary>Does my code leave the laptop?</summary>
-        <p>Souls and memory live on disk. Desktop screen and files are off / ask / trusted. A hosted office still needs a copy of a browser screenshot so Abby can see it — that is written down in TELEMETRY.md.</p>
-      </details>
-      <details>
-        <summary>How do I start?</summary>
-        <p>Open the live demo — no account. Watch the floor move, Buzz a note to Abby, then sign in when you want the workbench, CRM, and a station on your machine.</p>
-      </details>
-      <details>
-        <summary>Who is this for?</summary>
-        <p>Solo builders juggling agents, teams that hand off work, and ops folks who want patrols and escalations visible — not buried in another tile.</p>
-      </details>
-    </div>
-  </section>
-
   <section class="biz-strip" id="for-teams" aria-label="How to start">
     <p class="biz-strip-kicker">Demo · Team · Desktop</p>
     <h2>Same office. Three doors.</h2>
     <p class="biz-strip-lead">
-      Walk the floor free. Sign in for the workbench, CRM, and Connect AI.
+      Walk the floor free. Talk to Zion to start a team office.
       Install Desktop when you want Buzz over every app and a station on your machine.
     </p>
     <div class="biz-grid">
@@ -4188,7 +4331,9 @@
       </article>
       <article class="biz-card">
         <h3>Team</h3>
-        <p>Workbench, Meridian CRM, Connect AI, handoffs, and in-office Buzz. Your identity and memory persist.</p>
+        <p>Workbench, Meridian CRM, Connect AI, handoffs, and memory persist. Start with a conversation — no card on this page.</p>
+        <p class="biz-card-cta"><a href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">Talk to Zion on Discord</a></p>
+        <p class="biz-card-note"><a href="/office?login=1">Already have an office? Sign in</a></p>
       </article>
       <article class="biz-card">
         <h3>Desktop</h3>
@@ -4197,12 +4342,11 @@
     </div>
     <div class="biz-actions">
       <a class="btn btn-primary" href="/office?demo=1" data-tour-demo>Open live demo</a>
-      <a class="btn btn-ghost" href="/office?login=1">Full office</a>
-      <a class="btn btn-ghost" href="desktop/download.html">Download Desktop</a>
       <a class="btn btn-discord" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">
         <i class="ti ti-brand-discord" aria-hidden="true"></i>
-        Talk to us on Discord
+        Talk to Zion on Discord
       </a>
+      <a class="btn btn-ghost" href="desktop/download.html">Download Desktop</a>
     </div>
     <p class="biz-note">
       Built in <strong style="color:var(--text-soft)">Oklahoma City</strong> by
@@ -4248,28 +4392,82 @@
     </div>
   </section>
 
+  <section class="faq-strip reveal" id="faq" aria-label="Questions">
+    <p class="section-kicker">Questions</p>
+    <h2>Ask before you walk in.</h2>
+    <p class="section-lead">Lucy at the desk will talk you through it. The short version is here.</p>
+    <div class="faq-list">
+      <details open>
+        <summary>What problem does this solve?</summary>
+        <p>Your agents do real work, but you only see it as text. Denizen puts that work on a floor you can watch: who’s idle, who’s shipping, who needs you.</p>
+      </details>
+      <details>
+        <summary>How is this different from logs or a dashboard?</summary>
+        <p>Logs say something happened. Dashboards pile up metrics. Denizen is spatial — you read the room like a manager walking the floor, then open the trail only when you need it.</p>
+      </details>
+      <details>
+        <summary>Do I need new AI subscriptions?</summary>
+        <p>No. Connect the models you already pay for. Less tab-hopping and less overlap, because Claude, ChatGPT, Cursor, and the rest share one office.</p>
+      </details>
+      <details>
+        <summary>What does it cost?</summary>
+        <p>Demo is free. Team starts with a conversation on Discord — no card on this page. Desktop is the station install.</p>
+      </details>
+      <details>
+        <summary>Do I need Desktop?</summary>
+        <p>Browser office is enough to walk the floor and Buzz. Desktop is for the overlay plus local files and models.</p>
+      </details>
+      <details>
+        <summary>Does the laptop have to stay on?</summary>
+        <p>Yes for Desktop station work. Lid-closed jobs are listed under Coming.</p>
+      </details>
+      <details>
+        <summary>Do I pay for new models?</summary>
+        <p>No. Seat the subscriptions you already have. Claude, ChatGPT, Cursor, Grok, and LM Studio share one floor.</p>
+      </details>
+      <details>
+        <summary>Is Buzz free?</summary>
+        <p>Yes. Buzz is part of the office — screenshot, record, meeting, dictation. Desktop adds always-on-top and leave-invisible. Nothing about Buzz is locked behind a paid plan.</p>
+      </details>
+      <details>
+        <summary>Does my code leave the laptop?</summary>
+        <p>Souls and memory live on disk. Desktop screen and files are off / ask / trusted. A hosted office still needs a copy of a browser screenshot so Abby can see it — that is written down in TELEMETRY.md.</p>
+      </details>
+      <details>
+        <summary>How do I start?</summary>
+        <p>Open the live demo — no account. Watch the floor move, Buzz a note to Abby, then talk to Zion when you want a team office that persists.</p>
+      </details>
+      <details>
+        <summary>Who is this for?</summary>
+        <p>Solo builders juggling agents, teams that hand off work, and ops folks who want patrols and escalations visible — not buried in another tile.</p>
+      </details>
+    </div>
+  </section>
+
   <section class="coming-strip reveal" id="coming" aria-label="Coming soon">
     <h2>Coming</h2>
     <div class="coming-grid">
       <article class="coming-card">
         <h3>Lid-closed jobs</h3>
         <p>Station work that keeps going after the laptop sleeps.</p>
+        <a class="offer-try" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">Talk to Zion on Discord →</a>
       </article>
       <article class="coming-card">
         <h3>Remote office</h3>
         <p>Your floor from a phone app, wherever you are.</p>
+        <a class="offer-try" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">Talk to Zion on Discord →</a>
       </article>
     </div>
   </section>
 
   <section class="cta-final reveal">
     <h2>You do the work only you can do.</h2>
-    <p class="cta-lead">The office does the rest. Buzz in and watch them walk.</p>
+    <p class="cta-lead">The office does the rest. Download the station, or talk to Zion about a team floor.</p>
     <div class="hero-actions">
-      <a class="btn btn-primary" href="/office?demo=1" data-tour-demo>Open live demo</a>
+      <a class="btn btn-primary" href="desktop/download.html">Download Desktop</a>
       <a class="btn btn-discord" href="https://discord.gg/999pPp6yMu" target="_blank" rel="noopener noreferrer">
         <i class="ti ti-brand-discord" aria-hidden="true"></i>
-        Join the Discord
+        Talk to Zion on Discord
       </a>
     </div>
   </section>
@@ -4303,13 +4501,21 @@
 
   <script>
   (function () {
-    // ── boot splash: spinning pixel globe + DENIZEN (every landing load) ──
+    // ── boot splash: spinning pixel globe + DENIZEN (once per session) ──
     const boot = document.getElementById('boot');
+    const BOOT_KEY = 'denizen-landing-boot';
+    let alreadyBooted = false;
+    try { alreadyBooted = sessionStorage.getItem(BOOT_KEY) === '1'; } catch (_) {}
     if (boot) {
       // Use classes only — inline opacity/visibility would block #boot.hide forever
-      boot.classList.remove('hide');
-      boot.removeAttribute('style');
-      boot.setAttribute('aria-hidden', 'false');
+      if (alreadyBooted) {
+        boot.classList.add('hide');
+        boot.setAttribute('aria-hidden', 'true');
+      } else {
+        boot.classList.remove('hide');
+        boot.removeAttribute('style');
+        boot.setAttribute('aria-hidden', 'false');
+      }
     }
     let globeRaf = null;
     const reduceMotion = (() => {
@@ -4529,7 +4735,7 @@
         boot.setAttribute('aria-hidden', 'true');
       }
       if (globeRaf) { cancelAnimationFrame(globeRaf); globeRaf = null; }
-      try { startLobbyDialogue?.(); } catch (_) {}
+      try { sessionStorage.setItem(BOOT_KEY, '1'); } catch (_) {}
     };
 
     function ensureAudio() {
@@ -4603,17 +4809,32 @@
       if (soundOn) enableSoundFromGesture();
     });
 
-    // ── lobby tour XP (Compare → Lucy → Crew) ──
-    // Progress is in-memory only so refresh / new visit always starts at 0/3.
-    const TOUR_STEPS = ['compare', 'lucy', 'crew'];
+    // ── landing tour (How → Seat → Buzz), then it leaves
+    const TOUR_STEPS = ['how-you-start', 'seat-ais', 'meet-buzz'];
     const tourDone = new Set();
+    let tourFadeTimer = 0;
     try { localStorage.removeItem('denizen-landing-tour'); } catch (_) {}
 
     function tourMessage(n) {
-      if (n <= 0) return 'Explore the lobby';
-      if (n === 1) return 'First checkpoint cleared';
-      if (n === 2) return 'Almost there — one more stop';
-      return 'Lobby clear — open the live demo';
+      if (n <= 0) return 'Walk in, seat, Buzz';
+      if (n === 1) return 'First beat — seat an AI';
+      if (n === 2) return 'One more — Meet Buzz';
+      return 'Clear — demo or Discord';
+    }
+
+    function howInView() {
+      const how = document.getElementById('how-you-start');
+      if (!how) return false;
+      const r = how.getBoundingClientRect();
+      return r.top < window.innerHeight * 0.85 && r.bottom > 72;
+    }
+
+    function tourShouldFade() {
+      if (tourDone.size >= 3) return true;
+      if (window.matchMedia('(max-width: 1320px)').matches && howInView()) return true;
+      const buzz = document.getElementById('meet-buzz');
+      if (buzz && buzz.getBoundingClientRect().bottom < 48) return true;
+      return false;
     }
 
     function renderTour() {
@@ -4638,7 +4859,7 @@
       if (msgEl) msgEl.textContent = tourMessage(n);
       if (bar) {
         bar.classList.toggle('is-complete', n >= 3);
-        bar.classList.toggle('is-fading', n >= 3 && window.scrollY >= window.innerHeight * 0.8);
+        bar.classList.toggle('is-fading', tourShouldFade());
       }
       TOUR_STEPS.forEach((id, i) => {
         const el = document.getElementById(`tour-step-${id}`);
@@ -4659,30 +4880,32 @@
       tourDone.add(id);
       renderTour();
       playUiBlip(520 + tourDone.size * 120);
+      if (tourDone.size >= 3) {
+        clearTimeout(tourFadeTimer);
+        tourFadeTimer = setTimeout(() => {
+          document.getElementById('tour-bar')?.classList.add('is-fading');
+        }, 900);
+      }
     }
 
-    // Observe sections entering the viewport
+    // Observe conversion beats entering the viewport
     const tourIo = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         if (!e.isIntersecting) return;
         const id = e.target.id;
-        if (id === 'compare' || id === 'lucy' || id === 'crew') completeTourStep(id);
+        if (TOUR_STEPS.includes(id)) completeTourStep(id);
       });
-    }, { threshold: 0.35 });
-    ['compare', 'lucy', 'crew'].forEach((id) => {
+    }, { threshold: 0.28 });
+    TOUR_STEPS.forEach((id) => {
       const el = document.getElementById(id);
       if (el) tourIo.observe(el);
     });
-    // Split interaction also counts as Compare
-    document.getElementById('split')?.addEventListener('pointerenter', () => completeTourStep('compare'), { once: false });
-    document.getElementById('split')?.addEventListener('pointermove', () => completeTourStep('compare'));
     renderTour();
     window.addEventListener('resize', () => renderTour(), { passive: true });
 
-    // Demo links mark “you finished the lobby loop” visually (already 3/3 or nudge)
+    // Demo links mark “you finished the loop” visually (already 3/3 or nudge)
     document.querySelectorAll('[data-tour-demo]').forEach((a) => {
       a.addEventListener('click', () => {
-        // soft complete any remaining for people who skip
         if (tourDone.size >= 3) playUiBlip(990);
       });
     });
@@ -4865,16 +5088,15 @@
       globeRaf = requestAnimationFrame(frame);
     }
 
-    // Always play full boot (globe spin + DENIZEN) on each landing load.
-    // sessionStorage skip was removed on master — it made the splash feel broken
-    // because DENIZEN never appeared (boot hid at 2.4s while title fades in at 2.55s).
-    try { sessionStorage.removeItem('denizen-landing-boot'); } catch (_) {}
-    startGlobe({ animate: !reduceMotion });
-    // 4s: one full globe turn (~2.4s) + DENIZEN title (starts 2.55s) before fade-out.
-    // Shorter on small screens so mobile visitors reach the page faster.
-    const isMobile = window.matchMedia('(max-width: 640px)').matches;
-    const bootMs = reduceMotion ? 1600 : (isMobile ? 2600 : 4000);
-    setTimeout(skipBoot, bootMs);
+    // First visit this session: globe + DENIZEN. Later visits skip. Skip always works.
+    if (alreadyBooted) {
+      skipBoot();
+    } else {
+      startGlobe({ animate: !reduceMotion });
+      const isMobile = window.matchMedia('(max-width: 640px)').matches;
+      const bootMs = reduceMotion ? 1600 : (isMobile ? 2600 : 4000);
+      setTimeout(skipBoot, bootMs);
+    }
     boot?.addEventListener('click', skipBoot);
 
     // ── split slider (follows cursor over the compare stage) ──
@@ -5130,10 +5352,6 @@
         // Talking to Lucy auto-unmutes so typewriter can be heard
         enableSoundFromGesture();
       }
-      // Count tour when the visitor actually engages (not the auto-start line)
-      if (opts.fromUser || (key !== 'start' && opts.countTour !== false)) {
-        completeTourStep('lucy');
-      }
       speechChoices.innerHTML = '';
       // Typewriter audio only after a real Lucy click (fromUser already set)
       typeText(node.text, () => {
@@ -5145,7 +5363,6 @@
             btn.onclick = () => {
               lucyUserInteracted = true;
               enableSoundFromGesture();
-              completeTourStep('lucy');
               window.location.assign(officeHrefFromLink(c.href));
             };
           } else {
@@ -5161,15 +5378,23 @@
         });
       }
     }
-    // Defer opening Lucy until boot finishes (see skipBoot → startLobbyDialogue)
+    // Lucy talks only after the visitor clicks reception — not after boot.
     let lobbyDialogueStarted = false;
     startLobbyDialogue = () => {
       if (lobbyDialogueStarted) return;
       lobbyDialogueStarted = true;
-      showNode('start');
+      showNode('start', { fromUser: true });
     };
-    // If boot already gone (edge case), start immediately
-    if (!boot || boot.classList.contains('hide')) startLobbyDialogue();
+    const lucyEl = document.getElementById('lucy');
+    lucyEl?.addEventListener('click', (e) => {
+      if (e.target.closest('a, button')) return;
+      startLobbyDialogue();
+    });
+    lucyEl?.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      startLobbyDialogue();
+    });
 
     // ── interactive crew panel ──
     const CREW = {
@@ -5210,7 +5435,6 @@
     function selectCrew(id, opts = {}) {
       const data = CREW[id];
       if (!data) return;
-      if (opts.fromUser) completeTourStep('crew');
       document.querySelectorAll('.crew-card').forEach((card) => {
         const on = card.dataset.crew === id;
         card.classList.toggle('is-active', on);
@@ -5237,7 +5461,6 @@
     });
     document.getElementById('crew-ask-lucy')?.addEventListener('click', (e) => {
       const key = e.currentTarget.dataset.dialogue || 'crew';
-      completeTourStep('crew');
       showNode(key, { scroll: true, fromUser: true });
     });
     selectCrew('lucy');
@@ -5271,9 +5494,7 @@
       if (!hud) return;
       hud.classList.toggle('is-scrolled', window.scrollY > 12);
       const bar = document.getElementById('tour-bar');
-      if (bar) {
-        bar.classList.toggle('is-fading', tourDone.size >= 3 && window.scrollY >= window.innerHeight * 0.8);
-      }
+      if (bar) bar.classList.toggle('is-fading', tourShouldFade());
     };
     window.addEventListener('scroll', onScrollHud, { passive: true });
     onScrollHud();

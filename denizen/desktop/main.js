@@ -154,7 +154,33 @@ function writeSetupState(next) {
 
 }
 
+function officeDesktopUrl(baseUrl, extra = {}) {
+  const raw = String(baseUrl || "").replace(/\/+$/, "");
+  const u = new URL(`${raw}/`);
+  u.searchParams.set("layout", "openplan");
+  u.searchParams.set("desktop", "1");
+  if (extra.seat) u.searchParams.set("seat", "1");
+  return u.toString();
+}
 
+async function anySeatAiDetected() {
+  try {
+    const catalog = require("../src/seat-ai-catalog");
+    const tools = catalog.detectLocalTools();
+    const lm = await catalog.probeLmStudio();
+    return !!(tools.cursor || tools.claude || tools.grok || tools.codex || lm.reachable);
+  } catch (_) {
+    return false;
+  }
+}
+
+async function consumeSeatPrompt() {
+  const setup = readSetupState();
+  if (!setup.completed || setup.seatPromptShown) return false;
+  const found = await anySeatAiDetected();
+  writeSetupState({ ...readSetupState(), seatPromptShown: true });
+  return found;
+}
 
 function probeDenizenHealth(port) {
 
@@ -1420,7 +1446,9 @@ function setupIpc() {
 
     if (mainWindow) {
 
-      await mainWindow.loadURL(`${target.url}?layout=openplan&desktop=1`);
+      const seat = await consumeSeatPrompt();
+
+      await mainWindow.loadURL(officeDesktopUrl(target.url, { seat }));
 
       return true;
 
@@ -1654,7 +1682,9 @@ async function openDenizenWindow() {
 
   const target = await ensureDenizenServer();
 
-  await createWindow(`${target.url}?layout=openplan&desktop=1`);
+  const seat = await consumeSeatPrompt();
+
+  await createWindow(officeDesktopUrl(target.url, { seat }));
 
 }
 
@@ -2015,7 +2045,7 @@ app.whenReady().then(async () => {
     const target = await ensureDenizenServer();
     __diag("F: server target=" + (target && target.url));
 
-    await createWindow(`${target.url}?layout=openplan&desktop=1`);
+    await createWindow(officeDesktopUrl(target.url, { seat: await consumeSeatPrompt() }));
     __diag("H: main window created");
 
     maybeStartWorkerLoop();
