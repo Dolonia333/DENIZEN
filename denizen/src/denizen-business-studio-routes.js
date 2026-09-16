@@ -4,6 +4,7 @@ const { URL } = require('node:url');
 const studioStore = require('./denizen-business-studio-store');
 const e3 = require('./denizen-business-studio-e3-template');
 const progress = require('./denizen-business-studio-progress');
+const funding = require('./denizen-business-studio-funding');
 const denizenDb = require('./denizen-db');
 const sessionCookie = require('./visitor-session-cookie');
 const visitorAccess = require('./visitor-access');
@@ -128,6 +129,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
             'POST /api/business-studio/recommendations',
             'POST /api/business-studio/recommendations/respond',
             'POST /api/business-studio/comments',
+            'GET /api/business-studio/funding',
+            'PUT /api/business-studio/funding',
           ],
         });
         return true;
@@ -509,6 +512,70 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         state.comments = [comment, ...(state.comments || [])];
         const saved = await persistOrgState(orgId, state, actor.identityId);
         json(res, 200, { ok: true, comment, updated_at: saved.updated_at });
+        return true;
+      }
+
+      if (path === '/api/business-studio/funding' && req.method === 'GET') {
+        const body = {};
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgId(access);
+        const loaded = await loadOrgState(orgId);
+        json(res, 200, {
+          ok: true,
+          readiness: funding.evaluateFundingReadiness(loaded.state),
+          marketSizing: funding.calculateMarketSizing(loaded.state.funding?.marketSizing || {}),
+          moat: funding.evaluateMoat(loaded.state),
+          discovery: funding.discoveryPatterns(loaded.state),
+          capitalPlan: loaded.state.funding?.capitalPlan || funding.emptyFundingState().capitalPlan,
+        });
+        return true;
+      }
+
+      if (path === '/api/business-studio/funding' && req.method === 'PUT') {
+        const body = await readJsonBody(req);
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgId(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const loaded = await loadOrgState(orgId);
+        const maybeAdvisor = findAdvisor(loaded.state, access);
+        if (!isFounderCapable(access, maybeAdvisor)) {
+          json(res, 403, { ok: false, error: 'Advisors cannot overwrite funding workspace' });
+          return true;
+        }
+        const state = loaded.state;
+        state.funding = {
+          ...funding.emptyFundingState(),
+          ...(state.funding || {}),
+          ...(body.funding || {}),
+        };
+        if (body.marketSizing) {
+          state.funding.marketSizing = {
+            ...state.funding.marketSizing,
+            ...body.marketSizing,
+            calculated: funding.calculateMarketSizing({
+              ...state.funding.marketSizing,
+              ...body.marketSizing,
+            }),
+          };
+        }
+        if (body.moat) {
+          state.funding.moat = { ...state.funding.moat, ...body.moat };
+        }
+        if (body.capitalPlan) {
+          state.funding.capitalPlan = { ...state.funding.capitalPlan, ...body.capitalPlan };
+        }
+        const saved = await persistOrgState(orgId, state, actorFromAccess(access).identityId);
+        json(res, 200, {
+          ok: true,
+          funding: saved.state.funding,
+          readiness: funding.evaluateFundingReadiness(saved.state),
+          updated_at: saved.updated_at,
+        });
         return true;
       }
 

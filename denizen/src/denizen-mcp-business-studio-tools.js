@@ -7,6 +7,7 @@
 const studioStore = require('./denizen-business-studio-store');
 const progress = require('./denizen-business-studio-progress');
 const e3 = require('./denizen-business-studio-e3-template');
+const funding = require('./denizen-business-studio-funding');
 const denizenDb = require('./denizen-db');
 
 const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
@@ -109,6 +110,13 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
       },
       required: ['title'],
     },
+  },
+  {
+    name: 'business_studio_funding_readiness',
+    description:
+      'READ-ONLY Funding Readiness checklist with evidence counts (complete / need work / not started). '
+      + 'Never invent a mysterious readiness percentage.',
+    inputSchema: { type: 'object', properties: {} },
   },
 ];
 
@@ -333,6 +341,19 @@ async function callTool(scope, name, args = {}) {
     state.experiments = [exp, ...(state.experiments || [])];
     const saved = await saveState(scope, state);
     return { ok: true, experiment: exp, persist: saved, note: 'Assumptions are never auto-validated from task completion.' };
+  }
+
+  if (name === 'business_studio_funding_readiness') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    return {
+      ok: true,
+      readiness: funding.evaluateFundingReadiness(loaded.state),
+      marketSizing: funding.calculateMarketSizing(loaded.state.funding?.marketSizing || {}),
+      moat: funding.evaluateMoat(loaded.state),
+      discovery: funding.discoveryPatterns(loaded.state),
+      guidance: 'Never invent a funding-ready percentage. Use complete / need work / not started counts.',
+    };
   }
 
   return { ok: false, error: `Unknown Business Studio tool: ${name}` };

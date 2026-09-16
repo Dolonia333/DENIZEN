@@ -32,12 +32,16 @@ const STATE_KEYS = Object.freeze([
   'relations',
   'documents',
   'workbooks',
+  'funding',
   'activity',
   'notifications',
   'config',
 ]);
 
 function emptyState() {
+  const fundingMod = (() => {
+    try { return require('./denizen-business-studio-funding'); } catch (_) { return null; }
+  })();
   return {
     business: null,
     programs: [],
@@ -61,6 +65,13 @@ function emptyState() {
     relations: [],
     documents: [],
     workbooks: [],
+    funding: fundingMod ? fundingMod.emptyFundingState() : {
+      items: {},
+      marketSizing: {},
+      moat: { sources: {}, primaryClaim: '' },
+      capitalPlan: {},
+      unansweredInvestorQuestions: [],
+    },
     activity: [],
     notifications: [],
     config: {
@@ -73,6 +84,7 @@ function emptyState() {
         'operations',
         'program',
         'technical',
+        'funding_readiness',
       ],
       mentorShareDefaults: {
         programs: true,
@@ -85,6 +97,7 @@ function emptyState() {
         deliverables: true,
         meetings: true,
         founderQuestions: true,
+        funding: true,
         financials: false,
         crm: false,
         privateNotes: false,
@@ -98,8 +111,25 @@ function sanitizeState(raw) {
   const out = emptyState();
   if (raw.business && typeof raw.business === 'object') out.business = { ...raw.business };
   for (const key of STATE_KEYS) {
-    if (key === 'business' || key === 'config') continue;
+    if (key === 'business' || key === 'config' || key === 'funding') continue;
     if (Array.isArray(raw[key])) out[key] = raw[key];
+  }
+  if (raw.funding && typeof raw.funding === 'object' && !Array.isArray(raw.funding)) {
+    out.funding = {
+      ...out.funding,
+      ...raw.funding,
+      items: { ...(out.funding.items || {}), ...(raw.funding.items || {}) },
+      marketSizing: { ...(out.funding.marketSizing || {}), ...(raw.funding.marketSizing || {}) },
+      moat: {
+        ...(out.funding.moat || {}),
+        ...(raw.funding.moat || {}),
+        sources: { ...(out.funding.moat?.sources || {}), ...(raw.funding.moat?.sources || {}) },
+      },
+      capitalPlan: { ...(out.funding.capitalPlan || {}), ...(raw.funding.capitalPlan || {}) },
+      unansweredInvestorQuestions: Array.isArray(raw.funding.unansweredInvestorQuestions)
+        ? raw.funding.unansweredInvestorQuestions
+        : (out.funding.unansweredInvestorQuestions || []),
+    };
   }
   if (raw.config && typeof raw.config === 'object' && !Array.isArray(raw.config)) {
     out.config = { ...out.config, ...raw.config };
@@ -207,6 +237,7 @@ function filterStateForAdvisor(state, advisor) {
     out.metrics = (s.metrics || []).filter((m) => m.sharedWithAdvisors !== false);
     out.metricValues = s.metricValues;
   }
+  if (share.funding !== false) out.funding = s.funding;
   if (share.meetings) out.meetings = s.meetings;
   if (share.deliverables || share.pave) {
     // programs already copied; pave lives on program

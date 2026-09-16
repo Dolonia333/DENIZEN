@@ -74,10 +74,13 @@ Mentor task suggestions → founder accept/decline → task created.
 
 **Phase 1 (this PR):** Foundation — shell, dashboard, programs/E3, goals,
 assumptions/experiments/evidence, roadmap, strategy map, mentor ACL,
-comments/recommendations, metrics, CRM/Studio deep links, explainability.
+comments/recommendations, metrics, CRM/Studio deep links, explainability,
+**Funding Readiness** (evidence-gated checklist), Market Sizing Builder,
+Moat Builder, Customer Discovery Lab, Capital Plan.
 
 **Phase 2 (scaffolded, not claimed complete):** Template gallery, workbook
-engine, finance sheets, diagrams, report builder, document import.
+engine, finance sheets, diagrams, report builder, document import,
+Investor Question Simulator NPCs, Data Room packer.
 
 **Phase 3–4:** Contextual Jenny, document→plan extraction, meeting prep,
 scenario modeling, portfolio mentor view.

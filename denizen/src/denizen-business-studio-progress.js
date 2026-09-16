@@ -200,11 +200,33 @@ function businessHealth(state) {
     });
   }
 
+  // Funding readiness — counts only, never a mysterious score
+  let fundingSummary = null;
+  try {
+    const funding = require('./denizen-business-studio-funding');
+    fundingSummary = funding.evaluateFundingReadiness(state);
+    const fr = fundingSummary.overall;
+    categories.push({
+      id: 'funding_readiness',
+      name: 'Funding Readiness',
+      status: fr.notStarted === fr.total
+        ? 'unknown'
+        : (fr.needsWork + fr.notStarted > fr.complete ? 'needs_attention' : 'in_progress'),
+      reason: fr.summary,
+      evidenceIds: [],
+      missing: fundingSummary.sections
+        .flatMap((s) => s.items.filter((i) => !i.complete).map((i) => i.title))
+        .slice(0, 8),
+      recommendedAction: 'Open Funding Readiness and attach evidence to gap items — not a vanity %.',
+    });
+  } catch (_) { /* optional module */ }
+
   return {
     generatedAt: new Date().toISOString(),
     program: prog,
     experiments,
     categories,
+    funding: fundingSummary,
     openTaskCount: openTasks.length,
     overdueTaskCount: overdueTasks.length,
   };

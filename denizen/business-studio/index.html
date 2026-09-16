@@ -376,13 +376,22 @@ function weekBounds(){
 /* ---------- 3. Empty state / config ---------- */
 function emptyConfig(){
   return {
-    healthCategories:['product','customer_discovery','market_validation','sales','financial','operations','program','technical'],
+    healthCategories:['product','customer_discovery','market_validation','sales','financial','operations','program','technical','funding_readiness'],
     mentorShareDefaults:{
       programs:true,roadmap:true,goals:true,experiments:true,evidence:true,metrics:true,
-      pave:true,deliverables:true,meetings:true,founderQuestions:true,
+      pave:true,deliverables:true,meetings:true,founderQuestions:true,funding:true,
       financials:false,crm:false,privateNotes:false
     },
     advisorMode:false
+  };
+}
+function emptyFunding(){
+  return {
+    items:{},
+    marketSizing:{tamOrgs:null,samOrgs:null,somPct:null,acv:null,geography:'',buyerWho:'',sources:{tam:'',sam:'',som:''},calculated:null},
+    moat:{sources:{},primaryClaim:''},
+    capitalPlan:{stage:'pre_revenue',amountNeeded:null,uses:[],types:[],notes:''},
+    unansweredInvestorQuestions:[]
   };
 }
 function emptyState(){
@@ -408,7 +417,8 @@ function emptyState(){
     activity:[],
     config:emptyConfig(),
     documents:[],
-    workbooks:[]
+    workbooks:[],
+    funding:emptyFunding()
   };
 }
 function sanitizeState(raw){
@@ -419,6 +429,20 @@ function sanitizeState(raw){
     'experiments','evidence','findings','decisions','metrics','advisors','comments','recommendations',
     'relations','meetings','activity','documents','workbooks'];
   keys.forEach(k=>{ if(Array.isArray(raw[k])) out[k]=raw[k]; });
+  if(raw.funding && typeof raw.funding==='object'){
+    out.funding={
+      ...emptyFunding(),
+      ...raw.funding,
+      items:Object.assign({}, emptyFunding().items, raw.funding.items||{}),
+      marketSizing:Object.assign({}, emptyFunding().marketSizing, raw.funding.marketSizing||{}),
+      moat:Object.assign({}, emptyFunding().moat, raw.funding.moat||{}, {
+        sources:Object.assign({}, (emptyFunding().moat.sources||{}), (raw.funding.moat&&raw.funding.moat.sources)||{})
+      }),
+      capitalPlan:Object.assign({}, emptyFunding().capitalPlan, raw.funding.capitalPlan||{}),
+      unansweredInvestorQuestions:Array.isArray(raw.funding.unansweredInvestorQuestions)
+        ? raw.funding.unansweredInvestorQuestions : []
+    };
+  }
   if(raw.config && typeof raw.config==='object') out.config={...out.config,...raw.config};
   return out;
 }
@@ -678,6 +702,17 @@ function businessHealth(st){
 function explainStatus(st, subject){
   const health=businessHealth(st);
   if(!subject || subject==='program') return {kind:'program',...health.program};
+  if(subject==='funding'){
+    const fr=evaluateFundingReadiness();
+    return {
+      kind:'funding',
+      why:fr.overall.why,
+      reason:fr.overall.summary,
+      missing:fr.sections.flatMap(function(s){return s.items.filter(function(i){return !i.complete;}).map(function(i){return i.title;});}).slice(0,12),
+      evidenceIds:[],
+      recommendedAction:'Open Funding Readiness and attach evidence to gap items.'
+    };
+  }
   if(String(subject).indexOf('category:')===0){
     const id=String(subject).slice('category:'.length);
     return health.categories.find(function(c){return c.id===id;})||{kind:'unknown',why:'Category not found.'};
@@ -720,13 +755,18 @@ function topRecommendation(st){
 /* ---------- 6. App state ---------- */
 const NAV=[
   {id:'overview',label:'Overview',ico:'◎',group:'Command'},
+  {id:'funding',label:'Funding Readiness',ico:'◈',group:'Command'},
   {id:'strategy',label:'Strategy',ico:'◈',group:'Command'},
   {id:'roadmap',label:'Roadmap',ico:'⟶',group:'Command'},
   {id:'goals',label:'Goals',ico:'◎',group:'Execute'},
   {id:'tasks',label:'Tasks',ico:'✓',group:'Execute'},
   {id:'evidence',label:'Evidence',ico:'▣',group:'Execute'},
   {id:'experiments',label:'Experiments',ico:'⚗',group:'Execute'},
+  {id:'discovery',label:'Discovery Lab',ico:'◎',group:'Execute'},
   {id:'programs',label:'Programs',ico:'▦',group:'Programs'},
+  {id:'market',label:'Market Sizing',ico:'◎',group:'Programs'},
+  {id:'moat',label:'Moat Builder',ico:'⬡',group:'Programs'},
+  {id:'investorsim',label:'Investor Stress-Test',ico:'◎',group:'Programs'},
   {id:'mentors',label:'Mentors',ico:'◎',group:'People'},
   {id:'metrics',label:'Metrics',ico:'▦',group:'Measure'},
   {id:'crm',label:'CRM',ico:'↗',group:'Links'},
@@ -738,6 +778,151 @@ const NAV=[
   {id:'reports',label:'Reports',ico:'☰',group:'Phase 2',phase2:true},
   {id:'settings',label:'Settings',ico:'⚙',group:'System'}
 ];
+
+const FUNDING_SECTIONS=[
+  {id:'problem',name:'Problem / Product',items:[
+    {key:'problem_need',title:'Problem / Need',evidenceTypes:['interview','document','survey']},
+    {key:'customer_definition',title:'Customer Definition',evidenceTypes:['interview','document']},
+    {key:'customer_discovery',title:'Customer Discovery',evidenceTypes:['interview'],targetCount:10},
+    {key:'product_solution',title:'Product / Solution',evidenceTypes:['document','technical_test','prototype']},
+    {key:'pm_validation',title:'Product-Market Validation',evidenceTypes:['interview','signed_pilot','metric']},
+    {key:'business_model',title:'Business Model',evidenceTypes:['document']},
+    {key:'revenue_model',title:'Revenue Model',evidenceTypes:['document','metric']},
+    {key:'pricing_validation',title:'Pricing Validation',evidenceTypes:['interview','survey','metric']}
+  ]},
+  {id:'market',name:'Market',items:[
+    {key:'tam',title:'TAM',evidenceTypes:['document','metric','market_sizing']},
+    {key:'sam',title:'SAM',evidenceTypes:['document','metric','market_sizing']},
+    {key:'som',title:'SOM',evidenceTypes:['document','metric','market_sizing']},
+    {key:'market_growth',title:'Market Growth',evidenceTypes:['document','metric']},
+    {key:'beachhead',title:'Beachhead Market',evidenceTypes:['interview','document']}
+  ]},
+  {id:'competition',name:'Competition',items:[
+    {key:'competitive_matrix',title:'Competitive Matrix',evidenceTypes:['document']},
+    {key:'direct_competitors',title:'Direct Competitors',evidenceTypes:['document']},
+    {key:'indirect_competitors',title:'Indirect Competitors',evidenceTypes:['document']},
+    {key:'moat',title:'Moat',evidenceTypes:['document','technical_test','moat_claim']},
+    {key:'defensibility_evidence',title:'Defensibility Evidence',evidenceTypes:['technical_test','interview','metric']}
+  ]},
+  {id:'gtm',name:'Go-to-Market',items:[
+    {key:'economic_buyer',title:'Economic Buyer',evidenceTypes:['interview','document']},
+    {key:'decision_maker',title:'Decision Maker',evidenceTypes:['interview','document']},
+    {key:'sales_cycle',title:'Sales Cycle',evidenceTypes:['interview','document']},
+    {key:'channels',title:'Channels',evidenceTypes:['document']},
+    {key:'cac_assumptions',title:'CAC Assumptions',evidenceTypes:['document','metric']},
+    {key:'pilot_strategy',title:'Pilot Strategy',evidenceTypes:['document','signed_pilot']}
+  ]},
+  {id:'financials',name:'Financials',items:[
+    {key:'forecast_3y',title:'3-Year Forecast',evidenceTypes:['document','workbook']},
+    {key:'cash_flow',title:'Cash Flow',evidenceTypes:['document','workbook','metric']},
+    {key:'burn',title:'Burn',evidenceTypes:['metric','workbook']},
+    {key:'runway',title:'Runway',evidenceTypes:['metric','workbook']},
+    {key:'break_even',title:'Break-Even',evidenceTypes:['document','workbook']},
+    {key:'unit_economics',title:'Unit Economics',evidenceTypes:['document','workbook']},
+    {key:'use_of_funds',title:'Use of Funds',evidenceTypes:['document']}
+  ]},
+  {id:'team',name:'Team',items:[
+    {key:'founders',title:'Founders',evidenceTypes:['document']},
+    {key:'roles',title:'Roles',evidenceTypes:['document']},
+    {key:'critical_gaps',title:'Critical Gaps',evidenceTypes:['document']},
+    {key:'hiring_plan',title:'Hiring Plan',evidenceTypes:['document']},
+    {key:'advisors',title:'Advisors',evidenceTypes:['document','meeting']}
+  ]},
+  {id:'investor_materials',name:'Investor Materials',items:[
+    {key:'lean_canvas',title:'Lean Canvas',evidenceTypes:['document']},
+    {key:'exec_summary',title:'Executive Summary',evidenceTypes:['document']},
+    {key:'pitch_deck',title:'Pitch Deck',evidenceTypes:['document']},
+    {key:'financial_model',title:'Financial Model',evidenceTypes:['document','workbook']},
+    {key:'data_room',title:'Data Room',evidenceTypes:['document']},
+    {key:'pitch_90',title:'90-Second Pitch',evidenceTypes:['document']},
+    {key:'pitch_5m',title:'5-Minute Pitch',evidenceTypes:['document']},
+    {key:'investor_qa',title:'Investor Q&A',evidenceTypes:['document']}
+  ]}
+];
+const MOAT_SOURCES=[
+  {key:'technology_ip',title:'Technology / IP'},
+  {key:'proprietary_data',title:'Proprietary Data'},
+  {key:'network_effects',title:'Network Effects'},
+  {key:'switching_costs',title:'Switching Costs'},
+  {key:'distribution',title:'Distribution'},
+  {key:'brand_community',title:'Brand / Community'},
+  {key:'cost_advantage',title:'Cost Advantage'},
+  {key:'integrations',title:'Integrations / Workflow'},
+  {key:'operational_knowhow',title:'Operational Know-how'},
+  {key:'regulatory',title:'Regulatory / Compliance'}
+];
+
+function fundingEvidenceFor(item){
+  return (state.evidence||[]).filter(function(e){
+    if(!e) return false;
+    if(Array.isArray(e.linkedFundingKeys) && e.linkedFundingKeys.includes(item.key)) return true;
+    if(e.fundingKey===item.key) return true;
+    if(item.evidenceTypes && item.evidenceTypes.includes(e.type)
+      && (e.fundingKey===item.key || (Array.isArray(e.tags)&&e.tags.includes(item.key)))) return true;
+    return false;
+  });
+}
+function evaluateFundingItem(item){
+  const funding=state.funding||emptyFunding();
+  const linked=fundingEvidenceFor(item);
+  const override=(funding.items&&funding.items[item.key])||{};
+  const target=Math.max(1, Number(item.targetCount)||1);
+  const count=Math.max(linked.length, Number(override.manualCount)||0);
+  const complete=!!override.markedComplete || count>=target;
+  let status='not_started';
+  if(complete) status='complete';
+  else if(count>0) status='in_progress';
+  else if(override.needsEvidence) status='needs_evidence';
+  const label=item.targetCount ? (count+' / '+target) : (complete?'Evidence':(count>0?'In progress':'Not started'));
+  return {
+    key:item.key,title:item.title,status:status,count:count,target:target,complete:complete,label:label,
+    evidenceIds:linked.map(function(e){return e.id;}),
+    why:complete
+      ? count+'/'+target+' linked evidence — ready for investor review when founder confirms.'
+      : (count>0 ? count+'/'+target+' evidence linked; still insufficient.' : 'No evidence linked for "'+item.title+'".'),
+    recommendedAction:complete
+      ? 'Keep evidence current.'
+      : 'Attach evidence for '+item.title+'.'
+  };
+}
+function evaluateFundingReadiness(){
+  const sections=FUNDING_SECTIONS.map(function(sec){
+    const items=sec.items.map(evaluateFundingItem);
+    return {
+      id:sec.id,name:sec.name,items:items,
+      completeCount:items.filter(function(i){return i.complete;}).length,
+      needsWorkCount:items.filter(function(i){return !i.complete && i.count>0;}).length,
+      notStartedCount:items.filter(function(i){return i.status==='not_started';}).length
+    };
+  });
+  const all=sections.reduce(function(a,s){return a.concat(s.items);},[]);
+  const complete=all.filter(function(i){return i.complete;}).length;
+  const needsWork=all.filter(function(i){return !i.complete && i.count>0;}).length;
+  const notStarted=all.filter(function(i){return i.status==='not_started';}).length;
+  return {
+    sections:sections,
+    overall:{
+      complete:complete,needsWork:needsWork,notStarted:notStarted,total:all.length,
+      summary:complete+' complete · '+needsWork+' need work · '+notStarted+' not started',
+      why:'Counts items with linked evidence (or founder mark). Tasks alone never count.'
+    }
+  };
+}
+function calcMarketSizing(ms){
+  const tamOrgs=Number(ms.tamOrgs), samOrgs=Number(ms.samOrgs), somPct=Number(ms.somPct), acv=Number(ms.acv);
+  const out={tamValue:null,samValue:null,somOrgs:null,somValue:null,warnings:[]};
+  if(isFinite(tamOrgs)&&isFinite(acv)) out.tamValue=tamOrgs*acv;
+  if(isFinite(samOrgs)&&isFinite(acv)) out.samValue=samOrgs*acv;
+  if(isFinite(samOrgs)&&isFinite(somPct)){
+    out.somOrgs=samOrgs*(somPct/100);
+    if(isFinite(acv)) out.somValue=out.somOrgs*acv;
+  }
+  if(isFinite(somPct)&&somPct>5) out.warnings.push('SOM capture >5% needs supporting evidence.');
+  if(!(ms.sources&&ms.sources.tam)) out.warnings.push('TAM source missing.');
+  if(!(ms.sources&&ms.sources.sam)) out.warnings.push('SAM source missing.');
+  if(!(ms.sources&&ms.sources.som)) out.warnings.push('SOM assumption source missing.');
+  return out;
+}
 
 let state=emptyState();
 let ui={view:'overview',selectedProgramId:null,selectedNodeId:null};
@@ -900,6 +1085,7 @@ function applyE3Template(opts){
     state.strategyNodes=built.strategyNodes;
     state.strategyEdges=built.strategyEdges;
   }
+  if(!state.funding) state.funding=emptyFunding();
   logActivity('Applied E3 / PAVE template');
   scheduleSave();
   toast('Applied E3 / PAVE template');
@@ -1240,6 +1426,13 @@ function renderOverview(){
     });
   }
   html+='</div>';
+
+  // Funding readiness snapshot (counts only — never a mysterious %)
+  const fr=evaluateFundingReadiness();
+  html+='<div class="panel" style="margin-bottom:14px"><div class="meta-line"><h3 style="margin:0">Funding readiness</h3>'
+    +'<button type="button" class="btn" data-nav="funding">Open checklist</button></div>'
+    +'<p style="color:var(--ink-2);margin:8px 0 0;font-size:13.5px">'+esc(fr.overall.summary)+'</p>'
+    +'<p style="color:var(--muted);font-size:12px;margin:6px 0 0">'+esc(fr.overall.why)+'</p></div>';
 
   html+='<div class="grid grid-2" style="margin-bottom:14px">';
   // This week tasks
@@ -1684,6 +1877,167 @@ function renderSettings(){
   return html;
 }
 
+function renderFunding(){
+  const fr=evaluateFundingReadiness();
+  let html='<div class="page-head"><div><h2>Funding Readiness</h2>'
+    +'<p>Evidence-gated checklist — not an unexplained AI score. '+esc(fr.overall.summary)+'</p></div>'
+    +'<div class="actions"><button type="button" class="btn" data-nav="market">Market sizing</button>'
+    +'<button type="button" class="btn" data-nav="moat">Moat</button>'
+    +'<button type="button" class="btn" data-nav="discovery">Discovery Lab</button></div></div>';
+  html+='<div class="panel" style="margin-bottom:14px"><div class="meta-line"><span class="num">'+esc(fr.overall.summary)+'</span>'
+    +'<button type="button" class="btn btn-why" data-why="funding">WHY?</button></div>'
+    +'<p style="color:var(--muted);font-size:12.5px;margin-top:8px">'+esc(fr.overall.why)+'</p></div>';
+
+  fr.sections.forEach(function(sec){
+    html+='<div class="panel" style="margin-bottom:12px"><h3>'+esc(sec.name)
+      +' <span class="kbd">'+sec.completeCount+'/'+sec.items.length+'</span></h3><div class="list">';
+    sec.items.forEach(function(item){
+      const chip=item.complete?'complete':(item.count>0?'in_progress':(item.targetCount?'needs_attention':'not_started'));
+      html+='<div class="row-item"><div><div class="rt">'+esc(item.title)+'</div>'
+        +'<div class="rm">'+esc(item.why)+'</div></div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
+        +statusChip(chip)
+        +'<span class="num" style="font-size:12px">'+esc(item.label)+'</span>'
+        +'<button type="button" class="btn btn-sm" data-link-funding="'+esc(item.key)+'">Link evidence</button>'
+        +'</div></div>';
+    });
+    html+='</div></div>';
+  });
+
+  const cp=(state.funding&&state.funding.capitalPlan)||emptyFunding().capitalPlan;
+  html+='<div class="panel"><h3>Capital plan</h3><div class="form-grid" id="capitalPlanForm">'
+    +'<label>Stage<select name="stage">'
+    +['pre_revenue','validation','pilot','growth'].map(function(s){
+      return '<option value="'+s+'"'+(cp.stage===s?' selected':'')+'>'+s+'</option>';
+    }).join('')
+    +'</select></label>'
+    +'<label>Amount needed ($)<input name="amountNeeded" type="number" value="'+(cp.amountNeeded!=null?esc(String(cp.amountNeeded)):'')+'"/></label>'
+    +'<label>Notes<textarea name="notes">'+esc(cp.notes||'')+'</textarea></label>'
+    +'<button type="button" class="btn btn-primary" data-action="save-capital-plan">Save capital plan</button>'
+    +'</div><p class="field-hint">E3 does not guarantee funding — this tracks pathway readiness and gaps.</p></div>';
+  return html;
+}
+
+function renderDiscovery(){
+  const interviews=(state.evidence||[]).filter(function(e){return e.type==='interview';});
+  const tags={};
+  interviews.forEach(function(ev){
+    (ev.insightTags||ev.findings||[]).forEach(function(t){
+      const key=String(t).trim();
+      if(!key) return;
+      if(!tags[key]) tags[key]={tag:key,count:0,evidenceIds:[]};
+      tags[key].count+=1;
+      tags[key].evidenceIds.push(ev.id);
+    });
+  });
+  const patterns=Object.keys(tags).map(function(k){return tags[k];}).sort(function(a,b){return b.count-a.count;});
+  const exp=(state.experiments||[]).find(function(e){return /interview|discovery/i.test(e.title);});
+  const target=exp?Math.max(1,Number(exp.targetCount)||10):10;
+
+  let html='<div class="page-head"><div><h2>Customer Discovery Lab</h2>'
+    +'<p>Persona → hypothesis → interview → insights → evidence → assumption update. DENIZEN organizes counts — you decide.</p></div>'
+    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="add-interview">+ Interview</button></div></div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Progress</h3>'
+    +'<div class="meta-line"><span class="num">'+interviews.length+' / '+target+' interviews</span>'
+    +'<button type="button" class="btn btn-why" data-why="category:customer_discovery">WHY?</button></div>'
+    +'<p style="color:var(--muted);font-size:12.5px;margin-top:8px">Finishing tasks is not validation. Tag insights on each interview.</p></div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Insight patterns</h3>';
+  if(!patterns.length){
+    html+='<div class="empty"><strong>No tagged insights yet</strong>Add interviews with insight tags (e.g. Problem A, pricing asked).</div>';
+  } else {
+    html+='<div class="list">';
+    patterns.forEach(function(p){
+      html+='<div class="row-item"><div class="rt">'+esc(p.tag)+'</div>'
+        +'<span class="num">'+p.count+'/'+interviews.length+'</span></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+
+  html+='<div class="panel"><h3>Interviews</h3>';
+  if(!interviews.length) html+='<div class="empty">No interview evidence yet.</div>';
+  else {
+    html+='<div class="list">';
+    interviews.forEach(function(ev){
+      html+='<div class="row-item"><div><div class="rt">'+esc(ev.title)+'</div>'
+        +'<div class="rm">'+esc(((ev.insightTags||[]).join(' · '))||ev.notes||ev.description||'')+'</div></div>'
+        +statusChip('interview')+'</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function renderMarket(){
+  const ms=(state.funding&&state.funding.marketSizing)||emptyFunding().marketSizing;
+  const calc=calcMarketSizing(ms);
+  let html='<div class="page-head"><div><h2>Market Sizing Builder</h2>'
+    +'<p>TAM → SAM → SOM from org count × ACV. Sources required — mentors can challenge each assumption.</p></div></div>';
+
+  html+='<div class="grid grid-2" style="margin-bottom:14px">'
+    +'<div class="panel"><h3>TAM</h3><p class="num">'+(calc.tamValue!=null?('$'+Math.round(calc.tamValue).toLocaleString()):'—')+'</p>'
+    +'<p class="rm">All applicable organizations × ACV</p></div>'
+    +'<div class="panel"><h3>SAM</h3><p class="num">'+(calc.samValue!=null?('$'+Math.round(calc.samValue).toLocaleString()):'—')+'</p>'
+    +'<p class="rm">Customers you can serve</p></div>'
+    +'<div class="panel"><h3>SOM orgs</h3><p class="num">'+(calc.somOrgs!=null?Math.round(calc.somOrgs).toLocaleString():'—')+'</p>'
+    +'<p class="rm">Realistic reach</p></div>'
+    +'<div class="panel"><h3>SOM $</h3><p class="num">'+(calc.somValue!=null?('$'+Math.round(calc.somValue).toLocaleString()):'—')+'</p>'
+    +'<p class="rm">Capture × ACV</p></div></div>';
+
+  if(calc.warnings.length){
+    html+='<div class="panel" style="margin-bottom:14px;border-color:rgba(240,160,144,.35)"><h3>Challenges</h3><ul style="margin:0;padding-left:18px;color:var(--ink-2);font-size:13px">';
+    calc.warnings.forEach(function(w){ html+='<li>'+esc(w)+'</li>'; });
+    html+='</ul></div>';
+  }
+
+  html+='<div class="panel"><h3>Inputs</h3><div class="form-grid" id="marketSizingForm">'
+    +'<div class="form-row"><label>Who buys?<input name="buyerWho" value="'+esc(ms.buyerWho||'')+'"/></label>'
+    +'<label>Geography<input name="geography" value="'+esc(ms.geography||'')+'"/></label></div>'
+    +'<div class="form-row"><label>TAM orgs<input name="tamOrgs" type="number" value="'+(ms.tamOrgs!=null?esc(String(ms.tamOrgs)):'')+'"/></label>'
+    +'<label>SAM orgs<input name="samOrgs" type="number" value="'+(ms.samOrgs!=null?esc(String(ms.samOrgs)):'')+'"/></label></div>'
+    +'<div class="form-row"><label>SOM capture %<input name="somPct" type="number" value="'+(ms.somPct!=null?esc(String(ms.somPct)):'')+'"/></label>'
+    +'<label>Annual contract value $<input name="acv" type="number" value="'+(ms.acv!=null?esc(String(ms.acv)):'')+'"/></label></div>'
+    +'<label>TAM source<textarea name="srcTam">'+(esc((ms.sources&&ms.sources.tam)||''))+'</textarea></label>'
+    +'<label>SAM source<textarea name="srcSam">'+(esc((ms.sources&&ms.sources.sam)||''))+'</textarea></label>'
+    +'<label>SOM assumption source<textarea name="srcSom">'+(esc((ms.sources&&ms.sources.som)||''))+'</textarea></label>'
+    +'<button type="button" class="btn btn-primary" data-action="save-market-sizing">Save market sizing</button>'
+    +'</div></div>';
+  return html;
+}
+
+function renderMoat(){
+  const moat=(state.funding&&state.funding.moat)||emptyFunding().moat;
+  let html='<div class="page-head"><div><h2>Moat / Defensibility Builder</h2>'
+    +'<p>First-mover does not count as a long-term advantage. Advantage ≠ moat until copy difficulty is evidenced.</p></div></div>';
+  html+='<div class="panel" style="margin-bottom:14px"><label>Primary claim<textarea id="moatPrimaryClaim">'+esc(moat.primaryClaim||'')+'</textarea></label>'
+    +'<button type="button" class="btn btn-primary" style="margin-top:8px" data-action="save-moat-claim">Save claim</button></div>';
+  html+='<div class="list">';
+  MOAT_SOURCES.forEach(function(src){
+    const row=(moat.sources&&moat.sources[src.key])||{};
+    const linked=(state.evidence||[]).filter(function(e){
+      return e.moatKey===src.key || (Array.isArray(e.linkedMoatKeys)&&e.linkedMoatKeys.includes(src.key))
+        || (Array.isArray(row.evidenceIds)&&row.evidenceIds.includes(e.id));
+    });
+    let status=row.status||'none';
+    if(linked.length && status==='none') status='partial';
+    html+='<div class="panel" style="margin-bottom:10px"><div class="meta-line"><strong>'+esc(src.title)+'</strong>'+statusChip(status)+'</div>'
+      +'<div class="form-grid" style="margin-top:8px">'
+      +'<label>Status<select data-moat-status="'+esc(src.key)+'">'
+      +['none','partial','strong'].map(function(s){return '<option value="'+s+'"'+(status===s?' selected':'')+'>'+s+'</option>';}).join('')
+      +'</select></label>'
+      +'<label>Months for competitor to copy<input type="number" data-moat-months="'+esc(src.key)+'" value="'+(row.monthsToCopy!=null?esc(String(row.monthsToCopy)):'')+'"/></label>'
+      +'<label>Claim<textarea data-moat-claim="'+esc(src.key)+'">'+esc(row.claim||'')+'</textarea></label>'
+      +'<div class="rm">Evidence linked: '+linked.length+' — '+esc(linked.length?'Advantage not yet moat until copy difficulty is evidenced.':'No evidence yet.')+'</div>'
+      +'<button type="button" class="btn btn-sm" data-save-moat="'+esc(src.key)+'">Save</button>'
+      +'</div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
 /* ---------- 13. Main render ---------- */
 function render(){
   renderSidebar();
@@ -1695,13 +2049,17 @@ function render(){
   }
   const map={
     overview:renderOverview,
+    funding:renderFunding,
     strategy:renderStrategy,
     roadmap:renderRoadmap,
     goals:renderGoals,
     tasks:renderTasks,
     evidence:renderEvidence,
     experiments:renderExperiments,
+    discovery:renderDiscovery,
     programs:renderPrograms,
+    market:renderMarket,
+    moat:renderMoat,
     mentors:renderMentors,
     metrics:renderMetrics,
     crm:renderCrm,
@@ -1742,7 +2100,7 @@ function setNested(obj, path, value){
 }
 
 document.addEventListener('click', function(e){
-  const t=e.target.closest('[data-nav],[data-action],[data-why],[data-task-done],[data-del-task],[data-del-goal],[data-goal-status],[data-del-evidence],[data-select-program],[data-save-pave],[data-node],[data-save-node],[data-accept-rec],[data-decline-rec],[data-del-advisor],[data-update-metric],[data-close-more],[data-share]');
+  const t=e.target.closest('[data-nav],[data-action],[data-why],[data-task-done],[data-del-task],[data-del-goal],[data-goal-status],[data-del-evidence],[data-select-program],[data-save-pave],[data-node],[data-save-node],[data-accept-rec],[data-decline-rec],[data-del-advisor],[data-update-metric],[data-close-more],[data-share],[data-link-funding],[data-save-moat]');
   if(!t) {
     // bottom nav handled below
   }
@@ -1819,6 +2177,74 @@ document.addEventListener('click', function(e){
           source:'manual',sharedWithAdvisors:true,updatedAt:nowISO()
         });
         scheduleSave(); render(); toast('Metric added');
+      });
+    }
+    if(a==='save-capital-plan'){
+      state.funding=state.funding||emptyFunding();
+      const form=document.getElementById('capitalPlanForm');
+      if(!form) return;
+      state.funding.capitalPlan={
+        stage:(form.querySelector('[name=stage]')||{}).value||'pre_revenue',
+        amountNeeded:Number((form.querySelector('[name=amountNeeded]')||{}).value)||null,
+        uses:state.funding.capitalPlan.uses||[],
+        types:state.funding.capitalPlan.types||[],
+        notes:(form.querySelector('[name=notes]')||{}).value||''
+      };
+      scheduleSave(); toast('Capital plan saved'); render();
+    }
+    if(a==='save-market-sizing'){
+      state.funding=state.funding||emptyFunding();
+      const form=document.getElementById('marketSizingForm');
+      if(!form) return;
+      const next={
+        tamOrgs:Number((form.querySelector('[name=tamOrgs]')||{}).value)||null,
+        samOrgs:Number((form.querySelector('[name=samOrgs]')||{}).value)||null,
+        somPct:Number((form.querySelector('[name=somPct]')||{}).value)||null,
+        acv:Number((form.querySelector('[name=acv]')||{}).value)||null,
+        geography:(form.querySelector('[name=geography]')||{}).value||'',
+        buyerWho:(form.querySelector('[name=buyerWho]')||{}).value||'',
+        sources:{
+          tam:(form.querySelector('[name=srcTam]')||{}).value||'',
+          sam:(form.querySelector('[name=srcSam]')||{}).value||'',
+          som:(form.querySelector('[name=srcSom]')||{}).value||''
+        }
+      };
+      next.calculated=calcMarketSizing(next);
+      state.funding.marketSizing=next;
+      // Link market sizing evidence markers (does not auto-complete without explicit evidence rows)
+      scheduleSave(); toast('Market sizing saved'); render();
+    }
+    if(a==='save-moat-claim'){
+      state.funding=state.funding||emptyFunding();
+      state.funding.moat=state.funding.moat||{sources:{},primaryClaim:''};
+      state.funding.moat.primaryClaim=(document.getElementById('moatPrimaryClaim')||{}).value||'';
+      scheduleSave(); toast('Moat claim saved'); render();
+    }
+    if(a==='add-interview'){
+      promptForm('Add discovery interview',[
+        {name:'title',label:'Interview title',required:true,value:'Interview — '},
+        {name:'persona',label:'Persona / role'},
+        {name:'insights',label:'Insight tags (comma-separated)',hint:'e.g. Problem A, pricing asked, wants pilot'},
+        {name:'notes',label:'Notes',type:'textarea'}
+      ],function(d){
+        const tags=String(d.insights||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+        const exp=(state.experiments||[]).find(function(x){return /interview|discovery/i.test(x.title);});
+        const ev={
+          id:uid('ev'),title:d.title,type:'interview',notes:d.notes||'',
+          persona:d.persona||'',insightTags:tags,findings:tags,
+          fundingKey:'customer_discovery',linkedFundingKeys:['customer_discovery'],
+          experimentId:exp?exp.id:null,
+          linkedExperimentIds:exp?[exp.id]:[],
+          createdAt:nowISO()
+        };
+        state.evidence.unshift(ev);
+        if(exp){
+          const ep=experimentProgress(exp, state);
+          exp.completedCount=ep.count;
+        }
+        syncMetricFromEvidence();
+        logActivity('Interview evidence: '+d.title);
+        scheduleSave(); render(); toast('Interview added');
       });
     }
     if(a==='invite-advisor'){
@@ -2008,6 +2434,44 @@ document.addEventListener('click', function(e){
       m.updatedAt=nowISO();
       scheduleSave(); render(); toast('Metric updated');
     });
+    return;
+  }
+  const lf=e.target.closest('[data-link-funding]');
+  if(lf){
+    const key=lf.getAttribute('data-link-funding');
+    const opts=(state.evidence||[]).map(function(ev){return {value:ev.id,label:ev.title+' ('+ev.type+')'};});
+    if(!opts.length){
+      toast('Add evidence first, then link it here');
+      setView('evidence');
+      return;
+    }
+    promptForm('Link evidence to '+key,[
+      {name:'evidenceId',label:'Evidence',type:'select',options:opts,required:true}
+    ],function(d){
+      const ev=state.evidence.find(function(x){return x.id===d.evidenceId;});
+      if(!ev) return;
+      ev.fundingKey=key;
+      ev.linkedFundingKeys=Array.from(new Set([].concat(ev.linkedFundingKeys||[],[key])));
+      scheduleSave(); render(); toast('Evidence linked to '+key);
+    });
+    return;
+  }
+  const sm=e.target.closest('[data-save-moat]');
+  if(sm){
+    const key=sm.getAttribute('data-save-moat');
+    state.funding=state.funding||emptyFunding();
+    state.funding.moat=state.funding.moat||{sources:{},primaryClaim:''};
+    state.funding.moat.sources=state.funding.moat.sources||{};
+    const statusEl=document.querySelector('[data-moat-status="'+key+'"]');
+    const monthsEl=document.querySelector('[data-moat-months="'+key+'"]');
+    const claimEl=document.querySelector('[data-moat-claim="'+key+'"]');
+    state.funding.moat.sources[key]={
+      status:(statusEl&&statusEl.value)||'none',
+      monthsToCopy:monthsEl&&monthsEl.value!==''?Number(monthsEl.value):null,
+      claim:(claimEl&&claimEl.value)||'',
+      evidenceIds:(state.funding.moat.sources[key]&&state.funding.moat.sources[key].evidenceIds)||[]
+    };
+    scheduleSave(); toast('Moat source saved'); render();
     return;
   }
 });

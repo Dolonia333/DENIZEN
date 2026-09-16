@@ -247,6 +247,58 @@ describe('business-studio route helpers', () => {
   });
 });
 
+describe('business-studio funding readiness', () => {
+  it('counts evidence-gated items without inventing a readiness %', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    const state = {
+      evidence: [
+        { id: 'ev1', type: 'interview', fundingKey: 'customer_discovery', title: 'A' },
+        { id: 'ev2', type: 'interview', fundingKey: 'customer_discovery', title: 'B' },
+        { id: 'ev3', type: 'interview', fundingKey: 'customer_discovery', title: 'C' },
+        { id: 'ev4', type: 'document', fundingKey: 'problem_need', title: 'Problem brief' },
+      ],
+      funding: funding.emptyFundingState(),
+      tasks: [{ id: 't1', title: 'Contacted five schools', status: 'done' }],
+    };
+    const ready = funding.evaluateFundingReadiness(state);
+    assert.match(ready.overall.summary, /complete/);
+    assert.equal(ready.overall.total, funding.FUNDING_READINESS_SECTIONS.flatMap((s) => s.items).length);
+    const disc = ready.sections
+      .flatMap((s) => s.items)
+      .find((i) => i.key === 'customer_discovery');
+    assert.equal(disc.count, 3);
+    assert.equal(disc.target, 10);
+    assert.equal(disc.complete, false);
+    assert.match(disc.label, /3 \/ 10/);
+    // Completed tasks alone never flip discovery complete
+    assert.ok(ready.overall.complete >= 1); // problem_need has evidence
+  });
+
+  it('calculates TAM/SAM/SOM and warns on weak SOM', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    const calc = funding.calculateMarketSizing({
+      tamOrgs: 10000,
+      samOrgs: 1000,
+      somPct: 10,
+      acv: 12000,
+      sources: {},
+    });
+    assert.equal(calc.tamValue, 10000 * 12000);
+    assert.equal(calc.samValue, 1000 * 12000);
+    assert.equal(calc.somOrgs, 100);
+    assert.ok(calc.warnings.some((w) => /SOM/i.test(w)));
+  });
+
+  it('treats first-mover-only moat as needing evidence', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    const evaled = funding.evaluateMoat({
+      evidence: [],
+      funding: { moat: { primaryClaim: 'First mover', sources: {} } },
+    });
+    assert.ok(evaled.sources.every((s) => s.defensibility === 'needs_more_evidence' || s.status === 'none'));
+  });
+});
+
 describe('business-studio static shell', () => {
   it('ships index.html with founder nav + advisor mode', () => {
     const fs = require('node:fs');
@@ -258,6 +310,11 @@ describe('business-studio static shell', () => {
     assert.match(html, /id:'strategy'/);
     assert.match(html, /id:'evidence'/);
     assert.match(html, /id:'mentors'/);
+    assert.match(html, /id:'funding'/);
+    assert.match(html, /Funding Readiness/);
+    assert.match(html, /Market Sizing/);
+    assert.match(html, /Moat/);
+    assert.match(html, /Discovery Lab/);
     assert.match(html, /advisorMode|Advisor mode/);
     assert.match(html, /i2e-e3-pave|i2E E3/);
     assert.match(html, /data-why/);
