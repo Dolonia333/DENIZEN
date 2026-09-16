@@ -18,6 +18,87 @@ function emptyMarketRow() {
   return { customers: '', acv: '', size: '' };
 }
 
+const SALES_CYCLE_ROLES = Object.freeze([
+  { id: 'uses', label: 'USES', tone: 'sage' },
+  { id: 'recommends', label: 'RECOMMENDS', tone: 'blue' },
+  { id: 'influences', label: 'INFLUENCES', tone: 'tan' },
+  { id: 'decides', label: 'DECIDES & PAYS', tone: 'teal' },
+  { id: 'saboteur', label: 'SABOTEUR', tone: 'red' },
+]);
+
+const SALES_CYCLE_STEPS = Object.freeze([
+  { id: 'demo', label: 'Demo office' },
+  { id: 'account', label: 'One real account on My Board' },
+  { id: 'receipt', label: 'Weekly receipt (outcomes ledger)' },
+  { id: 'paid', label: 'Paid seat' },
+]);
+
+function emptySalesCycleDiagram() {
+  return {
+    title: 'Sales cycle',
+    subtitle: 'Buying center around the product.',
+    productTitle: 'Product',
+    productSubtitle: '',
+    roles: SALES_CYCLE_ROLES.map((r) => ({ id: r.id, label: r.label, tone: r.tone, text: '' })),
+    cycle: SALES_CYCLE_STEPS.map((s) => ({ id: s.id, label: s.label })),
+    cycleNote: 'How a deal moves (honest cycle — no invented close dates)',
+  };
+}
+
+function denizenSalesCycleDiagram() {
+  return {
+    title: 'DENIZEN sales cycle · E3 Workshop A',
+    subtitle: 'Buying center around the product. One paying persona: Dana.',
+    productTitle: 'DENIZEN',
+    productSubtitle: 'visual AI office',
+    roles: [
+      { id: 'uses', label: 'USES', tone: 'sage', text: 'Dana + one operator\nlives in Cursor / Grok\nworks in the office daily' },
+      { id: 'recommends', label: 'RECOMMENDS', tone: 'blue', text: 'Shawnaya (co-founder)\nor a peer founder\nwho already uses agents' },
+      { id: 'influences', label: 'INFLUENCES', tone: 'tan', text: '1921 / Angela — only if the\nseat is bought through 1921\nRM Cyber — if joint ops' },
+      { id: 'decides', label: 'DECIDES & PAYS', tone: 'teal', text: 'Dana on a card\n$49 / team or $199 / lab\nnot E3, not a federal vehicle' },
+      { id: 'saboteur', label: 'SABOTEUR', tone: 'red', text: "IT / security:\n'agents cannot send mail'\nor 'we already have ChatGPT'" },
+    ],
+    cycle: SALES_CYCLE_STEPS.map((s) => ({ id: s.id, label: s.label })),
+    cycleNote: 'How a deal moves (honest cycle — no invented close dates)',
+  };
+}
+
+function sanitizeSalesCycleDiagram(raw) {
+  const out = emptySalesCycleDiagram();
+  if (!raw || typeof raw !== 'object') return out;
+  out.title = coerceString(raw.title) || out.title;
+  out.subtitle = coerceString(raw.subtitle) || out.subtitle;
+  out.productTitle = coerceString(raw.productTitle || raw.centerTitle) || out.productTitle;
+  out.productSubtitle = coerceString(raw.productSubtitle || raw.centerSubtitle);
+  out.cycleNote = coerceString(raw.cycleNote) || out.cycleNote;
+  const byId = {};
+  if (Array.isArray(raw.roles)) {
+    raw.roles.forEach((r) => {
+      if (r && r.id) byId[r.id] = r;
+    });
+  }
+  out.roles = SALES_CYCLE_ROLES.map((meta) => {
+    const hit = byId[meta.id] || {};
+    return {
+      id: meta.id,
+      label: coerceString(hit.label) || meta.label,
+      tone: meta.tone,
+      text: coerceString(hit.text),
+    };
+  });
+  const stepById = {};
+  if (Array.isArray(raw.cycle)) {
+    raw.cycle.forEach((s) => {
+      if (s && s.id) stepById[s.id] = s;
+    });
+  }
+  out.cycle = SALES_CYCLE_STEPS.map((meta) => ({
+    id: meta.id,
+    label: coerceString((stepById[meta.id] || {}).label) || meta.label,
+  }));
+  return out;
+}
+
 function emptyPave() {
   return {
     snapshot: {
@@ -34,6 +115,7 @@ function emptyPave() {
       solution: '',
       valueProposition: '',
       salesCycle: '',
+      salesCycleDiagram: emptySalesCycleDiagram(),
     },
     partB: {
       targetPersona: '',
@@ -251,6 +333,7 @@ function sanitizePave(raw) {
   out.partA.solution = coerceString(a.solution);
   out.partA.valueProposition = coerceString(a.valueProposition);
   out.partA.salesCycle = coerceString(a.salesCycle);
+  out.partA.salesCycleDiagram = sanitizeSalesCycleDiagram(a.salesCycleDiagram);
 
   const b = raw.partB || {};
   out.partB.targetPersona = coerceString(b.targetPersona);
@@ -348,7 +431,8 @@ function denizenPaveDraft() {
       valueProposition:
         'With DENIZEN, Dana can: (1) See which agent is on and what it last finished. (2) Keep a sales board that only shows live humans and next verbs. (3) Leave an agent on overnight without this chat staying open. (4) Draft follow-ups without auto-sending mail. (5) Hand a coding fix to Cursor and get a closed ticket. (6) Prove to a partner or mentor what ran, with receipts — not vibes.',
       salesCycle:
-        'Text map until we draw it. DENIZEN in the center. USER: Dana plus one technical operator in Cursor or Grok. RECOMMENDS: co-founder Shawnaya or a peer founder who already uses agents. INFLUENCES: 1921 / Angela only if the seat is bought through the holding company; RM Cyber if the story is joint ops. DECIDES AND PAYS: Dana on a card ($49/team or $199/lab) until a real contract exists. Not a federal vehicle. Not E3. SABOTEUR: IT or security (agents cannot send mail) or “we already have ChatGPT.” Mitigation: mail default-deny; working-set hygiene; outcomes ledger. CYCLE TODAY: demo office → one real account on the board → weekly receipt → paid seat. No invented close dates.',
+        'Text map until we draw it. DENIZEN in the center. USER: Dana plus one technical operator in Cursor or Grok. RECOMMENDS: co-founder Shawnaya or a peer founder who already uses agents. INFLUENCES: 1921 / Angela only if the seat is bought through the holding company; RM Cyber if the story is joint ops. DECIDES AND PAYS: Dana on a card ($49/team or $199/lab). SABOTEUR: IT or security (agents cannot send mail) or “we already have ChatGPT.” CYCLE TODAY: demo office → one real account → weekly receipt → paid seat.',
+      salesCycleDiagram: denizenSalesCycleDiagram(),
     },
     partB: {
       targetPersona:
@@ -642,6 +726,11 @@ module.exports = {
   emptyPave,
   emptyRiskRow,
   emptyMarketRow,
+  emptySalesCycleDiagram,
+  denizenSalesCycleDiagram,
+  sanitizeSalesCycleDiagram,
+  SALES_CYCLE_ROLES,
+  SALES_CYCLE_STEPS,
   PAVE_SECTIONS,
   sanitizePave,
   denizenPaveDraft,

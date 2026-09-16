@@ -350,6 +350,7 @@ describe('business-studio static shell', () => {
     assert.match(html, /id:'pave'/);
     assert.match(html, /PAVE Workbook|pave-wrap|Living section/);
     assert.match(html, /pave-ask-why|Ask WHY/);
+    assert.match(html, /font-sheet|Arimo|sc-diagram|salesCycleDiagram/);
     assert.match(html, /lean-canvas/);
     assert.match(html, /Load DENIZEN draft/);
     assert.match(html, /uniqueValueProposition/);
@@ -404,6 +405,10 @@ describe('business-studio living PAVE workbook', () => {
     assert.match(draft.partD.pitch90, /ten Danas/i);
     assert.ok(pave.paveFilledCount(draft) > 20);
     assert.ok(pave.pavePartBIsSubstantial(draft));
+    assert.match(draft.partA.salesCycleDiagram.productTitle, /DENIZEN/);
+    assert.equal(draft.partA.salesCycleDiagram.roles.length, 5);
+    assert.equal(draft.partA.salesCycleDiagram.cycle.length, 4);
+    assert.match(draft.partA.salesCycleDiagram.roles.find((r) => r.id === 'decides').text, /Dana/);
   });
 
   it('keeps Part B living from discovery evidence and mentors ask WHY', () => {

@@ -6,7 +6,7 @@
 <title>Business Studio · Founder OS · Denizen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <style>
 :root{
   --canvas:#E6E3D8;
@@ -35,6 +35,7 @@
   --info:#3F6FA8;
   --font-ui:'Figtree',ui-sans-serif,system-ui,sans-serif;
   --font-display:'Syne',ui-sans-serif,system-ui,sans-serif;
+  --font-sheet:'Arimo','Arial','Helvetica Neue',Helvetica,sans-serif;
   --shadow:0 1px 2px rgba(16,35,28,.05),0 8px 24px rgba(16,35,28,.06);
   --shadow-lift:0 10px 30px rgba(16,35,28,.10),0 2px 8px rgba(16,35,28,.05);
   --shadow-modal:0 28px 70px rgba(16,35,28,.28),0 8px 20px rgba(16,35,28,.10);
@@ -580,6 +581,124 @@ html.embed .dz-app-chrome{display:none}
   background:rgba(42,106,85,.06)
 }
 
+/* Worksheet document contrast: Arial-family body vs app chrome */
+.pave-sheet{
+  font-family:var(--font-sheet);
+  background:#F7F4EC;
+  border:1px solid rgba(16,35,28,.14);
+  border-radius:18px;
+  padding:18px 18px 22px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7), var(--shadow);
+}
+.pave-sheet .pave-section-head h3{
+  font-family:var(--font-sheet);font-weight:700;letter-spacing:-.01em;text-transform:none;font-size:22px;color:#1B2A4A
+}
+.pave-sheet .pave-section-head p{font-family:var(--font-sheet);color:#4A5568}
+.pave-sheet .pave-field{
+  background:#FFFEFA;border-color:rgba(27,42,74,.12);border-radius:4px;padding:12px 12px 10px
+}
+.pave-sheet .pave-field-head label{
+  font-family:var(--font-sheet);font-size:13px;font-weight:700;color:#1B2A4A;letter-spacing:0
+}
+.pave-sheet .pave-field textarea,
+.pave-sheet .pave-field input,
+.pave-sheet .pave-risk-table textarea,
+.pave-sheet .pave-risk-table input,
+.pave-sheet .pave-market-table input{
+  font-family:var(--font-sheet);font-size:14.5px;line-height:1.45;color:#1A1A1A;background:#fff;border-radius:2px
+}
+.pave-sheet .pave-risk-table th,
+.pave-sheet .pave-market-table th{
+  font-family:var(--font-sheet);font-weight:700;color:#1B2A4A;background:#EEEAE0;text-transform:none;letter-spacing:0
+}
+
+/* Sales cycle diagram (from E3 Workshop A worksheet) */
+.sc-diagram{
+  margin:4px 0 18px;padding:18px 16px 16px;border:1px solid rgba(27,42,74,.16);
+  border-radius:8px;background:#FFFEFA;font-family:var(--font-sheet)
+}
+.sc-diagram-head{margin-bottom:14px}
+.sc-diagram-head .sc-title-input{
+  width:100%;border:none;background:transparent;font-family:var(--font-sheet);
+  font-size:18px;font-weight:700;color:#1B2A4A;padding:0;letter-spacing:-.01em
+}
+.sc-diagram-head .sc-sub-input{
+  width:100%;border:none;background:transparent;font-family:var(--font-sheet);
+  font-size:13px;color:#5A6472;padding:4px 0 0
+}
+.sc-flow-label input{
+  width:100%;border:none;background:transparent;font-family:var(--font-sheet);
+  font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#1B2A4A;padding:0
+}
+.sc-map{
+  display:grid;
+  grid-template-columns:1fr 1.15fr 1fr;
+  grid-template-rows:auto auto auto;
+  gap:12px 14px;align-items:center;justify-items:center;
+  margin:8px 0 18px;min-height:280px
+}
+.sc-role{
+  width:100%;max-width:220px;background:#fff;border:2px solid #8FAE9F;border-radius:10px;
+  padding:10px 11px;box-shadow:0 1px 2px rgba(16,35,28,.05)
+}
+.sc-role[data-tone="sage"]{border-color:#7FA58E}
+.sc-role[data-tone="blue"]{border-color:#7A93C4}
+.sc-role[data-tone="tan"]{border-color:#C4A574}
+.sc-role[data-tone="teal"]{border-color:#5F9EA0}
+.sc-role[data-tone="red"]{border-color:#C47A74}
+.sc-role .sc-role-label{
+  font-size:11px;font-weight:700;letter-spacing:.04em;color:#1B2A4A;margin-bottom:6px
+}
+.sc-role textarea{
+  width:100%;min-height:72px;border:1px solid rgba(27,42,74,.12);border-radius:4px;
+  background:#FFFEFA;font-family:var(--font-sheet);font-size:12.5px;line-height:1.35;padding:7px 8px;resize:vertical
+}
+.sc-hub{
+  grid-column:2;grid-row:2;width:148px;height:148px;border-radius:50%;
+  background:#1B2A4A;color:#F7F4EC;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:12px;box-shadow:0 10px 28px rgba(27,42,74,.22)
+}
+.sc-hub input,.sc-hub textarea{
+  width:100%;border:none;background:transparent;color:#F7F4EC;text-align:center;
+  font-family:var(--font-sheet);padding:2px 4px;border-radius:4px
+}
+.sc-hub input{font-size:16px;font-weight:700;letter-spacing:.02em}
+.sc-hub textarea{font-size:11.5px;min-height:34px;resize:none;opacity:.88;line-height:1.25}
+.sc-hub input:focus,.sc-hub textarea:focus,.sc-role textarea:focus{
+  outline:none;box-shadow:0 0 0 2px rgba(42,106,85,.25)
+}
+.sc-role.pos-uses{grid-column:2;grid-row:1}
+.sc-role.pos-saboteur{grid-column:1;grid-row:1}
+.sc-role.pos-recommends{grid-column:3;grid-row:1}
+.sc-role.pos-decides{grid-column:1;grid-row:3}
+.sc-role.pos-influences{grid-column:3;grid-row:3}
+.sc-flow-label{
+  margin:0 0 10px
+}
+.sc-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sc-step{
+  flex:1 1 140px;min-width:120px;background:#fff;border:1.5px solid #1B2A4A;border-radius:8px;padding:10px 11px
+}
+.sc-step .sc-step-n{font-size:11px;font-weight:700;color:#5A6472;margin-bottom:4px}
+.sc-step input{
+  width:100%;border:none;background:transparent;font-family:var(--font-sheet);font-size:13.5px;
+  font-weight:600;color:#1B2A4A;padding:0
+}
+.sc-arrow{color:#1B2A4A;font-weight:700;font-size:18px;flex:none}
+@media(max-width:820px){
+  .sc-map{display:flex;flex-direction:column;min-height:0}
+  .sc-role{max-width:100%}
+  .sc-arrow{transform:rotate(90deg)}
+}
+.sc-ref{
+  margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+  padding-top:12px;border-top:1px dashed rgba(27,42,74,.14)
+}
+.sc-ref img{
+  width:min(100%,280px);height:auto;border-radius:6px;border:1px solid rgba(27,42,74,.12);
+  background:#fff
+}
+
 .chip{display:inline-flex;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--forest-tint);color:var(--forest)}
 .kbd{font-size:11px;color:var(--muted)}
 
@@ -793,7 +912,7 @@ function emptyMarketRow(){ return {customers:'',acv:'',size:''}; }
 function emptyPave(){
   return {
     snapshot:{company:'',founders:'',i2eAdvisor:'',cohort:'',productDescription:''},
-    partA:{customer:'',problem:'',currentAlternative:'',solution:'',valueProposition:'',salesCycle:''},
+    partA:{customer:'',problem:'',currentAlternative:'',solution:'',valueProposition:'',salesCycle:'',salesCycleDiagram:emptySalesCycleDiagram()},
     partB:{targetPersona:'',interviewGoal:'10+',interviewsCompletedNote:'',summaryOfCalls:'',expectedFindings:'',unexpectedFindings:'',personaDecision:'',customerDiscovery:'',interviewRecords:[]},
     partC:{
       directCompetitors:'',indirectCompetitors:'',potentialCompetitors:'',statusQuo:'',competitiveMatrix:'',
@@ -806,6 +925,65 @@ function emptyPave(){
     final:{discoveredRisks:'',recommendedNextSteps:'',advisorOutcome:''},
     reviews:[], updatedAt:null, living:true
   };
+}
+const SALES_CYCLE_ROLES=[
+  {id:'uses',label:'USES',tone:'sage'},
+  {id:'recommends',label:'RECOMMENDS',tone:'blue'},
+  {id:'influences',label:'INFLUENCES',tone:'tan'},
+  {id:'decides',label:'DECIDES & PAYS',tone:'teal'},
+  {id:'saboteur',label:'SABOTEUR',tone:'red'}
+];
+const SALES_CYCLE_STEPS=[
+  {id:'demo',label:'Demo office'},
+  {id:'account',label:'One real account on My Board'},
+  {id:'receipt',label:'Weekly receipt (outcomes ledger)'},
+  {id:'paid',label:'Paid seat'}
+];
+function emptySalesCycleDiagram(){
+  return {
+    title:'Sales cycle', subtitle:'Buying center around the product.',
+    productTitle:'Product', productSubtitle:'',
+    roles:SALES_CYCLE_ROLES.map(function(r){return {id:r.id,label:r.label,tone:r.tone,text:''};}),
+    cycle:SALES_CYCLE_STEPS.map(function(s){return {id:s.id,label:s.label};}),
+    cycleNote:'How a deal moves (honest cycle — no invented close dates)'
+  };
+}
+function denizenSalesCycleDiagram(){
+  return {
+    title:'DENIZEN sales cycle · E3 Workshop A',
+    subtitle:'Buying center around the product. One paying persona: Dana.',
+    productTitle:'DENIZEN', productSubtitle:'visual AI office',
+    roles:[
+      {id:'uses',label:'USES',tone:'sage',text:'Dana + one operator\nlives in Cursor / Grok\nworks in the office daily'},
+      {id:'recommends',label:'RECOMMENDS',tone:'blue',text:'Shawnaya (co-founder)\nor a peer founder\nwho already uses agents'},
+      {id:'influences',label:'INFLUENCES',tone:'tan',text:'1921 / Angela — only if the\nseat is bought through 1921\nRM Cyber — if joint ops'},
+      {id:'decides',label:'DECIDES & PAYS',tone:'teal',text:'Dana on a card\n$49 / team or $199 / lab\nnot E3, not a federal vehicle'},
+      {id:'saboteur',label:'SABOTEUR',tone:'red',text:"IT / security:\n'agents cannot send mail'\nor 'we already have ChatGPT'"}
+    ],
+    cycle:SALES_CYCLE_STEPS.map(function(s){return {id:s.id,label:s.label};}),
+    cycleNote:'How a deal moves (honest cycle — no invented close dates)'
+  };
+}
+function sanitizeSalesCycleDiagram(raw){
+  var out=emptySalesCycleDiagram();
+  if(!raw||typeof raw!=='object') return out;
+  out.title=coercePaveStr(raw.title)||out.title;
+  out.subtitle=coercePaveStr(raw.subtitle)||out.subtitle;
+  out.productTitle=coercePaveStr(raw.productTitle||raw.centerTitle)||out.productTitle;
+  out.productSubtitle=coercePaveStr(raw.productSubtitle||raw.centerSubtitle);
+  out.cycleNote=coercePaveStr(raw.cycleNote)||out.cycleNote;
+  var byId={};
+  if(Array.isArray(raw.roles)) raw.roles.forEach(function(r){ if(r&&r.id) byId[r.id]=r; });
+  out.roles=SALES_CYCLE_ROLES.map(function(meta){
+    var hit=byId[meta.id]||{};
+    return {id:meta.id,label:coercePaveStr(hit.label)||meta.label,tone:meta.tone,text:coercePaveStr(hit.text)};
+  });
+  var stepById={};
+  if(Array.isArray(raw.cycle)) raw.cycle.forEach(function(s){ if(s&&s.id) stepById[s.id]=s; });
+  out.cycle=SALES_CYCLE_STEPS.map(function(meta){
+    return {id:meta.id,label:coercePaveStr((stepById[meta.id]||{}).label)||meta.label};
+  });
+  return out;
 }
 const PAVE_SECTIONS=[
   {id:'snapshot',title:'Company Snapshot',when:'Complete at the start of the cohort',living:false,fields:[
@@ -821,7 +999,7 @@ const PAVE_SECTIONS=[
     {key:'partA.currentAlternative',label:'They currently solve it by',kind:'textarea'},
     {key:'partA.solution',label:'Our product solves it by',kind:'textarea'},
     {key:'partA.valueProposition',label:'Value proposition — With [company], [customer] can…',kind:'textarea'},
-    {key:'partA.salesCycle',label:'Sales cycle (diagram or text map)',kind:'textarea'}
+    {key:'partA.salesCycle',label:'Sales cycle notes (optional — diagram below is the source of truth)',kind:'textarea'}
   ]},
   {id:'partB',title:'Part B — After Workshop B',when:'Living section — keep updating as you finish more interviews',living:true,fields:[
     {key:'partB.targetPersona',label:'Target persona / segment (one at a time — don’t mix)',kind:'textarea'},
@@ -898,6 +1076,7 @@ function sanitizePave(raw){
   out.partA.customer=coercePaveStr(a.customer); out.partA.problem=coercePaveStr(a.problem);
   out.partA.currentAlternative=coercePaveStr(a.currentAlternative); out.partA.solution=coercePaveStr(a.solution);
   out.partA.valueProposition=coercePaveStr(a.valueProposition); out.partA.salesCycle=coercePaveStr(a.salesCycle);
+  out.partA.salesCycleDiagram=sanitizeSalesCycleDiagram(a.salesCycleDiagram);
   var b=raw.partB||{};
   out.partB.targetPersona=coercePaveStr(b.targetPersona);
   out.partB.interviewGoal=coercePaveStr(b.interviewGoal)||'10+';
@@ -975,7 +1154,8 @@ function denizenPaveDraft(){
       currentAlternative:'Stacked chat tabs + a CRM nobody trusts + Slack/Notion notes + hoping a VA or intern follows up. Status quo is ChatGPT/Claude/Cursor with no office, no outcomes ledger, and no durable agent when the window closes.',
       solution:'Putting persistent agents in one office Dana can watch. Agents keep memory, run allowed tools, park junk off the sales board, and write outcomes. Faster than hiring a coordinator; clearer than another chatbot; cheaper than a full ops hire. Mail stays gated until Dana says send.',
       valueProposition:'With DENIZEN, Dana can: (1) See which agent is on and what it last finished. (2) Keep a sales board that only shows live humans and next verbs. (3) Leave an agent on overnight without this chat staying open. (4) Draft follow-ups without auto-sending mail. (5) Hand a coding fix to Cursor and get a closed ticket. (6) Prove to a partner or mentor what ran, with receipts — not vibes.',
-      salesCycle:'Text map until we draw it. DENIZEN in the center. USER: Dana plus one technical operator. DECIDES AND PAYS: Dana on a card ($49/team or $199/lab). CYCLE TODAY: demo office → one real account → weekly receipt → paid seat.'
+      salesCycle:'Text map until we draw it. DENIZEN in the center. USER: Dana plus one technical operator. DECIDES AND PAYS: Dana on a card ($49/team or $199/lab). CYCLE TODAY: demo office → one real account → weekly receipt → paid seat.',
+      salesCycleDiagram:denizenSalesCycleDiagram()
     },
     partB:{
       targetPersona:'Same as Part A: Dana, founder-operator of a 3–8 person technical shop. Do not mix CareerTech, OMES, and E3 into this list.',
@@ -2772,7 +2952,7 @@ function renderPave(){
   });
   html+='</div>';
 
-  html+='<div class="panel pave-section"><div class="pave-section-head"><h3>'+esc(sec.title)
+  html+='<div class="panel pave-section pave-sheet"><div class="pave-section-head"><h3>'+esc(sec.title)
     +(sec.living?' <span class="pave-living-chip">Living</span>':'')
     +'</h3><p>'+esc(sec.when)+'</p></div>';
 
@@ -2783,6 +2963,10 @@ function renderPave(){
       +'<button type="button" class="btn btn-sm" data-nav="discovery">Discovery Lab</button>'
       +'<button type="button" class="btn btn-sm btn-forest" data-action="pave-sync-discovery">Refresh from evidence</button>'
       +'</div></div>';
+  }
+
+  if(sec.id==='partA'){
+    html+=renderSalesCycleDiagram(pave.partA.salesCycleDiagram||emptySalesCycleDiagram(), advisor);
   }
 
   sec.fields.forEach(function(f){
@@ -2854,6 +3038,54 @@ function renderPave(){
   return html;
 }
 
+function renderSalesCycleDiagram(diagram, advisor){
+  diagram=sanitizeSalesCycleDiagram(diagram);
+  const rolePos={uses:'pos-uses',recommends:'pos-recommends',influences:'pos-influences',decides:'pos-decides',saboteur:'pos-saboteur'};
+  const ro=advisor?' readonly':'';
+  let html='<div class="sc-diagram" data-sc-diagram="1">'
+    +'<div class="sc-diagram-head">'
+    +'<input class="sc-title-input" data-sc="title" value="'+esc(diagram.title||'')+'" aria-label="Diagram title"'+ro+'/>'
+    +'<input class="sc-sub-input" data-sc="subtitle" value="'+esc(diagram.subtitle||'')+'" aria-label="Diagram subtitle"'+ro+'/>'
+    +'</div>';
+
+  html+='<div class="sc-map" aria-label="Buying center diagram">';
+  ['saboteur','uses','recommends'].forEach(function(id){
+    const role=(diagram.roles||[]).find(function(r){return r.id===id;})||{id:id,label:id,tone:'sage',text:''};
+    html+='<div class="sc-role '+rolePos[id]+'" data-tone="'+esc(role.tone||'sage')+'">'
+      +'<div class="sc-role-label">'+esc(role.label||id.toUpperCase())+'</div>'
+      +'<textarea data-sc-role="'+esc(id)+'" rows="3"'+ro+'>'+esc(role.text||'')+'</textarea>'
+      +'</div>';
+  });
+  html+='<div class="sc-hub">'
+    +'<input data-sc="productTitle" value="'+esc(diagram.productTitle||'')+'"'+ro+'/>'
+    +'<textarea data-sc="productSubtitle" rows="2"'+ro+'>'+esc(diagram.productSubtitle||'')+'</textarea>'
+    +'</div>';
+  ['decides','influences'].forEach(function(id){
+    const role=(diagram.roles||[]).find(function(r){return r.id===id;})||{id:id,label:id,tone:'sage',text:''};
+    html+='<div class="sc-role '+rolePos[id]+'" data-tone="'+esc(role.tone||'sage')+'">'
+      +'<div class="sc-role-label">'+esc(role.label||id.toUpperCase())+'</div>'
+      +'<textarea data-sc-role="'+esc(id)+'" rows="3"'+ro+'>'+esc(role.text||'')+'</textarea>'
+      +'</div>';
+  });
+  html+='</div>';
+
+  html+='<div class="sc-flow-label"><input data-sc="cycleNote" value="'+esc(diagram.cycleNote||'')+'"'+ro+'/></div>';
+  html+='<div class="sc-flow">';
+  (diagram.cycle||[]).forEach(function(step,i){
+    if(i) html+='<span class="sc-arrow" aria-hidden="true">→</span>';
+    html+='<div class="sc-step"><div class="sc-step-n">'+(i+1)+'.</div>'
+      +'<input data-sc-step="'+esc(step.id)+'" value="'+esc(step.label||'')+'"'+ro+'/>'
+      +'</div>';
+  });
+  html+='</div>';
+
+  html+='<div class="sc-ref">'
+    +'<span class="field-hint">Editable buying-center map from your Workshop A worksheet. Mentors can Ask WHY on Part A fields below.</span>'
+    +'<img src="/business-studio/assets/denizen-sales-cycle-workshop-a.jpg" alt="Original DENIZEN sales cycle worksheet diagram" loading="lazy"/>'
+    +'</div></div>';
+  return html;
+}
+
 function readPaveFromDom(prog){
   var pave=sanitizePave((prog&&prog.pave)||{});
   var wrap=document.querySelector('[data-pave-program]');
@@ -2873,6 +3105,24 @@ function readPaveFromDom(prog){
     if(!pave.partC.marketSizing[layer]) pave.partC.marketSizing[layer]=emptyMarketRow();
     pave.partC.marketSizing[layer][col]=inp.value;
   });
+  var sc=wrap.querySelector('[data-sc-diagram]');
+  if(sc){
+    var diagram=sanitizeSalesCycleDiagram(pave.partA.salesCycleDiagram||{});
+    sc.querySelectorAll('[data-sc]').forEach(function(inp){
+      diagram[inp.getAttribute('data-sc')]=inp.value;
+    });
+    sc.querySelectorAll('[data-sc-role]').forEach(function(inp){
+      var id=inp.getAttribute('data-sc-role');
+      var role=diagram.roles.find(function(r){return r.id===id;});
+      if(role) role.text=inp.value;
+    });
+    sc.querySelectorAll('[data-sc-step]').forEach(function(inp){
+      var id=inp.getAttribute('data-sc-step');
+      var step=diagram.cycle.find(function(s){return s.id===id;});
+      if(step) step.label=inp.value;
+    });
+    pave.partA.salesCycleDiagram=sanitizeSalesCycleDiagram(diagram);
+  }
   if(pave.partB.summaryOfCalls && !pave.partB.customerDiscovery){
     pave.partB.customerDiscovery=pave.partB.summaryOfCalls;
   }
