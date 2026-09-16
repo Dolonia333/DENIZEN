@@ -74,7 +74,7 @@
         './src/denizen-voice-call-ui.js?v=vc1',
         './src/elevenlabs-provider.js',
         './src/sfx.js?v=always1',
-        './src/voice-input.js?v=voicevc3corner',
+        './src/voice-input.js?v=voicevc4buzz',
         './src/llm-telemetry-panel.js?v=lmfix8',
         './src/mesh-jobs-panel.js?v=mesh2',
         './src/browser-mirror-panel.js?v=lucymirror6',
@@ -82,13 +82,13 @@
         './src/security-feed.js?v=sec2',
       ]);
       await loadParallel([
-        './src/tabler-icons.js?v=ti1',
+        './src/tabler-icons.js?v=ti6',
         './src/office-hq/office-level-chip.js?v=lvl4',
         './src/office-hq/office-hq-panel.js?v=hq2',
         './src/visitor-desktop-pairing.js?v=pair3',
         './src/visitor-credits-chip.js?v=node7',
-        './src/visitor-handoff-ui.js?v=handoffHeader1',
-        './src/visitor-projects-ui.js?v=projHeader2',
+        './src/visitor-handoff-ui.js?v=handoffHeader3',
+        './src/visitor-projects-ui.js?v=projHeader4',
         './src/visitor-assistant-labels.js?v=noStroke1',
         './src/bouncer-client-init.js?v=sec3',
         './src/security-monitor.js?v=sec3',
@@ -105,8 +105,9 @@
   function afterOffice() {
     const urls = [
       './src/visitor-companion-bridge.js?v=comp1',
-      './src/visitor-mcp-connect-ui.js?v=mcpHeader1',
-      './src/visitor-briefing-ui.js?v=briefHeader1',
+        './src/visitor-mcp-connect-ui.js?v=mcpHeader2',
+        './src/seat-ai.js?v=seat1',
+      './src/visitor-briefing-ui.js?v=briefHeader2',
       './src/visitor-voice-walkup.js?v=vis3',
       './src/visitor-skill-gap-ui.js?v=sgap1',
       './src/visitor-agent-inbox.js?v=ainbox1',

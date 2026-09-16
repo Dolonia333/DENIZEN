@@ -27,7 +27,7 @@
     s.textContent = `
       #${BTN_ID} {
         margin: 0;
-        padding: 4px 8px;
+        padding: 5px 8px;
         border-radius: 4px;
         background: rgba(96, 165, 250, 0.12);
         border: 1px solid rgba(96, 165, 250, 0.35);
@@ -38,6 +38,9 @@
         flex-shrink: 0;
         white-space: nowrap;
         touch-action: manipulation;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
       }
       #${BTN_ID}:hover { background: rgba(96, 165, 250, 0.22); border-color: #60a5fa; }
       html.denizen-touch #${BTN_ID} {
@@ -305,12 +308,19 @@
     handoffBtn.id = BTN_ID;
     handoffBtn.type = 'button';
     handoffBtn.textContent = 'Hand off';
+    const paint = () => {
+      const T = globalThis.DenizenTablerIcons;
+      if (T?.chip) T.setEl(handoffBtn, 'switch-horizontal', 'Hand off', { size: 12, fallback: '⇄' });
+      else handoffBtn.textContent = '⇄ Hand off';
+    };
+    paint();
+    window.addEventListener('denizen-tabler-ready', paint);
     handoffBtn.title = 'Hand off context to Lucy, CEO, or a teammate';
     handoffBtn.addEventListener('click', () => openModal());
     const actions = document.getElementById('player-chat-header-actions');
     const closeBtn = document.getElementById('player-chat-close-btn');
     if (actions) {
-      actions.insertBefore(handoffBtn, closeBtn || null);
+      actions.appendChild(handoffBtn);
     } else {
       const header = document.getElementById('player-chat-header');
       if (header && closeBtn) header.insertBefore(handoffBtn, closeBtn);

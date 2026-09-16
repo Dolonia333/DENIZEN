@@ -47,6 +47,14 @@ contextBridge.exposeInMainWorld("DenizenDesktop", {
     return () => ipcRenderer.removeListener("update-status", handler);
   },
   setDiagnosticsOptIn: (optIn) => ipcRenderer.invoke("set-diagnostics-opt-in", optIn),
+  buzzOverlayToggle: (on) => ipcRenderer.invoke("buzz-overlay-toggle", on),
+  buzzOverlayMode: (mode) => ipcRenderer.invoke("buzz-overlay-mode", mode),
+  buzzCaptureScreen: () => ipcRenderer.invoke("buzz-capture-screen"),
+  buzzCropScreen: (rect) => ipcRenderer.invoke("buzz-crop-screen", rect),
+  buzzSaveCapture: (pngBase64) => ipcRenderer.invoke("buzz-save-capture", pngBase64),
+  buzzOverlayInvisible: (on) => ipcRenderer.invoke("buzz-overlay-invisible", on),
+  buzzSession: () => ipcRenderer.invoke("buzz-session"),
+  detectSeatAi: () => ipcRenderer.invoke("detect-seat-ai"),
   onPermissionPending: (callback) => {
     if (typeof callback !== "function") return () => {};
     const handler = (_event, data) => callback(data);

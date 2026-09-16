@@ -924,9 +924,8 @@
     connectBtn.type = 'button';
     connectBtn.textContent = 'Connect AI';
     const actions = document.getElementById('player-chat-header-actions');
-    const closeBtn = document.getElementById('player-chat-close-btn');
     if (actions) {
-      actions.insertBefore(connectBtn, closeBtn || null);
+      actions.appendChild(connectBtn);
     } else {
       // Never insert into the name/chip column — create the actions row if needed.
       const header = document.getElementById('player-chat-header');
@@ -935,14 +934,9 @@
         if (!created) {
           created = document.createElement('div');
           created.id = 'player-chat-header-actions';
-          if (closeBtn) {
-            header.appendChild(created);
-            created.appendChild(closeBtn);
-          } else {
-            header.appendChild(created);
-          }
+          header.appendChild(created);
         }
-        created.insertBefore(connectBtn, document.getElementById('player-chat-close-btn') || null);
+        created.appendChild(connectBtn);
       }
     }
     return connectBtn;
@@ -968,8 +962,7 @@
       teamBtn.textContent = 'Team MCP';
       teamBtn.title = 'Connect Cursor/Claude to operate the whole office';
       const actions = document.getElementById('player-chat-header-actions');
-      const closeBtn = document.getElementById('player-chat-close-btn');
-      if (actions) actions.insertBefore(teamBtn, closeBtn || null);
+      if (actions) actions.appendChild(teamBtn);
       else btn.parentNode?.insertBefore(teamBtn, btn.nextSibling);
     }
     const tier = sess?.getAccessTier?.() || sess?.getTier?.();

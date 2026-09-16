@@ -153,8 +153,8 @@
 
   function phoneLine() {
     return isTouchUi()
-      ? 'Tap the phone button to open your office key.'
-      : 'Open the phone at the lower-right. It is your office key.';
+      ? 'Tap Buzz to capture. Hold for the phone toolbox.'
+      : 'Click Buzz (lower-right) to capture a screenshot or voice note. Hold for the phone.';
   }
 
   function arrivalTips() {
@@ -174,9 +174,16 @@
 
   function phoneTips() {
     return [
-      "I'm Buzz — your office key. Open me anytime for chat, Citizen ID, team, and station tools.",
+      "I'm Buzz — drop a screenshot or a voice note and Abby gets it.",
       phoneLine(),
-      'I carry your assistant, credits, and next steps from office to city.',
+      'Hold me for chat, Citizen ID, the workbench, and station tools.',
+    ];
+  }
+
+  function aisTips() {
+    return [
+      'Seat Cursor, Claude, ChatGPT, Grok, or LM Studio at a desk — the subscriptions you already pay for.',
+      'Workbench Crew shows seated vs empty. Nothing new to buy.',
     ];
   }
 
@@ -238,6 +245,14 @@
       anchor: 'claim',
       title: 'Choose your assistant.',
       tips: claimTips,
+    },
+    {
+      id: 'ais',
+      icon: '◎',
+      anchor: 'phone',
+      title: 'Seat the AIs you already pay for.',
+      tips: aisTips,
+      seatAction: true,
     },
     {
       id: 'power',
@@ -701,7 +716,8 @@
       }
       #${OVERLAY_ID} .onb-skip,
       #${OVERLAY_ID} .onb-next,
-      #${OVERLAY_ID} .onb-upgrade {
+      #${OVERLAY_ID} .onb-upgrade,
+      #${OVERLAY_ID} .onb-seat {
         min-height: 44px;
         touch-action: manipulation;
       }
@@ -734,7 +750,8 @@
         box-shadow: 0 0 0 2px color-mix(in srgb, var(--onb-accent) 45%, transparent), 3px 4px 0 #020617;
       }
       #${OVERLAY_ID} .onb-next:hover { filter: brightness(1.05); }
-      #${OVERLAY_ID} .onb-upgrade {
+      #${OVERLAY_ID} .onb-upgrade,
+      #${OVERLAY_ID} .onb-seat {
         background: transparent;
         color: #fde68a;
         border: 2px solid #020617;
@@ -747,7 +764,8 @@
         margin-right: auto;
         box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.45), 2px 3px 0 #020617;
       }
-      #${OVERLAY_ID} .onb-upgrade:hover {
+      #${OVERLAY_ID} .onb-upgrade:hover,
+      #${OVERLAY_ID} .onb-seat:hover {
         background: rgba(245, 158, 11, 0.1);
         color: #fef3c7;
       }
@@ -1149,7 +1167,7 @@
     }
   }
 
-  function wireStepButtons(skipBtn, nextBtn, upgradeBtn) {
+  function wireStepButtons(skipBtn, nextBtn, upgradeBtn, seatBtn) {
     clearStepUnbinds();
     const onNext = () => {
       if (stepIndex < activeSteps.length - 1) {
@@ -1184,6 +1202,19 @@
       } else {
         upgradeBtn.addEventListener('click', handler);
         stepUnbinds.push(() => upgradeBtn.removeEventListener('click', handler));
+      }
+    }
+    if (seatBtn) {
+      const handler = (e) => {
+        e?.preventDefault?.();
+        globalThis.DenizenSeatAI?.open?.();
+      };
+      if (bind) {
+        const offSeat = bind(seatBtn, handler, { stop: true });
+        if (typeof offSeat === 'function') stepUnbinds.push(offSeat);
+      } else {
+        seatBtn.addEventListener('click', handler);
+        stepUnbinds.push(() => seatBtn.removeEventListener('click', handler));
       }
     }
     if (nextBtn) {
@@ -1229,6 +1260,7 @@
       office: 'First stop: the live floor.',
       phone: 'Hey — I work here too. Use me.',
       claim: 'Pick a buddy on the floor.',
+      ais: 'Seat the AIs you already pay for.',
       power: 'Optional juice for the city.',
       ready: "You're cleared. Go walk.",
     };
@@ -1275,6 +1307,7 @@
             ${activeSteps.map((_, i) => `<span class="onb-dot${i < stepIndex ? ' done' : i === stepIndex ? ' active' : ''}"></span>`).join('')}
           </div>
           ${step.upgradeAction ? '<button type="button" class="onb-upgrade">Make my place permanent</button>' : ''}
+          ${step.seatAction ? '<button type="button" class="onb-seat">Seat an AI</button>' : ''}
           <button type="button" class="onb-skip">Skip</button>
           <button type="button" class="onb-next">${isLast ? 'Enter the office' : 'Next stop'}</button>
         </div>
@@ -1285,6 +1318,7 @@
       tooltip.querySelector('.onb-skip'),
       tooltip.querySelector('.onb-next'),
       tooltip.querySelector('.onb-upgrade'),
+      tooltip.querySelector('.onb-seat'),
     );
 
     document.documentElement.dataset.denizenOnboardingAnchor = step.anchor || '';

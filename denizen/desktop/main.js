@@ -38,6 +38,7 @@ const llamaBrainPull = require("./llama-brain-pull");
 const { startWorkerLoop, stopWorkerLoop, clearLastPendingId, syncCapabilities } = require("./node-worker-loop");
 const { startStationTaskLoop, stopStationTaskLoop } = require("./station-task-runner");
 const stationAgent = require("./station-agent");
+const buzzOverlay = require("./buzz-overlay");
 const {
   initAutoUpdater,
   getUpdateStatus,
@@ -1530,6 +1531,17 @@ function setupIpc() {
 
   ipcMain.handle("get-app-info", async () => getAppInfo());
 
+  ipcMain.handle("detect-seat-ai", async () => {
+    try {
+      const catalog = require("../src/seat-ai-catalog");
+      const tools = catalog.detectLocalTools();
+      const lm = await catalog.probeLmStudio();
+      return { ...tools, lmStudio: !!lm.reachable };
+    } catch (err) {
+      return { error: err?.message || String(err) };
+    }
+  });
+
   ipcMain.handle("set-diagnostics-opt-in", async (_evt, optIn) => {
     const setup = readSetupState();
     writeSetupState({ ...setup, diagnosticsOptIn: !!optIn });
@@ -1768,6 +1780,46 @@ function setupTray() {
 
     {
 
+      label: "Buzz overlay",
+
+      type: "checkbox",
+
+      checked: buzzOverlay.isEnabled(),
+
+      click: (item) => {
+
+        buzzOverlay.setEnabled(item.checked);
+
+        const setup = readSetupState();
+
+        writeSetupState({ ...setup, buzzOverlay: item.checked });
+
+      }
+
+    },
+
+    {
+
+      label: "Leave Buzz invisible",
+
+      type: "checkbox",
+
+      checked: buzzOverlay.isInvisible(),
+
+      click: (item) => {
+
+        buzzOverlay.setInvisible(item.checked);
+
+        const setup = readSetupState();
+
+        writeSetupState({ ...setup, buzzInvisible: item.checked });
+
+      }
+
+    },
+
+    {
+
       label: "Send feedback",
 
       click: () => {
@@ -1910,6 +1962,12 @@ async function capturePrimaryScreenPng() {
 
 stationAgent.setCaptureScreen(capturePrimaryScreenPng);
 
+buzzOverlay.registerIpc({
+  captureScreen: capturePrimaryScreenPng,
+  readSetup: readSetupState,
+  defaultServerUrl: DEFAULT_SERVER_URL,
+});
+
 __diag("A2: module load complete, registering whenReady");
 app.whenReady().then(async () => {
  try {
@@ -1938,6 +1996,14 @@ app.whenReady().then(async () => {
 
   const setup = readSetupState();
   __diag("D: setup.completed=" + setup.completed);
+
+  if (setup.buzzInvisible === false) {
+    buzzOverlay.setInvisible(false);
+  }
+  if (setup.buzzOverlay !== false) {
+    buzzOverlay.setEnabled(true);
+    setupTray();
+  }
 
   if (!setup.completed) {
 
