@@ -810,7 +810,7 @@ function buildOpenApiSpec(baseUrl) {
         + 'Prefer *-working-set / *-brief before writes. '
         + 'assignNpcTask is blocked (queues slow local NPC). '
         + 'Mint a Standard/Full Connect AI token.',
-      version: '2.0.0',
+      version: '2.1.0',
     },
     servers: [{ url: base }],
     components: {
