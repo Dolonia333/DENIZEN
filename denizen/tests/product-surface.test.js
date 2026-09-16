@@ -117,6 +117,9 @@ describe('Denizen customer product surface', () => {
     assert.match(buzz, /isPhoneUi/);
     assert.match(buzz, /useHoverDismiss/);
     assert.match(buzz, /pointer-events: none !important/);
+    assert.match(buzz, /z-index: 2147483645/);
+    assert.match(buzz, /pointerup/);
+    assert.match(buzz, /game\.input\.enabled = !open/);
     assert.match(buzz, /pointerdown/);
     assert.match(buzz, /pickImageFile\(\{ crop: true \}\)/);
     assert.match(buzz, /params.get\('buzz'\)/);
