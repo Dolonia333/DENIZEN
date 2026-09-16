@@ -346,6 +346,10 @@ describe('business-studio static shell', () => {
     const html = fs.readFileSync(path.join(__dirname, '../business-studio/index.html'), 'utf8');
     assert.match(html, /Business Studio/);
     assert.match(html, /id:'overview'/);
+    assert.match(html, /id:'leancanvas'/);
+    assert.match(html, /lean-canvas/);
+    assert.match(html, /Load DENIZEN draft/);
+    assert.match(html, /uniqueValueProposition/);
     assert.match(html, /id:'roadmap'/);
     assert.match(html, /id:'strategy'/);
     assert.match(html, /id:'evidence'/);
@@ -365,5 +369,19 @@ describe('business-studio static shell', () => {
     assert.match(html, /i2e-e3-pave|i2E E3/);
     assert.match(html, /data-why/);
     assert.match(html, /\/api\/business-studio\/recommendations/);
+  });
+});
+
+describe('business-studio lean canvas', () => {
+  it('models a 9-box canvas and DENIZEN draft', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    assert.equal(funding.LEAN_CANVAS_FIELDS.length, 9);
+    assert.equal(funding.leanCanvasFilledCount(funding.emptyLeanCanvas()), 0);
+    const draft = funding.denizenLeanCanvasDraft();
+    assert.ok(funding.leanCanvasIsSubstantial(draft));
+    assert.equal(funding.leanCanvasFilledCount(draft), 9);
+    assert.match(draft.problem, /API Cost Trap/);
+    assert.match(draft.uniqueValueProposition, /zero marginal cloud cost/i);
+    assert.match(funding.leanCanvasPlainText(draft), /Customer Segments/);
   });
 });

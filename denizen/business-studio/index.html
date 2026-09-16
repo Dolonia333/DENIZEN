@@ -315,6 +315,63 @@ html.embed .dz-app-chrome{display:none}
 .more-panel .nav-item{padding:12px 10px}
 
 .crm-frame{width:100%;height:min(70vh,640px);border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+
+/* ===== Lean Canvas (classic 9-box tablet) ===== */
+.lean-wrap{display:flex;flex-direction:column;gap:12px}
+.lean-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);font-size:12.5px}
+.lean-meta strong{color:var(--gold);font-weight:650}
+.lean-canvas{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-rows:minmax(160px,1.35fr) minmax(110px,.85fr) minmax(130px,1fr);
+  gap:0;
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  background:var(--line);
+  min-height:min(72vh,720px);
+  box-shadow:0 18px 50px rgba(0,0,0,.28);
+}
+.lean-cell{
+  background:var(--surface);
+  display:flex;flex-direction:column;min-height:0;min-width:0;
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.lean-cell:nth-child(5n){border-right:none}
+.lean-cell.lc-problem{grid-column:1;grid-row:1 / span 2}
+.lean-cell.lc-solution{grid-column:2;grid-row:1}
+.lean-cell.lc-metrics{grid-column:2;grid-row:2}
+.lean-cell.lc-uvp{grid-column:3;grid-row:1 / span 2;background:linear-gradient(180deg,rgba(240,180,41,.10),var(--surface))}
+.lean-cell.lc-unfair{grid-column:4;grid-row:1}
+.lean-cell.lc-channels{grid-column:4;grid-row:2}
+.lean-cell.lc-customers{grid-column:5;grid-row:1 / span 2}
+.lean-cell.lc-cost{grid-column:1 / span 3;grid-row:3;border-bottom:none}
+.lean-cell.lc-revenue{grid-column:4 / span 2;grid-row:3;border-bottom:none;border-right:none}
+.lean-cell-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  padding:10px 12px 4px;flex:none
+}
+.lean-cell-head h3{
+  margin:0;font-size:11px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--gold);font-family:var(--font-display)
+}
+.lean-cell-head span{font-size:10.5px;color:var(--muted-2);text-align:right;max-width:55%}
+.lean-cell textarea{
+  flex:1;min-height:0;border:none;border-radius:0;background:transparent;
+  padding:4px 12px 12px;font-size:12.5px;line-height:1.45;resize:none;
+  color:var(--ink)
+}
+.lean-cell textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--gold-dim)}
+.lean-cell.lc-uvp textarea{font-size:13.5px;font-weight:550}
+@media (max-width:900px){
+  .lean-canvas{
+    display:flex;flex-direction:column;min-height:0;gap:8px;background:transparent;border:none;box-shadow:none
+  }
+  .lean-cell{
+    border:1px solid var(--line)!important;border-radius:12px;min-height:140px
+  }
+  .lean-cell textarea{min-height:100px;resize:vertical}
+}
 .chip{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--forest-tint);color:#9fd4be}
 .kbd{font-size:11px;color:var(--muted)}
 
@@ -458,9 +515,66 @@ function emptyFunding(){
     moat:{sources:{},primaryClaim:'',primaryWhy:'',primaryCopyDifficulty:'',primaryMonthsToCopy:null},
     capitalPlan:{stage:'pre_revenue',amountNeeded:null,uses:[],types:[],notes:'',pathwayStep:'readiness'},
     discoveryLab:{personas:[],hypotheses:[]},
+    leanCanvas:emptyLeanCanvas(),
     dataRoom:{sharedWithInvestors:{}},
     unansweredInvestorQuestions:[]
   };
+}
+function emptyLeanCanvas(){
+  return {
+    problem:'',solution:'',uniqueValueProposition:'',unfairAdvantage:'',customerSegments:'',
+    keyMetrics:'',channels:'',costStructure:'',revenueStreams:'',updatedAt:null
+  };
+}
+function denizenLeanCanvasDraft(){
+  return {
+    problem:'API Cost Trap: Public school districts cannot sustain recurring cloud AI API token bills across hundreds of active lab students.\n\nFERPA & Privacy Barriers: Federal student privacy laws restrict transmitting unvetted student data/prompts to third-party public AI providers.\n\nStranded Lab Hardware: High-spec campus lab and esports computers sit idle for 16+ hours daily.',
+    solution:'Localized Mesh Overlay: Distributes local AI model inference across idle campus computers, eliminating external API costs.\n\nIsolated Sandbox Client: Containerized local node execution with zero lateral network traversal and encrypted mTLS communications.\n\nGamified Learning Hub: Interactive visual simulation interface for cybersecurity, AI, and network routing curriculum.',
+    uniqueValueProposition:'Enterprise-grade AI simulation capabilities at zero marginal cloud cost, guaranteeing student data privacy by keeping all prompts and network traffic inside the campus perimeter.',
+    unfairAdvantage:'Hardware Sovereignty Architecture: Proprietary localized mesh clustering that mathematically removes external API fees while enforcing local compliance out-of-the-box.\n\nHigh Gross Margins (80%+): Infrastructure runs on customer-owned edge hardware, avoiding platform cloud hosting bloat.',
+    customerSegments:'Economic Buyers: High School CTE Directors, District IT Directors, and STEM Curriculum Coordinators.\n\nEnd Users: High School Computer Science Teachers, Cybersecurity Instructors, and CTE Students.\n\nEarly Adopters: High school labs with dedicated GPU/gaming hardware (e.g., esports labs, 3D/CAD labs).',
+    keyMetrics:'Total district cloud API costs avoided/saved ($).\nActive connected mesh lab nodes per campus.\nLocal inference token throughput & latency vs. public cloud benchmarks.\nDiscovery pilot to multi-year SaaS contract conversion rate.',
+    channels:'Direct B2B / B2G pilot demonstrations to regional school district IT admins.\nState CareerTech & STEM education consortiums and conferences.\nAccelerator introductions (i2E, OCN network).',
+    costStructure:'Platform software development & visualization engine maintenance.\nContainer agent testing, security verification, and sandbox auditing.\nDistrict pilot deployment support and sales discovery travel.',
+    revenueStreams:'Annual B2B SaaS Subscriptions: Per-campus or per-seat licensing for orchestration and curriculum simulation interfaces.\nGrant Procurement: Funded via existing Perkins V (CTE) and federal STEM grant allocations.',
+    updatedAt:null
+  };
+}
+const LEAN_CANVAS_FIELDS=[
+  {key:'problem',title:'Problem',hint:'Top 1–3 problems'},
+  {key:'solution',title:'Solution',hint:'Top features for each problem'},
+  {key:'uniqueValueProposition',title:'Unique Value Proposition',hint:'Single, clear compelling message'},
+  {key:'unfairAdvantage',title:'Unfair Advantage',hint:'Cannot be easily copied or bought'},
+  {key:'customerSegments',title:'Customer Segments',hint:'Target customers + early adopters'},
+  {key:'keyMetrics',title:'Key Metrics',hint:'Key activities you measure'},
+  {key:'channels',title:'Channels',hint:'Path to customers'},
+  {key:'costStructure',title:'Cost Structure',hint:'Acquisition, distribution, people…'},
+  {key:'revenueStreams',title:'Revenue Streams',hint:'Model, LTV, gross margin'}
+];
+function sanitizeLeanCanvas(raw){
+  const out=emptyLeanCanvas();
+  if(!raw||typeof raw!=='object') return out;
+  LEAN_CANVAS_FIELDS.forEach(function(f){
+    if(typeof raw[f.key]==='string') out[f.key]=raw[f.key];
+  });
+  if(raw.updatedAt) out.updatedAt=raw.updatedAt;
+  return out;
+}
+function leanCanvasFilledCount(c){
+  c=sanitizeLeanCanvas(c);
+  return LEAN_CANVAS_FIELDS.filter(function(f){return String(c[f.key]||'').trim().length>=8;}).length;
+}
+function leanCanvasIsSubstantial(c){
+  c=sanitizeLeanCanvas(c);
+  return ['problem','uniqueValueProposition','customerSegments'].every(function(k){
+    return String(c[k]||'').trim().length>=12;
+  });
+}
+function leanCanvasPlainText(c){
+  c=sanitizeLeanCanvas(c);
+  return LEAN_CANVAS_FIELDS.map(function(f){
+    return f.title+'\n'+(String(c[f.key]||'').trim()||'—');
+  }).join('\n\n');
 }
 function emptyState(){
   return {
@@ -511,6 +625,7 @@ function sanitizeState(raw){
         personas:Array.isArray(raw.funding.discoveryLab&&raw.funding.discoveryLab.personas)?raw.funding.discoveryLab.personas:[],
         hypotheses:Array.isArray(raw.funding.discoveryLab&&raw.funding.discoveryLab.hypotheses)?raw.funding.discoveryLab.hypotheses:[]
       },
+      leanCanvas:sanitizeLeanCanvas(raw.funding.leanCanvas||{}),
       dataRoom:{
         sharedWithInvestors:Object.assign({}, (emptyFunding().dataRoom.sharedWithInvestors||{}), (raw.funding.dataRoom&&raw.funding.dataRoom.sharedWithInvestors)||{})
       },
@@ -831,6 +946,7 @@ function topRecommendation(st){
 const NAV=[
   {id:'overview',label:'Overview',ico:'◎',group:'Command'},
   {id:'funding',label:'Funding Readiness',ico:'◈',group:'Command'},
+  {id:'leancanvas',label:'Lean Canvas',ico:'▦',group:'Command'},
   {id:'strategy',label:'Strategy',ico:'◈',group:'Command'},
   {id:'roadmap',label:'Roadmap',ico:'⟶',group:'Command'},
   {id:'goals',label:'Goals',ico:'◎',group:'Execute'},
@@ -2053,11 +2169,101 @@ function renderSettings(){
   return html;
 }
 
+function renderLeanCanvas(){
+  state.funding=state.funding||emptyFunding();
+  const canvas=sanitizeLeanCanvas(state.funding.leanCanvas||{});
+  const filled=leanCanvasFilledCount(canvas);
+  const substantial=leanCanvasIsSubstantial(canvas);
+  let html='<div class="page-head"><div><h2>Lean Canvas</h2>'
+    +'<p>Nine-box tablet you fill in the app — not a spreadsheet export.</p></div>'
+    +'<div class="actions">'
+    +'<button type="button" class="btn" data-action="lean-load-denizen">Load DENIZEN draft</button>'
+    +'<button type="button" class="btn" data-action="lean-clear">Clear</button>'
+    +'<button type="button" class="btn btn-primary" data-action="lean-save">Save canvas</button>'
+    +'</div></div>';
+
+  html+='<div class="lean-wrap"><div class="lean-meta">'
+    +'<span><strong>'+filled+'</strong> / 9 boxes filled</span>'
+    +(substantial?'<span class="chip">Core story complete</span>':'<span>Fill Problem, UVP, and Customer Segments to unlock Funding Readiness evidence</span>')
+    +(canvas.updatedAt?'<span>Saved '+esc(fmtDate(canvas.updatedAt))+'</span>':'')
+    +'<button type="button" class="btn btn-sm" data-nav="funding">Funding Readiness</button>'
+    +'</div>';
+
+  function cell(cls, key){
+    const field=LEAN_CANVAS_FIELDS.find(function(f){return f.key===key;});
+    return '<div class="lean-cell '+cls+'">'
+      +'<div class="lean-cell-head"><h3>'+esc(field.title)+'</h3><span>'+esc(field.hint)+'</span></div>'
+      +'<textarea data-lean="'+esc(key)+'" placeholder="'+esc(field.hint)+'">'+esc(canvas[key]||'')+'</textarea>'
+      +'</div>';
+  }
+
+  html+='<div class="lean-canvas" role="region" aria-label="Lean Canvas">'
+    +cell('lc-problem','problem')
+    +cell('lc-solution','solution')
+    +cell('lc-uvp','uniqueValueProposition')
+    +cell('lc-unfair','unfairAdvantage')
+    +cell('lc-customers','customerSegments')
+    +cell('lc-metrics','keyMetrics')
+    +cell('lc-channels','channels')
+    +cell('lc-cost','costStructure')
+    +cell('lc-revenue','revenueStreams')
+    +'</div></div>';
+  return html;
+}
+
+function readLeanCanvasFromDom(){
+  const next=emptyLeanCanvas();
+  LEAN_CANVAS_FIELDS.forEach(function(f){
+    const el=document.querySelector('textarea[data-lean="'+f.key+'"]');
+    if(el) next[f.key]=el.value;
+  });
+  next.updatedAt=nowISO();
+  return next;
+}
+
+function syncLeanCanvasEvidence(canvas){
+  const text=leanCanvasPlainText(canvas);
+  const substantial=leanCanvasIsSubstantial(canvas);
+  state.evidence=state.evidence||[];
+  let ev=state.evidence.find(function(e){return e && e.source==='lean_canvas' && !e.revoked;});
+  if(!substantial){
+    if(ev){
+      ev.revoked=true; ev.status='revoked'; ev.revokedAt=nowISO();
+      ev.revokeReason='Lean Canvas core boxes cleared';
+    }
+    return;
+  }
+  if(ev){
+    ev.title='Lean Canvas';
+    ev.notes=text;
+    ev.description=text;
+    ev.fundingKey='lean_canvas';
+    ev.linkedFundingKeys=['lean_canvas'];
+    ev.type='document';
+    ev.updatedAt=nowISO();
+  } else {
+    state.evidence.unshift({
+      id:uid('ev'),
+      title:'Lean Canvas',
+      type:'document',
+      notes:text,
+      description:text,
+      fundingKey:'lean_canvas',
+      linkedFundingKeys:['lean_canvas'],
+      source:'lean_canvas',
+      createdAt:nowISO(),
+      status:'active',
+      revoked:false
+    });
+  }
+}
+
 function renderFunding(){
   const fr=evaluateFundingReadiness();
   let html='<div class="page-head"><div><h2>Funding Readiness</h2>'
     +'<p>Evidence-gated checklist — never an unexplained AI score.</p></div>'
-    +'<div class="actions"><button type="button" class="btn" data-nav="market">Market sizing</button>'
+    +'<div class="actions"><button type="button" class="btn" data-nav="leancanvas">Lean Canvas</button>'
+    +'<button type="button" class="btn" data-nav="market">Market sizing</button>'
     +'<button type="button" class="btn" data-nav="moat">Moat</button>'
     +'<button type="button" class="btn" data-nav="discovery">Discovery Lab</button></div></div>';
 
@@ -2457,6 +2663,7 @@ function render(){
   const map={
     overview:renderOverview,
     funding:renderFunding,
+    leancanvas:renderLeanCanvas,
     strategy:renderStrategy,
     roadmap:renderRoadmap,
     goals:renderGoals,
@@ -2565,6 +2772,29 @@ document.addEventListener('click', function(e){
         applyE3Template();
         setView('programs');
       }
+    }
+    if(a==='lean-save'){
+      state.funding=state.funding||emptyFunding();
+      state.funding.leanCanvas=readLeanCanvasFromDom();
+      syncLeanCanvasEvidence(state.funding.leanCanvas);
+      logActivity('Saved Lean Canvas ('+leanCanvasFilledCount(state.funding.leanCanvas)+'/9 boxes)');
+      scheduleSave(); render();
+      toast(leanCanvasIsSubstantial(state.funding.leanCanvas)
+        ? 'Lean Canvas saved — linked to Funding Readiness'
+        : 'Lean Canvas saved');
+    }
+    if(a==='lean-load-denizen'){
+      state.funding=state.funding||emptyFunding();
+      state.funding.leanCanvas=Object.assign(emptyLeanCanvas(), denizenLeanCanvasDraft(), {updatedAt:nowISO()});
+      syncLeanCanvasEvidence(state.funding.leanCanvas);
+      logActivity('Loaded DENIZEN Lean Canvas draft');
+      scheduleSave(); render(); toast('DENIZEN draft loaded — edit any box, then Save');
+    }
+    if(a==='lean-clear'){
+      state.funding=state.funding||emptyFunding();
+      state.funding.leanCanvas=emptyLeanCanvas();
+      syncLeanCanvasEvidence(state.funding.leanCanvas);
+      scheduleSave(); render(); toast('Canvas cleared');
     }
     if(a==='import-stub') toast('Import is Phase 2 — not built yet');
     if(a==='quickadd') quickAddMenu();

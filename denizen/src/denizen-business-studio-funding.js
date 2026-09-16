@@ -144,11 +144,107 @@ function emptyFundingState() {
       personas: [],
       hypotheses: [],
     },
+    leanCanvas: emptyLeanCanvas(),
     dataRoom: {
       sharedWithInvestors: {},
     },
     unansweredInvestorQuestions: [],
   };
+}
+
+/** Classic Ash Maurya Lean Canvas — nine boxes founders fill in-app. */
+function emptyLeanCanvas() {
+  return {
+    problem: '',
+    solution: '',
+    uniqueValueProposition: '',
+    unfairAdvantage: '',
+    customerSegments: '',
+    keyMetrics: '',
+    channels: '',
+    costStructure: '',
+    revenueStreams: '',
+    updatedAt: null,
+  };
+}
+
+const LEAN_CANVAS_FIELDS = Object.freeze([
+  { key: 'problem', title: 'Problem', hint: 'Top 1–3 problems' },
+  { key: 'solution', title: 'Solution', hint: 'Top features for each problem' },
+  { key: 'uniqueValueProposition', title: 'Unique Value Proposition', hint: 'Single, clear compelling message' },
+  { key: 'unfairAdvantage', title: 'Unfair Advantage', hint: 'Cannot be easily copied or bought' },
+  { key: 'customerSegments', title: 'Customer Segments', hint: 'Target customers + early adopters' },
+  { key: 'keyMetrics', title: 'Key Metrics', hint: 'Key activities you measure' },
+  { key: 'channels', title: 'Channels', hint: 'Path to customers' },
+  { key: 'costStructure', title: 'Cost Structure', hint: 'Customer acquisition, distribution, people, etc.' },
+  { key: 'revenueStreams', title: 'Revenue Streams', hint: 'Revenue model, life-time value, revenue, gross margin' },
+]);
+
+/** DENIZEN / Dolonia draft — so founders can visualize instead of a spreadsheet PDF. */
+function denizenLeanCanvasDraft() {
+  return {
+    problem:
+      'API Cost Trap: Public school districts cannot sustain recurring cloud AI API token bills across hundreds of active lab students.\n\n'
+      + 'FERPA & Privacy Barriers: Federal student privacy laws restrict transmitting unvetted student data/prompts to third-party public AI providers.\n\n'
+      + 'Stranded Lab Hardware: High-spec campus lab and esports computers sit idle for 16+ hours daily.',
+    solution:
+      'Localized Mesh Overlay: Distributes local AI model inference across idle campus computers, eliminating external API costs.\n\n'
+      + 'Isolated Sandbox Client: Containerized local node execution with zero lateral network traversal and encrypted mTLS communications.\n\n'
+      + 'Gamified Learning Hub: Interactive visual simulation interface for cybersecurity, AI, and network routing curriculum.',
+    uniqueValueProposition:
+      'Enterprise-grade AI simulation capabilities at zero marginal cloud cost, guaranteeing student data privacy by keeping all prompts and network traffic inside the campus perimeter.',
+    unfairAdvantage:
+      'Hardware Sovereignty Architecture: Proprietary localized mesh clustering that mathematically removes external API fees while enforcing local compliance out-of-the-box.\n\n'
+      + 'High Gross Margins (80%+): Infrastructure runs on customer-owned edge hardware, avoiding platform cloud hosting bloat.',
+    customerSegments:
+      'Economic Buyers: High School CTE Directors, District IT Directors, and STEM Curriculum Coordinators.\n\n'
+      + 'End Users: High School Computer Science Teachers, Cybersecurity Instructors, and CTE Students.\n\n'
+      + 'Early Adopters: High school labs with dedicated GPU/gaming hardware (e.g., esports labs, 3D/CAD labs).',
+    keyMetrics:
+      'Total district cloud API costs avoided/saved ($).\n'
+      + 'Active connected mesh lab nodes per campus.\n'
+      + 'Local inference token throughput & latency vs. public cloud benchmarks.\n'
+      + 'Discovery pilot to multi-year SaaS contract conversion rate.',
+    channels:
+      'Direct B2B / B2G pilot demonstrations to regional school district IT admins.\n'
+      + 'State CareerTech & STEM education consortiums and conferences.\n'
+      + 'Accelerator introductions (i2E, OCN network).',
+    costStructure:
+      'Platform software development & visualization engine maintenance.\n'
+      + 'Container agent testing, security verification, and sandbox auditing.\n'
+      + 'District pilot deployment support and sales discovery travel.',
+    revenueStreams:
+      'Annual B2B SaaS Subscriptions: Per-campus or per-seat licensing for orchestration and curriculum simulation interfaces.\n'
+      + 'Grant Procurement: Funded via existing Perkins V (CTE) and federal STEM grant allocations.',
+    updatedAt: null,
+  };
+}
+
+function sanitizeLeanCanvas(raw) {
+  const out = emptyLeanCanvas();
+  if (!raw || typeof raw !== 'object') return out;
+  for (const f of LEAN_CANVAS_FIELDS) {
+    if (typeof raw[f.key] === 'string') out[f.key] = raw[f.key];
+  }
+  if (raw.updatedAt) out.updatedAt = raw.updatedAt;
+  return out;
+}
+
+function leanCanvasFilledCount(canvas) {
+  const c = sanitizeLeanCanvas(canvas);
+  return LEAN_CANVAS_FIELDS.filter((f) => String(c[f.key] || '').trim().length >= 8).length;
+}
+
+function leanCanvasIsSubstantial(canvas) {
+  const c = sanitizeLeanCanvas(canvas);
+  // Core boxes: problem, UVP, customer segments
+  const core = ['problem', 'uniqueValueProposition', 'customerSegments'];
+  return core.every((k) => String(c[k] || '').trim().length >= 12);
+}
+
+function leanCanvasPlainText(canvas) {
+  const c = sanitizeLeanCanvas(canvas);
+  return LEAN_CANVAS_FIELDS.map((f) => `${f.title}\n${String(c[f.key] || '').trim() || '—'}`).join('\n\n');
 }
 
 function evidenceForFundingItem(state, item) {
@@ -577,7 +673,14 @@ module.exports = {
   CAPITAL_USES,
   CAPITAL_TYPES,
   CAPITAL_PATHWAY,
+  LEAN_CANVAS_FIELDS,
   emptyFundingState,
+  emptyLeanCanvas,
+  denizenLeanCanvasDraft,
+  sanitizeLeanCanvas,
+  leanCanvasFilledCount,
+  leanCanvasIsSubstantial,
+  leanCanvasPlainText,
   defaultFundingSeed,
   evidenceForFundingItem,
   evaluateFundingItem,

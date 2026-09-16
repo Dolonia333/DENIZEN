@@ -134,6 +134,14 @@ function sanitizeState(raw) {
           ? raw.funding.discoveryLab.hypotheses
           : (out.funding.discoveryLab?.hypotheses || []),
       },
+      leanCanvas: (() => {
+        try {
+          const funding = require('./denizen-business-studio-funding');
+          return funding.sanitizeLeanCanvas(raw.funding.leanCanvas || out.funding.leanCanvas);
+        } catch (_) {
+          return raw.funding.leanCanvas || out.funding.leanCanvas || {};
+        }
+      })(),
       dataRoom: {
         sharedWithInvestors: {
           ...(out.funding.dataRoom?.sharedWithInvestors || {}),
