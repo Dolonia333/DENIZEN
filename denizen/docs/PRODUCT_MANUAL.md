@@ -134,7 +134,7 @@ CRM deals may carry optional `studio_task_ids`; Studio Board tasks may carry opt
 ## 6b. Studio Board (Agency Tracker)
 
 Open **Studio Board** from the phone, the CRM sidebar link, or go to `/studio-board/` (deep-link with `?deal=` / `?task=` from a CRM deal). Like CRM, it opens as
-its own full-page app — not an in-phone iframe. New boards start **empty** (blank pipeline) so you track real delivery work; optional example templates live under Settings. It's a Monday.com-style work board for
+its own full-page app — not an in-phone iframe. New boards start **empty** with no sample people or tasks; templates only set categories/stages. It's a Monday.com-style work board for
 agency pipelines: **Calendar**, **Table**, **Board**, **Timeline**, **My Day**, **Team**,
 **Activity**, and **Settings**. Create tasks, custom columns, blockers, automations,
 filter by type, save views, and clear the board. Use **← Back to office** to return to Denizen.

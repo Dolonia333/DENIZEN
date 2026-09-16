@@ -1078,40 +1078,7 @@ const TEMPLATES = {
       {id:'Blocked',hex:'#B14D3C',blocked:true,entryLabel:'Unblock'},
       {id:'Published',hex:'#2A6A55',final:true,entryLabel:'Publish'},
     ],
-    seed(){
-      const P=[
-        {id:'p1',name:'Maya Rivera',color:'#C94F38'},{id:'p2',name:'Devon Clarke',color:'#3F6FA8'},
-        {id:'p3',name:'Priya Shah',color:'#2FA3B5'},{id:'p4',name:'Luis Moreno',color:'#8A63B8'},
-        {id:'p5',name:'Sam Turner',color:'#D28E2E'},
-      ];
-      const now=new Date(), y=now.getFullYear(), m=now.getMonth();
-      const day=d=>new Date(y,m,d).toISOString().slice(0,10);
-      const T=[
-        ['Launch teaser edit','TechFlow SaaS','video','p2','In progress','High',3,-2],
-        ['Q3 brand campaign brief','Nike Run Club','design','p1','Brief','Medium',5,-1],
-        ['Episode 12 \u2014 post-production','City Arts Fest','podcast','p3','Review','High',8,-6],
-        ['Instagram reel series','Local Roots Cafe','social','p4','In progress','Urgent',2,-1],
-        ['Founder interview article','TechFlow SaaS','article','p5','Client approval','Medium',10,-5],
-        ['Menu photoshoot direction','Local Roots Cafe','design','p1','Brief','Low',14,-1],
-        ['Highlight film \u2014 final cut','City Arts Fest','video','p2','Client approval','High',12,-2],
-        ['Newsletter feature draft','Nike Run Club','article','p3','In progress','Medium',6,-3],
-        ['TikTok trend concepts','Nike Run Club','social','p4','Brief','Medium',9,-1],
-        ['Ad spot \u2014 sound mix','TechFlow SaaS','podcast','p3','Published','Low',-2,-2],
-        ['Homepage hero motion','Local Roots Cafe','design','p1','Review','High',7,-1],
-        ['Recap thread copy','City Arts Fest','social','p4','Published','Low',-3,-3],
-        ['Product demo storyboard','TechFlow SaaS','video','p2','Brief','Medium',15,-1],
-        ['Athlete spotlight edit','Nike Run Club','video','p2','In progress','High',4,-2],
-      ];
-      const tasks=T.map(t=>({id:uid(),title:t[0],client:t[1],type:t[2],assignee:t[3],status:t[4],priority:t[5],
-        due:day(t[6]),notes:'',statusSince:addDays(todayISO(),t[7]),log:[],comments:[],subtasks:[],remind:true}));
-      const events=[
-        {id:uid(),kind:'meeting',title:'TechFlow weekly sync',date:todayISO(),time:'09:30',client:'TechFlow SaaS'},
-        {id:uid(),kind:'meeting',title:'Nike campaign check-in',date:addDays(todayISO(),2),time:'10:00',client:'Nike Run Club'},
-        {id:uid(),kind:'followup',title:'Chase City Arts invoice',date:addDays(todayISO(),1),done:false},
-        {id:uid(),kind:'followup',title:'Send Local Roots moodboard',date:todayISO(),done:false},
-      ];
-      return {people:P, tasks, events};
-    }
+    seed(){ return {people:[], tasks:[], events:[]}; }
   },
   software:{
     name:'Software / Product Team', desc:'Bugs, features, and chores moving through a dev pipeline.',
@@ -1128,34 +1095,7 @@ const TEMPLATES = {
       {id:'Blocked',hex:'#B14D3C',blocked:true,entryLabel:'Unblock'},
       {id:'Done',hex:'#2A6A55',final:true,entryLabel:'Ship'},
     ],
-    seed(){
-      const P=[
-        {id:'p1',name:'Alex Kim',color:'#C94F38'},{id:'p2',name:'Jordan Reyes',color:'#3F6FA8'},
-        {id:'p3',name:'Sam Patel',color:'#2FA3B5'},{id:'p4',name:'Taylor Wong',color:'#8A63B8'},
-      ];
-      const now=new Date(), y=now.getFullYear(), m=now.getMonth();
-      const day=d=>new Date(y,m,d).toISOString().slice(0,10);
-      const T=[
-        ['Login fails on Safari 17','Acme Corp','Bug','p1','In progress','Urgent',1,-1],
-        ['Add CSV export to reports','Acme Corp','Feature','p2','Backlog','Medium',10,-1],
-        ['Upgrade build pipeline to Node 20','Internal','Chore','p3','In review','Low',6,-5],
-        ['Write onboarding docs','Beacon Retail','Docs','p4','Backlog','Medium',12,-1],
-        ['Redesign settings page','Beacon Retail','Design','p2','QA','High',4,-4],
-        ['Null pointer on checkout','Acme Corp','Bug','p1','Blocked','Urgent',2,-2],
-        ['Dark mode support','Internal','Feature','p3','In progress','Medium',8,-2],
-        ['Fix flaky CI tests','Internal','Chore','p4','Done','Low',-3,-3],
-        ['API rate limit errors','Beacon Retail','Bug','p1','In review','High',3,-6],
-      ];
-      const tasks=T.map(t=>({id:uid(),title:t[0],client:t[1],type:t[2],assignee:t[3],status:t[4],priority:t[5],
-        due:day(t[6]),notes:'',statusSince:addDays(todayISO(),t[7]),log:[],comments:[],subtasks:[],remind:true,
-        blockReason:t[4]==='Blocked'?'Waiting on infra team':undefined}));
-      const events=[
-        {id:uid(),kind:'meeting',title:'Daily standup',date:todayISO(),time:'09:00',repeat:'weekly'},
-        {id:uid(),kind:'meeting',title:'Sprint planning',date:addDays(todayISO(),3),time:'14:00'},
-        {id:uid(),kind:'followup',title:'Ping DevOps about staging env',date:todayISO(),done:false},
-      ];
-      return {people:P, tasks, events};
-    }
+    seed(){ return {people:[], tasks:[], events:[]}; }
   },
   events:{
     name:'Event Production', desc:'Venues, vendors, and run-of-show for live events.',
@@ -1171,30 +1111,7 @@ const TEMPLATES = {
       {id:'Blocked',hex:'#B14D3C',blocked:true,entryLabel:'Unblock'},
       {id:'Completed',hex:'#2A6A55',final:true,entryLabel:'Complete'},
     ],
-    seed(){
-      const P=[
-        {id:'p1',name:'Riley Chen',color:'#3F6FA8'},{id:'p2',name:'Morgan Diaz',color:'#D28E2E'},
-        {id:'p3',name:'Casey Brooks',color:'#2FA3B5'},
-      ];
-      const now=new Date(), y=now.getFullYear(), m=now.getMonth();
-      const day=d=>new Date(y,m,d).toISOString().slice(0,10);
-      const T=[
-        ['Book main hall','Fall Gala','Venue','p1','Confirmed','High',5,-4],
-        ['Confirm catering headcount','Fall Gala','Catering','p2','Booking','Medium',8,-2],
-        ['Social campaign teasers','Fall Gala','Marketing','p3','Planned','Medium',12,-1],
-        ['Load-in schedule','Product Launch','Logistics','p1','Planned','High',15,-1],
-        ['Book keynote speaker','Product Launch','Talent','p2','Blocked','Urgent',3,-3],
-        ['Press release draft','Product Launch','Marketing','p3','Confirmed','Medium',6,-5],
-      ];
-      const tasks=T.map(t=>({id:uid(),title:t[0],client:t[1],type:t[2],assignee:t[3],status:t[4],priority:t[5],
-        due:day(t[6]),notes:'',statusSince:addDays(todayISO(),t[7]),log:[],comments:[],subtasks:[],remind:true,
-        blockReason:t[4]==='Blocked'?'Waiting on speaker\u2019s agent':undefined}));
-      const events=[
-        {id:uid(),kind:'meeting',title:'Vendor check-in call','date':todayISO(),time:'11:00'},
-        {id:uid(),kind:'followup',title:'Chase signed venue contract',date:addDays(todayISO(),1),done:false},
-      ];
-      return {people:P, tasks, events};
-    }
+    seed(){ return {people:[], tasks:[], events:[]}; }
   },
   blank:{
     name:'Blank slate', desc:'One category and a simple 3-stage pipeline \u2014 build your own from Settings.',
@@ -1224,9 +1141,13 @@ function isExampleSeedBoard(s){
   const tasks=Array.isArray(s.tasks)?s.tasks:[];
   const names=people.map(p=>String(p.name||'')).join('\n');
   if(/Maya Rivera|Devon Clarke|Priya Shah|Luis Moreno|Sam Turner/.test(names)) return true;
+  if(/Alex Kim|Jordan Reyes|Sam Patel|Taylor Wong/.test(names)) return true;
+  if(/Riley Chen|Morgan Diaz|Casey Brooks/.test(names)) return true;
   if(/Ava Chen|Ben Ortiz|Chris Park/.test(names) && tasks.some(t=>/Sprint|Backlog|Bug/i.test(String(t.title||'')))) return true;
   const clients=new Set(tasks.map(t=>String(t.client||'')).filter(Boolean));
-  return clients.has('TechFlow SaaS') || clients.has('Nike Run Club') || clients.has('Local Roots Cafe') || clients.has('City Arts Fest');
+  return clients.has('TechFlow SaaS') || clients.has('Nike Run Club') || clients.has('Local Roots Cafe')
+    || clients.has('City Arts Fest') || clients.has('Beacon Retail') || clients.has('Fall Gala')
+    || clients.has('Product Launch');
 }
 function clearToBlankBoard(){
   loadTemplate('blank', true);
@@ -2786,7 +2707,7 @@ function renderSettings(container){
 
     <div class="panel">
       <h3>Starter templates</h3>
-      <p class="stghint">Boards start empty for real work. Loading a template is optional — it replaces your categories, pipeline, and all tasks/events on the shared board with example data for that business type.</p>
+      <p class="stghint">Boards start empty for real work. Loading a template only swaps categories and pipeline stages — it does not invent sample tasks or people.</p>
       <div class="tplcards">${tplCards}</div>
     </div>`;
 }
@@ -2935,7 +2856,7 @@ function tplCardHTML(id,tp){
   return `<div class="tplcard ${active?'active':''}">
     <div class="tplcardhead">${esc(tp.name)}${active?'<span class="tplnow">current</span>':''}</div>
     <div class="tplcarddesc">${esc(tp.desc)}</div>
-    <button class="backtriage" onclick="confirmLoadTemplate('${id}')">${active?'Reload example data':'Switch to this template'}</button></div>`;
+    <button class="backtriage" onclick="confirmLoadTemplate('${id}')">${active?'Reload template structure':'Use this template'}</button></div>`;
 }
 function toggleColorPick(kind,id){
   ui.colorPick = (ui.colorPick&&ui.colorPick.kind===kind&&ui.colorPick.id===id) ? null : {kind,id};
@@ -3019,9 +2940,13 @@ function saveTeamInfo(){
 function confirmLoadTemplate(id){
   const tpl=TEMPLATES[id]; if(!tpl) return;
   askConfirm({title:'Load \u201c'+tpl.name+'\u201d?',
-    msg:'This replaces your categories, pipeline stages, and ALL tasks/events on the shared board with fresh example data for this template. This cannot be undone.',
+    msg:'This replaces your categories and pipeline stages with this template, and clears existing tasks/events/people so the board stays ready for real work. This cannot be undone.',
     input:true, placeholder:'Type RESET to confirm', require:'RESET', confirmLabel:'Load template', danger:true,
-    cb:async()=>{ loadTemplate(id,true); normalize(state.tasks); await save(); render(); toast(tpl.name+' loaded'); }});
+    cb:async()=>{
+      loadTemplate(id, true);
+      state.people=[]; state.tasks=[]; state.events=[]; state.notes=[];
+      normalize(state.tasks); await save(); render(); toast(tpl.name+' structure loaded (empty board)');
+    }});
 }
 
 /* ============ Activity feed ============ */
