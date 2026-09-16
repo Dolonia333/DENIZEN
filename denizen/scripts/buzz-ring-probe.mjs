@@ -36,8 +36,33 @@ async function enterDemo(page) {
     const m = document.getElementById('denizen-visitor-name-modal');
     return !m || getComputedStyle(m).display === 'none' || m.hidden;
   }, { timeout: 30_000 });
-  await page.evaluate(() => localStorage.setItem('denizen-onboarding-seen', '1'));
-  await page.waitForTimeout(1500);
+  await page.evaluate(() => {
+    localStorage.setItem('denizen-onboarding-seen', '1');
+    localStorage.setItem('denizen-onboarding-seen-v2', '1');
+    localStorage.setItem('denizen-onboarding-seen-v7', '1');
+    localStorage.setItem('denizen-onboarding-seen-v7-demo', '1');
+    localStorage.setItem('denizen-onboarding-seen-v7-demo-anonymous', '1');
+    localStorage.setItem('denizen-onboarding-seen-v7-team', '1');
+    localStorage.setItem('denizen-onboarding-seen-v7-team-anonymous', '1');
+  });
+  await page.waitForTimeout(800);
+  // Dismiss HQ tour / coach overlays so ring actions are unobstructed.
+  for (let i = 0; i < 4; i += 1) {
+    const skipped = await page.evaluate(() => {
+      if (globalThis.DenizenVisitorOnboarding?.dismiss) {
+        globalThis.DenizenVisitorOnboarding.dismiss();
+        return true;
+      }
+      const skip = document.querySelector('.onb-skip, .su-skip, #denizen-visitor-onboarding .onb-skip');
+      if (skip) { skip.click(); return true; }
+      const overlay = document.getElementById('denizen-visitor-onboarding');
+      if (overlay) { overlay.remove(); document.documentElement.classList.remove('denizen-onboarding-open'); return true; }
+      return false;
+    });
+    if (!skipped) break;
+    await page.waitForTimeout(400);
+  }
+  await page.waitForTimeout(600);
 }
 
 async function revealFab(page) {
