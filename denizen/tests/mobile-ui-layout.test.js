@@ -17,7 +17,8 @@ describe('mobile UI layout fixes', () => {
     assert.match(chat, /id="player-chat-header-actions"/);
     assert.match(chat, /_ensureChatHeaderActions/);
     assert.match(chat, /overflow:\s*hidden/);
-    assert.match(chat, /padding-top:\s*10px/);
+    assert.match(chat, /padding-top:\s*0/);
+    assert.match(chat, /pc-floor-kicker/);
   });
 
   it('touch header stays a single thin row with horizontal actions', () => {
@@ -38,8 +39,8 @@ describe('mobile UI layout fixes', () => {
       actionBlocks.every((block) => !/flex-direction:\s*column/.test(block)),
       'touch header-actions must not stack buttons in a column'
     );
-    assert.match(chat, /Float assistant chip over the message log/);
-    assert.match(chat, /padding:\s*30px 12px 12px/);
+    assert.match(chat, /denizen-visitor-assistant-chip[\s\S]*?display:\s*none !important/);
+    assert.match(chat, /padding:\s*12px/);
     assert.match(chat, /border-radius:\s*999px/);
     assert.match(chat, /#4ade80,\s*#16a34a/);
   });
@@ -55,12 +56,14 @@ describe('mobile UI layout fixes', () => {
     assert.match(briefing, /player-chat-header-actions/);
   });
 
-  it('assistant chip is a full-width header grid row, not nested under the name', () => {
+  it('removes the green Your assistant chip from Floor Line', () => {
     const claim = read('src/visitor-claim-ui.js');
     const chat = read('src/player-chat.js');
-    assert.match(claim, /header\.appendChild\(chip\)/);
-    assert.match(chat, /"chip chip chip"/);
-    assert.match(chat, /#denizen-visitor-assistant-chip \{ grid-area: chip/);
+    assert.match(claim, /Floor Line no longer shows the green/);
+    assert.match(chat, /pc-floor-kicker/);
+    assert.match(chat, /#player-chat-panel::before \{ content: none/);
+    assert.doesNotMatch(chat, /"chip chip chip"/);
+    assert.match(chat, /display: none !important/);
   });
 
   it('HQ PASS login avoids transform on touch so Safari autofill stays anchored', () => {

@@ -226,6 +226,13 @@ class PlayerChat {
     // Move action chips that were incorrectly nested under .chat-header-main
     const main = header.querySelector('.chat-header-main');
     if (main) {
+      if (!main.querySelector('.pc-floor-kicker')) {
+        const kicker = document.createElement('span');
+        kicker.className = 'pc-floor-kicker';
+        kicker.setAttribute('aria-hidden', 'true');
+        kicker.textContent = 'FLOOR LINE';
+        main.insertBefore(kicker, main.firstChild);
+      }
       for (const id of [
         'denizen-visitor-mcp-connect-btn',
         'denizen-visitor-team-mcp-btn',
@@ -236,9 +243,9 @@ class PlayerChat {
         const el = main.querySelector(`#${id}`);
         if (el && el.parentElement !== actions) actions.appendChild(el);
       }
-      // Assistant chip belongs on its own full-width grid row, not inside main.
-      const chip = main.querySelector('#denizen-visitor-assistant-chip');
-      if (chip) header.appendChild(chip);
+      // Remove legacy green assistant chip — it cluttered Floor Line.
+      const chip = header.querySelector('#denizen-visitor-assistant-chip');
+      if (chip) chip.remove();
     }
     // Briefing/etc. may also have been appended as a raw header child.
     for (const id of [
@@ -2197,9 +2204,9 @@ class PlayerChat {
         font-family: var(--pc-mono);
         font-size: 13px;
         color: var(--pc-text);
-        /* Clip body so a tall header cannot paint over the log; stamp sits in padding */
+        /* Clip body so a tall header cannot paint over the log */
         overflow: hidden;
-        padding-top: 10px;
+        padding-top: 0;
         box-shadow:
           inset 0 0 0 2px var(--pc-line),
           0 0 0 2px var(--pc-amber),
@@ -2210,15 +2217,16 @@ class PlayerChat {
       #player-chat-panel *,
       #player-chat-panel *::before,
       #player-chat-panel *::after { box-sizing: border-box; }
-      #player-chat-panel::before {
-        content: "FLOOR LINE";
-        position: absolute;
-        top: 2px;
-        left: 14px;
-        z-index: 3;
-        padding: 3px 8px;
+      /* Old absolute stamp overlapped the avatar letter — stamp is now .pc-floor-kicker. */
+      #player-chat-panel::before { content: none; display: none; }
+      .pc-floor-kicker {
+        display: block;
+        margin: 0 0 2px;
+        padding: 2px 6px;
+        width: max-content;
+        max-width: 100%;
         font-family: var(--pc-display);
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 800;
         letter-spacing: 0.14em;
         line-height: 1.2;
@@ -2226,21 +2234,18 @@ class PlayerChat {
         background: var(--pc-amber);
         border: 2px solid #020617;
         border-radius: 3px;
-        box-shadow: 2px 2px 0 #020617;
+        box-shadow: 1px 1px 0 #020617;
         white-space: nowrap;
-        pointer-events: none;
       }
       #player-chat-header {
         position: relative;
         display: grid;
         grid-template-columns: 40px minmax(0, 1fr) auto;
-        grid-template-areas:
-          "avatar main actions"
-          "chip chip chip";
-        align-items: center;
+        grid-template-areas: "avatar main actions";
+        align-items: start;
         column-gap: 8px;
-        row-gap: 4px;
-        padding: 14px 10px 10px;
+        row-gap: 0;
+        padding: 10px;
         border-bottom: 2px solid var(--pc-border);
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
@@ -2249,9 +2254,13 @@ class PlayerChat {
         box-shadow: inset 0 -1px 0 var(--pc-line);
         min-width: 0;
       }
-      #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: center; }
+      #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: start; margin-top: 2px; }
       #player-chat-header .chat-header-main { grid-area: main; min-width: 0; }
-      #player-chat-header #denizen-visitor-assistant-chip { grid-area: chip; }
+      /* Green "Your assistant: …" chip cluttered Floor Line — hide it (release via floor pill). */
+      #player-chat-header #denizen-visitor-assistant-chip,
+      #denizen-visitor-assistant-chip {
+        display: none !important;
+      }
       #player-chat-header-actions {
         grid-area: actions;
         display: flex;
@@ -2275,7 +2284,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-header {
         grid-template-columns: 34px minmax(0, 1fr) auto;
         grid-template-areas: "avatar main actions";
-        align-items: center;
+        align-items: start;
         column-gap: 6px;
         row-gap: 0;
         padding: 10px 8px 6px;
@@ -2304,18 +2313,8 @@ class PlayerChat {
         justify-content: center;
         text-align: center;
       }
-      /* Float assistant chip over the message log so it does not inflate the header */
-      html.denizen-touch #player-chat-header #denizen-visitor-assistant-chip {
-        position: absolute;
-        left: 8px;
-        top: calc(100% + 6px);
-        z-index: 4;
-        grid-area: unset;
-        max-width: calc(100% - 16px);
-        pointer-events: auto;
-      }
       html.denizen-touch #player-chat-log {
-        padding-top: 30px;
+        padding-top: 12px;
       }
       /* Compact labels on narrow phones so the right column stays one short row */
       html.denizen-touch.denizen-phone #denizen-visitor-mcp-connect-btn {
@@ -3003,7 +3002,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-panel {
         font-family: var(--pc-mono);
         overflow: hidden;
-        padding-top: 10px;
+        padding-top: 0;
         background:
           repeating-linear-gradient(
             -12deg,
@@ -3116,8 +3115,7 @@ class PlayerChat {
         min-height: 0;
         max-height: none;
         line-height: 1.45;
-        /* Top padding reserves room for the floating assistant chip */
-        padding: 30px 12px 12px;
+        padding: 12px;
         -webkit-overflow-scrolling: touch;
       }
       html.denizen-touch #player-chat-log:empty::before {
@@ -3200,7 +3198,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-header {
         padding: 10px 8px 6px;
         font-size: 13px;
-        align-items: center;
+        align-items: start;
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
           rgba(2, 6, 23, 0.55);
@@ -3245,6 +3243,7 @@ class PlayerChat {
         <div id="player-chat-header">
           <div class="pc-header-avatar" id="player-chat-avatar" role="button" tabindex="-1" title="Click an NPC, then tap their letter to open MCP"></div>
           <div class="chat-header-main">
+            <span class="pc-floor-kicker" aria-hidden="true">FLOOR LINE</span>
             <span class="target" id="player-chat-target">Messages</span>
             <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
           </div>

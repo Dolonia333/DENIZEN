@@ -270,46 +270,14 @@
   }
 
   function updateAssistantChip() {
-    const sess = globalThis.DenizenVisitorSession;
-    const header = document.getElementById('player-chat-header');
-    if (!header) return;
-
-    let chip = document.getElementById(CHIP_ID);
-    if (!chip) {
-      chip = document.createElement('span');
-      chip.id = CHIP_ID;
-      chip.innerHTML = '<span class="dz-asst-name"></span>'
-        + '<button type="button" class="dz-asst-release" title="Release this assistant" aria-label="Release this assistant">✕</button>';
-      // Direct child of the header grid so it can span a full row under the toolbar.
-      header.appendChild(chip);
-      assistantChip = chip;
-      const relBtn = chip.querySelector('.dz-asst-release');
-      if (relBtn) {
-        // Bind via ONE mechanism only — double-binding fires the handler twice
-        // per tap, which would arm and confirm the release in a single click.
-        if (globalThis.DenizenTouchBind?.bindPress) {
-          globalThis.DenizenTouchBind.bindPress(relBtn, onReleaseClick, { stop: true });
-        } else {
-          relBtn.addEventListener('click', onReleaseClick);
-        }
-      }
-    } else if (chip.parentElement !== header) {
-      header.appendChild(chip);
+    // Floor Line no longer shows the green "Your assistant: …" chip — it covered
+    // the chat log. Claim / release stays on the proximity floor pill.
+    const existing = document.getElementById(CHIP_ID);
+    if (existing) {
+      existing.style.display = 'none';
+      existing.remove();
     }
-
-    const asst = sess?.getAssistant?.();
-    const nameEl = chip.querySelector('.dz-asst-name');
-    if (!asst?.npc_key) {
-      chip.style.display = 'none';
-      disarmRelease();
-      return;
-    }
-
-    const name = asst.assistant_name
-      || npcDisplayName(sess.npcKeyToTextureKey(asst.npc_key))
-      || asst.npc_key;
-    if (nameEl) nameEl.textContent = `Your assistant: ${name}`;
-    chip.style.display = 'inline-flex';
+    assistantChip = null;
   }
 
   let releaseArmed = false;
