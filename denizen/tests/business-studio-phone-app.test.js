@@ -44,4 +44,28 @@ describe('Business Studio phone app', () => {
     const idx = read('index.html');
     assert.match(idx, /denizen-phone-ui\.js\?v=phone\d+\w*/);
   });
+
+  it('keeps classic Lean Canvas grid on mobile (no card stack)', () => {
+    const html = read('business-studio/index.html');
+    assert.match(html, /lean-stage/);
+    assert.match(html, /data-fit-design-width="820"/);
+    assert.match(html, /fitBoardToStage/);
+    // Must not collapse the tablet into a column of cards on phone
+    assert.doesNotMatch(
+      html,
+      /@media \(max-width:900px\)\{\s*\.lean-canvas\{\s*display:flex;flex-direction:column/,
+    );
+    assert.match(html, /Full 9-box canvas/);
+  });
+
+  it('keeps sales-cycle hub-and-spoke on mobile (scaled, not stacked)', () => {
+    const html = read('business-studio/index.html');
+    assert.match(html, /sc-map-stage/);
+    assert.match(html, /data-fit-design-width="640"/);
+    assert.doesNotMatch(html, /\.sc-spokes\{display:none\}/);
+    assert.doesNotMatch(
+      html,
+      /\.sc-hub,\.sc-role\{position:relative;left:auto!important/,
+    );
+  });
 });

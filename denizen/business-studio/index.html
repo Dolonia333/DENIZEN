@@ -471,6 +471,12 @@ html.embed .dz-app-chrome{display:none}
 .lean-wrap{display:flex;flex-direction:column;gap:12px}
 .lean-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);font-size:12.5px}
 .lean-meta strong{color:var(--forest);font-weight:700}
+.lean-stage{
+  width:100%;
+  overflow:hidden;
+  border-radius:16px;
+  /* height filled by fitBoardToStage() on narrow screens */
+}
 .lean-canvas{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
@@ -482,6 +488,8 @@ html.embed .dz-app-chrome{display:none}
   background:var(--line);
   min-height:min(72vh,720px);
   box-shadow:var(--shadow-lift);
+  width:100%;
+  transform-origin:top left;
 }
 .lean-cell{
   background:var(--surface);
@@ -514,14 +522,30 @@ html.embed .dz-app-chrome{display:none}
 }
 .lean-cell textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--forest-tint)}
 .lean-cell.lc-uvp textarea{font-size:13.5px;font-weight:550}
+/* Mobile: keep classic 5×3 tablet — scale to fit so all 9 boxes stay in view (no card stack). */
 @media (max-width:900px){
+  .lean-fit-hint{
+    display:block;font-size:11.5px;color:var(--muted);margin:0 0 6px;font-weight:600
+  }
+  .lean-stage{
+    border:1px solid var(--line);
+    box-shadow:var(--shadow-lift);
+    background:var(--line);
+  }
   .lean-canvas{
-    display:flex;flex-direction:column;min-height:0;gap:8px;background:transparent;border:none;box-shadow:none
+    width:820px;
+    min-width:820px;
+    min-height:540px;
+    border:none;border-radius:0;box-shadow:none;
   }
-  .lean-cell{
-    border:1px solid var(--line)!important;border-radius:12px;min-height:140px
-  }
-  .lean-cell textarea{min-height:100px;resize:vertical}
+  .lean-cell-head{padding:6px 8px 2px}
+  .lean-cell-head h3{font-size:9.5px;letter-spacing:.04em}
+  .lean-cell-head span{display:none}
+  .lean-cell textarea{padding:2px 8px 8px;font-size:10.5px;line-height:1.35}
+  .lean-cell.lc-uvp textarea{font-size:11px}
+}
+@media (min-width:901px){
+  .lean-fit-hint{display:none}
 }
 
 /* ===== Living PAVE workbook ===== */
@@ -627,9 +651,17 @@ html.embed .dz-app-chrome{display:none}
   width:100%;border:none;background:transparent;font-family:var(--font-sheet);
   font-size:14px;color:#4A5568;padding:6px 0 0;font-weight:400
 }
+.sc-map-stage{
+  width:100%;
+  overflow:hidden;
+  margin:8px auto 22px;
+  display:flex;
+  justify-content:center;
+}
 .sc-map{
-  position:relative;width:100%;max-width:760px;margin:8px auto 22px;
-  height:420px
+  position:relative;width:100%;max-width:760px;margin:0 auto;
+  height:420px;
+  transform-origin:top left;
 }
 .sc-spokes{
   position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0
@@ -685,7 +717,7 @@ html.embed .dz-app-chrome{display:none}
   width:100%;border:none;background:transparent;font-family:var(--font-sheet);
   font-size:13px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1B2A4A;padding:0
 }
-.sc-flow{display:flex;flex-wrap:nowrap;gap:0;align-items:stretch;overflow-x:auto;padding-bottom:4px}
+.sc-flow{display:flex;flex-wrap:nowrap;gap:0;align-items:stretch;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .sc-step{
   flex:1 1 0;min-width:148px;background:#fff;border:2px solid #1B2A4A;border-radius:14px;
   padding:16px 14px 14px;display:flex;flex-direction:column;justify-content:center
@@ -700,14 +732,27 @@ html.embed .dz-app-chrome{display:none}
   color:#1B2A4A;font-weight:700;font-size:20px;line-height:1
 }
 .sc-ref{display:none}
+/* Mobile: keep hub-and-spoke + horizontal deal flow — scale map to fit (no vertical stack). */
 @media(max-width:820px){
-  .sc-map{height:auto;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:100%}
-  .sc-spokes{display:none}
-  .sc-hub,.sc-role{position:relative;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none;width:min(100%,320px)}
-  .sc-hub{width:150px;height:150px;order:-1;margin-bottom:4px}
-  .sc-flow{flex-wrap:wrap;gap:8px}
-  .sc-arrow{width:100%;transform:rotate(90deg);height:18px}
-  .sc-step{min-width:calc(50% - 8px)}
+  .sc-diagram{padding:14px 12px 16px}
+  .sc-diagram-head .sc-title-input{font-size:17px}
+  .sc-diagram-head .sc-sub-input{font-size:12.5px}
+  .sc-map-stage{margin:6px 0 14px;justify-content:flex-start}
+  .sc-map{
+    width:640px;
+    max-width:none;
+    height:400px;
+  }
+  .sc-hub{width:132px;height:132px;padding:12px 10px}
+  .sc-hub input{font-size:14px}
+  .sc-hub textarea{font-size:10.5px;min-height:28px}
+  .sc-role{width:168px;padding:8px 9px 8px;border-radius:12px}
+  .sc-role .sc-role-label{font-size:10.5px;margin-bottom:4px}
+  .sc-role textarea{min-height:64px;font-size:11px;line-height:1.3}
+  .sc-flow{flex-wrap:nowrap}
+  .sc-arrow{width:22px;transform:none;height:auto;font-size:16px}
+  .sc-step{min-width:120px;padding:12px 10px}
+  .sc-step input{font-size:12.5px}
 }
 
 .chip{display:inline-flex;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--forest-tint);color:var(--forest)}
@@ -3125,7 +3170,8 @@ function renderSalesCycleDiagram(diagram, advisor){
     +'<input class="sc-sub-input" data-sc="subtitle" value="'+esc(diagram.subtitle||'')+'" aria-label="Diagram subtitle"'+ro+'/>'
     +'</div>';
 
-  html+='<div class="sc-map" aria-label="Buying center diagram">'
+  html+='<div class="sc-map-stage" data-fit-stage data-fit-design-width="640">'
+    +'<div class="sc-map" data-fit-board aria-label="Buying center diagram">'
     +'<svg class="sc-spokes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">';
   spokes.forEach(function(s){
     html+='<line x1="50" y1="50" x2="'+parseFloat(s.x2)+'" y2="'+parseFloat(s.y2)+'"/>';
@@ -3144,7 +3190,7 @@ function renderSalesCycleDiagram(diagram, advisor){
       +'<textarea data-sc-role="'+esc(id)+'" rows="4"'+ro+'>'+esc(role.text||'')+'</textarea>'
       +'</div>';
   });
-  html+='</div>';
+  html+='</div></div>';
 
   html+='<div class="sc-flow-wrap">'
     +'<div class="sc-flow-label"><input data-sc="cycleNote" value="'+esc(diagram.cycleNote||'')+'"'+ro+'/></div>'
@@ -3252,7 +3298,9 @@ function renderLeanCanvas(){
       +'</div>';
   }
 
-  html+='<div class="lean-canvas" role="region" aria-label="Lean Canvas">'
+  html+='<p class="lean-fit-hint">Full 9-box canvas — scaled to fit your phone (same layout as desktop)</p>'
+    +'<div class="lean-stage" data-fit-stage data-fit-design-width="820">'
+    +'<div class="lean-canvas" data-fit-board role="region" aria-label="Lean Canvas">'
     +cell('lc-problem','problem')
     +cell('lc-solution','solution')
     +cell('lc-uvp','uniqueValueProposition')
@@ -3262,7 +3310,7 @@ function renderLeanCanvas(){
     +cell('lc-channels','channels')
     +cell('lc-cost','costStructure')
     +cell('lc-revenue','revenueStreams')
-    +'</div></div>';
+    +'</div></div></div>';
   return html;
 }
 
@@ -3707,6 +3755,35 @@ function renderInvestorSim(){
 }
 
 /* ---------- 13. Main render ---------- */
+function fitBoardToStage(stage){
+  if(!stage) return;
+  var board=stage.querySelector('[data-fit-board]');
+  if(!board) return;
+  var designW=Number(stage.getAttribute('data-fit-design-width'))||820;
+  var avail=stage.clientWidth;
+  if(!avail){
+    avail=(stage.parentElement&&stage.parentElement.clientWidth)||Math.max(0, window.innerWidth-28);
+  }
+  board.style.transform='none';
+  if(avail>=designW-4){
+    board.style.width='';
+    board.style.minWidth='';
+    stage.style.height='';
+    return;
+  }
+  board.style.width=designW+'px';
+  board.style.minWidth=designW+'px';
+  var naturalH=board.offsetHeight||540;
+  var scale=Math.max(0.4, Math.min(1, avail/designW));
+  board.style.transform='scale('+scale+')';
+  board.style.transformOrigin='top left';
+  stage.style.height=Math.ceil(naturalH*scale)+'px';
+}
+
+function fitAllBoards(){
+  document.querySelectorAll('[data-fit-stage]').forEach(fitBoardToStage);
+}
+
 function render(){
   renderSidebar();
   renderBottomNav();
@@ -3746,6 +3823,10 @@ function render(){
   };
   const fn=map[ui.view]||renderOverview;
   main.innerHTML=fn();
+  requestAnimationFrame(function(){
+    fitAllBoards();
+    requestAnimationFrame(fitAllBoards);
+  });
 }
 
 function setView(id){
@@ -4448,6 +4529,14 @@ document.addEventListener('change', function(e){
   }catch(e){}
   render();
   bootstrapSync().then(function(){ render(); }).catch(function(){});
+  var fitTimer=null;
+  window.addEventListener('resize', function(){
+    clearTimeout(fitTimer);
+    fitTimer=setTimeout(fitAllBoards, 80);
+  });
+  window.addEventListener('orientationchange', function(){
+    setTimeout(fitAllBoards, 120);
+  });
 })();
 </script>
 </body>
