@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const STYLE_ID = 'denizen-buzz-capture-style';
+  const STYLE_ID = 'denizen-buzz-capture-style-v2';
   const RING_ID = 'denizen-buzz-ring';
   const NOTE_ID = 'denizen-buzz-note';
   const CROP_ID = 'denizen-buzz-crop';
@@ -16,6 +16,8 @@
 
   let ringEl = null;
   let noteEl = null;
+  let captureGen = 0;
+  let speechSession = 0;
   let state = {
     kind: 'note',
     note: '',
@@ -131,6 +133,19 @@
         stroke: currentColor;
       }
       #${RING_ID} .bz-act i { display: none; }
+      #${RING_ID} .bz-act .bz-act-label {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 4px);
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #f8f4ec;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+        pointer-events: none;
+      }
       #${RING_ID}.open .bz-act { transform: scale(1); opacity: 1; }
       #${RING_ID} .bz-act:nth-child(2) { transition-delay: 0.02s; }
       #${RING_ID} .bz-act:nth-child(3) { transition-delay: 0.05s; }
@@ -143,9 +158,10 @@
       #${RING_ID} .bz-act:hover:not([disabled]) {
         box-shadow: 0 10px 24px rgba(0,0,0,0.38), 0 0 0 3px rgba(163,230,53,0.45);
       }
-      html.denizen-phone #${RING_ID} { width: 240px; height: 240px; }
+      html.denizen-phone #${RING_ID} { width: 260px; height: 260px; }
       html.denizen-phone #${RING_ID} .bz-act { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
       html.denizen-phone #${RING_ID} .bz-act svg { width: 18px; height: 18px; }
+      html.denizen-phone #${RING_ID} .bz-act .bz-act-label { font-size: 9px; top: calc(100% + 3px); }
 
       #${NOTE_ID} {
         display: none;
@@ -153,7 +169,8 @@
         right: max(16px, env(safe-area-inset-right));
         bottom: calc(96px + env(safe-area-inset-bottom, 0px));
         width: min(360px, calc(100vw - 24px));
-        z-index: 2147483201;
+        /* Above the phone FAB — otherwise Discard/Stop/Send sit under Buzz and cannot be tapped. */
+        z-index: 2147483646;
         background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96));
         border: 1px solid rgba(250, 204, 21, 0.35);
         border-radius: 16px;
@@ -161,22 +178,29 @@
         color: #e2e8f0;
         font-family: "IBM Plex Sans", system-ui, sans-serif;
         overflow: hidden;
+        pointer-events: auto;
       }
       html.denizen-phone #${NOTE_ID} {
         right: max(10px, env(safe-area-inset-right));
         left: max(10px, env(safe-area-inset-left));
-        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(88px + env(safe-area-inset-bottom, 0px));
         width: auto;
-        max-height: min(70vh, calc(100dvh - 80px));
+        max-height: min(62vh, calc(100dvh - 120px));
       }
       html.denizen-phone #${NOTE_ID} textarea { min-height: 64px; font-size: 16px; }
       #${NOTE_ID}.open { display: flex; flex-direction: column; }
       #${NOTE_ID} header {
-        display: flex; align-items: center; justify-content: space-between;
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
         padding: 10px 12px 8px; border-bottom: 1px solid rgba(148,163,184,0.18);
       }
+      #${NOTE_ID} header .bz-head-main { min-width: 0; flex: 1; }
       #${NOTE_ID} header strong { font-size: 13px; color: #fde68a; }
       #${NOTE_ID} header span { font-size: 11px; color: #94a3b8; }
+      #${NOTE_ID} .bz-close {
+        flex: 0 0 auto; width: 36px; height: 36px; border-radius: 999px;
+        border: 1px solid #475569; background: #0f172a; color: #e2e8f0;
+        font-size: 20px; line-height: 1; cursor: pointer;
+      }
       #${NOTE_ID} .bz-preview {
         display: none; max-height: 140px; object-fit: contain; width: 100%;
         background: #020617; border-bottom: 1px solid rgba(148,163,184,0.12);
@@ -191,11 +215,12 @@
         padding: 0 12px 8px; font-size: 11px; color: #94a3b8;
       }
       #${NOTE_ID} footer {
-        display: flex; gap: 8px; padding: 8px 12px 12px; justify-content: flex-end;
+        display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px 12px; justify-content: flex-end;
       }
       #${NOTE_ID} footer button {
         border-radius: 999px; border: 1px solid #334155; background: transparent;
-        color: #cbd5e1; padding: 6px 12px; font-size: 12px; cursor: pointer;
+        color: #cbd5e1; padding: 10px 14px; font-size: 13px; cursor: pointer;
+        min-height: 40px; touch-action: manipulation;
       }
       #${NOTE_ID} footer button.primary {
         background: #a3e635; color: #052e16; border-color: #a3e635; font-weight: 700;
@@ -208,8 +233,17 @@
       #${NOTE_ID} [data-note="stop"] { display: none; }
       #${NOTE_ID}.recording [data-note="stop"] { display: inline-flex; }
       #${NOTE_ID}.recording [data-note="send"] { display: none; }
+      /* Keep Discard reachable while recording so the sheet is never a dead end. */
+      html.denizen-phone #${NOTE_ID} footer { justify-content: flex-end; flex-wrap: wrap; }
+      html.denizen-phone #${NOTE_ID} [data-note="discard"] { margin-right: auto; }
+      html.denizen-buzz-note-open #denizen-phone-fab,
+      html.denizen-buzz-note-open #denizen-phone-fab:hover,
+      html.denizen-buzz-note-open #denizen-phone-fab:focus-within {
+        pointer-events: none !important;
+        z-index: 2147483590 !important;
+      }
       #${CROP_ID} {
-        display: none; position: fixed; inset: 0; z-index: 2147483602;
+        display: none; position: fixed; inset: 0; z-index: 2147483647;
         background: rgba(2,6,23,0.72); cursor: crosshair;
         touch-action: none;
       }
@@ -226,6 +260,28 @@
         position: absolute; left: 0; right: 0; bottom: 16px; margin: 0; text-align: center;
         color: #e2e8f0; font: 13px/1.4 "IBM Plex Sans", system-ui, sans-serif;
         pointer-events: none;
+      }
+      #denizen-buzz-toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%) translateY(12px);
+        z-index: 2147483647;
+        max-width: min(90vw, 360px);
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.94);
+        border: 1px solid rgba(163, 230, 53, 0.45);
+        color: #ecfccb;
+        font: 600 13px/1.3 "IBM Plex Sans", system-ui, sans-serif;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      #denizen-buzz-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
       }
     `;
     document.head.appendChild(s);
@@ -248,28 +304,92 @@
 
   function actions() {
     const list = [
-      { id: 'screenshot', label: 'Screenshot', ico: 'ti-screenshot', svg: ICO.screenshot, title: isPhoneUi() ? 'Photo or screenshot from your camera roll' : 'Capture the screen' },
-      { id: 'meeting', label: 'Meet', ico: 'ti-video', svg: ICO.meeting, title: isPhoneUi() ? 'Record the meeting on this mic — transcribed as it lands' : 'Record meeting — transcribed as it lands' },
-      { id: 'dictate', label: 'Say', ico: 'ti-message', svg: ICO.dictate },
-      { id: 'phone', label: 'Apps', ico: 'ti-device-mobile', svg: ICO.phone, title: 'Open the phone — chat, CRM, and the rest of the apps' },
-      { id: 'record', label: 'Record', ico: 'ti-microphone', svg: ICO.record },
+      {
+        id: 'screenshot',
+        label: 'Shot',
+        ico: 'ti-screenshot',
+        svg: ICO.screenshot,
+        title: isPhoneUi()
+          ? 'Screenshot — photo from the camera roll, crop, one line, Send to Abby'
+          : 'Screenshot — capture the screen, crop, one line, Send to Abby',
+      },
+      {
+        id: 'meeting',
+        label: 'Meet',
+        ico: 'ti-video',
+        svg: ICO.meeting,
+        title: isPhoneUi()
+          ? 'Meet — record the room on this mic; audio lands in parts, then Send'
+          : 'Meet — record the room; audio lands in chunks and is transcribed as it goes',
+      },
+      {
+        id: 'dictate',
+        label: 'Say',
+        ico: 'ti-message',
+        svg: ICO.dictate,
+        title: 'Say — dictation into the note card; you read it, then Send',
+      },
+      {
+        id: 'phone',
+        label: 'Apps',
+        ico: 'ti-device-mobile',
+        svg: ICO.phone,
+        title: 'Apps — open the phone (chat, CRM, Workbench). Does not send Abby anything.',
+      },
+      {
+        id: 'record',
+        label: 'Record',
+        ico: 'ti-microphone',
+        svg: ICO.record,
+        title: 'Record — a voice memo for Abby. Shorter than Meet; no room-in-parts.',
+      },
     ];
     if (!isPhoneUi()) {
       const desktop = !!window.DenizenDesktop?.buzzOverlayToggle;
       const extra = desktop
-        ? { id: 'invisible', label: 'Ghost', ico: 'ti-eye-off', svg: ICO.invisible, title: 'Leave invisible — stay out of screen share' }
-        : { id: 'desktop', label: 'Desktop', ico: 'ti-device-desktop', svg: ICO.desktop, title: 'Always-on-top Buzz overlay' };
+        ? {
+          id: 'invisible',
+          label: 'Ghost',
+          ico: 'ti-eye-off',
+          svg: ICO.invisible,
+          title: 'Ghost — leave invisible so Buzz stays out of screen share and recordings',
+        }
+        : {
+          id: 'desktop',
+          label: 'Desktop',
+          ico: 'ti-device-desktop',
+          svg: ICO.desktop,
+          title: 'Desktop — always-on-top Buzz overlay / download',
+        };
       list.splice(4, 0, extra);
     }
     return list;
   }
 
+  function noteChrome(kind) {
+    // Card chrome is always the same gold Buzz note; kind only changes meta / placeholder.
+    const k = String(kind || 'note');
+    if (k === 'screenshot') {
+      return { placeholder: 'One line — what should they do?' };
+    }
+    if (k === 'meeting') {
+      return { placeholder: 'One line — what should they do?' };
+    }
+    if (k === 'dictate') {
+      return { placeholder: 'One line — what should they do?' };
+    }
+    if (k === 'record') {
+      return { placeholder: 'One line — what should they do?' };
+    }
+    return { placeholder: 'One line — what should they do?' };
+  }
+
   function ringRadius() {
-    return document.documentElement.classList.contains('denizen-phone') ? 88 : 118;
+    return document.documentElement.classList.contains('denizen-phone') ? 96 : 118;
   }
 
   function ringSize() {
-    return document.documentElement.classList.contains('denizen-phone') ? 240 : RING_SIZE;
+    return document.documentElement.classList.contains('denizen-phone') ? 260 : RING_SIZE;
   }
 
   function phoneAnchor() {
@@ -353,7 +473,7 @@
   function ringActionsHtml() {
     return actions().map((a) => {
       const title = a.title ? ` title="${esc(a.title)}"` : '';
-      return `<button type="button" class="bz-act" data-act="${a.id}" aria-label="${esc(a.label)}"${title} role="menuitem">${a.svg}<i class="ti ${a.ico}" aria-hidden="true"></i></button>`;
+      return `<button type="button" class="bz-act" data-act="${a.id}" aria-label="${esc(a.label)}"${title} role="menuitem">${a.svg}<span class="bz-act-label">${esc(a.label)}</span><i class="ti ${a.ico}" aria-hidden="true"></i></button>`;
     }).join('');
   }
 
@@ -419,15 +539,18 @@
     if (noteEl) return;
     noteEl = document.createElement('div');
     noteEl.id = NOTE_ID;
+    noteEl.setAttribute('role', 'dialog');
+    noteEl.setAttribute('aria-label', 'Buzz note');
     noteEl.innerHTML = `
       <header>
-        <div>
-          <strong>Buzz note</strong>
-          <span> — you see it before it goes</span>
+        <div class="bz-head-main">
+          <strong id="bz-title">Buzz note</strong>
+          <span id="bz-blurb"> — you see it before it goes</span>
         </div>
         <label>To
           <select id="bz-target" aria-label="Send to"></select>
         </label>
+        <button type="button" class="bz-close" data-note="discard" aria-label="Close note">×</button>
       </header>
       <img class="bz-preview" id="bz-preview" alt="Screenshot preview" />
       <textarea id="bz-note" placeholder="One line — what should they do?" maxlength="4000"></textarea>
@@ -439,12 +562,35 @@
         <button type="button" class="primary" data-note="send">Send</button>
       </footer>
     `;
-    noteEl.addEventListener('click', (e) => {
-      const act = e.target.closest('[data-note]')?.dataset.note;
+    const runNoteAct = (act) => {
+      if (!act) return;
       if (act === 'discard') closeNote();
-      if (act === 'send') void sendDrop();
-      if (act === 'stop') stopRecording();
-      if (act === 'mic') void startDictate();
+      else if (act === 'send') void sendDrop();
+      else if (act === 'stop') stopRecording();
+      else if (act === 'mic') void startDictate();
+    };
+    // pointerup is reliable on iOS (same pattern as the ring).
+    let lastNoteActAt = 0;
+    noteEl.addEventListener('pointerup', (e) => {
+      if (e.button != null && e.button !== 0) return;
+      const btn = e.target.closest?.('[data-note]');
+      if (!btn || btn.disabled) return;
+      e.preventDefault();
+      e.stopPropagation();
+      lastNoteActAt = Date.now();
+      runNoteAct(btn.dataset.note);
+    });
+    noteEl.addEventListener('click', (e) => {
+      const btn = e.target.closest?.('[data-note]');
+      if (!btn || btn.disabled) return;
+      if (Date.now() - lastNoteActAt < 450) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      runNoteAct(btn.dataset.note);
     });
     document.body.appendChild(noteEl);
   }
@@ -519,8 +665,17 @@
     fillTargets();
     state.kind = kind || state.kind || 'note';
     noteEl.classList.add('open');
+    noteEl.dataset.kind = state.kind;
+    document.documentElement.classList.add('denizen-buzz-note-open');
+    const chrome = noteChrome(state.kind);
+    const titleEl = noteEl.querySelector('#bz-title');
+    const blurbEl = noteEl.querySelector('#bz-blurb');
+    // Office / Desktop / landing deep-link all share this card chrome.
+    if (titleEl) titleEl.textContent = 'Buzz note';
+    if (blurbEl) blurbEl.textContent = ' — you see it before it goes';
     const ta = noteEl.querySelector('#bz-note');
     ta.value = state.note || '';
+    ta.placeholder = chrome.placeholder || 'One line — what should they do?';
     const preview = noteEl.querySelector('#bz-preview');
     if (state.imageDataUrl) {
       preview.src = state.imageDataUrl;
@@ -531,7 +686,11 @@
     }
     const meta = [];
     if (state.transcript) meta.push('Transcript ready');
-    if (state.recording) meta.push(state.kind === 'meeting' ? 'Recording meeting…' : 'Recording…');
+    if (state.recording) {
+      if (state.kind === 'meeting') meta.push('Recording meeting… Transcripts land in parts.');
+      else if (state.kind === 'dictate') meta.push('Dictating…');
+      else meta.push('Recording… Stop when you are done.');
+    }
     if (state.imageDataUrl && window.DenizenDesktop?.buzzSaveCapture) {
       meta.push('Saved on this disk; Abby gets the path');
     } else if (state.imageDataUrl) {
@@ -544,9 +703,19 @@
   }
 
   function closeNote() {
+    captureGen += 1;
+    speechSession += 1;
     stopRecording();
     closeCrop();
     noteEl?.classList.remove('open', 'recording');
+    document.documentElement.classList.remove('denizen-buzz-note-open');
+    const meta = noteEl?.querySelector('#bz-meta');
+    if (meta) meta.textContent = '';
+    const ta = noteEl?.querySelector('#bz-note');
+    if (ta) {
+      ta.value = '';
+      ta.placeholder = 'One line — what should they do?';
+    }
     state = {
       kind: 'note', note: '', transcript: '', imageDataUrl: null,
       imageName: 'buzz-screenshot.jpg', target: state.target || 'Abby',
@@ -598,8 +767,26 @@
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
+    // Keep the input in the DOM for the gesture — detached .click() is flaky on
+    // iOS/WebKit and some automation engines never raise a file chooser.
+    input.setAttribute('aria-hidden', 'true');
+    input.tabIndex = -1;
+    Object.assign(input.style, {
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      width: '1px',
+      height: '1px',
+      opacity: '0',
+      pointerEvents: 'none',
+      zIndex: '-1',
+    });
+    const cleanup = () => {
+      try { input.remove(); } catch (_) {}
+    };
     input.onchange = () => {
       const file = input.files?.[0];
+      cleanup();
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
@@ -610,7 +797,11 @@
       };
       reader.readAsDataURL(file);
     };
+    input.addEventListener('cancel', cleanup, { once: true });
+    document.body.appendChild(input);
     input.click();
+    // Safety net if the user dismisses without a cancel event.
+    setTimeout(cleanup, 120_000);
   }
 
   function closeCrop() {
@@ -812,12 +1003,13 @@
     rec.start(MEETING_CHUNK_MS);
     openNote('meeting');
     const meta = noteEl?.querySelector('#bz-meta');
-    if (meta) meta.textContent = 'Recording on this mic… Stop when you are done. Transcripts land in parts.';
+    if (meta) meta.textContent = 'Recording on this mic… Transcripts land in parts.';
   }
 
   async function startMeeting() {
-    if (state.recording) {
+    if (state.recording || state.speechRec) {
       stopRecording();
+      // Toggle off when already capturing — next tap starts a fresh meeting.
       return;
     }
     // Phones rarely support getDisplayMedia; keep the gesture path on mic-only.
@@ -887,7 +1079,19 @@
     rec.start(MEETING_CHUNK_MS);
     openNote('meeting');
     const meta = noteEl?.querySelector('#bz-meta');
-    if (meta) meta.textContent = 'Recording meeting… Stop when you are done. Transcripts land in parts.';
+    if (meta) meta.textContent = 'Recording meeting… Transcripts land in parts.';
+  }
+
+  function clearSpeechRec() {
+    try { state.speechRec?.stop?.(); } catch (_) {}
+    try { state.speechRec?.abort?.(); } catch (_) {}
+    state.speechRec = null;
+  }
+
+  /** Drop a dead speech session so mic recording can take over. */
+  function abandonSpeechForMic() {
+    clearSpeechRec();
+    state.recording = false;
   }
 
   async function startDictate() {
@@ -898,11 +1102,13 @@
     const SR = speechEngine();
     if (SR) {
       try {
+        const session = ++speechSession;
         const rec = new SR();
         rec.continuous = true;
         rec.interimResults = true;
         rec.lang = document.documentElement.lang || 'en-US';
         rec.onresult = (event) => {
+          if (session !== speechSession) return;
           let finalText = '';
           let interim = '';
           for (let i = event.resultIndex; i < event.results.length; i += 1) {
@@ -914,18 +1120,27 @@
           const ta = noteEl?.querySelector('#bz-note');
           if (ta && interim) ta.placeholder = interim;
           const meta = noteEl?.querySelector('#bz-meta');
-          if (meta) meta.textContent = interim ? `Dictating… ${interim}` : 'Dictating… Stop when you are done';
+          if (meta) meta.textContent = interim ? `Dictating… ${interim}` : 'Dictating…';
         };
-        rec.onerror = () => { void startRecording('dictate'); };
+        // Browser speech often fails (no permission, unsupported locale, headless).
+        // Clear the half-started speech session before falling back to mic capture —
+        // otherwise startRecording sees recording=true and only stops.
+        rec.onerror = () => {
+          if (session !== speechSession) return;
+          abandonSpeechForMic();
+          void startRecording('dictate');
+        };
         state.speechRec = rec;
         state.recording = true;
         state.kind = 'dictate';
         rec.start();
         openNote('dictate');
         const meta = noteEl?.querySelector('#bz-meta');
-        if (meta) meta.textContent = 'Dictating… written down as you speak. Stop when you are done.';
+        if (meta) meta.textContent = 'Dictating…';
         return;
-      } catch (_) {}
+      } catch (_) {
+        abandonSpeechForMic();
+      }
     }
     await startRecording('dictate');
   }
@@ -962,7 +1177,12 @@
       stopRecording();
       return;
     }
+    const gen = ++captureGen;
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (gen !== captureGen) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
     const rec = new MediaRecorder(stream);
     state.chunks = [];
     state.recorder = rec;
@@ -972,6 +1192,7 @@
     rec.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
       state.recording = false;
+      if (gen !== captureGen) return;
       const blob = new Blob(state.chunks, { type: rec.mimeType || 'audio/webm' });
       state.chunks = [];
       if (!blob.size) {
@@ -980,6 +1201,7 @@
       }
       try {
         const text = await transcribe(blob);
+        if (gen !== captureGen) return;
         state.transcript = text;
         if (!state.note) state.note = text;
         openNote(kind);
@@ -988,9 +1210,14 @@
         const meta = noteEl?.querySelector('#bz-meta');
         if (meta) meta.textContent = text ? 'Transcript ready — edit before send' : 'No speech captured';
       } catch (err) {
+        if (gen !== captureGen) return;
         openNote(kind);
         const meta = noteEl?.querySelector('#bz-meta');
-        if (meta) meta.textContent = err.message || 'STT failed — type the note instead';
+        if (meta) {
+          meta.textContent = kind === 'dictate'
+            ? `${err.message || 'Could not transcribe'} — type the note instead`
+            : (err.message || 'STT failed — type the note instead');
+        }
       }
     };
     rec.start(250);
@@ -998,8 +1225,8 @@
     const meta = noteEl?.querySelector('#bz-meta');
     if (meta) {
       meta.textContent = kind === 'record'
-        ? 'Recording… Stop when you are done'
-        : 'Dictating… Stop when you are done';
+        ? 'Recording… Stop when you are done.'
+        : 'Dictating…';
     }
     noteEl?.classList.add('recording');
     clearTimeout(state.recTimer);
@@ -1007,16 +1234,40 @@
   }
 
   function stopRecording() {
+    const wasRecording = !!(state.recording || state.speechRec || state.recorder);
     clearTimeout(state.recTimer);
     state.recTimer = null;
-    try { state.speechRec?.stop?.(); } catch (_) {}
-    state.speechRec = null;
+    speechSession += 1;
+    clearSpeechRec();
     try { if (state.recorder && state.recorder.state !== 'inactive') state.recorder.stop(); } catch (_) {}
     state.recorder = null;
     state.recording = false;
     state.meetingTracks.forEach((t) => { try { t.stop(); } catch (_) {} });
     state.meetingTracks = [];
     noteEl?.classList.remove('recording');
+    if (wasRecording && noteEl?.classList.contains('open')) {
+      const meta = noteEl.querySelector('#bz-meta');
+      if (meta && !meta.textContent) {
+        meta.textContent = 'Stopped — add a line if needed, then Send. Or Discard to close.';
+      } else if (meta && /dictat|recording on this mic|recording…/i.test(meta.textContent)) {
+        meta.textContent = 'Stopped — edit if needed, then Send. Or Discard / × to close.';
+      }
+    }
+  }
+
+  function showBuzzToast(message) {
+    injectStyles();
+    let toast = document.getElementById('denizen-buzz-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'denizen-buzz-toast';
+      toast.setAttribute('role', 'status');
+      document.body.appendChild(toast);
+    }
+    toast.textContent = String(message || '').trim() || 'Done';
+    toast.classList.add('show');
+    clearTimeout(showBuzzToast._timer);
+    showBuzzToast._timer = setTimeout(() => toast.classList.remove('show'), 2600);
   }
 
   async function sendDrop() {
@@ -1024,6 +1275,11 @@
     state.note = String(ta?.value || '').trim();
     const sel = noteEl?.querySelector('#bz-target');
     if (sel?.value) state.target = sel.value;
+    if (!state.note && !state.transcript && !state.imageDataUrl) {
+      const meta = noteEl?.querySelector('#bz-meta');
+      if (meta) meta.textContent = 'Add a line (or stop recording first), then Send — or Discard to close.';
+      return;
+    }
     const sendBtn = noteEl?.querySelector('[data-note="send"]');
     if (sendBtn) sendBtn.disabled = true;
     const attachments = [];
@@ -1052,10 +1308,17 @@
       try {
         document.dispatchEvent(new CustomEvent('denizen-buzz-drop', { detail: json }));
       } catch (_) {}
+      const who = state.target || 'Abby';
       closeNote();
+      showBuzzToast(`Sent to ${who}`);
     } catch (err) {
       const meta = noteEl?.querySelector('#bz-meta');
-      if (meta) meta.textContent = err.message || 'Could not send';
+      if (meta) {
+        const msg = err.message || 'Could not send';
+        meta.textContent = /demo|disabled|chat/i.test(msg)
+          ? `${msg} — tap × or Discard to close.`
+          : `${msg} — edit and retry, or Discard to close.`;
+      }
     } finally {
       if (sendBtn) sendBtn.disabled = false;
     }

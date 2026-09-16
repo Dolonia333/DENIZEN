@@ -44,4 +44,35 @@ describe('Buzz mobile capture', () => {
       /html\.denizen-buzz-ring-open #denizen-phone-fab[\s\S]*?pointer-events: auto !important/,
     );
   });
+
+  it('falls back to mic dictate when browser speech fails and keeps the file input attached', () => {
+    assert.match(buzz, /abandonSpeechForMic/);
+    assert.match(buzz, /Clear the half-started speech session/);
+    assert.match(buzz, /document\.body\.appendChild\(input\)/);
+    assert.match(buzz, /captureGen/);
+    assert.match(buzz, /speechSession/);
+  });
+
+  it('keeps Buzz note dismissible above the phone FAB on mobile', () => {
+    assert.match(buzz, /denizen-buzz-note-open/);
+    assert.match(buzz, /z-index: 2147483646/);
+    assert.match(buzz, /data-note="discard"/);
+    assert.match(buzz, /aria-label="Close note"/);
+    assert.match(buzz, /pointerup is reliable on iOS \(same pattern as the ring\)/);
+    const corner = fs.readFileSync(path.join(ROOT, 'src', 'corner-hud-autohide.js'), 'utf8');
+    assert.match(corner, /denizen-buzz-note-open[\s\S]*?pointer-events: none !important/);
+  });
+
+  it('labels ring actions and uses kind-specific Buzz note chrome', () => {
+    assert.match(buzz, /bz-act-label/);
+    assert.match(buzz, /function noteChrome/);
+    assert.match(buzz, /label: 'Shot'/);
+    assert.match(buzz, /label: 'Record'/);
+    assert.match(buzz, /you see it before it goes/);
+    assert.match(buzz, /office stores a copy so Abby can see it/);
+    assert.match(buzz, /Recording meeting… Transcripts land in parts/);
+    assert.match(buzz, /Drag a box to crop · click or Esc to keep the full shot/);
+    assert.match(buzz, /showBuzzToast/);
+    assert.match(buzz, /Shorter than Meet/);
+  });
 });
