@@ -3,6 +3,7 @@ import { T, fmt, STAGES as DEFAULT_STAGES, STAGE_COLORS, type Deal, type Contact
 import { useMobile } from "@/lib/crm-hooks";
 import { shareToGlobalChat } from "@/components/GlobalTeamChat";
 import type { IndustryConfig } from "@/lib/industry-config";
+import { StudioBoardPanel } from "./StudioBoardPanel";
 
 const STAGE_COLOR_PALETTE = ["#6366f1", "#f0b429", "#3b82f6", "#8b5cf6", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#f97316", "#06b6d4"];
 let _stageList: string[] = [];
@@ -391,6 +392,9 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
               </div>
             ))}
           </div>
+
+          {/* Studio Board delivery */}
+          <StudioBoardPanel deal={deal} glass={glass} />
 
           {/* Notes */}
           <div>

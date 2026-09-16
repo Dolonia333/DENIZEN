@@ -4,12 +4,20 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 describe('agency MCP tools', () => {
-  it('exposes working set / link / handoff', () => {
+  it('exposes full CRM ↔ Board agency toolkit', () => {
     const agency = require('../src/denizen-mcp-agency-tools');
-    assert.equal(agency.AGENCY_TOOL_DEFINITIONS.length, 3);
-    assert.ok(agency.isAgencyTool('agency_working_set'));
-    assert.ok(agency.isAgencyTool('agency_link_deal_task'));
-    assert.ok(agency.isAgencyTool('agency_handoff_won_deal'));
+    assert.equal(agency.AGENCY_TOOL_DEFINITIONS.length, 7);
+    for (const n of [
+      'agency_working_set',
+      'agency_list_deal_tasks',
+      'agency_link_deal_task',
+      'agency_unlink_deal_task',
+      'agency_create_delivery_task',
+      'agency_handoff_won_deal',
+      'agency_advance_deal_task',
+    ]) {
+      assert.ok(agency.isAgencyTool(n), n);
+    }
   });
 
   it('collects bidirectional links', () => {
@@ -58,8 +66,12 @@ describe('agency + CRM write scopes', () => {
   it('maps agency and CRM writes to scopes', () => {
     const scopes = require('../src/denizen-mcp-scopes');
     assert.equal(scopes.requiredScope('agency_working_set'), 'read');
+    assert.equal(scopes.requiredScope('agency_list_deal_tasks'), 'read');
     assert.equal(scopes.requiredScope('agency_link_deal_task'), 'crm_write');
+    assert.equal(scopes.requiredScope('agency_unlink_deal_task'), 'crm_write');
+    assert.equal(scopes.requiredScope('agency_create_delivery_task'), 'crm_write');
     assert.equal(scopes.requiredScope('agency_handoff_won_deal'), 'crm_write');
+    assert.equal(scopes.requiredScope('agency_advance_deal_task'), 'crm_write');
     assert.equal(scopes.requiredScope('crm_upsert_deal'), 'crm_write');
     assert.equal(scopes.requiredScope('crm_complete_task'), 'crm_write');
     assert.equal(scopes.requiredScope('crm_add_note'), 'crm_write');
@@ -98,5 +110,16 @@ describe('CRM deal studio_task_ids summary', () => {
       companies: [],
     });
     assert.deepEqual(board.pipelineDeals[0].studio_task_ids, ['a', 'b']);
+  });
+});
+
+describe('agency bridge exports', () => {
+  it('exposes shared bridge used by MCP and CRM HTTP', () => {
+    const bridge = require('../src/denizen-agency-bridge');
+    assert.equal(typeof bridge.listTasksForDeal, 'function');
+    assert.equal(typeof bridge.linkDealTask, 'function');
+    assert.equal(typeof bridge.unlinkDealTask, 'function');
+    assert.equal(typeof bridge.createDeliveryFromDeal, 'function');
+    assert.equal(typeof bridge.advanceDealTask, 'function');
   });
 });

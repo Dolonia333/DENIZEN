@@ -129,15 +129,15 @@ custom fields, **and** reshapes the dashboard with industry-specific widgets.
 | `crm_park_deal` | Park scrape/research to watchlist |
 | `crm_draft_email` / `send_draft` / `mail_policy_status` | Mail under policy |
 
-CRM deals may carry optional `studio_task_ids`; Studio Board tasks may carry optional `deal_id` / `contact_id` so sales and delivery stay linked without merging the apps.
+CRM deals may carry optional `studio_task_ids`; Studio Board tasks may carry optional `deal_id` / `contact_id` so sales and delivery stay linked without merging the apps. The CRM deal slideout **Studio Board** panel and MCP agency tools share the same bridge (`denizen-agency-bridge`) and HTTP routes under `/api/crm/deals/:id/studio-tasks`.
 
 ## 6b. Studio Board (Agency Tracker)
 
-Open **Studio Board** from the phone (or go to `/studio-board/`). Like CRM, it opens as
-its own full-page app — not an in-phone iframe. It's a Monday.com-style work board for
+Open **Studio Board** from the phone, the CRM sidebar link, or go to `/studio-board/` (deep-link with `?deal=` / `?task=` from a CRM deal). Like CRM, it opens as
+its own full-page app — not an in-phone iframe. New boards start **empty** with no sample people or tasks; templates only set categories/stages. It's a Monday.com-style work board for
 agency pipelines: **Calendar**, **Table**, **Board**, **Timeline**, **My Day**, **Team**,
 **Activity**, and **Settings**. Create tasks, custom columns, blockers, automations,
-filter by type, save views, and reset demo data. Use **← Back to office** to return to Denizen.
+filter by type, save views, and clear the board. Use **← Back to office** to return to Denizen.
 
 When you're signed into a **team** office, the board syncs to your org
 (`GET|PUT /api/studio-board/workspace`, plus `PATCH /tasks/:id`, presence heartbeats)
@@ -169,13 +169,16 @@ storage. **My Day** matches your Denizen login to a board person (or offers “U
 | `studio_board_standup` | Standup or weekly recap text |
 | `studio_board_my_day` | Overdue / due today / meetings for a person |
 
-**Agency (CRM ↔ Board)** — use when coordinating both systems:
+**Agency (CRM ↔ Board)** — use when coordinating both systems (same ops as the CRM deal panel):
 
 | Tool | Purpose |
 |------|---------|
 | `agency_working_set` | Joint CRM + Board brief + linked pairs |
-| `agency_link_deal_task` | Bind deal ↔ board task both ways |
+| `agency_list_deal_tasks` | List board tasks linked to a CRM deal |
+| `agency_link_deal_task` / `agency_unlink_deal_task` | Bind or remove deal ↔ board task both ways |
+| `agency_create_delivery_task` | Create linked delivery task from any deal |
 | `agency_handoff_won_deal` | Closed Won → create linked delivery task |
+| `agency_advance_deal_task` | Advance a linked board task |
 
 ---
 

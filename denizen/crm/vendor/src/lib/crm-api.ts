@@ -1331,3 +1331,139 @@ export function formatSyncTime(iso: string | null): string | null {
     return null;
   }
 }
+
+export type StudioBoardTaskSummary = {
+  id: string;
+  title?: string;
+  status?: string;
+  assignee?: string | null;
+  due?: string | null;
+  dueTime?: string | null;
+  priority?: string | null;
+  type?: string | null;
+  client?: string | null;
+  notes?: string;
+  deal_id?: string | number | null;
+  missing?: boolean;
+};
+
+export type DealStudioTasksResult = {
+  ok: boolean;
+  deal_id?: string;
+  deal?: {
+    id: number | string;
+    title?: string;
+    stage?: string;
+    contact?: string | null;
+    company?: string | null;
+    value?: number | null;
+    studioTaskIds?: string[];
+  };
+  tasks?: StudioBoardTaskSummary[];
+  stages?: { id: string; hex?: string | null; final?: boolean }[];
+  board_url?: string;
+  error?: string;
+  summary?: string;
+  task?: StudioBoardTaskSummary;
+  studio_task_ids?: string[];
+};
+
+export async function fetchDealStudioTasks(dealId: number | string): Promise<DealStudioTasksResult> {
+  const session = await ensureDenizenSession();
+  if (!session?.session_id) return { ok: false, error: "no session" };
+  try {
+    const qs = `?session_id=${encodeURIComponent(session.session_id)}`;
+    const res = await fetchWithTimeout(
+      `/api/crm/deals/${encodeURIComponent(String(dealId))}/studio-tasks${qs}`,
+      { headers: authHeaders(session) },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || `HTTP ${res.status}` };
+    return data as DealStudioTasksResult;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export async function createDealStudioTask(
+  dealId: number | string,
+  payload: { title?: string; assignee?: string; status?: string; due?: string; notes?: string; markWon?: boolean } = {},
+): Promise<DealStudioTasksResult> {
+  const session = await ensureDenizenSession();
+  if (!session?.session_id) return { ok: false, error: "no session" };
+  try {
+    const res = await fetchWithTimeout(`/api/crm/deals/${encodeURIComponent(String(dealId))}/studio-tasks`, {
+      method: "POST",
+      headers: authHeaders(session),
+      body: JSON.stringify({
+        session_id: session.session_id,
+        title: payload.title,
+        assignee: payload.assignee,
+        status: payload.status,
+        due: payload.due,
+        notes: payload.notes,
+        mark_won: payload.markWon,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || `HTTP ${res.status}` };
+    return data as DealStudioTasksResult;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export async function unlinkDealStudioTask(
+  dealId: number | string,
+  taskId: string,
+): Promise<DealStudioTasksResult> {
+  const session = await ensureDenizenSession();
+  if (!session?.session_id) return { ok: false, error: "no session" };
+  try {
+    const res = await fetchWithTimeout(`/api/crm/deals/${encodeURIComponent(String(dealId))}/studio-tasks/unlink`, {
+      method: "POST",
+      headers: authHeaders(session),
+      body: JSON.stringify({
+        session_id: session.session_id,
+        studio_task_id: taskId,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || `HTTP ${res.status}` };
+    return data as DealStudioTasksResult;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export async function advanceDealStudioTask(
+  dealId: number | string,
+  taskId: string,
+  status?: string,
+): Promise<DealStudioTasksResult> {
+  const session = await ensureDenizenSession();
+  if (!session?.session_id) return { ok: false, error: "no session" };
+  try {
+    const res = await fetchWithTimeout(
+      `/api/crm/deals/${encodeURIComponent(String(dealId))}/studio-tasks/${encodeURIComponent(taskId)}/advance`,
+      {
+        method: "POST",
+        headers: authHeaders(session),
+        body: JSON.stringify({
+          session_id: session.session_id,
+          status: status || undefined,
+        }),
+      },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || `HTTP ${res.status}` };
+    return data as DealStudioTasksResult;
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export function studioBoardDealUrl(dealId: number | string, taskId?: string | null): string {
+  const base = `/studio-board/?deal=${encodeURIComponent(String(dealId))}`;
+  return taskId ? `${base}&task=${encodeURIComponent(String(taskId))}` : base;
+}
