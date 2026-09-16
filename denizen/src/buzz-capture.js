@@ -133,6 +133,19 @@
         stroke: currentColor;
       }
       #${RING_ID} .bz-act i { display: none; }
+      #${RING_ID} .bz-act .bz-act-label {
+        position: absolute;
+        left: 50%;
+        top: calc(100% + 4px);
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #f8f4ec;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+        pointer-events: none;
+      }
       #${RING_ID}.open .bz-act { transform: scale(1); opacity: 1; }
       #${RING_ID} .bz-act:nth-child(2) { transition-delay: 0.02s; }
       #${RING_ID} .bz-act:nth-child(3) { transition-delay: 0.05s; }
@@ -145,9 +158,10 @@
       #${RING_ID} .bz-act:hover:not([disabled]) {
         box-shadow: 0 10px 24px rgba(0,0,0,0.38), 0 0 0 3px rgba(163,230,53,0.45);
       }
-      html.denizen-phone #${RING_ID} { width: 240px; height: 240px; }
+      html.denizen-phone #${RING_ID} { width: 260px; height: 260px; }
       html.denizen-phone #${RING_ID} .bz-act { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
       html.denizen-phone #${RING_ID} .bz-act svg { width: 18px; height: 18px; }
+      html.denizen-phone #${RING_ID} .bz-act .bz-act-label { font-size: 9px; top: calc(100% + 3px); }
 
       #${NOTE_ID} {
         display: none;
@@ -247,6 +261,28 @@
         color: #e2e8f0; font: 13px/1.4 "IBM Plex Sans", system-ui, sans-serif;
         pointer-events: none;
       }
+      #denizen-buzz-toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%) translateY(12px);
+        z-index: 2147483647;
+        max-width: min(90vw, 360px);
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.94);
+        border: 1px solid rgba(163, 230, 53, 0.45);
+        color: #ecfccb;
+        font: 600 13px/1.3 "IBM Plex Sans", system-ui, sans-serif;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      #denizen-buzz-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
     `;
     document.head.appendChild(s);
   }
@@ -268,11 +304,45 @@
 
   function actions() {
     const list = [
-      { id: 'screenshot', label: 'Screenshot', ico: 'ti-screenshot', svg: ICO.screenshot, title: isPhoneUi() ? 'Photo or screenshot from your camera roll' : 'Capture the screen' },
-      { id: 'meeting', label: 'Meet', ico: 'ti-video', svg: ICO.meeting, title: isPhoneUi() ? 'Record the meeting on this mic — transcribed as it lands' : 'Record meeting — transcribed as it lands' },
-      { id: 'dictate', label: 'Say', ico: 'ti-message', svg: ICO.dictate },
-      { id: 'phone', label: 'Apps', ico: 'ti-device-mobile', svg: ICO.phone, title: 'Open the phone — chat, CRM, and the rest of the apps' },
-      { id: 'record', label: 'Record', ico: 'ti-microphone', svg: ICO.record },
+      {
+        id: 'screenshot',
+        label: 'Photo',
+        ico: 'ti-screenshot',
+        svg: ICO.screenshot,
+        title: isPhoneUi()
+          ? 'Photo — pick from camera roll, crop, then send to Abby'
+          : 'Screenshot — capture the screen, then send to Abby',
+      },
+      {
+        id: 'meeting',
+        label: 'Meet',
+        ico: 'ti-video',
+        svg: ICO.meeting,
+        title: isPhoneUi()
+          ? 'Meet — record this mic; transcript lands in a Buzz note'
+          : 'Meet — record the meeting; transcript lands in a Buzz note',
+      },
+      {
+        id: 'dictate',
+        label: 'Say',
+        ico: 'ti-message',
+        svg: ICO.dictate,
+        title: 'Say — dictate a short instruction, then send to Abby',
+      },
+      {
+        id: 'phone',
+        label: 'Apps',
+        ico: 'ti-device-mobile',
+        svg: ICO.phone,
+        title: 'Apps — open the phone (chat, CRM, Studio Board, …)',
+      },
+      {
+        id: 'record',
+        label: 'Mic',
+        ico: 'ti-microphone',
+        svg: ICO.record,
+        title: 'Mic — record a voice note, then send to Abby',
+      },
     ];
     if (!isPhoneUi()) {
       const desktop = !!window.DenizenDesktop?.buzzOverlayToggle;
@@ -284,12 +354,49 @@
     return list;
   }
 
+  function noteChrome(kind) {
+    const k = String(kind || 'note');
+    if (k === 'screenshot') {
+      return {
+        title: 'Photo for Abby',
+        blurb: 'Crop looks good? Add one line, then Send.',
+        placeholder: 'What should they do with this?',
+      };
+    }
+    if (k === 'meeting') {
+      return {
+        title: 'Meeting capture',
+        blurb: 'Mic is recording — Stop, edit the note, then Send.',
+        placeholder: 'What came out of the meeting?',
+      };
+    }
+    if (k === 'dictate') {
+      return {
+        title: 'Say it',
+        blurb: 'Speak (or type). Stop when done, then Send to Abby.',
+        placeholder: 'One line — what should they do?',
+      };
+    }
+    if (k === 'record') {
+      return {
+        title: 'Voice note',
+        blurb: 'Recording — Stop, check the transcript, then Send.',
+        placeholder: 'Or type the instruction here…',
+      };
+    }
+    return {
+      title: 'Buzz note',
+      blurb: 'You see it before it goes.',
+      placeholder: 'One line — what should they do?',
+    };
+  }
+
   function ringRadius() {
-    return document.documentElement.classList.contains('denizen-phone') ? 88 : 118;
+    return document.documentElement.classList.contains('denizen-phone') ? 96 : 118;
   }
 
   function ringSize() {
-    return document.documentElement.classList.contains('denizen-phone') ? 240 : RING_SIZE;
+    return document.documentElement.classList.contains('denizen-phone') ? 260 : RING_SIZE;
   }
 
   function phoneAnchor() {
@@ -373,7 +480,7 @@
   function ringActionsHtml() {
     return actions().map((a) => {
       const title = a.title ? ` title="${esc(a.title)}"` : '';
-      return `<button type="button" class="bz-act" data-act="${a.id}" aria-label="${esc(a.label)}"${title} role="menuitem">${a.svg}<i class="ti ${a.ico}" aria-hidden="true"></i></button>`;
+      return `<button type="button" class="bz-act" data-act="${a.id}" aria-label="${esc(a.label)}"${title} role="menuitem">${a.svg}<span class="bz-act-label">${esc(a.label)}</span><i class="ti ${a.ico}" aria-hidden="true"></i></button>`;
     }).join('');
   }
 
@@ -444,8 +551,8 @@
     noteEl.innerHTML = `
       <header>
         <div class="bz-head-main">
-          <strong>Buzz note</strong>
-          <span> — you see it before it goes</span>
+          <strong id="bz-title">Buzz note</strong>
+          <span id="bz-blurb"> — you see it before it goes</span>
         </div>
         <label>To
           <select id="bz-target" aria-label="Send to"></select>
@@ -565,9 +672,16 @@
     fillTargets();
     state.kind = kind || state.kind || 'note';
     noteEl.classList.add('open');
+    noteEl.dataset.kind = state.kind;
     document.documentElement.classList.add('denizen-buzz-note-open');
+    const chrome = noteChrome(state.kind);
+    const titleEl = noteEl.querySelector('#bz-title');
+    const blurbEl = noteEl.querySelector('#bz-blurb');
+    if (titleEl) titleEl.textContent = chrome.title;
+    if (blurbEl) blurbEl.textContent = ` — ${chrome.blurb}`;
     const ta = noteEl.querySelector('#bz-note');
     ta.value = state.note || '';
+    ta.placeholder = chrome.placeholder;
     const preview = noteEl.querySelector('#bz-preview');
     if (state.imageDataUrl) {
       preview.src = state.imageDataUrl;
@@ -578,13 +692,17 @@
     }
     const meta = [];
     if (state.transcript) meta.push('Transcript ready');
-    if (state.recording) meta.push(state.kind === 'meeting' ? 'Recording meeting…' : 'Recording…');
+    if (state.recording) {
+      if (state.kind === 'meeting') meta.push('Recording meeting…');
+      else if (state.kind === 'dictate') meta.push('Listening…');
+      else meta.push('Recording…');
+    }
     if (state.imageDataUrl && window.DenizenDesktop?.buzzSaveCapture) {
       meta.push('Saved on this disk; Abby gets the path');
     } else if (state.imageDataUrl) {
-      meta.push('You see it first; the office stores a copy so Abby can see it');
+      meta.push('Preview below — Send when ready');
     }
-    noteEl.querySelector('#bz-meta').textContent = meta.join(' · ');
+    noteEl.querySelector('#bz-meta').textContent = meta.join(' · ') || chrome.blurb;
     noteEl.classList.toggle('recording', !!state.recording);
     closeRing();
     setTimeout(() => ta?.focus(), 40);
@@ -1143,6 +1261,21 @@
     }
   }
 
+  function showBuzzToast(message) {
+    injectStyles();
+    let toast = document.getElementById('denizen-buzz-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'denizen-buzz-toast';
+      toast.setAttribute('role', 'status');
+      document.body.appendChild(toast);
+    }
+    toast.textContent = String(message || '').trim() || 'Done';
+    toast.classList.add('show');
+    clearTimeout(showBuzzToast._timer);
+    showBuzzToast._timer = setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
   async function sendDrop() {
     const ta = noteEl?.querySelector('#bz-note');
     state.note = String(ta?.value || '').trim();
@@ -1181,7 +1314,9 @@
       try {
         document.dispatchEvent(new CustomEvent('denizen-buzz-drop', { detail: json }));
       } catch (_) {}
+      const who = state.target || 'Abby';
       closeNote();
+      showBuzzToast(`Sent to ${who}`);
     } catch (err) {
       const meta = noteEl?.querySelector('#bz-meta');
       if (meta) {

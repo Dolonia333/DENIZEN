@@ -62,4 +62,14 @@ describe('Buzz mobile capture', () => {
     const corner = fs.readFileSync(path.join(ROOT, 'src', 'corner-hud-autohide.js'), 'utf8');
     assert.match(corner, /denizen-buzz-note-open[\s\S]*?pointer-events: none !important/);
   });
+
+  it('labels ring actions and uses kind-specific Buzz note chrome', () => {
+    assert.match(buzz, /bz-act-label/);
+    assert.match(buzz, /function noteChrome/);
+    assert.match(buzz, /Photo for Abby/);
+    assert.match(buzz, /Meeting capture/);
+    assert.match(buzz, /Say it/);
+    assert.match(buzz, /Voice note/);
+    assert.match(buzz, /showBuzzToast/);
+  });
 });
