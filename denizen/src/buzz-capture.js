@@ -16,6 +16,8 @@
 
   let ringEl = null;
   let noteEl = null;
+  let captureGen = 0;
+  let speechSession = 0;
   let state = {
     kind: 'note',
     note: '',
@@ -544,9 +546,18 @@
   }
 
   function closeNote() {
+    captureGen += 1;
+    speechSession += 1;
     stopRecording();
     closeCrop();
     noteEl?.classList.remove('open', 'recording');
+    const meta = noteEl?.querySelector('#bz-meta');
+    if (meta) meta.textContent = '';
+    const ta = noteEl?.querySelector('#bz-note');
+    if (ta) {
+      ta.value = '';
+      ta.placeholder = 'One line — what should they do?';
+    }
     state = {
       kind: 'note', note: '', transcript: '', imageDataUrl: null,
       imageName: 'buzz-screenshot.jpg', target: state.target || 'Abby',
@@ -598,8 +609,26 @@
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
+    // Keep the input in the DOM for the gesture — detached .click() is flaky on
+    // iOS/WebKit and some automation engines never raise a file chooser.
+    input.setAttribute('aria-hidden', 'true');
+    input.tabIndex = -1;
+    Object.assign(input.style, {
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      width: '1px',
+      height: '1px',
+      opacity: '0',
+      pointerEvents: 'none',
+      zIndex: '-1',
+    });
+    const cleanup = () => {
+      try { input.remove(); } catch (_) {}
+    };
     input.onchange = () => {
       const file = input.files?.[0];
+      cleanup();
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
@@ -610,7 +639,11 @@
       };
       reader.readAsDataURL(file);
     };
+    input.addEventListener('cancel', cleanup, { once: true });
+    document.body.appendChild(input);
     input.click();
+    // Safety net if the user dismisses without a cancel event.
+    setTimeout(cleanup, 120_000);
   }
 
   function closeCrop() {
@@ -816,8 +849,9 @@
   }
 
   async function startMeeting() {
-    if (state.recording) {
+    if (state.recording || state.speechRec) {
       stopRecording();
+      // Toggle off when already capturing — next tap starts a fresh meeting.
       return;
     }
     // Phones rarely support getDisplayMedia; keep the gesture path on mic-only.
@@ -890,6 +924,18 @@
     if (meta) meta.textContent = 'Recording meeting… Stop when you are done. Transcripts land in parts.';
   }
 
+  function clearSpeechRec() {
+    try { state.speechRec?.stop?.(); } catch (_) {}
+    try { state.speechRec?.abort?.(); } catch (_) {}
+    state.speechRec = null;
+  }
+
+  /** Drop a dead speech session so mic recording can take over. */
+  function abandonSpeechForMic() {
+    clearSpeechRec();
+    state.recording = false;
+  }
+
   async function startDictate() {
     if (state.recording || state.speechRec) {
       stopRecording();
@@ -898,11 +944,13 @@
     const SR = speechEngine();
     if (SR) {
       try {
+        const session = ++speechSession;
         const rec = new SR();
         rec.continuous = true;
         rec.interimResults = true;
         rec.lang = document.documentElement.lang || 'en-US';
         rec.onresult = (event) => {
+          if (session !== speechSession) return;
           let finalText = '';
           let interim = '';
           for (let i = event.resultIndex; i < event.results.length; i += 1) {
@@ -916,7 +964,14 @@
           const meta = noteEl?.querySelector('#bz-meta');
           if (meta) meta.textContent = interim ? `Dictating… ${interim}` : 'Dictating… Stop when you are done';
         };
-        rec.onerror = () => { void startRecording('dictate'); };
+        // Browser speech often fails (no permission, unsupported locale, headless).
+        // Clear the half-started speech session before falling back to mic capture —
+        // otherwise startRecording sees recording=true and only stops.
+        rec.onerror = () => {
+          if (session !== speechSession) return;
+          abandonSpeechForMic();
+          void startRecording('dictate');
+        };
         state.speechRec = rec;
         state.recording = true;
         state.kind = 'dictate';
@@ -925,7 +980,9 @@
         const meta = noteEl?.querySelector('#bz-meta');
         if (meta) meta.textContent = 'Dictating… written down as you speak. Stop when you are done.';
         return;
-      } catch (_) {}
+      } catch (_) {
+        abandonSpeechForMic();
+      }
     }
     await startRecording('dictate');
   }
@@ -962,7 +1019,12 @@
       stopRecording();
       return;
     }
+    const gen = ++captureGen;
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (gen !== captureGen) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
     const rec = new MediaRecorder(stream);
     state.chunks = [];
     state.recorder = rec;
@@ -972,6 +1034,7 @@
     rec.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
       state.recording = false;
+      if (gen !== captureGen) return;
       const blob = new Blob(state.chunks, { type: rec.mimeType || 'audio/webm' });
       state.chunks = [];
       if (!blob.size) {
@@ -980,6 +1043,7 @@
       }
       try {
         const text = await transcribe(blob);
+        if (gen !== captureGen) return;
         state.transcript = text;
         if (!state.note) state.note = text;
         openNote(kind);
@@ -988,9 +1052,14 @@
         const meta = noteEl?.querySelector('#bz-meta');
         if (meta) meta.textContent = text ? 'Transcript ready — edit before send' : 'No speech captured';
       } catch (err) {
+        if (gen !== captureGen) return;
         openNote(kind);
         const meta = noteEl?.querySelector('#bz-meta');
-        if (meta) meta.textContent = err.message || 'STT failed — type the note instead';
+        if (meta) {
+          meta.textContent = kind === 'dictate'
+            ? `${err.message || 'Could not transcribe'} — type the note instead`
+            : (err.message || 'STT failed — type the note instead');
+        }
       }
     };
     rec.start(250);
@@ -1009,8 +1078,8 @@
   function stopRecording() {
     clearTimeout(state.recTimer);
     state.recTimer = null;
-    try { state.speechRec?.stop?.(); } catch (_) {}
-    state.speechRec = null;
+    speechSession += 1;
+    clearSpeechRec();
     try { if (state.recorder && state.recorder.state !== 'inactive') state.recorder.stop(); } catch (_) {}
     state.recorder = null;
     state.recording = false;

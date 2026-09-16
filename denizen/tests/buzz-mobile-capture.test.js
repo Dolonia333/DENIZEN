@@ -44,4 +44,12 @@ describe('Buzz mobile capture', () => {
       /html\.denizen-buzz-ring-open #denizen-phone-fab[\s\S]*?pointer-events: auto !important/,
     );
   });
+
+  it('falls back to mic dictate when browser speech fails and keeps the file input attached', () => {
+    assert.match(buzz, /abandonSpeechForMic/);
+    assert.match(buzz, /Clear the half-started speech session/);
+    assert.match(buzz, /document\.body\.appendChild\(input\)/);
+    assert.match(buzz, /captureGen/);
+    assert.match(buzz, /speechSession/);
+  });
 });
