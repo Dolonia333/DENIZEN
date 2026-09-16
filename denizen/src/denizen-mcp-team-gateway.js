@@ -13,6 +13,7 @@ const mcpResources = require('./denizen-mcp-resources.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
 const mcpStudioBoardTools = require('./denizen-mcp-studio-board-tools.js');
+const mcpBusinessStudioTools = require('./denizen-mcp-business-studio-tools.js');
 const mcpAgencyTools = require('./denizen-mcp-agency-tools.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const denizenDb = require('./denizen-db.js');
@@ -143,6 +144,7 @@ const TEAM_TOOL_DEFINITIONS = [
   ...mcpMentorTools.toolsForGateway(),
   ...mcpCrmTools.CRM_TOOL_DEFINITIONS,
   ...mcpStudioBoardTools.STUDIO_BOARD_TOOL_DEFINITIONS,
+  ...mcpBusinessStudioTools.BUSINESS_STUDIO_TOOL_DEFINITIONS,
   ...mcpAgencyTools.AGENCY_TOOL_DEFINITIONS,
 ];
 
@@ -453,6 +455,9 @@ async function callToolImpl(scope, name, args) {
       }
       if (mcpStudioBoardTools.isStudioBoardTool(name)) {
         return mcpStudioBoardTools.callTool(scope, name, args);
+      }
+      if (mcpBusinessStudioTools.isBusinessStudioTool(name)) {
+        return mcpBusinessStudioTools.callTool(scope, name, args);
       }
       if (mcpAgencyTools.isAgencyTool(name)) {
         return mcpAgencyTools.callTool(scope, name, args);

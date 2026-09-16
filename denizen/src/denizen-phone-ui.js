@@ -163,6 +163,8 @@
       available: () => true },
     { id: 'studioboard', tabler: 'layout-kanban', icon: '📋', label: 'Studio Board', type: 'navigate', url: '/studio-board/', c: ['#2a6a55', '#163a2f'],
       available: () => true },
+    { id: 'businessstudio', tabler: 'building-skyscraper', icon: '🏛️', label: 'Business Studio', type: 'navigate', url: '/business-studio/', c: ['#f0b429', '#2a6a55'],
+      available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
       c: ['#34d399', '#047857'],
       open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
@@ -253,8 +255,8 @@
   const MAX_DOCK_APPS = 4;
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workbench', 'profile'];
   /** Prefer these near the top of the home grid (first page / less scroll). */
-  const PRIORITY_GRID_IDS = ['workbench', 'crm', 'studioboard', 'compute', 'station', 'npcteam', 'tour', 'discordmap', 'discordcmds', 'market', 'approvals'];
-  const LAYOUT_VERSION = 6; // v6: Workbench + Studio Board next to CRM
+  const PRIORITY_GRID_IDS = ['workbench', 'crm', 'studioboard', 'businessstudio', 'compute', 'station', 'npcteam', 'tour', 'discordmap', 'discordcmds', 'market', 'approvals'];
+  const LAYOUT_VERSION = 8; // v8: Business Studio opens its own full page like CRM + Studio Board
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {
@@ -3271,6 +3273,37 @@
     setTimeout(() => trigger.click(), 180);
   }
 
+  /** Apps that leave the phone HUD for their own full page (CRM-style). */
+  const SESSION_HANDOFF_NAV_IDS = new Set(['crm', 'studioboard', 'businessstudio']);
+
+  function handoffVisitorSessionToNavigateUrl(href) {
+    const sess = globalThis.DenizenVisitorSession;
+    const sid = sess?.getSessionId?.();
+    const tok = sess?.getSessionToken?.();
+    const raw = JSON.parse(localStorage.getItem('denizen-visitor-session') || '{}');
+    const ceo = sess?.isCeoPrincipal?.() || raw.access_method === 'ceo';
+    if (sid || ceo) {
+      localStorage.setItem('denizen-visitor-session', JSON.stringify({
+        ...raw,
+        session_id: sid || raw.session_id,
+        sessionId: sid || raw.sessionId,
+        session_token: tok || raw.session_token || raw.sessionToken || null,
+        sessionToken: tok || raw.session_token || raw.sessionToken || null,
+        access_method: ceo ? 'ceo' : (raw.access_method || raw.accessMethod),
+        accessMethod: ceo ? 'ceo' : (raw.access_method || raw.accessMethod),
+        tier: ceo ? 'ceo' : (raw.tier || sess?.getTier?.()),
+        display_name: sess?.getDisplayName?.() || raw.display_name,
+        displayName: sess?.getDisplayName?.() || raw.displayName,
+        org_slug: raw.org_slug || raw.orgSlug,
+        orgSlug: raw.org_slug || raw.orgSlug,
+      }));
+    }
+    const next = new URL(href, window.location.origin);
+    if (sid) next.searchParams.set('dz_sid', sid);
+    if (tok) next.searchParams.set('dz_stok', tok);
+    return next.toString();
+  }
+
   async function runNavigateApp(app) {
     const path = app.url || '/';
     let href = path;
@@ -3301,32 +3334,11 @@
     if (app.id === 'crm') {
       prefetchCrmBundle();
       await warmCrmCritical(200);
+    }
+    // CRM / Studio Board / Business Studio — full-page apps with visitor session handoff.
+    if (SESSION_HANDOFF_NAV_IDS.has(app.id)) {
       try {
-        const sess = globalThis.DenizenVisitorSession;
-        const sid = sess?.getSessionId?.();
-        const tok = sess?.getSessionToken?.();
-        const raw = JSON.parse(localStorage.getItem('denizen-visitor-session') || '{}');
-        const ceo = sess?.isCeoPrincipal?.() || raw.access_method === 'ceo';
-        if (sid || ceo) {
-          localStorage.setItem('denizen-visitor-session', JSON.stringify({
-            ...raw,
-            session_id: sid || raw.session_id,
-            sessionId: sid || raw.sessionId,
-            session_token: tok || raw.session_token || raw.sessionToken || null,
-            sessionToken: tok || raw.session_token || raw.sessionToken || null,
-            access_method: ceo ? 'ceo' : (raw.access_method || raw.accessMethod),
-            accessMethod: ceo ? 'ceo' : (raw.access_method || raw.accessMethod),
-            tier: ceo ? 'ceo' : (raw.tier || sess?.getTier?.()),
-            display_name: sess?.getDisplayName?.() || raw.display_name,
-            displayName: sess?.getDisplayName?.() || raw.displayName,
-            org_slug: raw.org_slug || raw.orgSlug,
-            orgSlug: raw.org_slug || raw.orgSlug,
-          }));
-        }
-        const crmUrl = new URL(href, window.location.origin);
-        if (sid) crmUrl.searchParams.set('dz_sid', sid);
-        if (tok) crmUrl.searchParams.set('dz_stok', tok);
-        href = crmUrl.toString();
+        href = handoffVisitorSessionToNavigateUrl(href);
       } catch (_) {}
     }
     window.location.assign(href);
