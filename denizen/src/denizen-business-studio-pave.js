@@ -41,7 +41,7 @@ function emptySalesCycleDiagram() {
     productSubtitle: '',
     roles: SALES_CYCLE_ROLES.map((r) => ({ id: r.id, label: r.label, tone: r.tone, text: '' })),
     cycle: SALES_CYCLE_STEPS.map((s) => ({ id: s.id, label: s.label })),
-    cycleNote: 'How a deal moves (honest cycle — no invented close dates)',
+    cycleNote: 'HOW A DEAL MOVES (honest cycle — no invented close dates)',
   };
 }
 
@@ -59,7 +59,7 @@ function denizenSalesCycleDiagram() {
       { id: 'saboteur', label: 'SABOTEUR', tone: 'red', text: "IT / security:\n'agents cannot send mail'\nor 'we already have ChatGPT'" },
     ],
     cycle: SALES_CYCLE_STEPS.map((s) => ({ id: s.id, label: s.label })),
-    cycleNote: 'How a deal moves (honest cycle — no invented close dates)',
+    cycleNote: 'HOW A DEAL MOVES (honest cycle — no invented close dates)',
   };
 }
 

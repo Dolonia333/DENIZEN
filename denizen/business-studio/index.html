@@ -612,91 +612,102 @@ html.embed .dz-app-chrome{display:none}
   font-family:var(--font-sheet);font-weight:700;color:#1B2A4A;background:#EEEAE0;text-transform:none;letter-spacing:0
 }
 
-/* Sales cycle diagram (from E3 Workshop A worksheet) */
+/* Sales cycle diagram — matches E3 Workshop A worksheet */
 .sc-diagram{
-  margin:4px 0 18px;padding:18px 16px 16px;border:1px solid rgba(27,42,74,.16);
-  border-radius:8px;background:#FFFEFA;font-family:var(--font-sheet)
+  margin:4px 0 20px;padding:22px 22px 20px;
+  border:1px solid #D5D0C4;border-radius:4px;
+  background:#FBF8F1;font-family:var(--font-sheet);color:#1B2A4A
 }
-.sc-diagram-head{margin-bottom:14px}
+.sc-diagram-head{margin-bottom:8px}
 .sc-diagram-head .sc-title-input{
   width:100%;border:none;background:transparent;font-family:var(--font-sheet);
-  font-size:18px;font-weight:700;color:#1B2A4A;padding:0;letter-spacing:-.01em
+  font-size:22px;font-weight:700;color:#1B2A4A;padding:0;letter-spacing:-.015em
 }
 .sc-diagram-head .sc-sub-input{
   width:100%;border:none;background:transparent;font-family:var(--font-sheet);
-  font-size:13px;color:#5A6472;padding:4px 0 0
-}
-.sc-flow-label input{
-  width:100%;border:none;background:transparent;font-family:var(--font-sheet);
-  font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#1B2A4A;padding:0
+  font-size:14px;color:#4A5568;padding:6px 0 0;font-weight:400
 }
 .sc-map{
-  display:grid;
-  grid-template-columns:1fr 1.15fr 1fr;
-  grid-template-rows:auto auto auto;
-  gap:12px 14px;align-items:center;justify-items:center;
-  margin:8px 0 18px;min-height:280px
+  position:relative;width:100%;max-width:760px;margin:8px auto 22px;
+  height:420px
 }
-.sc-role{
-  width:100%;max-width:220px;background:#fff;border:2px solid #8FAE9F;border-radius:10px;
-  padding:10px 11px;box-shadow:0 1px 2px rgba(16,35,28,.05)
+.sc-spokes{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0
 }
-.sc-role[data-tone="sage"]{border-color:#7FA58E}
-.sc-role[data-tone="blue"]{border-color:#7A93C4}
-.sc-role[data-tone="tan"]{border-color:#C4A574}
-.sc-role[data-tone="teal"]{border-color:#5F9EA0}
-.sc-role[data-tone="red"]{border-color:#C47A74}
-.sc-role .sc-role-label{
-  font-size:11px;font-weight:700;letter-spacing:.04em;color:#1B2A4A;margin-bottom:6px
-}
-.sc-role textarea{
-  width:100%;min-height:72px;border:1px solid rgba(27,42,74,.12);border-radius:4px;
-  background:#FFFEFA;font-family:var(--font-sheet);font-size:12.5px;line-height:1.35;padding:7px 8px;resize:vertical
-}
+.sc-spokes line{stroke:#9AA3AD;stroke-width:1.5}
 .sc-hub{
-  grid-column:2;grid-row:2;width:148px;height:148px;border-radius:50%;
-  background:#1B2A4A;color:#F7F4EC;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:12px;box-shadow:0 10px 28px rgba(27,42,74,.22)
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;
+  width:168px;height:168px;border-radius:50%;
+  background:#1B2A4A;color:#F7F4EC;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:16px 14px;
+  box-shadow:0 8px 24px rgba(27,42,74,.18)
 }
 .sc-hub input,.sc-hub textarea{
   width:100%;border:none;background:transparent;color:#F7F4EC;text-align:center;
-  font-family:var(--font-sheet);padding:2px 4px;border-radius:4px
+  font-family:var(--font-sheet);padding:1px 4px;border-radius:4px
 }
-.sc-hub input{font-size:16px;font-weight:700;letter-spacing:.02em}
-.sc-hub textarea{font-size:11.5px;min-height:34px;resize:none;opacity:.88;line-height:1.25}
-.sc-hub input:focus,.sc-hub textarea:focus,.sc-role textarea:focus{
-  outline:none;box-shadow:0 0 0 2px rgba(42,106,85,.25)
+.sc-hub input{font-size:18px;font-weight:700;letter-spacing:.01em}
+.sc-hub textarea{font-size:12px;min-height:32px;resize:none;opacity:.9;line-height:1.25;font-weight:400}
+.sc-role{
+  position:absolute;z-index:2;width:200px;
+  background:#fff;border:2px solid #8FAE9F;border-radius:14px;
+  padding:11px 12px 10px;box-shadow:0 2px 8px rgba(27,42,74,.06)
 }
-.sc-role.pos-uses{grid-column:2;grid-row:1}
-.sc-role.pos-saboteur{grid-column:1;grid-row:1}
-.sc-role.pos-recommends{grid-column:3;grid-row:1}
-.sc-role.pos-decides{grid-column:1;grid-row:3}
-.sc-role.pos-influences{grid-column:3;grid-row:3}
-.sc-flow-label{
-  margin:0 0 10px
+.sc-role[data-tone="sage"]{border-color:#6F9B7E;background:linear-gradient(180deg,#F4FAF6,#fff)}
+.sc-role[data-tone="blue"]{border-color:#6E88BC;background:linear-gradient(180deg,#F3F6FC,#fff)}
+.sc-role[data-tone="tan"]{border-color:#C09A5E;background:linear-gradient(180deg,#FBF6EE,#fff)}
+.sc-role[data-tone="teal"]{border-color:#5B9A8E;background:linear-gradient(180deg,#F1F9F7,#fff)}
+.sc-role[data-tone="red"]{border-color:#C47A74;background:linear-gradient(180deg,#FCF4F3,#fff)}
+.sc-role .sc-role-label{
+  font-size:12px;font-weight:700;letter-spacing:.02em;color:#1B2A4A;margin-bottom:6px;
+  font-family:var(--font-sheet)
 }
-.sc-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sc-role textarea{
+  width:100%;min-height:78px;border:none;border-radius:0;background:transparent;
+  font-family:var(--font-sheet);font-size:12.5px;line-height:1.35;padding:0;resize:vertical;color:#243044
+}
+.sc-hub input:focus,.sc-hub textarea:focus,.sc-role textarea:focus,
+.sc-diagram-head input:focus,.sc-step input:focus,.sc-flow-label input:focus{
+  outline:none;box-shadow:0 0 0 2px rgba(27,42,74,.18);border-radius:4px
+}
+/* Radial positions around hub — mirror original worksheet */
+.sc-role.pos-uses{left:50%;top:8px;transform:translateX(-50%)}
+.sc-role.pos-saboteur{left:4%;top:56px}
+.sc-role.pos-recommends{right:4%;top:56px;left:auto}
+.sc-role.pos-decides{left:8%;bottom:18px;top:auto}
+.sc-role.pos-influences{right:8%;bottom:18px;top:auto;left:auto}
+.sc-flow-wrap{
+  border-top:1px solid #E0DBD0;padding-top:16px;margin-top:4px
+}
+.sc-flow-label{margin:0 0 12px}
+.sc-flow-label input{
+  width:100%;border:none;background:transparent;font-family:var(--font-sheet);
+  font-size:13px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1B2A4A;padding:0
+}
+.sc-flow{display:flex;flex-wrap:nowrap;gap:0;align-items:stretch;overflow-x:auto;padding-bottom:4px}
 .sc-step{
-  flex:1 1 140px;min-width:120px;background:#fff;border:1.5px solid #1B2A4A;border-radius:8px;padding:10px 11px
+  flex:1 1 0;min-width:148px;background:#fff;border:2px solid #1B2A4A;border-radius:14px;
+  padding:16px 14px 14px;display:flex;flex-direction:column;justify-content:center
 }
-.sc-step .sc-step-n{font-size:11px;font-weight:700;color:#5A6472;margin-bottom:4px}
+.sc-step .sc-step-n{font-size:12px;font-weight:700;color:#1B2A4A;margin-bottom:4px;font-family:var(--font-sheet)}
 .sc-step input{
-  width:100%;border:none;background:transparent;font-family:var(--font-sheet);font-size:13.5px;
-  font-weight:600;color:#1B2A4A;padding:0
+  width:100%;border:none;background:transparent;font-family:var(--font-sheet);font-size:14px;
+  font-weight:600;color:#1B2A4A;padding:0;line-height:1.3
 }
-.sc-arrow{color:#1B2A4A;font-weight:700;font-size:18px;flex:none}
+.sc-arrow{
+  flex:none;width:28px;display:flex;align-items:center;justify-content:center;
+  color:#1B2A4A;font-weight:700;font-size:20px;line-height:1
+}
+.sc-ref{display:none}
 @media(max-width:820px){
-  .sc-map{display:flex;flex-direction:column;min-height:0}
-  .sc-role{max-width:100%}
-  .sc-arrow{transform:rotate(90deg)}
-}
-.sc-ref{
-  margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
-  padding-top:12px;border-top:1px dashed rgba(27,42,74,.14)
-}
-.sc-ref img{
-  width:min(100%,280px);height:auto;border-radius:6px;border:1px solid rgba(27,42,74,.12);
-  background:#fff
+  .sc-map{height:auto;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:100%}
+  .sc-spokes{display:none}
+  .sc-hub,.sc-role{position:relative;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none;width:min(100%,320px)}
+  .sc-hub{width:150px;height:150px;order:-1;margin-bottom:4px}
+  .sc-flow{flex-wrap:wrap;gap:8px}
+  .sc-arrow{width:100%;transform:rotate(90deg);height:18px}
+  .sc-step{min-width:calc(50% - 8px)}
 }
 
 .chip{display:inline-flex;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--forest-tint);color:var(--forest)}
@@ -945,7 +956,7 @@ function emptySalesCycleDiagram(){
     productTitle:'Product', productSubtitle:'',
     roles:SALES_CYCLE_ROLES.map(function(r){return {id:r.id,label:r.label,tone:r.tone,text:''};}),
     cycle:SALES_CYCLE_STEPS.map(function(s){return {id:s.id,label:s.label};}),
-    cycleNote:'How a deal moves (honest cycle — no invented close dates)'
+    cycleNote:'HOW A DEAL MOVES (honest cycle — no invented close dates)'
   };
 }
 function denizenSalesCycleDiagram(){
@@ -961,7 +972,7 @@ function denizenSalesCycleDiagram(){
       {id:'saboteur',label:'SABOTEUR',tone:'red',text:"IT / security:\n'agents cannot send mail'\nor 'we already have ChatGPT'"}
     ],
     cycle:SALES_CYCLE_STEPS.map(function(s){return {id:s.id,label:s.label};}),
-    cycleNote:'How a deal moves (honest cycle — no invented close dates)'
+    cycleNote:'HOW A DEAL MOVES (honest cycle — no invented close dates)'
   };
 }
 function sanitizeSalesCycleDiagram(raw){
@@ -3041,48 +3052,54 @@ function renderPave(){
 function renderSalesCycleDiagram(diagram, advisor){
   diagram=sanitizeSalesCycleDiagram(diagram);
   const rolePos={uses:'pos-uses',recommends:'pos-recommends',influences:'pos-influences',decides:'pos-decides',saboteur:'pos-saboteur'};
+  const order=['saboteur','uses','recommends','decides','influences'];
   const ro=advisor?' readonly':'';
+  // Spoke endpoints as % of map box — tuned to card anchors around the hub
+  const spokes=[
+    {x2:'18%',y2:'28%'},  // saboteur
+    {x2:'50%',y2:'14%'},  // uses
+    {x2:'82%',y2:'28%'},  // recommends
+    {x2:'22%',y2:'78%'},  // decides
+    {x2:'78%',y2:'78%'}   // influences
+  ];
+
   let html='<div class="sc-diagram" data-sc-diagram="1">'
     +'<div class="sc-diagram-head">'
     +'<input class="sc-title-input" data-sc="title" value="'+esc(diagram.title||'')+'" aria-label="Diagram title"'+ro+'/>'
     +'<input class="sc-sub-input" data-sc="subtitle" value="'+esc(diagram.subtitle||'')+'" aria-label="Diagram subtitle"'+ro+'/>'
     +'</div>';
 
-  html+='<div class="sc-map" aria-label="Buying center diagram">';
-  ['saboteur','uses','recommends'].forEach(function(id){
-    const role=(diagram.roles||[]).find(function(r){return r.id===id;})||{id:id,label:id,tone:'sage',text:''};
-    html+='<div class="sc-role '+rolePos[id]+'" data-tone="'+esc(role.tone||'sage')+'">'
-      +'<div class="sc-role-label">'+esc(role.label||id.toUpperCase())+'</div>'
-      +'<textarea data-sc-role="'+esc(id)+'" rows="3"'+ro+'>'+esc(role.text||'')+'</textarea>'
-      +'</div>';
+  html+='<div class="sc-map" aria-label="Buying center diagram">'
+    +'<svg class="sc-spokes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">';
+  spokes.forEach(function(s){
+    html+='<line x1="50" y1="50" x2="'+parseFloat(s.x2)+'" y2="'+parseFloat(s.y2)+'"/>';
   });
+  html+='</svg>';
+
   html+='<div class="sc-hub">'
     +'<input data-sc="productTitle" value="'+esc(diagram.productTitle||'')+'"'+ro+'/>'
     +'<textarea data-sc="productSubtitle" rows="2"'+ro+'>'+esc(diagram.productSubtitle||'')+'</textarea>'
     +'</div>';
-  ['decides','influences'].forEach(function(id){
+
+  order.forEach(function(id){
     const role=(diagram.roles||[]).find(function(r){return r.id===id;})||{id:id,label:id,tone:'sage',text:''};
     html+='<div class="sc-role '+rolePos[id]+'" data-tone="'+esc(role.tone||'sage')+'">'
       +'<div class="sc-role-label">'+esc(role.label||id.toUpperCase())+'</div>'
-      +'<textarea data-sc-role="'+esc(id)+'" rows="3"'+ro+'>'+esc(role.text||'')+'</textarea>'
+      +'<textarea data-sc-role="'+esc(id)+'" rows="4"'+ro+'>'+esc(role.text||'')+'</textarea>'
       +'</div>';
   });
   html+='</div>';
 
-  html+='<div class="sc-flow-label"><input data-sc="cycleNote" value="'+esc(diagram.cycleNote||'')+'"'+ro+'/></div>';
-  html+='<div class="sc-flow">';
+  html+='<div class="sc-flow-wrap">'
+    +'<div class="sc-flow-label"><input data-sc="cycleNote" value="'+esc(diagram.cycleNote||'')+'"'+ro+'/></div>'
+    +'<div class="sc-flow">';
   (diagram.cycle||[]).forEach(function(step,i){
     if(i) html+='<span class="sc-arrow" aria-hidden="true">→</span>';
     html+='<div class="sc-step"><div class="sc-step-n">'+(i+1)+'.</div>'
       +'<input data-sc-step="'+esc(step.id)+'" value="'+esc(step.label||'')+'"'+ro+'/>'
       +'</div>';
   });
-  html+='</div>';
-
-  html+='<div class="sc-ref">'
-    +'<span class="field-hint">Editable buying-center map from your Workshop A worksheet. Mentors can Ask WHY on Part A fields below.</span>'
-    +'<img src="/business-studio/assets/denizen-sales-cycle-workshop-a.jpg" alt="Original DENIZEN sales cycle worksheet diagram" loading="lazy"/>'
-    +'</div></div>';
+  html+='</div></div></div>';
   return html;
 }
 
