@@ -163,6 +163,7 @@
         max-height: min(70vh, calc(100dvh - 80px));
       }
       html.denizen-phone #${NOTE_ID} textarea { min-height: 64px; font-size: 16px; }
+      #${NOTE_ID}.open { display: flex; flex-direction: column; }
       #${NOTE_ID} header {
         display: flex; align-items: center; justify-content: space-between;
         padding: 10px 12px 8px; border-bottom: 1px solid rgba(148,163,184,0.18);
