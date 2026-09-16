@@ -233,41 +233,54 @@ function NewMeetingModal({ date, contacts, onSave, onClose }: {
   };
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 950, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ ...glassCard(T.accent), padding: 24, width: 440, maxWidth: "95vw" }}>
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: T.text0, margin: "0 0 20px", letterSpacing: "-0.02em" }}>
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 10050,
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+      backdropFilter: "blur(8px)", padding: 0,
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        ...glassCard(T.accent), padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))",
+        width: "100%", maxWidth: 520, maxHeight: "min(92dvh, 920px)", overflowY: "auto",
+        borderRadius: "16px 16px 0 0", boxSizing: "border-box",
+      }}>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: T.text0, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
           New Meeting — {new Date(date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </h2>
         {/* Templates */}
         <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
           {MEETING_TEMPLATES.map(tpl => (
-            <button key={tpl.name} onClick={() => { setTitle(tpl.name); setType(tpl.type); setDuration(tpl.duration); }}
-              style={{ fontSize: 10, padding: "4px 10px", borderRadius: T.radius.full, cursor: "pointer", background: title === tpl.name ? `${T.accent}22` : "rgba(255,255,255,0.04)", border: `1px solid ${title === tpl.name ? `${T.accent}66` : T.bg4}`, color: title === tpl.name ? T.accent : T.text3, fontWeight: 600 }}>
+            <button key={tpl.name} type="button" onClick={() => { setTitle(tpl.name); setType(tpl.type); setDuration(tpl.duration); }}
+              style={{
+                fontSize: 11, padding: "8px 12px", borderRadius: T.radius.sm, cursor: "pointer",
+                background: title === tpl.name ? `${T.accent}22` : "rgba(255,255,255,0.04)",
+                border: `1px solid ${title === tpl.name ? `${T.accent}66` : T.bg4}`,
+                color: title === tpl.name ? T.accent : T.text3, fontWeight: 600, whiteSpace: "nowrap",
+              }}>
               {tpl.name}
             </button>
           ))}
         </div>
-        <div style={{ marginBottom: 12 }}><label style={S.label as React.CSSProperties}>Title *</label><input value={title} onChange={e => setTitle(e.target.value)} style={S.input as React.CSSProperties} /></div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          <div style={{ flex: 1 }}><label style={S.label as React.CSSProperties}>Time</label><input type="time" value={time} onChange={e => setTime(e.target.value)} style={S.input as React.CSSProperties} /></div>
-          <div style={{ flex: 1 }}><label style={S.label as React.CSSProperties}>Duration</label>
-            <select value={duration} onChange={e => setDuration(Number(e.target.value))} style={S.input as React.CSSProperties}>
+        <div style={{ marginBottom: 12 }}><label style={S.label as React.CSSProperties}>Title *</label><input value={title} onChange={e => setTitle(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} /></div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 12 }}>
+          <div><label style={S.label as React.CSSProperties}>Time</label><input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} /></div>
+          <div><label style={S.label as React.CSSProperties}>Duration</label>
+            <select value={duration} onChange={e => setDuration(Number(e.target.value))} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }}>
               {[15, 30, 45, 60, 90].map(d => <option key={d} value={d}>{d} min</option>)}
             </select>
           </div>
         </div>
         <div style={{ marginBottom: 12 }}><label style={S.label as React.CSSProperties}>Contact</label>
-          <select value={contact} onChange={e => setContact(e.target.value)} style={S.input as React.CSSProperties}>
+          <select value={contact} onChange={e => setContact(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }}>
             <option value="">Select…</option>
             {contacts.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
           </select>
         </div>
         <div style={{ marginBottom: 12 }}><label style={S.label as React.CSSProperties}>Notes</label>
-          <textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical" }} />
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical", width: "100%", boxSizing: "border-box" }} />
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={save} style={S.btn as React.CSSProperties}>Create Meeting</button>
-          <button onClick={onClose} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={save} style={{ ...(S.btn as React.CSSProperties), flex: "1 1 100%" }}>Create Meeting</button>
+          <button onClick={onClose} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
         </div>
       </div>
     </div>
@@ -437,22 +450,25 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
     <div>
       {/* ═══════════ COMMAND CENTER HEADER ═══════════ */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: T.text0, margin: 0, letterSpacing: "-0.03em" }}>
-            Schedule <span style={{ fontSize: 14, fontWeight: 500, color: T.text3, marginLeft: 6 }}>Command Center</span>
+        <div style={{ minWidth: 0, flex: isMobile ? "1 1 100%" : undefined }}>
+          <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: T.text0, margin: 0, letterSpacing: "-0.03em" }}>
+            Schedule {isMobile ? null : <span style={{ fontSize: 14, fontWeight: 500, color: T.text3, marginLeft: 6 }}>Command Center</span>}
           </h1>
           <p style={{ fontSize: 12, color: T.text3, marginTop: 4 }}>
-            {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+            {today.toLocaleDateString("en-US", { weekday: isMobile ? "short" : "long", month: "long", day: "numeric", year: "numeric" })}
           </p>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", width: isMobile ? "100%" : undefined }}>
           {(["schedule", "kanban", "agenda"] as MainView[]).map(v => (
             <button key={v} onClick={() => setMainView(v)} style={{
               ...glassCard(mainView === v ? T.accent : undefined) as any,
-              padding: "7px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+              padding: isMobile ? "8px 10px" : "7px 16px", fontSize: isMobile ? 11 : 12, fontWeight: 600, cursor: "pointer",
               color: mainView === v ? T.accent : T.text3, transition: "all 0.15s",
+              flex: isMobile ? "1 1 calc(33.33% - 6px)" : undefined, textAlign: "center", minWidth: 0,
             }}>
-              {v === "schedule" ? "📅 Schedule" : v === "kanban" ? "◆ Kanban" : "📋 Agenda"}
+              {isMobile
+                ? (v === "schedule" ? "Schedule" : v === "kanban" ? "Kanban" : "Agenda")
+                : (v === "schedule" ? "📅 Schedule" : v === "kanban" ? "◆ Kanban" : "📋 Agenda")}
             </button>
           ))}
         </div>
@@ -523,28 +539,40 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
             {/* ── LEFT: Calendar ── */}
             {(!isMobile || mobilePanel === "calendar") && (
               <div style={{ ...glassCard(), overflow: "hidden" }}>
-                <div style={{ padding: "14px 18px", borderBottom: `1px solid ${T.bg4}`, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                <div style={{
+                  padding: isMobile ? "12px 12px" : "14px 18px",
+                  borderBottom: `1px solid ${T.bg4}`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}>
+                  <div style={{ display: "flex", gap: 3, flex: isMobile ? "1 1 100%" : undefined }}>
                     {(["month", "week", "day"] as CalView[]).map(v => (
                       <button key={v} onClick={() => setCalView(v)} style={{
-                        padding: "5px 12px", borderRadius: T.radius.full, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                        padding: isMobile ? "8px 0" : "5px 12px",
+                        borderRadius: T.radius.full, fontSize: 11, fontWeight: 600, cursor: "pointer",
                         background: calView === v ? `${T.accent}22` : "rgba(255,255,255,0.03)",
                         color: calView === v ? T.accent : T.text3,
                         border: `1px solid ${calView === v ? `${T.accent}55` : "transparent"}`,
                         transition: "all 0.15s",
+                        flex: isMobile ? 1 : undefined,
+                        textAlign: "center",
                       }}>{v.charAt(0).toUpperCase() + v.slice(1)}</button>
                     ))}
                   </div>
-                  <div style={{ flex: 1 }} />
-                  {calView === "month" && (
-                    <>{navBtn(prev, "‹")}<span style={{ fontSize: 14, fontWeight: 700, color: T.text0, minWidth: isMobile ? 0 : 130, textAlign: "center", whiteSpace: "nowrap" }}>{monthName} {year}</span>{navBtn(next, "›")}</>
-                  )}
-                  {calView === "week" && (
-                    <>{navBtn(prevWeek, "‹")}<span style={{ fontSize: 12, fontWeight: 600, color: T.text0 }}>{new Date(weekDates[0] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {new Date(weekDates[6] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>{navBtn(nextWeek, "›")}</>
-                  )}
-                  {calView === "day" && (
-                    <>{navBtn(prevDay, "‹")}<span style={{ fontSize: 12, fontWeight: 600, color: T.text0 }}>{new Date(dayViewDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}</span>{navBtn(nextDay, "›")}</>
-                  )}
+                  {!isMobile && <div style={{ flex: 1 }} />}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flex: isMobile ? "1 1 100%" : undefined, justifyContent: "center" }}>
+                    {calView === "month" && (
+                      <>{navBtn(prev, "‹")}<span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 700, color: T.text0, minWidth: isMobile ? 0 : 130, textAlign: "center", flex: isMobile ? 1 : undefined }}>{isMobile ? `${monthName.slice(0, 3)} ${year}` : `${monthName} ${year}`}</span>{navBtn(next, "›")}</>
+                    )}
+                    {calView === "week" && (
+                      <>{navBtn(prevWeek, "‹")}<span style={{ fontSize: isMobile ? 11 : 12, fontWeight: 600, color: T.text0, textAlign: "center", flex: 1 }}>{new Date(weekDates[0] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {new Date(weekDates[6] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>{navBtn(nextWeek, "›")}</>
+                    )}
+                    {calView === "day" && (
+                      <>{navBtn(prevDay, "‹")}<span style={{ fontSize: isMobile ? 11 : 12, fontWeight: 600, color: T.text0, textAlign: "center", flex: 1 }}>{new Date(dayViewDate + "T12:00:00").toLocaleDateString("en-US", { weekday: isMobile ? "short" : "long", month: "short", day: "numeric", year: isMobile ? undefined : "numeric" })}</span>{navBtn(nextDay, "›")}</>
+                    )}
+                  </div>
                 </div>
 
                 {/* MONTH */}
@@ -552,15 +580,16 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                   <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", border: `1px solid ${T.gridLine}`, borderRadius: T.radius.md, overflow: "hidden" }}>
                     <thead>
                       <tr>
-                        {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d, i) => (
-                          <th key={d} style={{
+                        {(["S", "M", "T", "W", "T", "F", "S"] as const).map((d, i) => (
+                          <th key={`${d}-${i}`} style={{
                             textAlign: "center", fontSize: 10, color: i === 0 || i === 6 ? T.text3 : T.text2,
-                            fontWeight: 600, padding: "10px 0", letterSpacing: "0.12em",
+                            fontWeight: 600, padding: isMobile ? "6px 0" : "10px 0",
+                            letterSpacing: isMobile ? "0.04em" : "0.12em",
                             fontFamily: "'JetBrains Mono', monospace",
                             borderBottom: `1px solid ${T.gridLineStrong}`,
                             borderRight: i < 6 ? `1px solid ${T.gridLine}` : "none",
                             background: T.bg3,
-                          }}>{d}</th>
+                          }}>{isMobile ? d : ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][i]}</th>
                         ))}
                       </tr>
                     </thead>
@@ -570,7 +599,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                           {cells.slice(rowIdx * 7, rowIdx * 7 + 7).map((day, colIdx) => {
                             const isLastRow = rowIdx === Math.ceil(cells.length / 7) - 1;
                             const cellStyle: React.CSSProperties = {
-                              height: isMobile ? 64 : 88, padding: isMobile ? "4px 4px" : "6px 8px", verticalAlign: "top",
+                              height: isMobile ? 52 : 88, padding: isMobile ? "4px 2px" : "6px 8px", verticalAlign: "top",
                               borderRight: colIdx < 6 ? `1px solid ${T.gridLine}` : "none",
                               borderBottom: !isLastRow ? `1px solid ${T.gridLine}` : "none",
                             };
@@ -597,14 +626,14 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                 onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isToday ? `${T.accent}08` : isWeekend ? "rgba(255,255,255,0.015)" : "transparent"; }}
                               >
                                 {isSelected && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${T.accent}, ${T.accent}66)` }} />}
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: isMobile ? 2 : 6 }}>
                                   <span style={{
-                                    fontSize: 13, fontWeight: isToday ? 800 : 500,
+                                    fontSize: isMobile ? 12 : 13, fontWeight: isToday ? 800 : 500,
                                     color: isToday ? "#080d18" : isWeekend ? T.text3 : T.text1,
                                     fontFamily: "'JetBrains Mono', monospace",
                                     ...(isToday ? {
                                       background: `linear-gradient(135deg, ${T.accent}, #d97706)`,
-                                      width: 26, height: 26, borderRadius: "50%",
+                                      width: isMobile ? 22 : 26, height: isMobile ? 22 : 26, borderRadius: "50%",
                                       display: "inline-flex", alignItems: "center", justifyContent: "center",
                                       lineHeight: 1,
                                     } : {}),
@@ -614,16 +643,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                     {taskCount > 0 && <div style={{ width: 5, height: 5, borderRadius: "50%", background: events.some(e => e.type === "overdue") ? "#ef4444" : T.accent }} />}
                                   </div>
                                 </div>
-                                {isMobile ? (
-                                  <div style={{ display: "flex", gap: 3, flexWrap: "wrap", marginTop: 2 }}>
-                                    {events.slice(0, 4).map((ev, i) => (
-                                      <div key={i} title={ev.label} style={{ width: 6, height: 6, borderRadius: "50%", background: ev.color }} />
-                                    ))}
-                                    {events.length > 4 && (
-                                      <span style={{ fontSize: 8, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>+{events.length - 4}</span>
-                                    )}
-                                  </div>
-                                ) : (
+                                {!isMobile && (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                   {events.slice(0, 2).map((ev, i) => (
                                     <div key={i} style={{
@@ -640,6 +660,11 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                   )}
                                 </div>
                                 )}
+                                {isMobile && events.length > 0 && (
+                                  <div style={{ fontSize: 8, color: T.text3, textAlign: "center", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>
+                                    {events.length}
+                                  </div>
+                                )}
                               </td>
                             );
                           })}
@@ -651,7 +676,58 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
 
                 {/* WEEK */}
                 {calView === "week" && (
-                  <div style={{ padding: 14, border: `1px solid ${T.gridLine}`, borderRadius: T.radius.md }}>
+                  <div style={{ padding: isMobile ? 10 : 14, border: `1px solid ${T.gridLine}`, borderRadius: T.radius.md }}>
+                    {isMobile ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {weekDates.map((dateStr) => {
+                          const d = new Date(dateStr + "T12:00:00");
+                          const events = eventsMap[dateStr] || [];
+                          const isToday = dateStr === todayStr;
+                          const isSelected = dateStr === selectedDate;
+                          return (
+                            <button
+                              key={dateStr}
+                              type="button"
+                              onClick={() => { setSelectedDate(dateStr); setMobilePanel("tasks"); }}
+                              style={{
+                                display: "flex", alignItems: "center", gap: 12, width: "100%",
+                                padding: "12px 12px", textAlign: "left", cursor: "pointer",
+                                borderRadius: T.radius.md,
+                                border: `1px solid ${isSelected ? `${T.accent}66` : isToday ? `${T.accent}44` : T.gridLine}`,
+                                background: isSelected ? `${T.accent}14` : isToday ? `${T.accent}08` : "rgba(255,255,255,0.02)",
+                              }}
+                            >
+                              <div style={{ width: 44, flexShrink: 0, textAlign: "center" }}>
+                                <div style={{ fontSize: 9, color: T.text3, textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "'JetBrains Mono', monospace" }}>
+                                  {d.toLocaleDateString("en-US", { weekday: "short" })}
+                                </div>
+                                <div style={{ fontSize: 18, fontWeight: isToday ? 900 : 700, color: isToday ? T.accent : T.text0, fontFamily: "'JetBrains Mono', monospace" }}>
+                                  {d.getDate()}
+                                </div>
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                {events.length === 0 ? (
+                                  <div style={{ fontSize: 11, color: T.text3 }}>No meetings</div>
+                                ) : (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                    {events.slice(0, 2).map((ev, i) => (
+                                      <div key={i} style={{
+                                        fontSize: 11, color: ev.color, fontWeight: 500,
+                                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                                      }}>{ev.label}</div>
+                                    ))}
+                                    {events.length > 2 && (
+                                      <div style={{ fontSize: 10, color: T.text3 }}>+{events.length - 2} more</div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, flexShrink: 0 }}>Open →</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 0 }}>
                       {weekDates.map((dateStr, colIdx) => {
                         const d = new Date(dateStr + "T12:00:00");
@@ -700,6 +776,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                         );
                       })}
                     </div>
+                    )}
                   </div>
                 )}
 
@@ -713,7 +790,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                       return (
                         <div>
                           {/* Day header */}
-                          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}`, flexWrap: "wrap" }}>
                             <div style={{
                               width: 52, height: 52, borderRadius: T.radius.md,
                               background: isToday ? `linear-gradient(135deg, ${T.accent}, #d97706)` : T.bg3,
@@ -726,7 +803,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                 {new Date(dayViewDate + "T12:00:00").getDate()}
                               </span>
                             </div>
-                            <div>
+                            <div style={{ flex: "1 1 auto", minWidth: 0 }}>
                               <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>
                                 {new Date(dayViewDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" })}
                               </div>
@@ -734,10 +811,9 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                 {dayMeetings.length} meeting{dayMeetings.length !== 1 ? "s" : ""} · {dayTasks.length} task{dayTasks.length !== 1 ? "s" : ""}
                               </div>
                             </div>
-                            <div style={{ flex: 1 }} />
-                            <div style={{ display: "flex", gap: 6 }}>
-                              <button onClick={() => openQuickAdd(dayViewDate)} style={{ ...glassCard() as any, padding: "6px 14px", fontSize: 11, fontWeight: 600, color: T.accent, cursor: "pointer" }}>+ Task</button>
-                              <button onClick={() => openNewMeeting(dayViewDate)} style={{ ...glassCard() as any, padding: "6px 14px", fontSize: 11, fontWeight: 600, color: "#8b5cf6", cursor: "pointer" }}>+ Meeting</button>
+                            <div style={{ display: "flex", gap: 6, flex: isMobile ? "1 1 100%" : undefined }}>
+                              <button onClick={() => openQuickAdd(dayViewDate)} style={{ ...glassCard() as any, padding: "8px 14px", fontSize: 11, fontWeight: 600, color: T.accent, cursor: "pointer", flex: isMobile ? 1 : undefined }}>+ Task</button>
+                              <button onClick={() => openNewMeeting(dayViewDate)} style={{ ...glassCard() as any, padding: "8px 14px", fontSize: 11, fontWeight: 600, color: "#8b5cf6", cursor: "pointer", flex: isMobile ? 1 : undefined }}>+ Meeting</button>
                             </div>
                           </div>
 
@@ -1040,28 +1116,36 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
       {/* ═══════════ MODALS ═══════════ */}
       {/* Quick Add Task */}
       {showQuickAdd && (
-        <div onClick={() => setShowQuickAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 950, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}>
-          <div onClick={e => e.stopPropagation()} style={{ ...glassCard(T.accent), padding: 24, width: 420, maxWidth: "95vw" }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: T.text0, margin: "0 0 18px", letterSpacing: "-0.02em" }}>
+        <div onClick={() => setShowQuickAdd(false)} style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 10050,
+          display: "flex", alignItems: "flex-end", justifyContent: "center", backdropFilter: "blur(8px)", padding: 0,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            ...glassCard(T.accent),
+            padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))",
+            width: "100%", maxWidth: 520, maxHeight: "min(92dvh, 920px)", overflowY: "auto",
+            borderRadius: "16px 16px 0 0", boxSizing: "border-box",
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: T.text0, margin: "0 0 14px", letterSpacing: "-0.02em" }}>
               Quick Add Task — {new Date(quickAddDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </h2>
             <div style={{ marginBottom: 12 }}>
               <label style={S.label as React.CSSProperties}>Title *</label>
-              <input value={quickTitle} onChange={e => setQuickTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && handleQuickAdd()} style={S.input as React.CSSProperties} autoFocus placeholder="Task title…" />
+              <input value={quickTitle} onChange={e => setQuickTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && handleQuickAdd()} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} autoFocus placeholder="Task title…" />
             </div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <div style={{ flex: 1 }}><label style={S.label as React.CSSProperties}>Priority</label>
-                <select value={quickPriority} onChange={e => setQuickPriority(e.target.value)} style={S.input as React.CSSProperties}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 12 }}>
+              <div><label style={S.label as React.CSSProperties}>Priority</label>
+                <select value={quickPriority} onChange={e => setQuickPriority(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }}>
                   {["Critical", "High", "Medium", "Low"].map(p => <option key={p}>{p}</option>)}
                 </select>
               </div>
-              <div style={{ flex: 1 }}><label style={S.label as React.CSSProperties}>Assignee</label>
-                <input value={quickAssignee} onChange={e => setQuickAssignee(e.target.value)} style={S.input as React.CSSProperties} placeholder="Name…" />
+              <div><label style={S.label as React.CSSProperties}>Assignee</label>
+                <input value={quickAssignee} onChange={e => setQuickAssignee(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} placeholder="Name…" />
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={handleQuickAdd} style={S.btn as React.CSSProperties}>Create Task</button>
-              <button onClick={() => setShowQuickAdd(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button onClick={handleQuickAdd} style={{ ...(S.btn as React.CSSProperties), flex: "1 1 100%" }}>Create Task</button>
+              <button onClick={() => setShowQuickAdd(false)} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
             </div>
           </div>
         </div>

@@ -529,32 +529,36 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>Calendar</h1>
+        <div style={{ minWidth: 0, flex: isMobile ? "1 1 100%" : undefined }}>
+          <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>Calendar</h1>
           <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Meetings, tasks, deals & booking</p>
         </div>
         <div style={{
-          display: "flex", gap: 6, flexWrap: isMobile ? "nowrap" : "wrap",
-          overflowX: isMobile ? "auto" : undefined, WebkitOverflowScrolling: "touch",
-          maxWidth: isMobile ? "100%" : undefined, paddingBottom: isMobile ? 2 : 0,
+          display: "flex", gap: 6, flexWrap: "wrap",
+          width: isMobile ? "100%" : undefined,
+          alignItems: "stretch",
         }}>
           {(["month", "week", "day", "agenda", "booking"] as ViewMode[]).map(v => (
             <button key={v} onClick={() => {
               setViewMode(v);
               if ((v === "day" || v === "week") && selectedDate) setDayViewDate(selectedDate);
             }} style={{
-              ...S.btnGhost, fontSize: isMobile ? 11 : 12, padding: isMobile ? "7px 10px" : "6px 14px",
+              ...S.btnGhost, fontSize: isMobile ? 11 : 12, padding: isMobile ? "8px 10px" : "6px 14px",
               background: viewMode === v ? T.accent : T.bg3, color: viewMode === v ? "#080d18" : T.text2,
               fontWeight: viewMode === v ? 700 : 500,
-              flex: isMobile ? "1 1 auto" : undefined,
+              flex: isMobile ? "1 1 calc(33.33% - 6px)" : undefined,
               minWidth: isMobile ? 0 : undefined,
+              textAlign: "center",
             }}>
               {isMobile
                 ? (v === "month" ? "Month" : v === "week" ? "Week" : v === "day" ? "Day" : v === "agenda" ? "Agenda" : "Book")
                 : (v === "month" ? "📅 Month" : v === "week" ? "📆 Week" : v === "day" ? "🕐 Day" : v === "agenda" ? "📋 Agenda" : "🔗 Booking")}
             </button>
           ))}
-          <button onClick={() => openNewMeeting(selectedDate || dayViewDate || todayStr)} style={{ ...S.btn, fontSize: 12, padding: "6px 14px" }}>+ Meeting</button>
+          <button onClick={() => openNewMeeting(selectedDate || dayViewDate || todayStr)} style={{
+            ...S.btn, fontSize: 12, padding: isMobile ? "8px 12px" : "6px 14px",
+            flex: isMobile ? "1 1 100%" : undefined,
+          }}>+ Meeting</button>
         </div>
       </div>
 
@@ -659,14 +663,14 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", border: `1px solid ${T.gridLine}`, borderRadius: T.radius.md, overflow: "hidden" }}>
               <thead>
                 <tr>
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
-                    <th key={d} style={{
-                      textAlign: "center", fontSize: 10, color: T.text2, fontWeight: 600,
-                      padding: "8px 0", textTransform: "uppercase", letterSpacing: "0.06em",
+                  {(["S", "M", "T", "W", "T", "F", "S"] as const).map((d, i) => (
+                    <th key={`${d}-${i}`} style={{
+                      textAlign: "center", fontSize: isMobile ? 10 : 10, color: T.text2, fontWeight: 600,
+                      padding: isMobile ? "6px 0" : "8px 0", textTransform: "uppercase", letterSpacing: "0.06em",
                       borderBottom: `1px solid ${T.gridLineStrong}`,
                       borderRight: i < 6 ? `1px solid ${T.gridLine}` : "none",
                       background: T.bg3,
-                    }}>{d}</th>
+                    }}>{isMobile ? d : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][i]}</th>
                   ))}
                 </tr>
               </thead>
@@ -679,7 +683,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                         if (day === null) {
                           return (
                             <td key={`e-${colIdx}`} style={{
-                              height: 72, ...calCellBorder(colIdx, isLastRow),
+                              height: isMobile ? 48 : 72, ...calCellBorder(colIdx, isLastRow),
                               background: "rgba(255,255,255,0.02)",
                             }} />
                           );
@@ -698,7 +702,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                             }}
                             onDoubleClick={() => { setDayViewDate(dateStr); setViewMode("day"); }}
                             style={{
-                              height: 72, padding: "6px 8px", verticalAlign: "top",
+                              height: isMobile ? 48 : 72, padding: isMobile ? "4px 4px" : "6px 8px", verticalAlign: "top",
                               cursor: "pointer", position: "relative", transition: "background 0.1s",
                               background: isSelected ? `${T.accent}22` : isToday ? `${T.blue}15` : getHeatmapColor(mc),
                               ...calCellBorder(colIdx, isLastRow),
@@ -1266,33 +1270,64 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
       {/* ── NEW/EDIT MEETING MODAL ── */}
       {showNewMeeting && (
-        <div style={S.modalBg} onClick={() => { setShowNewMeeting(false); resetForm(); }}>
-          <div style={{ ...S.modalBox, width: "min(520px, calc(100vw - 24px))", maxHeight: isMobile ? "min(90vh, 720px)" : undefined, overflowY: isMobile ? "auto" : undefined }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>
-                {editingMeeting ? "Edit Meeting" : "New Meeting"}
-              </div>
-              {/* Meeting templates */}
-              {!editingMeeting && (
-                <div style={{ display: "flex", gap: 4 }}>
-                  {MEETING_TEMPLATES.map(tpl => (
-                    <button key={tpl.name} onClick={() => applyTemplate(tpl)}
-                      style={{ fontSize: 9, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 8px", color: T.accent, cursor: "pointer", whiteSpace: "nowrap" }}>
-                      {tpl.name}
-                    </button>
-                  ))}
-                </div>
-              )}
+        <div
+          style={{
+            ...S.modalBg,
+            zIndex: 10050,
+            alignItems: isMobile ? "flex-end" : "center",
+            padding: isMobile ? 0 : undefined,
+          }}
+          onClick={() => { setShowNewMeeting(false); resetForm(); }}
+        >
+          <div
+            style={{
+              ...S.modalBox,
+              width: isMobile ? "100%" : "min(520px, calc(100vw - 24px))",
+              maxWidth: isMobile ? "100%" : "94vw",
+              maxHeight: isMobile ? "min(92dvh, 920px)" : undefined,
+              borderRadius: isMobile ? "16px 16px 0 0" : undefined,
+              padding: isMobile ? "16px 16px calc(16px + env(safe-area-inset-bottom, 0px))" : 28,
+              overflowY: "auto",
+              boxSizing: "border-box",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text0, marginBottom: !editingMeeting ? 12 : 16 }}>
+              {editingMeeting ? "Edit Meeting" : "New Meeting"}
             </div>
+            {/* Meeting templates — own row so chips never collide with the title on phone */}
+            {!editingMeeting && (
+              <div style={{
+                display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap",
+                maxWidth: "100%",
+              }}>
+                {MEETING_TEMPLATES.map(tpl => (
+                  <button key={tpl.name} type="button" onClick={() => applyTemplate(tpl)}
+                    style={{
+                      fontSize: isMobile ? 11 : 9,
+                      background: nmTitle === tpl.name ? `${T.accent}22` : T.bg4,
+                      border: `1px solid ${nmTitle === tpl.name ? `${T.accent}66` : "transparent"}`,
+                      borderRadius: T.radius.sm,
+                      padding: isMobile ? "8px 12px" : "3px 8px",
+                      color: T.accent,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      fontWeight: 600,
+                    }}>
+                    {tpl.name}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div style={{ ...S.label }}>Title *</div>
             <input value={nmTitle} onChange={e => setNmTitle(e.target.value)} placeholder="e.g. Discovery Call — Acme Corp"
-              style={{ ...S.input, marginBottom: 14 }} />
+              style={{ ...S.input, marginBottom: 14, boxSizing: "border-box", width: "100%" }} />
 
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
               <div>
                 <div style={{ ...S.label }}>Type</div>
-                <select value={nmType} onChange={e => setNmType(e.target.value)} style={{ ...S.input, marginBottom: 14 }}>
+                <select value={nmType} onChange={e => setNmType(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }}>
                   <option value="discovery">Discovery Call</option>
                   <option value="demo">Product Demo</option>
                   <option value="proposal">Proposal Review</option>
@@ -1302,7 +1337,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
               <div>
                 <div style={{ ...S.label }}>Duration (min)</div>
-                <select value={nmDuration} onChange={e => setNmDuration(Number(e.target.value))} style={{ ...S.input, marginBottom: 14 }}>
+                <select value={nmDuration} onChange={e => setNmDuration(Number(e.target.value))} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }}>
                   {[15, 30, 45, 60, 90].map(d => <option key={d} value={d}>{d} min</option>)}
                 </select>
               </div>
@@ -1311,14 +1346,14 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
               <div>
                 <div style={{ ...S.label }}>Date *</div>
-                <input type="date" value={nmDate} onChange={e => setNmDate(e.target.value)} style={{ ...S.input, marginBottom: 14 }} />
+                <input type="date" value={nmDate} onChange={e => setNmDate(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
               </div>
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ ...S.label }}>Time *</div>
-                  <button onClick={generateSuggestions} style={{ fontSize: 9, background: "none", border: "none", color: T.purple, cursor: "pointer", fontWeight: 600 }}>✨ Suggest Times</button>
+                  <button type="button" onClick={generateSuggestions} style={{ fontSize: 9, background: "none", border: "none", color: T.purple, cursor: "pointer", fontWeight: 600 }}>✨ Suggest Times</button>
                 </div>
-                <input type="time" value={nmTime} onChange={e => setNmTime(e.target.value)} style={{ ...S.input, marginBottom: 14 }} />
+                <input type="time" value={nmTime} onChange={e => setNmTime(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
               </div>
             </div>
 
@@ -1348,14 +1383,14 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
               <div>
                 <div style={{ ...S.label }}>Contact</div>
-                <select value={nmContact} onChange={e => setNmContact(e.target.value)} style={{ ...S.input, marginBottom: 14 }}>
+                <select value={nmContact} onChange={e => setNmContact(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }}>
                   <option value="">— Select contact —</option>
                   {contacts.map(c => <option key={c.id} value={c.name}>{c.name} ({c.company})</option>)}
                 </select>
               </div>
               <div>
                 <div style={{ ...S.label }}>Recurring</div>
-                <select value={nmRecurrence} onChange={e => setNmRecurrence(e.target.value as any)} style={{ ...S.input, marginBottom: 14 }}>
+                <select value={nmRecurrence} onChange={e => setNmRecurrence(e.target.value as any)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }}>
                   <option value="none">No repeat</option>
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -1366,11 +1401,11 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
             <div style={{ ...S.label }}>Meeting URL</div>
             <input value={nmUrl} onChange={e => setNmUrl(e.target.value)} placeholder="https://meet.google.com/..."
-              style={{ ...S.input, marginBottom: 14 }} />
+              style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
 
             <div style={{ ...S.label }}>Notes</div>
             <textarea value={nmNotes} onChange={e => setNmNotes(e.target.value)} placeholder="Meeting agenda..."
-              style={{ ...S.input, minHeight: 60, resize: "vertical", marginBottom: 14 }} />
+              style={{ ...S.input, minHeight: 60, resize: "vertical", marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
 
             {/* Checklist */}
             {nmChecklist.length > 0 && (
@@ -1387,13 +1422,13 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
             )}
 
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: 10, justifyContent: isMobile ? "stretch" : "flex-end", flexWrap: "wrap" }}>
               {editingMeeting && (
                 <button onClick={(e) => { e.stopPropagation(); downloadICS(editingMeeting); }}
-                  style={{ ...S.btnGhost, fontSize: 12 }}>📥 Download .ics</button>
+                  style={{ ...S.btnGhost, fontSize: 12, flex: isMobile ? "1 1 auto" : undefined }}>📥 Download .ics</button>
               )}
-              <button onClick={() => { setShowNewMeeting(false); resetForm(); }} style={{ ...S.btnGhost, fontSize: 12 }}>Cancel</button>
-              <button onClick={saveMeeting} style={{ ...S.btn, fontSize: 12 }}>{editingMeeting ? "Save Changes" : "Create Meeting"}</button>
+              <button onClick={() => { setShowNewMeeting(false); resetForm(); }} style={{ ...S.btnGhost, fontSize: 12, flex: isMobile ? "1 1 auto" : undefined }}>Cancel</button>
+              <button onClick={saveMeeting} style={{ ...S.btn, fontSize: 12, flex: isMobile ? "1 1 100%" : undefined }}>{editingMeeting ? "Save Changes" : "Create Meeting"}</button>
             </div>
           </div>
         </div>
@@ -1401,8 +1436,17 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
       {/* ── BOOKING PAGE PREVIEW MODAL ── */}
       {showBookingPreview && (
-        <div style={S.modalBg} onClick={() => setShowBookingPreview(false)}>
-          <div style={{ ...S.modalBox, width: "min(520px, calc(100vw - 24px))", maxHeight: isMobile ? "min(90vh, 720px)" : undefined, overflowY: isMobile ? "auto" : undefined }} onClick={e => e.stopPropagation()}>
+        <div style={{ ...S.modalBg, zIndex: 10050, alignItems: isMobile ? "flex-end" : "center", padding: isMobile ? 0 : undefined }} onClick={() => setShowBookingPreview(false)}>
+          <div style={{
+            ...S.modalBox,
+            width: isMobile ? "100%" : "min(520px, calc(100vw - 24px))",
+            maxWidth: isMobile ? "100%" : "94vw",
+            maxHeight: isMobile ? "min(92dvh, 920px)" : undefined,
+            borderRadius: isMobile ? "16px 16px 0 0" : undefined,
+            padding: isMobile ? "16px 16px calc(16px + env(safe-area-inset-bottom, 0px))" : 28,
+            overflowY: "auto",
+            boxSizing: "border-box",
+          }} onClick={e => e.stopPropagation()}>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>📅</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: T.text0 }}>Book a Meeting</div>
