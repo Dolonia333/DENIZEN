@@ -30,10 +30,18 @@ Execution → Evidence → Outcomes → Metrics → Strategy updates.
 - `src/denizen-business-studio-routes.js` — `/api/business-studio/*`
 - `src/denizen-business-studio-e3-template.js` — i2E E3 / PAVE program template
 - `src/denizen-business-studio-progress.js` — explainable health/progress
-- `src/denizen-business-studio-chain.js` — SoT evidence linker (experiment ↔ requirement ↔ milestone ↔ goal ↔ funding ↔ CRM relation)
-- `src/denizen-mcp-business-studio-tools.js` — MCP tools (`business_studio_chain_status`, linked `add_evidence`)
+- `src/denizen-business-studio-evidence.js` — **SoT ledger**: `qualifyingEvidence()`, dedupe, revoke, assumption stance (never auto-validate)
+- `src/denizen-business-studio-chain.js` — single writer + derived views + compact `workingSetBrief`
+- `src/denizen-mcp-business-studio-tools.js` — MCP (`working_set` / `brief` / `chain_status` / `add_evidence` / `revoke_evidence`)
 - Migration: `denizen_business_studio_workspaces`
-- Tests: `tests/business-studio-e2e-chain.test.js` — judge completion by information flow, not screens
+- Tests: `tests/business-studio-e2e-chain.test.js` — information flow + negatives (dupes, revoke, wrong experiment, contradicting 11th interview)
+
+### Invariant
+
+**Task completed ≠ business progress. Qualifying evidence meeting a requirement = business progress.**
+
+Program completion (e.g. 10/10 interviews) ≠ business validation (hypothesis proved).
+Every downstream counter must ask `qualifyingEvidence()` — never trust independent caches.
 
 ## Data model (workspace JSON blob)
 

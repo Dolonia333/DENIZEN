@@ -15,13 +15,15 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   {
     name: 'business_studio_working_set',
     description:
-      'READ-ONLY Business Studio working set: active program progress, health categories, open/overdue tasks, '
-      + 'experiments needing evidence, recent evidence. Call first. Empty workspace is OK — do not invent metrics.',
+      'READ-ONLY compact Business Studio working set for the current objective — not a dump of the company database. '
+      + 'Returns current objective, E3 discovery X/Y qualifying interviews, primary assumption status, '
+      + 'funding readiness customer_discovery, blocking milestone, and recommended next action with WHY. Call first.',
     inputSchema: { type: 'object', properties: { focus: { type: 'string' } } },
   },
   {
     name: 'business_studio_brief',
-    description: 'Short founder brief: program %, needs-attention categories, top next actions with WHY.',
+    description:
+      'Short founder brief derived from qualifying evidence: working-set objective summary + top next actions with WHY.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
@@ -74,16 +76,33 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
         contact_name: { type: 'string' },
         persona: { type: 'string' },
         insight_tags: { type: 'array', items: { type: 'string' } },
+        stance: {
+          type: 'string',
+          description: 'supports | contradicts | neutral relative to linked assumption — never auto-validates',
+        },
       },
       required: ['title', 'type'],
     },
   },
   {
+    name: 'business_studio_revoke_evidence',
+    description:
+      'Revoke (soft-delete) evidence. Downstream experiment/requirement/milestone/goal/funding counts recalculate from remaining qualifying evidence.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        evidence_id: { type: 'string' },
+        reason: { type: 'string' },
+      },
+      required: ['evidence_id'],
+    },
+  },
+  {
     name: 'business_studio_chain_status',
     description:
-      'READ-ONLY end-to-end chain snapshot: discovery experiment counts, program requirement %, '
-      + 'milestone/goal derived status, Funding Readiness customer_discovery, CRM-linked evidence, and next actions. '
-      + 'Use after attaching evidence to explain what changed.',
+      'READ-ONLY end-to-end chain + compact working_set: discovery counts, program %, milestone/goal, '
+      + 'Funding Readiness customer_discovery, assumption stance, and recommended next action. '
+      + 'Use after attaching evidence to explain what changed. Counts come only from qualifying evidence.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
@@ -196,44 +215,33 @@ async function callTool(scope, name, args = {}) {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state, local } = loaded;
-    const health = progress.businessHealth(state);
-    const snap = chain.chainSnapshot(state);
+    const brief = chain.workingSetBrief(state);
     return {
       ok: true,
       local,
-      business: state.business,
-      health,
-      chain: snap,
-      open_tasks: (state.tasks || []).filter((t) => t.status !== 'done').slice(0, 20),
-      experiments: health.experiments,
-      evidence_recent: (state.evidence || []).slice(0, 10),
-      guidance: 'Empty workspace is OK. Do not invent revenue, interviews, or progress.',
+      business: state.business
+        ? { id: state.business.id, name: state.business.name, founderName: state.business.founderName }
+        : null,
+      ...brief,
+      guidance:
+        'Minimum authoritative context for the current objective. '
+        + 'Do not invent metrics. Drill into evidence_ids only when needed. '
+        + 'Empty workspace is OK.',
     };
   }
 
   if (name === 'business_studio_brief') {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
-    const health = progress.businessHealth(loaded.state);
-    const snap = chain.chainSnapshot(loaded.state);
-    const attn = (health.categories || []).filter((c) => c.status === 'needs_attention');
+    const brief = chain.workingSetBrief(loaded.state);
     return {
       ok: true,
-      program: health.program,
-      chain: {
-        discovery_interviews: snap.metricDiscoveryInterviews,
-        funding_customer_discovery: snap.fundingCustomerDiscovery,
-        experiment: snap.experiment,
-        milestones: snap.milestones,
-        goals: snap.goals,
-      },
-      needs_attention: attn,
-      next_actions: attn.map((c) => ({
-        category: c.name,
-        action: c.recommendedAction,
-        why: c.reason,
-      })),
-      overdue_tasks: health.overdueTaskCount,
+      ...brief,
+      next_actions: [{
+        action: brief.recommended_next_action,
+        why: brief.reason,
+      }],
+      guidance: 'Task completion ≠ progress. Qualifying evidence meeting a requirement = progress.',
     };
   }
 
@@ -301,6 +309,7 @@ async function callTool(scope, name, args = {}) {
         contactName: args.contact_name || args.contactName,
         persona: args.persona,
         insightTags: args.insight_tags || args.insightTags,
+        stance: args.stance || args.hypothesis_stance,
         source: 'mcp',
       });
     } catch (err) {
@@ -311,6 +320,26 @@ async function callTool(scope, name, args = {}) {
       ok: true,
       evidence: result.evidence,
       links: result.links,
+      duplicate: !!result.duplicate,
+      working_set: result.chain?.workingSet || chain.workingSetBrief(state),
+      chain: result.chain,
+      persist: saved,
+    };
+  }
+
+  if (name === 'business_studio_revoke_evidence') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { state } = loaded;
+    const result = chain.revokeAndResync(state, args.evidence_id || args.evidenceId, {
+      reason: args.reason,
+    });
+    if (!result.ok) return result;
+    const saved = await saveState(scope, state);
+    return {
+      ok: true,
+      evidence: result.evidence,
+      working_set: result.chain?.workingSet || chain.workingSetBrief(state),
       chain: result.chain,
       persist: saved,
     };
@@ -319,10 +348,14 @@ async function callTool(scope, name, args = {}) {
   if (name === 'business_studio_chain_status') {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
+    const snap = chain.chainSnapshot(loaded.state);
     return {
       ok: true,
-      chain: chain.chainSnapshot(loaded.state),
-      guidance: 'Use this to explain what changed after evidence was attached. Do not invent counts.',
+      working_set: snap.workingSet,
+      chain: snap,
+      guidance:
+        'Counts come only from qualifying evidence. '
+        + 'Program completion ≠ assumption validation. Do not invent counts.',
     };
   }
 

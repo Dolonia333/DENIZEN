@@ -2,22 +2,14 @@
 
 /**
  * Explainable progress + business health for Business Studio.
- * Never invent percentages — derive from requirements, evidence, completion.
+ * Never invent percentages — derive from qualifying evidence only.
+ * Task completion ≠ business progress.
  */
 
+const evidenceLedger = require('./denizen-business-studio-evidence');
+
 function evidenceForRequirement(state, req) {
-  const evidence = Array.isArray(state.evidence) ? state.evidence : [];
-  return evidence.filter((e) => {
-    if (!e) return false;
-    if (req.evidenceType && e.type && e.type !== req.evidenceType && req.evidenceType !== 'document') {
-      // allow linked via requirement key
-    }
-    if (Array.isArray(e.linkedRequirementIds) && e.linkedRequirementIds.includes(req.id)) return true;
-    if (Array.isArray(e.linkedAssumptionKeys) && req.linkedAssumptionKey
-      && e.linkedAssumptionKeys.includes(req.linkedAssumptionKey)) return true;
-    if (e.requirementKey && e.requirementKey === req.key) return true;
-    return false;
-  });
+  return evidenceLedger.qualifyingEvidence(state, { requirement: req }).evidence;
 }
 
 function requirementProgress(state, req) {
@@ -97,11 +89,9 @@ function programProgress(state, program) {
 }
 
 function experimentProgress(exp, state) {
-  const evidence = (state.evidence || []).filter((e) =>
-    (Array.isArray(e.linkedExperimentIds) && e.linkedExperimentIds.includes(exp.id))
-    || e.experimentId === exp.id
-  );
-  const count = Math.max(Number(exp.completedCount) || 0, evidence.length);
+  // Count ONLY qualifying evidence linked to this experiment — never trust completedCount.
+  const q = evidenceLedger.qualifyingEvidence(state, { experimentId: exp.id });
+  const count = q.count;
   const target = Math.max(1, Number(exp.targetCount) || 1);
   const complete = count >= target;
   return {
@@ -112,9 +102,9 @@ function experimentProgress(exp, state) {
     complete,
     confidence: complete ? 'sufficient_to_decide' : 'insufficient',
     why: complete
-      ? `${count}/${target} experiment samples collected — ready for a decision (not auto-validated).`
-      : `${count}/${target} samples — insufficient evidence to validate the linked assumption.`,
-    evidenceIds: evidence.map((e) => e.id),
+      ? `${count}/${target} qualifying samples collected — ready for a decision (assumption not auto-validated).`
+      : `${count}/${target} qualifying samples — insufficient evidence to validate the linked assumption.`,
+    evidenceIds: q.evidenceIds,
   };
 }
 

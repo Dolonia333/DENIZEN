@@ -1,16 +1,19 @@
 'use strict';
 
 /**
- * Business Studio evidence chain — one source of truth for linking
- * discovery interviews across experiment → requirement → milestone → goal → funding.
- * Assumptions are never auto-validated; only confidence / counts move.
+ * Business Studio evidence chain — single writer + derived views.
+ *
+ * Downstream systems ask "what qualifying evidence exists?" via the ledger.
+ * This module attaches/revokes evidence and syncs *derived* display fields only.
+ * Assumptions are never auto-validated.
  */
 
 const progress = require('./denizen-business-studio-progress');
 const funding = require('./denizen-business-studio-funding');
+const ledger = require('./denizen-business-studio-evidence');
 
 function uid(prefix) {
-  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+  return ledger.uid(prefix);
 }
 
 function activeProgram(state) {
@@ -22,7 +25,6 @@ function findDiscoveryExperiment(state) {
   const list = Array.isArray(state.experiments) ? state.experiments : [];
   return list.find((e) => /interview|discovery/i.test(e.title || ''))
     || list.find((e) => e.method === 'customer_interview')
-    || list[0]
     || null;
 }
 
@@ -32,9 +34,6 @@ function findRequirement(state, key) {
   return (prog.requirements || []).find((r) => r.key === key) || null;
 }
 
-/**
- * Resolve default links for a discovery interview so one write touches the full chain.
- */
 function resolveDiscoveryLinks(state, input = {}) {
   const exp = input.experimentId
     ? (state.experiments || []).find((e) => e.id === input.experimentId)
@@ -56,14 +55,17 @@ function resolveDiscoveryLinks(state, input = {}) {
   };
 }
 
+/** Derived display caches only — never authoritative. */
 function syncMetricsFromEvidence(state) {
   const metrics = Array.isArray(state.metrics) ? state.metrics : [];
-  const evidence = Array.isArray(state.evidence) ? state.evidence : [];
-  const interviewCount = evidence.filter((e) => e && e.type === 'interview').length;
+  const req = findRequirement(state, 'discovery_interviews');
+  const q = req
+    ? ledger.qualifyingEvidence(state, { requirement: req })
+    : ledger.qualifyingEvidence(state, { type: 'interview', fundingKey: 'customer_discovery' });
   for (const met of metrics) {
     if (!met || met.source !== 'evidence') continue;
     if (met.key === 'discovery_interviews') {
-      met.current = interviewCount;
+      met.current = q.count;
       met.updatedAt = new Date().toISOString();
     }
   }
@@ -74,15 +76,19 @@ function syncExperimentCounts(state) {
   for (const exp of state.experiments || []) {
     if (!exp) continue;
     const ep = progress.experimentProgress(exp, state);
+    // Cache only — progress always re-derives from qualifying evidence
     exp.completedCount = ep.count;
     if (exp.assumptionKey) {
       const asm = (state.assumptions || []).find((a) => a.key === exp.assumptionKey);
-      if (asm) {
-        asm.confidence = ep.complete ? 'sufficient_to_decide' : 'insufficient';
-        // status stays testing / founder-decided — never auto-validate
-        if (asm.status !== 'validated') {
-          asm.status = 'testing';
-        }
+      if (asm && asm.status !== 'validated') {
+        const stance = ledger.assumptionStance(state, asm);
+        asm.confidence = stance.confidence;
+        asm.status = stance.status === 'validated' ? 'validated' : stance.status;
+        asm.stanceSummary = {
+          supports: stance.supports,
+          contradicts: stance.contradicts,
+          neutral: stance.neutral,
+        };
       }
     }
   }
@@ -129,9 +135,30 @@ function goalProgress(state, goal) {
   const metrics = [];
   const requirements = [];
   for (const key of keys) {
+    const req = findRequirement(state, key);
+    if (req) {
+      const rp = progress.requirementProgress(state, req);
+      requirements.push(rp);
+      metrics.push({
+        key,
+        name: req.title,
+        current: rp.count,
+        target: rp.target,
+        complete: rp.complete,
+      });
+      continue;
+    }
     const met = (state.metrics || []).find((m) => m.key === key);
     if (met) {
-      const current = Number(met.current) || 0;
+      // Prefer qualifying evidence over stale metric.current when source=evidence
+      let current = Number(met.current) || 0;
+      if (met.source === 'evidence' && met.key === 'discovery_interviews') {
+        const q = ledger.qualifyingEvidence(state, {
+          requirementKey: 'discovery_interviews',
+          type: 'interview',
+        });
+        current = q.count;
+      }
       const target = Math.max(1, Number(met.target) || 1);
       metrics.push({
         key,
@@ -141,10 +168,8 @@ function goalProgress(state, goal) {
         complete: current >= target,
       });
     }
-    const req = findRequirement(state, key);
-    if (req) requirements.push(progress.requirementProgress(state, req));
   }
-  const parts = [...metrics, ...requirements];
+  const parts = metrics.length ? metrics : requirements;
   const complete = parts.length > 0 && parts.every((p) => p.complete);
   const any = parts.some((p) => (p.current || p.count || 0) > 0);
   return {
@@ -154,11 +179,7 @@ function goalProgress(state, goal) {
     complete,
     derived: parts.length > 0,
     why: parts.length
-      ? parts.map((p) => {
-        if (p.target != null && p.current != null && p.name) return `${p.name}: ${p.current}/${p.target}`;
-        if (p.target != null && p.current != null) return `${p.key}: ${p.current}/${p.target}`;
-        return `${p.title || p.key}: ${p.count}/${p.target}`;
-      }).join(' · ')
+      ? parts.map((p) => `${p.name || p.title || p.key}: ${p.current ?? p.count}/${p.target}`).join(' · ')
       : 'Goal has no metricKeys linked to metrics or requirements.',
     metrics,
     requirements,
@@ -180,16 +201,13 @@ function syncDerivedStatuses(state) {
   return state;
 }
 
-/**
- * Attach evidence and wire the discovery chain when appropriate.
- * Mutates state in place; returns { evidence, links, chain }.
- */
 function attachEvidence(state, input = {}) {
   if (!state || typeof state !== 'object') throw new Error('state required');
   const type = String(input.type || 'manual').trim() || 'manual';
-  const isDiscovery = type === 'interview'
-    || input.kind === 'discovery_interview'
-    || input.autoLinkDiscovery === true;
+  const autoLink = input.autoLinkDiscovery !== false
+    && (type === 'interview'
+      || input.kind === 'discovery_interview'
+      || input.autoLinkDiscovery === true);
 
   let links = {
     experimentId: input.experimentId || input.experiment_id || null,
@@ -202,7 +220,7 @@ function attachEvidence(state, input = {}) {
     ).filter(Boolean),
   };
 
-  if (isDiscovery) {
+  if (autoLink) {
     const resolved = resolveDiscoveryLinks(state, {
       experimentId: links.experimentId,
       requirementKey: links.requirementKey,
@@ -231,6 +249,7 @@ function attachEvidence(state, input = {}) {
     persona: input.persona || null,
     insightTags: Array.isArray(input.insightTags) ? input.insightTags : (input.insight_tags || []),
     findings: Array.isArray(input.findings) ? input.findings : (input.insightTags || input.insight_tags || []),
+    stance: input.stance || input.hypothesisStance || 'neutral',
     experimentId: links.experimentId,
     linkedExperimentIds: links.experimentId ? [links.experimentId] : [],
     requirementKey: links.requirementKey,
@@ -242,7 +261,21 @@ function attachEvidence(state, input = {}) {
     contactName: input.contactName || input.contact_name || null,
     createdAt: input.createdAt || new Date().toISOString(),
     source: input.source || 'chain',
+    revoked: false,
+    status: 'active',
   };
+  evidence.fingerprint = ledger.evidenceFingerprint(evidence);
+
+  const dup = ledger.findDuplicate(state, evidence);
+  if (dup) {
+    syncDerivedStatuses(state);
+    return {
+      evidence: dup,
+      links,
+      duplicate: true,
+      chain: chainSnapshot(state),
+    };
+  }
 
   state.evidence = [evidence, ...(state.evidence || [])];
 
@@ -264,7 +297,7 @@ function attachEvidence(state, input = {}) {
   }
 
   syncDerivedStatuses(state);
-  return { evidence, links, chain: chainSnapshot(state) };
+  return { evidence, links, duplicate: false, chain: chainSnapshot(state) };
 }
 
 function attachDiscoveryInterview(state, input = {}) {
@@ -276,6 +309,13 @@ function attachDiscoveryInterview(state, input = {}) {
   });
 }
 
+function revokeAndResync(state, evidenceId, opts = {}) {
+  const result = ledger.revokeEvidence(state, evidenceId, opts);
+  if (!result.ok) return result;
+  syncDerivedStatuses(state);
+  return { ok: true, evidence: result.evidence, chain: chainSnapshot(state) };
+}
+
 function fundingItemByKey(state, key) {
   const ready = funding.evaluateFundingReadiness(state);
   for (const section of ready.sections || []) {
@@ -285,18 +325,115 @@ function fundingItemByKey(state, key) {
   return null;
 }
 
-/** Compact snapshot Jenny / tests can assert against. */
+function primaryAssumption(state) {
+  const asm = (state.assumptions || []).find((a) => a.status !== 'validated')
+    || (state.assumptions || [])[0]
+    || null;
+  if (!asm) return null;
+  return ledger.assumptionStance(state, asm);
+}
+
+function blockingMilestone(state) {
+  const milestones = (state.milestones || []).map((m) => milestoneProgress(state, m));
+  return milestones.find((m) => !m.complete && (m.status === 'active' || m.status === 'blocked' || m.status === 'todo'))
+    || null;
+}
+
+/**
+ * Compact agent working set — minimum authoritative context for the current objective.
+ * Not a dump of the company database.
+ */
+function workingSetBrief(state) {
+  const prog = progress.programProgress(state, activeProgram(state));
+  const disc = (prog.requirements || []).find((r) => r.key === 'discovery_interviews') || null;
+  const fr = fundingItemByKey(state, 'customer_discovery');
+  const asm = primaryAssumption(state);
+  const block = blockingMilestone(state);
+  const discoveryExpEntity = findDiscoveryExperiment(state);
+  const experiment = discoveryExpEntity
+    ? progress.experimentProgress(discoveryExpEntity, state)
+    : null;
+  const missing = disc ? Math.max(0, disc.target - disc.count) : 0;
+  const objective = (state.goals || []).find((g) => g.status !== 'complete')?.title
+    || 'Validate customer segment with qualifying evidence';
+
+  let recommended = 'Record qualifying discovery evidence linked to the active experiment.';
+  let reason = 'No discovery requirement found.';
+  if (disc && !disc.complete) {
+    recommended = `Conduct ${missing} additional qualifying interview${missing === 1 ? '' : 's'}`;
+    reason = `E3 requirement requires ${disc.target}; current qualifying evidence count is ${disc.count}.`;
+  } else if (disc?.complete && asm && !asm.validated && asm.confidence !== 'contradicted') {
+    recommended = 'Review interview findings and decide on the primary assumption (do not auto-validate).';
+    reason = `Program discovery is ${disc.count}/${disc.target}, but the hypothesis remains unresolved.`;
+  } else if (asm?.confidence === 'contradicted') {
+    recommended = 'Revisit the primary assumption — evidence currently contradicts the thesis.';
+    reason = asm.why;
+  } else if (fr && !fr.complete) {
+    recommended = 'Attach evidence to remaining Funding Readiness gaps.';
+    reason = fr.display || fr.why || 'Customer discovery funding item incomplete.';
+  }
+
+  return {
+    current_objective: objective,
+    e3_discovery: disc
+      ? {
+        count: disc.count,
+        target: disc.target,
+        complete: disc.complete,
+        label: `${disc.count}/${disc.target} qualifying interviews`,
+        evidence_ids: disc.evidenceIds || [],
+      }
+      : null,
+    evidence_count: disc?.count ?? ledger.qualifyingEvidence(state, { type: 'interview' }).count,
+    primary_assumption: asm
+      ? {
+        key: asm.key,
+        title: asm.title,
+        status: asm.validated ? 'validated' : (asm.confidence === 'contradicted' ? 'challenged' : 'unresolved'),
+        confidence: asm.confidence,
+        supports: asm.supports,
+        contradicts: asm.contradicts,
+        why: asm.why,
+      }
+      : { status: 'none' },
+    funding_readiness: fr
+      ? {
+        customer_discovery: fr.complete ? 'complete' : 'incomplete',
+        count: fr.count,
+        target: fr.target,
+        display: fr.display,
+      }
+      : null,
+    blocking_milestone: block
+      ? { title: block.title, status: block.status, why: block.why }
+      : null,
+    recommended_next_action: recommended,
+    reason,
+    program_percent: prog.percent,
+    experiment: experiment
+      ? { id: experiment.id, title: experiment.title, count: experiment.count, target: experiment.target }
+      : null,
+  };
+}
+
 function chainSnapshot(state) {
   const health = progress.businessHealth(state);
   const prog = health.program;
   const milestones = (state.milestones || []).map((m) => milestoneProgress(state, m));
   const goals = (state.goals || []).map((g) => goalProgress(state, g));
-  const discoveryExp = (health.experiments || []).find((e) => /interview|discovery/i.test(e.title))
-    || health.experiments?.[0]
-    || null;
+  const discoveryExpEntity = findDiscoveryExperiment(state);
+  const discoveryExp = discoveryExpEntity
+    ? progress.experimentProgress(discoveryExpEntity, state)
+    : ((health.experiments || [])[0] || null);
   const frDiscovery = fundingItemByKey(state, 'customer_discovery');
+  const discReq = (prog?.requirements || []).find((r) => r.key === 'discovery_interviews') || null;
+  const metricCount = discReq
+    ? discReq.count
+    : ledger.qualifyingEvidence(state, { type: 'interview', fundingKey: 'customer_discovery' }).count;
   const metric = (state.metrics || []).find((m) => m.key === 'discovery_interviews');
-  const crmLinked = (state.evidence || []).filter((e) => e && e.contactId).length;
+  const crmLinked = ledger.qualifyingEvidence(state, {}).evidence.filter((e) => e.contactId).length;
+  const asm = primaryAssumption(state);
+  const block = blockingMilestone(state);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -304,7 +441,7 @@ function chainSnapshot(state) {
       percent: prog?.percent ?? null,
       label: prog?.label || null,
       why: prog?.why || null,
-      discoveryRequirement: (prog?.requirements || []).find((r) => r.key === 'discovery_interviews') || null,
+      discoveryRequirement: discReq,
     },
     experiment: discoveryExp,
     milestones,
@@ -319,11 +456,19 @@ function chainSnapshot(state) {
         status: frDiscovery.status,
       }
       : null,
-    metricDiscoveryInterviews: metric
-      ? { key: metric.key, current: metric.current, target: metric.target }
-      : null,
+    metricDiscoveryInterviews: {
+      key: 'discovery_interviews',
+      current: metricCount,
+      target: metric?.target || discReq?.target || 10,
+    },
+    primaryAssumption: asm,
+    blockingMilestone: block,
     crmLinkedEvidenceCount: crmLinked,
-    relationsCount: (state.relations || []).length,
+    relationsCount: (state.relations || []).filter((r) => {
+      if (!r?.evidenceId) return true;
+      const ev = ledger.findEvidenceById(state, r.evidenceId);
+      return !ev || ledger.isActiveEvidence(ev);
+    }).length,
     nextActions: (health.categories || [])
       .filter((c) => c.status === 'needs_attention' || c.status === 'in_progress')
       .map((c) => ({
@@ -332,6 +477,7 @@ function chainSnapshot(state) {
         action: c.recommendedAction,
         why: c.reason,
       })),
+    workingSet: workingSetBrief(state),
     healthCategories: health.categories,
   };
 }
@@ -349,6 +495,10 @@ module.exports = {
   goalProgress,
   attachEvidence,
   attachDiscoveryInterview,
+  revokeAndResync,
   chainSnapshot,
+  workingSetBrief,
   fundingItemByKey,
+  primaryAssumption,
+  blockingMilestone,
 };

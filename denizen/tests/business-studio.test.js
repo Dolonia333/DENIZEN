@@ -231,9 +231,11 @@ describe('business-studio MCP tools + scopes', () => {
     assert.equal(scopes.requiredScope('business_studio_chain_status'), 'read');
     assert.equal(scopes.requiredScope('business_studio_apply_program_template'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_add_evidence'), 'crm_write');
+    assert.equal(scopes.requiredScope('business_studio_revoke_evidence'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_upsert_task'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_create_experiment'), 'crm_write');
     assert.ok(tools.isBusinessStudioTool('business_studio_chain_status'));
+    assert.ok(tools.isBusinessStudioTool('business_studio_revoke_evidence'));
   });
 });
 

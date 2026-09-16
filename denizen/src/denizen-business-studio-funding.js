@@ -152,26 +152,17 @@ function emptyFundingState() {
 }
 
 function evidenceForFundingItem(state, item) {
-  const evidence = Array.isArray(state.evidence) ? state.evidence : [];
-  return evidence.filter((e) => {
-    if (!e) return false;
-    if (Array.isArray(e.linkedFundingKeys) && e.linkedFundingKeys.includes(item.key)) return true;
-    if (e.fundingKey === item.key) return true;
-    // Heuristic: type match + optional tag — never invent completeness from tasks
-    if (item.evidenceTypes && item.evidenceTypes.includes(e.type)
-      && (e.fundingKey === item.key || (Array.isArray(e.tags) && e.tags.includes(item.key)))) {
-      return true;
-    }
-    return false;
-  });
+  const evidenceLedger = require('./denizen-business-studio-evidence');
+  return evidenceLedger.qualifyingEvidence(state, { fundingItem: item }).evidence;
 }
 
 function evaluateFundingItem(state, item, fundingOverrides = {}) {
   const linked = evidenceForFundingItem(state, item);
   const override = fundingOverrides[item.key] || {};
   const target = Math.max(1, Number(item.targetCount) || 1);
-  const count = Math.max(linked.length, Number(override.manualCount) || 0);
-  // warnMode:validation (e.g. SOM) — evidence alone is not enough; founder must confirm or mark validated
+  // Count ONLY qualifying linked evidence — never invent via manualCount alone for counted items.
+  // manualCount may supplement only when founder explicitly marks complete for non-counted items.
+  const count = linked.length;
   const autoComplete = item.warnMode === 'validation'
     ? !!(override.markedComplete || override.validated)
     : (count >= target);
