@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const STYLE_ID = 'denizen-buzz-capture-style';
+  const STYLE_ID = 'denizen-buzz-capture-style-v2';
   const RING_ID = 'denizen-buzz-ring';
   const NOTE_ID = 'denizen-buzz-note';
   const CROP_ID = 'denizen-buzz-crop';
@@ -155,7 +155,8 @@
         right: max(16px, env(safe-area-inset-right));
         bottom: calc(96px + env(safe-area-inset-bottom, 0px));
         width: min(360px, calc(100vw - 24px));
-        z-index: 2147483201;
+        /* Above the phone FAB — otherwise Discard/Stop/Send sit under Buzz and cannot be tapped. */
+        z-index: 2147483646;
         background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(2,6,23,0.96));
         border: 1px solid rgba(250, 204, 21, 0.35);
         border-radius: 16px;
@@ -163,22 +164,29 @@
         color: #e2e8f0;
         font-family: "IBM Plex Sans", system-ui, sans-serif;
         overflow: hidden;
+        pointer-events: auto;
       }
       html.denizen-phone #${NOTE_ID} {
         right: max(10px, env(safe-area-inset-right));
         left: max(10px, env(safe-area-inset-left));
-        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(88px + env(safe-area-inset-bottom, 0px));
         width: auto;
-        max-height: min(70vh, calc(100dvh - 80px));
+        max-height: min(62vh, calc(100dvh - 120px));
       }
       html.denizen-phone #${NOTE_ID} textarea { min-height: 64px; font-size: 16px; }
       #${NOTE_ID}.open { display: flex; flex-direction: column; }
       #${NOTE_ID} header {
-        display: flex; align-items: center; justify-content: space-between;
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
         padding: 10px 12px 8px; border-bottom: 1px solid rgba(148,163,184,0.18);
       }
+      #${NOTE_ID} header .bz-head-main { min-width: 0; flex: 1; }
       #${NOTE_ID} header strong { font-size: 13px; color: #fde68a; }
       #${NOTE_ID} header span { font-size: 11px; color: #94a3b8; }
+      #${NOTE_ID} .bz-close {
+        flex: 0 0 auto; width: 36px; height: 36px; border-radius: 999px;
+        border: 1px solid #475569; background: #0f172a; color: #e2e8f0;
+        font-size: 20px; line-height: 1; cursor: pointer;
+      }
       #${NOTE_ID} .bz-preview {
         display: none; max-height: 140px; object-fit: contain; width: 100%;
         background: #020617; border-bottom: 1px solid rgba(148,163,184,0.12);
@@ -193,11 +201,12 @@
         padding: 0 12px 8px; font-size: 11px; color: #94a3b8;
       }
       #${NOTE_ID} footer {
-        display: flex; gap: 8px; padding: 8px 12px 12px; justify-content: flex-end;
+        display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px 12px; justify-content: flex-end;
       }
       #${NOTE_ID} footer button {
         border-radius: 999px; border: 1px solid #334155; background: transparent;
-        color: #cbd5e1; padding: 6px 12px; font-size: 12px; cursor: pointer;
+        color: #cbd5e1; padding: 10px 14px; font-size: 13px; cursor: pointer;
+        min-height: 40px; touch-action: manipulation;
       }
       #${NOTE_ID} footer button.primary {
         background: #a3e635; color: #052e16; border-color: #a3e635; font-weight: 700;
@@ -210,8 +219,17 @@
       #${NOTE_ID} [data-note="stop"] { display: none; }
       #${NOTE_ID}.recording [data-note="stop"] { display: inline-flex; }
       #${NOTE_ID}.recording [data-note="send"] { display: none; }
+      /* Keep Discard reachable while recording so the sheet is never a dead end. */
+      html.denizen-phone #${NOTE_ID} footer { justify-content: space-between; }
+      html.denizen-phone #${NOTE_ID} [data-note="discard"] { order: -1; margin-right: auto; }
+      html.denizen-buzz-note-open #denizen-phone-fab,
+      html.denizen-buzz-note-open #denizen-phone-fab:hover,
+      html.denizen-buzz-note-open #denizen-phone-fab:focus-within {
+        pointer-events: none !important;
+        z-index: 2147483590 !important;
+      }
       #${CROP_ID} {
-        display: none; position: fixed; inset: 0; z-index: 2147483602;
+        display: none; position: fixed; inset: 0; z-index: 2147483647;
         background: rgba(2,6,23,0.72); cursor: crosshair;
         touch-action: none;
       }
@@ -421,32 +439,58 @@
     if (noteEl) return;
     noteEl = document.createElement('div');
     noteEl.id = NOTE_ID;
+    noteEl.setAttribute('role', 'dialog');
+    noteEl.setAttribute('aria-label', 'Buzz note');
     noteEl.innerHTML = `
       <header>
-        <div>
+        <div class="bz-head-main">
           <strong>Buzz note</strong>
           <span> — you see it before it goes</span>
         </div>
         <label>To
           <select id="bz-target" aria-label="Send to"></select>
         </label>
+        <button type="button" class="bz-close" data-note="discard" aria-label="Close note">×</button>
       </header>
       <img class="bz-preview" id="bz-preview" alt="Screenshot preview" />
       <textarea id="bz-note" placeholder="One line — what should they do?" maxlength="4000"></textarea>
       <div class="bz-meta" id="bz-meta"></div>
       <footer>
-        <button type="button" data-note="mic" title="Dictation">Mic</button>
         <button type="button" data-note="discard">Discard</button>
+        <button type="button" data-note="mic" title="Dictation">Mic</button>
         <button type="button" data-note="stop">Stop</button>
         <button type="button" class="primary" data-note="send">Send</button>
       </footer>
     `;
-    noteEl.addEventListener('click', (e) => {
-      const act = e.target.closest('[data-note]')?.dataset.note;
+    const runNoteAct = (act) => {
+      if (!act) return;
       if (act === 'discard') closeNote();
-      if (act === 'send') void sendDrop();
-      if (act === 'stop') stopRecording();
-      if (act === 'mic') void startDictate();
+      else if (act === 'send') void sendDrop();
+      else if (act === 'stop') stopRecording();
+      else if (act === 'mic') void startDictate();
+    };
+    // pointerup is reliable on iOS (same pattern as the ring).
+    let lastNoteActAt = 0;
+    noteEl.addEventListener('pointerup', (e) => {
+      if (e.button != null && e.button !== 0) return;
+      const btn = e.target.closest?.('[data-note]');
+      if (!btn || btn.disabled) return;
+      e.preventDefault();
+      e.stopPropagation();
+      lastNoteActAt = Date.now();
+      runNoteAct(btn.dataset.note);
+    });
+    noteEl.addEventListener('click', (e) => {
+      const btn = e.target.closest?.('[data-note]');
+      if (!btn || btn.disabled) return;
+      if (Date.now() - lastNoteActAt < 450) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      runNoteAct(btn.dataset.note);
     });
     document.body.appendChild(noteEl);
   }
@@ -521,6 +565,7 @@
     fillTargets();
     state.kind = kind || state.kind || 'note';
     noteEl.classList.add('open');
+    document.documentElement.classList.add('denizen-buzz-note-open');
     const ta = noteEl.querySelector('#bz-note');
     ta.value = state.note || '';
     const preview = noteEl.querySelector('#bz-preview');
@@ -551,6 +596,7 @@
     stopRecording();
     closeCrop();
     noteEl?.classList.remove('open', 'recording');
+    document.documentElement.classList.remove('denizen-buzz-note-open');
     const meta = noteEl?.querySelector('#bz-meta');
     if (meta) meta.textContent = '';
     const ta = noteEl?.querySelector('#bz-note');
@@ -1076,6 +1122,7 @@
   }
 
   function stopRecording() {
+    const wasRecording = !!(state.recording || state.speechRec || state.recorder);
     clearTimeout(state.recTimer);
     state.recTimer = null;
     speechSession += 1;
@@ -1086,6 +1133,14 @@
     state.meetingTracks.forEach((t) => { try { t.stop(); } catch (_) {} });
     state.meetingTracks = [];
     noteEl?.classList.remove('recording');
+    if (wasRecording && noteEl?.classList.contains('open')) {
+      const meta = noteEl.querySelector('#bz-meta');
+      if (meta && !meta.textContent) {
+        meta.textContent = 'Stopped — add a line if needed, then Send. Or Discard to close.';
+      } else if (meta && /dictat|recording on this mic|recording…/i.test(meta.textContent)) {
+        meta.textContent = 'Stopped — edit if needed, then Send. Or Discard / × to close.';
+      }
+    }
   }
 
   async function sendDrop() {
@@ -1093,6 +1148,11 @@
     state.note = String(ta?.value || '').trim();
     const sel = noteEl?.querySelector('#bz-target');
     if (sel?.value) state.target = sel.value;
+    if (!state.note && !state.transcript && !state.imageDataUrl) {
+      const meta = noteEl?.querySelector('#bz-meta');
+      if (meta) meta.textContent = 'Add a line (or stop recording first), then Send — or Discard to close.';
+      return;
+    }
     const sendBtn = noteEl?.querySelector('[data-note="send"]');
     if (sendBtn) sendBtn.disabled = true;
     const attachments = [];
@@ -1124,7 +1184,12 @@
       closeNote();
     } catch (err) {
       const meta = noteEl?.querySelector('#bz-meta');
-      if (meta) meta.textContent = err.message || 'Could not send';
+      if (meta) {
+        const msg = err.message || 'Could not send';
+        meta.textContent = /demo|disabled|chat/i.test(msg)
+          ? `${msg} — tap × or Discard to close.`
+          : `${msg} — edit and retry, or Discard to close.`;
+      }
     } finally {
       if (sendBtn) sendBtn.disabled = false;
     }

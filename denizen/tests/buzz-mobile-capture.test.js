@@ -52,4 +52,14 @@ describe('Buzz mobile capture', () => {
     assert.match(buzz, /captureGen/);
     assert.match(buzz, /speechSession/);
   });
+
+  it('keeps Buzz note dismissible above the phone FAB on mobile', () => {
+    assert.match(buzz, /denizen-buzz-note-open/);
+    assert.match(buzz, /z-index: 2147483646/);
+    assert.match(buzz, /data-note="discard"/);
+    assert.match(buzz, /aria-label="Close note"/);
+    assert.match(buzz, /pointerup is reliable on iOS \(same pattern as the ring\)/);
+    const corner = fs.readFileSync(path.join(ROOT, 'src', 'corner-hud-autohide.js'), 'utf8');
+    assert.match(corner, /denizen-buzz-note-open[\s\S]*?pointer-events: none !important/);
+  });
 });

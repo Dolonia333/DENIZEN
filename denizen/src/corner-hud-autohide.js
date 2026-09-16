@@ -79,19 +79,27 @@
       html.denizen-buzz-ring-open #denizen-phone-fab:hover,
       html.denizen-buzz-ring-open #denizen-phone-fab:focus-within,
       html.denizen-buzz-ring-open #denizen-phone-fab.denizen-press-active,
-      html.denizen-buzz-ring-open #denizen-phone-fab:active {
+      html.denizen-buzz-ring-open #denizen-phone-fab:active,
+      html.denizen-buzz-note-open #denizen-phone-fab,
+      html.denizen-buzz-note-open #denizen-phone-fab:hover,
+      html.denizen-buzz-note-open #denizen-phone-fab:focus-within,
+      html.denizen-buzz-note-open #denizen-phone-fab.denizen-press-active,
+      html.denizen-buzz-note-open #denizen-phone-fab:active {
         right: 168px !important;
         bottom: 152px !important;
         transform: none !important;
         opacity: 1 !important;
-        /* Must not steal taps from Buzz ring actions (FAB sits above the ring). */
+        /* Must not steal taps from Buzz ring/note actions (FAB sits above them). */
         pointer-events: none !important;
         visibility: visible !important;
         z-index: 2147483590 !important;
       }
       html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab,
       html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab:hover,
-      html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab:focus-within {
+      html.denizen-phone.denizen-buzz-ring-open #denizen-phone-fab:focus-within,
+      html.denizen-phone.denizen-buzz-note-open #denizen-phone-fab,
+      html.denizen-phone.denizen-buzz-note-open #denizen-phone-fab:hover,
+      html.denizen-phone.denizen-buzz-note-open #denizen-phone-fab:focus-within {
         right: 50% !important;
         bottom: 38% !important;
         transform: translateX(50%) !important;

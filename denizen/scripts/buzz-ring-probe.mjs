@@ -251,10 +251,45 @@ async function run() {
     JSON.stringify(st),
   );
   await page.screenshot({ path: `${OUT}/06-say.png` });
-  await page.evaluate(() => {
-    document.querySelector('#denizen-buzz-note [data-note="stop"]')?.click?.();
-    globalThis.DenizenBuzzCapture?.closeNote?.();
+
+  // Note must stay dismissible above the FAB (the stuck-sheet bug).
+  const noteHit = await page.evaluate(() => {
+    const discard = document.querySelector('#denizen-buzz-note [data-note="discard"]');
+    const close = document.querySelector('#denizen-buzz-note .bz-close');
+    const fab = document.getElementById('denizen-phone-fab');
+    const probe = (btn) => {
+      if (!btn) return { ok: false, reason: 'missing' };
+      const r = btn.getBoundingClientRect();
+      const cx = Math.round(r.left + r.width / 2);
+      const cy = Math.round(r.top + r.height / 2);
+      const top = document.elementFromPoint(cx, cy);
+      const hits = !!(top && (top === btn || btn.contains(top) || top.closest?.('[data-note="discard"]')));
+      return {
+        ok: hits,
+        reason: hits ? 'hit' : `blocked:${top?.id || String(top?.className) || top?.tagName}`,
+        fabPe: fab && getComputedStyle(fab).pointerEvents,
+        noteZ: getComputedStyle(document.getElementById('denizen-buzz-note')).zIndex,
+        htmlNote: document.documentElement.classList.contains('denizen-buzz-note-open'),
+      };
+    };
+    return { discard: probe(discard), close: probe(close) };
   });
+  check('note Discard hit-test above FAB', noteHit.discard.ok, JSON.stringify(noteHit.discard));
+  check('note × close hit-test above FAB', noteHit.close.ok, JSON.stringify(noteHit.close));
+
+  const discardBox = await page.locator('#denizen-buzz-note .bz-close').boundingBox();
+  if (discardBox) {
+    await page.touchscreen.tap(discardBox.x + discardBox.width / 2, discardBox.y + discardBox.height / 2);
+  } else {
+    await page.locator('#denizen-buzz-note [data-note="discard"]').first().click({ force: true });
+  }
+  await page.waitForTimeout(600);
+  const closed = await page.evaluate(() => ({
+    note: !!document.getElementById('denizen-buzz-note')?.classList.contains('open'),
+    html: document.documentElement.classList.contains('denizen-buzz-note-open'),
+  }));
+  check('× / Discard closes Buzz note', !closed.note && !closed.html, JSON.stringify(closed));
+  await page.screenshot({ path: `${OUT}/06b-note-closed.png` });
 
   // Apps
   await page.evaluate(() => globalThis.DenizenBuzzCapture?.closeRing?.());
