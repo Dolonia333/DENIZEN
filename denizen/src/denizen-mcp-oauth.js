@@ -17,11 +17,24 @@
  */
 
 const crypto = require('node:crypto');
+const npcRoster = require('./npc-roster');
 
 const CODE_TTL_MS = 5 * 60 * 1000;       // auth code lives 5 min
 const CLIENT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const _clients = new Map();              // client_id -> { redirect_uris, name, created }
 const _codes = new Map();                // code -> { accessToken, npcKey, codeChallenge, redirectUri, clientId, expires }
+
+function normalizeApproveNpcKey(raw) {
+  return npcRoster.canonicalizeNpcKey(raw);
+}
+
+function unknownNpcDescription(npcKey) {
+  const suggestion = npcRoster.suggestNpcKey(npcKey);
+  if (suggestion && suggestion !== npcKey) {
+    return `Teammate "${npcKey}" is not a known office NPC. Did you mean "${suggestion}"? Update the ChatGPT connector URL to /mcp/npc/${suggestion} and try Allow again.`;
+  }
+  return `Teammate "${npcKey}" is not a known office NPC. Use a Connect AI link from Denizen (e.g. /mcp/npc/josh), then try Allow again.`;
+}
 
 function sweep() {
   const now = Date.now();
@@ -119,7 +132,10 @@ function esc(s) {
 }
 
 function consentPage({ npcKey, clientName, params }) {
-  const npcLabel = npcKey ? npcKey.charAt(0).toUpperCase() + npcKey.slice(1) : 'your NPC';
+  const npcLabel = npcKey
+    ? (npcRoster.entries.find((e) => e.folder === npcKey)?.display
+      || (npcKey.charAt(0).toUpperCase() + npcKey.slice(1)))
+    : 'your NPC';
   const p = JSON.stringify(params);
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -182,8 +198,11 @@ function consentPage({ npcKey, clientName, params }) {
     try{
       const res=await fetch('/mcp/oauth/approve',{method:'POST',headers:{'Content-Type':'application/json','X-Session-Id':sess.session_id||'','X-Session-Token':sess.session_token||''},
         body:JSON.stringify({ ...PARAMS, session_id:sess.session_id, session_token:sess.session_token })});
-      const data=await res.json();
-      if(!res.ok||!data.redirect) throw new Error(data.error||'Approval failed');
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok||!data.redirect){
+        const detail=data.error_description||data.error||('Approval failed ('+res.status+')');
+        throw new Error(detail);
+      }
       location.href=data.redirect;
     }catch(e){ const el=document.getElementById('err'); el.textContent=e.message||'Could not connect'; el.style.display='block'; btn.textContent='Allow'; btn.disabled=false; }
   }
@@ -265,7 +284,9 @@ async function handleOAuthRoute(req, res, urlPath, deps) {
     if (!params.code_challenge || params.code_challenge_method !== 'S256') {
       return (send(res, 400, { error: 'invalid_request', error_description: 'PKCE S256 required' }), true);
     }
-    const npcKey = npcKeyFromResource(params.resource) || (q.get('npc') || '').toLowerCase();
+    const npcKey = normalizeApproveNpcKey(
+      npcKeyFromResource(params.resource) || (q.get('npc') || ''),
+    );
     const client = _clients.get(params.client_id);
     const clientName = client?.name || 'an AI client';
     sendHtml(res, 200, consentPage({ npcKey, clientName, params: { ...params, npc: npcKey } }));
@@ -276,12 +297,13 @@ async function handleOAuthRoute(req, res, urlPath, deps) {
   if (req.method === 'POST' && urlPath === '/mcp/oauth/approve') {
     const body = await readBody(req);
     const sessionId = body.session_id || req.headers['x-session-id'];
-    const npcKey = String(body.npc || npcKeyFromResource(body.resource) || '').toLowerCase().trim();
+    const requestedKey = String(body.npc || npcKeyFromResource(body.resource) || '').toLowerCase().trim();
+    const npcKey = normalizeApproveNpcKey(requestedKey);
     if (!sessionId || !npcKey) {
       return (send(res, 400, { error: 'invalid_request', error_description: 'session and npc required' }), true);
     }
     if (!body.code_challenge || !body.redirect_uri) {
-      return (send(res, 400, { error: 'invalid_request' }), true);
+      return (send(res, 400, { error: 'invalid_request', error_description: 'code_challenge and redirect_uri required' }), true);
     }
     let access;
     try {
@@ -289,11 +311,51 @@ async function handleOAuthRoute(req, res, urlPath, deps) {
     } catch (err) {
       return (send(res, 403, { error: 'access_denied', error_description: err?.message || 'session invalid' }), true);
     }
+    const orgId = access?.orgId
+      || (typeof deps.resolveOrgId === 'function' ? await deps.resolveOrgId(access, sessionId) : null)
+      || (typeof deps.getDefaultOrgId === 'function' ? deps.getDefaultOrgId() : null)
+      || null;
+    if (!orgId) {
+      return (send(res, 400, {
+        error: 'invalid_request',
+        error_description: 'Your Denizen session has no organization. Sign in with a team office code on denizen.dolonia.cloud, then click Allow again.',
+      }), true);
+    }
     let minted;
     try {
-      minted = await deps.createMcpToken({ orgId: access.orgId, npcKey, sessionId, label: 'oauth' });
+      minted = await deps.createMcpToken({ orgId, npcKey, sessionId, label: 'oauth' });
     } catch (err) {
-      return (send(res, 500, { error: 'server_error', error_description: err?.message || 'token mint failed' }), true);
+      const msg = String(err?.message || 'token mint failed');
+      console.error('[mcp-oauth] token mint failed', { npcKey, requestedKey, sessionId, orgId, err: msg });
+      if (/demo org/i.test(msg)) {
+        return (send(res, 403, {
+          error: 'access_denied',
+          error_description: 'Demo offices cannot connect ChatGPT or Claude. Join a team office, then try Allow again.',
+        }), true);
+      }
+      if (/protected/i.test(msg)) {
+        return (send(res, 403, {
+          error: 'access_denied',
+          error_description: `Teammate "${npcKey}" is protected and cannot be connected via MCP.`,
+        }), true);
+      }
+      if (/database unavailable|missing org|org_id.*required/i.test(msg)) {
+        return (send(res, 400, {
+          error: 'invalid_request',
+          error_description: 'Could not mint an MCP token for this session. Sign in to your team office and retry.',
+        }), true);
+      }
+      // FK 23503 / "not present in table denizen_npcs" — usually a typo'd connector URL.
+      if (/23503|denizen_npcs|is not present|unknown npc|not a known/i.test(msg)) {
+        return (send(res, 400, {
+          error: 'invalid_request',
+          error_description: unknownNpcDescription(requestedKey || npcKey),
+        }), true);
+      }
+      return (send(res, 500, { error: 'server_error', error_description: msg }), true);
+    }
+    if (!minted?.token) {
+      return (send(res, 500, { error: 'server_error', error_description: 'token mint returned no access token' }), true);
     }
     const code = crypto.randomBytes(32).toString('base64url');
     _codes.set(code, {

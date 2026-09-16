@@ -537,7 +537,8 @@ async function handleRpc(scope, req, res, message, sessionId) {
 }
 
 async function handleHttpRequest(req, res, npcKeyFromPath) {
-  const npcKey = String(npcKeyFromPath || '').toLowerCase().trim();
+  const npcRoster = require('./npc-roster');
+  const npcKey = npcRoster.canonicalizeNpcKey(npcKeyFromPath);
   if (!npcKey) {
     return sendJson(res, 400, { ok: false, error: 'npc_key required' });
   }
@@ -550,7 +551,7 @@ async function handleHttpRequest(req, res, npcKeyFromPath) {
   }
 
   const pathKey = reqUrl.pathname.split('/').filter(Boolean).pop();
-  if (pathKey && pathKey !== npcKey) {
+  if (pathKey && npcRoster.canonicalizeNpcKey(pathKey) !== npcKey) {
     return sendJson(res, 400, { ok: false, error: 'npc_key mismatch' });
   }
 
@@ -1083,9 +1084,20 @@ async function createMcpToken({
   clientType = null,
   metadata = null,
 } = {}) {
-  if (!denizenDb.enabled || !orgId || !npcKey) {
+  const npcRoster = require('./npc-roster');
+  const resolvedKey = npcRoster.canonicalizeNpcKey(npcKey);
+  if (!denizenDb.enabled || !orgId || !resolvedKey) {
     throw new Error('database unavailable or missing org/npc');
   }
+  if (!npcRoster.isKnownNpcFolder(resolvedKey)) {
+    const hint = npcRoster.suggestNpcKey(npcKey);
+    throw new Error(
+      hint && hint !== resolvedKey
+        ? `unknown npc "${npcKey}" (did you mean "${hint}"?)`
+        : `unknown npc "${npcKey}"`,
+    );
+  }
+  npcKey = resolvedKey;
 
   const token = crypto.randomBytes(32).toString('base64url');
   const tokenHash = hashSessionToken(token);
@@ -1139,6 +1151,9 @@ async function createMcpToken({
 }
 
 function buildConnectInfo(npcKey, baseUrl) {
+  const npcRoster = require('./npc-roster');
+  const resolved = npcRoster.canonicalizeNpcKey(npcKey);
+  npcKey = resolved;
   const base = String(baseUrl || getPublicBaseUrl()).replace(/\/$/, '');
   const url = `${base}/mcp/npc/${encodeURIComponent(npcKey)}`;
   return {

@@ -44,14 +44,23 @@ const deps = {
   createMcpToken: async ({ npcKey }) => ({ token: `tok-${npcKey}-secret`, mcp_url: `${BASE}/mcp/npc/${npcKey}` }),
 };
 
-async function call(method, url, opts) {
+async function call(method, url, opts, overrideDeps) {
   const req = mockReq(method, url, opts);
   const res = mockRes();
-  const handled = await oauth.handleOAuthRoute(req, res, new URL(url, BASE).pathname, deps);
+  const handled = await oauth.handleOAuthRoute(req, res, new URL(url, BASE).pathname, { ...deps, ...(overrideDeps || {}) });
   let json = null;
   try { json = JSON.parse(res.body); } catch (_) { /* html */ }
   return { handled, res, json };
 }
+
+const approveBody = {
+  session_id: 'sess-good',
+  npc: 'joshi',
+  redirect_uri: 'https://chatgpt.com/cb',
+  code_challenge: 'challenge',
+  code_challenge_method: 'S256',
+  resource: `${BASE}/mcp/npc/joshi`,
+};
 
 describe('denizen-mcp-oauth', () => {
   it('serves authorization-server metadata', async () => {
@@ -153,5 +162,128 @@ describe('denizen-mcp-oauth', () => {
   it('builds a WWW-Authenticate header pointing at resource metadata', () => {
     const h = oauth.wwwAuthenticate(BASE, 'lucy');
     assert.match(h, /resource_metadata="https:\/\/office\.example\.com\/\.well-known\/oauth-protected-resource\/mcp\/npc\/lucy"/);
+  });
+
+  it('consent page surfaces error_description from approve failures', async () => {
+    const url = `/mcp/oauth/authorize?response_type=code&client_id=dz-x&redirect_uri=${encodeURIComponent('https://chatgpt.com/cb')}`
+      + `&code_challenge=abc&code_challenge_method=S256&state=s1&resource=${encodeURIComponent(`${BASE}/mcp/npc/joshi`)}`;
+    const { res } = await call('GET', url);
+    assert.match(res.body, /error_description/);
+    assert.match(res.body, /data\.error_description\|\|data\.error/);
+  });
+
+  it('approve rejects when session has no org and no default org', async () => {
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: approveBody,
+    }, {
+      guardVisitorFeature: async () => ({ orgId: null }),
+      getDefaultOrgId: () => null,
+    });
+    assert.equal(approve.res.statusCode, 400);
+    assert.equal(approve.json.error, 'invalid_request');
+    assert.match(approve.json.error_description, /no organization/i);
+  });
+
+  it('approve falls back to getDefaultOrgId when session orgId is missing', async () => {
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: approveBody,
+    }, {
+      guardVisitorFeature: async () => ({ orgId: null }),
+      getDefaultOrgId: () => 'org-fallback',
+      createMcpToken: async ({ orgId, npcKey }) => {
+        assert.equal(orgId, 'org-fallback');
+        return { token: `tok-${npcKey}`, mcp_url: `${BASE}/mcp/npc/${npcKey}` };
+      },
+    });
+    assert.equal(approve.res.statusCode, 200, approve.res.body);
+    assert.ok(approve.json.redirect);
+  });
+
+  it('approve maps demo-org mint failures to a clear access_denied', async () => {
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: approveBody,
+    }, {
+      createMcpToken: async () => { throw new Error('demo org cannot create mcp tokens'); },
+    });
+    assert.equal(approve.res.statusCode, 403);
+    assert.equal(approve.json.error, 'access_denied');
+    assert.match(approve.json.error_description, /Demo offices cannot connect/i);
+  });
+
+  it('approve maps protected-NPC mint failures to access_denied', async () => {
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: approveBody,
+    }, {
+      createMcpToken: async () => { throw new Error('NPC is protected'); },
+    });
+    assert.equal(approve.res.statusCode, 403);
+    assert.equal(approve.json.error, 'access_denied');
+    assert.match(approve.json.error_description, /josh.*protected/i);
+  });
+
+  it('approve maps missing-org mint failures to invalid_request', async () => {
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: approveBody,
+    }, {
+      createMcpToken: async () => { throw new Error('missing org_id required'); },
+    });
+    assert.equal(approve.res.statusCode, 400);
+    assert.equal(approve.json.error, 'invalid_request');
+    assert.match(approve.json.error_description, /team office/i);
+  });
+
+  it('approve maps missing-NPC FK failures to a clear invalid_request with suggestion', async () => {
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: {
+        ...approveBody,
+        npc: 'notanpc',
+        resource: `${BASE}/mcp/npc/notanpc`,
+      },
+    }, {
+      createMcpToken: async () => {
+        throw new Error('RPC denizen_register_mcp_token → HTTP 409 {"code":"23503","details":"Key (npc_key)=(notanpc) is not present in table \\"denizen_npcs\\"."}');
+      },
+    });
+    assert.equal(approve.res.statusCode, 400);
+    assert.equal(approve.json.error, 'invalid_request');
+    assert.match(approve.json.error_description, /not a known office NPC/i);
+  });
+
+  it('approve canonicalizes joshl → josh before minting', async () => {
+    let mintedKey = null;
+    const approve = await call('POST', '/mcp/oauth/approve', {
+      headers: { 'content-type': 'application/json' },
+      body: {
+        ...approveBody,
+        npc: 'joshl',
+        resource: `${BASE}/mcp/npc/joshl`,
+      },
+    }, {
+      createMcpToken: async ({ npcKey }) => {
+        mintedKey = npcKey;
+        return { token: `tok-${npcKey}`, mcp_url: `${BASE}/mcp/npc/${npcKey}` };
+      },
+    });
+    assert.equal(approve.res.statusCode, 200, approve.res.body);
+    assert.equal(mintedKey, 'josh');
+    assert.ok(approve.json.redirect);
+  });
+
+  it('authorize consent page rewrites joshl resource to josh', async () => {
+    const url = `/mcp/oauth/authorize?response_type=code&client_id=c1`
+      + `&redirect_uri=${encodeURIComponent('https://chatgpt.com/cb')}`
+      + `&code_challenge=abc&code_challenge_method=S256&state=s1`
+      + `&resource=${encodeURIComponent(`${BASE}/mcp/npc/joshl`)}`;
+    const { res } = await call('GET', url);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, />Josh</);
+    assert.match(res.body, /"npc":"josh"/);
+    assert.doesNotMatch(res.body, />Joshl</);
   });
 });

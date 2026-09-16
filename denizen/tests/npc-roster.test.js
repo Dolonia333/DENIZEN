@@ -27,4 +27,12 @@ describe('npc-roster', () => {
     assert.ok(roster.assetNames.includes('Conference_man'));
     assert.ok(roster.assetNames.includes('Abby'));
   });
+
+  it('canonicalizes ChatGPT typos joshl/joshi → josh', () => {
+    assert.equal(roster.canonicalizeNpcKey('joshl'), 'josh');
+    assert.equal(roster.canonicalizeNpcKey('joshi'), 'josh');
+    assert.equal(roster.canonicalizeNpcKey('Josh'), 'josh');
+    assert.equal(roster.isKnownNpcFolder('joshl'), true);
+    assert.equal(roster.suggestNpcKey('joshl'), 'josh');
+  });
 });

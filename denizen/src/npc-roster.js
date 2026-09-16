@@ -38,6 +38,45 @@ const displayToGender = Object.fromEntries(
   NPC_ROSTER_ENTRIES.map((e) => [e.display, e.gender || null])
 );
 
+/** Common ChatGPT / paste typos for folder keys (consent UI shows these as "Joshl"). */
+const NPC_KEY_ALIASES = Object.freeze({
+  joshl: 'josh',
+  joshi: 'josh',
+  joshua: 'josh',
+});
+
+const KNOWN_NPC_FOLDERS = new Set(NPC_ROSTER_ENTRIES.map((e) => e.folder));
+
+/**
+ * Normalize an MCP npc key from a URL, consent form, or display-name paste.
+ * Maps known typos onto roster folder keys; leaves unknown keys unchanged.
+ */
+function canonicalizeNpcKey(input) {
+  const raw = String(input || '').trim().toLowerCase();
+  if (!raw) return '';
+  if (NPC_KEY_ALIASES[raw]) return NPC_KEY_ALIASES[raw];
+  const byDisplay = NPC_ROSTER_ENTRIES.find((e) => e.display.toLowerCase() === raw);
+  if (byDisplay) return byDisplay.folder;
+  return raw;
+}
+
+function isKnownNpcFolder(key) {
+  const k = canonicalizeNpcKey(key);
+  return k === '_team' || KNOWN_NPC_FOLDERS.has(k);
+}
+
+function suggestNpcKey(input) {
+  const raw = String(input || '').trim().toLowerCase();
+  if (!raw) return null;
+  const canonical = canonicalizeNpcKey(raw);
+  if (KNOWN_NPC_FOLDERS.has(canonical)) return canonical;
+  // Prefix / contains heuristic for near-misses (e.g. "jos" → josh).
+  const hit = NPC_ROSTER_ENTRIES.find(
+    (e) => e.folder.startsWith(raw) || raw.startsWith(e.folder) || e.display.toLowerCase().startsWith(raw),
+  );
+  return hit?.folder || null;
+}
+
 const DenizenNpcRoster = {
   entries: NPC_ROSTER_ENTRIES,
   nameToKey,
@@ -45,6 +84,10 @@ const DenizenNpcRoster = {
   displayNames,
   assetNames,
   displayToGender,
+  NPC_KEY_ALIASES,
+  canonicalizeNpcKey,
+  isKnownNpcFolder,
+  suggestNpcKey,
 };
 
 if (typeof globalThis !== 'undefined') {
