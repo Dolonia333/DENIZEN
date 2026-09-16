@@ -1,0 +1,1999 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Business Studio · Founder OS · Denizen</title>
+<style>
+:root{
+  --bg:#0c1219;
+  --bg-2:#121a24;
+  --surface:#162030;
+  --surface-2:#1c2a3c;
+  --surface-3:#243447;
+  --ink:#e8eef4;
+  --ink-2:#b4c2d0;
+  --muted:#7a8fa3;
+  --muted-2:#5a7085;
+  --line:rgba(184,204,220,.12);
+  --line-2:rgba(184,204,220,.07);
+  --gold:#f0b429;
+  --gold-dim:rgba(240,180,41,.14);
+  --gold-press:#d49a1a;
+  --forest:#2a6a55;
+  --forest-2:#1e4f40;
+  --forest-tint:rgba(42,106,85,.18);
+  --danger:#c94f38;
+  --danger-tint:rgba(201,79,56,.14);
+  --warn:#d28e2e;
+  --ok:#3d9b74;
+  --info:#3f6fa8;
+  --font-ui:'Segoe UI',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-display:'Segoe UI Semibold','Segoe UI',ui-sans-serif,system-ui,sans-serif;
+  --shadow:0 1px 2px rgba(0,0,0,.25),0 4px 16px rgba(0,0,0,.2);
+  --shadow-modal:0 24px 64px rgba(0,0,0,.55);
+  --radius:12px;
+  --sidebar-w:220px;
+  --bottom-nav-h:64px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+html{background:var(--bg)}
+body{
+  font-family:var(--font-ui);color:var(--ink);background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(42,106,85,.18), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(240,180,41,.08), transparent 50%),
+    var(--bg);
+  font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  min-height:100vh;min-height:100dvh;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink);background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-dim)}
+textarea{min-height:88px;resize:vertical}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ===== App chrome ===== */
+.dz-app-chrome{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;
+  padding:8px 14px;padding-top:max(8px,env(safe-area-inset-top));
+  background:rgba(12,18,25,.94);border-bottom:1px solid var(--line);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.dz-app-chrome a{color:var(--ink);text-decoration:none;font-size:12.5px;font-weight:600;
+  padding:6px 10px;border-radius:8px;border:1px solid var(--line);white-space:nowrap}
+.dz-app-chrome a:hover{border-color:var(--gold);color:var(--gold)}
+.dz-app-chrome .dz-app-title{color:var(--muted);font-size:12px;margin-left:4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dz-app-chrome .dz-app-spacer{flex:1;min-width:8px}
+html.embed .dz-app-chrome{display:none}
+
+/* ===== Shell ===== */
+.shell{display:flex;min-height:calc(100vh - 44px);min-height:calc(100dvh - 44px)}
+.sidebar{
+  width:var(--sidebar-w);flex:none;background:var(--bg-2);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:16px 12px;gap:4px;position:sticky;top:44px;height:calc(100vh - 44px);height:calc(100dvh - 44px);overflow:auto
+}
+.side-brand{padding:4px 8px 14px;border-bottom:1px solid var(--line-2);margin-bottom:10px}
+.side-brand h1{margin:0;font-size:15px;font-weight:650;letter-spacing:-.02em;color:var(--ink);font-family:var(--font-display)}
+.side-brand small{color:var(--muted);font-size:11.5px}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;
+  color:var(--ink-2);font-size:13px;font-weight:500;text-align:left;width:100%;transition:.12s
+}
+.nav-item:hover{background:var(--surface);color:var(--ink)}
+.nav-item.active{background:var(--gold-dim);color:var(--gold)}
+.nav-item .ico{width:18px;text-align:center;opacity:.85;font-size:13px}
+.nav-sec{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);padding:14px 10px 6px}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.main-scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:22px clamp(14px,2.5vw,28px) 40px}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.page-head h2{margin:0;font-size:22px;font-weight:650;letter-spacing:-.025em;font-family:var(--font-display)}
+.page-head p{margin:4px 0 0;color:var(--muted);font-size:13.5px;max-width:52ch}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 14px;border-radius:9px;font-size:13px;font-weight:600;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);transition:.12s;white-space:nowrap
+}
+.btn:hover{border-color:var(--muted);background:var(--surface-2)}
+.btn-primary{background:var(--gold);color:#1a1408;border-color:var(--gold)}
+.btn-primary:hover{background:var(--gold-press);border-color:var(--gold-press)}
+.btn-forest{background:var(--forest);color:#f0f7f4;border-color:var(--forest)}
+.btn-forest:hover{background:var(--forest-2)}
+.btn-ghost{background:transparent}
+.btn-danger{background:var(--danger-tint);color:#f0b4a8;border-color:rgba(201,79,56,.35)}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:7px}
+.btn-why{color:var(--gold);border-color:rgba(240,180,41,.35);background:var(--gold-dim);font-size:11.5px;padding:4px 9px}
+
+.panel{
+  background:linear-gradient(180deg,var(--surface),var(--bg-2));
+  border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)
+}
+.panel h3{margin:0 0 10px;font-size:14px;font-weight:650;letter-spacing:-.01em}
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:980px){.grid-3,.grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+.health-card{padding:14px 15px;border-radius:11px;border:1px solid var(--line);background:var(--surface-2)}
+.health-card .hc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.health-card .hc-name{font-weight:600;font-size:13.5px}
+.health-card .hc-reason{color:var(--ink-2);font-size:12.5px;line-height:1.4}
+.status{
+  display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;
+  font-size:11px;font-weight:650;text-transform:capitalize;letter-spacing:.01em
+}
+.status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.status-on_track,.status-complete,.status-done,.status-accepted{color:#7dcea0;background:rgba(61,155,116,.16)}
+.status-needs_attention,.status-blocked,.status-declined{color:#f0a090;background:var(--danger-tint)}
+.status-in_progress,.status-active,.status-testing,.status-pending{color:#f0c96a;background:var(--gold-dim)}
+.status-unknown,.status-not_started,.status-todo{color:var(--muted);background:rgba(122,143,163,.14)}
+.status-insufficient{color:#f0a090;background:var(--danger-tint)}
+.status-sufficient_to_decide{color:#7dcea0;background:rgba(61,155,116,.16)}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.row-item{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:12px 13px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface-2)
+}
+.row-item .rt{font-weight:600;font-size:13.5px;letter-spacing:-.01em}
+.row-item .rm{color:var(--muted);font-size:12px;margin-top:3px}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap;flex:none}
+
+.empty{
+  padding:28px 18px;text-align:center;color:var(--muted);border:1px dashed var(--line);
+  border-radius:var(--radius);background:rgba(22,32,48,.4)
+}
+.empty strong{display:block;color:var(--ink-2);margin-bottom:4px;font-size:14px}
+.stub-phase2{
+  padding:32px 20px;text-align:center;border:1px dashed rgba(240,180,41,.35);
+  border-radius:var(--radius);background:rgba(240,180,41,.05);color:var(--ink-2)
+}
+.stub-phase2 h3{margin:0 0 8px;color:var(--gold);font-size:16px}
+.form-grid{display:grid;gap:10px;margin-top:12px}
+.form-grid label{display:grid;gap:5px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.form-row{grid-template-columns:1fr}}
+.field-hint{font-size:11.5px;color:var(--muted);font-weight:400}
+
+.progress-bar{height:8px;border-radius:999px;background:var(--bg);overflow:hidden;border:1px solid var(--line-2)}
+.progress-bar > span{display:block;height:100%;background:linear-gradient(90deg,var(--forest),var(--gold));border-radius:999px}
+.meta-line{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12.5px;margin-top:8px}
+
+/* Roadmap stages */
+.stage-rail{display:flex;gap:0;overflow-x:auto;padding:8px 0 4px;-webkit-overflow-scrolling:touch}
+.stage-node{
+  flex:1 0 120px;min-width:110px;position:relative;padding:14px 12px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface-2);text-align:left;transition:.12s
+}
+.stage-node:first-child{border-radius:10px 0 0 10px}
+.stage-node:last-child{border-radius:0 10px 10px 0}
+.stage-node:hover,.stage-node:focus{background:var(--surface-3);z-index:1}
+.stage-node .sn-name{font-weight:650;font-size:13px}
+.stage-node .sn-status{margin-top:6px}
+.stage-node.complete{border-color:rgba(61,155,116,.45);background:rgba(61,155,116,.1)}
+.stage-node.active{border-color:rgba(240,180,41,.5);background:var(--gold-dim)}
+
+/* Strategy SVG */
+.strategy-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-2);max-height:70vh}
+.strategy-wrap svg{display:block;min-width:320px}
+.strategy-wrap .node-hit{cursor:pointer}
+.strategy-wrap .node-hit:hover rect{stroke:var(--gold)}
+
+/* Copilot */
+.copilot{
+  border:1px solid rgba(240,180,41,.28);background:linear-gradient(160deg,rgba(240,180,41,.1),rgba(42,106,85,.08));
+  border-radius:var(--radius);padding:16px 18px
+}
+.copilot .cp-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.copilot .cp-body{font-size:14px;line-height:1.5;color:var(--ink)}
+.copilot .cp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* Toggle */
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2)}
+.toggle input{width:auto;accent-color:var(--gold)}
+
+/* Modal */
+.modal-backdrop{
+  position:fixed;inset:0;z-index:100;background:rgba(4,8,12,.72);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)
+}
+.modal-backdrop[hidden]{display:none!important}
+.modal{
+  width:min(520px,100%);max-height:min(88vh,720px);overflow:auto;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow-modal);padding:18px 20px
+}
+.modal h3{margin:0 0 8px;font-size:17px;letter-spacing:-.02em}
+.modal .why-block{margin-top:12px;padding:12px;border-radius:10px;background:var(--bg-2);border:1px solid var(--line-2)}
+.modal .why-block dt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:10px}
+.modal .why-block dt:first-child{margin-top:0}
+.modal .why-block dd{margin:4px 0 0;color:var(--ink-2);font-size:13px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:24px;right:16px;z-index:120;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;padding:10px 14px;border-radius:10px;background:var(--surface-3);border:1px solid var(--line);box-shadow:var(--shadow);font-size:13px;color:var(--ink);max-width:320px}
+@media(max-width:720px){.toast-wrap{bottom:calc(var(--bottom-nav-h) + 16px + env(safe-area-inset-bottom,0px));left:12px;right:12px}}
+
+/* Onboarding */
+.welcome{
+  max-width:560px;margin:40px auto;padding:28px 24px;border-radius:16px;
+  border:1px solid var(--line);background:linear-gradient(165deg,var(--surface),var(--bg-2));
+  box-shadow:var(--shadow);text-align:center
+}
+.welcome h2{margin:0 0 8px;font-size:24px;letter-spacing:-.03em;font-family:var(--font-display)}
+.welcome p{color:var(--muted);margin:0 0 20px}
+.welcome .actions{justify-content:center}
+
+/* Bottom nav (mobile) */
+.bottom-nav{
+  display:none;position:fixed;left:0;right:0;bottom:0;z-index:45;
+  height:calc(var(--bottom-nav-h) + env(safe-area-inset-bottom,0px));
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+  background:rgba(12,18,25,.96);border-top:1px solid var(--line);
+  grid-template-columns:repeat(5,1fr);gap:2px;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)
+}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:10.5px;font-weight:600;color:var(--muted);border-radius:10px;padding:4px 2px;touch-action:manipulation
+}
+.bn-item.active{color:var(--gold);background:var(--gold-dim)}
+.bn-item .bn-ico{font-size:16px;line-height:1}
+.bn-plus{
+  width:44px;height:44px;border-radius:50%;background:var(--gold);color:#1a1408;
+  display:grid;place-items:center;font-size:24px;font-weight:700;margin:-10px auto 0;box-shadow:0 4px 14px rgba(240,180,41,.35)
+}
+.more-sheet{
+  position:fixed;inset:0;z-index:60;background:rgba(4,8,12,.65);display:none;align-items:flex-end
+}
+.more-sheet.open{display:flex}
+.more-panel{
+  width:100%;max-height:78vh;overflow:auto;background:var(--bg-2);border-radius:16px 16px 0 0;
+  border:1px solid var(--line);padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px));
+}
+.more-panel h3{margin:0 0 10px;font-size:15px}
+.more-panel .nav-item{padding:12px 10px}
+
+.crm-frame{width:100%;height:min(70vh,640px);border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.chip{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--forest-tint);color:#9fd4be}
+.kbd{font-size:11px;color:var(--muted)}
+
+@media (max-width:720px){
+  html,body{height:100%;height:100dvh;overflow:hidden}
+  body.standalone{display:flex;flex-direction:column;min-height:100dvh;height:100dvh;overflow:hidden}
+  .dz-app-chrome{position:relative;flex-shrink:0;padding:6px 10px;padding-top:max(6px,env(safe-area-inset-top));gap:8px}
+  .dz-app-chrome a{padding:5px 8px;font-size:12px}
+  .dz-app-chrome .dz-app-title{font-size:11px;max-width:36vw}
+  .shell{flex:1;min-height:0;overflow:hidden}
+  .sidebar{display:none}
+  .main{min-height:0}
+  .main-scroll{
+    padding:12px 12px calc(var(--bottom-nav-h) + 20px + env(safe-area-inset-bottom,0px));
+    -webkit-overflow-scrolling:touch
+  }
+  .bottom-nav{display:grid}
+  .page-head h2{font-size:19px}
+  .stage-node{flex:0 0 130px}
+}
+@media (min-width:721px){
+  .bottom-nav,.more-sheet{display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="dz-app-chrome" role="navigation" aria-label="Business Studio app bar">
+  <a href="/">← Back to office</a>
+  <span class="dz-app-title">Business Studio · Founder OS</span>
+  <span class="dz-app-spacer"></span>
+  <a href="/crm/">Open CRM</a>
+  <a href="/studio-board/">Studio Board</a>
+</div>
+
+<div class="shell">
+  <aside class="sidebar" id="sidebar" aria-label="Primary"></aside>
+  <div class="main">
+    <div class="main-scroll" id="main"></div>
+  </div>
+</div>
+
+<nav class="bottom-nav" aria-label="Mobile">
+  <button class="bn-item" data-view="overview" type="button"><span class="bn-ico">⌂</span>Home</button>
+  <button class="bn-item" data-view="programs" type="button"><span class="bn-ico">▣</span>Plan</button>
+  <button class="bn-item" data-action="quickadd" type="button" aria-label="Quick add"><span class="bn-plus">+</span></button>
+  <button class="bn-item" data-view="metrics" type="button"><span class="bn-ico">▦</span>Metrics</button>
+  <button class="bn-item" data-action="more" type="button"><span class="bn-ico">⋯</span>More</button>
+</nav>
+
+<div class="more-sheet" id="moreSheet" hidden>
+  <div class="more-panel" id="morePanel"></div>
+</div>
+
+<div class="modal-backdrop" id="modalRoot" hidden></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ========================================================================
+   DENIZEN Business Studio — Phase 1 Founder OS
+   Single-file SPA: CSS above + JS sections below.
+   ======================================================================== */
+
+/* ---------- 0. Embed / standalone ---------- */
+(function(){
+  try{
+    var q = new URLSearchParams(location.search);
+    if(q.get('embed')==='1' || q.get('embed')==='true') document.documentElement.classList.add('embed');
+    else document.body.classList.add('standalone');
+  }catch(e){}
+})();
+
+/* ---------- 1. Storage shim (dz-bs:) ---------- */
+window.storage = {
+  getItem(k){ return localStorage.getItem('dz-bs:'+k); },
+  setItem(k,v){ localStorage.setItem('dz-bs:'+k, v); },
+  removeItem(k){ localStorage.removeItem('dz-bs:'+k); }
+};
+
+/* ---------- 2. Utilities ---------- */
+function uid(prefix){
+  return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8);
+}
+function nowISO(){ return new Date().toISOString(); }
+function esc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  try{
+    const d=new Date(iso);
+    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  }catch(e){ return '—'; }
+}
+function toast(msg){
+  const wrap=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className='toast';
+  el.textContent=msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.remove(); },3200);
+}
+function weekBounds(){
+  const d=new Date();
+  const day=d.getDay();
+  const start=new Date(d); start.setHours(0,0,0,0); start.setDate(d.getDate()-(day===0?6:day-1));
+  const end=new Date(start); end.setDate(start.getDate()+7);
+  return {start,end};
+}
+
+/* ---------- 3. Empty state / config ---------- */
+function emptyConfig(){
+  return {
+    healthCategories:['product','customer_discovery','market_validation','sales','financial','operations','program','technical'],
+    mentorShareDefaults:{
+      programs:true,roadmap:true,goals:true,experiments:true,evidence:true,metrics:true,
+      pave:true,deliverables:true,meetings:true,founderQuestions:true,
+      financials:false,crm:false,privateNotes:false
+    },
+    advisorMode:false
+  };
+}
+function emptyState(){
+  return {
+    business:null,
+    programs:[],
+    goals:[],
+    milestones:[],
+    tasks:[],
+    strategyNodes:[],
+    strategyEdges:[],
+    assumptions:[],
+    experiments:[],
+    evidence:[],
+    findings:[],
+    decisions:[],
+    metrics:[],
+    advisors:[],
+    comments:[],
+    recommendations:[],
+    relations:[],
+    meetings:[],
+    activity:[],
+    config:emptyConfig(),
+    documents:[],
+    workbooks:[]
+  };
+}
+function sanitizeState(raw){
+  const out=emptyState();
+  if(!raw || typeof raw!=='object') return out;
+  if(raw.business && typeof raw.business==='object') out.business={...raw.business};
+  const keys=['programs','goals','milestones','tasks','strategyNodes','strategyEdges','assumptions',
+    'experiments','evidence','findings','decisions','metrics','advisors','comments','recommendations',
+    'relations','meetings','activity','documents','workbooks'];
+  keys.forEach(k=>{ if(Array.isArray(raw[k])) out[k]=raw[k]; });
+  if(raw.config && typeof raw.config==='object') out.config={...out.config,...raw.config};
+  return out;
+}
+
+/* ---------- 4. E3 / PAVE template (inline, mirrors denizen-business-studio-e3-template.js) ---------- */
+function buildE3Template(opts){
+  opts=opts||{};
+  const businessName=opts.businessName||'My Business';
+  const founderName=opts.founderName||'Founder';
+  const now=nowISO();
+  const programId=uid('prog');
+
+  const stages=[
+    {id:'idea',name:'Idea',order:1,status:'complete'},
+    {id:'prototype',name:'Prototype',order:2,status:'complete'},
+    {id:'validate',name:'Customer Validation',order:3,status:'active'},
+    {id:'pilot',name:'Pilot',order:4,status:'not_started'},
+    {id:'revenue',name:'Revenue',order:5,status:'not_started'}
+  ];
+
+  const requirements=[
+    {
+      id:uid('req'),programId,stageId:'validate',key:'discovery_interviews',
+      title:'Customer discovery interviews',
+      description:'Complete 10 interviews with target decision makers.',
+      evidenceType:'interview',targetCount:10,
+      linkedAssumptionKey:'core_problem_assumption'
+    },
+    {
+      id:uid('req'),programId,stageId:'validate',key:'pave_part_b',
+      title:'PAVE Part B — Discovery findings',
+      description:'Document persona, expected/unexpected findings, persona decision.',
+      evidenceType:'document',targetCount:1
+    },
+    {
+      id:uid('req'),programId,stageId:'pilot',key:'pilot_agreement',
+      title:'Pilot evaluation agreement',
+      description:'At least one org agrees to evaluate a pilot.',
+      evidenceType:'document',targetCount:1
+    }
+  ];
+
+  const deliverables=[
+    {id:uid('del'),programId,title:'Company Snapshot',section:'snapshot',status:'todo'},
+    {id:uid('del'),programId,title:'PAVE Part A — Customer / Problem / Solution',section:'part_a',status:'todo'},
+    {id:uid('del'),programId,title:'PAVE Part B — Customer Discovery',section:'part_b',status:'todo'},
+    {id:uid('del'),programId,title:'PAVE Part C — Competition & Market',section:'part_c',status:'todo'},
+    {id:uid('del'),programId,title:'PAVE Part D — Team & Pitch',section:'part_d',status:'todo'},
+    {id:uid('del'),programId,title:'Final PAVE — Risks & Next Steps',section:'final',status:'todo'}
+  ];
+
+  const milestones=[
+    {id:uid('ms'),programId,stageId:'validate',title:'10 discovery interviews complete',status:'active',due:null,requirementKeys:['discovery_interviews']},
+    {id:uid('ms'),programId,stageId:'validate',title:'PAVE Part B drafted',status:'todo',due:null,requirementKeys:['pave_part_b']},
+    {id:uid('ms'),programId,stageId:'pilot',title:'First pilot commitment',status:'blocked',due:null,requirementKeys:['pilot_agreement'],blockedReason:'Requires validated discovery evidence first'}
+  ];
+
+  const tasks=[
+    {id:uid('task'),title:'Schedule two customer discovery interviews',status:'todo',priority:'high',due:null,programId,stageId:'validate',owner:founderName,source:'e3_template',createdAt:now},
+    {id:uid('task'),title:'Update PAVE Part B with interview findings',status:'todo',priority:'medium',due:null,programId,stageId:'validate',owner:founderName,source:'e3_template',createdAt:now},
+    {id:uid('task'),title:'Follow up with mentor on discovery plan',status:'todo',priority:'medium',due:null,programId,stageId:'validate',owner:founderName,source:'e3_template',createdAt:now}
+  ];
+
+  const assumptions=[{
+    id:uid('asm'),key:'core_problem_assumption',
+    title:'Target customers view the core problem as urgent enough to change tools',
+    status:'testing',confidence:'insufficient',programId,createdAt:now
+  }];
+
+  const experiments=[{
+    id:uid('exp'),title:'Interview 10 target decision makers',
+    assumptionKey:'core_problem_assumption',status:'active',targetCount:10,completedCount:0,
+    programId,method:'customer_interview',createdAt:now
+  }];
+
+  const goals=[{
+    id:uid('goal'),title:'Validate problem-solution fit for primary buyers',
+    status:'active',programId,metricKeys:['discovery_interviews'],createdAt:now
+  }];
+
+  const metrics=[
+    {id:uid('met'),key:'discovery_interviews',name:'Customer discovery interviews',category:'customer_discovery',current:0,target:10,unit:'count',source:'evidence',sharedWithAdvisors:true,updatedAt:now},
+    {id:uid('met'),key:'active_pilots',name:'Active pilots',category:'sales',current:0,target:1,unit:'count',source:'manual',sharedWithAdvisors:true,updatedAt:now}
+  ];
+
+  const strategyNodes=[
+    {id:'n_vision',type:'vision',label:'Vision',x:40,y:40,text:businessName+' as a durable operating system'},
+    {id:'n_market',type:'market',label:'Market',x:40,y:120,text:'Primary segment + operators'},
+    {id:'n_problem',type:'problem',label:'Problem',x:40,y:200,text:'Fragmented ops + cost friction'},
+    {id:'n_customer',type:'customer',label:'Customer',x:40,y:280,text:'Decision makers in target segment'},
+    {id:'n_assumption',type:'assumption',label:'Assumption',x:40,y:360,text:'Problem is a buying trigger'},
+    {id:'n_experiment',type:'experiment',label:'Experiment',x:40,y:440,text:'10 discovery interviews'},
+    {id:'n_evidence',type:'evidence',label:'Evidence',x:40,y:520,text:'Interview ledger'},
+    {id:'n_decision',type:'decision',label:'Decision',x:40,y:600,text:'Persona + pilot path'},
+    {id:'n_milestone',type:'milestone',label:'Milestone',x:40,y:680,text:'Validation complete'},
+    {id:'n_outcome',type:'outcome',label:'Outcome',x:40,y:760,text:'Pilot commitment'}
+  ];
+  const strategyEdges=[
+    ['n_vision','n_market'],['n_market','n_problem'],['n_problem','n_customer'],
+    ['n_customer','n_assumption'],['n_assumption','n_experiment'],['n_experiment','n_evidence'],
+    ['n_evidence','n_decision'],['n_decision','n_milestone'],['n_milestone','n_outcome']
+  ].map(function(pair,i){ return {id:'e_'+i,from:pair[0],to:pair[1]}; });
+
+  const pave={
+    snapshot:{company:businessName,founder:founderName,program:'i2E E3'},
+    partA:{customer:'',problem:'',currentAlternative:'',solution:'',valueProposition:'',salesCycle:''},
+    partB:{customerDiscovery:'',targetPersona:'',interviewGoal:'10 decision makers',interviewRecords:[],expectedFindings:'',unexpectedFindings:'',personaDecision:''},
+    partC:{competition:{direct:[],indirect:[],potential:[],statusQuo:''},competitiveMatrix:'',shortTermAdvantages:'',longTermAdvantages:'',risks:'',marketSizing:{tam:'',sam:'',som:''},revenueProjections:'',futureSegments:''},
+    partD:{foundingTeam:founderName,teamGaps:'',gapStrategy:'',pitch90:''},
+    final:{discoveredRisks:'',recommendedNextSteps:'',advisorOutcome:''}
+  };
+
+  return {
+    templateId:'i2e-e3-pave',
+    templateName:'i2E E3 / PAVE',
+    program:{
+      id:programId,name:'i2E E3',templateId:'i2e-e3-pave',
+      cohort:opts.cohort||'',advisor:opts.advisor||'',
+      startDate:opts.startDate||null,endDate:opts.endDate||null,
+      status:'active',stages,requirements,deliverables,pave,
+      createdAt:now,sharedWithAdvisors:true
+    },
+    milestones,tasks,assumptions,experiments,goals,metrics,strategyNodes,strategyEdges
+  };
+}
+
+/* ---------- 5. Progress & health (explainable — no fake %) ---------- */
+function evidenceForRequirement(st, req){
+  const evidence=Array.isArray(st.evidence)?st.evidence:[];
+  return evidence.filter(function(e){
+    if(!e) return false;
+    if(Array.isArray(e.linkedRequirementIds) && e.linkedRequirementIds.indexOf(req.id)>=0) return true;
+    if(Array.isArray(e.linkedAssumptionKeys) && req.linkedAssumptionKey
+      && e.linkedAssumptionKeys.indexOf(req.linkedAssumptionKey)>=0) return true;
+    if(e.requirementKey && e.requirementKey===req.key) return true;
+    return false;
+  });
+}
+function requirementProgress(st, req){
+  const linked=evidenceForRequirement(st, req);
+  const count=linked.length;
+  const target=Math.max(1, Number(req.targetCount)||1);
+  const complete=count>=target;
+  return {
+    id:req.id,key:req.key,title:req.title,count,target,complete,
+    evidenceIds:linked.map(function(e){return e.id;}),
+    missing:Math.max(0,target-count),
+    why: complete
+      ? count+'/'+target+' required evidence items attached.'
+      : count+' of '+target+' required evidence items attached; '+Math.max(0,target-count)+' still missing.'
+  };
+}
+function programProgress(st, program){
+  if(!program){
+    return {percent:null,label:'No program',why:'No active program selected.',requirements:[],stageStatuses:[]};
+  }
+  const reqs=Array.isArray(program.requirements)?program.requirements:[];
+  const reqProgress=reqs.map(function(r){ return requirementProgress(st,r); });
+  const done=reqProgress.filter(function(r){return r.complete;}).length;
+  const total=reqProgress.length;
+  const percent=total===0?null:Math.round((done/total)*100);
+  const stages=Array.isArray(program.stages)?program.stages:[];
+  const stageStatuses=stages.map(function(stage){
+    const stageReqs=reqProgress.filter(function(r){
+      const raw=reqs.find(function(x){return x.id===r.id;});
+      return raw && raw.stageId===stage.id;
+    });
+    var status=stage.status||'not_started';
+    var why='Stage marked '+status+'.';
+    if(stageReqs.length){
+      const sDone=stageReqs.filter(function(r){return r.complete;}).length;
+      if(sDone===stageReqs.length){ status='complete'; why='All '+stageReqs.length+' requirements have enough evidence.'; }
+      else if(sDone>0 || stage.status==='active'){ status='active'; why=sDone+'/'+stageReqs.length+' requirements evidenced.'; }
+      else if(stage.status==='complete'){ status='complete'; why='Marked complete (no requirements gated).'; }
+      else { status=stage.status||'not_started'; why='0/'+stageReqs.length+' requirements evidenced.'; }
+    }
+    return {id:stage.id,name:stage.name,status,why,requirements:stageReqs};
+  });
+  return {
+    programId:program.id,programName:program.name,percent,
+    label:percent==null?'No gated requirements':done+'/'+total+' requirements evidenced',
+    why:total===0?'Program has no evidence-gated requirements yet.':done+' of '+total+' program requirements have sufficient linked evidence.',
+    requirements:reqProgress,stageStatuses
+  };
+}
+function experimentProgress(exp, st){
+  const evidence=(st.evidence||[]).filter(function(e){
+    return (Array.isArray(e.linkedExperimentIds)&&e.linkedExperimentIds.indexOf(exp.id)>=0) || e.experimentId===exp.id;
+  });
+  const count=Math.max(Number(exp.completedCount)||0, evidence.length);
+  const target=Math.max(1, Number(exp.targetCount)||1);
+  const complete=count>=target;
+  return {
+    id:exp.id,title:exp.title,count,target,complete,
+    confidence:complete?'sufficient_to_decide':'insufficient',
+    why:complete
+      ? count+'/'+target+' experiment samples collected — ready for a decision (not auto-validated).'
+      : count+'/'+target+' samples — insufficient evidence to validate the linked assumption.',
+    evidenceIds:evidence.map(function(e){return e.id;})
+  };
+}
+function businessHealth(st){
+  const programs=Array.isArray(st.programs)?st.programs:[];
+  const activeProgram=programs.find(function(p){return p.status==='active';})||programs[0]||null;
+  const prog=programProgress(st, activeProgram);
+  const experiments=(st.experiments||[]).map(function(e){return experimentProgress(e,st);});
+  const openTasks=(st.tasks||[]).filter(function(t){return t && t.status!=='done' && t.status!=='cancelled';});
+  const overdueTasks=openTasks.filter(function(t){return t.due && new Date(t.due)<new Date();});
+  const categories=[];
+
+  const discoveryExp=experiments.find(function(e){return /interview|discovery/i.test(e.title);})||experiments[0];
+  if(discoveryExp){
+    categories.push({
+      id:'customer_discovery',name:'Customer Discovery',
+      status:discoveryExp.complete?'on_track':'needs_attention',
+      reason:discoveryExp.why,evidenceIds:discoveryExp.evidenceIds,
+      missing:discoveryExp.complete?[]:[ (discoveryExp.target-discoveryExp.count)+' more interviews/evidence' ],
+      recommendedAction:discoveryExp.complete?'Record a decision on the linked assumption.':'Schedule additional discovery interviews and attach evidence.'
+    });
+  } else {
+    categories.push({
+      id:'customer_discovery',name:'Customer Discovery',status:'unknown',
+      reason:'No discovery experiment defined.',evidenceIds:[],
+      missing:['Create a discovery experiment'],
+      recommendedAction:'Create an experiment tied to a core assumption.'
+    });
+  }
+
+  if(activeProgram){
+    const behind=(prog.requirements||[]).some(function(r){return !r.complete && r.count<r.target;});
+    categories.push({
+      id:'program',name:'Program / Accelerator',
+      status:behind?'needs_attention':(prog.percent===100?'on_track':'in_progress'),
+      reason:prog.why,
+      evidenceIds:(prog.requirements||[]).flatMap(function(r){return r.evidenceIds||[];}),
+      missing:(prog.requirements||[]).filter(function(r){return !r.complete;}).map(function(r){return r.title;}),
+      recommendedAction:behind?'Focus on the active stage’s missing evidence requirements.':'Continue executing active stage deliverables.'
+    });
+  }
+
+  categories.push({
+    id:'operations',name:'Operations',
+    status:overdueTasks.length?'needs_attention':(openTasks.length?'in_progress':'on_track'),
+    reason:overdueTasks.length
+      ? overdueTasks.length+' overdue task(s); '+openTasks.length+' open.'
+      : openTasks.length+' open task(s); none overdue.',
+    evidenceIds:[],
+    missing:overdueTasks.map(function(t){return t.title;}),
+    recommendedAction:overdueTasks.length?'Reschedule or complete overdue tasks this week.':'Work the highest-priority open tasks.'
+  });
+
+  return {
+    generatedAt:nowISO(),program:prog,experiments,categories,
+    openTaskCount:openTasks.length,overdueTaskCount:overdueTasks.length
+  };
+}
+function explainStatus(st, subject){
+  const health=businessHealth(st);
+  if(!subject || subject==='program') return {kind:'program',...health.program};
+  if(String(subject).indexOf('category:')===0){
+    const id=String(subject).slice('category:'.length);
+    return health.categories.find(function(c){return c.id===id;})||{kind:'unknown',why:'Category not found.'};
+  }
+  if(String(subject).indexOf('experiment:')===0){
+    const id=String(subject).slice('experiment:'.length);
+    return health.experiments.find(function(e){return e.id===id;})||{kind:'unknown',why:'Experiment not found.'};
+  }
+  if(String(subject).indexOf('stage:')===0){
+    const id=String(subject).slice('stage:'.length);
+    const stage=(health.program.stageStatuses||[]).find(function(s){return s.id===id;});
+    return stage||{kind:'unknown',why:'Stage not found.'};
+  }
+  return {kind:'unknown',why:'Unknown subject.'};
+}
+function topRecommendation(st){
+  const health=businessHealth(st);
+  const attn=health.categories.find(function(c){return c.status==='needs_attention';})
+    || health.categories.find(function(c){return c.status==='in_progress';})
+    || health.categories[0];
+  if(!attn){
+    return {
+      title:'Set up your workspace',
+      body:'Apply the E3 / PAVE template or add a goal so health and recommendations have real signal.',
+      actions:[{label:'Open Programs',view:'programs'},{label:'Add evidence',view:'evidence'}]
+    };
+  }
+  return {
+    title:attn.name,
+    body:attn.recommendedAction+' — '+attn.reason,
+    categoryId:attn.id,
+    actions:[
+      {label:'Create task',action:'create-task-from-rec',payload:attn.recommendedAction},
+      {label:'Open evidence',view:'evidence'},
+      {label:'WHY?',action:'why',payload:'category:'+attn.id}
+    ]
+  };
+}
+
+/* ---------- 6. App state ---------- */
+const NAV=[
+  {id:'overview',label:'Overview',ico:'◎',group:'Command'},
+  {id:'strategy',label:'Strategy',ico:'◈',group:'Command'},
+  {id:'roadmap',label:'Roadmap',ico:'⟶',group:'Command'},
+  {id:'goals',label:'Goals',ico:'◎',group:'Execute'},
+  {id:'tasks',label:'Tasks',ico:'✓',group:'Execute'},
+  {id:'evidence',label:'Evidence',ico:'▣',group:'Execute'},
+  {id:'experiments',label:'Experiments',ico:'⚗',group:'Execute'},
+  {id:'programs',label:'Programs',ico:'▦',group:'Programs'},
+  {id:'mentors',label:'Mentors',ico:'◎',group:'People'},
+  {id:'metrics',label:'Metrics',ico:'▦',group:'Measure'},
+  {id:'crm',label:'CRM',ico:'↗',group:'Links'},
+  {id:'calendar',label:'Calendar',ico:'◷',group:'Links'},
+  {id:'templates',label:'Templates',ico:'⬚',group:'Phase 2',phase2:true},
+  {id:'financials',label:'Financials',ico:'$',group:'Phase 2',phase2:true},
+  {id:'diagrams',label:'Diagrams',ico:'⬡',group:'Phase 2',phase2:true},
+  {id:'documents',label:'Documents',ico:'▤',group:'Phase 2',phase2:true},
+  {id:'reports',label:'Reports',ico:'☰',group:'Phase 2',phase2:true},
+  {id:'settings',label:'Settings',ico:'⚙',group:'System'}
+];
+
+let state=emptyState();
+let ui={view:'overview',selectedProgramId:null,selectedNodeId:null};
+let remoteSyncEnabled=false;
+let remoteUpdatedAt=null;
+let saveTimer=null;
+
+function activeProgram(){
+  if(ui.selectedProgramId){
+    const p=state.programs.find(function(x){return x.id===ui.selectedProgramId;});
+    if(p) return p;
+  }
+  return state.programs.find(function(p){return p.status==='active';})||state.programs[0]||null;
+}
+function isAdvisorMode(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('view')==='advisor') return true;
+  return !!(state.config && state.config.advisorMode);
+}
+function logActivity(text, meta){
+  state.activity.unshift({id:uid('act'),text:text,meta:meta||null,at:nowISO()});
+  if(state.activity.length>200) state.activity=state.activity.slice(0,200);
+}
+
+/* ---------- 7. Persistence + cloud sync ---------- */
+function persistLocal(){
+  try{ window.storage.setItem('workspace', JSON.stringify(state)); }catch(e){}
+}
+function scheduleSave(){
+  persistLocal();
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(function(){ pushRemoteWorkspace().catch(function(){}); },600);
+}
+function loadLocal(){
+  try{
+    const raw=window.storage.getItem('workspace');
+    if(raw) state=sanitizeState(JSON.parse(raw));
+  }catch(e){ state=emptyState(); }
+}
+function readVisitorSession(){
+  try{
+    const raw=localStorage.getItem('denizen-visitor-session');
+    if(!raw) return null;
+    const d=JSON.parse(raw);
+    if(d && d.session_id) return d;
+  }catch(e){}
+  return null;
+}
+function authHeaders(sess){
+  return {
+    'X-Session-Id':sess.session_id,
+    'X-Session-Token':sess.session_token||'',
+    'Authorization':'Bearer '+(sess.session_token||'')
+  };
+}
+async function fetchRemoteWorkspace(){
+  const sess=readVisitorSession();
+  if(!sess) return null;
+  try{
+    const url='/api/business-studio/workspace?session_id='+encodeURIComponent(sess.session_id);
+    const res=await fetch(url,{headers:authHeaders(sess)});
+    if(!res.ok) return null;
+    const data=await res.json();
+    if(!data || !data.ok || !data.state) return null;
+    remoteSyncEnabled=true;
+    remoteUpdatedAt=data.updated_at||null;
+    return data;
+  }catch(e){ return null; }
+}
+async function pushRemoteWorkspace(){
+  const sess=readVisitorSession();
+  if(!sess || !remoteSyncEnabled) return;
+  try{
+    const res=await fetch('/api/business-studio/workspace',{
+      method:'PUT',
+      headers:Object.assign({'Content-Type':'application/json'}, authHeaders(sess)),
+      body:JSON.stringify({
+        session_id:sess.session_id,
+        session_token:sess.session_token,
+        if_updated_at:remoteUpdatedAt,
+        state:state
+      })
+    });
+    const data=await res.json().catch(function(){return {};});
+    if(res.ok && data.ok){
+      remoteUpdatedAt=data.updated_at||remoteUpdatedAt;
+    } else if(res.status===409 && data.state){
+      state=sanitizeState(data.state);
+      remoteUpdatedAt=data.updated_at||remoteUpdatedAt;
+      persistLocal();
+      render();
+    }
+  }catch(e){}
+}
+async function bootstrapSync(){
+  const remote=await fetchRemoteWorkspace();
+  if(remote && remote.state){
+    const remoteHas=remote.state.business || (remote.state.programs&&remote.state.programs.length);
+    const localHas=state.business || (state.programs&&state.programs.length);
+    if(remoteHas || !localHas){
+      state=sanitizeState(remote.state);
+      persistLocal();
+    } else if(localHas){
+      await pushRemoteWorkspace();
+    }
+  }
+}
+
+/* ---------- 8. Mutations ---------- */
+function applyE3Template(opts){
+  const built=buildE3Template(opts||{
+    businessName:(state.business&&state.business.name)||'My Business',
+    founderName:(state.business&&state.business.founderName)||'Founder'
+  });
+  if(!state.business){
+    state.business={
+      id:uid('biz'),
+      name:opts&&opts.businessName||'My Business',
+      founderName:opts&&opts.founderName||'Founder',
+      createdAt:nowISO()
+    };
+  }
+  state.programs=state.programs.filter(function(p){return p.templateId!=='i2e-e3-pave';});
+  state.programs.push(built.program);
+  ui.selectedProgramId=built.program.id;
+  state.milestones=state.milestones.concat(built.milestones);
+  state.tasks=state.tasks.concat(built.tasks);
+  state.assumptions=state.assumptions.concat(built.assumptions);
+  state.experiments=state.experiments.concat(built.experiments);
+  state.goals=state.goals.concat(built.goals);
+  // merge metrics by key
+  built.metrics.forEach(function(m){
+    const existing=state.metrics.find(function(x){return x.key===m.key;});
+    if(!existing) state.metrics.push(m);
+  });
+  if(!state.strategyNodes.length){
+    state.strategyNodes=built.strategyNodes;
+    state.strategyEdges=built.strategyEdges;
+  }
+  logActivity('Applied E3 / PAVE template');
+  scheduleSave();
+  toast('Applied E3 / PAVE template');
+}
+function startBusiness(name, founder){
+  state.business={
+    id:uid('biz'),
+    name:(name||'').trim()||'Untitled business',
+    founderName:(founder||'').trim()||'Founder',
+    createdAt:nowISO()
+  };
+  logActivity('Created business workspace');
+  scheduleSave();
+  ui.view='overview';
+  render();
+}
+function syncMetricFromEvidence(){
+  const met=state.metrics.find(function(m){return m.key==='discovery_interviews';});
+  if(!met || met.source!=='evidence') return;
+  const count=(state.evidence||[]).filter(function(e){return e.type==='interview';}).length;
+  met.current=count;
+  met.updatedAt=nowISO();
+}
+
+/* ---------- 9. WHY modal (createPortal-style) ---------- */
+function createPortal(contentHtml, opts){
+  opts=opts||{};
+  const root=document.getElementById('modalRoot');
+  root.hidden=false;
+  root.innerHTML='<div class="modal" role="dialog" aria-modal="true">'
+    +'<h3>'+esc(opts.title||'Details')+'</h3>'
+    +contentHtml
+    +'<div class="modal-foot"><button type="button" class="btn" data-close-modal>Close</button></div>'
+    +'</div>';
+  function close(){
+    root.hidden=true;
+    root.innerHTML='';
+    root.removeEventListener('click', onBg);
+  }
+  function onBg(e){
+    if(e.target===root || e.target.hasAttribute('data-close-modal')) close();
+  }
+  root.addEventListener('click', onBg);
+  return {close:close, root:root};
+}
+function showWhy(subject){
+  const expl=explainStatus(state, subject);
+  const reason=expl.reason||expl.why||'No explanation available.';
+  const evidenceIds=expl.evidenceIds||[];
+  const missing=expl.missing||(expl.missing!=null?[expl.missing]:[]);
+  const missingList=Array.isArray(missing)?missing:[];
+  const action=expl.recommendedAction||'';
+  const html='<div class="why-block">'
+    +'<dl>'
+    +'<dt>Reason</dt><dd>'+esc(reason)+'</dd>'
+    +'<dt>Evidence IDs</dt><dd>'+(evidenceIds.length?esc(evidenceIds.join(', ')):'None linked yet')+'</dd>'
+    +'<dt>Missing</dt><dd>'+(missingList.length?esc(missingList.join('; ')):'Nothing missing')+'</dd>'
+    +(action?'<dt>Recommended action</dt><dd>'+esc(action)+'</dd>':'')
+    +'</dl></div>';
+  createPortal(html,{title:'WHY?'});
+}
+
+/* ---------- 10. Forms / dialogs ---------- */
+function promptForm(title, fields, onSubmit){
+  // fields: [{name,label,type,value,options,required}]
+  let body='<form class="form-grid" id="portalForm">';
+  fields.forEach(function(f){
+    body+='<label>'+esc(f.label);
+    if(f.type==='select'){
+      body+='<select name="'+esc(f.name)+'">';
+      (f.options||[]).forEach(function(o){
+        const v=typeof o==='string'?o:o.value;
+        const l=typeof o==='string'?o:o.label;
+        body+='<option value="'+esc(v)+'"'+(f.value===v?' selected':'')+'>'+esc(l)+'</option>';
+      });
+      body+='</select>';
+    } else if(f.type==='textarea'){
+      body+='<textarea name="'+esc(f.name)+'"'+(f.required?' required':'')+'>'+esc(f.value||'')+'</textarea>';
+    } else {
+      body+='<input name="'+esc(f.name)+'" type="'+(f.type||'text')+'" value="'+esc(f.value||'')+'"'+(f.required?' required':'')+' />';
+    }
+    if(f.hint) body+='<span class="field-hint">'+esc(f.hint)+'</span>';
+    body+='</label>';
+  });
+  body+='<div class="actions"><button type="submit" class="btn btn-primary">Save</button>'
+    +'<button type="button" class="btn" data-close-modal>Cancel</button></div></form>';
+  const portal=createPortal(body,{title:title});
+  const form=document.getElementById('portalForm');
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    const fd=new FormData(form);
+    const data={};
+    fields.forEach(function(f){ data[f.name]=String(fd.get(f.name)||'').trim(); });
+    portal.close();
+    onSubmit(data);
+  });
+}
+
+function quickAddMenu(){
+  promptForm('Quick add',[{
+    name:'kind',label:'What to create',type:'select',
+    options:[
+      {value:'task',label:'Task'},
+      {value:'goal',label:'Goal'},
+      {value:'evidence',label:'Evidence'},
+      {value:'assumption',label:'Assumption'},
+      {value:'experiment',label:'Experiment'}
+    ]
+  }],function(data){
+    if(data.kind==='task') openCreateTask();
+    else if(data.kind==='goal') openCreateGoal();
+    else if(data.kind==='evidence') openCreateEvidence();
+    else if(data.kind==='assumption') openCreateAssumption();
+    else if(data.kind==='experiment') openCreateExperiment();
+  });
+}
+
+function openCreateTask(prefill){
+  promptForm('Create task',[
+    {name:'title',label:'Title',required:true,value:(prefill&&prefill.title)||''},
+    {name:'priority',label:'Priority',type:'select',options:['high','medium','low'],value:'medium'},
+    {name:'due',label:'Due (optional)',type:'date'}
+  ],function(data){
+    if(!data.title) return;
+    const prog=activeProgram();
+    state.tasks.unshift({
+      id:uid('task'),title:data.title,status:'todo',priority:data.priority||'medium',
+      due:data.due||null,programId:prog&&prog.id||null,owner:(state.business&&state.business.founderName)||'Founder',
+      source:'manual',createdAt:nowISO()
+    });
+    logActivity('Created task: '+data.title);
+    scheduleSave(); render(); toast('Task created');
+  });
+}
+function openCreateGoal(){
+  promptForm('Create goal',[
+    {name:'title',label:'Goal',required:true},
+    {name:'status',label:'Status',type:'select',options:['active','paused','done'],value:'active'}
+  ],function(data){
+    if(!data.title) return;
+    const prog=activeProgram();
+    state.goals.unshift({
+      id:uid('goal'),title:data.title,status:data.status||'active',
+      programId:prog&&prog.id||null,createdAt:nowISO()
+    });
+    logActivity('Created goal: '+data.title);
+    scheduleSave(); render(); toast('Goal created');
+  });
+}
+function openCreateAssumption(){
+  promptForm('Create assumption',[
+    {name:'title',label:'Assumption',required:true,type:'textarea'},
+    {name:'key',label:'Key (optional)',hint:'Stable id used to link experiments'}
+  ],function(data){
+    if(!data.title) return;
+    const key=data.key||('asm_'+Date.now().toString(36));
+    const prog=activeProgram();
+    state.assumptions.unshift({
+      id:uid('asm'),key:key,title:data.title,status:'testing',
+      confidence:'insufficient',programId:prog&&prog.id||null,createdAt:nowISO()
+    });
+    logActivity('Created assumption');
+    scheduleSave(); render(); toast('Assumption created — confidence stays insufficient until experiments meet target');
+  });
+}
+function openCreateExperiment(){
+  const asmOpts=state.assumptions.map(function(a){return {value:a.key,label:a.title};});
+  if(!asmOpts.length){ toast('Create an assumption first'); return; }
+  promptForm('Create experiment',[
+    {name:'title',label:'Experiment title',required:true},
+    {name:'assumptionKey',label:'Linked assumption',type:'select',options:asmOpts},
+    {name:'targetCount',label:'Target evidence count',type:'number',value:'10',required:true}
+  ],function(data){
+    const target=Math.max(1,parseInt(data.targetCount,10)||1);
+    const prog=activeProgram();
+    state.experiments.unshift({
+      id:uid('exp'),title:data.title,assumptionKey:data.assumptionKey,
+      status:'active',targetCount:target,completedCount:0,
+      programId:prog&&prog.id||null,method:'manual',createdAt:nowISO()
+    });
+    // Never auto-validate assumption
+    const asm=state.assumptions.find(function(a){return a.key===data.assumptionKey;});
+    if(asm){ asm.confidence='insufficient'; asm.status='testing'; }
+    logActivity('Created experiment: '+data.title);
+    scheduleSave(); render(); toast('Experiment created');
+  });
+}
+function openCreateEvidence(){
+  const expOpts=[{value:'',label:'— none —'}].concat(state.experiments.map(function(e){return {value:e.id,label:e.title};}));
+  const prog=activeProgram();
+  const reqOpts=[{value:'',label:'— none —'}].concat(
+    ((prog&&prog.requirements)||[]).map(function(r){return {value:r.id,label:r.title};})
+  );
+  promptForm('Add evidence',[
+    {name:'title',label:'Title / summary',required:true},
+    {name:'type',label:'Type',type:'select',options:['interview','document','metric','meeting','manual']},
+    {name:'experimentId',label:'Link to experiment',type:'select',options:expOpts},
+    {name:'requirementId',label:'Link to requirement',type:'select',options:reqOpts},
+    {name:'notes',label:'Notes',type:'textarea'}
+  ],function(data){
+    const ev={
+      id:uid('ev'),title:data.title,type:data.type||'manual',notes:data.notes||'',
+      experimentId:data.experimentId||null,
+      linkedExperimentIds:data.experimentId?[data.experimentId]:[],
+      linkedRequirementIds:data.requirementId?[data.requirementId]:[],
+      requirementKey:null,
+      linkedAssumptionKeys:[],
+      createdAt:nowISO()
+    };
+    if(data.requirementId && prog){
+      const req=(prog.requirements||[]).find(function(r){return r.id===data.requirementId;});
+      if(req){
+        ev.requirementKey=req.key;
+        if(req.linkedAssumptionKey) ev.linkedAssumptionKeys=[req.linkedAssumptionKey];
+      }
+    }
+    if(data.experimentId){
+      const exp=state.experiments.find(function(e){return e.id===data.experimentId;});
+      if(exp && exp.assumptionKey) ev.linkedAssumptionKeys=[exp.assumptionKey];
+      // bump completedCount but NEVER auto-validate assumption
+      if(exp){
+        const ep=experimentProgress(exp, Object.assign({},state,{evidence:state.evidence.concat([ev])}));
+        exp.completedCount=ep.count;
+        const asm=state.assumptions.find(function(a){return a.key===exp.assumptionKey;});
+        if(asm){
+          asm.confidence=ep.complete?'sufficient_to_decide':'insufficient';
+          // status stays testing — founder must decide
+        }
+      }
+    }
+    state.evidence.unshift(ev);
+    syncMetricFromEvidence();
+    logActivity('Added evidence: '+data.title);
+    scheduleSave(); render(); toast('Evidence added');
+  });
+}
+
+/* ---------- 11. Render helpers ---------- */
+function statusChip(s){
+  const key=String(s||'unknown').replace(/\s+/g,'_');
+  return '<span class="status status-'+esc(key)+'">'+esc(String(s||'unknown').replace(/_/g,' '))+'</span>';
+}
+function phase2Stub(name){
+  return '<div class="stub-phase2"><h3>Phase 2 — not built yet</h3>'
+    +'<p>'+esc(name)+' will ship in Phase 2 (template gallery, workbooks, finance, diagrams, reports, document import).</p></div>';
+}
+function renderSidebar(){
+  const el=document.getElementById('sidebar');
+  let html='<div class="side-brand"><h1>Business Studio</h1><small>Founder OS · Denizen</small></div>';
+  let lastGroup='';
+  NAV.forEach(function(n){
+    if(n.group!==lastGroup){
+      html+='<div class="nav-sec">'+esc(n.group)+'</div>';
+      lastGroup=n.group;
+    }
+    html+='<button type="button" class="nav-item'+(ui.view===n.id?' active':'')+'" data-nav="'+esc(n.id)+'">'
+      +'<span class="ico">'+n.ico+'</span>'+esc(n.label)
+      +(n.phase2?' <span class="kbd">P2</span>':'')
+      +'</button>';
+  });
+  el.innerHTML=html;
+}
+function renderBottomNav(){
+  document.querySelectorAll('.bottom-nav .bn-item[data-view]').forEach(function(btn){
+    btn.classList.toggle('active', btn.getAttribute('data-view')===ui.view);
+  });
+}
+function renderMoreSheet(){
+  const panel=document.getElementById('morePanel');
+  let html='<h3>More</h3>';
+  NAV.filter(function(n){return !['overview','programs','metrics'].includes(n.id);}).forEach(function(n){
+    html+='<button type="button" class="nav-item" data-nav="'+esc(n.id)+'">'
+      +'<span class="ico">'+n.ico+'</span>'+esc(n.label)
+      +(n.phase2?' <span class="kbd">Phase 2</span>':'')+'</button>';
+  });
+  html+='<button type="button" class="btn" style="margin-top:12px;width:100%" data-close-more>Close</button>';
+  panel.innerHTML=html;
+}
+
+/* ---------- 12. Views ---------- */
+function renderOnboarding(){
+  return '<div class="welcome">'
+    +'<h2>Welcome to Business Studio</h2>'
+    +'<p>Founder OS for where the business is, whether you\'re on track, what evidence supports that, and what to do next.</p>'
+    +'<div class="actions">'
+    +'<button type="button" class="btn btn-primary" data-action="start-business">Start</button>'
+    +'<button type="button" class="btn btn-forest" data-action="apply-e3-onboard">Apply E3 / PAVE template</button>'
+    +'<button type="button" class="btn btn-ghost" data-action="import-stub">Import</button>'
+    +'</div>'
+    +'<p class="field-hint" style="margin-top:16px">Import is Phase 2 — not built yet.</p>'
+    +'</div>';
+}
+
+function renderOverview(){
+  const b=state.business;
+  const health=businessHealth(state);
+  const prog=health.program;
+  const rec=topRecommendation(state);
+  const {start,end}=weekBounds();
+  const weekTasks=state.tasks.filter(function(t){
+    if(t.status==='done'||t.status==='cancelled') return false;
+    if(!t.due) return t.status==='todo'||t.status==='active';
+    const d=new Date(t.due);
+    return d>=start && d<end;
+  }).slice(0,8);
+  const recentEv=state.evidence.slice(0,5);
+  const stages=prog.stageStatuses||[];
+
+  let html='<div class="page-head"><div>'
+    +'<h2>Good '+(new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening')
+    +', '+esc((b&&b.founderName)||'Founder')+'</h2>'
+    +'<p>'+esc((b&&b.name)||'Your business')+' — Founder Command Center</p></div>'
+    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="quickadd">+ Add</button></div></div>';
+
+  // Program progress
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Program progress</h3>';
+  if(prog.percent==null && !(prog.requirements||[]).length){
+    html+='<div class="empty"><strong>No evidence-gated requirements</strong>Apply the E3 / PAVE template or add requirements to track real progress.</div>';
+  } else {
+    const pct=prog.percent==null?0:prog.percent;
+    html+='<div class="progress-bar" aria-label="'+esc(prog.label)+'"><span style="width:'+pct+'%"></span></div>'
+      +'<div class="meta-line"><span class="num">'+esc(prog.label)+'</span>'
+      +'<button type="button" class="btn btn-why" data-why="program">WHY?</button></div>'
+      +'<p style="color:var(--muted);font-size:12.5px;margin:8px 0 0">'+esc(prog.why)+'</p>';
+  }
+  html+='</div>';
+
+  // Health cards
+  html+='<div class="grid grid-3" style="margin-bottom:14px">';
+  if(!health.categories.length){
+    html+='<div class="empty" style="grid-column:1/-1"><strong>No health signals yet</strong>Add programs, experiments, or tasks.</div>';
+  } else {
+    health.categories.forEach(function(c){
+      html+='<div class="health-card"><div class="hc-top"><span class="hc-name">'+esc(c.name)+'</span>'
+        +statusChip(c.status)+'</div>'
+        +'<div class="hc-reason">'+esc(c.reason)+'</div>'
+        +'<div class="meta-line"><button type="button" class="btn btn-why" data-why="category:'+esc(c.id)+'">WHY?</button></div></div>';
+    });
+  }
+  html+='</div>';
+
+  html+='<div class="grid grid-2" style="margin-bottom:14px">';
+  // This week tasks
+  html+='<div class="panel"><h3>This week</h3>';
+  if(!weekTasks.length) html+='<div class="empty"><strong>No tasks due this week</strong>Open Tasks to add work, or leave due dates blank for backlog.</div>';
+  else {
+    html+='<div class="list">';
+    weekTasks.forEach(function(t){
+      html+='<div class="row-item"><div><div class="rt">'+esc(t.title)+'</div>'
+        +'<div class="rm">'+esc(t.priority||'')+' · '+(t.due?fmtDate(t.due):'no due')+'</div></div>'
+        +'<div class="row-actions"><button type="button" class="btn btn-sm" data-task-done="'+esc(t.id)+'">Done</button></div></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+
+  // Recent evidence
+  html+='<div class="panel"><h3>Recent evidence</h3>';
+  if(!recentEv.length) html+='<div class="empty"><strong>No evidence yet</strong>Attach interviews, docs, or metrics to experiments and requirements.</div>';
+  else {
+    html+='<div class="list">';
+    recentEv.forEach(function(e){
+      html+='<div class="row-item"><div><div class="rt">'+esc(e.title)+'</div>'
+        +'<div class="rm"><span class="chip">'+esc(e.type)+'</span> · '+fmtDate(e.createdAt)+'</div></div></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div></div>';
+
+  // Copilot
+  html+='<div class="copilot" style="margin-bottom:14px"><div class="cp-label">Copilot</div>'
+    +'<div class="cp-body"><strong>'+esc(rec.title)+'</strong> — '+esc(rec.body)+'</div>'
+    +'<div class="cp-actions">';
+  (rec.actions||[]).forEach(function(a){
+    if(a.action==='why') html+='<button type="button" class="btn btn-why" data-why="'+esc(a.payload)+'">WHY?</button>';
+    else if(a.action==='create-task-from-rec') html+='<button type="button" class="btn btn-primary" data-action="create-task-from-rec" data-payload="'+esc(a.payload)+'">Create task</button>';
+    else if(a.view) html+='<button type="button" class="btn" data-nav="'+esc(a.view)+'">'+esc(a.label)+'</button>';
+  });
+  html+='</div></div>';
+
+  // Roadmap mini
+  html+='<div class="panel"><h3>Roadmap</h3>';
+  if(!stages.length) html+='<div class="empty"><strong>No program stages</strong>Apply E3 / PAVE to get Idea → Revenue stages.</div>';
+  else {
+    html+='<div class="stage-rail">';
+    stages.forEach(function(s){
+      html+='<button type="button" class="stage-node '+esc(s.status)+'" data-why="stage:'+esc(s.id)+'">'
+        +'<div class="sn-name">'+esc(s.name)+'</div>'
+        +'<div class="sn-status">'+statusChip(s.status)+'</div></button>';
+    });
+    html+='</div><p class="field-hint" style="margin-top:8px">Click a stage for WHY explanation.</p>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function renderPrograms(){
+  let html='<div class="page-head"><div><h2>Programs</h2><p>Accelerator and launch programs with evidence-gated requirements.</p></div>'
+    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="apply-e3">Apply E3 / PAVE template</button></div></div>';
+
+  if(!state.programs.length){
+    html+='<div class="empty"><strong>No programs yet</strong>Apply the E3 / PAVE template to generate stages, milestones, tasks, assumptions, experiments, metrics, and a strategy map.</div>';
+    return html;
+  }
+
+  state.programs.forEach(function(p){
+    const prog=programProgress(state,p);
+    const selected=activeProgram()&&activeProgram().id===p.id;
+    html+='<div class="panel" style="margin-bottom:14px">';
+    html+='<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">'
+      +'<div><h3 style="margin:0">'+esc(p.name)+' '+(selected?'<span class="chip">active</span>':'')+'</h3>'
+      +'<div class="meta-line">'+esc(prog.label)+' · '+statusChip(p.status)
+      +'<button type="button" class="btn btn-why" data-why="program">WHY?</button></div></div>'
+      +'<button type="button" class="btn btn-sm" data-select-program="'+esc(p.id)+'">Select</button></div>';
+
+    // Stages
+    html+='<h3 style="margin-top:16px">Stages</h3><div class="stage-rail">';
+    (prog.stageStatuses||[]).forEach(function(s){
+      html+='<button type="button" class="stage-node '+esc(s.status)+'" data-why="stage:'+esc(s.id)+'">'
+        +'<div class="sn-name">'+esc(s.name)+'</div><div class="sn-status">'+statusChip(s.status)+'</div></button>';
+    });
+    html+='</div>';
+
+    // Requirements X/Y
+    html+='<h3 style="margin-top:16px">Requirements</h3><div class="list">';
+    if(!(p.requirements||[]).length) html+='<div class="empty">No requirements.</div>';
+    else (prog.requirements||[]).forEach(function(r){
+      html+='<div class="row-item"><div><div class="rt">'+esc(r.title)+'</div>'
+        +'<div class="rm num">'+r.count+'/'+r.target+' evidence · '+esc(r.why)+'</div></div>'
+        +statusChip(r.complete?'complete':'active')+'</div>';
+    });
+    html+='</div>';
+
+    // Deliverables
+    html+='<h3 style="margin-top:16px">Deliverables</h3><div class="list">';
+    (p.deliverables||[]).forEach(function(d){
+      html+='<div class="row-item"><div class="rt">'+esc(d.title)+'</div>'+statusChip(d.status||'todo')+'</div>';
+    });
+    html+='</div>';
+
+    // PAVE editor
+    if(p.pave){
+      html+='<h3 style="margin-top:16px">PAVE</h3>';
+      html+='<div class="form-grid" data-pave-program="'+esc(p.id)+'">';
+      html+='<label>Part A — Customer / Problem / Solution<textarea data-pave="partA.customer" placeholder="Customer">'+esc((p.pave.partA&&p.pave.partA.customer)||'')+'</textarea>'
+        +'<textarea data-pave="partA.problem" placeholder="Problem" style="margin-top:6px">'+esc((p.pave.partA&&p.pave.partA.problem)||'')+'</textarea>'
+        +'<textarea data-pave="partA.solution" placeholder="Solution" style="margin-top:6px">'+esc((p.pave.partA&&p.pave.partA.solution)||'')+'</textarea></label>';
+      html+='<label>Part B — Discovery<textarea data-pave="partB.customerDiscovery" placeholder="Discovery notes">'+esc((p.pave.partB&&p.pave.partB.customerDiscovery)||'')+'</textarea>'
+        +'<textarea data-pave="partB.targetPersona" placeholder="Target persona" style="margin-top:6px">'+esc((p.pave.partB&&p.pave.partB.targetPersona)||'')+'</textarea></label>';
+      html+='<label>Part C — Competition & Market<textarea data-pave="partC.competitiveMatrix" placeholder="Competitive notes">'+esc((p.pave.partC&&p.pave.partC.competitiveMatrix)||'')+'</textarea>'
+        +'<textarea data-pave="partC.risks" placeholder="Risks" style="margin-top:6px">'+esc((p.pave.partC&&p.pave.partC.risks)||'')+'</textarea></label>';
+      html+='<label>Part D — Team & Pitch<textarea data-pave="partD.foundingTeam" placeholder="Founding team">'+esc((p.pave.partD&&p.pave.partD.foundingTeam)||'')+'</textarea>'
+        +'<textarea data-pave="partD.pitch90" placeholder="90-second pitch" style="margin-top:6px">'+esc((p.pave.partD&&p.pave.partD.pitch90)||'')+'</textarea></label>';
+      html+='<button type="button" class="btn btn-forest" data-save-pave="'+esc(p.id)+'">Save PAVE</button>';
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  return html;
+}
+
+function renderGoals(){
+  let html='<div class="page-head"><div><h2>Goals</h2><p>Outcomes you are steering toward.</p></div>'
+    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="create-goal">Create goal</button></div></div>';
+  if(!state.goals.length){
+    html+='<div class="empty"><strong>No goals yet</strong>Create a goal or apply the E3 template.</div>';
+    return html;
+  }
+  html+='<div class="list">';
+  state.goals.forEach(function(g){
+    html+='<div class="row-item"><div><div class="rt">'+esc(g.title)+'</div>'
+      +'<div class="rm">'+fmtDate(g.createdAt)+'</div></div>'
+      +'<div class="row-actions">'+statusChip(g.status)
+      +'<button type="button" class="btn btn-sm" data-goal-status="'+esc(g.id)+'" data-status="done">Done</button>'
+      +'<button type="button" class="btn btn-sm btn-danger" data-del-goal="'+esc(g.id)+'">Delete</button></div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderTasks(){
+  let html='<div class="page-head"><div><h2>Tasks</h2><p>Execution queue — no fake progress.</p></div>'
+    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="create-task">Create task</button></div></div>';
+  if(!state.tasks.length){
+    html+='<div class="empty"><strong>No tasks</strong>Create one or apply E3 / PAVE.</div>';
+    return html;
+  }
+  html+='<div class="list">';
+  state.tasks.forEach(function(t){
+    html+='<div class="row-item"><div><div class="rt">'+esc(t.title)+'</div>'
+      +'<div class="rm">'+esc(t.priority||'')+' · '+(t.due?fmtDate(t.due):'no due')+' · '+esc(t.source||'')+'</div></div>'
+      +'<div class="row-actions">'+statusChip(t.status)
+      +(t.status!=='done'?'<button type="button" class="btn btn-sm" data-task-done="'+esc(t.id)+'">Done</button>':'')
+      +'<button type="button" class="btn btn-sm btn-danger" data-del-task="'+esc(t.id)+'">Delete</button></div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderEvidence(){
+  let html='<div class="page-head"><div><h2>Evidence</h2><p>Interviews, documents, metrics, meetings — linked to experiments and requirements.</p></div>'
+    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="create-evidence">Add evidence</button></div></div>';
+
+  // Assumptions + experiments summary
+  html+='<div class="grid grid-2" style="margin-bottom:14px">';
+  html+='<div class="panel"><h3>Assumptions</h3>';
+  if(!state.assumptions.length) html+='<div class="empty"><strong>None</strong><button type="button" class="btn btn-sm" style="margin-top:8px" data-action="create-assumption">Create assumption</button></div>';
+  else {
+    html+='<div class="list">';
+    state.assumptions.forEach(function(a){
+      html+='<div class="row-item"><div><div class="rt">'+esc(a.title)+'</div>'
+        +'<div class="rm">key: '+esc(a.key)+'</div></div>'
+        +'<div class="row-actions">'+statusChip(a.confidence||'insufficient')+'</div></div>';
+    });
+    html+='</div><button type="button" class="btn btn-sm" style="margin-top:8px" data-action="create-assumption">Create assumption</button>';
+  }
+  html+='</div>';
+
+  html+='<div class="panel"><h3>Experiments</h3>';
+  if(!state.experiments.length) html+='<div class="empty"><strong>None</strong><button type="button" class="btn btn-sm" style="margin-top:8px" data-action="create-experiment">Create experiment</button></div>';
+  else {
+    html+='<div class="list">';
+    state.experiments.forEach(function(e){
+      const ep=experimentProgress(e,state);
+      html+='<div class="row-item"><div><div class="rt">'+esc(e.title)+'</div>'
+        +'<div class="rm num">'+ep.count+'/'+ep.target+' · confidence: '+esc(ep.confidence)+'</div>'
+        +'<div class="rm">'+esc(ep.why)+'</div></div>'
+        +'<div class="row-actions"><button type="button" class="btn btn-why" data-why="experiment:'+esc(e.id)+'">WHY?</button></div></div>';
+    });
+    html+='</div><button type="button" class="btn btn-sm" style="margin-top:8px" data-action="create-experiment">Create experiment</button>';
+  }
+  html+='</div></div>';
+
+  html+='<div class="panel"><h3>Evidence ledger</h3>';
+  if(!state.evidence.length) html+='<div class="empty"><strong>No evidence recorded</strong>Progress stays honest until you attach real items.</div>';
+  else {
+    html+='<div class="list">';
+    state.evidence.forEach(function(e){
+      html+='<div class="row-item"><div><div class="rt">'+esc(e.title)+'</div>'
+        +'<div class="rm"><span class="chip">'+esc(e.type)+'</span> · '+fmtDate(e.createdAt)
+        +(e.experimentId?' · exp linked':'')
+        +(e.linkedRequirementIds&&e.linkedRequirementIds.length?' · req linked':'')
+        +'</div></div>'
+        +'<button type="button" class="btn btn-sm btn-danger" data-del-evidence="'+esc(e.id)+'">Delete</button></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function renderExperiments(){
+  // Dedicated experiments view — same data, focused
+  let html='<div class="page-head"><div><h2>Experiments</h2><p>Tests linked to assumptions. Meeting target unlocks decision readiness — never auto-validates.</p></div>'
+    +'<div class="actions">'
+    +'<button type="button" class="btn" data-action="create-assumption">Assumption</button>'
+    +'<button type="button" class="btn btn-primary" data-action="create-experiment">Experiment</button>'
+    +'<button type="button" class="btn btn-forest" data-action="create-evidence">Evidence</button>'
+    +'</div></div>';
+
+  if(!state.experiments.length){
+    html+='<div class="empty"><strong>No experiments</strong>Create an assumption, then an experiment with a target count.</div>';
+    return html;
+  }
+  html+='<div class="list">';
+  state.experiments.forEach(function(e){
+    const ep=experimentProgress(e,state);
+    const asm=state.assumptions.find(function(a){return a.key===e.assumptionKey;});
+    const pct=Math.min(100, Math.round((ep.count/ep.target)*100));
+    html+='<div class="panel" style="margin-bottom:10px"><div class="rt">'+esc(e.title)+'</div>'
+      +'<div class="rm" style="margin:6px 0">Assumption: '+esc(asm?asm.title:e.assumptionKey)+'</div>'
+      +'<div class="progress-bar"><span style="width:'+pct+'%"></span></div>'
+      +'<div class="meta-line num">'+ep.count+'/'+ep.target+' · '+statusChip(ep.confidence)
+      +'<button type="button" class="btn btn-why" data-why="experiment:'+esc(e.id)+'">WHY?</button></div>'
+      +'<p style="color:var(--muted);font-size:12.5px;margin:8px 0 0">'+esc(ep.why)+'</p></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderRoadmap(){
+  const prog=activeProgram();
+  const pp=programProgress(state,prog);
+  let html='<div class="page-head"><div><h2>Roadmap</h2><p>Stage timeline derived from requirements and evidence — not decorative percentages.</p></div></div>';
+  if(!prog){
+    html+='<div class="empty"><strong>No active program</strong>Apply E3 / PAVE from Programs.</div>';
+    return html;
+  }
+  html+='<div class="panel"><h3>'+esc(prog.name)+'</h3><div class="stage-rail" style="flex-wrap:nowrap">';
+  (pp.stageStatuses||[]).forEach(function(s){
+    html+='<button type="button" class="stage-node '+esc(s.status)+'" data-why="stage:'+esc(s.id)+'">'
+      +'<div class="sn-name">'+esc(s.name)+'</div>'
+      +'<div class="sn-status">'+statusChip(s.status)+'</div>'
+      +'<div class="rm" style="margin-top:8px;font-size:11.5px;color:var(--muted)">'+esc(s.why)+'</div></button>';
+  });
+  html+='</div><p class="field-hint" style="margin-top:10px">Click any stage for full WHY (reason, evidence ids, missing, action).</p></div>';
+
+  html+='<div class="panel" style="margin-top:14px"><h3>Milestones</h3>';
+  const ms=state.milestones.filter(function(m){return !prog||m.programId===prog.id;});
+  if(!ms.length) html+='<div class="empty">No milestones.</div>';
+  else {
+    html+='<div class="list">';
+    ms.forEach(function(m){
+      html+='<div class="row-item"><div><div class="rt">'+esc(m.title)+'</div>'
+        +(m.blockedReason?'<div class="rm">'+esc(m.blockedReason)+'</div>':'')
+        +'</div>'+statusChip(m.status)+'</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function renderStrategy(){
+  let html='<div class="page-head"><div><h2>Strategy map</h2><p>Vision → outcome chain. Click a node to edit.</p></div></div>';
+  if(!state.strategyNodes.length){
+    html+='<div class="empty"><strong>No strategy nodes</strong>Apply E3 / PAVE to generate a vertical strategy graph.</div>';
+    return html;
+  }
+  const nodes=state.strategyNodes;
+  const edges=state.strategyEdges||[];
+  const maxY=Math.max.apply(null, nodes.map(function(n){return n.y||0;}))+80;
+  const width=360;
+  const height=maxY;
+
+  let svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'">';
+  edges.forEach(function(e){
+    const a=nodes.find(function(n){return n.id===e.from;});
+    const b=nodes.find(function(n){return n.id===e.to;});
+    if(!a||!b) return;
+    const x1=(a.x||40)+140, y1=(a.y||0)+28, x2=(b.x||40)+140, y2=(b.y||0)+8;
+    svg+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="rgba(184,204,220,.28)" stroke-width="2"/>';
+  });
+  nodes.forEach(function(n){
+    const x=n.x||40, y=n.y||0;
+    const sel=ui.selectedNodeId===n.id;
+    svg+='<g class="node-hit" data-node="'+esc(n.id)+'" transform="translate('+x+','+y+')">'
+      +'<rect width="280" height="56" rx="10" fill="'+(sel?'#243447':'#1c2a3c')+'" stroke="'+(sel?'#f0b429':'rgba(184,204,220,.2)')+'" stroke-width="1.5"/>'
+      +'<text x="14" y="22" fill="#f0b429" font-size="11" font-weight="700">'+esc(n.label||n.type)+'</text>'
+      +'<text x="14" y="42" fill="#e8eef4" font-size="12">'+esc((n.text||'').slice(0,42))+((n.text||'').length>42?'…':'')+'</text>'
+      +'</g>';
+  });
+  svg+='</svg>';
+  html+='<div class="strategy-wrap">'+svg+'</div>';
+  if(ui.selectedNodeId){
+    const n=nodes.find(function(x){return x.id===ui.selectedNodeId;});
+    if(n){
+      html+='<div class="panel" style="margin-top:14px"><h3>Edit node</h3><div class="form-grid">'
+        +'<label>Label<input id="nodeLabel" value="'+esc(n.label||'')+'"/></label>'
+        +'<label>Text<textarea id="nodeText">'+esc(n.text||'')+'</textarea></label>'
+        +'<button type="button" class="btn btn-primary" data-save-node="'+esc(n.id)+'">Save node</button>'
+        +'</div></div>';
+    }
+  }
+  return html;
+}
+
+function renderMentors(){
+  const advisor=isAdvisorMode();
+  let html='<div class="page-head"><div><h2>'+(advisor?'Mentor dashboard':'Mentors')+'</h2>'
+    +'<p>'+(advisor?'Shared founder workspace slice — recommend actions the founder can accept.':'Invite advisors and control what they see.')+'</p></div>'
+    +'<div class="actions"><label class="toggle"><input type="checkbox" id="advisorModeToggle"'+(advisor?' checked':'')+'/> Advisor mode</label></div></div>';
+
+  if(!advisor){
+    html+='<div class="panel" style="margin-bottom:14px"><h3>Invite advisor</h3><div class="form-grid" id="inviteAdvisor">'
+      +'<div class="form-row"><label>Name<input name="name" required/></label><label>Email<input name="email" type="email" required/></label></div>'
+      +'<label>Role<select name="role"><option value="mentor">mentor</option><option value="advisor">advisor</option><option value="viewer">viewer</option></select></label>'
+      +'<button type="button" class="btn btn-primary" data-action="invite-advisor">Invite</button></div></div>';
+
+    html+='<div class="panel" style="margin-bottom:14px"><h3>Advisors</h3>';
+    if(!state.advisors.length) html+='<div class="empty"><strong>No advisors yet</strong>Invite a mentor or advisor above.</div>';
+    else {
+      state.advisors.forEach(function(a){
+        const share=Object.assign({}, (state.config&&state.config.mentorShareDefaults)||{}, a.share||{});
+        html+='<div class="row-item" style="flex-direction:column;align-items:stretch">'
+          +'<div style="display:flex;justify-content:space-between;gap:8px;width:100%"><div><div class="rt">'+esc(a.name)+'</div>'
+          +'<div class="rm">'+esc(a.email)+' · '+esc(a.role)+'</div></div>'
+          +'<button type="button" class="btn btn-sm btn-danger" data-del-advisor="'+esc(a.id)+'">Remove</button></div>'
+          +'<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">';
+        ['programs','roadmap','goals','experiments','evidence','metrics','pave','financials','crm'].forEach(function(k){
+          html+='<label class="toggle"><input type="checkbox" data-share="'+esc(a.id)+'" data-key="'+esc(k)+'"'+(share[k]?' checked':'')+'/> '+esc(k)+'</label>';
+        });
+        html+='</div></div>';
+      });
+    }
+    html+='</div>';
+  }
+
+  // Recommendations
+  html+='<div class="panel"><h3>Mentor recommendations</h3>';
+  if(advisor){
+    html+='<div class="form-grid" style="margin-bottom:14px">'
+      +'<label>Title<input id="recTitle"/></label>'
+      +'<label>Body<textarea id="recBody"></textarea></label>'
+      +'<button type="button" class="btn btn-primary" data-action="add-recommendation">Add recommendation</button></div>';
+  }
+  const recs=state.recommendations||[];
+  if(!recs.length) html+='<div class="empty"><strong>No recommendations</strong>'+(advisor?'Add one above.':'Advisors can add recommendations in advisor mode (?view=advisor).')+'</div>';
+  else {
+    html+='<div class="list">';
+    recs.forEach(function(r){
+      html+='<div class="row-item"><div><div class="rt">'+esc(r.title)+'</div>'
+        +'<div class="rm">'+esc(r.body)+'</div>'
+        +'<div class="rm">from '+esc(r.advisorName||r.advisorEmail||'advisor')+' · '+statusChip(r.status||'pending')+'</div></div>';
+      if(!advisor && (r.status==='pending'||!r.status)){
+        html+='<div class="row-actions">'
+          +'<button type="button" class="btn btn-sm btn-primary" data-accept-rec="'+esc(r.id)+'">Accept</button>'
+          +'<button type="button" class="btn btn-sm" data-decline-rec="'+esc(r.id)+'">Decline</button></div>';
+      }
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+
+  if(advisor){
+    const health=businessHealth(state);
+    html+='<div class="panel" style="margin-top:14px"><h3>Shared health snapshot</h3><div class="list">';
+    health.categories.forEach(function(c){
+      html+='<div class="row-item"><div><div class="rt">'+esc(c.name)+'</div><div class="rm">'+esc(c.reason)+'</div></div>'+statusChip(c.status)+'</div>';
+    });
+    html+='</div></div>';
+  }
+  return html;
+}
+
+function renderMetrics(){
+  let html='<div class="page-head"><div><h2>Metrics</h2><p>Current / target with source. Evidence-linked metrics update from the ledger.</p></div>'
+    +'<div class="actions"><button type="button" class="btn btn-primary" data-action="create-metric">Add metric</button></div></div>';
+  if(!state.metrics.length){
+    html+='<div class="empty"><strong>No metrics</strong>Add one manually or apply E3 / PAVE.</div>';
+    return html;
+  }
+  html+='<div class="list">';
+  state.metrics.forEach(function(m){
+    html+='<div class="row-item"><div><div class="rt">'+esc(m.name)+'</div>'
+      +'<div class="rm num">'+esc(m.current)+' / '+esc(m.target)+' '+esc(m.unit||'')+' · source: '+esc(m.source||'manual')+'</div></div>'
+      +'<div class="row-actions">'
+      +(m.source==='manual'?'<button type="button" class="btn btn-sm" data-update-metric="'+esc(m.id)+'">Update</button>':'')
+      +'</div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderCrm(){
+  return '<div class="page-head"><div><h2>CRM</h2><p>Deep-link into Denizen CRM. Relations stay in Business Studio.</p></div>'
+    +'<div class="actions"><a class="btn btn-primary" href="/crm/">Open CRM</a></div></div>'
+    +'<iframe class="crm-frame" title="CRM" src="/crm/?embed=1"></iframe>'
+    +'<p class="field-hint" style="margin-top:10px">If the iframe is blocked, use Open CRM. Contact/deal links can be stored in relations[] in a later pass.</p>';
+}
+
+function renderCalendar(){
+  return '<div class="page-head"><div><h2>Calendar</h2><p>Meetings and program checkpoints.</p></div>'
+    +'<div class="actions"><a class="btn" href="/studio-board/">Open Studio Board calendar</a></div></div>'
+    +'<div class="panel"><p>Business Studio calendar deep-links to Studio Board / office calendar for scheduling.</p>'
+    +'<p class="field-hint">Local meetings stub: '+(state.meetings.length||0)+' stored meeting(s). Full calendar UX is shared with Studio Board.</p>'
+    +'<a class="btn btn-forest" href="/studio-board/?view=calendar">Open calendar view</a></div>';
+}
+
+function renderSettings(){
+  const sess=readVisitorSession();
+  let html='<div class="page-head"><div><h2>Settings</h2><p>Workspace, sync, and role.</p></div></div>';
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Business</h3>';
+  if(state.business){
+    html+='<div class="form-grid"><label>Business name<input id="setBizName" value="'+esc(state.business.name||'')+'"/></label>'
+      +'<label>Founder name<input id="setFounderName" value="'+esc(state.business.founderName||'')+'"/></label>'
+      +'<button type="button" class="btn btn-primary" data-action="save-business">Save</button></div>';
+  } else html+='<div class="empty">No business yet.</div>';
+  html+='</div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Sync</h3>'
+    +'<p class="rm">Session: '+(sess?esc(sess.session_id.slice(0,12))+'…':'none — localStorage only')+'</p>'
+    +'<p class="rm">Cloud sync: '+(remoteSyncEnabled?'enabled':'not connected')+'</p>'
+    +'<button type="button" class="btn" data-action="sync-now">Sync now</button></div>';
+
+  html+='<div class="panel" style="margin-bottom:14px"><h3>Advisor mode</h3>'
+    +'<label class="toggle"><input type="checkbox" id="setAdvisorMode"'+(isAdvisorMode()?' checked':'')+'/> Enable mentor dashboard (?view=advisor also works)</label></div>';
+
+  html+='<div class="panel"><h3>Danger zone</h3>'
+    +'<button type="button" class="btn btn-danger" data-action="reset-workspace">Reset local workspace</button></div>';
+  return html;
+}
+
+/* ---------- 13. Main render ---------- */
+function render(){
+  renderSidebar();
+  renderBottomNav();
+  const main=document.getElementById('main');
+  if(!state.business){
+    main.innerHTML=renderOnboarding();
+    return;
+  }
+  const map={
+    overview:renderOverview,
+    strategy:renderStrategy,
+    roadmap:renderRoadmap,
+    goals:renderGoals,
+    tasks:renderTasks,
+    evidence:renderEvidence,
+    experiments:renderExperiments,
+    programs:renderPrograms,
+    mentors:renderMentors,
+    metrics:renderMetrics,
+    crm:renderCrm,
+    calendar:renderCalendar,
+    templates:function(){return '<div class="page-head"><h2>Templates</h2></div>'+phase2Stub('Template gallery');},
+    financials:function(){return '<div class="page-head"><h2>Financials</h2></div>'+phase2Stub('Financials');},
+    diagrams:function(){return '<div class="page-head"><h2>Diagrams</h2></div>'+phase2Stub('Diagrams');},
+    documents:function(){return '<div class="page-head"><h2>Documents</h2></div>'+phase2Stub('Documents');},
+    reports:function(){return '<div class="page-head"><h2>Reports</h2></div>'+phase2Stub('Reports');},
+    settings:renderSettings
+  };
+  const fn=map[ui.view]||renderOverview;
+  main.innerHTML=fn();
+}
+
+function setView(id){
+  ui.view=id;
+  try{
+    const u=new URL(location.href);
+    if(id==='overview') u.searchParams.delete('tab');
+    else u.searchParams.set('tab', id);
+    history.replaceState(null,'',u);
+  }catch(e){}
+  document.getElementById('moreSheet').classList.remove('open');
+  document.getElementById('moreSheet').hidden=true;
+  render();
+}
+
+/* ---------- 14. Event wiring ---------- */
+function setNested(obj, path, value){
+  const parts=path.split('.');
+  let cur=obj;
+  for(let i=0;i<parts.length-1;i++){
+    if(!cur[parts[i]] || typeof cur[parts[i]]!=='object') cur[parts[i]]={};
+    cur=cur[parts[i]];
+  }
+  cur[parts[parts.length-1]]=value;
+}
+
+document.addEventListener('click', function(e){
+  const t=e.target.closest('[data-nav],[data-action],[data-why],[data-task-done],[data-del-task],[data-del-goal],[data-goal-status],[data-del-evidence],[data-select-program],[data-save-pave],[data-node],[data-save-node],[data-accept-rec],[data-decline-rec],[data-del-advisor],[data-update-metric],[data-close-more],[data-share]');
+  if(!t) {
+    // bottom nav handled below
+  }
+
+  const bn=e.target.closest('.bottom-nav [data-view]');
+  if(bn){ setView(bn.getAttribute('data-view')); return; }
+  const bnAct=e.target.closest('.bottom-nav [data-action]');
+  if(bnAct){
+    const a=bnAct.getAttribute('data-action');
+    if(a==='quickadd') quickAddMenu();
+    if(a==='more'){
+      const sheet=document.getElementById('moreSheet');
+      renderMoreSheet();
+      sheet.hidden=false;
+      sheet.classList.add('open');
+    }
+    return;
+  }
+  if(e.target.closest('[data-close-more]') || e.target.id==='moreSheet'){
+    if(e.target.id==='moreSheet' || e.target.closest('[data-close-more]')){
+      document.getElementById('moreSheet').classList.remove('open');
+      document.getElementById('moreSheet').hidden=true;
+    }
+  }
+
+  const nav=e.target.closest('[data-nav]');
+  if(nav){ setView(nav.getAttribute('data-nav')); return; }
+
+  const why=e.target.closest('[data-why]');
+  if(why){ showWhy(why.getAttribute('data-why')); return; }
+
+  const act=e.target.closest('[data-action]');
+  if(act){
+    const a=act.getAttribute('data-action');
+    if(a==='start-business'){
+      promptForm('Start your business',[
+        {name:'name',label:'Business name',required:true},
+        {name:'founder',label:'Founder name',required:true,value:'Founder'}
+      ],function(d){ startBusiness(d.name,d.founder); });
+    }
+    if(a==='apply-e3' || a==='apply-e3-onboard'){
+      if(!state.business){
+        promptForm('Apply E3 / PAVE',[
+          {name:'name',label:'Business name',required:true},
+          {name:'founder',label:'Founder name',required:true,value:'Founder'}
+        ],function(d){
+          startBusiness(d.name,d.founder);
+          applyE3Template({businessName:d.name,founderName:d.founder});
+          setView('programs');
+        });
+      } else {
+        applyE3Template();
+        setView('programs');
+      }
+    }
+    if(a==='import-stub') toast('Import is Phase 2 — not built yet');
+    if(a==='quickadd') quickAddMenu();
+    if(a==='create-task') openCreateTask();
+    if(a==='create-goal') openCreateGoal();
+    if(a==='create-evidence') openCreateEvidence();
+    if(a==='create-assumption') openCreateAssumption();
+    if(a==='create-experiment') openCreateExperiment();
+    if(a==='create-task-from-rec') openCreateTask({title:act.getAttribute('data-payload')||''});
+    if(a==='create-metric'){
+      promptForm('Add metric',[
+        {name:'name',label:'Name',required:true},
+        {name:'target',label:'Target',type:'number',value:'1'},
+        {name:'current',label:'Current',type:'number',value:'0'},
+        {name:'unit',label:'Unit',value:'count'}
+      ],function(d){
+        state.metrics.push({
+          id:uid('met'),key:uid('key'),name:d.name,category:'manual',
+          current:Number(d.current)||0,target:Number(d.target)||1,unit:d.unit||'count',
+          source:'manual',sharedWithAdvisors:true,updatedAt:nowISO()
+        });
+        scheduleSave(); render(); toast('Metric added');
+      });
+    }
+    if(a==='invite-advisor'){
+      const form=document.getElementById('inviteAdvisor');
+      if(!form) return;
+      const name=form.querySelector('[name=name]').value.trim();
+      const email=form.querySelector('[name=email]').value.trim();
+      const role=form.querySelector('[name=role]').value;
+      if(!name||!email){ toast('Name and email required'); return; }
+      state.advisors.push({
+        id:uid('adv'),name:name,email:email,role:role,
+        share:Object.assign({}, (state.config&&state.config.mentorShareDefaults)||{}),
+        invitedAt:nowISO()
+      });
+      logActivity('Invited advisor '+name);
+      scheduleSave(); render(); toast('Advisor invited');
+    }
+    if(a==='add-recommendation'){
+      const title=(document.getElementById('recTitle')||{}).value||'';
+      const body=(document.getElementById('recBody')||{}).value||'';
+      if(!title.trim()){ toast('Title required'); return; }
+      state.recommendations.unshift({
+        id:uid('rec'),title:title.trim(),body:body.trim(),
+        advisorName:'Advisor',advisorEmail:'',status:'pending',
+        toRole:'founder',createdAt:nowISO()
+      });
+      scheduleSave(); render(); toast('Recommendation added');
+    }
+    if(a==='save-business'){
+      if(!state.business) return;
+      state.business.name=(document.getElementById('setBizName')||{}).value||state.business.name;
+      state.business.founderName=(document.getElementById('setFounderName')||{}).value||state.business.founderName;
+      scheduleSave(); toast('Saved'); render();
+    }
+    if(a==='sync-now'){
+      pushRemoteWorkspace().then(function(){ toast('Sync attempted'); }).catch(function(){ toast('Sync failed — local only'); });
+    }
+    if(a==='reset-workspace'){
+      if(confirm('Reset local Business Studio workspace?')){
+        state=emptyState();
+        window.storage.removeItem('workspace');
+        scheduleSave(); render(); toast('Workspace reset');
+      }
+    }
+    return;
+  }
+
+  const td=e.target.closest('[data-task-done]');
+  if(td){
+    const id=td.getAttribute('data-task-done');
+    const task=state.tasks.find(function(x){return x.id===id;});
+    if(task){ task.status='done'; task.completedAt=nowISO(); scheduleSave(); render(); }
+    return;
+  }
+  const dt=e.target.closest('[data-del-task]');
+  if(dt){
+    state.tasks=state.tasks.filter(function(x){return x.id!==dt.getAttribute('data-del-task');});
+    scheduleSave(); render(); return;
+  }
+  const dg=e.target.closest('[data-del-goal]');
+  if(dg){
+    state.goals=state.goals.filter(function(x){return x.id!==dg.getAttribute('data-del-goal');});
+    scheduleSave(); render(); return;
+  }
+  const gs=e.target.closest('[data-goal-status]');
+  if(gs){
+    const g=state.goals.find(function(x){return x.id===gs.getAttribute('data-goal-status');});
+    if(g){ g.status=gs.getAttribute('data-status')||'done'; scheduleSave(); render(); }
+    return;
+  }
+  const de=e.target.closest('[data-del-evidence]');
+  if(de){
+    state.evidence=state.evidence.filter(function(x){return x.id!==de.getAttribute('data-del-evidence');});
+    syncMetricFromEvidence();
+    scheduleSave(); render(); return;
+  }
+  const sp=e.target.closest('[data-select-program]');
+  if(sp){
+    ui.selectedProgramId=sp.getAttribute('data-select-program');
+    const p=state.programs.find(function(x){return x.id===ui.selectedProgramId;});
+    state.programs.forEach(function(x){ x.status = (p && x.id===p.id) ? 'active' : (x.status==='active'?'paused':x.status); });
+    scheduleSave(); render(); return;
+  }
+  const savePave=e.target.closest('[data-save-pave]');
+  if(savePave){
+    const pid=savePave.getAttribute('data-save-pave');
+    const prog=state.programs.find(function(x){return x.id===pid;});
+    const wrap=document.querySelector('[data-pave-program="'+pid+'"]');
+    if(prog && wrap){
+      if(!prog.pave) prog.pave={};
+      wrap.querySelectorAll('[data-pave]').forEach(function(inp){
+        setNested(prog.pave, inp.getAttribute('data-pave'), inp.value);
+      });
+      scheduleSave(); toast('PAVE saved');
+    }
+    return;
+  }
+  const node=e.target.closest('[data-node]');
+  if(node){
+    ui.selectedNodeId=node.getAttribute('data-node');
+    render(); return;
+  }
+  const sn=e.target.closest('[data-save-node]');
+  if(sn){
+    const n=state.strategyNodes.find(function(x){return x.id===sn.getAttribute('data-save-node');});
+    if(n){
+      n.label=(document.getElementById('nodeLabel')||{}).value||n.label;
+      n.text=(document.getElementById('nodeText')||{}).value||n.text;
+      scheduleSave(); toast('Node saved'); render();
+    }
+    return;
+  }
+  const ar=e.target.closest('[data-accept-rec]');
+  if(ar){
+    const r=state.recommendations.find(function(x){return x.id===ar.getAttribute('data-accept-rec');});
+    if(r){
+      r.status='accepted';
+      state.tasks.unshift({
+        id:uid('task'),title:r.title,status:'todo',priority:'medium',due:null,
+        source:'mentor_recommendation',recommendationId:r.id,createdAt:nowISO(),
+        notes:r.body
+      });
+      logActivity('Accepted mentor recommendation');
+      scheduleSave(); render(); toast('Accepted — task created');
+    }
+    return;
+  }
+  const dr=e.target.closest('[data-decline-rec]');
+  if(dr){
+    const r=state.recommendations.find(function(x){return x.id===dr.getAttribute('data-decline-rec');});
+    if(r){ r.status='declined'; scheduleSave(); render(); toast('Declined'); }
+    return;
+  }
+  const da=e.target.closest('[data-del-advisor]');
+  if(da){
+    state.advisors=state.advisors.filter(function(x){return x.id!==da.getAttribute('data-del-advisor');});
+    scheduleSave(); render(); return;
+  }
+  const um=e.target.closest('[data-update-metric]');
+  if(um){
+    const m=state.metrics.find(function(x){return x.id===um.getAttribute('data-update-metric');});
+    if(!m) return;
+    promptForm('Update metric',[
+      {name:'current',label:'Current value',type:'number',value:String(m.current),required:true}
+    ],function(d){
+      m.current=Number(d.current)||0;
+      m.updatedAt=nowISO();
+      scheduleSave(); render(); toast('Metric updated');
+    });
+    return;
+  }
+});
+
+document.addEventListener('change', function(e){
+  if(e.target && e.target.id==='advisorModeToggle'){
+    state.config=state.config||emptyConfig();
+    state.config.advisorMode=!!e.target.checked;
+    try{
+      const u=new URL(location.href);
+      if(state.config.advisorMode) u.searchParams.set('view','advisor');
+      else u.searchParams.delete('view');
+      history.replaceState(null,'',u);
+    }catch(err){}
+    scheduleSave(); render();
+  }
+  if(e.target && e.target.id==='setAdvisorMode'){
+    state.config=state.config||emptyConfig();
+    state.config.advisorMode=!!e.target.checked;
+    scheduleSave(); render();
+  }
+  const share=e.target.closest('[data-share]');
+  if(share && e.target.matches('input[type=checkbox]')){
+    const id=share.getAttribute('data-share');
+    const key=share.getAttribute('data-key');
+    const adv=state.advisors.find(function(a){return a.id===id;});
+    if(adv){
+      adv.share=adv.share||{};
+      adv.share[key]=!!e.target.checked;
+      scheduleSave();
+    }
+  }
+});
+
+/* ---------- 15. Boot ---------- */
+(function boot(){
+  loadLocal();
+  try{
+    const q=new URLSearchParams(location.search);
+    if(q.get('tab') && NAV.some(function(n){return n.id===q.get('tab');})) ui.view=q.get('tab');
+    if(q.get('view')==='advisor'){
+      state.config=state.config||emptyConfig();
+      state.config.advisorMode=true;
+      ui.view='mentors';
+    }
+  }catch(e){}
+  render();
+  bootstrapSync().then(function(){ render(); }).catch(function(){});
+})();
+</script>
+</body>
+</html>
