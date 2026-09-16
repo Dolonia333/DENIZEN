@@ -857,7 +857,7 @@ body.standalone{min-height:100vh}
         <input type="text" id="search" placeholder="Search" oninput="setFilter('search',this.value)">
       </div>
       <button class="resetbtn" onclick="saveCurrentView()">+ Save view</button>
-      <button class="resetbtn" onclick="resetAll()">Reset data</button>
+      <button class="resetbtn" onclick="resetAll()">Clear board</button>
     </div>
   </header>
 
@@ -1217,6 +1217,22 @@ function loadTemplate(id, seedData){
   if(seedData){ const d=tpl.seed(); state.people=d.people; state.tasks=d.tasks; state.events=d.events; }
   applyBrand();
 }
+/** Built-in example boards (media/software/events) — never auto-load for real orgs. */
+function isExampleSeedBoard(s){
+  if(!s) return false;
+  const people=Array.isArray(s.people)?s.people:[];
+  const tasks=Array.isArray(s.tasks)?s.tasks:[];
+  const names=people.map(p=>String(p.name||'')).join('\n');
+  if(/Maya Rivera|Devon Clarke|Priya Shah|Luis Moreno|Sam Turner/.test(names)) return true;
+  if(/Ava Chen|Ben Ortiz|Chris Park/.test(names) && tasks.some(t=>/Sprint|Backlog|Bug/i.test(String(t.title||'')))) return true;
+  const clients=new Set(tasks.map(t=>String(t.client||'')).filter(Boolean));
+  return clients.has('TechFlow SaaS') || clients.has('Nike Run Club') || clients.has('Local Roots Cafe') || clients.has('City Arts Fest');
+}
+function clearToBlankBoard(){
+  loadTemplate('blank', true);
+  state.tasks=[]; state.people=[]; state.events=[]; state.notes=[]; state.activity=[];
+  normalize(state.tasks); applyBrand();
+}
 function applyBrand(){
   const nm=document.getElementById('brandName'), sb=document.getElementById('brandSub');
   if(nm) nm.textContent=state.config.teamName; if(sb) sb.textContent=state.config.teamSub;
@@ -1545,6 +1561,12 @@ async function pushRemoteWorkspace(){
 
 function applyRemoteState(d, updatedAt){
   if(!d) return;
+  if(isExampleSeedBoard(d)){
+    clearToBlankBoard();
+    if(updatedAt) remoteUpdatedAt=updatedAt;
+    scheduleRemoteSave();
+    return;
+  }
   if(dirty){ rebaseFromRemote(d, updatedAt); return; }
   state.tasks=d.tasks||[];
   state.people=d.people||[];
@@ -1665,41 +1687,65 @@ function hydrate(){
     }
     const [local, remote]=r||[];
     if(remote && remote.state && ((remote.state.tasks&&remote.state.tasks.length)||(remote.state.people&&remote.state.people.length)||remote.state.config)){
+      if(isExampleSeedBoard(remote.state)){
+        clearToBlankBoard();
+        scheduleRemoteSave();
+        markReady(); return;
+      }
       applyRemoteState(remote.state, remote.updated_at);
       // Keep local cache warm for offline.
       try{ window.storage.set(KEY, JSON.stringify(remote.state), true); }catch(e){}
       markReady(); return;
     }
-    if(local && local.value){ applyStored(local,true); scheduleRemoteSave(); markReady(); return; }
+    if(local && local.value){
+      try{
+        const parsed=JSON.parse(local.value);
+        if(isExampleSeedBoard(parsed)){
+          clearToBlankBoard();
+          try{ window.storage.set(KEY, JSON.stringify({tasks:[],people:[],events:[],notes:[],templates:[],config:state.config}), true); }catch(e){}
+          markReady(); return;
+        }
+      }catch(e){}
+      applyStored(local,false); scheduleRemoteSave(); markReady(); return;
+    }
     /* shared empty → migrate legacy personal board if one exists */
     let legacy=null; try{ legacy=await window.storage.get(KEY,false); }catch(e){}
     if(legacy && legacy.value){
+      try{
+        const parsed=JSON.parse(legacy.value);
+        if(isExampleSeedBoard(parsed)){
+          clearToBlankBoard();
+          markReady(); return;
+        }
+      }catch(e){}
       applyStored(legacy,false);
       try{ await window.storage.set(KEY, legacy.value, true); }catch(e){}
-    } else { applyStored(null,true); }
+    } else { applyStored(null,false); }
     markReady();
   }).catch(()=>markReady());
 }
-function applyStored(r,persistSeedIfEmpty){
+function applyStored(r,persistIfEmpty){
   try{
     if(r && r.value){
       const d=JSON.parse(r.value);
-      if(!dirty && d && ((d.tasks&&d.tasks.length)||(d.people&&d.people.length))){
+      if(isExampleSeedBoard(d)){ clearToBlankBoard(); return; }
+      if(!dirty && d && ((d.tasks&&d.tasks.length)||(d.people&&d.people.length)||(d.config&&d.config.categories))){
         state.tasks=d.tasks||[]; state.people=d.people||[]; state.events=d.events||[]; state.templates=d.templates||[]; state.notes=d.notes||[];
         if(d.config && Array.isArray(d.config.categories) && Array.isArray(d.config.stages) && d.config.categories.length && d.config.stages.length){
           state.config=d.config; TYPES=state.config.categories; STATUSES=state.config.stages; rebuildNextStep();
         }
         normalize(state.tasks); applyBrand(); render();
       }
-    } else if(persistSeedIfEmpty && !dirty){
-      /* definitively no saved data → persist the seed for next session */
-      window.storage.set(KEY, JSON.stringify({tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], config:state.config}), true).catch(()=>{});
+    } else if(persistIfEmpty && !dirty && state.config){
+      /* Persist blank structure only — never invent example tasks/people. */
+      window.storage.set(KEY, JSON.stringify({tasks:state.tasks||[], people:state.people||[], events:state.events||[], templates:state.templates||[], notes:state.notes||[], config:state.config}), true).catch(()=>{});
     }
   }catch(e){/* keep what's on screen */}
 }
 
 /* ============ Seed ============ */
-function seed(){ loadTemplate('media', true); }
+/** First paint: blank slate ready for real work (example templates stay opt-in in Settings). */
+function seed(){ loadTemplate('blank', true); }
 
 /* ============ Helpers ============ */
 function visibleTasks(){
@@ -2740,7 +2786,7 @@ function renderSettings(container){
 
     <div class="panel">
       <h3>Starter templates</h3>
-      <p class="stghint">Switching templates replaces your categories, pipeline, and all tasks/events on the shared board with example data for that business type.</p>
+      <p class="stghint">Boards start empty for real work. Loading a template is optional — it replaces your categories, pipeline, and all tasks/events on the shared board with example data for that business type.</p>
       <div class="tplcards">${tplCards}</div>
     </div>`;
 }
@@ -3037,7 +3083,7 @@ function markSeen(silent){
 }
 
 /* ============ Empty states ============ */
-function emptyState(){ return `<div class="empty"><h3>No tasks yet</h3><p>Add your first piece of work and it'll show up across every view.</p><button onclick="openTask()">Create a task</button></div>`; }
+function emptyState(){ return `<div class="empty"><h3>No tasks yet</h3><p>This board starts empty — add real delivery work and it will sync across Calendar, Table, Board, and CRM deals.</p><button onclick="openTask()">Create a task</button></div>`; }
 function noResults(){ return `<div class="empty"><h3>Nothing matches</h3><p>Try clearing a filter or your search.</p><button onclick="clearFilters()">Clear filters</button></div>`; }
 function clearFilters(){ ui.filters={client:'all',assignee:'all',type:'all',search:'',deal:null}; ui.statFilter=null; document.getElementById('search').value=''; render(); }
 
@@ -3281,11 +3327,11 @@ function confirmOk(){
 function closeConfirm(){ document.getElementById('cOverlay').classList.remove('open'); cCb=null; cReq=null; }
 function resetAll(){
   askConfirm({
-    title:'Clear all tasks?',
-    msg:'This clears every task, meeting, and follow-up from the shared board for EVERYONE on the team. Your categories, pipeline, team name, and people stay exactly as they are. This cannot be undone.',
+    title:'Clear board for real data?',
+    msg:'This clears every task, meeting, follow-up, note, and person from the shared board for EVERYONE on the team, and resets to a blank pipeline. Example templates stay available under Settings if you want sample data later. This cannot be undone.',
     input:true, placeholder:'Type RESET to confirm', require:'RESET',
     confirmLabel:'Clear board', danger:true,
-    cb:async()=>{ state.tasks=[]; state.events=[]; state.notes=[]; await save(); render(); toast('Board cleared \u2014 setup kept'); }
+    cb:async()=>{ clearToBlankBoard(); await save(); render(); toast('Board cleared — ready for real work'); }
   });
 }
 const VIEW_KEYS={'1':'calendar','2':'table','3':'board','4':'timeline','5':'myday','6':'team','7':'activity'};

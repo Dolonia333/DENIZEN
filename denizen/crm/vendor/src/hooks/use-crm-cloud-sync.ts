@@ -88,10 +88,16 @@ function applyWorkspace(state: CrmWorkspaceState, fns: CrmSyncApplyFns) {
 }
 
 function hasLocalData(state: CrmWorkspaceState): boolean {
-  return Object.values(state).some((v) => {
-    if (Array.isArray(v)) return v.length > 0;
-    if (v && typeof v === "object") return Object.keys(v).length > 0;
-    return false;
+  // Only count real pipeline/ops entities — ignore soft config defaults.
+  const keys: (keyof CrmWorkspaceState)[] = [
+    "contacts", "deals", "notes", "tasks", "companies", "goals",
+    "sequences", "sequenceEnrollments", "submissions", "quotes", "packages",
+    "meetings", "automations", "emailTemplates", "emailLog", "auditLog",
+    "dealComments", "supportTickets", "marketingCampaigns", "crmQuotas",
+  ];
+  return keys.some((k) => {
+    const v = state[k];
+    return Array.isArray(v) && v.length > 0;
   });
 }
 

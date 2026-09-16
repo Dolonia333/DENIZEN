@@ -273,7 +273,12 @@ export function DataToolsTab({
                 <div style={{ fontSize: 12, color: T.text3, marginTop: 6 }}>Auto-detects contacts, deals, tasks, companies, or notes</div>
               </div>
               {onLoadDemoData && (
-                <button onClick={onLoadDemoData} style={{ ...S.btnGhost, marginTop: 14 }}>Load sample CRM data</button>
+                <div style={{ marginTop: 14 }}>
+                  <button onClick={onLoadDemoData} style={{ ...S.btnGhost }}>Load sample CRM data</button>
+                  <div style={{ fontSize: 11, color: T.text3, marginTop: 6 }}>
+                    Optional for demos only. New workspaces start empty and track your real contacts, deals, and tasks.
+                  </div>
+                </div>
               )}
             </div>
           ) : (

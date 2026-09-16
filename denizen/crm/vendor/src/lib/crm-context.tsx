@@ -11,10 +11,7 @@ import {
   type Contact, type Deal, type Note, type Task, type Goal, type Package, type Submission,
   type Quote, type Company, type Automation, type Meeting, type Sequence, type AuditEntry,
   type EmailLogEntry, type Commission, type IntakeQuestion,
-  initialContacts, initialDeals, initialNotes, initialTasks, initialGoals, initialPackages,
-  initialSubmissions, initialQuotes, initialCompanies, initialAutomations, initialMeetings,
-  initialSequences, initialAuditLog, initialEmailLog, initialCommissions, initialProducts,
-  initialEmailTemplates, initialCustomFields, initialWebhooks, initialBranding,
+  initialBranding,
   initialAvailability, initialViews, initialPipelines, defaultIntakeQuestions,
   fmt, calcLeadScore,
 } from "@/lib/crm-data";
@@ -211,28 +208,28 @@ export function CRMProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useLocalStorage("userProfile", null);
   const [teamRoster, setTeamRoster] = useLocalStorage<any[]>("teamRoster", []);
   const [checklistCompleted, setChecklistCompleted] = useLocalStorage<string[]>("checklistCompleted", []);
-  const [contacts, setContacts] = useLocalStorage("contacts", initialContacts);
-  const [deals, setDeals] = useLocalStorage("deals", initialDeals);
-  const [notes, setNotes] = useLocalStorage("notes", initialNotes);
-  const [tasks, setTasks] = useLocalStorage("tasks", initialTasks);
-  const [goals, setGoals] = useLocalStorage("goals", initialGoals);
-  const [packages, setPackages] = useLocalStorage("packages", initialPackages);
-  const [submissions, setSubmissions] = useLocalStorage("submissions", initialSubmissions);
-  const [quotes, setQuotes] = useLocalStorage("quotes", initialQuotes);
-  const [companies, setCompanies] = useLocalStorage("companies", initialCompanies);
-  const [automations, setAutomations] = useLocalStorage("automations", initialAutomations);
-  const [meetings, setMeetings] = useLocalStorage("meetings", initialMeetings);
-  const [sequences, setSequences] = useLocalStorage("sequences", initialSequences);
-  const [auditLog, setAuditLog] = useLocalStorage("auditLog", initialAuditLog);
-  const [emailLog, setEmailLog] = useLocalStorage("emailLog", initialEmailLog);
-  const [commissions, setCommissions] = useLocalStorage("commissions", initialCommissions);
-  const [notifications, setNotifications] = useLocalStorage<NotifItem[]>("notifications", initialNotifications);
-  const [comments, setComments] = useLocalStorage<Record<number, any[]>>("comments", initialComments);
+  const [contacts, setContacts] = useLocalStorage("contacts", []);
+  const [deals, setDeals] = useLocalStorage("deals", []);
+  const [notes, setNotes] = useLocalStorage("notes", []);
+  const [tasks, setTasks] = useLocalStorage("tasks", []);
+  const [goals, setGoals] = useLocalStorage("goals", []);
+  const [packages, setPackages] = useLocalStorage("packages", []);
+  const [submissions, setSubmissions] = useLocalStorage("submissions", []);
+  const [quotes, setQuotes] = useLocalStorage("quotes", []);
+  const [companies, setCompanies] = useLocalStorage("companies", []);
+  const [automations, setAutomations] = useLocalStorage("automations", []);
+  const [meetings, setMeetings] = useLocalStorage("meetings", []);
+  const [sequences, setSequences] = useLocalStorage("sequences", []);
+  const [auditLog, setAuditLog] = useLocalStorage("auditLog", []);
+  const [emailLog, setEmailLog] = useLocalStorage("emailLog", []);
+  const [commissions, setCommissions] = useLocalStorage("commissions", []);
+  const [notifications, setNotifications] = useLocalStorage<NotifItem[]>("notifications", []);
+  const [comments, setComments] = useLocalStorage<Record<number, any[]>>("comments", {});
   const [branding, setBranding] = useLocalStorage("branding", initialBranding);
-  const [products, setProducts] = useLocalStorage("products", initialProducts);
-  const [emailTemplates, setEmailTemplates] = useLocalStorage("emailTemplates", initialEmailTemplates);
-  const [customFields, setCustomFields] = useLocalStorage("customFields", initialCustomFields);
-  const [webhooks, setWebhooks] = useLocalStorage("webhooks", initialWebhooks);
+  const [products, setProducts] = useLocalStorage("products", []);
+  const [emailTemplates, setEmailTemplates] = useLocalStorage("emailTemplates", []);
+  const [customFields, setCustomFields] = useLocalStorage("customFields", []);
+  const [webhooks, setWebhooks] = useLocalStorage("webhooks", []);
   const [availability, setAvailability] = useLocalStorage("availability", initialAvailability);
   const [intakeQuestions, setIntakeQuestions] = useLocalStorage("intakeQuestions", defaultIntakeQuestions);
   const [formConfig, setFormConfig] = useLocalStorage("formConfig", { title:"Tell us about your business", description:"Help us understand your goals — we'll build a custom quote in 24 hours." });

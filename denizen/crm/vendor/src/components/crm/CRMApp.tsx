@@ -21,6 +21,7 @@ import { IndustryConfigBridge } from "@/lib/crm-industry-bridge";
 import type { ProspectorLead } from "./AIProspector";
 import { ensureDenizenSession, markCrmDemoLoaded, markCrmUserEdited, postCrmEvent, intakeHandoff, fetchCrmWorkspace, fetchCrmTeam, fetchCrmSession, fetchVisitorAssistant, isCeoPrincipalSession, resolveProfileDisplayName, type CrmSendEmailResult, type CrmWorkspaceState, type CrmTeamMember, type CrmScope } from "@/lib/crm-api";
 import { appendAudit, restoreWorkspace, type ClearableEntity, type RestoreMode } from "@/lib/crm-data-management";
+import { purgeCrmDemoSeedIfPresent } from "@/lib/crm-demo-seed";
 import { EmailComposeModal, type ComposeSeed } from "./EmailComposeModal";
 import { CommandPalette } from "./CommandPalette";
 import { ContactDrawer } from "./ContactDrawer";
@@ -83,11 +84,7 @@ export default function CRMApp() {
   const [auditLog, setAuditLog] = useLocalStorage<AuditEntry[]>("auditLog", []);
   const [crmQuotas, setCrmQuotas] = useLocalStorage<Quota[]>("crmQuotas", []);
   const [automations, setAutomations] = useLocalStorage<Automation[]>("automations", []);
-  const [emailTemplates, setEmailTemplates] = useLocalStorage<EmailTemplate[]>("emailTemplates", [
-    { id: 1, name: "Welcome Email", subject: "Welcome to {{company}}!", body: "Hi {{name}},\n\nWelcome aboard! We're thrilled to have you.\n\nBest,\n{{sender.name}}", category: "Onboarding", createdAt: "2026-03-01", updatedAt: "2026-03-01" },
-    { id: 2, name: "Follow-Up", subject: "Following up on our conversation", body: "Hi {{name}},\n\nJust wanted to check in after our last conversation about {{deal.title}}.\n\nLooking forward to hearing from you.\n\n{{sender.name}}", category: "Sales", createdAt: "2026-03-05", updatedAt: "2026-03-05" },
-    { id: 3, name: "Proposal Sent", subject: "Your proposal for {{deal.title}}", body: "Hi {{name}},\n\nPlease find attached our proposal for {{deal.title}} valued at {{deal.value}}.\n\nLet me know if you have any questions.\n\nBest,\n{{sender.name}}", category: "Sales", createdAt: "2026-03-10", updatedAt: "2026-03-10" },
-  ]);
+  const [emailTemplates, setEmailTemplates] = useLocalStorage<EmailTemplate[]>("emailTemplates", []);
   const [noteBoards, setNoteBoards] = useLocalStorage<unknown[]>("noteBoards", []);
   const [undoActions, setUndoActions] = useState<UndoAction[]>([]);
   const dismissUndo = useCallback((id: number) => setUndoActions(p => p.filter(a => a.id !== id)), []);
@@ -384,6 +381,33 @@ export default function CRMApp() {
     setToasts(prev => [...prev, { id, type, message, title }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
+
+  // One-shot: strip bundled Acme/Bright Labs sample data so CRM tracks real records.
+  useEffect(() => {
+    const purged = purgeCrmDemoSeedIfPresent(
+      { contacts, deals },
+      {
+        setContacts,
+        setDeals,
+        setNotes,
+        setTasks,
+        setCompanies,
+        setGoals,
+        setSequences,
+        setSubmissions,
+        setQuotes,
+        setPackages,
+        setMeetings,
+        setAutomations,
+        setEmailLog,
+        setAuditLog,
+      },
+    );
+    if (purged) {
+      addToast("info", "Sample CRM data cleared — ready for your real pipeline");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount against initial localStorage
+  }, [addToast]);
 
   const openCompose = useCallback((seed?: ComposeSeed) => {
     setComposeSeed(seed || null);
