@@ -432,3 +432,98 @@ describe('npc-mcp-gateway', () => {
     assert.ok(!names.includes('run_skill'));
   });
 });
+
+describe('npc-mcp-gateway rate limit', () => {
+  let prevRate;
+
+  before(() => {
+    prevRate = process.env.DENIZEN_MCP_RATE_LIMIT;
+    gateway.resolveToken = async (token) => (token === 'good-token' ? SCOPE : null);
+    gateway.configure({
+      runNpcSkill: async (name, skill) => ({ ok: true, output: `${name} ran ${skill}`, npcName: name, skill }),
+      npcBrains: {
+        assignDirective: () => {},
+        getDirective: () => null,
+        getOpenCommitments: () => [],
+      },
+      broadcast: () => {},
+    });
+  });
+
+  after(() => {
+    gateway.clearRateLimitBuckets();
+    if (prevRate === undefined) delete process.env.DENIZEN_MCP_RATE_LIMIT;
+    else process.env.DENIZEN_MCP_RATE_LIMIT = prevRate;
+  });
+
+  it('env 0 skips the check', () => {
+    process.env.DENIZEN_MCP_RATE_LIMIT = '0';
+    gateway.clearRateLimitBuckets();
+    assert.equal(gateway.rateLimitPerHour(), 0);
+    for (let i = 0; i < 50; i += 1) {
+      assert.equal(gateway.checkRateLimit('tok-lab').allowed, true);
+    }
+  });
+
+  it('checkRateLimit trips after limit and reports retryAfterSec', () => {
+    process.env.DENIZEN_MCP_RATE_LIMIT = '3';
+    gateway.clearRateLimitBuckets();
+    assert.equal(gateway.checkRateLimit('tok-a').allowed, true);
+    assert.equal(gateway.checkRateLimit('tok-a').allowed, true);
+    assert.equal(gateway.checkRateLimit('tok-a').allowed, true);
+    const blocked = gateway.checkRateLimit('tok-a');
+    assert.equal(blocked.allowed, false);
+    assert.ok(blocked.retryAfterSec >= 1);
+    assert.ok(blocked.retryAfterSec <= 3600);
+  });
+
+  it('initialize and tools/list do not increment; tools/call does and sends Retry-After', async () => {
+    process.env.DENIZEN_MCP_RATE_LIMIT = '2';
+    gateway.clearRateLimitBuckets();
+
+    const server = http.createServer((req, res) => {
+      gateway.handleHttpRequest(req, res, 'roki');
+    });
+    await new Promise((resolve) => server.listen(0, resolve));
+    const { port } = server.address();
+    const url = `http://127.0.0.1:${port}/mcp/npc/roki`;
+    const headers = {
+      Authorization: 'Bearer good-token',
+      'Content-Type': 'application/json',
+    };
+
+    async function rpc(method, params) {
+      return fetchNoKeepAlive(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: params || {} }),
+      });
+    }
+
+    // Handshakes must not burn the bucket (Grok re-inits every tool call).
+    for (let i = 0; i < 8; i += 1) {
+      const init = await rpc('initialize');
+      assert.equal(init.status, 200);
+      const list = await rpc('tools/list');
+      assert.equal(list.status, 200);
+      const note = await rpc('notifications/initialized');
+      assert.equal(note.status, 200);
+    }
+
+    const call1 = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    assert.equal(call1.status, 200);
+    const call2 = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    assert.equal(call2.status, 200);
+    const call3 = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    assert.equal(call3.status, 429);
+    assert.ok(call3.headers.get('retry-after'));
+    const body = await call3.json();
+    assert.equal(body.error, 'rate limit exceeded');
+
+    // Handshakes still work after tools/call is limited.
+    const stillInit = await rpc('initialize');
+    assert.equal(stillInit.status, 200);
+
+    await new Promise((resolve) => server.close(resolve));
+  });
+});

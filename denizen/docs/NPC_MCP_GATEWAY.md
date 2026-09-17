@@ -191,7 +191,7 @@ py infra/run-grok-autonomy.py --loop --interval 300 --max 10
 ## Security
 
 - Tokens stored as SHA-256 hashes only (`visitor-session-auth.hashSessionToken`)
-- Rate limit: `DENIZEN_MCP_RATE_LIMIT` per token per hour (default 120)
+- Rate limit: `DENIZEN_MCP_RATE_LIMIT` **tools/call** (and REST sync) per token per hour (default 120). Handshakes (`initialize`, `tools/list`, `notifications/initialized`) do not increment. Set `0` to disable (lab only). `429` responses include `Retry-After`. Ops tip: raise to `2000` for Grok+ChatGPT+Cursor fill sessions; restart the Node process to wipe the in-memory `_rateBuckets` map.
 - RLS on `denizen_mcp_tokens` denies direct table access; resolution via security definer RPC
 - Demo org and protected NPCs rejected at token creation and resolution
 

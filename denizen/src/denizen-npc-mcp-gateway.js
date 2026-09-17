@@ -28,8 +28,21 @@ const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
-const RATE_LIMIT_PER_HOUR = Number(process.env.DENIZEN_MCP_RATE_LIMIT || 120);
 const _rateBuckets = new Map();
+
+/** Default 120 hits/hour/token. Set DENIZEN_MCP_RATE_LIMIT=0 to disable (lab only). */
+function rateLimitPerHour() {
+  const raw = process.env.DENIZEN_MCP_RATE_LIMIT;
+  if (raw == null || String(raw).trim() === '') return 120;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 120;
+}
+
+function secondsUntilNextHourBucket() {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const hourEnd = (Math.floor(nowSec / 3600) + 1) * 3600;
+  return Math.max(1, hourEnd - nowSec);
+}
 
 let _idCounter = 1;
 const _sessions = new Map();
@@ -181,7 +194,16 @@ function rateLimitKey(tokenId) {
   return String(tokenId || 'unknown');
 }
 
+/**
+ * In-memory per-token hourly bucket. Counts only when callers invoke this —
+ * MCP handshakes (initialize / tools/list / notifications/initialized) must not call it.
+ * @returns {{ allowed: boolean, retryAfterSec: number }}
+ */
 function checkRateLimit(tokenId) {
+  const limit = rateLimitPerHour();
+  if (limit <= 0) {
+    return { allowed: true, retryAfterSec: 0 };
+  }
   const key = rateLimitKey(tokenId);
   const hour = Math.floor(Date.now() / 3600000);
   const bucketKey = `${key}:${hour}`;
@@ -193,7 +215,21 @@ function checkRateLimit(tokenId) {
       if (Number(k.split(':').pop()) < cutoff) _rateBuckets.delete(k);
     }
   }
-  return count <= RATE_LIMIT_PER_HOUR;
+  if (count > limit) {
+    return { allowed: false, retryAfterSec: secondsUntilNextHourBucket() };
+  }
+  return { allowed: true, retryAfterSec: 0 };
+}
+
+function clearRateLimitBuckets() {
+  _rateBuckets.clear();
+}
+
+function sendRateLimited(res) {
+  const retryAfterSec = secondsUntilNextHourBucket();
+  return sendJson(res, 429, { ok: false, error: 'rate limit exceeded' }, {
+    'Retry-After': String(retryAfterSec),
+  });
 }
 
 async function resolveToken(token) {
@@ -444,6 +480,12 @@ async function handleRpc(scope, req, res, message, sessionId) {
   }
 
   if (method === 'tools/call') {
+    const rate = checkRateLimit(scope.token_id);
+    if (!rate.allowed) {
+      return sendJson(res, 429, { ok: false, error: 'rate limit exceeded' }, {
+        'Retry-After': String(rate.retryAfterSec),
+      });
+    }
     const toolName = params?.name;
     const toolArgs = params?.arguments || {};
     try {
@@ -598,9 +640,7 @@ async function handleHttpRequest(req, res, npcKeyFromPath) {
     return sendJson(res, 403, { ok: false, error: 'token not valid for this NPC' });
   }
 
-  if (!checkRateLimit(scope.token_id)) {
-    return sendJson(res, 429, { ok: false, error: 'rate limit exceeded' });
-  }
+  // Rate limit is applied only on tools/call (and REST sync below) — not on handshakes.
 
   if (req.method === 'GET') {
     return sendJson(res, 200, {
@@ -668,8 +708,10 @@ async function authenticateBearerRequest(req, res) {
     return null;
   }
 
-  if (!checkRateLimit(scope.token_id)) {
-    sendJson(res, 429, { ok: false, error: 'rate limit exceeded' });
+  // REST OpenAPI actions count like tools/call (not MCP handshakes).
+  const rate = checkRateLimit(scope.token_id);
+  if (!rate.allowed) {
+    sendRateLimited(res);
     return null;
   }
 
@@ -1221,4 +1263,7 @@ module.exports = {
   buildOnboardingPayload,
   resolveToken,
   callTool,
+  checkRateLimit,
+  clearRateLimitBuckets,
+  rateLimitPerHour,
 };

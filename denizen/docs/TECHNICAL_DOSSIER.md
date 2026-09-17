@@ -195,8 +195,8 @@ chain `session?.org_id || denizenDb.orgId || getDefaultOrgId() || '__default__'`
 `:3603`. CRM is the strictest surface — it returns 409 when a session has no org.
 
 **Rate limiting is near-absent.** `[PARTIAL]` There is no global limiter. Four ad-hoc 429s exist, all
-per-NPC placement budgets, plus IP throttling inside CRM intake and a 120/token/hour limit on the
-per-NPC MCP gateway. **The team MCP gateway has no rate limit at all.**
+per-NPC placement budgets, plus IP throttling inside CRM intake and a 120 **tools/call**/token/hour limit on the
+per-NPC MCP gateway (handshakes free; `Retry-After` on 429). **The team MCP gateway has no rate limit at all.**
 
 ### ⚠ The auth surface
 
@@ -924,7 +924,7 @@ This is the largest single expansion since v1.6.0, which documented **three** to
 | Mount | `/mcp/npc/:npcKey` (`server.js:3850`) | `/mcp/team` (`:3859`) |
 | Protocol | `2024-11-05`, serverInfo `denizen-npc-<key>` **v2.0.0** | `2024-11-05`, `denizen-team` v1.0.0 |
 | Auth | Bearer header or `?token=` | same |
-| Rate limit | `DENIZEN_MCP_RATE_LIMIT`, default 120/token/hour | **none** |
+| Rate limit | `DENIZEN_MCP_RATE_LIMIT`, default 120 **tools/call**/token/hour (handshakes free; `0` = off) | **none** |
 | Purpose | one human ↔ one claimed NPC | org operator; `run_as_npc` into any non-protected NPC |
 | Tools | **22 baseline**, 25 `oscar`, 27 `roki`, 29 `grok` | **20** + **8 MCP resources** |
 
