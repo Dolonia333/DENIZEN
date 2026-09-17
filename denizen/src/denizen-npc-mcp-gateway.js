@@ -969,7 +969,8 @@ function buildOpenApiSpec(baseUrl) {
                       description:
                         'Skill from listNpcSkills. Examples: research, crm-summary, '
                         + 'studio-board-working-set, studio-board-brief, studio-board-upsert-task, '
-                        + 'business-studio-working-set, business-studio-brief, business-studio-add-evidence',
+                        + 'business-studio-catalog, business-studio-section, business-studio-working-set, '
+                        + 'business-studio-brief, business-studio-get-lean-canvas, business-studio-add-evidence',
                     },
                     params: {
                       type: 'object',
@@ -1133,7 +1134,7 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
         'Do work with runNpcSkill (default wait=false). If you get a job_id / status=running, poll getSkillJob until status is done or failed, then summarize output.',
         'Operating surfaces via runNpcSkill: Meridian CRM (crm-*), Studio Board /studio-board/ (studio-board-*), Business Studio Founder OS /business-studio/ (business-studio-*).',
         'Before creating Studio Board tasks: studio-board-working-set then studio-board-brief. Updates: studio-board-upsert-task, studio-board-advance-task, studio-board-assign-task, studio-board-add-comment.',
-        'Before changing Founder OS: business-studio-working-set / business-studio-brief. Evidence is gated — use business-studio-add-evidence / business-studio-explain; check business-studio-funding-readiness.',
+        'Before changing Founder OS: business-studio-catalog / business-studio-section (name the app) then business-studio-working-set / business-studio-brief. Evidence is gated — use business-studio-add-evidence / business-studio-explain; check business-studio-funding-readiness. Lean Canvas / PAVE / Moat / Capital / Data Room have get+upsert skills.',
         'Start hard jobs with listNpcSkills, then runNpcSkill with a clear params object (query/task/note/id/title).',
         'Use getNpcStatus when you need NPC-only status. Use updateNpcMemory for lasting context. Use logNpcActivity after you finish.',
         'Prefer the Denizen MCP connector URL for full CRM / Studio Board / Business Studio tools when Custom GPT Actions are too thin.',
