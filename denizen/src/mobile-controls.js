@@ -421,11 +421,11 @@
         ) !important;
         max-height: min(38dvh, 280px) !important;
       }
-      /* Landscape Floor Line: compact rail — never full-bleed over HQ */
+      /* Landscape Floor Line: LEFT rail — Buzz phone FAB stays bottom-right */
       html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
-        left: auto !important;
-        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        right: auto !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
         bottom: calc(
           var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;

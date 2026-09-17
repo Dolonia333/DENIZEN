@@ -97,29 +97,37 @@ describe('mobile UI layout fixes', () => {
       /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
     );
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=hqLand1/);
+    assert.match(html, /mobile-controls\.js\?v=hqLand2/);
   });
 
-  it('landscape Floor Line is a compact right rail, not full-bleed', () => {
+  it('landscape Floor Line is a compact left rail so Buzz stays bottom-right', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
-    assert.match(
-      chat,
-      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)/
-    );
+    const phone = read('src/denizen-phone-ui.js');
+    assert.match(chat, /Landscape Floor Line: compact LEFT rail/);
+    assert.match(chat, /Buzz phone FAB owns bottom-right/);
     assert.match(chat, /height:\s*min\(44dvh,\s*260px\)/);
     assert.match(chat, /width:\s*min\(340px/);
     assert.match(
       chat,
-      /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
     );
     assert.match(
-      mobile,
-      /denizen-landscape #player-chat-panel:not\(\[data-phone-chat="1"\]\)/
+      chat,
+      /denizen-landscape\.denizen-chat-open #denizen-phone-fab\s*\{[\s\S]*?display:\s*flex !important/
     );
-    assert.doesNotMatch(
+    assert.match(mobile, /LEFT rail — Buzz phone FAB stays bottom-right/);
+    assert.match(
       mobile,
-      /denizen-landscape:not\(\.denizen-phone-mode\) #player-chat-panel \{\s*max-height:\s*min\(52dvh/
+      /denizen-landscape #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
+    );
+    assert.match(
+      phone,
+      /Landscape Floor Line uses the left rail[\s\S]*?display:\s*flex !important/
+    );
+    assert.match(
+      chat,
+      /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
     );
   });
 

@@ -3073,14 +3073,14 @@ class PlayerChat {
         transform: translateX(-50%) !important;
       }
       /*
-       * Landscape Floor Line: compact right rail over HQ.
-       * Works with or without phone-mode — never stretch top→bottom full-bleed.
+       * Landscape Floor Line: compact LEFT rail.
+       * Buzz phone FAB owns bottom-right — do not park chat there.
        */
       html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
-        left: auto !important;
-        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        right: auto !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
         width: min(340px, calc(100dvw - 20px)) !important;
         min-width: 0 !important;
         max-width: min(340px, calc(100dvw - 20px)) !important;
@@ -3244,6 +3244,16 @@ class PlayerChat {
         display: none !important;
         visibility: hidden !important;
         pointer-events: none !important;
+      }
+      /* Landscape: keep Buzz reachable — Floor Line sits on the left rail */
+      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-phone-fab {
+        display: flex !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        z-index: 2147483640 !important;
+      }
+      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-speak-fab {
+        display: none !important;
       }
     `;
     this._chatStyleInjected = true;
