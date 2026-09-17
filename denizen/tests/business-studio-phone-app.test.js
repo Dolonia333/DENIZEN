@@ -44,4 +44,51 @@ describe('Business Studio phone app', () => {
     const idx = read('index.html');
     assert.match(idx, /denizen-phone-ui\.js\?v=phone\d+\w*/);
   });
+
+  it('keeps classic Lean Canvas grid on mobile (no card stack)', () => {
+    const html = read('business-studio/index.html');
+    assert.match(html, /lean-stage/);
+    assert.match(html, /data-fit-design-width="860"/);
+    assert.match(html, /fitBoardToStage/);
+    // Must not collapse the tablet into a column of cards on phone
+    assert.doesNotMatch(
+      html,
+      /@media \(max-width:900px\)\{\s*\.lean-canvas\{\s*display:flex;flex-direction:column/,
+    );
+    assert.match(html, /Full 9-box canvas/);
+  });
+
+  it('keeps sales-cycle hub-and-spoke on mobile (scaled, not stacked)', () => {
+    const html = read('business-studio/index.html');
+    assert.match(html, /sc-map-stage/);
+    assert.match(html, /data-fit-design-width="640"/);
+    assert.doesNotMatch(html, /\.sc-spokes\{display:none\}/);
+    assert.doesNotMatch(
+      html,
+      /\.sc-hub,\.sc-role\{position:relative;left:auto!important/,
+    );
+  });
+
+  it('keeps phone chrome in landscape (no desktop sidebar takeover)', () => {
+    const html = read('business-studio/index.html');
+    // Short landscape phones are often >720px wide — must still hide sidebar
+    assert.match(
+      html,
+      /@media \(max-width:720px\), \(orientation:landscape\) and \(max-height:520px\)/,
+    );
+    assert.match(html, /\.sidebar\{display:none\}/);
+    // Bottom nav must not be force-hidden on landscape phones
+    assert.match(
+      html,
+      /@media \(min-width:721px\) and \(min-height:521px\)\{\s*\.bottom-nav/,
+    );
+    assert.doesNotMatch(
+      html,
+      /@media \(min-width:721px\)\{\s*\.bottom-nav,\.more-sheet\{display:none!important\}/,
+    );
+    assert.match(html, /orientationchange/);
+    assert.match(html, /visualViewport/);
+    assert.match(html, /data-fit-mode="contain"/);
+    assert.match(html, /pave-banner\{display:none\}/);
+  });
 });

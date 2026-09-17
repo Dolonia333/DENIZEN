@@ -471,57 +471,114 @@ html.embed .dz-app-chrome{display:none}
 .lean-wrap{display:flex;flex-direction:column;gap:12px}
 .lean-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);font-size:12.5px}
 .lean-meta strong{color:var(--forest);font-weight:700}
+.lean-fit-hint{display:none}
+.lean-stage{
+  width:100%;
+  overflow:hidden;
+  border-radius:18px;
+}
 .lean-canvas{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
-  grid-template-rows:minmax(160px,1.35fr) minmax(110px,.85fr) minmax(130px,1fr);
-  gap:0;
-  border:1px solid var(--line);
-  border-radius:16px;
+  grid-template-rows:minmax(168px,1.4fr) minmax(120px,.9fr) minmax(140px,1fr);
+  gap:8px;
+  padding:10px;
+  border:1px solid rgba(13,31,26,.35);
+  border-radius:18px;
   overflow:hidden;
-  background:var(--line);
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(184,135,27,.14), transparent 55%),
+    linear-gradient(165deg, #1A3F35 0%, #0F2A22 48%, #0A1C17 100%);
   min-height:min(72vh,720px);
-  box-shadow:var(--shadow-lift);
+  box-shadow:
+    var(--shadow-lift),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  width:100%;
+  transform-origin:top left;
 }
 .lean-cell{
-  background:var(--surface);
+  background:linear-gradient(180deg, #FFFCF6 0%, var(--surface) 100%);
   display:flex;flex-direction:column;min-height:0;min-width:0;
-  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  border:1px solid rgba(16,35,28,.10);
+  border-radius:12px;
+  box-shadow:0 1px 0 rgba(255,255,255,.65) inset, 0 4px 14px rgba(10,28,23,.08);
+  transition:box-shadow .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
 }
-.lean-cell:nth-child(5n){border-right:none}
+.lean-cell:focus-within{
+  border-color:rgba(42,106,85,.45);
+  box-shadow:0 0 0 3px rgba(42,106,85,.18), 0 6px 18px rgba(10,28,23,.12);
+}
 .lean-cell.lc-problem{grid-column:1;grid-row:1 / span 2}
 .lean-cell.lc-solution{grid-column:2;grid-row:1}
 .lean-cell.lc-metrics{grid-column:2;grid-row:2}
-.lean-cell.lc-uvp{grid-column:3;grid-row:1 / span 2;background:linear-gradient(180deg,rgba(42,106,85,.10),var(--surface))}
+.lean-cell.lc-uvp{
+  grid-column:3;grid-row:1 / span 2;
+  /* Paper body — no green wash over the copy (readability first). */
+  background:linear-gradient(180deg, #FFFCF6 0%, var(--surface) 100%);
+  border-color:rgba(42,106,85,.38);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.7) inset,
+    inset 0 3px 0 0 var(--forest),
+    0 6px 18px rgba(10,28,23,.10);
+}
 .lean-cell.lc-unfair{grid-column:4;grid-row:1}
 .lean-cell.lc-channels{grid-column:4;grid-row:2}
 .lean-cell.lc-customers{grid-column:5;grid-row:1 / span 2}
-.lean-cell.lc-cost{grid-column:1 / span 3;grid-row:3;border-bottom:none}
-.lean-cell.lc-revenue{grid-column:4 / span 2;grid-row:3;border-bottom:none;border-right:none}
+.lean-cell.lc-cost{grid-column:1 / span 3;grid-row:3}
+.lean-cell.lc-revenue{grid-column:4 / span 2;grid-row:3}
 .lean-cell-head{
   display:flex;align-items:baseline;justify-content:space-between;gap:8px;
-  padding:10px 12px 4px;flex:none
+  padding:11px 12px 6px;flex:none;
+  border-bottom:1px solid rgba(16,35,28,.06);
 }
 .lean-cell-head h3{
-  margin:0;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
-  color:var(--forest);font-family:var(--font-display)
+  margin:0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--forest-2);font-family:var(--font-display)
 }
-.lean-cell-head span{font-size:10.5px;color:var(--muted-2);text-align:right;max-width:55%}
+.lean-cell-head span{
+  font-size:10.5px;color:var(--muted-2);text-align:right;max-width:52%;
+  line-height:1.25;font-weight:500
+}
 .lean-cell textarea{
   flex:1;min-height:0;border:none;border-radius:0;background:transparent;
-  padding:4px 12px 12px;font-size:12.5px;line-height:1.45;resize:none;
-  color:var(--ink)
+  padding:8px 12px 12px;font-size:12.5px;line-height:1.45;resize:none;
+  color:var(--ink);font-family:var(--font-sheet)
 }
-.lean-cell textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--forest-tint)}
-.lean-cell.lc-uvp textarea{font-size:13.5px;font-weight:550}
+.lean-cell textarea:focus{outline:none;box-shadow:none}
+.lean-cell textarea::placeholder{color:var(--muted-2);opacity:.85}
+.lean-cell.lc-uvp .lean-cell-head{
+  border-bottom-color:rgba(16,35,28,.08);
+  background:transparent;
+  border-radius:12px 12px 0 0;
+}
+.lean-cell.lc-uvp .lean-cell-head h3{color:var(--forest-2)}
+.lean-cell.lc-uvp textarea{font-size:13.5px;font-weight:550;color:var(--ink)}
+/* Mobile: keep classic 5×3 tablet — denser type so scaled view stays readable. */
 @media (max-width:900px){
+  .lean-fit-hint{
+    display:block;font-size:11.5px;color:var(--muted);margin:0 0 6px;font-weight:600
+  }
+  .lean-stage{
+    border-radius:16px;
+    box-shadow:var(--shadow-lift);
+  }
   .lean-canvas{
-    display:flex;flex-direction:column;min-height:0;gap:8px;background:transparent;border:none;box-shadow:none
+    width:860px;
+    min-width:860px;
+    min-height:560px;
+    gap:7px;
+    padding:9px;
+    border-radius:16px;
   }
-  .lean-cell{
-    border:1px solid var(--line)!important;border-radius:12px;min-height:140px
-  }
-  .lean-cell textarea{min-height:100px;resize:vertical}
+  .lean-cell{border-radius:10px}
+  .lean-cell-head{padding:8px 9px 4px}
+  .lean-cell-head h3{font-size:10px;letter-spacing:.07em}
+  .lean-cell-head span{display:none}
+  .lean-cell textarea{padding:5px 9px 9px;font-size:11.5px;line-height:1.38}
+  .lean-cell.lc-uvp textarea{font-size:12px}
+}
+@media (min-width:901px){
+  .lean-fit-hint{display:none}
 }
 
 /* ===== Living PAVE workbook ===== */
@@ -627,9 +684,17 @@ html.embed .dz-app-chrome{display:none}
   width:100%;border:none;background:transparent;font-family:var(--font-sheet);
   font-size:14px;color:#4A5568;padding:6px 0 0;font-weight:400
 }
+.sc-map-stage{
+  width:100%;
+  overflow:hidden;
+  margin:8px auto 22px;
+  display:flex;
+  justify-content:center;
+}
 .sc-map{
-  position:relative;width:100%;max-width:760px;margin:8px auto 22px;
-  height:420px
+  position:relative;width:100%;max-width:760px;margin:0 auto;
+  height:420px;
+  transform-origin:top left;
 }
 .sc-spokes{
   position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0
@@ -685,7 +750,7 @@ html.embed .dz-app-chrome{display:none}
   width:100%;border:none;background:transparent;font-family:var(--font-sheet);
   font-size:13px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1B2A4A;padding:0
 }
-.sc-flow{display:flex;flex-wrap:nowrap;gap:0;align-items:stretch;overflow-x:auto;padding-bottom:4px}
+.sc-flow{display:flex;flex-wrap:nowrap;gap:0;align-items:stretch;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .sc-step{
   flex:1 1 0;min-width:148px;background:#fff;border:2px solid #1B2A4A;border-radius:14px;
   padding:16px 14px 14px;display:flex;flex-direction:column;justify-content:center
@@ -700,20 +765,34 @@ html.embed .dz-app-chrome{display:none}
   color:#1B2A4A;font-weight:700;font-size:20px;line-height:1
 }
 .sc-ref{display:none}
+/* Mobile: keep hub-and-spoke + horizontal deal flow — scale map to fit (no vertical stack). */
 @media(max-width:820px){
-  .sc-map{height:auto;display:flex;flex-direction:column;align-items:center;gap:12px;max-width:100%}
-  .sc-spokes{display:none}
-  .sc-hub,.sc-role{position:relative;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none;width:min(100%,320px)}
-  .sc-hub{width:150px;height:150px;order:-1;margin-bottom:4px}
-  .sc-flow{flex-wrap:wrap;gap:8px}
-  .sc-arrow{width:100%;transform:rotate(90deg);height:18px}
-  .sc-step{min-width:calc(50% - 8px)}
+  .sc-diagram{padding:14px 12px 16px}
+  .sc-diagram-head .sc-title-input{font-size:17px}
+  .sc-diagram-head .sc-sub-input{font-size:12.5px}
+  .sc-map-stage{margin:6px 0 14px;justify-content:flex-start}
+  .sc-map{
+    width:640px;
+    max-width:none;
+    height:400px;
+  }
+  .sc-hub{width:132px;height:132px;padding:12px 10px}
+  .sc-hub input{font-size:14px}
+  .sc-hub textarea{font-size:10.5px;min-height:28px}
+  .sc-role{width:168px;padding:8px 9px 8px;border-radius:12px}
+  .sc-role .sc-role-label{font-size:10.5px;margin-bottom:4px}
+  .sc-role textarea{min-height:64px;font-size:11px;line-height:1.3}
+  .sc-flow{flex-wrap:nowrap}
+  .sc-arrow{width:22px;transform:none;height:auto;font-size:16px}
+  .sc-step{min-width:120px;padding:12px 10px}
+  .sc-step input{font-size:12.5px}
 }
 
 .chip{display:inline-flex;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--forest-tint);color:var(--forest)}
 .kbd{font-size:11px;color:var(--muted)}
 
-@media (max-width:720px){
+/* Phone shell: narrow portrait OR short landscape (rotated phones >720px wide). */
+@media (max-width:720px), (orientation:landscape) and (max-height:520px){
   html,body{height:100%;height:100dvh;overflow:hidden}
   body.standalone{display:flex;flex-direction:column;min-height:100dvh;height:100dvh;overflow:hidden}
   .dz-app-chrome{position:relative;flex-shrink:0;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));gap:8px}
@@ -732,7 +811,43 @@ html.embed .dz-app-chrome{display:none}
   .stage-node{flex:0 0 130px}
   .welcome-hero,.welcome-body{padding-left:20px;padding-right:20px}
 }
-@media (min-width:721px){
+/* Compact landscape phone: reclaim vertical space for the full worksheet. */
+@media (orientation:landscape) and (max-height:520px){
+  .dz-app-chrome{padding:4px 10px;padding-top:max(4px,env(safe-area-inset-top));gap:6px}
+  .dz-app-chrome a{padding:5px 8px;font-size:11px}
+  .page-head{margin-bottom:8px}
+  .page-head h2{font-size:18px;margin:0}
+  .page-head>div>p{display:none}
+  .page-head .actions{margin-top:6px}
+  .lean-fit-hint{display:none}
+  .lean-meta{gap:6px;font-size:11.5px;margin-bottom:6px}
+  .lean-canvas{
+    min-height:400px;
+    grid-template-rows:minmax(120px,1.3fr) minmax(88px,.85fr) minmax(100px,.95fr);
+  }
+  .main-scroll{
+    padding:8px 12px calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom,0px));
+  }
+  .bottom-nav{
+    height:calc(48px + env(safe-area-inset-bottom,0px));
+    padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));
+  }
+  .sc-map{height:400px}
+  .pave-banner{display:none}
+  .pave-tabs{
+    flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    gap:6px;padding-bottom:4px;margin-bottom:8px
+  }
+  .pave-tab{padding:7px 11px;font-size:11.5px;flex:none}
+  .pave-section-head p{display:none}
+  .pave-sheet{padding:12px 12px 14px}
+  [data-fit-stage]{
+    scroll-margin-top:8px;
+    scroll-margin-bottom:calc(var(--bottom-nav-h) + 16px + env(safe-area-inset-bottom,0px));
+  }
+}
+/* Desktop / tall tablet only — keep bottom nav on landscape phones. */
+@media (min-width:721px) and (min-height:521px){
   .bottom-nav,.more-sheet{display:none!important}
 }
 </style>
@@ -3125,7 +3240,8 @@ function renderSalesCycleDiagram(diagram, advisor){
     +'<input class="sc-sub-input" data-sc="subtitle" value="'+esc(diagram.subtitle||'')+'" aria-label="Diagram subtitle"'+ro+'/>'
     +'</div>';
 
-  html+='<div class="sc-map" aria-label="Buying center diagram">'
+  html+='<div class="sc-map-stage" data-fit-stage data-fit-design-width="640" data-fit-mode="contain">'
+    +'<div class="sc-map" data-fit-board aria-label="Buying center diagram">'
     +'<svg class="sc-spokes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">';
   spokes.forEach(function(s){
     html+='<line x1="50" y1="50" x2="'+parseFloat(s.x2)+'" y2="'+parseFloat(s.y2)+'"/>';
@@ -3144,7 +3260,7 @@ function renderSalesCycleDiagram(diagram, advisor){
       +'<textarea data-sc-role="'+esc(id)+'" rows="4"'+ro+'>'+esc(role.text||'')+'</textarea>'
       +'</div>';
   });
-  html+='</div>';
+  html+='</div></div>';
 
   html+='<div class="sc-flow-wrap">'
     +'<div class="sc-flow-label"><input data-sc="cycleNote" value="'+esc(diagram.cycleNote||'')+'"'+ro+'/></div>'
@@ -3252,7 +3368,9 @@ function renderLeanCanvas(){
       +'</div>';
   }
 
-  html+='<div class="lean-canvas" role="region" aria-label="Lean Canvas">'
+  html+='<p class="lean-fit-hint">Full 9-box canvas — scaled to fit (portrait + landscape, same layout as desktop)</p>'
+    +'<div class="lean-stage" data-fit-stage data-fit-design-width="860">'
+    +'<div class="lean-canvas" data-fit-board role="region" aria-label="Lean Canvas">'
     +cell('lc-problem','problem')
     +cell('lc-solution','solution')
     +cell('lc-uvp','uniqueValueProposition')
@@ -3262,7 +3380,7 @@ function renderLeanCanvas(){
     +cell('lc-channels','channels')
     +cell('lc-cost','costStructure')
     +cell('lc-revenue','revenueStreams')
-    +'</div></div>';
+    +'</div></div></div>';
   return html;
 }
 
@@ -3707,6 +3825,72 @@ function renderInvestorSim(){
 }
 
 /* ---------- 13. Main render ---------- */
+function fitBoardToStage(stage){
+  if(!stage) return;
+  var board=stage.querySelector('[data-fit-board]');
+  if(!board) return;
+  var designW=Number(stage.getAttribute('data-fit-design-width'))||860;
+  var avail=stage.clientWidth;
+  if(!avail){
+    avail=(stage.parentElement&&stage.parentElement.clientWidth)||Math.max(0, window.innerWidth-28);
+  }
+  board.style.transform='none';
+  board.style.width=designW+'px';
+  board.style.minWidth=designW+'px';
+  var naturalH=board.offsetHeight||540;
+  var scale=Math.min(1, avail/designW);
+  var mode=stage.getAttribute('data-fit-mode')||'width';
+  var shortLandscape=window.matchMedia('(orientation: landscape) and (max-height: 520px)').matches;
+  /*
+   * contain (sales-cycle): also fit height on short landscape so hub/spokes stay above bottom nav.
+   * width (lean canvas): prefer readable cells; main-scroll handles vertical overflow unless extreme.
+   */
+  if(shortLandscape){
+    var bottomNav=document.querySelector('.bottom-nav');
+    var botH=0;
+    if(bottomNav){
+      var bcs=window.getComputedStyle(bottomNav);
+      if(bcs.display!=='none' && bcs.visibility!=='hidden') botH=bottomNav.getBoundingClientRect().height;
+    }
+    if(mode==='contain'){
+      var chrome=document.querySelector('.dz-app-chrome');
+      var chromeH=chrome?chrome.getBoundingClientRect().height:36;
+      var navTop=bottomNav?bottomNav.getBoundingClientRect().top:(window.innerHeight-botH);
+      /* Fixed content band (chrome → bottom nav) — avoids scroll/refit feedback loops. */
+      var availH=Math.max(120, navTop-chromeH-16);
+      scale=Math.min(scale, availH/Math.max(1, naturalH));
+    }else{
+      var top2=stage.getBoundingClientRect().top;
+      var availH2=Math.max(140, window.innerHeight-Math.max(0, top2)-botH-8);
+      if(naturalH*scale>window.innerHeight*1.65){
+        scale=Math.min(scale, availH2/Math.max(1, naturalH));
+      }
+    }
+  }
+  scale=Math.max(0.35, Math.min(1, scale));
+  if(avail>=designW-4 && scale>=0.995){
+    board.style.width='';
+    board.style.minWidth='';
+    board.style.transform='none';
+    board.style.marginLeft='';
+    stage.style.height='';
+    return;
+  }
+  board.style.transform='scale('+scale+')';
+  board.style.transformOrigin='top left';
+  stage.style.height=Math.ceil(naturalH*scale)+'px';
+  var visualW=designW*scale;
+  if(visualW<avail-8){
+    board.style.marginLeft=Math.floor((avail-visualW)/2)+'px';
+  }else{
+    board.style.marginLeft='';
+  }
+}
+
+function fitAllBoards(){
+  document.querySelectorAll('[data-fit-stage]').forEach(fitBoardToStage);
+}
+
 function render(){
   renderSidebar();
   renderBottomNav();
@@ -3746,6 +3930,10 @@ function render(){
   };
   const fn=map[ui.view]||renderOverview;
   main.innerHTML=fn();
+  requestAnimationFrame(function(){
+    fitAllBoards();
+    requestAnimationFrame(fitAllBoards);
+  });
 }
 
 function setView(id){
@@ -4448,6 +4636,26 @@ document.addEventListener('change', function(e){
   }catch(e){}
   render();
   bootstrapSync().then(function(){ render(); }).catch(function(){});
+  var fitTimer=null;
+  function scheduleFitBoards(delay){
+    clearTimeout(fitTimer);
+    fitTimer=setTimeout(function(){
+      fitAllBoards();
+      requestAnimationFrame(fitAllBoards);
+    }, delay||80);
+  }
+  window.addEventListener('resize', function(){ scheduleFitBoards(80); });
+  window.addEventListener('orientationchange', function(){
+    scheduleFitBoards(120);
+    setTimeout(function(){ scheduleFitBoards(280); }, 280);
+  });
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', function(){ scheduleFitBoards(60); });
+  }
+  var mainScroll=document.getElementById('main');
+  if(mainScroll){
+    mainScroll.addEventListener('scroll', function(){ scheduleFitBoards(60); }, {passive:true});
+  }
 })();
 </script>
 </body>
