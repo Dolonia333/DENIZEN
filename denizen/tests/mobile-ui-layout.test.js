@@ -97,7 +97,7 @@ describe('mobile UI layout fixes', () => {
       /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
     );
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=hqLand3/);
+    assert.match(html, /mobile-controls\.js\?v=hqLand4/);
   });
 
   it('landscape Floor Line is a compact left rail so Buzz stays bottom-right', () => {
@@ -106,7 +106,7 @@ describe('mobile UI layout fixes', () => {
     const phone = read('src/denizen-phone-ui.js');
     assert.match(chat, /Landscape Floor Line: compact LEFT rail/);
     assert.match(chat, /Buzz phone FAB owns bottom-right/);
-    assert.match(chat, /height:\s*min\(62dvh,\s*340px\)/);
+    assert.match(chat, /height:\s*min\(58dvh,\s*320px\)/);
     assert.match(chat, /width:\s*min\(420px/);
     assert.match(chat, /100dvw - 120px/);
     assert.match(
@@ -130,6 +130,20 @@ describe('mobile UI layout fixes', () => {
       chat,
       /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
     );
+    // Close btn must stay in actions — never a loose 4th header grid child
+    assert.match(chat, /Close must live in the actions grid cell/);
+    assert.match(chat, /actions\.appendChild\(closeBtn\)/);
+    assert.doesNotMatch(
+      chat,
+      /if \(closeBtn\) header\.appendChild\(closeBtn\)/
+    );
+    assert.match(chat, /#player-chat-header > #player-chat-close-btn/);
+  });
+
+  it('cache-busts Floor Line landscape fix scripts', () => {
+    const html = read('index.html');
+    assert.match(html, /player-chat\.js\?v=floorChat8/);
+    assert.match(html, /mobile-controls\.js\?v=hqLand4/);
   });
 
   it('speech bubbles nudge away from neighbors', () => {

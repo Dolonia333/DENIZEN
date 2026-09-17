@@ -50,7 +50,7 @@
       }
       #${BTN_ID}:hover { background: #1e293b; border-color: #4ade80; }
       #${CHIP_ID} {
-        display: none;
+        display: none !important;
         align-items: center;
         gap: 4px;
         margin: 0;
@@ -67,6 +67,10 @@
         min-width: 0;
         grid-column: 1 / -1;
         justify-self: start;
+        pointer-events: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
       }
       #${CHIP_ID} .dz-asst-name {
         overflow: hidden;
@@ -89,10 +93,17 @@
         flex-shrink: 0;
       }
       html.denizen-touch #${CHIP_ID} {
-        padding: 2px 6px;
-        font-size: 9px;
-        box-shadow: 0 2px 8px rgba(2, 6, 23, 0.55);
-        background: rgba(6, 78, 40, 0.92);
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
       }
       #${CHIP_ID} .dz-asst-release:hover { opacity: 1; background: rgba(74, 222, 128, 0.18); }
       #${CHIP_ID} .dz-asst-release.armed {
