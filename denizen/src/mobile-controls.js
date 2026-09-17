@@ -421,8 +421,20 @@
         ) !important;
         max-height: min(38dvh, 280px) !important;
       }
-      html.denizen-touch.denizen-landscape:not(.denizen-phone-mode) #player-chat-panel {
-        max-height: min(52dvh, 300px) !important;
+      /* Landscape Floor Line: LEFT rail — Buzz phone FAB stays bottom-right */
+      html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
+        top: auto !important;
+        right: auto !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        bottom: calc(
+          var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
+        ) !important;
+        width: min(420px, calc(100dvw - 120px)) !important;
+        max-width: min(420px, calc(100dvw - 120px)) !important;
+        min-width: 0 !important;
+        height: min(62dvh, 340px) !important;
+        max-height: min(62dvh, 340px) !important;
+        transform: none !important;
       }
 
       html.denizen-touch.denizen-tablet #denizen-diag-panel,
@@ -440,7 +452,9 @@
         max-height: min(72dvh, 560px) !important;
         pointer-events: auto !important;
       }
-      html.denizen-touch:not(.denizen-phone-mode) #player-chat-panel {
+      /* Portrait / non-landscape floor chat stays full-width under the game frame */
+      html.denizen-touch.denizen-portrait:not(.denizen-phone-mode) #player-chat-panel,
+      html.denizen-touch:not(.denizen-landscape):not(.denizen-phone-mode) #player-chat-panel {
         z-index: 100200 !important;
         width: calc(100dvw - 16px) !important;
         max-width: calc(100dvw - 16px) !important;

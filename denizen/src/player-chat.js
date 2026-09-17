@@ -226,6 +226,13 @@ class PlayerChat {
     // Move action chips that were incorrectly nested under .chat-header-main
     const main = header.querySelector('.chat-header-main');
     if (main) {
+      if (!main.querySelector('.pc-floor-kicker')) {
+        const kicker = document.createElement('span');
+        kicker.className = 'pc-floor-kicker';
+        kicker.setAttribute('aria-hidden', 'true');
+        kicker.textContent = 'FLOOR LINE';
+        main.insertBefore(kicker, main.firstChild);
+      }
       for (const id of [
         'denizen-visitor-mcp-connect-btn',
         'denizen-visitor-team-mcp-btn',
@@ -236,9 +243,9 @@ class PlayerChat {
         const el = main.querySelector(`#${id}`);
         if (el && el.parentElement !== actions) actions.appendChild(el);
       }
-      // Assistant chip belongs on its own full-width grid row, not inside main.
-      const chip = main.querySelector('#denizen-visitor-assistant-chip');
-      if (chip) header.appendChild(chip);
+      // Remove legacy green assistant chip — it cluttered Floor Line.
+      const chip = header.querySelector('#denizen-visitor-assistant-chip');
+      if (chip) chip.remove();
     }
     // Briefing/etc. may also have been appended as a raw header child.
     for (const id of [
@@ -2197,9 +2204,9 @@ class PlayerChat {
         font-family: var(--pc-mono);
         font-size: 13px;
         color: var(--pc-text);
-        /* Clip body so a tall header cannot paint over the log; stamp sits in padding */
+        /* Clip body so a tall header cannot paint over the log */
         overflow: hidden;
-        padding-top: 10px;
+        padding-top: 0;
         box-shadow:
           inset 0 0 0 2px var(--pc-line),
           0 0 0 2px var(--pc-amber),
@@ -2210,15 +2217,16 @@ class PlayerChat {
       #player-chat-panel *,
       #player-chat-panel *::before,
       #player-chat-panel *::after { box-sizing: border-box; }
-      #player-chat-panel::before {
-        content: "FLOOR LINE";
-        position: absolute;
-        top: 2px;
-        left: 14px;
-        z-index: 3;
-        padding: 3px 8px;
+      /* Old absolute stamp overlapped the avatar letter — stamp is now .pc-floor-kicker. */
+      #player-chat-panel::before { content: none; display: none; }
+      .pc-floor-kicker {
+        display: block;
+        margin: 0 0 2px;
+        padding: 2px 6px;
+        width: max-content;
+        max-width: 100%;
         font-family: var(--pc-display);
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 800;
         letter-spacing: 0.14em;
         line-height: 1.2;
@@ -2226,21 +2234,18 @@ class PlayerChat {
         background: var(--pc-amber);
         border: 2px solid #020617;
         border-radius: 3px;
-        box-shadow: 2px 2px 0 #020617;
+        box-shadow: 1px 1px 0 #020617;
         white-space: nowrap;
-        pointer-events: none;
       }
       #player-chat-header {
         position: relative;
         display: grid;
         grid-template-columns: 40px minmax(0, 1fr) auto;
-        grid-template-areas:
-          "avatar main actions"
-          "chip chip chip";
-        align-items: center;
+        grid-template-areas: "avatar main actions";
+        align-items: start;
         column-gap: 8px;
-        row-gap: 4px;
-        padding: 14px 10px 10px;
+        row-gap: 0;
+        padding: 10px;
         border-bottom: 2px solid var(--pc-border);
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
@@ -2249,9 +2254,13 @@ class PlayerChat {
         box-shadow: inset 0 -1px 0 var(--pc-line);
         min-width: 0;
       }
-      #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: center; }
+      #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: start; margin-top: 2px; }
       #player-chat-header .chat-header-main { grid-area: main; min-width: 0; }
-      #player-chat-header #denizen-visitor-assistant-chip { grid-area: chip; }
+      /* Green "Your assistant: …" chip cluttered Floor Line — hide it (release via floor pill). */
+      #player-chat-header #denizen-visitor-assistant-chip,
+      #denizen-visitor-assistant-chip {
+        display: none !important;
+      }
       #player-chat-header-actions {
         grid-area: actions;
         display: flex;
@@ -2275,7 +2284,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-header {
         grid-template-columns: 34px minmax(0, 1fr) auto;
         grid-template-areas: "avatar main actions";
-        align-items: center;
+        align-items: start;
         column-gap: 6px;
         row-gap: 0;
         padding: 10px 8px 6px;
@@ -2304,18 +2313,8 @@ class PlayerChat {
         justify-content: center;
         text-align: center;
       }
-      /* Float assistant chip over the message log so it does not inflate the header */
-      html.denizen-touch #player-chat-header #denizen-visitor-assistant-chip {
-        position: absolute;
-        left: 8px;
-        top: calc(100% + 6px);
-        z-index: 4;
-        grid-area: unset;
-        max-width: calc(100% - 16px);
-        pointer-events: auto;
-      }
       html.denizen-touch #player-chat-log {
-        padding-top: 30px;
+        padding-top: 12px;
       }
       /* Compact labels on narrow phones so the right column stays one short row */
       html.denizen-touch.denizen-phone #denizen-visitor-mcp-connect-btn {
@@ -2952,8 +2951,8 @@ class PlayerChat {
         }
         @media (orientation: landscape) {
           #player-chat-panel {
-            height: min(55dvh, 360px);
-            max-height: min(55dvh, 360px);
+            height: min(62dvh, 340px);
+            max-height: min(62dvh, 340px);
           }
         }
       }
@@ -3003,7 +3002,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-panel {
         font-family: var(--pc-mono);
         overflow: hidden;
-        padding-top: 10px;
+        padding-top: 0;
         background:
           repeating-linear-gradient(
             -12deg,
@@ -3029,7 +3028,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-close-btn {
         box-sizing: border-box;
       }
-      html.denizen-touch.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
+      html.denizen-touch.denizen-chat-open:not(.denizen-phone-mode):not(.denizen-landscape) #player-chat-panel {
         top: max(8px, env(safe-area-inset-top, 0px)) !important;
         bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
@@ -3073,40 +3072,56 @@ class PlayerChat {
         max-height: min(48dvh, 520px) !important;
         transform: translateX(-50%) !important;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
-        top: max(6px, env(safe-area-inset-top, 0px)) !important;
+      /*
+       * Landscape Floor Line: compact LEFT rail.
+       * Buzz phone FAB owns bottom-right — do not park chat there.
+       * Sized for readable message text while leaving Buzz clear (~120px).
+       */
+      html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
+        top: auto !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
-        left: auto !important;
-        right: max(6px, env(safe-area-inset-right, 0px)) !important;
-        width: min(380px, 58dvw, calc(100dvw - 16px)) !important;
-        min-width: min(320px, calc(100dvw - 16px)) !important;
-        max-width: calc(100dvw - 16px) !important;
-        height: auto !important;
-        max-height: none !important;
+        right: auto !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        width: min(420px, calc(100dvw - 120px)) !important;
+        min-width: 0 !important;
+        max-width: min(420px, calc(100dvw - 120px)) !important;
+        height: min(62dvh, 340px) !important;
+        max-height: min(62dvh, 340px) !important;
         transform: none !important;
+        z-index: 2147483630 !important;
+        overflow: hidden !important;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header {
-        padding: 14px 10px 8px;
+      html.denizen-touch.denizen-landscape #player-chat-header {
+        padding: 8px !important;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header .hint { display: none; }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-log {
+      html.denizen-touch.denizen-landscape #player-chat-header .pc-header-status {
+        display: none;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header .hint { display: none; }
+      html.denizen-touch.denizen-landscape #player-chat-log {
         min-height: 0;
-        padding: 8px 10px;
-        font-size: 13px;
+        flex: 1 1 auto;
+        padding: 10px 12px;
+        font-size: 14px;
+        line-height: 1.45;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-shell { padding: 8px; }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-bar { gap: 6px; }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input {
+      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 8px 10px; flex-shrink: 0; }
+      html.denizen-touch.denizen-landscape .pc-composer-bar { gap: 6px; }
+      html.denizen-touch.denizen-landscape #player-chat-input {
         min-height: 40px;
         font-size: 16px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-send,
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-speak {
+      html.denizen-touch.denizen-landscape #player-chat-send,
+      html.denizen-touch.denizen-landscape #player-chat-speak {
         width: 40px;
         min-width: 40px;
         height: 40px;
         min-height: 40px;
         padding: 0;
+        flex-shrink: 0;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions {
+        max-width: min(42vw, 140px);
       }
       html.denizen-touch #player-chat-log {
         display: flex;
@@ -3116,8 +3131,7 @@ class PlayerChat {
         min-height: 0;
         max-height: none;
         line-height: 1.45;
-        /* Top padding reserves room for the floating assistant chip */
-        padding: 30px 12px 12px;
+        padding: 12px;
         -webkit-overflow-scrolling: touch;
       }
       html.denizen-touch #player-chat-log:empty::before {
@@ -3200,7 +3214,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-header {
         padding: 10px 8px 6px;
         font-size: 13px;
-        align-items: center;
+        align-items: start;
         background:
           linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
           rgba(2, 6, 23, 0.55);
@@ -3234,6 +3248,16 @@ class PlayerChat {
         visibility: hidden !important;
         pointer-events: none !important;
       }
+      /* Landscape: keep Buzz reachable — Floor Line sits on the left rail */
+      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-phone-fab {
+        display: flex !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        z-index: 2147483640 !important;
+      }
+      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-speak-fab {
+        display: none !important;
+      }
     `;
     this._chatStyleInjected = true;
 
@@ -3245,6 +3269,7 @@ class PlayerChat {
         <div id="player-chat-header">
           <div class="pc-header-avatar" id="player-chat-avatar" role="button" tabindex="-1" title="Click an NPC, then tap their letter to open MCP"></div>
           <div class="chat-header-main">
+            <span class="pc-floor-kicker" aria-hidden="true">FLOOR LINE</span>
             <span class="target" id="player-chat-target">Messages</span>
             <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
           </div>
