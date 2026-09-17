@@ -2951,8 +2951,8 @@ class PlayerChat {
         }
         @media (orientation: landscape) {
           #player-chat-panel {
-            height: min(55dvh, 360px);
-            max-height: min(55dvh, 360px);
+            height: min(44dvh, 260px);
+            max-height: min(44dvh, 260px);
           }
         }
       }
@@ -3028,7 +3028,7 @@ class PlayerChat {
       html.denizen-touch #player-chat-close-btn {
         box-sizing: border-box;
       }
-      html.denizen-touch.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
+      html.denizen-touch.denizen-chat-open:not(.denizen-phone-mode):not(.denizen-landscape) #player-chat-panel {
         top: max(8px, env(safe-area-inset-top, 0px)) !important;
         bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
@@ -3072,40 +3072,53 @@ class PlayerChat {
         max-height: min(48dvh, 520px) !important;
         transform: translateX(-50%) !important;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
-        top: max(6px, env(safe-area-inset-top, 0px)) !important;
+      /*
+       * Landscape Floor Line: compact right rail over HQ.
+       * Works with or without phone-mode — never stretch top→bottom full-bleed.
+       */
+      html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
+        top: auto !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: auto !important;
-        right: max(6px, env(safe-area-inset-right, 0px)) !important;
-        width: min(380px, 58dvw, calc(100dvw - 16px)) !important;
-        min-width: min(320px, calc(100dvw - 16px)) !important;
-        max-width: calc(100dvw - 16px) !important;
-        height: auto !important;
-        max-height: none !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        width: min(340px, calc(100dvw - 20px)) !important;
+        min-width: 0 !important;
+        max-width: min(340px, calc(100dvw - 20px)) !important;
+        height: min(44dvh, 260px) !important;
+        max-height: min(44dvh, 260px) !important;
         transform: none !important;
+        z-index: 2147483630 !important;
+        overflow: hidden !important;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header {
-        padding: 14px 10px 8px;
+      html.denizen-touch.denizen-landscape #player-chat-header {
+        padding: 8px !important;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header .hint { display: none; }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-log {
+      html.denizen-touch.denizen-landscape #player-chat-header .pc-header-status {
+        display: none;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header .hint { display: none; }
+      html.denizen-touch.denizen-landscape #player-chat-log {
         min-height: 0;
         padding: 8px 10px;
         font-size: 13px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-shell { padding: 8px; }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-bar { gap: 6px; }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input {
-        min-height: 40px;
+      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 6px 8px; flex-shrink: 0; }
+      html.denizen-touch.denizen-landscape .pc-composer-bar { gap: 6px; }
+      html.denizen-touch.denizen-landscape #player-chat-input {
+        min-height: 36px;
         font-size: 16px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-send,
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-speak {
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
-        min-height: 40px;
+      html.denizen-touch.denizen-landscape #player-chat-send,
+      html.denizen-touch.denizen-landscape #player-chat-speak {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
         padding: 0;
+        flex-shrink: 0;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions {
+        max-width: min(42vw, 140px);
       }
       html.denizen-touch #player-chat-log {
         display: flex;

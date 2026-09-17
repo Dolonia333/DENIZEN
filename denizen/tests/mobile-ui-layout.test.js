@@ -97,7 +97,30 @@ describe('mobile UI layout fixes', () => {
       /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
     );
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=hqMid1/);
+    assert.match(html, /mobile-controls\.js\?v=hqLand1/);
+  });
+
+  it('landscape Floor Line is a compact right rail, not full-bleed', () => {
+    const chat = read('src/player-chat.js');
+    const mobile = read('src/mobile-controls.js');
+    assert.match(
+      chat,
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)/
+    );
+    assert.match(chat, /height:\s*min\(44dvh,\s*260px\)/);
+    assert.match(chat, /width:\s*min\(340px/);
+    assert.match(
+      chat,
+      /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
+    );
+    assert.match(
+      mobile,
+      /denizen-landscape #player-chat-panel:not\(\[data-phone-chat="1"\]\)/
+    );
+    assert.doesNotMatch(
+      mobile,
+      /denizen-landscape:not\(\.denizen-phone-mode\) #player-chat-panel \{\s*max-height:\s*min\(52dvh/
+    );
   });
 
   it('speech bubbles nudge away from neighbors', () => {

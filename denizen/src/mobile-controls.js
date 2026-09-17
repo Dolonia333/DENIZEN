@@ -421,8 +421,20 @@
         ) !important;
         max-height: min(38dvh, 280px) !important;
       }
-      html.denizen-touch.denizen-landscape:not(.denizen-phone-mode) #player-chat-panel {
-        max-height: min(52dvh, 300px) !important;
+      /* Landscape Floor Line: compact rail — never full-bleed over HQ */
+      html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
+        top: auto !important;
+        left: auto !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        bottom: calc(
+          var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
+        ) !important;
+        width: min(340px, calc(100dvw - 20px)) !important;
+        max-width: min(340px, calc(100dvw - 20px)) !important;
+        min-width: 0 !important;
+        height: min(44dvh, 260px) !important;
+        max-height: min(44dvh, 260px) !important;
+        transform: none !important;
       }
 
       html.denizen-touch.denizen-tablet #denizen-diag-panel,
@@ -440,7 +452,9 @@
         max-height: min(72dvh, 560px) !important;
         pointer-events: auto !important;
       }
-      html.denizen-touch:not(.denizen-phone-mode) #player-chat-panel {
+      /* Portrait / non-landscape floor chat stays full-width under the game frame */
+      html.denizen-touch.denizen-portrait:not(.denizen-phone-mode) #player-chat-panel,
+      html.denizen-touch:not(.denizen-landscape):not(.denizen-phone-mode) #player-chat-panel {
         z-index: 100200 !important;
         width: calc(100dvw - 16px) !important;
         max-width: calc(100dvw - 16px) !important;
