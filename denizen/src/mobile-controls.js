@@ -429,11 +429,11 @@
         bottom: calc(
           var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;
-        width: min(340px, calc(100dvw - 20px)) !important;
-        max-width: min(340px, calc(100dvw - 20px)) !important;
+        width: min(420px, calc(100dvw - 120px)) !important;
+        max-width: min(420px, calc(100dvw - 120px)) !important;
         min-width: 0 !important;
-        height: min(44dvh, 260px) !important;
-        max-height: min(44dvh, 260px) !important;
+        height: min(62dvh, 340px) !important;
+        max-height: min(62dvh, 340px) !important;
         transform: none !important;
       }
 

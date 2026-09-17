@@ -2951,8 +2951,8 @@ class PlayerChat {
         }
         @media (orientation: landscape) {
           #player-chat-panel {
-            height: min(44dvh, 260px);
-            max-height: min(44dvh, 260px);
+            height: min(62dvh, 340px);
+            max-height: min(62dvh, 340px);
           }
         }
       }
@@ -3075,17 +3075,18 @@ class PlayerChat {
       /*
        * Landscape Floor Line: compact LEFT rail.
        * Buzz phone FAB owns bottom-right — do not park chat there.
+       * Sized for readable message text while leaving Buzz clear (~120px).
        */
       html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         right: auto !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
-        width: min(340px, calc(100dvw - 20px)) !important;
+        width: min(420px, calc(100dvw - 120px)) !important;
         min-width: 0 !important;
-        max-width: min(340px, calc(100dvw - 20px)) !important;
-        height: min(44dvh, 260px) !important;
-        max-height: min(44dvh, 260px) !important;
+        max-width: min(420px, calc(100dvw - 120px)) !important;
+        height: min(62dvh, 340px) !important;
+        max-height: min(62dvh, 340px) !important;
         transform: none !important;
         z-index: 2147483630 !important;
         overflow: hidden !important;
@@ -3099,21 +3100,23 @@ class PlayerChat {
       html.denizen-touch.denizen-landscape #player-chat-header .hint { display: none; }
       html.denizen-touch.denizen-landscape #player-chat-log {
         min-height: 0;
-        padding: 8px 10px;
-        font-size: 13px;
+        flex: 1 1 auto;
+        padding: 10px 12px;
+        font-size: 14px;
+        line-height: 1.45;
       }
-      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 6px 8px; flex-shrink: 0; }
+      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 8px 10px; flex-shrink: 0; }
       html.denizen-touch.denizen-landscape .pc-composer-bar { gap: 6px; }
       html.denizen-touch.denizen-landscape #player-chat-input {
-        min-height: 36px;
+        min-height: 40px;
         font-size: 16px;
       }
       html.denizen-touch.denizen-landscape #player-chat-send,
       html.denizen-touch.denizen-landscape #player-chat-speak {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
         padding: 0;
         flex-shrink: 0;
       }

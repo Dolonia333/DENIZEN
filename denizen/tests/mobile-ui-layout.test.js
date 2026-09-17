@@ -97,7 +97,7 @@ describe('mobile UI layout fixes', () => {
       /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
     );
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=hqLand2/);
+    assert.match(html, /mobile-controls\.js\?v=hqLand3/);
   });
 
   it('landscape Floor Line is a compact left rail so Buzz stays bottom-right', () => {
@@ -106,8 +106,9 @@ describe('mobile UI layout fixes', () => {
     const phone = read('src/denizen-phone-ui.js');
     assert.match(chat, /Landscape Floor Line: compact LEFT rail/);
     assert.match(chat, /Buzz phone FAB owns bottom-right/);
-    assert.match(chat, /height:\s*min\(44dvh,\s*260px\)/);
-    assert.match(chat, /width:\s*min\(340px/);
+    assert.match(chat, /height:\s*min\(62dvh,\s*340px\)/);
+    assert.match(chat, /width:\s*min\(420px/);
+    assert.match(chat, /100dvw - 120px/);
     assert.match(
       chat,
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
