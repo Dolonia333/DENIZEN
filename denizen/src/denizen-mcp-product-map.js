@@ -47,15 +47,18 @@ const SURFACES = [
     role: 'Evidence-gated founder workbook',
     does: [
       'Tasks ≠ progress — qualifying evidence moves the chain',
-      'Funding Readiness, Lean Canvas, living PAVE workbook',
-      'Sales-cycle workshop diagram and mentor recommendations',
+      'Every menu app: Funding Readiness, Lean Canvas, PAVE, Strategy, Roadmap, Goals, Tasks, Evidence, Experiments, Discovery Lab, Market Sizing, Moat, Capital Pathway, Data Room, Investor Stress-Test, Mentors',
+      'Sales-cycle workshop diagram (inside PAVE) and mentor recommendations',
       'Assumptions never auto-validate',
+      'Phase 2 stubs (Templates, Financials, Diagrams, Documents, Reports) are documented as coming_soon — not fake write tools',
     ],
     does_not: [
       'Invent market size, traction, or checklist checks',
       'Treat CRM deals as delivery tasks',
     ],
     start_tools: [
+      'business_studio_catalog',
+      'business_studio_section',
       'business_studio_working_set',
       'business_studio_brief',
       'business_studio_explain',
@@ -63,6 +66,7 @@ const SURFACES = [
       'business_studio_funding_readiness',
     ],
     write_scope: 'crm_write',
+    sections_resource: 'docs://business-studio-sections',
   },
   {
     id: 'agency',
@@ -81,14 +85,23 @@ const SURFACES = [
 ];
 
 function productMapJson() {
+  const sections = (() => {
+    try {
+      return require('./denizen-business-studio-sections').catalogForAgent();
+    } catch (_) {
+      return null;
+    }
+  })();
   return {
     ok: true,
     product: 'Denizen',
     pitch: 'The office for your AI agents — floor you can watch, workbench you can drop into, CRM + delivery + founder OS as tools.',
     surfaces: SURFACES,
+    business_studio_sections: sections?.sections || null,
     playbook: [
       'Call the matching *_working_set (or agency_working_set) before inventing ids or stages.',
-      'ChatGPT Custom GPT: same tools via runNpcSkill with kebab names (studio-board-working-set, business-studio-brief, …).',
+      'Business Studio apps: call business_studio_catalog or business_studio_section with the menu name (Lean Canvas, Moat Builder, …) so you know what it is and which tools read/update it.',
+      'ChatGPT Custom GPT: same tools via runNpcSkill with kebab names (business-studio-section, business-studio-get-lean-canvas, studio-board-working-set, …).',
       'Empty workspaces are OK — do not fabricate contacts, deals, tasks, or evidence.',
       'CRM = sell. Studio Board = deliver. Business Studio = prove (evidence). Agency = link sell→deliver.',
       'Mutations need crm_write scope (Full access token). Read tools work with Standard/read.',
@@ -133,16 +146,18 @@ function mcpInitializeInstructions({ mode = 'team' } = {}) {
     who,
     'Denizen is not a mystery chat: CRM sells, Studio Board delivers client work, Business Studio proves founder progress with evidence, Agency links CRM deals to Board tasks.',
     'Always orient with crm_working_set / studio_board_working_set / business_studio_working_set / agency_working_set (or business_studio_explain) before creating records.',
+    'Business Studio menu apps: call business_studio_catalog or business_studio_section (Lean Canvas, PAVE, Moat, Capital Pathway, …) so you know what each app is and which tools read/update it.',
     'Never invent pipeline data, board people, or funding evidence. Empty boards are valid.',
-    'Read resource docs://product-map for the full surface guide. Writes require crm_write (Full access).',
+    'Read resource docs://product-map (and docs://business-studio-sections) for the full surface guide. Writes require crm_write (Full access).',
   ].join(' ');
 }
 
 function chatgptProductInstructions({ npcLabel = 'the connected Denizen assistant' } = {}) {
   return [
     `You ARE ${npcLabel} in Denizen — an AI that works the office tools, not a generic chatbot.`,
-    'Product map: Meridian CRM = sales pipeline (contacts/deals/tasks). Studio Board = agency delivery (tasks/people/calendar/My Day). Business Studio / Founder OS = evidence-gated progress (PAVE, Lean Canvas, Funding Readiness — tasks are not progress; evidence is). Agency tools link CRM deals ↔ Studio Board tasks.',
-    'ChatGPT Actions path: runNpcSkill with kebab skill names — studio-board-working-set, studio-board-brief, studio-board-upsert-task, business-studio-working-set, business-studio-brief, business-studio-add-evidence (same as MCP snake_case tools, hyphens instead of underscores).',
+    'Product map: Meridian CRM = sales pipeline (contacts/deals/tasks). Studio Board = agency delivery (tasks/people/calendar/My Day). Business Studio / Founder OS = evidence-gated progress (every menu app: Funding Readiness, Lean Canvas, PAVE, Strategy, Roadmap, Goals, Tasks, Evidence, Experiments, Discovery Lab, Market Sizing, Moat, Capital Pathway, Data Room, Investor Stress-Test, Mentors — plus Phase 2 coming soon). Agency tools link CRM deals ↔ Studio Board tasks.',
+    'When the founder names a Business Studio app, call business-studio-section (or business-studio-catalog) first so you know what it is, what it is for, and which tools to use. Pass section= into business-studio-working-set when you know which screen they are on.',
+    'ChatGPT Actions path: runNpcSkill with kebab skill names — business-studio-section, business-studio-get-lean-canvas, business-studio-upsert-lean-canvas, business-studio-get-pave, business-studio-funding-readiness, studio-board-working-set, … (same as MCP snake_case tools).',
     'Before mutating: call the matching working_set or brief. Prefer agency_working_set when sales and delivery collide.',
     'In Business Studio never invent traction, TAM, or checklist ticks — use business-studio-add-evidence and business-studio-chain-status (or business_studio_* MCP tools).',
     'If scope_denied, tell the human to mint a Connect AI token with Full access (crm_write).',
@@ -164,6 +179,13 @@ const PRODUCT_RESOURCES = [
     description: 'Same Denizen product map as readable Markdown.',
     mimeType: 'text/markdown',
   },
+  {
+    uri: 'docs://business-studio-sections',
+    name: 'business_studio_sections',
+    description:
+      'Every Business Studio menu app (Funding Readiness through Phase 2 stubs) — what it is, used for, read/write tools.',
+    mimeType: 'application/json',
+  },
 ];
 
 function productResourcesList() {
@@ -174,6 +196,13 @@ function readProductResource(uri) {
   const u = String(uri || '');
   if (u === 'docs://product-map') return JSON.stringify(productMapJson(), null, 2);
   if (u === 'docs://product-map.md') return productMapMarkdown();
+  if (u === 'docs://business-studio-sections') {
+    try {
+      return JSON.stringify(require('./denizen-business-studio-sections').catalogForAgent(), null, 2);
+    } catch (_) {
+      return null;
+    }
+  }
   return null;
 }
 

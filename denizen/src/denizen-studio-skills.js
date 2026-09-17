@@ -50,12 +50,30 @@ const STUDIO_BOARD_WRITE_SKILLS = Object.freeze([
 ]);
 
 const BUSINESS_STUDIO_READ_SKILLS = Object.freeze([
+  'business-studio-catalog',
+  'business-studio-section',
   'business-studio-working-set',
   'business-studio-brief',
   'business-studio-explain',
   'business-studio-list-programs',
   'business-studio-chain-status',
   'business-studio-funding-readiness',
+  'business-studio-get-lean-canvas',
+  'business-studio-get-pave',
+  'business-studio-list-evidence',
+  'business-studio-list-tasks',
+  'business-studio-list-goals',
+  'business-studio-list-experiments',
+  'business-studio-get-moat',
+  'business-studio-get-market-sizing',
+  'business-studio-capital-pathway',
+  'business-studio-data-room',
+  'business-studio-discovery-lab',
+  'business-studio-investor-stress',
+  'business-studio-get-strategy',
+  'business-studio-get-roadmap',
+  'business-studio-list-advisors',
+  'business-studio-get-settings',
 ]);
 
 const BUSINESS_STUDIO_WRITE_SKILLS = Object.freeze([
@@ -66,6 +84,15 @@ const BUSINESS_STUDIO_WRITE_SKILLS = Object.freeze([
   'business-studio-upsert-task',
   'business-studio-upsert-goal',
   'business-studio-create-experiment',
+  'business-studio-upsert-lean-canvas',
+  'business-studio-upsert-pave',
+  'business-studio-upsert-moat',
+  'business-studio-upsert-market-sizing',
+  'business-studio-upsert-capital-plan',
+  'business-studio-set-data-room-share',
+  'business-studio-upsert-discovery-lab',
+  'business-studio-answer-investor-question',
+  'business-studio-upsert-settings',
 ]);
 
 const ALL_STUDIO_SKILLS = Object.freeze([
