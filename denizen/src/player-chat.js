@@ -214,16 +214,11 @@ class PlayerChat {
     const header = panel?.querySelector?.('#player-chat-header');
     if (!header) return;
     let actions = header.querySelector('#player-chat-header-actions');
-    const closeBtn = header.querySelector('#player-chat-close-btn');
     if (!actions) {
       actions = document.createElement('div');
       actions.id = 'player-chat-header-actions';
       header.appendChild(actions);
     }
-    if (closeBtn && closeBtn.parentElement !== header) {
-      header.appendChild(closeBtn);
-    }
-    // Move action chips that were incorrectly nested under .chat-header-main
     const main = header.querySelector('.chat-header-main');
     if (main) {
       if (!main.querySelector('.pc-floor-kicker')) {
@@ -258,7 +253,14 @@ class PlayerChat {
       const el = header.querySelector(`:scope > #${id}`);
       if (el) actions.appendChild(el);
     }
-    if (closeBtn) header.appendChild(closeBtn);
+    // Close must live in the actions grid cell — a direct header child becomes
+    // an auto-placed 4th grid item and floats mid-panel (landscape bug).
+    const closeBtn = header.querySelector('#player-chat-close-btn');
+    if (closeBtn && closeBtn.parentElement !== actions) {
+      actions.appendChild(closeBtn);
+    }
+    // Strip any stray assistant chip anywhere under Floor Line.
+    panel.querySelectorAll?.('#denizen-visitor-assistant-chip')?.forEach((el) => el.remove());
   }
 
   _chatFabClosedLabel() {
@@ -2256,10 +2258,27 @@ class PlayerChat {
       }
       #player-chat-header .pc-header-avatar { grid-area: avatar; align-self: start; margin-top: 2px; }
       #player-chat-header .chat-header-main { grid-area: main; min-width: 0; }
-      /* Green "Your assistant: …" chip cluttered Floor Line — hide it (release via floor pill). */
+      /* Green "Your assistant: …" chip cluttered Floor Line — hide/remove everywhere. */
       #player-chat-header #denizen-visitor-assistant-chip,
+      #player-chat-panel #denizen-visitor-assistant-chip,
       #denizen-visitor-assistant-chip {
         display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        border: none !important;
+        pointer-events: none !important;
+      }
+      /* Close belongs only in the actions cell — never as a loose header grid child. */
+      #player-chat-header > #player-chat-close-btn {
+        display: none !important;
+      }
+      #player-chat-header-actions #player-chat-close-btn {
+        display: inline-flex !important;
+        order: 99;
       }
       #player-chat-header-actions {
         grid-area: actions;
@@ -3021,7 +3040,13 @@ class PlayerChat {
       }
       html.denizen-touch #player-chat-panel .chat-desktop-hint { display: none; }
       html.denizen-touch #player-chat-panel .chat-mobile-hint { display: none; }
-      html.denizen-touch #player-chat-close-btn { display: flex; }
+      /* Close only in the actions cell — never a loose 4th header grid child. */
+      html.denizen-touch #player-chat-header > #player-chat-close-btn {
+        display: none !important;
+      }
+      html.denizen-touch #player-chat-header-actions #player-chat-close-btn {
+        display: inline-flex !important;
+      }
       html.denizen-touch #player-chat-input,
       html.denizen-touch #player-chat-send,
       html.denizen-touch #player-chat-speak,
@@ -3085,43 +3110,62 @@ class PlayerChat {
         width: min(420px, calc(100dvw - 120px)) !important;
         min-width: 0 !important;
         max-width: min(420px, calc(100dvw - 120px)) !important;
-        height: min(62dvh, 340px) !important;
-        max-height: min(62dvh, 340px) !important;
+        height: min(58dvh, 320px) !important;
+        max-height: min(58dvh, 320px) !important;
+        display: flex !important;
+        flex-direction: column !important;
         transform: none !important;
         z-index: 2147483630 !important;
         overflow: hidden !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header {
-        padding: 8px !important;
+        padding: 6px 8px !important;
+        flex: 0 0 auto !important;
+        grid-template-columns: 32px minmax(0, 1fr) auto !important;
+        grid-template-areas: "avatar main actions" !important;
+        grid-auto-flow: column !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header > *:not(.pc-header-avatar):not(.chat-header-main):not(#player-chat-header-actions) {
+        display: none !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header .pc-header-status {
-        display: none;
+        display: none !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header .hint { display: none; }
       html.denizen-touch.denizen-landscape #player-chat-log {
-        min-height: 0;
-        flex: 1 1 auto;
-        padding: 10px 12px;
+        min-height: 0 !important;
+        flex: 1 1 auto !important;
+        padding: 8px 10px;
         font-size: 14px;
         line-height: 1.45;
+        overflow-y: auto !important;
       }
-      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 8px 10px; flex-shrink: 0; }
+      html.denizen-touch.denizen-landscape #player-chat-composer {
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+      }
+      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 6px 8px 8px; flex-shrink: 0; }
       html.denizen-touch.denizen-landscape .pc-composer-bar { gap: 6px; }
       html.denizen-touch.denizen-landscape #player-chat-input {
-        min-height: 40px;
+        min-height: 36px;
         font-size: 16px;
       }
       html.denizen-touch.denizen-landscape #player-chat-send,
       html.denizen-touch.denizen-landscape #player-chat-speak {
-        width: 40px;
-        min-width: 40px;
-        height: 40px;
-        min-height: 40px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
         padding: 0;
         flex-shrink: 0;
       }
       html.denizen-touch.denizen-landscape #player-chat-header-actions {
         max-width: min(42vw, 140px);
+        flex-wrap: nowrap !important;
+      }
+      /* Claim proximity pill must not peek under Floor Line */
+      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-visitor-claim-btn {
+        display: none !important;
       }
       html.denizen-touch #player-chat-log {
         display: flex;

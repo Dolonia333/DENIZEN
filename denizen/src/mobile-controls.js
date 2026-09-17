@@ -432,9 +432,12 @@
         width: min(420px, calc(100dvw - 120px)) !important;
         max-width: min(420px, calc(100dvw - 120px)) !important;
         min-width: 0 !important;
-        height: min(62dvh, 340px) !important;
-        max-height: min(62dvh, 340px) !important;
+        height: min(58dvh, 320px) !important;
+        max-height: min(58dvh, 320px) !important;
+        display: flex !important;
+        flex-direction: column !important;
         transform: none !important;
+        overflow: hidden !important;
       }
 
       html.denizen-touch.denizen-tablet #denizen-diag-panel,
