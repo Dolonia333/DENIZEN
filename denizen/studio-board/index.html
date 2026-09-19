@@ -261,6 +261,24 @@ tr.trow.r-done:hover{opacity:1}
 #quickadd:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(42,106,85,.14)}
 .asel{border:none;background:transparent;font-size:13px;color:var(--ink-2);max-width:118px;cursor:pointer;padding:2px 0}
 .asel:focus{outline:none;color:var(--ink)}
+.ssel{border:none;background:transparent;font-size:12.5px;color:var(--ink-2);max-width:148px;cursor:pointer;padding:2px 0;font-weight:500}
+.ssel:focus{outline:none;color:var(--ink)}
+.psel{appearance:auto;-webkit-appearance:menulist;border:none;background:transparent;font-size:11px;font-weight:500;max-width:110px;cursor:pointer;padding:2px 2px;border-radius:980px}
+.psel:focus{outline:none}
+.psel.prio-Low{color:#2A6A55}
+.psel.prio-Medium{color:#96660F}
+.psel.prio-High{color:#A8422E}
+.psel.prio-Urgent{color:#A8422E;font-weight:700}
+.stcell{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.t-notes{min-width:120px;max-width:200px}
+.notes-btn{display:inline-flex;align-items:center;gap:5px;max-width:100%;border:none;background:transparent;padding:2px 4px;border-radius:8px;cursor:pointer;font:inherit;font-size:12px;color:var(--ink-2);text-align:left}
+.notes-btn:hover{background:var(--surface-2);color:var(--ink)}
+.notes-ico{font-size:14px;line-height:1;flex:0 0 auto}
+.notes-preview{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--muted)}
+.notes-btn.has-notes .notes-preview{color:var(--ink-2)}
+.notein{width:100%;border:none;background:transparent;font:inherit;font-size:12px;color:var(--ink-2);padding:2px 0}
+.notein:focus{outline:none;color:var(--ink)}
+.notein::placeholder{color:var(--muted-2)}
 .duein{border:none;background:transparent;font-size:12px;color:var(--muted);cursor:pointer;width:118px;font-family:inherit;padding:0;margin-left:6px}
 .cbxcell{width:30px}
 .cbx{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
@@ -1175,6 +1193,31 @@ body.standalone{min-height:100vh}
   </div>
 </div>
 
+<!-- Table Notes popover -->
+<div class="overlay" id="notesOverlay">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:440px">
+    <div class="modal-head">
+      <h2 id="tn-title">Notes</h2>
+      <button class="x" onclick="closeTableNotes()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tn-id">
+      <div class="field"><label for="tn-notes">Task notes</label>
+        <textarea id="tn-notes" rows="5" placeholder="Brief, links, references…"></textarea></div>
+      <div class="field" id="tn-wait-wrap" style="display:none">
+        <label for="tn-wait" id="tn-wait-label">Waiting / blocked reason</label>
+        <input type="text" id="tn-wait" placeholder="Why is this waiting…">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeTableNotes()">Cancel</button>
+      <button class="btn-primary" onclick="saveTableNotes()">Save notes</button>
+    </div>
+  </div>
+</div>
+
 <script>
 
 /* Denizen phone: localStorage-backed storage shim (window.storage API). */
@@ -1421,7 +1464,15 @@ function logEvt(t,text){
   state.activity=[{id:'act_'+uid(),ts:Date.now(),who:meName(),text:String(text||''),taskId:t.id,title:t.title},...(state.activity||[])].slice(0,200);
 }
 function setStatus(t,ns,reason){
-  if(t.status===ns){ if(isBlockedStage(ns)&&reason) t.blockReason=reason; return; }
+  if(t.status===ns){
+    if((isBlockedStage(ns)||isWaitingStage(ns)) && reason!=null){
+      const r=String(reason).trim();
+      if(r) t.blockReason=r;
+      else if(isBlockedStage(ns)) t.blockReason='No reason given';
+      else delete t.blockReason;
+    }
+    return;
+  }
   const blockers=openBlockers(t);
   if(blockers.length && !isBlockedStage(ns)){
     toast('Waiting on '+blockers.length+' blocker(s)');
@@ -1430,7 +1481,16 @@ function setStatus(t,ns,reason){
   logEvt(t,'Status: '+t.status+' \u2192 '+ns);
   if(isBlockedStage(ns) && !isBlockedStage(t.status)) t.preBlockStatus=t.status;
   t.status=ns; t.statusSince=todayISO();
-  if(isBlockedStage(ns)) t.blockReason=reason||'No reason given'; else delete t.blockReason;
+  if(isBlockedStage(ns)) t.blockReason=(reason!=null && String(reason).trim())?String(reason).trim():'No reason given';
+  else if(isWaitingStage(ns)){
+    if(reason!=null && String(reason).trim()) t.blockReason=String(reason).trim();
+  } else delete t.blockReason;
+}
+function actionVerb(status){
+  const next=NEXT_STEP[status];
+  if(!next) return null;
+  if(next[1]==='__RESUME__') return next[0]||'Unblock';
+  return next[0]||('Move to '+next[1]);
 }
 function setMe(id){ me.id=id; try{ window.storage.set(ME_KEY, JSON.stringify({id})); }catch(e){} loadPersonal(); render(); }
 function clearMe(){ me.id=null; try{ window.storage.set(ME_KEY, JSON.stringify({id:null})); }catch(e){} render(); }
@@ -2353,36 +2413,113 @@ function relDue(t){
   return {cls:'',html:''};
 }
 function taskRow(t, rowCls){
-  const p=personById(t.assignee);
   const due=relDue(t);
+  const verb=actionVerb(t.status);
   const next=NEXT_STEP[t.status];
-  const actCell = next
-    ? `<button class="act" title="Move to ${esc(next[1])}" onclick="event.stopPropagation();advance('${t.id}')">${next[0]}</button>`
+  const actCell = verb
+    ? `<button class="act" title="${esc(next && next[1]==='__RESUME__' ? 'Resume previous status' : ('Move to '+next[1]))}" onclick="event.stopPropagation();advance('${t.id}')">${esc(verb)}</button>`
     : `<span class="doneflag" title="Published">\u2713</span>`;
   return `<tr class="trow ${rowCls} ${ui.kbRow===t.id?'kbfocus':''}" data-id="${t.id}">
     <td class="cbxcell"><input type="checkbox" class="cbx"${ui.sel.has(t.id)?' checked':''} onclick="event.stopPropagation();toggleSel('${t.id}',this.checked)"></td>
-    <td class="t-task" onclick="openTask('${t.id}')"><span class="ttl">${esc(t.title)}</span>${progressBadge(t)}${isBlockedStage(t.status)&&t.blockReason?`<div class="breason">\u2691 ${esc(t.blockReason)}</div>`:''}</td>
+    <td class="t-task" onclick="openTask('${t.id}')"><span class="ttl">${esc(t.title)}</span>${progressBadge(t)}</td>
     <td class="t-client">${esc(t.client||'\u2014')}</td>
     <td><span class="chip typechip" style="background:${tint(typeHex(t.type),.12)};color:${typeHex(t.type)}"><span class="d" style="background:${typeHex(t.type)}"></span>${t.type}</span></td>
     <td><div class="asg">${avatar(t.assignee)}<select class="asel" onclick="event.stopPropagation()" onchange="inlineAssign('${t.id}',this.value)">${assigneeOpts(t.assignee)}</select></div></td>
-    <td><span class="chip" style="background:${tint(statusHex(t.status),.12)};color:${statusHex(t.status)}"><span class="d" style="background:${statusHex(t.status)}"></span>${esc(t.status)}</span>${ageChip(t)}</td>
-    <td><span class="pill-prio prio-${t.priority}">${t.priority}</span></td>
+    <td onclick="event.stopPropagation()"><div class="stcell"><select class="ssel" style="color:${statusHex(t.status)}" onchange="inlineStatus('${t.id}',this.value)" title="Change status">${statusOpts(t.status)}</select>${ageChip(t)}</div></td>
+    <td onclick="event.stopPropagation()"><select class="psel prio-${esc(t.priority||'Medium')}" onchange="inlinePrio('${t.id}',this.value)" title="Change priority">${prioOpts(t.priority)}</select></td>
     <td class="t-date ${due.cls}">${due.html}<input type="date" class="duein" value="${t.due}" onclick="event.stopPropagation()" onchange="inlineDue('${t.id}',this.value)"></td>
+    <td class="t-notes" onclick="event.stopPropagation()">${notesCell(t)}</td>
     <td>${actCell}</td></tr>`;
 }
 function assigneeOpts(cur){
   return `<option value=""${!cur?' selected':''}>Unassigned</option>`+state.people.map(p=>`<option value="${p.id}"${p.id===cur?' selected':''}>${esc(p.name)}</option>`).join('');
 }
+function statusOpts(cur){
+  return STATUSES.map(s=>`<option value="${esc(s.id)}"${s.id===cur?' selected':''}>${esc(s.id)}</option>`).join('');
+}
+function prioOpts(cur){
+  const c=cur||'Medium';
+  return PRIOS.map(p=>`<option value="${p}"${p===c?' selected':''}>${p}</option>`).join('');
+}
+function notesCell(t){
+  const body=(t.notes||'').trim();
+  const waiting=isWaitingStage(t.status)||isBlockedStage(t.status);
+  const waitNote=waiting?(t.blockReason||'').trim():'';
+  const preview=body||waitNote;
+  const cls=preview?'notes-btn has-notes':'notes-btn';
+  const label=preview
+    ? esc(preview.length>42?preview.slice(0,42)+'\u2026':preview)
+    : '\u2014';
+  const tip=body?'View / edit notes':(waitNote?'Waiting reason — click to edit notes':'Add notes');
+  return `<button type="button" class="${cls}" title="${esc(tip)}" onclick="openTableNotes('${t.id}')"><span class="notes-ico" aria-hidden="true">\uD83D\uDCDD</span><span class="notes-preview">${label}</span></button>`;
+}
 function inlineAssign(id,v){ const t=state.tasks.find(x=>x.id===id); if(!t||t.assignee===v) return;
   logEvt(t,'Assignee \u2192 '+((personById(v)||{name:'Unassigned'}).name)); t.assignee=v; save(); render(); }
 function inlineDue(id,v){ const t=state.tasks.find(x=>x.id===id); if(!t||!v||t.due===v) return;
   logEvt(t,'Due \u2192 '+v); t.due=v; save(); render(); }
+function inlinePrio(id,v){
+  const t=state.tasks.find(x=>x.id===id); if(!t||!v||t.priority===v) return;
+  logEvt(t,'Priority \u2192 '+v); t.priority=v; save(); render();
+}
+function inlineStatus(id,v){
+  const t=state.tasks.find(x=>x.id===id); if(!t||t.status===v) return;
+  if(isBlockedStage(v)){
+    askConfirm({title:'Why is this blocked?',
+      msg:'A short reason keeps the team in the loop \u2014 it shows in the Notes column.',
+      input:true, placeholder:'e.g. waiting on client footage', confirmLabel:'Block task',
+      cb:reason=>{ setStatus(t,v,(reason||'').trim()||'No reason given'); save(); render(); }});
+    render();
+    return;
+  }
+  if(isWaitingStage(v) && !isWaitingStage(t.status)){
+    askConfirm({title:'Why waiting?',
+      msg:'Optional — shows in the Notes column so the team knows what you are waiting on.',
+      input:true, placeholder:'e.g. awaiting client feedback', confirmLabel:'Set status',
+      cb:reason=>{ setStatus(t,v,(reason||'').trim()); save(); render(); }});
+    render();
+    return;
+  }
+  setStatus(t,v); save(); render();
+}
+function openTableNotes(id){
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  document.getElementById('tn-id').value=t.id;
+  document.getElementById('tn-title').textContent='Notes \u00b7 '+(t.title||'Task');
+  document.getElementById('tn-notes').value=t.notes||'';
+  const waiting=isWaitingStage(t.status)||isBlockedStage(t.status);
+  const wrap=document.getElementById('tn-wait-wrap');
+  wrap.style.display=waiting?'block':'none';
+  document.getElementById('tn-wait-label').textContent=isBlockedStage(t.status)?'Why blocked':'Why waiting';
+  document.getElementById('tn-wait').value=t.blockReason||'';
+  document.getElementById('notesOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('tn-notes').focus(),40);
+}
+function closeTableNotes(){ document.getElementById('notesOverlay').classList.remove('open'); }
+function saveTableNotes(){
+  const id=document.getElementById('tn-id').value;
+  const t=state.tasks.find(x=>x.id===id); if(!t) return;
+  const notes=(document.getElementById('tn-notes').value||'').trim();
+  const prev=String(t.notes||'').trim();
+  if(notes!==prev){
+    t.notes=notes;
+    logEvt(t, notes?'Notes updated':'Notes cleared');
+  }
+  const waiting=isWaitingStage(t.status)||isBlockedStage(t.status);
+  if(waiting){
+    const reason=(document.getElementById('tn-wait').value||'').trim();
+    if(reason) t.blockReason=reason;
+    else if(isBlockedStage(t.status)) t.blockReason='No reason given';
+    else delete t.blockReason;
+  }
+  save(); closeTableNotes(); render();
+  toast('Notes saved');
+}
 function headHTML(){
   const arr=k=>(tableMode==='sort'&&sortKey===k)?`<span class="arr">${sortDir>0?'\u25B2':'\u25BC'}</span>`:'';
   const allSel=lastIds.length>0&&lastIds.every(id=>ui.sel.has(id));
   return `<th class="cbxcell"><input type="checkbox" class="cbx"${allSel?' checked':''} onclick="selAllVisible(this.checked)"></th>`+[['title','Task'],['client','__CLIENTCOL__'],['type','Type'],['assignee','Assignee'],
           ['status','Status'],['priority','Priority'],['due','Due']]
-    .map(([k,l])=>l==='__CLIENTCOL__'?`<th onclick="sortBy('${k}')" id="clientColHead">${esc((state.config||{}).clientLabel||'Client')} ${arr(k)}</th>`:`<th onclick="sortBy('${k}')">${l} ${arr(k)}</th>`).join('')+`<th>Action</th>`;
+    .map(([k,l])=>l==='__CLIENTCOL__'?`<th onclick="sortBy('${k}')" id="clientColHead">${esc((state.config||{}).clientLabel||'Client')} ${arr(k)}</th>`:`<th onclick="sortBy('${k}')">${l} ${arr(k)}</th>`).join('')+`<th>Notes</th><th>Action</th>`;
 }
 function triageBodyRows(tasks){
   const prioRank=t=>PRIOS.indexOf(t.priority);
@@ -2398,7 +2535,7 @@ function triageBodyRows(tasks){
     {name:'Completed',color:'#2A6A55',rowCls:'r-done',list:done},
   ];
   return groups.filter(g=>g.list.length).map(g=>
-    `<tr class="grp-row"><td colspan="9"><span class="gband"><span class="gbar" style="background:${g.color}"></span><span class="gname" style="color:${g.color}">${g.name}</span><span class="gcount">${g.list.length}</span></span></td></tr>`+
+    `<tr class="grp-row"><td colspan="10"><span class="gband"><span class="gbar" style="background:${g.color}"></span><span class="gname" style="color:${g.color}">${g.name}</span><span class="gcount">${g.list.length}</span></span></td></tr>`+
     g.list.map(t=>taskRow(t,g.rowCls)).join('')
   ).join('');
 }
@@ -3657,7 +3794,7 @@ function resetAll(){
   });
 }
 const VIEW_KEYS={'1':'calendar','2':'table','3':'board','4':'timeline','5':'myday','6':'team','7':'activity'};
-function anyModalOpen(){ return ['overlay','pOverlay','cOverlay','kOverlay','rsOverlay','mtOverlay'].some(id=>document.getElementById(id)?.classList.contains('open')); }
+function anyModalOpen(){ return ['overlay','pOverlay','cOverlay','kOverlay','rsOverlay','mtOverlay','notesOverlay'].some(id=>document.getElementById(id)?.classList.contains('open')); }
 function kbMove(dir){
   if(ui.view!=='table'||!lastIds.length) return;
   let i=lastIds.indexOf(ui.kbRow);
