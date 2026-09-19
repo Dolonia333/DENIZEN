@@ -8,6 +8,8 @@ const boardStore = require('./denizen-studio-board-store');
 const boardActivity = require('./denizen-studio-board-activity');
 const boardAcl = require('./denizen-studio-board-acl');
 const boardAutomations = require('./denizen-studio-board-automations');
+const workspaceAccess = require('./denizen-workspace-access');
+const boardRoster = require('./denizen-studio-board-roster');
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -98,10 +100,52 @@ function defaultStatus(state) {
   return stages[0]?.id || 'backlog';
 }
 
-function buildWorkingSet(state) {
-  const tasks = Array.isArray(state?.tasks) ? state.tasks : [];
+const BOARD_OWNER_FIELDS = [
+  'ownerIdentityId', 'ownerId', 'owner', 'ownerEmail', 'createdBy',
+  'assignee', 'assigneeIdentityId', 'from', 'author', 'user',
+];
+
+function stampBoardRecord(record, actor) {
+  return workspaceAccess.stampOwnership(record, {
+    identityId: actor?.identityId || actor?.identity_id || null,
+    email: actor?.email || null,
+    displayName: actorName(actor),
+    user: actorName(actor),
+  }, { visibility: 'private' });
+}
+
+/**
+ * Filter board arrays by Mine / Team / Org. People always remain (roster).
+ */
+function filterStateForScope(state, actor, scope = 'own') {
+  const raw = state && typeof state === 'object' ? state : boardStore.emptyState();
+  const resolved = workspaceAccess.parseScope(scope, { role: actor?.role, defaultScope: 'own' });
+  if (resolved === 'org') {
+    return { state: raw, scope: 'org', filtered: false };
+  }
+  const out = { ...raw };
+  out.tasks = workspaceAccess.filterRecords(raw.tasks, resolved, actor, BOARD_OWNER_FIELDS);
+  out.events = workspaceAccess.filterRecords(raw.events, resolved, actor, BOARD_OWNER_FIELDS);
+  out.notes = workspaceAccess.filterRecords(raw.notes, resolved, actor, [
+    ...BOARD_OWNER_FIELDS, 'to', 'toIdentityId', 'fromIdentityId',
+  ]);
+  // Activity: mine = my rows; team = all (shared feed)
+  if (resolved === 'own') {
+    out.activity = workspaceAccess.filterRecords(raw.activity || [], 'own', actor, ['who', 'user', 'createdBy']);
+  }
+  out.people = Array.isArray(raw.people) ? raw.people : [];
+  out.templates = Array.isArray(raw.templates) ? raw.templates : [];
+  out.config = raw.config || null;
+  return { state: out, scope: resolved, filtered: true };
+}
+
+function buildWorkingSet(state, actor = null, scope = 'org') {
+  const filtered = actor
+    ? filterStateForScope(state, actor, scope).state
+    : state;
+  const tasks = Array.isArray(filtered?.tasks) ? filtered.tasks : [];
   const people = Array.isArray(state?.people) ? state.people : [];
-  const events = Array.isArray(state?.events) ? state.events : [];
+  const events = Array.isArray(filtered?.events) ? filtered.events : [];
   const today = todayISO();
   const open = tasks.filter((t) => !isFinalStage(state, t.status));
   const overdue = open.filter((t) => t.due && String(t.due) < today);
@@ -216,7 +260,10 @@ function slugUnique(name, existing) {
 
 function personHint(state, hint) {
   if (!hint) return null;
-  return findPerson(state, hint.assignee || hint.person || hint.person_id || hint.name || hint.displayName || hint.user)
+  if (typeof hint === 'string') return findPerson(state, hint);
+  return findPerson(state, hint.assignee || hint.person || hint.person_id || hint.name || hint.displayName || hint.display_name || hint.user)
+    || findPerson(state, hint.email)
+    || findPerson(state, hint.identityId || hint.identity_id)
     || null;
 }
 
@@ -264,8 +311,12 @@ async function commit(orgId, state, identityId, row, extra = {}) {
   return { ok: true, updated_at: saved?.updated_at, ...extra };
 }
 
-async function listTasks(orgId, filters = {}) {
-  const { state } = await loadState(orgId);
+async function listTasks(orgId, filters = {}, actor = null) {
+  const { state: full } = await loadState(orgId);
+  const scope = filters.scope || filters.access_scope || (actor ? 'own' : 'org');
+  const state = actor
+    ? filterStateForScope(full, actor, scope).state
+    : full;
   let tasks = [...(state.tasks || [])];
   const status = filters.status || filters.stage || null;
   const assignee = filters.assignee || null;
@@ -275,7 +326,7 @@ async function listTasks(orgId, filters = {}) {
     || String(filters.open || '') === '1';
   if (status) tasks = tasks.filter((t) => String(t.status) === String(status));
   if (assignee) {
-    const p = findPerson(state, assignee);
+    const p = findPerson(full, assignee);
     const aid = p?.id || assignee;
     tasks = tasks.filter((t) => String(t.assignee || '') === String(aid)
       || String(t.assignee || '').toLowerCase() === String(assignee).toLowerCase());
@@ -283,7 +334,7 @@ async function listTasks(orgId, filters = {}) {
   if (client) {
     tasks = tasks.filter((t) => String(t.client || '').toLowerCase() === String(client).toLowerCase());
   }
-  if (openOnly) tasks = tasks.filter((t) => !isFinalStage(state, t.status));
+  if (openOnly) tasks = tasks.filter((t) => !isFinalStage(full, t.status));
   if (search) {
     tasks = tasks.filter((t) => `${t.title} ${t.client || ''} ${t.notes || ''}`.toLowerCase().includes(search));
   }
@@ -291,8 +342,9 @@ async function listTasks(orgId, filters = {}) {
   return {
     ok: true,
     count: tasks.length,
+    access_scope: scope,
     tasks: tasks.slice(0, limit).map(summarizeTask),
-    stages: (state.config?.stages || []).map((s) => s.id),
+    stages: (full.config?.stages || []).map((s) => s.id),
   };
 }
 
@@ -333,9 +385,12 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
       subtasks: Array.isArray(input.subtasks) ? input.subtasks : [],
       remind: input.remind !== false,
     });
+    task = stampBoardRecord(task, actor);
+    if (input.visibility) task.visibility = String(input.visibility);
     if (input.assignee) {
       const p = findPerson(state, input.assignee);
       if (p) task.assignee = p.id;
+      task = workspaceAccess.promoteVisibilityOnAssign(task);
     }
     logEvt(task, who, 'Created via MCP');
     act(state, who, `Created “${task.title}”`, task);
@@ -361,6 +416,7 @@ async function upsertTask(orgId, input = {}, identityId = null, actor = {}) {
     if (input.assignee != null) {
       const p = findPerson(state, input.assignee);
       task.assignee = p?.id || input.assignee || null;
+      Object.assign(task, workspaceAccess.promoteVisibilityOnAssign(task));
       logEvt(task, who, `Assignee → ${task.assignee || 'unassigned'}`);
       act(state, who, `Assignee → ${task.assignee || 'unassigned'}`, task);
     }
@@ -587,7 +643,7 @@ async function listEvents(orgId, filters = {}) {
   return { ok: true, count: events.length, events: events.slice(0, limit).map(summarizeEvent) };
 }
 
-async function upsertEvent(orgId, input = {}, identityId = null) {
+async function upsertEvent(orgId, input = {}, identityId = null, actor = {}) {
   const { state, row } = await loadState(orgId);
   const id = String(input.id || input.event_id || '').trim();
   let ev = id ? findEvent(state, id) : null;
@@ -596,7 +652,7 @@ async function upsertEvent(orgId, input = {}, identityId = null) {
   if (creating) {
     const title = String(input.title || '').trim();
     if (!title) return { ok: false, error: 'title required' };
-    ev = {
+    ev = stampBoardRecord({
       id: id || uid(),
       kind,
       title: title.slice(0, 200),
@@ -606,7 +662,8 @@ async function upsertEvent(orgId, input = {}, identityId = null) {
       note: input.note || null,
       repeat: input.repeat === 'weekly' ? 'weekly' : null,
       done: !!input.done,
-    };
+    }, actor);
+    if (input.visibility) ev.visibility = String(input.visibility);
     state.events = [...(state.events || []), ev];
   } else {
     if (input.title != null) ev.title = String(input.title).slice(0, 200);
@@ -717,7 +774,7 @@ async function sendNote(orgId, input = {}, identityId = null, actor = {}) {
   const text = String(input.text || input.note || input.body || '').trim();
   if (!text) return { ok: false, error: 'note text required' };
   const fromP = findPerson(state, input.from || actor.displayName || actor.user || actor.npc_key);
-  const note = {
+  let note = {
     id: uid(),
     from: fromP?.id || actor.npc_key || 'mcp',
     to: toP.id,
@@ -725,6 +782,9 @@ async function sendNote(orgId, input = {}, identityId = null, actor = {}) {
     ts: Date.now(),
     read: false,
   };
+  note = stampBoardRecord(note, actor);
+  note.visibility = 'team'; // notes to teammates are team-visible
+  note.toIdentityId = toP.identityId || toP.identity_id || null;
   state.notes = [...(state.notes || []), note];
   const saved = await saveState(orgId, state, identityId, {
     ifUpdatedAt: row?.updated_at || null,
@@ -1099,6 +1159,11 @@ async function patchTaskEntity(orgId, taskId, patch = {}, identityId = null, act
 }
 
 module.exports = {
+  findPerson,
+  personHint,
+  filterStateForScope,
+  stampBoardRecord,
+  boardRoster,
   buildWorkingSet,
   summarizeTask,
   summarizeEvent,

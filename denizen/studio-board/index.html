@@ -242,6 +242,9 @@ tr.trow.r-done:hover{opacity:1}
 /* ===== team features ===== */
 .sharedbadge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--sage);font-weight:500;white-space:nowrap}
 .sharedbadge .dot{width:6px;height:6px;border-radius:50%;background:#5FBF97;box-shadow:0 0 6px rgba(95,191,151,.8)}
+.scope-toggle{display:inline-flex;gap:2px;padding:2px;border-radius:8px;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08)}
+.scopebtn{border:0;background:transparent;font:inherit;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;cursor:pointer;color:var(--ink-soft,#666)}
+.scopebtn.active{background:#fff;color:var(--ink,#1a1a1a);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .presence-strip{display:flex;flex-wrap:wrap;gap:4px;max-width:280px;align-items:center}
 .presence-chip{font-size:10px;padding:2px 7px;border-radius:999px;background:var(--surface-2);color:var(--ink);border:1px solid var(--hairline);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .tl-wrap{overflow:auto;padding:8px}
@@ -928,7 +931,7 @@ body.standalone{min-height:100vh}
 </head>
 <body>
 <div class="dz-app-chrome" role="navigation" aria-label="Studio Board app bar">
-  <a href="/">← Back to office</a>
+  <a href="/office">← Back to office</a>
   <span class="dz-app-title">Studio Board · Agency Tracker</span>
   <span class="dz-app-spacer"></span>
   <a href="/crm/">Open CRM</a>
@@ -968,7 +971,14 @@ body.standalone{min-height:100vh}
         </button>
       </nav>
       <div class="bar-actions">
-        <span class="sharedbadge" title="Everyone using this artifact sees and edits this same board"><span class="dot"></span>Shared board</span>
+        <span class="sharedbadge" id="accessScopeBadge" title="Mine = your private work. Team = shared and assigned.">
+          <span class="dot"></span><span id="accessScopeLabel">Mine</span>
+        </span>
+        <div class="scope-toggle" id="scopeToggle" role="group" aria-label="Access scope">
+          <button type="button" class="scopebtn active" data-scope="own" onclick="setAccessScope('own')">Mine</button>
+          <button type="button" class="scopebtn" data-scope="team" onclick="setAccessScope('team')">Team</button>
+          <button type="button" class="scopebtn" data-scope="org" id="scopeOrgBtn" style="display:none" onclick="setAccessScope('org')">Org</button>
+        </div>
         <div class="presence-strip" id="presenceStrip" title="Who is on the board right now"></div>
         <div class="people-strip" id="peopleStrip"></div>
         <button class="newbtn" onclick="openTask()" aria-label="New task">
@@ -1518,7 +1528,18 @@ function tint(hex,a){ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&25
 
 /* ============ State ============ */
 let state = {tasks:[], people:[], events:[], templates:[], notes:[], config:null};
-let ui = {view:'calendar', calY:0, calM:0, filters:{client:'all',assignee:'all',type:'all',search:'',deal:null},
+function initialBoardView(){
+  try{
+    const q=new URLSearchParams(location.search);
+    const forced=String(q.get('view')||'').toLowerCase();
+    const allowed=new Set(['calendar','table','board','timeline','myday','team','activity','settings']);
+    if(forced && allowed.has(forced)) return forced;
+    if(q.get('deal')) return 'table';
+    if(readVisitorSession()) return 'myday';
+  }catch(e){}
+  return 'calendar';
+}
+let ui = {view:initialBoardView(), calY:0, calM:0, filters:{client:'all',assignee:'all',type:'all',search:'',deal:null},
           editId:null, draft:{}, pColor:AV_COLORS[0]};
 ui.statFilter=null;
 ui.sel=new Set();
@@ -1540,6 +1561,25 @@ let remotePollTimer=null;
 let pendingPatches={}; /* taskId -> partial fields awaiting rebase */
 let boardPresence=[];
 let boardIsAdmin=true;
+let accessScope='own';
+let canOrgScope=false;
+
+function setAccessScope(scope){
+  const next=String(scope||'own');
+  if(next==='org' && !canOrgScope) return;
+  accessScope=next;
+  const label=document.getElementById('accessScopeLabel');
+  if(label) label.textContent=next==='own'?'Mine':next==='team'?'Team':'Org';
+  document.querySelectorAll('.scopebtn').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-scope')===accessScope);
+  });
+  const orgBtn=document.getElementById('scopeOrgBtn');
+  if(orgBtn) orgBtn.style.display=canOrgScope?'':'none';
+  fetchRemoteWorkspace().then(data=>{
+    if(data&&data.state) rebaseFromRemote(data.state, data.updated_at);
+  }).catch(()=>{});
+}
+window.setAccessScope=setAccessScope;
 ui.tlZoom = ui.tlZoom || 28;
 
 function readVisitorSession(){
@@ -1563,7 +1603,8 @@ function authHeaders(sess){
 async function fetchRemoteWorkspace(){
   const sess=readVisitorSession();
   if(!sess) return null;
-  const url='/api/studio-board/workspace?session_id='+encodeURIComponent(sess.session_id);
+  const url='/api/studio-board/workspace?session_id='+encodeURIComponent(sess.session_id)
+    +'&scope='+encodeURIComponent(accessScope||'own');
   const res=await fetch(url,{ headers:authHeaders(sess) });
   if(!res.ok) return null;
   const data=await res.json();
@@ -1571,6 +1612,17 @@ async function fetchRemoteWorkspace(){
   remoteSyncEnabled=true;
   remoteUpdatedAt=data.updated_at||null;
   if(typeof data.is_admin==='boolean') boardIsAdmin=data.is_admin;
+  if(typeof data.can_org_scope==='boolean'){
+    canOrgScope=data.can_org_scope;
+    const orgBtn=document.getElementById('scopeOrgBtn');
+    if(orgBtn) orgBtn.style.display=canOrgScope?'':'none';
+  }
+  if(data.access_scope) accessScope=data.access_scope;
+  const label=document.getElementById('accessScopeLabel');
+  if(label) label.textContent=accessScope==='own'?'Mine':accessScope==='team'?'Team':'Org';
+  document.querySelectorAll('.scopebtn').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-scope')===accessScope);
+  });
   if(Array.isArray(data.presence)) boardPresence=data.presence;
   if(Array.isArray(data.activity) && data.activity.length) state.activity=data.activity;
   return data;
@@ -1624,6 +1676,7 @@ async function pushRemoteWorkspace(){
     session_id:sess.session_id,
     session_token:sess.session_token,
     if_updated_at:remoteUpdatedAt,
+    scope:accessScope||'own',
     state:{tasks:state.tasks, people:state.people, events:state.events||[], templates:state.templates||[], notes:state.notes||[], activity:state.activity||[], config:state.config},
   };
   const res=await fetch('/api/studio-board/workspace',{
@@ -1767,11 +1820,17 @@ function applyCrmDeepLink(){
     const q=new URLSearchParams(location.search);
     const deal=q.get('deal');
     const task=q.get('task');
+    const forced=String(q.get('view')||'').toLowerCase();
     if(deal){
       ui.filters.deal=deal;
       ui.view='table';
       render();
       toast('Filtered to CRM deal #'+deal);
+    } else if(forced){
+      /* honored by initialBoardView */
+    } else if(readVisitorSession() && ui.view!=='myday' && !task){
+      /* Keep My Day as home after hydrate unless deep-linked elsewhere */
+      ui.view='myday';
     }
     if(task){
       setTimeout(()=>openTask(task), 80);
@@ -2339,11 +2398,15 @@ function advance(id){
 }
 function setTriage(){ tableMode='triage'; render(); }
 function dayDiff(due){
-  const [y,m,d]=due.split('-').map(Number);
+  if(!due) return Infinity;
+  const parts=String(due).split('-').map(Number);
+  if(parts.length<3 || parts.some(n=>!Number.isFinite(n))) return Infinity;
+  const [y,m,d]=parts;
   const a=new Date(y,m-1,d), n=new Date(); const b=new Date(n.getFullYear(),n.getMonth(),n.getDate());
   return Math.round((a-b)/86400000);
 }
 function relDue(t){
+  if(!t || !t.due) return {cls:'',html:`<span class="rel">No date</span>`};
   const diff=dayDiff(t.due);
   if(isFinalStage(t.status)) return {cls:'',html:`<span class="rel">Done</span>`};
   if(diff<0)  return {cls:'overdue', html:`<span class="rel">${-diff}d overdue</span>`};
@@ -2867,13 +2930,18 @@ function renderMyDay(container){
   const p=personById(me.id);
   const today=todayISO();
   const mine=state.tasks.filter(t=>t.assignee===me.id && !isFinalStage(t.status));
-  const overdue=mine.filter(t=>dayDiff(t.due)<0).sort((a,b)=>a.due<b.due?-1:1);
-  const dueToday=mine.filter(t=>dayDiff(t.due)===0);
+  const overdue=mine.filter(t=>t.due && dayDiff(t.due)<0).sort((a,b)=>a.due<b.due?-1:1);
+  const dueToday=mine.filter(t=>t.due && dayDiff(t.due)===0);
   const focus=[...overdue,...dueToday];
-  const later=mine.filter(t=>dayDiff(t.due)>0).sort((a,b)=>a.due<b.due?-1:1);
+  const later=mine.filter(t=>!t.due || dayDiff(t.due)>0).sort((a,b)=>{
+    if(!a.due && !b.due) return 0;
+    if(!a.due) return 1;
+    if(!b.due) return -1;
+    return a.due<b.due?-1:1;
+  });
   const meetings=eventsOn(today).filter(e=>e.kind==='meeting'&&(!e.client||true)).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const rem=(personal.reminders||[]);
-  const taskRem=mine.filter(t=>t.remind!==false && dayDiff(t.due)<=0).sort((a,b)=>a.due<b.due?-1:1);
+  const taskRem=mine.filter(t=>t.remind!==false && t.due && dayDiff(t.due)<=0).sort((a,b)=>a.due<b.due?-1:1);
   const remOpen=rem.filter(r=>!r.done).length + taskRem.length;
 
   // summary line
@@ -2887,7 +2955,7 @@ function renderMyDay(container){
 
   const taskLine=(t,tag)=>{
     const due=relDue(t); const next=NEXT_STEP[t.status];
-    const isOver=dayDiff(t.due)<0;
+    const isOver=!!(t.due && dayDiff(t.due)<0);
     const act=next?`<button class="mdact" title="Move to ${esc(next[1])}" onclick="event.stopPropagation();advance('${t.id}')">${next[0]}</button>`:'';
     const resched=isOver?`<button class="mdresched" title="Reschedule to an open slot" onclick="event.stopPropagation();openReschedule('${t.id}')">Reschedule</button>`:'';
     const timeBit=t.dueTime&&!isOver?`<span class="mdclient" style="max-width:none">${esc(fmtSlotLabel(t.dueTime))}</span>`:'';

@@ -7,9 +7,12 @@ const boardPresence = require('./denizen-studio-board-presence');
 const boardAcl = require('./denizen-studio-board-acl');
 const boardActivity = require('./denizen-studio-board-activity');
 const boardAutomations = require('./denizen-studio-board-automations');
+const boardRoster = require('./denizen-studio-board-roster');
+const workspaceAccess = require('./denizen-workspace-access');
 const denizenDb = require('./denizen-db');
 const sessionCookie = require('./visitor-session-cookie');
 const visitorAccess = require('./visitor-access');
+const teamAuth = require('./denizen-team-auth');
 
 function sessionIdFrom(req, body, url) {
   return String(
@@ -53,20 +56,78 @@ async function verifyBoardSession(req, sessionId, body, verifyVisitorSession) {
   return access;
 }
 
+/** Never fall back to denizenDb.orgId for browser sessions. */
 async function resolveOrgId(access) {
   return access?.orgId
     || access?.session?.org_id
-    || denizenDb.orgId
     || null;
 }
 
-function actorFromAccess(access) {
+async function actorFromAccess(access, sessionId) {
+  let role = null;
+  try {
+    const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+      isCeoPrincipal: !!access?.session?.metadata?.is_ceo_principal,
+    });
+    role = approval.role || null;
+  } catch (_) { /* optional */ }
   return {
     identityId: access?.session?.identity_id || null,
     identity_id: access?.session?.identity_id || null,
     email: access?.session?.email || access?.user?.email || null,
     displayName: access?.session?.display_name || access?.user?.display_name || null,
+    user: access?.session?.display_name || access?.user?.display_name || null,
+    role: role || 'member',
     enforceAcl: true,
+  };
+}
+
+async function prepareBoardState(orgId, access, sessionId, requestedScope) {
+  let row = await boardStore.getWorkspace(orgId);
+  let state = row?.state || boardStore.emptyState();
+  if (state.config) {
+    boardStore.migrateConfig(state.config);
+    boardAcl.seedOwnerIfEmpty(state.config, await actorFromAccess(access, sessionId));
+  }
+  boardAutomations.sweepDuePassed(state, 'Automation');
+
+  const synced = await boardRoster.syncOrgRoster(state, orgId);
+  state = synced.state;
+  if (synced.changed) {
+    const identityId = access.session?.identity_id || null;
+    const saved = await boardStore.upsertWorkspace(orgId, state, identityId, {
+      ifUpdatedAt: row?.updated_at || null,
+    });
+    if (!saved?.conflict) {
+      row = saved || row;
+      state = saved?.state || state;
+    }
+  }
+
+  const actor = await actorFromAccess(access, sessionId);
+  // Mine matches assignee against actor aliases. Tasks store assignee as person id
+  // (p_xxx), so include the roster person's id/email/identity or Mine looks empty.
+  try {
+    const hint = actor.email || actor.identityId || actor.identity_id || actor.displayName || actor.user;
+    const person = hint ? boardMutations.findPerson(state, hint) : null;
+    if (person) {
+      const extra = [person.id, person.name, person.email, person.identityId, person.identity_id]
+        .filter(Boolean)
+        .map(String);
+      actor.aliases = [...new Set([...(actor.aliases || []), ...extra])];
+    }
+  } catch (_) { /* non-fatal */ }
+  const scope = workspaceAccess.parseScope(requestedScope || 'own', {
+    role: actor.role,
+    defaultScope: 'own',
+  });
+  const filtered = boardMutations.filterStateForScope(state, actor, scope);
+  return {
+    row,
+    fullState: state,
+    state: filtered.state,
+    scope: filtered.scope,
+    actor,
   };
 }
 
@@ -93,28 +154,23 @@ function mountStudioBoardRoutes({ verifyVisitorSession, readJsonBody } = {}) {
           json(res, 503, { ok: false, error: 'Database not configured' });
           return true;
         }
-        let row = await boardStore.getWorkspace(orgId);
-        let state = row?.state || boardStore.emptyState();
-        // Seed owner + migrate config on read (lazy)
-        if (state.config) {
-          boardStore.migrateConfig(state.config);
-          boardAcl.seedOwnerIfEmpty(state.config, actorFromAccess(access));
-        }
-        boardAutomations.sweepDuePassed(state, 'Automation');
-        const actor = actorFromAccess(access);
+        const requestedScope = url.searchParams.get('scope') || url.searchParams.get('access_scope') || 'own';
+        const prepared = await prepareBoardState(orgId, access, sessionId, requestedScope);
         json(res, 200, {
           ok: true,
           org_id: orgId,
           org_slug: access.orgSlug || null,
-          schema_version: row?.schema_version || boardStore.SCHEMA_VERSION,
-          updated_at: row?.updated_at || null,
-          updated_by: row?.updated_by || null,
-          state,
-          activity: boardActivity.listActivity(state),
-          is_admin: boardAcl.isAdmin(state.config, actor),
-          is_owner: boardAcl.isOwner(state.config, actor),
+          schema_version: prepared.row?.schema_version || boardStore.SCHEMA_VERSION,
+          updated_at: prepared.row?.updated_at || null,
+          updated_by: prepared.row?.updated_by || null,
+          state: prepared.state,
+          access_scope: prepared.scope,
+          can_org_scope: workspaceAccess.isOrgWideRole(prepared.actor.role),
+          activity: boardActivity.listActivity(prepared.state),
+          is_admin: boardAcl.isAdmin(prepared.fullState.config, prepared.actor),
+          is_owner: boardAcl.isOwner(prepared.fullState.config, prepared.actor),
           presence: boardPresence.list(orgId),
-          working_set: boardMutations.buildWorkingSet(state),
+          working_set: boardMutations.buildWorkingSet(prepared.fullState, prepared.actor, prepared.scope),
         });
         return true;
       }
@@ -132,9 +188,81 @@ function mountStudioBoardRoutes({ verifyVisitorSession, readJsonBody } = {}) {
           json(res, 503, { ok: false, error: 'Database not configured' });
           return true;
         }
-        const state = boardStore.sanitizeState(body.state || body);
+        const actor = await actorFromAccess(access, sessionId);
+        const requestedScope = body.scope || body.access_scope || 'own';
+        const scope = workspaceAccess.parseScope(requestedScope, { role: actor.role, defaultScope: 'own' });
+        let incoming = boardStore.sanitizeState(body.state || body);
+        // Stamp new/unowned tasks from this save as private to actor
+        incoming.tasks = (incoming.tasks || []).map((t) => {
+          if (!t || typeof t !== 'object') return t;
+          if (!workspaceAccess.recordHasOwnerStamp(t)) {
+            return boardMutations.stampBoardRecord(t, actor);
+          }
+          return t;
+        });
+        incoming.events = (incoming.events || []).map((e) => {
+          if (!e || typeof e !== 'object') return e;
+          if (!workspaceAccess.recordHasOwnerStamp(e)) {
+            return boardMutations.stampBoardRecord(e, actor);
+          }
+          return e;
+        });
+
+        const existing = await boardStore.getWorkspace(orgId);
+        let state = incoming;
+        if (scope !== 'org') {
+          // Merge: keep others' private rows
+          const full = existing?.state || boardStore.emptyState();
+          const keepTasks = (full.tasks || []).filter((t) => {
+            const mine = workspaceAccess.recordVisibleMine(
+              t,
+              workspaceAccess.buildActorAliases(actor, { fuzzyName: true }),
+              ['ownerIdentityId', 'ownerId', 'createdBy', 'assignee'],
+            );
+            return !mine;
+          });
+          const keepEvents = (full.events || []).filter((e) => {
+            const mine = workspaceAccess.recordVisibleMine(
+              e,
+              workspaceAccess.buildActorAliases(actor, { fuzzyName: true }),
+              ['ownerIdentityId', 'ownerId', 'createdBy'],
+            );
+            return !mine;
+          });
+          const keepNotes = (full.notes || []).filter((n) => {
+            const mine = workspaceAccess.recordVisibleMine(
+              n,
+              workspaceAccess.buildActorAliases(actor, { fuzzyName: true }),
+              ['ownerIdentityId', 'from', 'createdBy'],
+            );
+            return !mine;
+          });
+          state = {
+            ...full,
+            ...incoming,
+            people: incoming.people?.length ? incoming.people : full.people,
+            config: incoming.config || full.config,
+            tasks: [...keepTasks, ...(incoming.tasks || [])],
+            events: [...keepEvents, ...(incoming.events || [])],
+            notes: [...keepNotes, ...(incoming.notes || [])],
+            activity: full.activity || [],
+          };
+          // Deduplicate by id preferring incoming
+          const dedupe = (list) => {
+            const map = new Map();
+            for (const row of list || []) {
+              if (row?.id == null) continue;
+              map.set(String(row.id), row);
+            }
+            return [...map.values()];
+          };
+          state.tasks = dedupe(state.tasks);
+          state.events = dedupe(state.events);
+          state.notes = dedupe(state.notes);
+        }
+
         const identityId = access.session?.identity_id || null;
-        boardAcl.seedOwnerIfEmpty(state.config || (state.config = {}), actorFromAccess(access));
+        boardAcl.seedOwnerIfEmpty(state.config || (state.config = {}), actor);
         const ifUpdatedAt = body.if_updated_at || body.ifUpdatedAt || null;
         const saved = await boardStore.upsertWorkspace(orgId, state, identityId, { ifUpdatedAt });
         if (saved?.conflict) {
@@ -143,10 +271,11 @@ function mountStudioBoardRoutes({ verifyVisitorSession, readJsonBody } = {}) {
             error: 'Board was updated by a teammate — reloading latest copy',
             code: 'CONFLICT',
             org_id: orgId,
-            state: saved.state,
+            state: boardMutations.filterStateForScope(saved.state, actor, scope).state,
             updated_at: saved.updated_at,
             schema_version: saved.schema_version,
             activity: boardActivity.listActivity(saved.state),
+            access_scope: scope,
           });
           return true;
         }
@@ -155,6 +284,7 @@ function mountStudioBoardRoutes({ verifyVisitorSession, readJsonBody } = {}) {
           org_id: orgId,
           schema_version: saved?.schema_version || boardStore.SCHEMA_VERSION,
           updated_at: saved?.updated_at || new Date().toISOString(),
+          access_scope: scope,
         });
         return true;
       }
@@ -176,7 +306,7 @@ function mountStudioBoardRoutes({ verifyVisitorSession, readJsonBody } = {}) {
           taskId,
           body.patch || body,
           access.session?.identity_id || null,
-          actorFromAccess(access),
+          await actorFromAccess(access, sessionId),
         );
         if (result?.code === 'CONFLICT') {
           json(res, 409, result);
@@ -247,12 +377,12 @@ function mountStudioBoardRoutes({ verifyVisitorSession, readJsonBody } = {}) {
           json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
           return true;
         }
-        const row = await boardStore.getWorkspace(orgId);
-        const state = row?.state || boardStore.emptyState();
-        boardAutomations.sweepDuePassed(state, 'Automation');
+        const requestedScope = url.searchParams.get('scope') || 'own';
+        const prepared = await prepareBoardState(orgId, access, sessionId, requestedScope);
         json(res, 200, {
           ok: true,
-          ...boardMutations.buildWorkingSet(state),
+          access_scope: prepared.scope,
+          ...boardMutations.buildWorkingSet(prepared.fullState, prepared.actor, prepared.scope),
         });
         return true;
       }
