@@ -133,12 +133,13 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
 .cal-cell.today .daynum{background:var(--accent);color:var(--bone);font-weight:600}
 .evt{font-size:11.5px;font-weight:500;padding:3px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;display:flex;align-items:center;gap:5px;transition:filter .12s;min-width:0;letter-spacing:-.005em;
-  background:var(--ec-bg);color:var(--ec)}
+  background:var(--ec-bg);color:var(--ec);cursor:pointer;position:relative;z-index:1}
 .evt:hover{filter:brightness(.95)}
 .evt.done{opacity:.5;text-decoration:line-through}
 .evt .edot{width:6px;height:6px;border-radius:50%;background:var(--ec);flex:none}
 .evt .etitle{overflow:hidden;text-overflow:ellipsis}
-.more{font-size:11px;color:var(--muted);font-weight:500;padding-left:2px}
+.more{font-size:11px;color:var(--muted);font-weight:500;padding-left:2px;cursor:pointer;position:relative;z-index:1}
+.more:hover{color:var(--accent)}
 
 /* ================= Table ================= */
 .tbl-wrap{background:var(--surface);border:1px solid var(--hairline);border-radius:16px;overflow-x:auto;box-shadow:var(--shadow)}
@@ -426,7 +427,7 @@ tr.trow.r-done:hover{opacity:1}
 .wk-col{position:relative;border-left:1px solid var(--hairline-2);cursor:pointer;min-width:0;
   background:repeating-linear-gradient(to bottom,transparent,transparent 47px,var(--hairline-2) 47px,var(--hairline-2) 48px)}
 .wk-col.today{background-color:rgba(42,106,85,.045)}
-.wk-evt{position:absolute;left:3px;right:3px;background:var(--forest-2);color:var(--bone);border-radius:7px;padding:3px 7px;font-size:11px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:var(--shadow)}
+.wk-evt{position:absolute;left:3px;right:3px;background:var(--forest-2);color:var(--bone);border-radius:7px;padding:3px 7px;font-size:11px;font-weight:500;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-shadow:var(--shadow);cursor:pointer;z-index:2}
 .wk-evt b{font-weight:600;color:#CFE3D6;margin-right:4px;font-variant-numeric:tabular-nums}
 .wk-evt .rep{opacity:.85}
 @media(max-width:560px){.wk-head,.wk-allday,.wk-body{grid-template-columns:40px repeat(7,1fr)}.wk-evt{font-size:9.5px;padding:2px 4px}}
@@ -532,6 +533,12 @@ tbody tr.trow:hover{box-shadow:inset 3px 0 0 var(--sage)}
 .fdon{color:var(--muted)}
 .fdtime{font-size:11.5px;color:var(--muted-2);white-space:nowrap;flex:none;font-variant-numeric:tabular-nums}
 .fdrow.new .fdtime{color:var(--accent);font-weight:600}
+.fdrow .fddetail{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fdcat{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.fdcatbtn{border:1px solid var(--hairline);background:var(--surface);border-radius:980px;padding:4px 11px;font-size:12px;font-weight:500;color:var(--ink-2);cursor:pointer}
+.fdcatbtn:hover{border-color:var(--accent);color:var(--accent)}
+.fdcatbtn.on{background:var(--accent-tint);border-color:transparent;color:var(--accent);font-weight:600}
+.fdsec{margin:14px 0 6px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .newbanner{background:var(--accent-tint);color:var(--accent);border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;font-weight:500}
 .newbanner a{text-decoration:underline;cursor:pointer;font-weight:600}
 
@@ -1388,9 +1395,13 @@ function savePersonal(){
 }
 const STALE_DAYS = 4;
 function meName(){ const p=personById(me.id); return p ? p.name.split(' ')[0] : 'Someone'; }
-function todayISO(){ return new Date().toISOString().slice(0,10); }
+function dateToISO(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function ymdISO(y,m,d){ return dateToISO(new Date(y,m,d)); }
+function todayISO(){ return dateToISO(new Date()); }
 function addDays(iso,n){ const [y,m,d]=iso.split('-').map(Number); const x=new Date(y,m-1,d+n);
-  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+  return dateToISO(x); }
 function normalize(list){ (list||[]).forEach(t=>{
   t.log=t.log||[]; t.comments=t.comments||[]; t.subtasks=t.subtasks||[];
   t.fields=t.fields&&typeof t.fields==='object'?t.fields:{};
@@ -1431,11 +1442,20 @@ function progressBadge(t){ const p=subProgress(t); if(!p) return '';
   const pct=Math.round(p.done/p.total*100);
   return `<span class="subbadge${p.done===p.total?' full':''}" title="${p.done}/${p.total} subtasks done"><span class="subbar"><span style="width:${pct}%"></span></span>${p.done}/${p.total}</span>`; }
 function isStuck(t){ return isBlockedStage(t.status) || isStale(t); }
+function logBoard(text, extra={}){
+  ensureBoardConfig();
+  state.activity=[{
+    id:'act_'+uid(),
+    ts:Date.now(),
+    who:meName(),
+    text:String(text||''),
+    ...extra,
+  },...(state.activity||[])].slice(0,200);
+}
 function logEvt(t,text){
   (t.log=t.log||[]).push({ts:Date.now(),who:meName(),text});
   if(t.log.length>50) t.log=t.log.slice(-50);
-  ensureBoardConfig();
-  state.activity=[{id:'act_'+uid(),ts:Date.now(),who:meName(),text:String(text||''),taskId:t.id,title:t.title},...(state.activity||[])].slice(0,200);
+  logBoard(text,{taskId:t.id,title:t.title,kind:'task',detail:t.client?String(t.client):''});
 }
 function setStatus(t,ns,reason){
   if(t.status===ns){
@@ -1573,6 +1593,7 @@ ui.mdNudge=true;
 ui.convertId=null;
 ui.colorPick=null;
 ui.calMode='month';
+ui.activityCat='all';
 const uid = () => Math.random().toString(36).slice(2,9);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -2206,9 +2227,9 @@ function renderCalendar(){
   let cells='';
   for(let i=0;i<42;i++){
     let dim=false,dnum,dateStr;
-    if(i<start){ dim=true; dnum=prevDays-start+i+1; dateStr=new Date(ui.calY,ui.calM-1,dnum).toISOString().slice(0,10); }
-    else if(i>=start+days){ dim=true; dnum=i-start-days+1; dateStr=new Date(ui.calY,ui.calM+1,dnum).toISOString().slice(0,10); }
-    else { dnum=i-start+1; dateStr=new Date(ui.calY,ui.calM,dnum).toISOString().slice(0,10); }
+    if(i<start){ dim=true; dnum=prevDays-start+i+1; dateStr=ymdISO(ui.calY,ui.calM-1,dnum); }
+    else if(i>=start+days){ dim=true; dnum=i-start-days+1; dateStr=ymdISO(ui.calY,ui.calM+1,dnum); }
+    else { dnum=i-start+1; dateStr=ymdISO(ui.calY,ui.calM,dnum); }
     const isToday=dateStr===todayStr;
     const dueList=byDate[dateStr]||[];
     const carry=isToday?overdue.filter(t=>t.due!==todayStr):[];
@@ -2223,7 +2244,7 @@ function renderCalendar(){
       ...fups.map(ev=>`<div class="evt evf ${ev.done?'done':''}" onclick="event.stopPropagation();selectDay('${dateStr}')" title="${esc(ev.title)}">\u2691 <span class="etitle">${esc(ev.title)}</span></div>`)
     ];
     const shown=pills.slice(0,3).join('');
-    const more=pills.length>3?`<div class="more">${pills.length-3} more</div>`:'';
+    const more=pills.length>3?`<div class="more" onclick="event.stopPropagation();selectDay('${dateStr}')">${pills.length-3} more</div>`:'';
     cells+=`<div class="cal-cell ${dim?'dim':''} ${isToday?'today':''} ${dateStr===ui.selDate?'sel':''} ${load.cls}" data-date="${dateStr}" onclick="selectDay('${dateStr}')">
       <span class="heat"></span><div class="daynum">${dnum}</div>${shown}${more}</div>`;
   }
@@ -2259,7 +2280,7 @@ function renderWeek(){
       ...fups.map(ev=>`<div class="evt evf ${ev.done?'done':''}" onclick="event.stopPropagation();selectDay('${d}')">\u2691 <span class="etitle">${esc(ev.title)}</span></div>`)
     ];
     const shown=pills.slice(0,3).join('');
-    const more=pills.length>3?`<div class="more">+${pills.length-3}</div>`:'';
+    const more=pills.length>3?`<div class="more" onclick="event.stopPropagation();selectDay('${d}')">+${pills.length-3}</div>`:'';
     return `<div class="adc" data-date="${d}" onclick="selectDay('${d}')">${shown}${more}</div>`;
   }).join('');
   const gutter=`<div class="wk-gutter" style="position:relative;height:${BODYH}px">${hours.map((h,i)=>`<div style="top:${i*H}px">${h===12?'12 PM':h>12?(h-12)+' PM':h+' AM'}</div>`).join('')}</div>`;
@@ -2334,7 +2355,7 @@ function dayPanelHTML(dateStr){
       ${avatar(t.assignee)}
     </div>`;
   };
-  const mrow=e=>`<div class="dpitem evrow" data-id="${e.id}"><span class="dptime">${e.time||'\u2014'}</span><span class="dptxt">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.client?` <span class="dpc">${esc(e.client)}</span>`:''}${e.duration?` <span class="dpc">${e.duration}m</span>`:''}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpedit" onclick="event.stopPropagation();openMeetingEdit('${e.id}')" title="Edit meeting">Edit</button><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
+  const mrow=e=>`<div class="dpitem evrow" data-id="${e.id}" onclick="openMeetingEdit('${e.id}')" title="Open meeting"><span class="dptime">${e.time||'\u2014'}</span><span class="dptxt">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.client?` <span class="dpc">${esc(e.client)}</span>`:''}${e.duration?` <span class="dpc">${e.duration}m</span>`:''}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpedit" onclick="event.stopPropagation();openMeetingEdit('${e.id}')" title="Edit meeting">Edit</button><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
   const frow=e=>`<div class="dpitem evrow" data-id="${e.id}"><input type="checkbox" class="cbx"${e.done?' checked':''} onclick="event.stopPropagation();toggleFollow('${e.id}')"><span class="dptxt ${e.done?'done':''} ${!e.done&&dateStr<todayISO()?'late':''}">${esc(e.title)}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpconv" title="Convert to task" onclick="event.stopPropagation();convertFollow('${e.id}')">\u2192 task</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
   const clientBar=clients.length?`<div class="dpops" style="margin:6px 0 2px">${clients.map(c=>`<button type="button" onclick="filterClient('${esc(c)}')">Filter ${esc(c)}</button>`).join('')}</div>`:'';
   return `<aside class="daypanel">
@@ -2356,7 +2377,10 @@ function addEvent(kind){
   const e={id:uid(),kind,title,date:ui.selDate,done:false};
   if(isM){ const tv=document.getElementById('mtTime').value; if(tv) e.time=tv;
     if(document.getElementById('mtRep').checked) e.repeat='weekly'; }
-  (state.events=state.events||[]).push(e); save(); render();
+  (state.events=state.events||[]).push(e);
+  if(isM) logBoard('Meeting scheduled',{kind:'meeting',eventId:e.id,title:e.title,detail:(e.time?e.time+' ':'')+(e.date||'')});
+  else logBoard('Follow-up added',{kind:'followup',eventId:e.id,title:e.title,detail:e.date||''});
+  save(); render();
 }
 function toggleFollow(id){ const e=(state.events||[]).find(x=>x.id===id); if(!e) return; e.done=!e.done; save(); render(); }
 function convertFollow(id){
@@ -2365,9 +2389,17 @@ function convertFollow(id){
   openTask(null, e.date>=todayISO()?e.date:todayISO());
   document.getElementById('m-title').value=e.title;
 }
-function delEvent(id){ state.events=(state.events||[]).filter(x=>x.id!==id); save(); render(); }
+function delEvent(id){
+  const e=(state.events||[]).find(x=>x.id===id);
+  if(e){
+    if(e.kind==='meeting') logBoard('Meeting removed',{kind:'meeting',eventId:e.id,title:e.title,detail:e.date||''});
+    else logBoard('Follow-up removed',{kind:'followup',eventId:e.id,title:e.title,detail:e.date||''});
+  }
+  state.events=(state.events||[]).filter(x=>x.id!==id); save(); render();
+}
 function openMeetingEdit(id){
-  const e=(state.events||[]).find(x=>x.id===id); if(!e||e.kind!=='meeting'){ selectDay(ui.selDate); return; }
+  const e=(state.events||[]).find(x=>x.id===id);
+  if(!e || (e.kind && e.kind!=='meeting')){ selectDay(ui.selDate); return; }
   document.getElementById('me-id').value=e.id;
   document.getElementById('me-title').value=e.title||'';
   document.getElementById('me-date').value=e.date||ui.selDate;
@@ -2401,6 +2433,7 @@ function saveMeetingEdit(){
   if(note) e.note=note; else delete e.note;
   if(document.getElementById('me-rep').checked) e.repeat='weekly'; else delete e.repeat;
   ui.selDate=e.date;
+  logBoard('Meeting updated',{kind:'meeting',eventId:e.id,title:e.title,detail:(e.time?e.time+' ':'')+(e.date||'')+(e.client?' · '+e.client:'')});
   save(); closeMeetingEdit(); render();
   toast('Meeting updated');
 }
@@ -3285,7 +3318,7 @@ function taskStart(t){
   if(t.start) return t.start;
   if(!t.due) return null;
   const d=new Date(t.due+'T00:00:00'); d.setDate(d.getDate()-2);
-  return d.toISOString().slice(0,10);
+  return dateToISO(d);
 }
 function openBlockers(t){
   return (t.blockedBy||[]).filter(id=>{
@@ -3305,7 +3338,7 @@ function renderTimeline(){
   const heads=[];
   for(let i=0;i<days;i++){
     const d=new Date(fromD); d.setDate(d.getDate()+i);
-    const iso=d.toISOString().slice(0,10);
+    const iso=dateToISO(d);
     const label=d.getDate()===1||i===0?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):String(d.getDate());
     heads.push(`<div class="tl-day" style="width:${dayW}px">${esc(label)}</div>`);
   }
@@ -3342,7 +3375,7 @@ function tlDragStart(ev, id){
   const onMove=(e)=>{
     const delta=Math.round((e.clientX-startX)/28);
     if(!delta && e.clientX===startX) return;
-    const shift=(iso,d)=>{ const x=new Date(iso+'T00:00:00'); x.setDate(x.getDate()+d); return x.toISOString().slice(0,10); };
+    const shift=(iso,d)=>{ const x=new Date(iso+'T00:00:00'); x.setDate(x.getDate()+d); return dateToISO(x); };
     if(origDue) t.due=shift(origDue, delta);
     if(origStart) t.start=shift(origStart, delta);
     pendingPatches[id]={ due:t.due, start:t.start };
@@ -3483,6 +3516,25 @@ function confirmLoadTemplate(id){
 }
 
 /* ============ Activity feed ============ */
+const ACTIVITY_CATS=[
+  {id:'all',label:'All'},
+  {id:'meetings',label:'Meetings'},
+  {id:'status',label:'Status'},
+  {id:'assignments',label:'Assignments'},
+  {id:'dates',label:'Dates'},
+  {id:'comments',label:'Comments'},
+  {id:'other',label:'Other'},
+];
+function activityCategory(a){
+  if(a.kind==='meeting' || String(a.text||'').startsWith('Meeting')) return 'meetings';
+  if(a.kind==='followup' || String(a.text||'').startsWith('Follow-up')) return 'meetings';
+  const t=String(a.text||'');
+  if(t.startsWith('Status') || t.startsWith('Waiting note') || t.startsWith('Block reason')) return 'status';
+  if(t.startsWith('Assignee')) return 'assignments';
+  if(t.startsWith('Due')) return 'dates';
+  if(t==='commented' || /comment/i.test(t)) return 'comments';
+  return 'other';
+}
 function activityFeed(){
   ensureBoardConfig();
   if(Array.isArray(state.activity) && state.activity.length){
@@ -3490,11 +3542,14 @@ function activityFeed(){
   }
   const items=[];
   state.tasks.forEach(t=>{
-    (t.log||[]).forEach(l=>{ items.push({ts:l.ts, who:l.who, text:l.text, taskId:t.id, title:t.title}); });
+    (t.log||[]).forEach(l=>{ items.push({ts:l.ts, who:l.who, text:l.text, taskId:t.id, title:t.title, kind:'task'}); });
   });
   return items.sort((a,b)=>b.ts-a.ts);
 }
-function feedIcon(text){
+function feedIcon(a){
+  const text=typeof a==='string'?a:(a.text||'');
+  const cat=typeof a==='string'?null:activityCategory(a);
+  if(cat==='meetings') return {c:'#0D1F1A',g:'\u25C8'};
   if(text.startsWith('Status')){
     if(STATUSES.some(s=>s.final&&text.endsWith(s.id))) return {c:'#2A6A55',g:'\u2713'};
     if(STATUSES.some(s=>s.blocked&&text.endsWith(s.id))) return {c:'#B14D3C',g:'\u2691'};
@@ -3513,25 +3568,71 @@ function relTime(ts){
   const d=Math.floor(s/86400); if(d<7) return d+'d ago';
   return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
+function activityDetail(a){
+  const bits=[];
+  if(a.detail) bits.push(String(a.detail));
+  if(a.client) bits.push(String(a.client));
+  return bits.filter(Boolean).join(' \u00b7 ');
+}
+function openActivityItem(a){
+  if(a.eventId && (a.kind==='meeting' || String(a.text||'').startsWith('Meeting'))){
+    openMeetingEdit(a.eventId);
+    return;
+  }
+  if(a.taskId){ openTask(a.taskId); return; }
+}
+function setActivityCat(id){ ui.activityCat=id||'all'; render(); }
 function renderActivity(container){
   const feed=activityFeed();
   const last=personal.lastSeen||0;
   const unseen=feed.filter(a=>a.ts>last);
-  const mineNew = me.id ? unseen.filter(a=>{ const t=state.tasks.find(x=>x.id===a.taskId); return t&&t.assignee===me.id&&a.text.startsWith('Assignee'); }) : [];
+  const cat=ui.activityCat||'all';
+  const filtered=cat==='all'?feed:feed.filter(a=>activityCategory(a)===cat);
+  const mineNew = me.id ? unseen.filter(a=>{ const t=state.tasks.find(x=>x.id===a.taskId); return t&&t.assignee===me.id&&String(a.text||'').startsWith('Assignee'); }) : [];
   const head=`<div class="mdhead"><div class="mdgreet"><div><h2>Activity</h2><div class="mdsum">${feed.length?`${unseen.length} new since your last visit`:'No activity yet'}</div></div></div>${unseen.length?`<button class="swap" onclick="markSeen()">Mark all as seen</button>`:''}</div>`;
+  const cats=ACTIVITY_CATS.map(c=>{
+    const n=c.id==='all'?feed.length:feed.filter(a=>activityCategory(a)===c.id).length;
+    if(c.id!=='all' && !n) return '';
+    return `<button type="button" class="fdcatbtn ${(ui.activityCat||'all')===c.id?'on':''}" onclick="setActivityCat('${c.id}')">${esc(c.label)}${n?` (${n})`:''}</button>`;
+  }).join('');
   let banner='';
   if(mineNew.length){ banner=`<div class="newbanner">\u2605 ${mineNew.length} task${mineNew.length>1?'s':''} newly assigned to you \u2014 <a onclick="setView('myday')">open My Day</a></div>`; }
-  if(!feed.length){ container.innerHTML=head+`<div class="empty"><h3>Nothing yet</h3><p>Changes to tasks \u2014 status moves, assignments, comments \u2014 will show up here.</p></div>`; return; }
-  const rows=feed.slice(0,80).map(a=>{
-    const ic=feedIcon(a.text);
+  if(!feed.length){ container.innerHTML=head+`<div class="empty"><h3>Nothing yet</h3><p>Task changes and meetings show up here with more detail.</p></div>`; return; }
+  if(!filtered.length){ container.innerHTML=head+banner+`<div class="fdcat">${cats}</div><div class="empty"><h3>Nothing in this category</h3><p>Try All or another filter.</p></div>`; return; }
+
+  const groups=[];
+  filtered.slice(0,100).forEach(a=>{
+    const key=activityCategory(a);
+    let g=groups.find(x=>x.id===key);
+    if(!g){ g={id:key,label:(ACTIVITY_CATS.find(c=>c.id===key)||{label:key}).label,items:[]}; groups.push(g); }
+    g.items.push(a);
+  });
+
+  const rowSafe=(a,idx)=>{
+    const ic=feedIcon(a);
     const isNew=a.ts>last;
-    return `<div class="fdrow ${isNew?'new':''}" onclick="openTask('${a.taskId}')">
+    const detail=activityDetail(a);
+    const onLabel=a.eventId?'meeting':(a.title||'');
+    const text=String(a.text||'').replace('commented','added a comment');
+    return `<div class="fdrow ${isNew?'new':''}" data-act-idx="${idx}">
       <span class="fdi" style="background:${ic.c}">${ic.g}</span>
-      <span class="fdbody"><span class="fdwho">${esc(a.who)}</span> <span class="fdtext">${esc(a.text.replace('commented','added a comment'))}</span> <span class="fdon">on ${esc(a.title)}</span></span>
+      <span class="fdbody"><span class="fdwho">${esc(a.who)}</span> <span class="fdtext">${esc(text)}</span>${onLabel?` <span class="fdon">on ${esc(onLabel)}</span>`:''}${detail?`<span class="fddetail">${esc(detail)}</span>`:''}</span>
       <span class="fdtime">${relTime(a.ts)}</span></div>`;
+  };
+
+  const flat=[];
+  const body=groups.map(g=>{
+    const rows=g.items.map(a=>{ const i=flat.length; flat.push(a); return rowSafe(a,i); }).join('');
+    return (cat==='all'?`<div class="fdsec">${esc(g.label)}</div>`:'')+rows;
   }).join('');
-  container.innerHTML=head+banner+`<div class="panel fdpanel">${rows}</div>`;
-  // auto-advance the marker shortly after viewing
+
+  container.innerHTML=head+banner+`<div class="fdcat">${cats}</div><div class="panel fdpanel">${body}</div>`;
+  container.querySelectorAll('[data-act-idx]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const a=flat[Number(el.dataset.actIdx)];
+      if(a) openActivityItem(a);
+    });
+  });
   clearTimeout(window.__seenT);
   window.__seenT=setTimeout(()=>{ if(ui.view==='activity') markSeen(true); }, 2500);
 }
@@ -3557,7 +3658,7 @@ function openTask(id=null, presetDate=null, presetStatus=null){
   document.getElementById('m-title').value=t?t.title:'';
   document.getElementById('m-client').value=t?t.client:'';
   document.getElementById('m-notes').value=t?t.notes:'';
-  document.getElementById('m-due').value=t?t.due:(presetDate||new Date().toISOString().slice(0,10));
+  document.getElementById('m-due').value=t?t.due:(presetDate||todayISO());
   const clients=[...new Set(state.tasks.map(x=>x.client).filter(Boolean))].sort();
   document.getElementById('clientlist').innerHTML=clients.map(c=>`<option value="${esc(c)}">`).join('');
   const asel=document.getElementById('m-assignee');
