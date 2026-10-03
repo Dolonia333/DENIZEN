@@ -27,7 +27,7 @@ describe('Business Studio phone app', () => {
     assert.match(src, /url: '\/business-studio\/'/);
     assert.match(src, /PRIORITY_GRID_IDS = \[[^\]]*businessstudio/);
     assert.match(src, /SESSION_HANDOFF_NAV_IDS = new Set\(\[[^\]]*businessstudio/);
-    assert.match(src, /LAYOUT_VERSION = 8/);
+    assert.match(src, /LAYOUT_VERSION = 9/);
     assert.doesNotMatch(src, /renderBusinessStudioApp/);
     assert.doesNotMatch(src, /dzp-businessstudio-frame/);
   });

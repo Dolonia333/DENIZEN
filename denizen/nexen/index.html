@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>NEXEN · Command Center · Denizen</title>
+<link rel="icon" type="image/png" href="/nexen/branding/NEXEN-logo.png" />
+<link rel="stylesheet" href="/nexen/assets/command-center.css" />
+<link rel="stylesheet" href="/nexen/assets/workspace-shell.css" />
+<style>
+:root{color-scheme:dark;--ink:#eaf6ff;--muted:#94adc9;--blue:#83cfff;--line:#8bc6ff2c;font-family:Segoe UI,system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 80% 0,#174e8266,transparent 48%),radial-gradient(ellipse at 5% 50%,#10487630,transparent 45%),#07101f;color:var(--ink)}
+a{color:inherit;text-decoration:none}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}
+.dz-app-chrome{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));background:linear-gradient(180deg,#0d1a2cf5,#0a1524e8);border-bottom:1px solid var(--line);backdrop-filter:blur(18px)}
+.dz-app-chrome a{padding:7px 12px;border:1px solid #8bc6ff44;border-radius:999px;font-size:12px;font-weight:600;background:#17385866}
+.dz-app-chrome a:hover{border-color:#aadfff99;background:#24507888}
+.dz-app-chrome .dz-app-title{display:flex;align-items:center;gap:10px;min-width:0}
+.dz-app-chrome .dz-app-title img{width:28px;height:28px;border-radius:8px;background:linear-gradient(140deg,#d8f6ff,#529cf0)}
+.dz-app-chrome .dz-app-title strong{display:block;font-size:13px;letter-spacing:.04em}
+.dz-app-chrome .dz-app-title span{display:block;font-size:11px;color:var(--muted)}
+.dz-app-chrome .dz-app-spacer{flex:1}
+html.embed .dz-app-chrome{display:none}
+.shell{max-width:1100px;margin:0 auto;padding:18px 18px 40px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.breadcrumb{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.pill{font-size:10px;font-weight:750;letter-spacing:1px;background:#338ac21d;color:#b9ecff;border:1px solid #87d7ff44;border-radius:25px;padding:7px 10px;white-space:nowrap}
+.pill:before{content:'●';font-size:7px;margin-right:6px}
+.pill.pending{color:#ffcd9c;background:#69491f24;border-color:#ffcf9b44}
+.pagehead{padding:18px 0 16px}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--blue)}
+h1{font-size:clamp(28px,4vw,42px);line-height:1.1;letter-spacing:-1.5px;margin:8px 0}
+.sub{font-size:13px;color:var(--muted);margin:0;max-width:52ch}
+.grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin:16px 0}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.glass{background:linear-gradient(125deg,#9bd4ff13,#183b592f);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:inset 0 1px #d6edff12,0 8px 32px #0002;backdrop-filter:blur(18px)}
+.urgent-label{font-size:10px;letter-spacing:1.5px;color:#ffcd9c;font-weight:800}
+.focus h2,.panel h2{margin:8px 0 10px;font-size:20px;letter-spacing:-.4px}
+.focus p,.panel p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{padding:14px 16px;border-radius:13px;border:1px solid var(--line);background:#183b592f}
+.stat strong{display:block;font-size:22px;letter-spacing:-.5px}
+.stat small{display:block;margin-top:5px;font-size:10px;color:var(--muted)}
+.commandline{display:flex;gap:10px;align-items:center;padding:12px 14px;margin:18px 0 8px;background:linear-gradient(100deg,#24578c60,#12294099);border:1px solid #92d5ff55;border-radius:14px}
+.commandline span{color:#c6eeff;font-size:20px}
+.commandline input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:13px;padding:8px 0;color:var(--ink)}
+.commandline input::placeholder{color:#91acc6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 13px;border:1px solid #93c8ff40;background:linear-gradient(150deg,#36678b54,#1738585e);border-radius:10px;font-size:12px;font-weight:700}
+.btn.primary{color:#0b2a49;background:linear-gradient(140deg,#c8f0ff,#62a9ef);border-color:#b3e9ff}
+.btn.small{padding:7px 10px;font-size:11px}
+.feedback{min-height:1.4em;font-size:12px;color:#b4e8ff;margin:0 2px 14px}
+.deckhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:22px 0 12px}
+.deckhead h2{margin:0;font-size:18px}
+.deckhead p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+.deck{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:720px){.deck{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.action{display:flex;align-items:flex-start;gap:10px;text-align:left;border-radius:13px;padding:14px;min-height:96px;border:1px solid var(--line);background:linear-gradient(125deg,#9bd4ff13,#183b592f);transition:transform .15s,border-color .15s}
+.action:hover{transform:translateY(-2px);border-color:#aadfff9c}
+.action .ico{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:#7dcdff27;border:1px solid #9fe0ff22}
+.action b{display:block;font-size:13px;margin-bottom:4px}
+.action small{display:block;font-size:11px;color:var(--muted);line-height:1.45}
+.list{display:grid;gap:8px}
+.result{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#27445f33}
+.result small{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}
+.result p{margin:0;font-size:13px;white-space:pre-wrap;color:#c6dff3}
+.empty{font-size:13px;color:var(--muted);padding:16px;border:1px dashed #7bbae44f;border-radius:12px}
+.taskrow{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#1a335033}
+.taskrow b{font-size:13px}
+.taskrow .meta{font-size:11px;color:var(--muted)}
+.chip{font-size:10px;letter-spacing:.4px;padding:3px 7px;border-radius:999px;border:1px solid #87d7ff44;color:#b9ecff}
+.chip.urgent{color:#ffcd9c;border-color:#ffcf9b55}
+.notice{font-size:12px;line-height:1.65;padding:12px 14px;border-left:2px solid #8ed7ff;background:#3569912b;color:#c4e2f8;border-radius:0 10px 10px 0;margin:14px 0}
+.bottomline{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:16px;margin-top:28px;font-size:11px;color:#7998b6}
+.task-form{display:grid;gap:8px;margin-top:12px}
+.task-form input,.task-form select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #8ac7ff4d;background:#07182ba0}
+@media(max-width:520px){
+  .dz-app-chrome .dz-app-title span{display:none}
+  .shell{padding:12px 12px 32px}
+}
+</style>
+</head>
+<body>
+<div class="dz-app-chrome" role="navigation" aria-label="NEXEN app bar">
+  <a href="/">← Back to office</a>
+  <div class="dz-app-title">
+    <img src="/nexen/branding/NEXEN-logo.png" alt="" />
+    <div>
+      <strong>NEXEN</strong>
+      <span>Command Center · DENIZEN</span>
+    </div>
+  </div>
+  <div class="dz-app-spacer"></div>
+  <a href="/crm/">CRM</a>
+</div>
+
+<div class="shell">
+  <header class="topbar">
+    <div class="breadcrumb">DENIZEN <span>/</span> NEXEN</div>
+    <div class="pill pending" id="connection">Connecting</div>
+  </header>
+
+  <div class="pagehead">
+    <div class="eyebrow">YOUR LIFE WORKSPACE</div>
+    <h1>Your life. In one place.</h1>
+    <p class="sub">Tasks, requests, and next moves — running on your DENIZEN org backend, opened from the Buzz phone Apps grid.</p>
+  </div>
+
+  <div class="notice" id="mode-note">Loading workspace…</div>
+
+  <div class="stats" aria-label="Workspace stats">
+    <div class="stat"><strong id="stat-open">—</strong><small>Open tasks</small></div>
+    <div class="stat"><strong id="stat-urgent">—</strong><small>Urgent</small></div>
+    <div class="stat"><strong id="stat-requests">—</strong><small>Planned requests</small></div>
+    <div class="stat"><strong id="stat-activity">—</strong><small>Activity</small></div>
+  </div>
+
+  <div class="grid2">
+    <article class="glass focus">
+      <div class="urgent-label">FOCUS</div>
+      <h2 id="focus-title">Your next move</h2>
+      <p id="focus-detail">Reading saved priorities…</p>
+      <div class="task-form">
+        <input id="task-title" maxlength="240" placeholder="Add a priority task…" aria-label="New task title" />
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="task-priority" aria-label="Priority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+          <button class="btn primary" type="button" id="task-add">Save task</button>
+        </div>
+      </div>
+    </article>
+    <aside class="glass panel">
+      <h2>Urgent &amp; open</h2>
+      <div id="task-list" class="list"><div class="empty">No tasks yet.</div></div>
+    </aside>
+  </div>
+
+  <form id="commandform" class="commandline">
+    <span aria-hidden="true">⌘</span>
+    <input id="command" maxlength="4000" autocomplete="off" placeholder="Describe a request to save on your NEXEN workspace…" aria-label="Save a NEXEN request" />
+    <button class="btn primary" id="command-submit" type="submit">Save</button>
+  </form>
+  <p class="feedback" id="commandfeedback" role="status"></p>
+
+  <div class="deckhead">
+    <div>
+      <h2>Your workspaces</h2>
+      <p>Surfaces from the NEXEN UI, living inside DENIZEN.</p>
+    </div>
+    <button class="btn small" type="button" id="refresh">↻ Refresh</button>
+  </div>
+  <section class="deck" id="deck" aria-label="NEXEN workspaces"></section>
+
+  <div class="deckhead">
+    <div>
+      <h2>Mission queue</h2>
+      <p>Planned requests saved through DENIZEN.</p>
+    </div>
+  </div>
+  <div id="request-list" class="list"><div class="empty">No planned requests yet.</div></div>
+
+  <div class="deckhead">
+    <div>
+      <h2>Recent activity</h2>
+      <p id="brief">—</p>
+    </div>
+  </div>
+  <div id="activity-list" class="list"><div class="empty">No activity yet.</div></div>
+
+  <footer class="bottomline">
+    <b>NEXEN × DENIZEN</b>
+    <span>Phone Apps · org-backed workspace · same session as CRM</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Embed / standalone + phone session handoff (same as CRM / Business Studio).
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('embed') === '1' || window.self !== window.top) document.documentElement.classList.add('embed');
+    else document.body.classList.add('standalone');
+    var sid = q.get('dz_sid') || q.get('dz_session') || q.get('session_id');
+    var tok = q.get('dz_stok') || q.get('dz_token') || q.get('session_token');
+    if (sid || tok) {
+      var raw = {};
+      try { raw = JSON.parse(localStorage.getItem('denizen-visitor-session') || '{}') || {}; } catch (e) {}
+      if (sid) { raw.session_id = sid; raw.sessionId = sid; }
+      if (tok) { raw.session_token = tok; raw.sessionToken = tok; }
+      localStorage.setItem('denizen-visitor-session', JSON.stringify(raw));
+      ['dz_sid', 'dz_session', 'dz_stok', 'dz_token', 'session_id', 'session_token'].forEach(function (k) { q.delete(k); });
+      var clean = location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash;
+      history.replaceState(null, '', clean);
+    }
+  } catch (e) {}
+
+  function visitorSession() {
+    try {
+      var d = JSON.parse(localStorage.getItem('denizen-visitor-session') || '{}') || {};
+      return {
+        session_id: d.session_id || d.sessionId || null,
+        session_token: d.session_token || d.sessionToken || null,
+      };
+    } catch (e) {
+      return { session_id: null, session_token: null };
+    }
+  }
+
+  function authHeaders() {
+    var sess = visitorSession();
+    var h = { 'Content-Type': 'application/json' };
+    if (sess.session_id) h['X-Session-Id'] = sess.session_id;
+    if (sess.session_token) h['X-Session-Token'] = sess.session_token;
+    return h;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  async function api(path, options) {
+    var opts = options || {};
+    var r = await fetch(path, {
+      method: opts.method || 'GET',
+      headers: authHeaders(),
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      credentials: 'same-origin',
+    });
+    var data = null;
+    try { data = await r.json(); } catch (e) { data = null; }
+    if (!r.ok) throw Error((data && data.error) || ('NEXEN request failed (' + r.status + ')'));
+    return data;
+  }
+
+  var state = { hub: null };
+
+  function renderWorkspaces(list) {
+    var deck = document.getElementById('deck');
+    var rows = Array.isArray(list) && list.length ? list : [];
+    deck.innerHTML = rows.map(function (w) {
+      return '<button type="button" class="action" data-ws="' + esc(w.id) + '">'
+        + '<span class="ico" aria-hidden="true">' + esc(w.icon || '◇') + '</span>'
+        + '<span><b>' + esc(w.label) + '</b><small>' + esc(w.hint || '') + '</small></span></button>';
+    }).join('') || '<div class="empty">No workspaces configured.</div>';
+  }
+
+  function renderTasks(tasks) {
+    var open = (tasks || []).filter(function (t) { return t.status !== 'done' && t.status !== 'completed'; });
+    var box = document.getElementById('task-list');
+    if (!open.length) {
+      box.innerHTML = '<div class="empty">No open tasks. Add one on the left.</div>';
+      return;
+    }
+    box.innerHTML = open.slice(0, 12).map(function (t) {
+      var urgent = t.priority === 'urgent' || t.priority === 'high';
+      return '<div class="taskrow" data-id="' + esc(t.id) + '">'
+        + '<div><b>' + esc(t.title) + '</b><div class="meta">' + esc(t.status) + '</div></div>'
+        + '<div style="display:flex;gap:6px;align-items:center">'
+        + '<span class="chip' + (urgent ? ' urgent' : '') + '">' + esc(t.priority || 'normal') + '</span>'
+        + '<button class="btn small" type="button" data-done="' + esc(t.id) + '">Done</button>'
+        + '</div></div>';
+    }).join('');
+  }
+
+  function renderRequests(rows) {
+    var box = document.getElementById('request-list');
+    if (!rows || !rows.length) {
+      box.innerHTML = '<div class="empty">No planned requests yet. Use the command bar above.</div>';
+      return;
+    }
+    box.innerHTML = rows.slice(0, 20).map(function (r) {
+      return '<article class="result"><small>' + esc(r.status) + ' · ' + esc(r.created_at || '') + '</small><p>' + esc(r.text) + '</p></article>';
+    }).join('');
+  }
+
+  function renderActivity(rows) {
+    var box = document.getElementById('activity-list');
+    if (!rows || !rows.length) {
+      box.innerHTML = '<div class="empty">Activity will show here as you save requests and tasks.</div>';
+      return;
+    }
+    box.innerHTML = rows.slice(0, 20).map(function (a) {
+      return '<article class="result"><small>' + esc(a.type || 'event') + ' · ' + esc(a.at || '') + '</small><p>' + esc(a.text || '') + '</p></article>';
+    }).join('');
+  }
+
+  function paint(hub) {
+    state.hub = hub;
+    var conn = document.getElementById('connection');
+    conn.className = hub && hub.ok ? 'pill' : 'pill pending';
+    conn.textContent = hub && hub.ok ? 'NEXEN ONLINE' : 'CONNECTION ISSUE';
+    var st = hub.status || {};
+    document.getElementById('stat-open').textContent = st.open_tasks ?? '—';
+    document.getElementById('stat-urgent').textContent = st.urgent_tasks ?? '—';
+    document.getElementById('stat-requests').textContent = st.planned_requests ?? '—';
+    document.getElementById('stat-activity').textContent = st.activity ?? '—';
+    document.getElementById('focus-title').textContent = (hub.focus && hub.focus.title) || 'Your next move';
+    document.getElementById('focus-detail').textContent = (hub.focus && hub.focus.detail) || '';
+    document.getElementById('brief').textContent = hub.brief || '';
+    var note = document.getElementById('mode-note');
+    if (hub.mode === 'cloud') note.textContent = 'Cloud mode — workspace is saved on your DENIZEN org.';
+    else if (hub.mode === 'local' || hub.mode === 'cloud-empty') note.textContent = 'Local / empty org workspace — sign in with a team session to persist like CRM.';
+    else note.textContent = 'Browse mode — open NEXEN from the Buzz phone after signing in to attach your session.';
+    renderWorkspaces(hub.workspaces);
+    renderTasks(hub.tasks);
+    renderRequests(hub.requests);
+    renderActivity(hub.activity);
+  }
+
+  async function refresh() {
+    try {
+      var hub = await api('/api/nexen/hub');
+      paint(hub);
+    } catch (e) {
+      document.getElementById('connection').className = 'pill pending';
+      document.getElementById('connection').textContent = 'CONNECTION ISSUE';
+      document.getElementById('mode-note').textContent = e.message || 'Unable to reach NEXEN API';
+    }
+  }
+
+  document.getElementById('refresh').onclick = function () { refresh(); };
+
+  document.getElementById('commandform').onsubmit = async function (e) {
+    e.preventDefault();
+    var input = document.getElementById('command');
+    var btn = document.getElementById('command-submit');
+    var fb = document.getElementById('commandfeedback');
+    var text = input.value.trim();
+    if (!text) { fb.textContent = 'Enter a request first.'; return; }
+    if (!visitorSession().session_id) {
+      fb.textContent = 'Sign in via the DENIZEN office / Buzz phone first, then reopen NEXEN so your session can save.';
+      return;
+    }
+    btn.disabled = true;
+    fb.textContent = 'Saving…';
+    try {
+      var r = await api('/api/nexen/request', { method: 'POST', body: { text: text } });
+      fb.textContent = r.message || 'Saved.';
+      input.value = '';
+      await refresh();
+    } catch (err) {
+      fb.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  document.getElementById('task-add').onclick = async function () {
+    var title = document.getElementById('task-title').value.trim();
+    var priority = document.getElementById('task-priority').value;
+    var fb = document.getElementById('commandfeedback');
+    if (!title) { fb.textContent = 'Enter a task title.'; return; }
+    if (!visitorSession().session_id) {
+      fb.textContent = 'Sign in via Buzz / office first so tasks can persist on your org.';
+      return;
+    }
+    try {
+      await api('/api/nexen/tasks', { method: 'POST', body: { title: title, priority: priority } });
+      document.getElementById('task-title').value = '';
+      fb.textContent = 'Task saved.';
+      await refresh();
+    } catch (err) {
+      fb.textContent = err.message;
+    }
+  };
+
+  document.getElementById('task-list').addEventListener('click', async function (e) {
+    var btn = e.target.closest('[data-done]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-done');
+    try {
+      await api('/api/nexen/tasks/' + encodeURIComponent(id), { method: 'PATCH', body: { status: 'done' } });
+      await refresh();
+    } catch (err) {
+      document.getElementById('commandfeedback').textContent = err.message;
+    }
+  });
+
+  document.getElementById('deck').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ws]');
+    if (!b) return;
+    var id = b.getAttribute('data-ws');
+    var fb = document.getElementById('commandfeedback');
+    if (id === 'money' || id === 'tasks' || id === 'checkin' || id === 'voice' || id === 'agents') {
+      fb.textContent = '“' + id + '” is on the Command Center roadmap — hub + requests/tasks are live on DENIZEN now.';
+      return;
+    }
+    fb.textContent = 'Workspace “' + id + '” is reserved for the next NEXEN surface.';
+  });
+
+  refresh();
+  setInterval(function () { if (!document.hidden) refresh(); }, 45000);
+})();
+</script>
+</body>
+</html>
