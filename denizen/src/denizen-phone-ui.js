@@ -165,6 +165,8 @@
       available: () => true },
     { id: 'businessstudio', tabler: 'building-skyscraper', icon: '🏛️', label: 'Business Studio', type: 'navigate', url: '/business-studio/', c: ['#f0b429', '#2a6a55'],
       available: () => true },
+    { id: 'nexen', tabler: 'layout-dashboard', icon: '◈', label: 'NEXEN', type: 'navigate', url: '/nexen/', c: ['#83cfff', '#1d4e89'],
+      available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
       c: ['#34d399', '#047857'],
       open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
@@ -255,8 +257,8 @@
   const MAX_DOCK_APPS = 4;
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workbench', 'profile'];
   /** Prefer these near the top of the home grid (first page / less scroll). */
-  const PRIORITY_GRID_IDS = ['workbench', 'crm', 'studioboard', 'businessstudio', 'compute', 'station', 'npcteam', 'tour', 'discordmap', 'discordcmds', 'market', 'approvals'];
-  const LAYOUT_VERSION = 8; // v8: Business Studio opens its own full page like CRM + Studio Board
+  const PRIORITY_GRID_IDS = ['workbench', 'crm', 'studioboard', 'businessstudio', 'nexen', 'compute', 'station', 'npcteam', 'tour', 'discordmap', 'discordcmds', 'market', 'approvals'];
+  const LAYOUT_VERSION = 9; // v9: NEXEN Command Center opens as a full-page phone app like CRM
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {
@@ -3280,7 +3282,7 @@
   }
 
   /** Apps that leave the phone HUD for their own full page (CRM-style). */
-  const SESSION_HANDOFF_NAV_IDS = new Set(['crm', 'studioboard', 'businessstudio']);
+  const SESSION_HANDOFF_NAV_IDS = new Set(['crm', 'studioboard', 'businessstudio', 'nexen']);
 
   function handoffVisitorSessionToNavigateUrl(href) {
     const sess = globalThis.DenizenVisitorSession;

@@ -176,6 +176,7 @@ const { mountComputeRoutes } = require('./src/denizen-compute-routes');
 const { mountCrmRoutes } = require('./src/denizen-crm-routes');
 const { mountStudioBoardRoutes } = require('./src/denizen-studio-board-routes');
 const { mountBusinessStudioRoutes } = require('./src/denizen-business-studio-routes');
+const { mountNexenRoutes } = require('./src/denizen-nexen-routes');
 const { mountN8nRoutes } = require('./src/n8n-routes');
 const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
 const { startJennyDurableLoop } = require('./src/npc-jenny-durable-loop');
@@ -1893,6 +1894,11 @@ const handleStudioBoardRoutes = mountStudioBoardRoutes({
 });
 
 const handleBusinessStudioRoutes = mountBusinessStudioRoutes({
+  verifyVisitorSession: _verifyVisitorSession,
+  readJsonBody: _readJsonBody,
+});
+
+const handleNexenRoutes = mountNexenRoutes({
   verifyVisitorSession: _verifyVisitorSession,
   readJsonBody: _readJsonBody,
 });
@@ -3907,6 +3913,18 @@ const server = http.createServer((req, res) => {
   if (urlPath.startsWith('/api/business-studio/')) {
     (async () => {
       await handleBusinessStudioRoutes(req, res);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath.startsWith('/api/nexen/')) {
+    (async () => {
+      await handleNexenRoutes(req, res);
     })().catch((err) => {
       if (!res.writableEnded) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -11366,6 +11384,50 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   if (urlPath === '/business-studio.html') {
     res.writeHead(302, { Location: '/business-studio/' });
     res.end();
+    return;
+  }
+
+  if (urlPath === '/nexen.html') {
+    res.writeHead(302, { Location: '/nexen/' });
+    res.end();
+    return;
+  }
+
+  // NEXEN — Command Center at /nexen/
+  // Phone app navigates here like CRM + Studio Board + Business Studio (full page).
+  if (urlPath === '/nexen' || urlPath.startsWith('/nexen/')) {
+    const NEXEN_ROOT = path.join(ROOT, 'nexen');
+    let rel = urlPath.replace(/^\/nexen\/?/, '') || 'index.html';
+    if (rel.endsWith('/')) rel += 'index.html';
+    const filePath = path.resolve(NEXEN_ROOT, rel);
+    const inside = path.relative(NEXEN_ROOT, filePath);
+    if (inside.startsWith('..') || path.isAbsolute(inside)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+    const sendNexen = (target) => {
+      fs.readFile(target, (err, data) => {
+        if (err) {
+          if (target !== path.join(NEXEN_ROOT, 'index.html')) {
+            sendNexen(path.join(NEXEN_ROOT, 'index.html'));
+            return;
+          }
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('NEXEN not found');
+          return;
+        }
+        const ext = path.extname(target).toLowerCase() || '.html';
+        const headers = {
+          'Content-Type': MIME[ext] || 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          Pragma: 'no-cache',
+        };
+        res.writeHead(200, headers);
+        res.end(data);
+      });
+    };
+    sendNexen(path.extname(rel) ? filePath : path.join(NEXEN_ROOT, 'index.html'));
     return;
   }
 
