@@ -300,15 +300,16 @@
       });
     }
 
-    /** Face-aware mug hold — cup-only sprite parked on the mouth. */
+    /** Face-aware mug hold — rim on the lower face (chibi mouth), cup hangs down. */
     mugMouthOffset() {
       const f = this._npc.frame?.index ?? 0;
-      // Abby 32x48 @ 1.5 → mouth between the cheek pixels (~52px above feet)
-      const y = -52;
-      if (f >= 4 && f <= 7) return { x: -1, y };      // facing left
-      if (f >= 8 && f <= 11) return { x: 1, y };       // facing right
-      if (f >= 12) return { x: 0, y: -56 };             // facing up
-      return { x: 0, y };                              // facing down/camera
+      // Abby is chibi: big head is ~top half of the 72px sprite. Mouth/cheeks sit
+      // near the bottom of that head (~36–40px above the feet), not mid-hair.
+      const y = -38;
+      if (f >= 4 && f <= 7) return { x: -6, y };      // facing left — on the face toward the machine
+      if (f >= 8 && f <= 11) return { x: 6, y };       // facing right
+      if (f >= 12) return { x: 0, y: -40 };
+      return { x: 0, y };
     }
 
     holdMugAtMouth() {
@@ -317,7 +318,9 @@
       this._mug.setVisible(false);
       this._mugCup.setVisible(true);
       this._mugCup.setDepth(21);
-      this._mugCup.setScale(1.7);
+      // Origin near the rim so the cup hangs from the mouth down across the chin
+      this._mugCup.setOrigin(0.5, 0.15);
+      this._mugCup.setScale(1.9);
       this.stopFollow();
       const tick = () => {
         if (!this._mugCup?.active || !this._npc?.active) return;

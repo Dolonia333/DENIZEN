@@ -1847,22 +1847,23 @@ class AgentActions {
       this._clearCoffeeMug?.(npcKey);
       let mug;
       if (cupKey) {
-        mug = this.scene.add.image(npc.x, npc.y - 52, cupKey);
-        mug.setOrigin(0.5, 0.55);
-        mug.setScale(1.35);
+        mug = this.scene.add.image(npc.x, npc.y - 38, cupKey);
+        // Rim at chibi mouth — cup hangs down over the chin
+        mug.setOrigin(0.5, 0.15);
+        mug.setScale(1.6);
       } else {
-        mug = this.scene.add.sprite(npc.x, npc.y - 52, sheetKey, 0);
-        mug.setOrigin(0.5, 0.5);
-        mug.setScale(1.2);
+        mug = this.scene.add.sprite(npc.x, npc.y - 38, sheetKey, 0);
+        mug.setOrigin(0.5, 0.15);
+        mug.setScale(1.3);
         try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
       }
       mug.setDepth((npc.depth || 10) + 2);
 
       try {
-        mug.y = npc.y - 30;
+        mug.y = npc.y - 22;
         this.scene.tweens.add({
           targets: mug,
-          y: npc.y - 52,
+          y: npc.y - 38,
           duration: 280,
           ease: 'Back.easeOut',
         });
@@ -1875,10 +1876,10 @@ class AgentActions {
           if (!mug.active || !npc.active) return;
           const f = npc.frame?.index ?? 0;
           let ox = 0;
-          let oy = -52;
-          if (f >= 4 && f <= 7) ox = -1;
-          else if (f >= 8 && f <= 11) ox = 1;
-          else if (f >= 12) oy = -56;
+          let oy = -38;
+          if (f >= 4 && f <= 7) ox = -6;
+          else if (f >= 8 && f <= 11) ox = 6;
+          else if (f >= 12) oy = -40;
           mug.x = npc.x + ox;
           mug.y = npc.y + oy;
         },
