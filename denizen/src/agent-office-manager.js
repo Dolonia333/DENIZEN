@@ -2267,12 +2267,16 @@ class AgentOfficeManager {
       const list = (keys || []).filter((k) => this.agents.get(k)?.assignedDesk);
       if (list.length < 2) return;
       // Spread medium load across several desks so paper/mug clutter reads at a glance.
+      // Do not clobber blocked/talking/break gems already set for the showcase.
+      const preserve = new Set(['waiting_on_skill', 'blocked', 'waiting', 'talking', 'break', 'meeting', 'error']);
       for (let i = 0; i < Math.min(5, list.length); i++) {
         const agent = this.agents.get(list[i]);
-        if (!agent || agent.role === 'cofounder' && i > 0) continue;
+        if (!agent || (agent.role === 'cofounder' && i > 0)) continue;
         agent.currentTask = agent.currentTask || 'Desk work';
         agent._lastSkillAt = now;
-        if (agent.status === 'idle' || agent.status === 'wandering') agent.status = 'working';
+        if (!preserve.has(agent.status) && (agent.status === 'idle' || agent.status === 'wandering' || !agent.status)) {
+          agent.status = 'working';
+        }
       }
       const heavy = this.agents.get(list[1]);
       if (heavy) {
