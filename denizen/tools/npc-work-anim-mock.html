@@ -230,8 +230,12 @@
       this._npc.anims.stop();
       this._npc.setPosition(420, 280);
       this._npc.setFrame(0);
-      this._npc.setCrop();
+      // Reset sit-crop from work scene
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
       this._npc.clearTint();
+      this._npc.setVisible(true);
+      this._npc.setAlpha(1);
     }
 
     track(obj) {
