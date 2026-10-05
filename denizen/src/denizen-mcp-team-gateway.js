@@ -17,6 +17,7 @@ const mcpBusinessStudioTools = require('./denizen-mcp-business-studio-tools.js')
 const mcpAgencyTools = require('./denizen-mcp-agency-tools.js');
 const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
+const mcpActor = require('./denizen-mcp-actor.js');
 const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
 const outcomeLedger = require('./denizen-outcome-ledger.js');
@@ -191,6 +192,7 @@ function configure(deps = {}) {
   _deps = { ..._deps, ...deps };
   mcpTeamTools.configure(deps);
   mcpCrmTools.configure(deps);
+  mcpActor.configure(deps);
   npcGateway.configure(deps);
 }
 
@@ -481,23 +483,24 @@ async function callToolImpl(scope, name, args) {
 
 async function callTool(scope, name, args) {
   const toolName = String(name || '').trim();
-  if (scope?.session_id) {
-    try { mcpTeamTools.touchMcpPresence(scope.session_id); } catch (_) { /* non-fatal */ }
-  } else if (scope?.npc_key) {
-    try { mcpTeamTools.touchMcpPresenceByNpc(scope.npc_key); } catch (_) { /* non-fatal */ }
+  const enriched = await mcpActor.enrichMcpScope(scope);
+  if (enriched?.session_id) {
+    try { mcpTeamTools.touchMcpPresence(enriched.session_id); } catch (_) { /* non-fatal */ }
+  } else if (enriched?.npc_key) {
+    try { mcpTeamTools.touchMcpPresenceByNpc(enriched.npc_key); } catch (_) { /* non-fatal */ }
   }
-  if (!mcpScopes.toolAllowed(scope, toolName)) {
+  if (!mcpScopes.toolAllowed(enriched, toolName)) {
     const denied = {
       ok: false,
       error: 'scope_denied',
       required_scope: mcpScopes.requiredScope(toolName),
-      granted_scopes: mcpScopes.scopesFromTokenScope(scope),
+      granted_scopes: mcpScopes.scopesFromTokenScope(enriched),
     };
-    logTeamAudit(scope, toolName, denied);
+    logTeamAudit(enriched, toolName, denied);
     return denied;
   }
-  const result = await callToolImpl(scope, toolName, args);
-  logTeamAudit(scope, toolName, result);
+  const result = await callToolImpl(enriched, toolName, args);
+  logTeamAudit(enriched, toolName, result);
   return result;
 }
 

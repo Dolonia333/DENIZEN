@@ -174,7 +174,19 @@ function upcomingEvents(events, fromDate) {
   return out;
 }
 
-function summarizeEvent(e) {
+function eventOwnerLabel(e, people = []) {
+  if (!e) return null;
+  if (e.ownerName) return e.ownerName;
+  const pid = e.ownerPersonId || e.owner_person_id || e.personId || null;
+  if (pid && Array.isArray(people)) {
+    const p = people.find((x) => String(x.id) === String(pid));
+    if (p?.name) return p.name;
+  }
+  return e.owner || e.organizer || null;
+}
+
+function summarizeEvent(e, people = []) {
+  const ownerName = eventOwnerLabel(e, people);
   return {
     id: e.id,
     kind: e.kind || 'meeting',
@@ -185,7 +197,40 @@ function summarizeEvent(e) {
     note: e.note || null,
     repeat: e.repeat || null,
     done: !!e.done,
+    owner_person_id: e.ownerPersonId || e.owner_person_id || null,
+    owner_identity_id: e.ownerIdentityId || e.owner_identity_id || null,
+    owner_name: ownerName,
+    attendee_ids: Array.isArray(e.attendeeIds || e.attendee_ids) ? [...(e.attendeeIds || e.attendee_ids)] : [],
+    visibility: e.visibility === 'private' ? 'private' : 'team',
   };
+}
+
+function eventVisibleToPerson(e, person, actor = {}) {
+  if (!e) return false;
+  const vis = String(e.visibility || 'team').toLowerCase();
+  if (vis !== 'private') return true;
+  if (!person && !actor?.identityId && !actor?.user) return false;
+  const pid = person?.id != null ? String(person.id) : null;
+  const ownerPid = e.ownerPersonId || e.owner_person_id;
+  if (pid && ownerPid != null && String(ownerPid) === pid) return true;
+  const attendees = e.attendeeIds || e.attendee_ids || [];
+  if (pid && Array.isArray(attendees) && attendees.some((a) => String(a) === pid)) return true;
+  const id = actor?.identityId || actor?.identity_id || null;
+  if (id && String(e.ownerIdentityId || e.owner_identity_id || '') === String(id)) return true;
+  const name = String(actor?.user || actor?.displayName || actor?.display_name || '').toLowerCase();
+  if (name && String(e.ownerName || e.owner_name || '').toLowerCase() === name) return true;
+  return false;
+}
+
+function eventInvolvesPerson(e, person, actor = {}) {
+  if (!e || !person) return false;
+  const pid = String(person.id);
+  if (String(e.ownerPersonId || e.owner_person_id || '') === pid) return true;
+  const attendees = e.attendeeIds || e.attendee_ids || [];
+  if (Array.isArray(attendees) && attendees.some((a) => String(a) === pid)) return true;
+  const id = actor?.identityId || person.identityId || person.identity_id || null;
+  if (id && String(e.ownerIdentityId || e.owner_identity_id || '') === String(id)) return true;
+  return false;
 }
 
 function summarizeNote(n) {
@@ -570,29 +615,51 @@ async function deletePerson(orgId, input = {}, identityId = null) {
   return { ok: true, deleted: person.id, name: person.name, updated_at: saved?.updated_at };
 }
 
-async function listEvents(orgId, filters = {}) {
+async function listEvents(orgId, filters = {}, actor = {}) {
   const { state } = await loadState(orgId);
   const kind = String(filters.kind || '').trim().toLowerCase();
   const date = String(filters.date || '').trim();
   const search = String(filters.search || filters.q || '').trim().toLowerCase();
-  let events = [...(state.events || [])];
+  const ownerFilter = String(filters.owner || filters.person || filters.assignee || '').trim();
+  const person = ownerFilter ? findPerson(state, ownerFilter) : null;
+  let events = [...(state.events || [])].filter((e) => eventVisibleToPerson(e, person, actor));
   if (kind) events = events.filter((e) => String(e.kind || '').toLowerCase() === kind);
   if (date) events = events.filter((e) => eventOccursOn(e, date));
+  if (person) {
+    events = events.filter((e) => eventInvolvesPerson(e, person, actor));
+  }
   if (search) {
-    events = events.filter((e) => `${e.title || ''} ${e.client || ''} ${e.note || ''}`.toLowerCase().includes(search));
+    events = events.filter((e) => `${e.title || ''} ${e.client || ''} ${e.note || ''} ${e.ownerName || ''}`.toLowerCase().includes(search));
   }
   events.sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))
     || String(a.time || '').localeCompare(String(b.time || '')));
   const limit = Math.min(Math.max(Number(filters.limit) || 40, 1), 100);
-  return { ok: true, count: events.length, events: events.slice(0, limit).map(summarizeEvent) };
+  const people = state.people || [];
+  return {
+    ok: true,
+    count: events.length,
+    events: events.slice(0, limit).map((e) => summarizeEvent(e, people)),
+  };
 }
 
-async function upsertEvent(orgId, input = {}, identityId = null) {
+async function upsertEvent(orgId, input = {}, identityId = null, actor = {}) {
   const { state, row } = await loadState(orgId);
   const id = String(input.id || input.event_id || '').trim();
   let ev = id ? findEvent(state, id) : null;
   const creating = !ev;
   const kind = String(input.kind || ev?.kind || 'meeting').toLowerCase() === 'followup' ? 'followup' : 'meeting';
+  const person = personHint(state, input) || personHint(state, actor)
+    || (identityId ? findPerson(state, identityId) : null);
+  const ownerName = input.owner_name || input.ownerName || actor?.displayName || actor?.user || person?.name || null;
+  const ownerPersonId = input.owner_person_id || input.ownerPersonId || person?.id || null;
+  const ownerIdentityId = input.owner_identity_id || input.ownerIdentityId || identityId
+    || actor?.identityId || person?.identityId || person?.identity_id || null;
+  const attendeeIds = Array.isArray(input.attendee_ids || input.attendeeIds)
+    ? [...(input.attendee_ids || input.attendeeIds)].map(String)
+    : (ev?.attendeeIds || []);
+  const visibility = String(input.visibility || ev?.visibility || 'team').toLowerCase() === 'private'
+    ? 'private'
+    : 'team';
   if (creating) {
     const title = String(input.title || '').trim();
     if (!title) return { ok: false, error: 'title required' };
@@ -606,6 +673,11 @@ async function upsertEvent(orgId, input = {}, identityId = null) {
       note: input.note || null,
       repeat: input.repeat === 'weekly' ? 'weekly' : null,
       done: !!input.done,
+      ownerPersonId,
+      ownerIdentityId,
+      ownerName,
+      attendeeIds,
+      visibility,
     };
     state.events = [...(state.events || []), ev];
   } else {
@@ -617,12 +689,28 @@ async function upsertEvent(orgId, input = {}, identityId = null) {
     if (input.note != null) ev.note = input.note || null;
     if (input.repeat != null) ev.repeat = input.repeat === 'weekly' ? 'weekly' : null;
     if (input.done != null) ev.done = !!input.done;
+    if (input.visibility != null) ev.visibility = visibility;
+    if (input.attendee_ids != null || input.attendeeIds != null) ev.attendeeIds = attendeeIds;
+    if (input.owner_person_id != null || input.ownerPersonId != null || !ev.ownerPersonId) {
+      ev.ownerPersonId = ownerPersonId || ev.ownerPersonId || null;
+    }
+    if (input.owner_identity_id != null || input.ownerIdentityId != null || !ev.ownerIdentityId) {
+      ev.ownerIdentityId = ownerIdentityId || ev.ownerIdentityId || null;
+    }
+    if (input.owner_name != null || input.ownerName != null || !ev.ownerName) {
+      ev.ownerName = ownerName || ev.ownerName || null;
+    }
   }
   const saved = await saveState(orgId, state, identityId, {
     ifUpdatedAt: row?.updated_at || null,
   });
   if (saved?.conflict) return { ok: false, error: 'workspace conflict', code: 'CONFLICT' };
-  return { ok: true, created: creating, event: summarizeEvent(ev), updated_at: saved?.updated_at };
+  return {
+    ok: true,
+    created: creating,
+    event: summarizeEvent(ev, state.people || []),
+    updated_at: saved?.updated_at,
+  };
 }
 
 async function deleteEvent(orgId, input = {}, identityId = null) {
@@ -906,17 +994,30 @@ async function myDay(orgId, input = {}, actor = {}) {
   const overdue = mine.filter((t) => t.due && dayDiff(t.due) < 0);
   const dueToday = mine.filter((t) => t.due && dayDiff(t.due) === 0);
   const later = mine.filter((t) => !t.due || dayDiff(t.due) > 0);
-  const meetings = (state.events || []).filter((e) => e.kind === 'meeting' && eventOccursOn(e, today));
+  const people = state.people || [];
+  // Personal day: meetings I own or attend. Team calendar still shows all.
+  const meetings = (state.events || []).filter((e) => (
+    e.kind === 'meeting'
+    && eventOccursOn(e, today)
+    && eventVisibleToPerson(e, person, actor)
+    && eventInvolvesPerson(e, person, actor)
+  ));
+  const teamMeetings = (state.events || []).filter((e) => (
+    e.kind === 'meeting'
+    && eventOccursOn(e, today)
+    && eventVisibleToPerson(e, person, actor)
+  ));
   const inbox = (state.notes || []).filter((n) => String(n.to) === String(person.id));
   return {
     ok: true,
     identified: true,
     person: { id: person.id, name: person.name, role: person.role || null },
-    summary: `${person.name}: ${mine.length} open, ${overdue.length} overdue, ${dueToday.length} due today, ${meetings.length} meetings, ${inbox.filter((n) => !n.read).length} unread notes.`,
+    summary: `${person.name}: ${mine.length} open, ${overdue.length} overdue, ${dueToday.length} due today, ${meetings.length} my meetings (${teamMeetings.length} team today), ${inbox.filter((n) => !n.read).length} unread notes.`,
     overdue: overdue.map(summarizeTask),
     due_today: dueToday.map(summarizeTask),
     upcoming: later.slice(0, 15).map(summarizeTask),
-    meetings: meetings.map(summarizeEvent),
+    meetings: meetings.map((e) => summarizeEvent(e, people)),
+    team_meetings: teamMeetings.map((e) => summarizeEvent(e, people)),
     notes: inbox.slice(0, 20).map(summarizeNote),
   };
 }
@@ -1102,6 +1203,9 @@ module.exports = {
   buildWorkingSet,
   summarizeTask,
   summarizeEvent,
+  eventOwnerLabel,
+  eventVisibleToPerson,
+  eventInvolvesPerson,
   listTasks,
   getTask,
   upsertTask,

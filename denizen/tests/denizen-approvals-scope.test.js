@@ -1,18 +1,39 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
 const scope = require('../src/denizen-approvals-scope');
 
 describe('denizen-approvals-scope', () => {
-  it('detects Angela Van Zandt by email and display name', () => {
+  const prev = process.env.DENIZEN_HOLDING_EMAILS;
+
+  before(() => {
+    process.env.DENIZEN_HOLDING_EMAILS = 'vzion253@gmail.com';
+  });
+
+  after(() => {
+    if (prev == null) delete process.env.DENIZEN_HOLDING_EMAILS;
+    else process.env.DENIZEN_HOLDING_EMAILS = prev;
+  });
+
+  it('detects holding principal only when allowlist is configured', () => {
     assert.equal(scope.isAngelaHoldingPrincipal({ email: 'vzion253@gmail.com' }), true);
     assert.equal(scope.isAngelaHoldingPrincipal({ display_name: 'Angela Van Zandt' }), true);
     assert.equal(scope.isAngelaHoldingPrincipal({ display_name: 'Rilwan Hollis' }), false);
   });
 
-  it('forces white skin for regular users and branded skin for Angela', () => {
+  it('forces white skin without allowlist match', () => {
+    delete process.env.DENIZEN_HOLDING_EMAILS;
+    assert.equal(scope.isAngelaHoldingPrincipal({ email: 'vzion253@gmail.com' }), false);
+    assert.equal(scope.resolveDossierSkinForOwner(
+      { email: 'vzion253@gmail.com' },
+      { requestedSkin: 'denizen', defaultSkin: 'denizen' },
+    ), 'white');
+    process.env.DENIZEN_HOLDING_EMAILS = 'vzion253@gmail.com';
+  });
+
+  it('forces white skin for regular users and branded skin for allowlisted holding', () => {
     assert.equal(scope.resolveDossierSkinForOwner(
       { display_name: 'Guest' },
       { requestedSkin: 'denizen', defaultSkin: 'denizen' },

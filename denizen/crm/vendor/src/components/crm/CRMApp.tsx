@@ -1186,7 +1186,19 @@ export default function CRMApp() {
       /* CONSOLIDATED: Sales section (Lead Gen + Pipeline + Sales Hub + Quotas) */
       case "sales": return <SalesSection deals={deals} contacts={contacts} notes={notes} emailLog={emailLog} tasks={tasks} leadModelState={leadModelState} onLeadModelStateChange={setLeadModelState} auditLog={auditLog} dealComments={dealComments} onAddDealComment={(c) => setDealComments((prev) => [c, ...prev])} currentUserName={denizenProfile.name} quotas={crmQuotas} onUpdateQuotas={setCrmQuotas} onDealStageChange={handleDealStageChange} onEditDeal={openEditDeal} onDeleteDeal={handleDeleteDeal} industryConfig={industryConfig} isMobile={isMobile} initialTab={navSubTab} onSubTabChange={setNavSubTab} />;
       /* CONSOLIDATED: Schedule section (Tasks & Meetings + Calendar + Interactions) */
-      case "schedule": return <ScheduleSection tasks={tasks} deals={deals} meetings={meetings} contacts={contacts} notes={notes} availability={availability} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onUpdateTask={handleUpdateTask} onAddMeeting={(m) => setMeetings(prev => [...prev, m])} onUpdateMeeting={(m) => setMeetings(prev => prev.map(x => x.id === m.id ? m : x))} onDeleteNote={handleDeleteNote} onNavigate={handleNavigate} onCalendarSync={refreshWorkspaceFromServer} initialTab={navSubTab} onSubTabChange={setNavSubTab} />;
+      case "schedule": return <ScheduleSection tasks={tasks} deals={deals} meetings={meetings} contacts={contacts} notes={notes} availability={availability} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onUpdateTask={handleUpdateTask} onAddMeeting={(m) => setMeetings(prev => [...prev, {
+        ...m,
+        ownerId: m.ownerId || denizenProfile.name,
+        ownerName: m.ownerName || denizenProfile.name,
+        ownerIdentityId: m.ownerIdentityId || selfIdentityId || undefined,
+        visibility: m.visibility || "team",
+      }])} onUpdateMeeting={(m) => setMeetings(prev => prev.map(x => x.id === m.id ? {
+        ...m,
+        ownerId: m.ownerId || x.ownerId || denizenProfile.name,
+        ownerName: m.ownerName || x.ownerName || denizenProfile.name,
+        ownerIdentityId: m.ownerIdentityId || x.ownerIdentityId || selfIdentityId || undefined,
+        visibility: m.visibility || x.visibility || "team",
+      } : x))} onDeleteNote={handleDeleteNote} onNavigate={handleNavigate} onCalendarSync={refreshWorkspaceFromServer} initialTab={navSubTab} onSubTabChange={setNavSubTab} />;
       case "notes": return (
         <NotesTab
           boards={noteBoards as Board[]}

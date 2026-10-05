@@ -8029,7 +8029,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         return;
       }
       const orgSlug = body.org_slug || body.orgSlug;
-      const templatePack = body.template_pack || body.templatePack || '1921-govcon';
+      const templatePack = body.template_pack || body.templatePack || 'generic-office';
       if (!orgSlug) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: false, error: 'org_slug required' }));

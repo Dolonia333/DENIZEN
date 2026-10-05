@@ -429,11 +429,15 @@ function resolveOrgId(scope) {
 }
 
 function actorFromScope(scope) {
+  const mcpActor = require('./denizen-mcp-actor');
+  const base = mcpActor.actorFromMcpScope(scope);
   return {
     npc_key: scope?.npc_key || 'mcp',
-    displayName: scope?.display_name || scope?.user || scope?.npc_key || 'MCP',
-    user: scope?.user || scope?.display_name || null,
-    identityId: scope?.identity_id || null,
+    displayName: base.displayName || base.user || scope?.npc_key || 'MCP',
+    user: base.user || scope?.display_name || null,
+    identityId: base.identityId || scope?.identity_id || null,
+    email: base.email || null,
+    role: base.role || null,
   };
 }
 
@@ -505,9 +509,9 @@ async function callTool(scope, name, args = {}) {
     case 'studio_board_delete_person':
       return boardMutations.deletePerson(orgId, args || {}, identityId);
     case 'studio_board_list_events':
-      return boardMutations.listEvents(orgId, args || {});
+      return boardMutations.listEvents(orgId, args || {}, actor);
     case 'studio_board_upsert_event':
-      return boardMutations.upsertEvent(orgId, args || {}, identityId);
+      return boardMutations.upsertEvent(orgId, args || {}, identityId, actor);
     case 'studio_board_delete_event':
       return boardMutations.deleteEvent(orgId, args || {}, identityId);
     case 'studio_board_add_subtask':

@@ -164,11 +164,9 @@ async function verifyCrmSession(req, sessionId, body, verifyVisitorSession) {
 }
 
 function resolveOrgId(access) {
-  let orgId = access.orgId || access.session?.org_id;
-  if (!orgId && access.session?.metadata?.is_ceo_principal && denizenDb.orgId) {
-    orgId = denizenDb.orgId;
-  }
-  return orgId;
+  // Never fall back to the operator org — that bleeds Dolonia/zion CRM into
+  // sessions that have not joined a team yet.
+  return access.orgId || access.session?.org_id || null;
 }
 
 async function resolveOrgIdAsync(access) {

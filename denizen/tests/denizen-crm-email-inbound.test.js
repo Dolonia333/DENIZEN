@@ -9,8 +9,9 @@ const os = require('node:os');
 const inbound = require('../src/denizen-crm-email-inbound');
 
 describe('denizen-crm-email-inbound', () => {
-  it('builds query for Angela addresses', () => {
-    const q = inbound.buildQuery(inbound.DEFAULT_FROM);
+  it('builds query from env allowlist (no hard-coded personal defaults)', () => {
+    assert.deepEqual(inbound.fromAllowlist(), []);
+    const q = inbound.buildQuery(['vzion253@gmail.com']);
     assert.match(q, /vzion253@gmail\.com/);
     assert.match(q, /newer_than:/);
   });

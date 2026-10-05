@@ -1,6 +1,17 @@
 const SESSION_KEY = "denizen-visitor-session";
 const CEO_GRANT_KEY = "denizen-ceo-grant";
-const DEFAULT_ORG_SLUG = "zion";
+/** Never invent an org — missing slug means the user is not in a team yet. */
+function resolvedOrgSlug(
+  session: { org_slug?: string | null } | null | undefined,
+  raw: { org_slug?: string; orgSlug?: string } | null | undefined,
+  { demo = false }: { demo?: boolean } = {},
+): string | null {
+  const fromSession = String(session?.org_slug || "").trim();
+  if (fromSession) return fromSession;
+  const fromRaw = String(raw?.org_slug || raw?.orgSlug || "").trim();
+  if (fromRaw) return fromRaw;
+  return demo ? "acme" : null;
+}
 
 export type CrmWorkspaceState = {
   contacts?: unknown[];
@@ -414,11 +425,12 @@ function authHeaders(session: SessionStore | null): HeadersInit {
 
 function ceoBootstrapHeaders(session: SessionStore | null): Record<string, string> {
   const raw = readRawStore();
+  const orgSlug = resolvedOrgSlug(session, raw, { demo: false });
   const headers: Record<string, string> = {
     "X-Access-Method": "ceo",
-    "X-Display-Name": session?.display_name || raw.display_name || raw.displayName || "Dolonia",
-    "X-Org-Slug": session?.org_slug || raw.org_slug || raw.orgSlug || DEFAULT_ORG_SLUG,
+    "X-Display-Name": session?.display_name || raw.display_name || raw.displayName || "Owner",
   };
+  if (orgSlug) headers["X-Org-Slug"] = orgSlug;
   const grant = readCeoGrant();
   if (grant) headers["X-Denizen-Ceo-Grant"] = grant;
   if (session?.session_id) headers["X-Session-Id"] = session.session_id;
@@ -429,6 +441,7 @@ function ceoBootstrapHeaders(session: SessionStore | null): Record<string, strin
 function visitorBootstrapHeaders(session: SessionStore | null): Record<string, string> {
   const raw = readRawStore();
   const demo = isDemoSession(session);
+  const orgSlug = resolvedOrgSlug(session, raw, { demo });
   const headers: Record<string, string> = {
     "X-Display-Name": resolveProfileDisplayName(session?.display_name || raw.display_name || raw.displayName, {
       tier: session?.tier,
@@ -438,8 +451,8 @@ function visitorBootstrapHeaders(session: SessionStore | null): Record<string, s
     })
       || rawDemoUsername()
       || "Demo user",
-    "X-Org-Slug": session?.org_slug || raw.org_slug || raw.orgSlug || (demo ? "acme" : DEFAULT_ORG_SLUG),
   };
+  if (orgSlug) headers["X-Org-Slug"] = orgSlug;
   if (demo) {
     headers["X-Demo"] = "1";
     headers["X-Access-Method"] = sessionAccessMethod(session) || "demo";
@@ -468,7 +481,7 @@ async function openDenizenSession(session: SessionStore | null): Promise<Session
   const next: SessionStore = {
     session_id: sessionId,
     session_token: token,
-    org_slug: data.org?.slug || session?.org_slug || (resolvedDemo ? "acme" : DEFAULT_ORG_SLUG),
+    org_slug: data.org?.slug || session?.org_slug || (resolvedDemo ? "acme" : null),
     display_name: resolveProfileDisplayName(
       session?.display_name || data.session?.display_name || data.identity?.display_name || rawDisplayName(),
       {
@@ -548,7 +561,7 @@ function scrubLegacyCeoSessionStore() {
         display_name: CEO_DISPLAY_NAME,
         tier: "ceo",
         access_method: "ceo",
-        org_slug: raw.org_slug || raw.orgSlug || DEFAULT_ORG_SLUG,
+        org_slug: raw.org_slug || raw.orgSlug || null,
       });
     }
     return;
@@ -1239,7 +1252,7 @@ export async function fetchCrmSession(): Promise<CrmSessionInfo | null> {
         session_token: session.session_token || undefined,
         tier: "ceo",
         access_method: "ceo",
-        org_slug: data.org_slug || session.org_slug || DEFAULT_ORG_SLUG,
+        org_slug: data.org_slug || session.org_slug || null,
         display_name: resolvedName,
       });
     }

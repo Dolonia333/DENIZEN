@@ -321,9 +321,25 @@ async function handleOAuthRoute(req, res, urlPath, deps) {
         error_description: 'Your Denizen session has no organization. Sign in with a team office code on denizen.dolonia.cloud, then click Allow again.',
       }), true);
     }
+    let memberId = null;
+    if (typeof deps.resolveMemberId === 'function') {
+      try { memberId = await deps.resolveMemberId(sessionId, access); } catch (_) { /* optional */ }
+    } else {
+      try {
+        const teamAuth = require('./denizen-team-auth');
+        const account = await teamAuth.getTeamAccountForSession(sessionId);
+        memberId = account?.id || null;
+      } catch (_) { /* optional */ }
+    }
     let minted;
     try {
-      minted = await deps.createMcpToken({ orgId, npcKey, sessionId, label: 'oauth' });
+      minted = await deps.createMcpToken({
+        orgId,
+        npcKey,
+        sessionId,
+        memberId,
+        label: 'oauth',
+      });
     } catch (err) {
       const msg = String(err?.message || 'token mint failed');
       console.error('[mcp-oauth] token mint failed', { npcKey, requestedKey, sessionId, orgId, err: msg });

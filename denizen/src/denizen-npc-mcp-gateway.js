@@ -25,6 +25,7 @@ const mcpScopes = require('./denizen-mcp-scopes.js');
 const mcpResources = require('./denizen-mcp-resources.js');
 const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
+const mcpActor = require('./denizen-mcp-actor.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
@@ -389,23 +390,24 @@ async function callToolImpl(scope, name, args) {
 
 async function callTool(scope, name, args) {
   const toolName = String(name || '').trim();
-  if (scope?.session_id) {
-    try { mcpTeamTools.touchMcpPresence(scope.session_id); } catch (_) { /* non-fatal */ }
-  } else if (scope?.npc_key) {
-    try { mcpTeamTools.touchMcpPresenceByNpc(scope.npc_key); } catch (_) { /* non-fatal */ }
+  const enriched = await mcpActor.enrichMcpScope(scope);
+  if (enriched?.session_id) {
+    try { mcpTeamTools.touchMcpPresence(enriched.session_id); } catch (_) { /* non-fatal */ }
+  } else if (enriched?.npc_key) {
+    try { mcpTeamTools.touchMcpPresenceByNpc(enriched.npc_key); } catch (_) { /* non-fatal */ }
   }
-  if (!mcpScopes.toolAllowed(scope, toolName)) {
+  if (!mcpScopes.toolAllowed(enriched, toolName)) {
     const denied = {
       ok: false,
       error: 'scope_denied',
       required_scope: mcpScopes.requiredScope(toolName),
-      granted_scopes: mcpScopes.scopesFromTokenScope(scope),
+      granted_scopes: mcpScopes.scopesFromTokenScope(enriched),
     };
-    logMcpAudit(scope, toolName, denied);
+    logMcpAudit(enriched, toolName, denied);
     return denied;
   }
-  const result = await callToolImpl(scope, toolName, args);
-  logMcpAudit(scope, toolName, result);
+  const result = await callToolImpl(enriched, toolName, args);
+  logMcpAudit(enriched, toolName, result);
   return result;
 }
 
@@ -416,6 +418,7 @@ function configure(deps = {}) {
   mcpCrmTools.configure(deps);
   mcpMeshTools.configure(deps);
   mcpCursorTools.configure(deps);
+  mcpActor.configure(deps);
   mcpMentorTools.configure({
     announceInOffice: ({ npcName, message }) => {
       if (typeof deps.broadcast === 'function') {

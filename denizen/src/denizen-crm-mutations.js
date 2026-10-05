@@ -1,10 +1,25 @@
 'use strict';
 
 const crmStore = require('./denizen-crm-store');
+const crmAccess = require('./denizen-crm-access');
 
 function nextId(list) {
   const ids = (list || []).map((r) => Number(r?.id) || 0);
   return ids.length ? Math.max(...ids) + 1 : Date.now();
+}
+
+/** Normalize optional actor bag from MCP / routes. */
+function resolveActor(identityId, actor = null) {
+  if (actor && typeof actor === 'object') {
+    return {
+      user: actor.user || actor.displayName || actor.display_name || null,
+      displayName: actor.displayName || actor.display_name || actor.user || null,
+      email: actor.email || null,
+      identityId: actor.identityId || actor.identity_id || identityId || null,
+    };
+  }
+  if (!identityId) return null;
+  return { identityId, user: null, displayName: null, email: null };
 }
 
 async function loadOrgWorkspace(orgId) {
@@ -108,7 +123,7 @@ async function parkDeal(orgId, params = {}, identityId = null) {
   };
 }
 
-async function addContact(orgId, params = {}, identityId = null) {
+async function addContact(orgId, params = {}, identityId = null, actor = null) {
   const name = String(params.name || '').trim();
   const email = String(params.email || '').trim().toLowerCase();
   if (!name && !email) {
@@ -119,7 +134,8 @@ async function addContact(orgId, params = {}, identityId = null) {
   if (email && contacts.some((c) => String(c?.email || '').toLowerCase() === email)) {
     return { summary: `Contact already exists: ${email}`, contact: contacts.find((c) => String(c?.email || '').toLowerCase() === email) };
   }
-  const contact = {
+  const who = resolveActor(identityId, actor || params.actor);
+  let contact = {
     id: nextId(contacts),
     name: name || email,
     company: String(params.company || '').trim(),
@@ -131,10 +147,15 @@ async function addContact(orgId, params = {}, identityId = null) {
     lastContact: new Date().toISOString().slice(0, 10),
     interactions: 0,
     leadSource: String(params.leadSource || params.source || 'npc'),
+    ownerId: params.ownerId || params.owner || who?.user || who?.displayName || null,
+    ownerIdentityId: params.ownerIdentityId || who?.identityId || identityId || null,
+    ownerEmail: params.ownerEmail || who?.email || null,
+    createdBy: params.createdBy || who?.user || who?.displayName || null,
   };
+  if (who) contact = crmAccess.stampOwnerFields(contact, who);
   contacts.push(contact);
   const next = { ...state, contacts };
-  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  await saveOrgWorkspace(orgId, next, identityId || who?.identityId || null, ifUpdatedAt);
   return { summary: `Added contact ${contact.name}${email ? ` (${email})` : ''}.`, contact };
 }
 
@@ -194,12 +215,13 @@ async function updateDeal(orgId, params = {}, identityId = null) {
   };
 }
 
-async function addTask(orgId, params = {}, identityId = null) {
+async function addTask(orgId, params = {}, identityId = null, actor = null) {
   const title = String(params.title || params.task || '').trim();
   if (!title) throw new Error('title required');
   const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
   const tasks = Array.isArray(state.tasks) ? [...state.tasks] : [];
-  const task = {
+  const who = resolveActor(identityId, actor || params.actor);
+  let task = {
     id: nextId(tasks),
     title,
     contact: String(params.contact || '').trim(),
@@ -207,13 +229,17 @@ async function addTask(orgId, params = {}, identityId = null) {
     priority: String(params.priority || 'Medium'),
     done: false,
     notes: String(params.notes || params.task || '').slice(0, 500),
+    assignee: params.assignee || who?.user || who?.displayName || null,
+    createdBy: params.createdBy || who?.user || who?.displayName || null,
+    ownerIdentityId: params.ownerIdentityId || who?.identityId || identityId || null,
     ...(params.dealId != null || params.deal_id != null
       ? { dealId: params.dealId ?? params.deal_id }
       : {}),
   };
+  if (who) task = crmAccess.stampOwnerFields(task, who);
   tasks.push(task);
   const next = { ...state, tasks };
-  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  await saveOrgWorkspace(orgId, next, identityId || who?.identityId || null, ifUpdatedAt);
   return { summary: `Added task "${task.title}" due ${task.due}.`, task };
 }
 
@@ -419,7 +445,7 @@ const STARTER_PACKAGES = [
   },
 ];
 
-async function addDeal(orgId, params = {}, identityId = null) {
+async function addDeal(orgId, params = {}, identityId = null, actor = null) {
   const title = String(params.title || '').trim();
   if (!title) throw new Error('title required');
   const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
@@ -428,7 +454,8 @@ async function addDeal(orgId, params = {}, identityId = null) {
     const existing = deals.find((d) => String(d?.title || '').toLowerCase() === title.toLowerCase());
     return { summary: `Deal already exists: "${existing.title}"`, deal: existing };
   }
-  const deal = {
+  const who = resolveActor(identityId, actor || params.actor);
+  let deal = {
     id: nextId(deals),
     title,
     contact: String(params.contact || '').trim(),
@@ -439,17 +466,22 @@ async function addDeal(orgId, params = {}, identityId = null) {
     closeDate: String(params.closeDate || params.close_date || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)),
     daysInStage: 0,
     health: String(params.health || 'good'),
+    ownerId: params.ownerId || params.owner || who?.user || who?.displayName || null,
+    ownerIdentityId: params.ownerIdentityId || who?.identityId || identityId || null,
+    ownerEmail: params.ownerEmail || who?.email || null,
+    createdBy: params.createdBy || who?.user || who?.displayName || null,
     studioTaskIds: Array.isArray(params.studio_task_ids || params.studioTaskIds)
       ? [...(params.studio_task_ids || params.studioTaskIds)].map(String)
       : [],
   };
+  if (who) deal = crmAccess.stampOwnerFields(deal, who);
   deals.push(deal);
   const next = { ...state, deals };
-  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  await saveOrgWorkspace(orgId, next, identityId || who?.identityId || null, ifUpdatedAt);
   return { summary: `Created deal "${deal.title}" (${deal.stage}, $${deal.value}).`, deal };
 }
 
-async function updateUserProfile(orgId, params = {}, identityId = null) {
+async function updateUserProfile(orgId, params = {}, identityId = null, actor = null) {
   const name = String(params.name || params.displayName || '').trim();
   const email = String(params.email || '').trim();
   const title = String(params.title || params.position || '').trim();
@@ -457,17 +489,26 @@ async function updateUserProfile(orgId, params = {}, identityId = null) {
     return { summary: 'No profile fields to update.', profile: null };
   }
   const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
-  const userPrefs = { ...(state.userPrefs || {}) };
-  const profile = { ...(userPrefs.profile || {}) };
-  if (name) profile.name = name;
-  if (email) profile.email = email;
-  if (title) profile.title = title;
-  userPrefs.profile = profile;
+  const who = resolveActor(identityId, actor || params.actor);
+  const idKey = who?.identityId || identityId || null;
+  const patch = { profile: {} };
+  const prev = crmAccess.prefsForIdentity(state.userPrefs, idKey);
+  patch.profile = { ...(prev.profile || {}) };
+  if (name) patch.profile.name = name;
+  if (email) patch.profile.email = email;
+  if (title) patch.profile.title = title;
+  const userPrefs = idKey
+    ? crmAccess.mergePrefsForIdentity(state.userPrefs, patch, idKey)
+    : {
+      ...(state.userPrefs || {}),
+      profile: patch.profile,
+    };
   const next = { ...state, userPrefs };
-  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  await saveOrgWorkspace(orgId, next, idKey, ifUpdatedAt);
   return {
     summary: `Updated CRM profile${name ? ` for ${name}` : ''}${title ? ` (${title})` : ''}.`,
-    profile,
+    profile: patch.profile,
+    identity_id: idKey,
   };
 }
 

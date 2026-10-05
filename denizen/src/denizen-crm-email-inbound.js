@@ -8,8 +8,8 @@
  *
  * Env:
  *   GMAIL_INBOUND=1|0                 master (default on when Gmail real mode)
- *   GMAIL_INBOUND_FROM=a@x,b@y        default Angela addresses
- *   GMAIL_INBOUND_ORG_SLUG=zion       org to file into (default DENIZEN_ORG_SLUG / zion)
+ *   GMAIL_INBOUND_FROM=a@x,b@y        required allowlist (no personal defaults in code)
+ *   GMAIL_INBOUND_ORG_SLUG=…          org to file into (default DENIZEN_ORG_SLUG only)
  *   GMAIL_INBOUND_MAX=15              max messages per poll
  *   GMAIL_INBOUND_NEWER_THAN=30d      Gmail newer_than token
  *   GMAIL_OAUTH_FILE                  existing gmail client path
@@ -26,11 +26,6 @@ const gmailClient = require('./gmail-client');
 const ROOT = path.join(__dirname, '..');
 const STATE_PATH = path.join(ROOT, 'data', 'crm-email-inbound-state.json');
 
-const DEFAULT_FROM = [
-  'vzion253@gmail.com',
-  'angelavanzandt1921@gmail.com',
-];
-
 function inboundEnabled() {
   const v = String(process.env.GMAIL_INBOUND ?? '1').trim().toLowerCase();
   if (/^(0|false|no|off)$/.test(v)) return false;
@@ -39,7 +34,8 @@ function inboundEnabled() {
 
 function fromAllowlist() {
   const raw = String(process.env.GMAIL_INBOUND_FROM || '').trim();
-  if (!raw) return [...DEFAULT_FROM];
+  // Empty = disabled senders (fail closed). Operator deploys must set the env.
+  if (!raw) return [];
   return raw.split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
 
@@ -86,11 +82,9 @@ async function resolveOrgId(opts = {}) {
     opts.orgSlug
     || process.env.GMAIL_INBOUND_ORG_SLUG
     || process.env.DENIZEN_ORG_SLUG
-    || 'zion',
+    || '',
   ).trim();
-  if (denizenDb.orgId && (!slug || slug === process.env.DENIZEN_ORG_SLUG || slug === 'zion')) {
-    // prefer configured denizen org when it matches
-  }
+  if (!slug) return denizenDb.orgId || null;
   if (denizenDb.enabled) {
     const rows = await denizenDb._get(
       `denizen_organizations?select=id,slug&slug=eq.${encodeURIComponent(slug)}&limit=1`,
@@ -451,5 +445,6 @@ module.exports = {
   getInboundStatus,
   loadState,
   STATE_PATH,
-  DEFAULT_FROM,
+  /** @deprecated empty by design — use GMAIL_INBOUND_FROM env */
+  get DEFAULT_FROM() { return fromAllowlist(); },
 };

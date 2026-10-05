@@ -109,6 +109,13 @@ export interface Meeting {
   recurrence?: 'none' | 'daily' | 'weekly' | 'monthly';
   recurrenceParentId?: number;
   checklist?: string[];
+  /** Who owns this calendar item — team calendars show this label. */
+  ownerId?: string;
+  ownerIdentityId?: string;
+  ownerName?: string;
+  organizer?: string;
+  /** private = only owner/attendees; team (default) = org calendar. */
+  visibility?: 'private' | 'team';
 }
 
 export const MEETING_TEMPLATES = [

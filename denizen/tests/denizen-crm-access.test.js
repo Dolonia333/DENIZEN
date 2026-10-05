@@ -116,4 +116,62 @@ describe('denizen-crm-access', () => {
     const scoped = access.filterWorkspaceForAccess(state, kaiser, { orgWide: false });
     assert.equal(scoped.state.deals.length, 1);
   });
+
+  it('keeps teammate profile prefs isolated by identity', () => {
+    const state = {
+      deals: [],
+      tasks: [],
+      contacts: [],
+      userPrefs: {
+        profiles: {
+          'id-kaiser': { profile: { name: 'Kaiser', title: 'AE' } },
+          'id-zion': { profile: { name: 'Zion', title: 'Ops' } },
+        },
+        profile: { name: 'LEGACY_SHARED', title: 'wrong' },
+      },
+      calendarConnections: {
+        'id-kaiser': { google: { token: 'kaiser-secret' } },
+        'id-zion': { google: { token: 'zion-secret' } },
+      },
+      meetings: [
+        { id: 1, title: 'Team standup', ownerIdentityId: 'id-zion', visibility: 'team' },
+        { id: 2, title: 'Kaiser private', ownerIdentityId: 'id-kaiser', visibility: 'private' },
+        { id: 3, title: 'Zion private', ownerIdentityId: 'id-zion', visibility: 'private' },
+      ],
+    };
+    const scoped = access.filterWorkspaceForAccess(state, kaiser, { orgWide: false });
+    assert.equal(scoped.state.userPrefs.profile.name, 'Kaiser');
+    assert.equal(scoped.state.userPrefs.profiles['id-zion'], undefined);
+    assert.deepEqual(Object.keys(scoped.state.calendarConnections), ['id-kaiser']);
+    assert.ok(scoped.state.meetings.some((m) => m.id === 1), 'team calendar visible');
+    assert.ok(scoped.state.meetings.some((m) => m.id === 2), 'own private meeting visible');
+    assert.ok(!scoped.state.meetings.some((m) => m.id === 3), 'teammate private hidden');
+  });
+
+  it('mergeMemberWorkspace does not overwrite teammate prefs', () => {
+    const full = {
+      deals: [],
+      tasks: [],
+      contacts: [],
+      userPrefs: {
+        profiles: {
+          'id-kaiser': { profile: { name: 'Kaiser' } },
+          'id-zion': { profile: { name: 'Zion', title: 'Ops' } },
+        },
+      },
+      noteBoards: [
+        { id: 1, name: 'Kaiser board', ownerIdentityId: 'id-kaiser' },
+        { id: 2, name: 'Zion board', ownerIdentityId: 'id-zion' },
+      ],
+    };
+    const memberPayload = {
+      userPrefs: { profile: { name: 'Kaiser Updated', title: 'Closer' } },
+      noteBoards: [{ id: 1, name: 'Kaiser board v2', ownerIdentityId: 'id-kaiser' }],
+    };
+    const merged = access.mergeMemberWorkspace(full, memberPayload, kaiser);
+    assert.equal(merged.userPrefs.profiles['id-zion'].profile.name, 'Zion');
+    assert.equal(merged.userPrefs.profiles['id-kaiser'].profile.name, 'Kaiser Updated');
+    assert.ok(merged.noteBoards.find((b) => b.id === 2), 'teammate note board preserved');
+    assert.equal(merged.noteBoards.find((b) => b.id === 1)?.name, 'Kaiser board v2');
+  });
 });
