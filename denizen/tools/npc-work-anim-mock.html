@@ -312,8 +312,9 @@
       this._mug.setFrame(0);
       // Coffee sheet is mostly empty steam above the cup — crop to the cup only
       this._mug.setCrop(0, 15, 16, 17);
-      this._mug.setOrigin(0.5, 0.9);
-      this._mug.setScale(1.35);
+      // Center origin on the cup so it sits ON the mouth, not hanging above it
+      this._mug.setOrigin(0.5, 0.5);
+      this._mug.setScale(1.5);
       this._mug.setDepth(20);
       this._mug.setVisible(true);
       this.stopFollow();
