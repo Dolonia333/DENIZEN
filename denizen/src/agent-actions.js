@@ -1965,151 +1965,68 @@ class AgentActions {
       onArrive: () => {
         const npc = this._getNpc(npcKey);
         this._showEmote?.(npc, npcKey, '✎');
-        this._flashBoardStrokes(board.sprite || board, 4200);
+        this._flashBoardReveal(board.sprite || board, 3600);
       },
     }).then(() => this.think(npcKey, note || 'Jotting this down…'));
   }
 
   /**
-   * Chalk strokes on a whiteboard sprite (office VFX for useWhiteboard).
+   * Soft reveal on a whiteboard — prefer swapping to a drawn board texture
+   * from the pack; fall back to a brief thought only (no freehand HUD lines).
    */
-  _flashBoardStrokes(boardSprite, ms = 4200) {
-    if (!boardSprite || !this.scene?.add) return null;
+  _flashBoardReveal(boardSprite, ms = 3600) {
+    if (!boardSprite || !this.scene?.textures) return null;
     try {
-      const g = this.scene.add.graphics().setDepth((boardSprite.depth || 10) + 2);
-      const bx = boardSprite.x;
-      const by = boardSprite.y - (boardSprite.displayHeight || 40) * 0.15;
-      const strokes = [
-        { x1: -18, y1: -10, x2: 16, y2: -8, c: 0x1e293b },
-        { x1: -14, y1: -2, x2: 8, y2: 0, c: 0x0369a1 },
-        { x1: -12, y1: 6, x2: 14, y2: 8, c: 0xb45309 },
-      ];
-      let i = 0;
-      const draw = this.scene.time.addEvent({
-        delay: 380,
-        repeat: strokes.length - 1,
-        callback: () => {
-          const s = strokes[i++];
-          if (!s || !g.active) return;
-          g.lineStyle(2, s.c, 0.85);
-          g.beginPath();
-          g.moveTo(bx + s.x1, by + s.y1);
-          g.lineTo(bx + s.x2, by + s.y2);
-          g.strokePath();
-        },
-      });
+      const drawnKey = this.scene.textures.exists('vfx_whiteboard_drawn')
+        ? 'vfx_whiteboard_drawn'
+        : (this.scene.textures.exists('whiteboard_line_chart') ? 'whiteboard_line_chart' : null);
+      if (!drawnKey || !boardSprite.setTexture) {
+        return null;
+      }
+      const prevKey = boardSprite.texture?.key;
+      const prevFrame = boardSprite.frame?.name;
+      boardSprite.setTexture(drawnKey);
       this.scene.time.delayedCall(ms, () => {
-        try { draw.remove(); } catch (_) {}
-        try { g.destroy(); } catch (_) {}
+        try {
+          if (prevKey) boardSprite.setTexture(prevKey, prevFrame);
+        } catch (_) {}
       });
-      return g;
+      return boardSprite;
     } catch (_) {
       return null;
     }
   }
 
   /**
-   * Visual cast for run_skill — research (magnifier) vs coding (brackets).
+   * Quiet run_skill tell — one thought line matching office bubble style.
    */
   _flashSkillCast(npc, npcKey, skill = '', ms = 3600) {
-    if (!npc || !this.scene?.add) return null;
+    if (!npc) return null;
     try {
-      this._clearSkillCast?.(npcKey);
       const kind = /cod|github|desktop|build/i.test(skill) ? 'coding'
         : /research|search|web|browser/i.test(skill) ? 'research'
-          : 'coding';
-      const objs = [];
-      if (kind === 'research') {
-        const lens = this.scene.add.circle(npc.x, npc.y - 40, 9, 0x93c5fd, 0.35)
-          .setStrokeStyle(2, 0x38bdf8).setDepth((npc.depth || 10) + 3);
-        objs.push(lens);
-        const label = this.scene.add.text(npc.x, npc.y - 62, 'research', {
-          fontSize: '8px', fontFamily: 'monospace', color: '#0c4a6e',
-          backgroundColor: '#bae6fdcc', padding: { x: 3, y: 1 },
-        }).setOrigin(0.5, 1).setDepth((npc.depth || 10) + 4);
-        objs.push(label);
-        const follow = this.scene.time.addEvent({
-          delay: 40, loop: true,
-          callback: () => {
-            if (!npc.active) return;
-            const t = this.scene.time.now / 180;
-            lens.x = npc.x + Math.cos(t) * 12;
-            lens.y = npc.y - 40 + Math.sin(t) * 7;
-            label.x = npc.x;
-            label.y = npc.y - 62;
-          },
-        });
-        objs.push({ destroy: () => { try { follow.remove(); } catch (_) {} } });
-      } else {
-        const open = this.scene.add.text(npc.x - 16, npc.y - 48, '{', {
-          fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', color: '#4ade80',
-        }).setOrigin(0.5).setDepth((npc.depth || 10) + 3);
-        const close = this.scene.add.text(npc.x + 16, npc.y - 48, '}', {
-          fontSize: '18px', fontFamily: 'monospace', fontStyle: 'bold', color: '#4ade80',
-        }).setOrigin(0.5).setDepth((npc.depth || 10) + 3);
-        const label = this.scene.add.text(npc.x, npc.y - 62, skill || 'coding-agent', {
-          fontSize: '8px', fontFamily: 'monospace', color: '#052e16',
-          backgroundColor: '#86efaccc', padding: { x: 3, y: 1 },
-        }).setOrigin(0.5, 1).setDepth((npc.depth || 10) + 4);
-        objs.push(open, close, label);
-        try {
-          this.scene.tweens.add({ targets: open, x: npc.x - 22, yoyo: true, duration: 280, repeat: 8 });
-          this.scene.tweens.add({ targets: close, x: npc.x + 22, yoyo: true, duration: 280, repeat: 8 });
-        } catch (_) {}
-        const follow = this.scene.time.addEvent({
-          delay: 40, loop: true,
-          callback: () => {
-            if (!npc.active) return;
-            label.x = npc.x;
-            label.y = npc.y - 62;
-          },
-        });
-        objs.push({ destroy: () => { try { follow.remove(); } catch (_) {} } });
-      }
-      const timer = this.scene.time.delayedCall(ms, () => this._clearSkillCast?.(npcKey));
-      if (!this._skillCasts) this._skillCasts = new Map();
-      this._skillCasts.set(npcKey, { objs, timer });
-      return objs[0];
+          : 'work';
+      const line = kind === 'research' ? 'Looking that up…'
+        : kind === 'coding' ? 'Drafting a fix…'
+          : 'Working…';
+      this.think(npcKey, line);
+      this._showTypingIndicator?.(npc, npcKey);
+      this.scene?.time?.delayedCall?.(ms, () => this._hideTypingIndicator?.(npcKey));
+      return true;
     } catch (_) {
       return null;
     }
   }
 
-  _clearSkillCast(npcKey) {
-    const row = this._skillCasts?.get?.(npcKey);
-    if (!row) return;
-    try { row.timer?.remove?.(); } catch (_) {}
-    for (const o of row.objs || []) {
-      try { o.destroy?.(); } catch (_) {}
-    }
-    this._skillCasts.delete(npcKey);
-  }
-
   /**
-   * taskPhase finished — artifact float + shipped check.
+   * taskPhase finished — small check emote + short speech (no confetti HUD).
    */
-  _flashShipBeat(npc, npcKey, ms = 2800) {
-    if (!npc || !this.scene?.add) return null;
+  _flashShipBeat(npc, npcKey, ms = 2200) {
+    if (!npc) return null;
     try {
-      const doc = this.scene.add.rectangle(npc.x, npc.y - 28, 12, 15, 0xf8fafc)
-        .setDepth((npc.depth || 10) + 3);
-      const badge = this.scene.add.text(npc.x, npc.y - 56, 'shipped ✓', {
-        fontSize: '9px', fontFamily: 'monospace', fontStyle: 'bold',
-        color: '#052e16', backgroundColor: '#4ade80ee', padding: { x: 4, y: 2 },
-      }).setOrigin(0.5, 1).setDepth((npc.depth || 10) + 4).setAlpha(0);
-      try {
-        this.scene.tweens.add({
-          targets: doc, y: npc.y - 70, duration: 650, ease: 'Cubic.easeOut',
-        });
-        this.scene.tweens.add({
-          targets: badge, alpha: 1, y: npc.y - 72, duration: 280, delay: 400, ease: 'Back.easeOut',
-        });
-      } catch (_) {}
-      this.scene.time.delayedCall(ms, () => {
-        try { doc.destroy(); } catch (_) {}
-        try { badge.destroy(); } catch (_) {}
-      });
-      return badge;
+      this._showEmote?.(npc, npcKey, '✓');
+      this._showSpeechBubble?.(npc, npcKey, 'Done.', 'speech', ms);
+      return true;
     } catch (_) {
       return null;
     }

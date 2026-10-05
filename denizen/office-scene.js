@@ -336,6 +336,10 @@ class OfficeScene extends Phaser.Scene {
       'vfx_coffee_cup',
       'assets/limezu/animated/coffee_cup_only.png'
     );
+    this.load.image(
+      'vfx_whiteboard_drawn',
+      'assets/modern_office/named/whiteboard_line_chart.png'
+    );
     // Unused sheets removed to prevent loader stall (were loading 90+ files)
 
     // Singles for open-plan are loaded on demand in create() when a placement needs them.

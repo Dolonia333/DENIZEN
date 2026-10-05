@@ -13,18 +13,24 @@ describe('npc-work-anim-mock', () => {
     assert.ok(fs.existsSync(page), 'demo html missing');
     const html = fs.readFileSync(page, 'utf8');
     assert.match(html, /NPC work anim mock/i);
-    assert.match(html, /pourOntoPlant|tip \+ pour|Pour plant/i);
-    assert.match(html, /Writing code/);
+    assert.match(html, /pourOntoPlant|Pour/);
+    assert.match(html, /Coffee_Machine_Front/);
+    assert.match(html, /desk_setup_monitors_pc|desk_setup/);
+    assert.match(html, /whiteboard_medium|board_blank/);
+    assert.match(html, /whiteboard_line_chart|board_drawn/);
     assert.match(html, /mug_cup|coffee_cup_only|holdMugAtMouth/);
-    assert.match(html, /sceneDesk|startDeskCodingFx/);
-    assert.match(html, /castResearchSkill|castCodingSkill/);
-    assert.match(html, /drawBoardStrokes|sceneBoard/);
-    assert.match(html, /sceneShip|shipped/);
+    assert.match(html, /sceneDesk|startDeskWork/);
+    assert.match(html, /sceneSkill|sceneBoard|sceneShip/);
+    // Must not load the misnamed desk-phone asset as the coffee machine
+    assert.doesNotMatch(html, /load\.image\([^)]*coffee_machine_desk/);
 
     const assets = [
       'assets/Abby.png',
       'assets/modern_office/named/plant_floor_leafy.png',
-      'assets/modern_office/named/coffee_machine_desk.png',
+      'assets/limezu/ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Coffee_Machine_Front.png',
+      'assets/modern_office/named/desk_setup_monitors_pc.png',
+      'assets/modern_office/named/whiteboard_medium.png',
+      'assets/modern_office/named/whiteboard_line_chart.png',
       'assets/limezu/animated/coffee.png',
       'assets/limezu/animated/coffee_cup_only.png',
       'assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png',
@@ -47,7 +53,7 @@ describe('npc-work-anim-mock', () => {
     assert.match(src, /vfx_coffee_cup/);
     assert.match(src, /angle:\s*-28/);
     assert.match(src, /_flashSkillCast/);
-    assert.match(src, /_flashBoardStrokes/);
+    assert.match(src, /_flashBoardReveal/);
     assert.match(src, /_flashShipBeat/);
 
     const office = fs.readFileSync(path.join(ROOT, 'office-scene.js'), 'utf8');

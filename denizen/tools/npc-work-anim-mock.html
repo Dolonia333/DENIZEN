@@ -53,7 +53,6 @@
     padding: 10px 16px; border-top: 1px solid var(--line); background: var(--panel);
     color: var(--muted); font-size: 12px;
   }
-  footer code { color: #b7c9db; }
 </style>
 </head>
 <body>
@@ -61,19 +60,18 @@
   <h1>NPC work anim mock</h1>
   <div class="caption" id="caption"><strong>Booting…</strong></div>
   <div class="btns">
-    <button type="button" data-scene="desk" class="active">1 · Desk coding</button>
-    <button type="button" data-scene="skill">2 · run_skill</button>
-    <button type="button" data-scene="board">3 · Whiteboard</button>
-    <button type="button" data-scene="ship">4 · Ship / done</button>
-    <button type="button" data-scene="water">5 · Pour plant</button>
+    <button type="button" data-scene="desk" class="active">1 · Desk</button>
+    <button type="button" data-scene="skill">2 · Skill</button>
+    <button type="button" data-scene="board">3 · Board</button>
+    <button type="button" data-scene="ship">4 · Done</button>
+    <button type="button" data-scene="water">5 · Pour</button>
     <button type="button" data-scene="coffee">6 · Coffee</button>
     <button type="button" data-scene="loop">▶ Auto loop</button>
   </div>
 </header>
 <div id="stage-wrap"><div id="game-host"></div></div>
 <footer>
-  Work-visibility mock — desk coding, skill casts, whiteboard strokes, ship beat;
-  plus LimeZu pour / coffee props. Press a scene or leave on Auto loop.
+  Same modern-office + LimeZu sprites as the office. Quiet bubbles only — no HUD chrome.
 </footer>
 
 <script src="/vendor/phaser/phaser.min.js"></script>
@@ -81,14 +79,13 @@
 (() => {
   const W = 720, H = 420;
   const CAPTIONS = {
-    desk: '<strong>Desk coding</strong> — sit, keyboard bounce, monitor glow + blinking cursor (not just a chip).',
-    skill: '<strong>run_skill</strong> — research (magnifier) vs coding-agent (brackets/diff), then resolve.',
-    board: '<strong>Whiteboard</strong> — walk up and chalk strokes appear on the board.',
-    ship: '<strong>Ship / done</strong> — taskPhase finished: artifact flies up + shipped check.',
-    water: '<strong>Plant pour</strong> — tip LimeZu can + stream into soil.',
-    coffee: '<strong>Coffee pickup</strong> — brew, then sip with cup on her mouth.',
-    compare: '<strong>Before vs after</strong> — emoji-only vs tip + pour.',
-    loop: '<strong>Auto loop</strong> — desk → skill → board → ship → pour → coffee.',
+    desk: '<strong>Desk</strong> — sit at a real monitor setup; typing dots like the live office.',
+    skill: '<strong>Skill</strong> — research then coding as quiet thought lines, still at the desk.',
+    board: '<strong>Board</strong> — walk up to the chart whiteboard; quiet thought, no HUD lines.',
+    ship: '<strong>Done</strong> — task finished as a small office bubble + check emote.',
+    water: '<strong>Pour</strong> — LimeZu can tip + stream into the plant.',
+    coffee: '<strong>Coffee</strong> — LimeZu coffee machine, then sip with cup on her mouth.',
+    loop: '<strong>Auto loop</strong> — desk → skill → board → done → pour → coffee.',
   };
 
   let api = null;
@@ -100,28 +97,25 @@
     });
   }
 
-  function makeChip(scene, text, color, x, y) {
-    const bg = color || '#e0f2fe';
-    const ink = color === '#4ade80' ? '#052e16'
-      : color === '#22d3ee' ? '#083344'
-      : color === '#60a5fa' ? '#0c4a6e'
-      : color === '#fbbf24' ? '#422006'
-      : '#0c4a6e';
-    const t = scene.add.text(x, y, text, {
-      fontSize: '12px',
+  /** Match live office speech/thought bubbles (agent-actions.js). */
+  function makeBubble(scene, text, x, y, thought = false) {
+    const t = scene.add.text(x, y, thought ? `…${text}` : text, {
+      fontSize: thought ? '8px' : '9px',
       fontFamily: 'monospace',
-      fontStyle: 'bold',
-      color: ink,
-      backgroundColor: bg + 'ee',
-      padding: { x: 6, y: 3 },
+      color: thought ? '#0c4a6e' : '#0f172a',
+      backgroundColor: thought ? '#e0f2fede' : '#f8fafcee',
+      padding: { x: 4, y: 3 },
+      wordWrap: { width: thought ? 110 : 130 },
+      align: 'center',
     });
     t.setOrigin(0.5, 1);
     t.setDepth(50);
+    t.setAlpha(0.96);
     return t;
   }
 
   function makeEmote(scene, symbol, x, y) {
-    return makeChip(scene, symbol, '#e0f2fe', x, y);
+    return makeBubble(scene, symbol, x, y, true);
   }
 
   class MockScene extends Phaser.Scene {
@@ -131,13 +125,15 @@
       this._npc = null;
       this._plant = null;
       this._machine = null;
-      this._desk = null;
+      this._deskSetup = null;
+      this._board = null;
       this._can = null;
       this._mug = null;
       this._mugCup = null;
       this._playing = null;
       this._holdFollow = null;
       this._sceneGen = 0;
+      this._deskFxTimer = null;
     }
 
     preload() {
@@ -145,9 +141,16 @@
       this.load.image('plant', '/assets/modern_office/named/plant_floor_leafy.png');
       this.load.image('can_full', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png');
       this.load.image('can_empty', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Empty.png');
-      this.load.image('machine', '/assets/modern_office/named/coffee_machine_desk.png');
+      // LimeZu coffee machine (modern_office coffee_machine_desk / coffee_station are phones/desks)
+      this.load.image(
+        'coffee_machine',
+        '/assets/limezu/ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Coffee_Machine_Front.png'
+      );
       this.load.spritesheet('mug', '/assets/limezu/animated/coffee.png', { frameWidth: 16, frameHeight: 32 });
       this.load.image('mug_cup', '/assets/limezu/animated/coffee_cup_only.png');
+      this.load.image('desk_setup', '/assets/modern_office/named/desk_setup_monitors_pc.png');
+      this.load.image('board_blank', '/assets/modern_office/named/whiteboard_medium.png');
+      this.load.image('board_drawn', '/assets/modern_office/named/whiteboard_line_chart.png');
     }
 
     create() {
@@ -158,23 +161,16 @@
       for (let x = 0; x < W; x += 32) g.lineBetween(x, 0, x, H);
       for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
 
-      this._desk = this.add.rectangle(520, 250, 90, 48, 0x6b5344).setDepth(2);
-      this._monitor = this.add.rectangle(520, 220, 54, 36, 0x1a2332).setDepth(3);
-      this._monitorBezel = this.add.rectangle(520, 220, 60, 42, 0x2a3544).setDepth(2.5);
-      this._monitorGlow = this.add.rectangle(520, 220, 48, 30, 0x4ade80).setDepth(3.5).setAlpha(0.15);
-      this._keyboard = this.add.rectangle(520, 246, 44, 10, 0x3d4450).setDepth(4);
+      // Tight office corner — real pack sprites, one composition
+      this._machine = null; // created below after anims
 
-      // Whiteboard / cork board (center-left)
-      this._board = this.add.rectangle(340, 200, 88, 64, 0xf4f1e8).setDepth(3);
-      this.add.rectangle(340, 200, 92, 68, 0x8b7355).setDepth(2.5);
-      this.add.text(340, 238, 'whiteboard', {
-        fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
-      }).setOrigin(0.5, 0).setDepth(5);
+      // Desk station — packed modern-office sprite (monitor + keyboard)
+      this._deskSetup = this.add.image(500, 268, 'desk_setup').setOrigin(0.5, 1).setDepth(4).setScale(1.55);
 
-      this._plant = this.add.image(200, 210, 'plant').setOrigin(0.5, 1).setDepth(5).setScale(1.4);
-      this.add.text(200, 220, 'office plant', {
-        fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
-      }).setOrigin(0.5, 0).setDepth(5);
+      // Whiteboard — chart asset (blank medium reads as an empty purple slab)
+      this._board = this.add.image(360, 230, 'board_drawn').setOrigin(0.5, 1).setDepth(4).setScale(1.3);
+
+      this._plant = this.add.image(250, 240, 'plant').setOrigin(0.5, 1).setDepth(5).setScale(1.3);
 
       this.anims.create({
         key: 'walk_down',
@@ -202,26 +198,21 @@
         frameRate: 6, repeat: -1,
       });
 
-      // Coffee machine (modern office) + resting mug on top
-      this._machine = this.add.image(120, 300, 'machine').setOrigin(0.5, 1).setDepth(6).setScale(2.4);
-      this.add.text(120, 310, 'coffee machine', {
-        fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
-      }).setOrigin(0.5, 0).setDepth(6);
+      this._machine = this.add.image(160, 300, 'coffee_machine').setOrigin(0.5, 1).setDepth(6).setScale(1.85);
 
-      this._mug = this.add.sprite(120, 286, 'mug', 0).setOrigin(0.5, 0.72).setDepth(8).setScale(1.4).setVisible(false);
-      this._mugCup = this.add.image(0, 0, 'mug_cup').setOrigin(0.5, 0.55).setDepth(21).setScale(1.7).setVisible(false);
+      this._mug = this.add.sprite(160, 272, 'mug', 0).setOrigin(0.5, 1).setDepth(8).setScale(1.3).setVisible(false);
+      this._mugCup = this.add.image(0, 0, 'mug_cup').setOrigin(0.5, 0).setDepth(21).setScale(1.35).setVisible(false);
 
-      this._npc = this.add.sprite(420, 280, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
-      // Origin near the handle (right side) so the can body sits in her hands, spout out front
+      this._npc = this.add.sprite(400, 290, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
       this._can = this.add.image(0, 0, 'can_full').setOrigin(0.78, 0.62).setDepth(12).setScale(1.35).setVisible(false);
 
-      this.add.text(16, 12, 'DENIZEN · work visibility mock', {
+      this.add.text(16, 12, 'DENIZEN · work visibility', {
         fontSize: '11px', fontFamily: 'monospace', color: '#9eb0a0',
       }).setDepth(100);
 
       api = { play: (name) => this.playScene(name) };
       window.__npcAnimMock = api;
-      // Do not auto-play — avoids double-start races with button clicks / refresh.
+      window.__game = this.game;
       setCaption('desk');
       setTimeout(() => { if (this._sceneGen === 0) this.playScene('desk'); }, 400);
     }
@@ -231,9 +222,9 @@
         try { o.destroy(); } catch (_) {}
       }
       this._cleanup = [];
-      // Kill tweens only — do NOT removeAllEvents (that aborts in-flight walks).
       try { this.tweens.killAll(); } catch (_) {}
       this.stopFollow();
+      this.stopDeskFx();
       this._can.setVisible(false);
       this._can.setAngle(0);
       this._can.setTexture('can_full');
@@ -243,21 +234,32 @@
       this._mug.setOrigin(0.5, 1);
       this._mug.setFrame(0);
       this._mug.setAngle(0);
-      this._mug.setScale(1.4);
-      this._mug.setPosition(120, 286);
+      this._mug.setScale(1.3);
+      this._mug.setPosition(160, 272);
+      this._mug.setAlpha(1);
       if (this._mugCup) {
         this._mugCup.setVisible(false);
         this._mugCup.setAngle(0);
       }
+      if (this._board) {
+        this._board.setTexture('board_drawn');
+        this._board.setScale(1.3);
+        this._board.setAlpha(1);
+      }
+      if (this._machine) this._machine.setScale(1.85);
+      if (this._deskSetup) {
+        this._deskSetup.setAlpha(1);
+        this._deskSetup.y = 268;
+      }
       this._npc.anims.stop();
-      this._npc.setPosition(420, 280);
+      this._npc.setPosition(400, 290);
       this._npc.setFrame(0);
-      // Reset sit-crop from work scene
       try { this._npc.setCrop(); } catch (_) {}
       this._npc.setScale(1.5);
       this._npc.clearTint();
       this._npc.setVisible(true);
       this._npc.setAlpha(1);
+      this._npc.setDepth(10);
     }
 
     track(obj) {
@@ -267,7 +269,6 @@
 
     wait(ms) {
       const gen = this._sceneGen;
-      // Wall clock — Phaser time can stall if the scene clock glitches
       return new Promise((r) => setTimeout(() => r(this._sceneGen === gen), ms));
     }
 
@@ -275,13 +276,8 @@
       return this._sceneGen === gen && this._playing != null;
     }
 
-    /** Step-walk with hard timeout so a scene can never hang mid-move. */
     walkTo(x, y, anim, ms = 1400) {
       return this._walkSpriteTo(this._npc, x, y, anim, ms);
-    }
-
-    walkSprite(sprite, x, y, anim, ms) {
-      return this._walkSpriteTo(sprite, x, y, anim, ms);
     }
 
     _walkSpriteTo(sprite, x, y, anim, ms) {
@@ -309,16 +305,11 @@
           if (t >= 1) finish(true);
           else setTimeout(step, ms / steps);
         };
-        // Hard ceiling on wall clock — never hang a scene
         setTimeout(() => finish(this._sceneGen === gen), ms + 500);
         setTimeout(step, 0);
       });
     }
 
-    /** Face-aware mug hold — rim on Abby's lips (not eyes/hair).
-     * Abby 32×48 @1.5, origin at feet. Frame padding: hair ~row 10–23,
-     * eyes ~30–31 (oy≈-26), mouth pink ~32–33 (oy≈-23), chin ~34.
-     * Phaser spritesheet frames expose `.name` (not always `.index`). */
     npcFrameIndex() {
       const fr = this._npc?.frame;
       if (!fr) return 0;
@@ -330,22 +321,18 @@
 
     mugMouthOffset() {
       const f = this.npcFrameIndex();
-      // Rim on mouth (pink ~row 32–33 → oy≈-22). Eyes ~row 30–31 (oy≈-26).
       const y = -22;
-      if (f >= 4 && f <= 7) return { x: -8, y };      // facing left — lips toward machine
-      if (f >= 8 && f <= 11) return { x: 8, y };       // facing right
+      if (f >= 4 && f <= 7) return { x: -8, y };
+      if (f >= 8 && f <= 11) return { x: 8, y };
       if (f >= 12) return { x: 0, y: -23 };
       return { x: 0, y };
     }
 
     holdMugAtMouth() {
-      // Hide the tall steaming sheet — use the tight cup-only image
       this._mug.anims.stop();
       this._mug.setVisible(false);
       this._mugCup.setVisible(true);
       this._mugCup.setDepth(21);
-      // Origin at texture top (= rim). cup_only has opaque rows 0–7; any
-      // originY > 0 leaves rim pixels above the mouth anchor (reads as eyes).
       this._mugCup.setOrigin(0.5, 0);
       this._mugCup.setScale(1.35);
       this._mugCup.setAngle(-18);
@@ -356,7 +343,6 @@
         const f = this.npcFrameIndex();
         this._mugCup.x = this._npc.x + o.x;
         this._mugCup.y = this._npc.y + o.y;
-        // Tip toward the face she's looking at
         if (f >= 4 && f <= 7) this._mugCup.setAngle(-18);
         else if (f >= 8 && f <= 11) this._mugCup.setAngle(18);
         else this._mugCup.setAngle(0);
@@ -365,7 +351,6 @@
       this._holdFollow = setInterval(tick, 16);
     }
 
-    /** Keep prop glued to NPC hand while held (wall-clock interval). */
     followHand(prop, ox, oy, also = null) {
       this.stopFollow();
       const tick = () => {
@@ -386,6 +371,40 @@
       }
     }
 
+    stopDeskFx() {
+      if (this._deskFxTimer) {
+        try { clearInterval(this._deskFxTimer); } catch (_) {}
+        this._deskFxTimer = null;
+      }
+    }
+
+    /** Subtle sit-work: typing dots + tiny keyboard bob on the desk sprite. */
+    startDeskWork(label = 'Working…') {
+      this.stopDeskFx();
+      this._npc.anims.stop();
+      this._npc.setPosition(500, 272);
+      this._npc.setFrame(0);
+      this._npc.setCrop(0, 0, 32, 34);
+      this._npc.setDepth(8);
+
+      const dots = this.track(makeBubble(this, '…', 500, this._npc.y - 36, true));
+      let n = 0;
+      const gen = this._sceneGen;
+      const baseY = this._deskSetup.y;
+      this._deskFxTimer = setInterval(() => {
+        if (this._sceneGen !== gen) { this.stopDeskFx(); return; }
+        n = (n + 1) % 4;
+        dots.setText('.'.repeat(n || 1));
+        // 1px keyboard/desk bob — reads as typing without HUD
+        this._deskSetup.y = baseY + (n % 2);
+      }, 380);
+      this.track({ destroy: () => this.stopDeskFx() });
+
+      if (label) {
+        this.track(makeBubble(this, label, 500, this._npc.y - 52, true));
+      }
+    }
+
     tweenProp(targets, props, duration) {
       return new Promise((resolve) => {
         const start = {};
@@ -403,10 +422,8 @@
       });
     }
 
-    /** Spout tip in world space — handle-gripped left-facing can. */
     canSpoutWorld() {
       const ang = Phaser.Math.DegToRad(this._can.angle);
-      // Local spout offset from handle origin (spout is far left of the can art)
       const lx = -20;
       const ly = -3;
       const cos = Math.cos(ang);
@@ -457,19 +474,14 @@
       this._can.setDepth(20);
       this._can.setAngle(0);
       this._can.setScale(1.5);
-      // Grip centered on torso; when facing the plant, can sits in front of her
       this.followHand(this._can, 0, -16);
       if (!(await this.wait(350))) return false;
-      // Mild tip so the can body doesn't swing up beside her head
       await this.tweenProp(this._can, { angle: -28, scale: 1.6 }, 650);
       if (!this.alive(gen)) return false;
-      // Hold tipped while streaming so the pour reads clearly
       this.emitPourStream(plantX, plantY - 8, 16);
       if (!(await this.wait(1400))) return false;
-      // Empty after pour
       this._can.setTexture('can_empty');
       if (!(await this.wait(500))) return false;
-      // Untip
       await this.tweenProp(this._can, { angle: 0, scale: 1.5 }, 420);
       if (!(await this.wait(400))) return false;
       return true;
@@ -484,331 +496,109 @@
       else if (name === 'skill') await this.sceneSkill(gen);
       else if (name === 'board') await this.sceneBoard(gen);
       else if (name === 'ship') await this.sceneShip(gen);
-      else if (name === 'compare') await this.sceneCompare(gen);
       else if (name === 'water') await this.sceneWater(gen);
       else if (name === 'coffee') await this.sceneCoffee(gen);
       else if (name === 'loop') await this.sceneLoop(gen);
     }
 
-    /** Monitor code lines + cursor blink + keyboard key bounce while seated. */
-    startDeskCodingFx(deskX, deskY) {
-      const screen = this.track(this.add.container(deskX, deskY - 30));
-      const lines = [];
-      const colors = [0x86efac, 0x7dd3fc, 0xfde68a, 0xc4b5fd];
-      for (let i = 0; i < 4; i++) {
-        const ln = this.add.rectangle(-16 + (i % 2) * 2, -10 + i * 6, 28 - i * 3, 2, colors[i]).setOrigin(0, 0.5);
-        screen.add(ln);
-        lines.push(ln);
-      }
-      const cursor = this.add.rectangle(10, -10, 2, 5, 0xf8fafc).setOrigin(0, 0.5);
-      screen.add(cursor);
-      screen.setDepth(25);
-
-      const gen = this._sceneGen;
-      let tick = 0;
-      const timer = setInterval(() => {
-        if (this._sceneGen !== gen) { try { clearInterval(timer); } catch (_) {} return; }
-        tick += 1;
-        cursor.setAlpha(tick % 2 === 0 ? 1 : 0.15);
-        lines.forEach((ln, i) => {
-          ln.width = 18 + ((tick + i * 3) % 12);
-          ln.x = -16 + ((tick + i) % 3);
-        });
-        if (this._keyboard) {
-          this._keyboard.y = 246 + ((tick % 2) === 0 ? 0 : 1);
-          this._keyboard.setFillStyle((tick % 2) === 0 ? 0x3d4450 : 0x525a6a);
-        }
-        if (this._monitorGlow) {
-          this._monitorGlow.setAlpha(0.12 + (tick % 3) * 0.06);
-          this._monitorGlow.setFillStyle(tick % 4 === 0 ? 0x22d3ee : 0x4ade80);
-        }
-      }, 180);
-      this.track({ destroy: () => { try { clearInterval(timer); } catch (_) {} } });
-      return screen;
-    }
-
-    /** Research magnifier orbit + web arcs. */
-    castResearchSkill(x, y) {
-      const g = this.track(this.add.graphics().setDepth(30));
-      const lens = this.track(this.add.circle(x, y - 40, 10, 0x93c5fd, 0.35).setStrokeStyle(2, 0x38bdf8).setDepth(31));
-      const handle = this.track(this.add.rectangle(x + 10, y - 30, 12, 3, 0x64748b).setAngle(40).setDepth(31));
-      this.track(makeChip(this, 'run_skill · research', '#60a5fa', x, y - 78));
-      let t = 0;
-      const timer = setInterval(() => {
-        t += 1;
-        const a = t * 0.18;
-        lens.x = x + Math.cos(a) * 14;
-        lens.y = y - 42 + Math.sin(a) * 8;
-        handle.x = lens.x + 10;
-        handle.y = lens.y + 10;
-        g.clear();
-        g.lineStyle(1, 0x38bdf8, 0.55);
-        for (let i = 0; i < 3; i++) {
-          const r = 18 + i * 8 + (t % 6);
-          g.strokeCircle(x, y - 40, r);
-        }
-      }, 50);
-      this.track({ destroy: () => { try { clearInterval(timer); } catch (_) {} } });
-      return { lens, handle, g };
-    }
-
-    /** Coding-agent brackets + green/red diff flash. */
-    castCodingSkill(x, y) {
-      this.track(makeChip(this, 'run_skill · coding-agent', '#4ade80', x, y - 78));
-      const open = this.track(this.add.text(x - 22, y - 52, '{', {
-        fontSize: '28px', fontFamily: 'monospace', fontStyle: 'bold', color: '#4ade80',
-      }).setOrigin(0.5).setDepth(31));
-      const close = this.track(this.add.text(x + 22, y - 52, '}', {
-        fontSize: '28px', fontFamily: 'monospace', fontStyle: 'bold', color: '#4ade80',
-      }).setOrigin(0.5).setDepth(31));
-      const plus = this.track(this.add.text(x, y - 36, '+ draft', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#052e16',
-        backgroundColor: '#86efacdd', padding: { x: 4, y: 2 },
-      }).setOrigin(0.5).setDepth(32));
-      const minus = this.track(this.add.text(x, y - 20, '- buggy', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#450a0a',
-        backgroundColor: '#fca5a5dd', padding: { x: 4, y: 2 },
-      }).setOrigin(0.5).setDepth(32));
-      this.tweens.add({ targets: open, x: x - 28, yoyo: true, duration: 320, repeat: 6 });
-      this.tweens.add({ targets: close, x: x + 28, yoyo: true, duration: 320, repeat: 6 });
-      this.tweens.add({ targets: [plus, minus], alpha: 0.35, yoyo: true, duration: 240, repeat: 5 });
-      return { open, close, plus, minus };
-    }
-
-    /** Draw chalk strokes onto the whiteboard over time. */
-    async drawBoardStrokes(gen) {
-      const bx = this._board.x;
-      const by = this._board.y;
-      const strokes = [
-        { x1: -30, y1: -18, x2: 28, y2: -16, c: 0x0f172a },
-        { x1: -26, y1: -6, x2: 12, y2: -4, c: 0x0369a1 },
-        { x1: -22, y1: 6, x2: 24, y2: 8, c: 0xb45309 },
-        { x1: 10, y1: -20, x2: 10, y2: 18, c: 0x166534 },
-      ];
-      const g = this.track(this.add.graphics().setDepth(28));
-      for (const s of strokes) {
-        if (!this.alive(gen)) return;
-        g.lineStyle(3, s.c, 1);
-        g.beginPath();
-        g.moveTo(bx + s.x1, by + s.y1);
-        g.lineTo(bx + s.x2, by + s.y2);
-        g.strokePath();
-        // chalk dust
-        for (let i = 0; i < 3; i++) {
-          const d = this.track(this.add.circle(
-            bx + s.x2 + (Math.random() * 6 - 3),
-            by + s.y2 + (Math.random() * 4 - 2),
-            1.2, 0xcbd5e1, 0.7
-          ).setDepth(7));
-          this.tweens.add({ targets: d, alpha: 0, y: d.y + 6, duration: 500 });
-        }
-        if (!(await this.wait(380))) return;
-      }
-    }
-
-    async sceneCompare(gen) {
-      this.track(this.add.sprite(160, 300, 'abby', 12).setOrigin(0.5, 1).setScale(1.5).setDepth(10));
-      this.track(this.add.image(160, 230, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
-      this.track(makeEmote(this, '💧', 172, 248));
-      this.track(this.add.text(160, 330, 'BEFORE\nemoji only', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#f0c27a', align: 'center',
-      }).setOrigin(0.5, 0).setDepth(20));
-
-      this.track(this.add.rectangle(360, 210, 2, 260, 0x5a6a5a).setDepth(4));
-
-      const rightPlant = this.track(this.add.image(560, 210, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
-      this._npc.setPosition(560, 320);
-      this._npc.setFrame(0);
-      if (!(await this.walkTo(560, 250, 'walk_up', 900))) return;
-      if (!this.alive(gen)) return;
-      this._npc.setFrame(12);
-      await this.pourOntoPlant(rightPlant.x, rightPlant.y - 18, gen);
-      if (!this.alive(gen)) return;
-      this.track(makeEmote(this, '💦', this._npc.x + 10, this._npc.y - 54));
-      this.track(this.add.text(560, 330, 'AFTER\ntip + pour', {
-        fontSize: '12px', fontFamily: 'monospace', color: '#8fd6b5', align: 'center',
-      }).setOrigin(0.5, 0).setDepth(20));
-      if (!(await this.wait(900))) return;
-      this.stopFollow();
-      this._can.setVisible(false);
-    }
-
-    async sceneWater(gen) {
-      try { this._npc.setCrop(); } catch (_) {}
-      this._npc.setScale(1.5);
-      this._npc.clearTint();
-      // Start near plant, short walk in, then pour (prop tip is the point of the demo)
-      this._npc.setPosition(280, 240);
-      this._npc.setFrame(4);
-      this.track(makeChip(this, 'grabbing can…', '#67e8f9', 280, 180));
-      if (!(await this.walkTo(218, 228, 'walk_left', 500))) return;
-      if (!this.alive(gen)) return;
-      this._npc.setPosition(218, 228);
-      this._npc.setFrame(12);
-      this.track(makeChip(this, 'pouring…', '#7dd3fc', 218, 170));
-      // Hard-place can in her hands (handle grip) before async pour
-      this._can.setTexture('can_full');
-      this._can.setVisible(true);
-      this._can.setDepth(20);
-      this._can.setScale(1.55);
-      this._can.setAngle(0);
-      this._can.setPosition(this._npc.x + 0, this._npc.y - 16);
-      await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
-      if (!this.alive(gen)) return;
-      const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
-        fontSize: '11px', fontFamily: 'monospace', color: '#0c4a6e',
-        backgroundColor: '#f8fafcee', padding: { x: 6, y: 4 },
-      }).setOrigin(0.5, 1).setDepth(40));
-      if (!(await this.wait(1400))) return;
-      try { bubble.destroy(); } catch (_) {}
-      this.stopFollow();
-      this._can.setVisible(false);
-      if (!(await this.walkTo(420, 280, 'walk_right', 900))) return;
-      this._npc.setFrame(0);
-    }
-
     async sceneDesk(gen) {
       try { this._npc.setCrop(); } catch (_) {}
       this._npc.setScale(1.5);
-      this._npc.clearTint();
-      this._npc.setPosition(420, 280);
+      this._npc.setPosition(400, 290);
       this._npc.setFrame(8);
-      if (!(await this.walkTo(520, 268, 'walk_right', 900))) return;
+      if (!(await this.walkTo(500, 286, 'walk_right', 800))) return;
       if (!this.alive(gen)) return;
-
-      // Sit at desk — crop to torso like office sit pose
-      this._npc.anims.stop();
-      this._npc.setPosition(520, 248);
-      this._npc.setFrame(0);
-      this._npc.setCrop(0, 0, 32, 34);
-      this._npc.setDepth(8);
-
-      this.startDeskCodingFx(520, 250);
-      this.track(makeChip(this, 'Writing code', '#4ade80', 520, 168));
-      const term = this.track(this.add.text(548, 208, '$ ▍', {
-        fontSize: '10px', fontFamily: 'monospace', color: '#86efac',
-      }).setDepth(26));
-
-      if (!(await this.wait(1600))) return;
-      // Brief think / blocked beat
-      if (this._monitorGlow) this._monitorGlow.setFillStyle(0xfbbf24);
-      this.track(makeChip(this, 'thinking…', '#fbbf24', 520, 152));
-      term.setText('?');
-      term.setColor('#fde68a');
-      if (!(await this.wait(900))) return;
-      if (this._monitorGlow) this._monitorGlow.setFillStyle(0x4ade80);
-      term.setText('$ npm t');
-      term.setColor('#86efac');
-      this.track(makeChip(this, 'typing again', '#4ade80', 580, 168));
+      this.startDeskWork('Writing code');
+      if (!(await this.wait(1800))) return;
+      this.clearFx();
+      this.startDeskWork();
+      this.track(makeBubble(this, 'Hmm.', 500, this._npc.y - 52, true));
+      if (!(await this.wait(1000))) return;
+      this.clearFx();
+      this.startDeskWork('Back at it');
       if (!(await this.wait(1600))) return;
     }
 
     async sceneSkill(gen) {
       try { this._npc.setCrop(); } catch (_) {}
       this._npc.setScale(1.5);
-      this._npc.setPosition(200, 280);
-      this._npc.setFrame(0);
-
-      // Research cast on the left
-      this._npc.setPosition(240, 260);
-      this.castResearchSkill(240, 260);
-      const spin = this.track(this.add.text(240, 200, '⟳', {
-        fontSize: '18px', color: '#38bdf8',
-      }).setOrigin(0.5).setDepth(40));
-      this.tweens.add({ targets: spin, angle: 360, duration: 900, repeat: 2 });
+      this._npc.setPosition(400, 290);
+      if (!(await this.walkTo(500, 286, 'walk_right', 700))) return;
+      if (!this.alive(gen)) return;
+      this.startDeskWork();
+      this.track(makeBubble(this, 'Looking that up…', 500, this._npc.y - 52, true));
+      if (!(await this.wait(2000))) return;
+      if (!this.alive(gen)) return;
+      this.clearFx();
+      this.startDeskWork();
+      this.track(makeBubble(this, 'Drafting a fix…', 500, this._npc.y - 52, true));
       if (!(await this.wait(2200))) return;
-      if (!this.alive(gen)) return;
-      spin.setText('✓');
-      spin.setColor('#4ade80');
-      this.track(makeChip(this, 'sources found', '#60a5fa', 240, 168));
-      if (!(await this.wait(700))) return;
-
-      // Walk to desk and cast coding-agent
-      if (!(await this.walkTo(500, 268, 'walk_right', 1000))) return;
-      if (!this.alive(gen)) return;
-      this._npc.setFrame(0);
-      this._npc.setCrop(0, 0, 32, 34);
-      this._npc.setPosition(520, 248);
-      this.startDeskCodingFx(520, 250);
-      this.castCodingSkill(520, 248);
-      if (!(await this.wait(2400))) return;
-      this.track(makeChip(this, 'diff ready', '#4ade80', 520, 140));
-      if (!(await this.wait(900))) return;
+      this.track(makeBubble(this, 'Got it.', 500, this._npc.y - 68, false));
+      if (!(await this.wait(1000))) return;
     }
 
     async sceneBoard(gen) {
       try { this._npc.setCrop(); } catch (_) {}
       this._npc.setScale(1.5);
-      this._npc.setPosition(480, 280);
-      this._npc.setFrame(4);
-      if (!(await this.wait(200))) return;
-      if (!(await this.walkTo(340, 250, 'walk_left', 900))) return;
+      this._npc.setPosition(460, 290);
+      if (!(await this.walkTo(360, 258, 'walk_left', 800))) return;
       if (!this.alive(gen)) return;
       this._npc.anims.stop();
-      this._npc.setFrame(12); // face the board (up)
-      this.track(makeChip(this, 'whiteboard', '#fbbf24', 340, 150));
-      this.track(makeEmote(this, '✎', 358, 168));
-      // Marker in hand
-      const marker = this.track(this.add.rectangle(this._npc.x - 4, this._npc.y - 28, 3, 10, 0x0f172a).setDepth(20));
-      this.followHand(marker, -4, -28);
-      await this.drawBoardStrokes(gen);
-      if (!this.alive(gen)) return;
-      this.stopFollow();
-      marker.setVisible(false);
-      this.track(makeChip(this, 'plan sketched', '#fbbf24', 340, 134));
-      if (!(await this.wait(1200))) return;
+      this._npc.setFrame(12);
+      this.track(makeBubble(this, 'Sketching this out…', 360, this._npc.y - 48, true));
+      // Soft pulse on the board — pack art already has the chart
+      this.tweens.add({
+        targets: this._board,
+        scale: 1.36,
+        duration: 220,
+        yoyo: true,
+        repeat: 1,
+      });
+      if (!(await this.wait(900))) return;
+      this.track(makeBubble(this, 'Okay — plan’s up.', 360, this._npc.y - 48, false));
+      if (!(await this.wait(1600))) return;
     }
 
     async sceneShip(gen) {
       try { this._npc.setCrop(); } catch (_) {}
       this._npc.setScale(1.5);
-      this._npc.setPosition(520, 248);
-      this._npc.setFrame(0);
-      this._npc.setCrop(0, 0, 32, 34);
-      this.startDeskCodingFx(520, 250);
-      this.track(makeChip(this, 'taskPhase · finishing', '#22d3ee', 520, 160));
+      this.startDeskWork();
       if (!(await this.wait(900))) return;
       if (!this.alive(gen)) return;
+      this.clearFx();
+      this._npc.setPosition(500, 272);
+      this._npc.setFrame(0);
+      this._npc.setCrop(0, 0, 32, 34);
+      this._npc.setDepth(8);
+      this.track(makeEmote(this, '✓', 512, this._npc.y - 40));
+      this.track(makeBubble(this, 'Done.', 500, this._npc.y - 56, false));
+      if (!(await this.wait(2000))) return;
+    }
 
-      // Artifact flies up from desk
-      const doc = this.track(this.add.rectangle(520, 230, 16, 20, 0xf8fafc).setDepth(40));
-      this.track(this.add.rectangle(520, 224, 10, 2, 0x94a3b8).setDepth(41));
-      this.track(this.add.rectangle(520, 230, 10, 2, 0x94a3b8).setDepth(41));
-      this.tweens.add({
-        targets: doc,
-        y: 140,
-        scaleX: 1.4,
-        scaleY: 1.4,
-        duration: 700,
-        ease: 'Cubic.easeOut',
-      });
-      if (!(await this.wait(750))) return;
-
-      const badge = this.track(this.add.text(520, 120, 'shipped ✓', {
-        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
-        color: '#052e16', backgroundColor: '#4ade80ee', padding: { x: 10, y: 5 },
-      }).setOrigin(0.5).setDepth(50).setAlpha(0));
-      this.tweens.add({ targets: badge, alpha: 1, y: 110, duration: 280, ease: 'Back.easeOut' });
-
-      // Subtle celebrate particles
-      for (let i = 0; i < 10; i++) {
-        const p = this.track(this.add.circle(
-          520 + (Math.random() * 40 - 20),
-          130,
-          2,
-          [0x4ade80, 0x22d3ee, 0xfbbf24][i % 3],
-          0.9
-        ).setDepth(45));
-        this.tweens.add({
-          targets: p,
-          x: p.x + (Math.random() * 60 - 30),
-          y: p.y - 20 - Math.random() * 30,
-          alpha: 0,
-          duration: 700 + Math.random() * 400,
-        });
-      }
-      this.track(makeChip(this, 'PR #42 merged', '#86efac', 520, 168));
-      if (!(await this.wait(2200))) return;
+    async sceneWater(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.clearTint();
+      this._npc.setPosition(280, 240);
+      this._npc.setFrame(4);
+      if (!(await this.walkTo(218, 228, 'walk_left', 500))) return;
+      if (!this.alive(gen)) return;
+      this._npc.setPosition(218, 228);
+      this._npc.setFrame(12);
+      this._can.setTexture('can_full');
+      this._can.setVisible(true);
+      this._can.setDepth(20);
+      this._can.setScale(1.55);
+      this._can.setAngle(0);
+      this._can.setPosition(this._npc.x, this._npc.y - 16);
+      await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
+      if (!this.alive(gen)) return;
+      this.track(makeBubble(this, 'Looking healthy.', this._npc.x, this._npc.y - 56, false));
+      if (!(await this.wait(1400))) return;
+      this.stopFollow();
+      this._can.setVisible(false);
+      if (!(await this.walkTo(400, 290, 'walk_right', 900))) return;
+      this._npc.setFrame(0);
     }
 
     async sceneCoffee(gen) {
@@ -818,45 +608,42 @@
       this._mug.setVisible(false);
       try { this._mug.setCrop(); } catch (_) {}
       this._mug.setOrigin(0.5, 1);
-      if (!(await this.walkTo(158, 308, 'walk_left', 1100))) return;
+      if (!(await this.walkTo(188, 308, 'walk_left', 1000))) return;
       if (!this.alive(gen)) return;
-      this._npc.setFrame(4); // face the machine (left)
+      this._npc.setFrame(4);
 
-      this.track(makeChip(this, 'brewing…', '#fbbf24', this._machine.x, this._machine.y - 36));
+      this.track(makeBubble(this, 'One sec…', this._npc.x, this._npc.y - 52, true));
       await new Promise((resolve) => {
         this.tweens.add({
           targets: this._machine,
-          scale: 2.55,
-          duration: 180,
+          scale: 1.95,
+          duration: 160,
           yoyo: true,
-          repeat: 3,
+          repeat: 2,
           onComplete: resolve,
         });
       });
       if (!this.alive(gen)) return;
 
-      // Full steaming mug on the machine first
+      // Mug appears at the machine, then she takes it to her mouth
       this._mug.setCrop();
       this._mug.setOrigin(0.5, 1);
-      this._mug.setPosition(this._machine.x + 2, this._machine.y - 14);
+      this._mug.setPosition(this._machine.x + 2, this._machine.y - 22);
       this._mug.setVisible(true);
-      this._mug.setScale(1.35);
+      this._mug.setScale(1.2);
       this._mug.setDepth(20);
       this._mug.anims.play('mug_steam', true);
       if (!(await this.wait(700))) return;
 
-      // Sip pose: cropped cup glued to her mouth (facing left toward machine)
       try { this._npc.anims.stop(); } catch (_) {}
       this._npc.setFrame(4);
       this.holdMugAtMouth();
-      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 72));
-      // Hold the mouth pose long enough to read clearly
+      this.track(makeBubble(this, 'Coffee.', this._npc.x, this._npc.y - 56, false));
       if (!(await this.wait(2800))) return;
 
-      // Walk away still holding cup at mouth (offset tracks facing)
-      if (!(await this.walkTo(420, 280, 'walk_right', 1400))) return;
+      if (!(await this.walkTo(400, 290, 'walk_right', 1200))) return;
       this._npc.setFrame(0);
-      if (!(await this.wait(1000))) return;
+      if (!(await this.wait(800))) return;
     }
 
     async sceneLoop(gen) {
@@ -888,18 +675,17 @@
     backgroundColor: '#2d3f2f',
     scene: [MockScene],
     pixelArt: true,
-    scale: { mode: Phaser.Scale.NONE },
+    antialias: false,
+    roundPixels: true,
   });
   window.__game = game;
 
   document.querySelectorAll('button[data-scene]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const key = btn.dataset.scene;
-      setCaption(key);
-      if (api) api.play(key);
+      if (!api) return;
+      api.play(btn.dataset.scene);
     });
   });
-
 })();
 </script>
 </body>
