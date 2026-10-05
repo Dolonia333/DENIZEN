@@ -212,8 +212,8 @@
         try { o.destroy(); } catch (_) {}
       }
       this._cleanup = [];
-      this.tweens.killAll();
-      this.time.removeAllEvents();
+      // Kill tweens only — do NOT removeAllEvents (that aborts in-flight walks).
+      try { this.tweens.killAll(); } catch (_) {}
       if (this._holdFollow) {
         try { this._holdFollow.remove(false); } catch (_) {}
         this._holdFollow = null;
@@ -252,18 +252,35 @@
       return this._sceneGen === gen && this._playing != null;
     }
 
+    /** Time-based walk (avoids Phaser tween kill races with clearFx). */
     walkTo(x, y, anim, ms = 1400) {
       const gen = this._sceneGen;
+      const sprite = this._npc;
+      const x0 = sprite.x;
+      const y0 = sprite.y;
+      try { sprite.anims.play(anim, true); } catch (_) {}
       return new Promise((resolve) => {
-        this._npc.anims.play(anim, true);
-        this.tweens.add({
-          targets: this._npc,
-          x, y,
-          duration: ms,
-          ease: 'Linear',
-          onComplete: () => {
-            this._npc.anims.stop();
-            resolve(this._sceneGen === gen);
+        const start = this.time.now;
+        const ev = this.time.addEvent({
+          delay: 16,
+          loop: true,
+          callback: () => {
+            if (this._sceneGen !== gen) {
+              try { ev.remove(false); } catch (_) {}
+              try { sprite.anims.stop(); } catch (_) {}
+              resolve(false);
+              return;
+            }
+            const t = Math.min(1, (this.time.now - start) / ms);
+            sprite.x = x0 + (x - x0) * t;
+            sprite.y = y0 + (y - y0) * t;
+            if (t >= 1) {
+              try { ev.remove(false); } catch (_) {}
+              try { sprite.anims.stop(); } catch (_) {}
+              sprite.x = x;
+              sprite.y = y;
+              resolve(true);
+            }
           },
         });
       });
@@ -271,11 +288,32 @@
 
     walkSprite(sprite, x, y, anim, ms) {
       const gen = this._sceneGen;
+      const x0 = sprite.x;
+      const y0 = sprite.y;
+      try { sprite.anims.play(anim, true); } catch (_) {}
       return new Promise((resolve) => {
-        sprite.anims.play(anim, true);
-        this.tweens.add({
-          targets: sprite, x, y, duration: ms, ease: 'Linear',
-          onComplete: () => { sprite.anims.stop(); resolve(this._sceneGen === gen); },
+        const start = this.time.now;
+        const ev = this.time.addEvent({
+          delay: 16,
+          loop: true,
+          callback: () => {
+            if (this._sceneGen !== gen) {
+              try { ev.remove(false); } catch (_) {}
+              try { sprite.anims.stop(); } catch (_) {}
+              resolve(false);
+              return;
+            }
+            const t = Math.min(1, (this.time.now - start) / ms);
+            sprite.x = x0 + (x - x0) * t;
+            sprite.y = y0 + (y - y0) * t;
+            if (t >= 1) {
+              try { ev.remove(false); } catch (_) {}
+              try { sprite.anims.stop(); } catch (_) {}
+              sprite.x = x;
+              sprite.y = y;
+              resolve(true);
+            }
+          },
         });
       });
     }
@@ -432,10 +470,15 @@
     }
 
     async sceneWater(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
       this._npc.setPosition(420, 300);
+      this._npc.setFrame(0);
+      this.track(makeChip(this, 'heading to plant…', '#67e8f9', 420, 240));
       if (!(await this.walkTo(232, 236, 'walk_left', 1200))) return;
       if (!this.alive(gen)) return;
       this._npc.setFrame(12);
+      this.track(makeChip(this, 'pouring…', '#7dd3fc', this._npc.x, this._npc.y - 58));
       await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
       if (!this.alive(gen)) return;
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
