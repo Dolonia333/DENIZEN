@@ -131,6 +131,7 @@
       this._mug = null;
       this._playing = null;
       this._holdFollow = null;
+      this._sceneGen = 0;
     }
 
     preload() {
@@ -201,7 +202,9 @@
 
       api = { play: (name) => this.playScene(name) };
       window.__npcAnimMock = api;
-      this.playScene('compare');
+      // Default: plant pour (clearest prop demo). Auto loop is opt-in.
+      setCaption('water');
+      this.playScene('water');
     }
 
     clearFx() {
@@ -237,10 +240,16 @@
     }
 
     wait(ms) {
-      return new Promise((r) => this.time.delayedCall(ms, r));
+      const gen = this._sceneGen;
+      return new Promise((r) => this.time.delayedCall(ms, () => r(this._sceneGen === gen)));
+    }
+
+    alive(gen) {
+      return this._sceneGen === gen && this._playing != null;
     }
 
     walkTo(x, y, anim, ms = 1400) {
+      const gen = this._sceneGen;
       return new Promise((resolve) => {
         this._npc.anims.play(anim, true);
         this.tweens.add({
@@ -250,18 +259,19 @@
           ease: 'Linear',
           onComplete: () => {
             this._npc.anims.stop();
-            resolve();
+            resolve(this._sceneGen === gen);
           },
         });
       });
     }
 
     walkSprite(sprite, x, y, anim, ms) {
+      const gen = this._sceneGen;
       return new Promise((resolve) => {
         sprite.anims.play(anim, true);
         this.tweens.add({
           targets: sprite, x, y, duration: ms, ease: 'Linear',
-          onComplete: () => { sprite.anims.stop(); resolve(); },
+          onComplete: () => { sprite.anims.stop(); resolve(this._sceneGen === gen); },
         });
       });
     }
@@ -338,13 +348,14 @@
       }
     }
 
-    async pourOntoPlant(plantX, plantY) {
+    async pourOntoPlant(plantX, plantY, gen) {
+      if (!this.alive(gen)) return false;
       this._can.setTexture('can_full');
       this._can.setVisible(true);
       this._can.setAngle(0);
       this._can.setScale(1.8);
       this.followHand(this._can, -14, -28);
-      await this.wait(350);
+      if (!(await this.wait(350))) return false;
       // Tip spout toward plant (counter-clockwise — spout on left)
       await new Promise((resolve) => {
         this.tweens.add({
@@ -356,12 +367,13 @@
           onComplete: resolve,
         });
       });
+      if (!this.alive(gen)) return false;
       // Hold tipped while streaming so the pour reads clearly
       this.emitPourStream(plantX, plantY - 8, 16);
-      await this.wait(1400);
+      if (!(await this.wait(1400))) return false;
       // Empty after pour
       this._can.setTexture('can_empty');
-      await this.wait(500);
+      if (!(await this.wait(500))) return false;
       // Untip
       await new Promise((resolve) => {
         this.tweens.add({
@@ -373,21 +385,23 @@
           onComplete: resolve,
         });
       });
-      await this.wait(400);
+      if (!(await this.wait(400))) return false;
+      return true;
     }
 
     async playScene(name) {
+      const gen = (this._sceneGen = (this._sceneGen || 0) + 1);
       this._playing = name;
       this.clearFx();
-      if (name === 'compare') await this.sceneCompare();
-      else if (name === 'water') await this.sceneWater();
-      else if (name === 'work') await this.sceneWork();
-      else if (name === 'coffee') await this.sceneCoffee();
-      else if (name === 'loop') await this.sceneLoop();
+      if (name === 'compare') await this.sceneCompare(gen);
+      else if (name === 'water') await this.sceneWater(gen);
+      else if (name === 'work') await this.sceneWork(gen);
+      else if (name === 'coffee') await this.sceneCoffee(gen);
+      else if (name === 'loop') await this.sceneLoop(gen);
     }
 
-    async sceneCompare() {
-      const leftNpc = this.track(this.add.sprite(160, 300, 'abby', 12).setOrigin(0.5, 1).setScale(1.5).setDepth(10));
+    async sceneCompare(gen) {
+      this.track(this.add.sprite(160, 300, 'abby', 12).setOrigin(0.5, 1).setScale(1.5).setDepth(10));
       this.track(this.add.image(160, 230, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
       this.track(makeEmote(this, '💧', 172, 248));
       this.track(this.add.text(160, 330, 'BEFORE\nemoji only', {
@@ -399,36 +413,40 @@
       const rightPlant = this.track(this.add.image(560, 210, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
       this._npc.setPosition(560, 320);
       this._npc.setFrame(0);
-      await this.walkTo(560, 250, 'walk_up', 900);
+      if (!(await this.walkTo(560, 250, 'walk_up', 900))) return;
+      if (!this.alive(gen)) return;
       this._npc.setFrame(12);
-      await this.pourOntoPlant(rightPlant.x, rightPlant.y - 18);
+      await this.pourOntoPlant(rightPlant.x, rightPlant.y - 18, gen);
+      if (!this.alive(gen)) return;
       this.track(makeEmote(this, '💦', this._npc.x + 10, this._npc.y - 54));
       this.track(this.add.text(560, 330, 'AFTER\ntip + pour', {
         fontSize: '12px', fontFamily: 'monospace', color: '#8fd6b5', align: 'center',
       }).setOrigin(0.5, 0).setDepth(20));
-      await this.wait(900);
+      if (!(await this.wait(900))) return;
       this.stopFollow();
       this._can.setVisible(false);
     }
 
-    async sceneWater() {
+    async sceneWater(gen) {
       this._npc.setPosition(420, 300);
-      await this.walkTo(232, 236, 'walk_left', 1200);
+      if (!(await this.walkTo(232, 236, 'walk_left', 1200))) return;
+      if (!this.alive(gen)) return;
       this._npc.setFrame(12);
-      await this.pourOntoPlant(this._plant.x, this._plant.y - 18);
+      await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
+      if (!this.alive(gen)) return;
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
         fontSize: '11px', fontFamily: 'monospace', color: '#0c4a6e',
         backgroundColor: '#f8fafcee', padding: { x: 6, y: 4 },
       }).setOrigin(0.5, 1).setDepth(40));
-      await this.wait(1400);
-      bubble.destroy();
+      if (!(await this.wait(1400))) return;
+      try { bubble.destroy(); } catch (_) {}
       this.stopFollow();
       this._can.setVisible(false);
-      await this.walkTo(500, 260, 'walk_right', 1100);
+      if (!(await this.walkTo(500, 260, 'walk_right', 1100))) return;
       this._npc.setFrame(0);
     }
 
-    async sceneWork() {
+    async sceneWork(gen) {
       const rob = this.track(this.add.sprite(300, 280, 'abby', 0).setOrigin(0.5, 1).setScale(1.5).setDepth(10).setTint(0xc8e0ff));
       this._npc.setPosition(520, 248);
       this._npc.setFrame(0);
@@ -437,7 +455,8 @@
       this.track(makeChip(this, 'Writing code', '#4ade80', 520, 198));
       this.track(makeChip(this, 'Reading', '#60a5fa', 300, 228));
 
-      await this.walkSprite(rob, 380, 250, 'walk_right', 900);
+      if (!(await this.walkSprite(rob, 380, 250, 'walk_right', 900))) return;
+      if (!this.alive(gen)) return;
       rob.setFrame(0);
       this.track(makeChip(this, '$ terminal', '#22d3ee', 380, 198));
       this.track(makeEmote(this, '$', 396, 188));
@@ -457,11 +476,12 @@
       await this.wait(2800);
     }
 
-    async sceneCoffee() {
+    async sceneCoffee(gen) {
       this._npc.setPosition(360, 300);
       // Mug starts hidden — brew first
       this._mug.setVisible(false);
-      await this.walkTo(158, 308, 'walk_left', 1100);
+      if (!(await this.walkTo(158, 308, 'walk_left', 1100))) return;
+      if (!this.alive(gen)) return;
       this._npc.setFrame(4);
 
       // Brew pulse on machine
@@ -476,65 +496,57 @@
           onComplete: resolve,
         });
       });
+      if (!this.alive(gen)) return;
 
-      // Mug appears on machine, steam starts
+      // Mug appears on machine, steam starts — scale up so pickup reads clearly
       this._mug.setPosition(this._machine.x + 2, this._machine.y - 14);
       this._mug.setVisible(true);
-      this._mug.setScale(1.2);
+      this._mug.setScale(1.8);
+      this._mug.setDepth(20);
       this._mug.anims.play('mug_steam', true);
-      await this.wait(450);
+      if (!(await this.wait(600))) return;
 
       // Reach / pick up — mug arcs into hand
       await new Promise((resolve) => {
         this.tweens.add({
           targets: this._mug,
-          x: this._npc.x - 10,
-          y: this._npc.y - 28,
-          scale: 1.45,
-          duration: 420,
+          x: this._npc.x - 12,
+          y: this._npc.y - 30,
+          scale: 2.0,
+          duration: 480,
           ease: 'Back.easeOut',
           onComplete: resolve,
         });
       });
-      this.followHand(this._mug, -10, -28);
-      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 58));
+      if (!this.alive(gen)) return;
+      this.followHand(this._mug, -12, -30);
+      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 62));
 
-      // Sip bob
-      await new Promise((resolve) => {
-        this.tweens.add({
-          targets: this._mug,
-          y: this._npc.y - 34,
-          duration: 220,
-          yoyo: true,
-          ease: 'Sine.easeInOut',
-          onComplete: resolve,
-        });
-      });
+      if (!(await this.wait(500))) return;
 
       // Walk away still holding steaming mug
-      const walk = this.walkTo(420, 280, 'walk_right', 1400);
-      // Keep mug steaming while walking (followHand already running)
-      await walk;
+      if (!(await this.walkTo(420, 280, 'walk_right', 1400))) return;
       this._npc.setFrame(0);
-      await this.wait(900);
+      await this.wait(1200);
     }
 
-    async sceneLoop() {
+    async sceneLoop(gen) {
       const order = ['compare', 'water', 'work', 'coffee'];
       for (const key of order) {
-        if (this._playing !== 'loop') return;
+        if (!this.alive(gen) || this._playing !== 'loop') return;
         setCaption('loop');
         document.getElementById('caption').innerHTML =
           CAPTIONS.loop + ' · now: <strong>' + key + '</strong>';
+        // Bump gen only via clearFx path — keep same loop gen, but reset fx carefully
         this.clearFx();
-        if (key === 'compare') await this.sceneCompare();
-        else if (key === 'water') await this.sceneWater();
-        else if (key === 'work') await this.sceneWork();
-        else if (key === 'coffee') await this.sceneCoffee();
-        await this.wait(700);
-        if (this._playing !== 'loop') return;
+        if (key === 'compare') await this.sceneCompare(gen);
+        else if (key === 'water') await this.sceneWater(gen);
+        else if (key === 'work') await this.sceneWork(gen);
+        else if (key === 'coffee') await this.sceneCoffee(gen);
+        if (!this.alive(gen) || this._playing !== 'loop') return;
+        if (!(await this.wait(700))) return;
       }
-      if (this._playing === 'loop') this.playScene('loop');
+      if (this.alive(gen) && this._playing === 'loop') this.playScene('loop');
     }
   }
 
@@ -558,12 +570,6 @@
     });
   });
 
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      setCaption('loop');
-      if (api) api.play('loop');
-    }, 600);
-  });
 })();
 </script>
 </body>
