@@ -191,7 +191,7 @@
         fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
       }).setOrigin(0.5, 0).setDepth(6);
 
-      this._mug = this.add.sprite(120, 286, 'mug', 0).setOrigin(0.5, 1).setDepth(8).setScale(1.4).setVisible(false);
+      this._mug = this.add.sprite(120, 286, 'mug', 0).setOrigin(0.5, 0.72).setDepth(8).setScale(1.4).setVisible(false);
 
       this._npc = this.add.sprite(420, 280, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
       // Origin near the handle (right side) so the can body sits in her hands, spout out front
@@ -386,8 +386,8 @@
       this._can.setDepth(20);
       this._can.setAngle(0);
       this._can.setScale(1.55);
-      // Hands / mid-torso — not out on the left shoulder
-      this.followHand(this._can, -2, -20);
+      // Hands / mid-torso in front of her — spout reaches the plant when tipped
+      this.followHand(this._can, 2, -18);
       if (!(await this.wait(350))) return false;
       // Tip spout toward plant (milder tip so it stays in her hands)
       await this.tweenProp(this._can, { angle: -42, scale: 1.7 }, 650);
@@ -447,21 +447,21 @@
       this._npc.setScale(1.5);
       this._npc.clearTint();
       // Start near plant, short walk in, then pour (prop tip is the point of the demo)
-      this._npc.setPosition(320, 250);
+      this._npc.setPosition(280, 240);
       this._npc.setFrame(4);
-      this.track(makeChip(this, 'grabbing can…', '#67e8f9', 320, 190));
-      if (!(await this.walkTo(232, 236, 'walk_left', 700))) return;
+      this.track(makeChip(this, 'grabbing can…', '#67e8f9', 280, 180));
+      if (!(await this.walkTo(218, 228, 'walk_left', 500))) return;
       if (!this.alive(gen)) return;
-      this._npc.setPosition(232, 236);
+      this._npc.setPosition(218, 228);
       this._npc.setFrame(12);
-      this.track(makeChip(this, 'pouring…', '#7dd3fc', 232, 178));
+      this.track(makeChip(this, 'pouring…', '#7dd3fc', 218, 170));
       // Hard-place can in her hands (handle grip) before async pour
       this._can.setTexture('can_full');
       this._can.setVisible(true);
       this._can.setDepth(20);
       this._can.setScale(1.55);
       this._can.setAngle(0);
-      this._can.setPosition(this._npc.x - 2, this._npc.y - 20);
+      this._can.setPosition(this._npc.x + 2, this._npc.y - 18);
       await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
       if (!this.alive(gen)) return;
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
@@ -536,14 +536,14 @@
       this._mug.anims.play('mug_steam', true);
       if (!(await this.wait(600))) return;
 
-      // Lift to mouth — facing left, mug sits just in front of her face
+      // Lift to mouth — mug body origin sits on her face, not floating above hair
       await this.tweenProp(this._mug, {
-        x: this._npc.x - 2,
-        y: this._npc.y - 46,
-        scale: 1.3,
+        x: this._npc.x + 1,
+        y: this._npc.y - 38,
+        scale: 1.15,
       }, 480);
       if (!this.alive(gen)) return;
-      this.followHand(this._mug, -2, -46);
+      this.followHand(this._mug, 1, -38);
       this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 62));
 
       if (!(await this.wait(500))) return;
