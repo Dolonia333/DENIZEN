@@ -61,17 +61,19 @@
   <h1>NPC work anim mock</h1>
   <div class="caption" id="caption"><strong>Booting…</strong></div>
   <div class="btns">
-    <button type="button" data-scene="compare" class="active">1 · Before / after water</button>
-    <button type="button" data-scene="water">2 · Pour plant</button>
-    <button type="button" data-scene="work">3 · Work chips</button>
-    <button type="button" data-scene="coffee">4 · Pick up coffee</button>
+    <button type="button" data-scene="desk" class="active">1 · Desk coding</button>
+    <button type="button" data-scene="skill">2 · run_skill</button>
+    <button type="button" data-scene="board">3 · Whiteboard</button>
+    <button type="button" data-scene="ship">4 · Ship / done</button>
+    <button type="button" data-scene="water">5 · Pour plant</button>
+    <button type="button" data-scene="coffee">6 · Coffee</button>
     <button type="button" data-scene="loop">▶ Auto loop</button>
   </div>
 </header>
 <div id="stage-wrap"><div id="game-host"></div></div>
 <footer>
-  Uses LimeZu garden watering can (tip + stream) and LimeZu steaming mug + modern-office coffee machine.
-  Demo only — press scenes or leave on Auto loop.
+  Work-visibility mock — desk coding, skill casts, whiteboard strokes, ship beat;
+  plus LimeZu pour / coffee props. Press a scene or leave on Auto loop.
 </footer>
 
 <script src="/vendor/phaser/phaser.min.js"></script>
@@ -79,11 +81,14 @@
 (() => {
   const W = 720, H = 420;
   const CAPTIONS = {
-    compare: '<strong>Before vs after</strong> — left: emoji-only 💧. Right: tip can + pour stream.',
-    water: '<strong>Plant pour</strong> — walk up, lift LimeZu can, tip spout, stream into soil, empty can.',
-    work: '<strong>Work chips</strong> — same XP body, clearer job labels for code / research / terminal.',
-    coffee: '<strong>Coffee pickup</strong> — brew at machine, lift steaming LimeZu mug, walk away holding it.',
-    loop: '<strong>Auto loop</strong> — cycling all mock scenes.',
+    desk: '<strong>Desk coding</strong> — sit, keyboard bounce, monitor glow + blinking cursor (not just a chip).',
+    skill: '<strong>run_skill</strong> — research (magnifier) vs coding-agent (brackets/diff), then resolve.',
+    board: '<strong>Whiteboard</strong> — walk up and chalk strokes appear on the board.',
+    ship: '<strong>Ship / done</strong> — taskPhase finished: artifact flies up + shipped check.',
+    water: '<strong>Plant pour</strong> — tip LimeZu can + stream into soil.',
+    coffee: '<strong>Coffee pickup</strong> — brew, then sip with cup on her mouth.',
+    compare: '<strong>Before vs after</strong> — emoji-only vs tip + pour.',
+    loop: '<strong>Auto loop</strong> — desk → skill → board → ship → pour → coffee.',
   };
 
   let api = null;
@@ -154,7 +159,17 @@
       for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
 
       this._desk = this.add.rectangle(520, 250, 90, 48, 0x6b5344).setDepth(2);
-      this.add.rectangle(520, 228, 70, 10, 0x89a4b8).setDepth(3);
+      this._monitor = this.add.rectangle(520, 220, 54, 36, 0x1a2332).setDepth(3);
+      this._monitorBezel = this.add.rectangle(520, 220, 60, 42, 0x2a3544).setDepth(2.5);
+      this._monitorGlow = this.add.rectangle(520, 220, 48, 30, 0x4ade80).setDepth(3.5).setAlpha(0.15);
+      this._keyboard = this.add.rectangle(520, 246, 44, 10, 0x3d4450).setDepth(4);
+
+      // Whiteboard / cork board (center-left)
+      this._board = this.add.rectangle(340, 200, 88, 64, 0xf4f1e8).setDepth(3);
+      this.add.rectangle(340, 200, 92, 68, 0x8b7355).setDepth(2.5);
+      this.add.text(340, 238, 'whiteboard', {
+        fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
+      }).setOrigin(0.5, 0).setDepth(5);
 
       this._plant = this.add.image(200, 210, 'plant').setOrigin(0.5, 1).setDepth(5).setScale(1.4);
       this.add.text(200, 220, 'office plant', {
@@ -207,8 +222,8 @@
       api = { play: (name) => this.playScene(name) };
       window.__npcAnimMock = api;
       // Do not auto-play — avoids double-start races with button clicks / refresh.
-      setCaption('water');
-      setTimeout(() => { if (this._sceneGen === 0) this.playScene('water'); }, 400);
+      setCaption('desk');
+      setTimeout(() => { if (this._sceneGen === 0) this.playScene('desk'); }, 400);
     }
 
     clearFx() {
@@ -463,12 +478,132 @@
     async playScene(name) {
       const gen = (this._sceneGen = (this._sceneGen || 0) + 1);
       this._playing = name;
+      if (name !== 'loop') setCaption(name === 'work' ? 'desk' : name);
       this.clearFx();
-      if (name === 'compare') await this.sceneCompare(gen);
+      if (name === 'desk' || name === 'work') await this.sceneDesk(gen);
+      else if (name === 'skill') await this.sceneSkill(gen);
+      else if (name === 'board') await this.sceneBoard(gen);
+      else if (name === 'ship') await this.sceneShip(gen);
+      else if (name === 'compare') await this.sceneCompare(gen);
       else if (name === 'water') await this.sceneWater(gen);
-      else if (name === 'work') await this.sceneWork(gen);
       else if (name === 'coffee') await this.sceneCoffee(gen);
       else if (name === 'loop') await this.sceneLoop(gen);
+    }
+
+    /** Monitor code lines + cursor blink + keyboard key bounce while seated. */
+    startDeskCodingFx(deskX, deskY) {
+      const screen = this.track(this.add.container(deskX, deskY - 30));
+      const lines = [];
+      const colors = [0x86efac, 0x7dd3fc, 0xfde68a, 0xc4b5fd];
+      for (let i = 0; i < 4; i++) {
+        const ln = this.add.rectangle(-16 + (i % 2) * 2, -10 + i * 6, 28 - i * 3, 2, colors[i]).setOrigin(0, 0.5);
+        screen.add(ln);
+        lines.push(ln);
+      }
+      const cursor = this.add.rectangle(10, -10, 2, 5, 0xf8fafc).setOrigin(0, 0.5);
+      screen.add(cursor);
+      screen.setDepth(25);
+
+      const gen = this._sceneGen;
+      let tick = 0;
+      const timer = setInterval(() => {
+        if (this._sceneGen !== gen) { try { clearInterval(timer); } catch (_) {} return; }
+        tick += 1;
+        cursor.setAlpha(tick % 2 === 0 ? 1 : 0.15);
+        lines.forEach((ln, i) => {
+          ln.width = 18 + ((tick + i * 3) % 12);
+          ln.x = -16 + ((tick + i) % 3);
+        });
+        if (this._keyboard) {
+          this._keyboard.y = 246 + ((tick % 2) === 0 ? 0 : 1);
+          this._keyboard.setFillStyle((tick % 2) === 0 ? 0x3d4450 : 0x525a6a);
+        }
+        if (this._monitorGlow) {
+          this._monitorGlow.setAlpha(0.12 + (tick % 3) * 0.06);
+          this._monitorGlow.setFillStyle(tick % 4 === 0 ? 0x22d3ee : 0x4ade80);
+        }
+      }, 180);
+      this.track({ destroy: () => { try { clearInterval(timer); } catch (_) {} } });
+      return screen;
+    }
+
+    /** Research magnifier orbit + web arcs. */
+    castResearchSkill(x, y) {
+      const g = this.track(this.add.graphics().setDepth(30));
+      const lens = this.track(this.add.circle(x, y - 40, 10, 0x93c5fd, 0.35).setStrokeStyle(2, 0x38bdf8).setDepth(31));
+      const handle = this.track(this.add.rectangle(x + 10, y - 30, 12, 3, 0x64748b).setAngle(40).setDepth(31));
+      this.track(makeChip(this, 'run_skill · research', '#60a5fa', x, y - 78));
+      let t = 0;
+      const timer = setInterval(() => {
+        t += 1;
+        const a = t * 0.18;
+        lens.x = x + Math.cos(a) * 14;
+        lens.y = y - 42 + Math.sin(a) * 8;
+        handle.x = lens.x + 10;
+        handle.y = lens.y + 10;
+        g.clear();
+        g.lineStyle(1, 0x38bdf8, 0.55);
+        for (let i = 0; i < 3; i++) {
+          const r = 18 + i * 8 + (t % 6);
+          g.strokeCircle(x, y - 40, r);
+        }
+      }, 50);
+      this.track({ destroy: () => { try { clearInterval(timer); } catch (_) {} } });
+      return { lens, handle, g };
+    }
+
+    /** Coding-agent brackets + green/red diff flash. */
+    castCodingSkill(x, y) {
+      this.track(makeChip(this, 'run_skill · coding-agent', '#4ade80', x, y - 78));
+      const open = this.track(this.add.text(x - 22, y - 52, '{', {
+        fontSize: '28px', fontFamily: 'monospace', fontStyle: 'bold', color: '#4ade80',
+      }).setOrigin(0.5).setDepth(31));
+      const close = this.track(this.add.text(x + 22, y - 52, '}', {
+        fontSize: '28px', fontFamily: 'monospace', fontStyle: 'bold', color: '#4ade80',
+      }).setOrigin(0.5).setDepth(31));
+      const plus = this.track(this.add.text(x, y - 36, '+ draft', {
+        fontSize: '11px', fontFamily: 'monospace', color: '#052e16',
+        backgroundColor: '#86efacdd', padding: { x: 4, y: 2 },
+      }).setOrigin(0.5).setDepth(32));
+      const minus = this.track(this.add.text(x, y - 20, '- buggy', {
+        fontSize: '11px', fontFamily: 'monospace', color: '#450a0a',
+        backgroundColor: '#fca5a5dd', padding: { x: 4, y: 2 },
+      }).setOrigin(0.5).setDepth(32));
+      this.tweens.add({ targets: open, x: x - 28, yoyo: true, duration: 320, repeat: 6 });
+      this.tweens.add({ targets: close, x: x + 28, yoyo: true, duration: 320, repeat: 6 });
+      this.tweens.add({ targets: [plus, minus], alpha: 0.35, yoyo: true, duration: 240, repeat: 5 });
+      return { open, close, plus, minus };
+    }
+
+    /** Draw chalk strokes onto the whiteboard over time. */
+    async drawBoardStrokes(gen) {
+      const bx = this._board.x;
+      const by = this._board.y;
+      const strokes = [
+        { x1: -30, y1: -18, x2: 28, y2: -16, c: 0x0f172a },
+        { x1: -26, y1: -6, x2: 12, y2: -4, c: 0x0369a1 },
+        { x1: -22, y1: 6, x2: 24, y2: 8, c: 0xb45309 },
+        { x1: 10, y1: -20, x2: 10, y2: 18, c: 0x166534 },
+      ];
+      const g = this.track(this.add.graphics().setDepth(28));
+      for (const s of strokes) {
+        if (!this.alive(gen)) return;
+        g.lineStyle(3, s.c, 1);
+        g.beginPath();
+        g.moveTo(bx + s.x1, by + s.y1);
+        g.lineTo(bx + s.x2, by + s.y2);
+        g.strokePath();
+        // chalk dust
+        for (let i = 0; i < 3; i++) {
+          const d = this.track(this.add.circle(
+            bx + s.x2 + (Math.random() * 6 - 3),
+            by + s.y2 + (Math.random() * 4 - 2),
+            1.2, 0xcbd5e1, 0.7
+          ).setDepth(7));
+          this.tweens.add({ targets: d, alpha: 0, y: d.y + 6, duration: 500 });
+        }
+        if (!(await this.wait(380))) return;
+      }
     }
 
     async sceneCompare(gen) {
@@ -532,34 +667,148 @@
       this._npc.setFrame(0);
     }
 
-    async sceneWork(gen) {
-      const rob = this.track(this.add.sprite(300, 280, 'abby', 0).setOrigin(0.5, 1).setScale(1.5).setDepth(10).setTint(0xc8e0ff));
+    async sceneDesk(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.clearTint();
+      this._npc.setPosition(420, 280);
+      this._npc.setFrame(8);
+      if (!(await this.walkTo(520, 268, 'walk_right', 900))) return;
+      if (!this.alive(gen)) return;
+
+      // Sit at desk — crop to torso like office sit pose
+      this._npc.anims.stop();
       this._npc.setPosition(520, 248);
       this._npc.setFrame(0);
       this._npc.setCrop(0, 0, 32, 34);
+      this._npc.setDepth(8);
 
-      this.track(makeChip(this, 'Writing code', '#4ade80', 520, 198));
-      this.track(makeChip(this, 'Reading', '#60a5fa', 300, 228));
+      this.startDeskCodingFx(520, 250);
+      this.track(makeChip(this, 'Writing code', '#4ade80', 520, 168));
+      const term = this.track(this.add.text(548, 208, '$ ▍', {
+        fontSize: '10px', fontFamily: 'monospace', color: '#86efac',
+      }).setDepth(26));
 
-      if (!(await this.walkSprite(rob, 380, 250, 'walk_right', 900))) return;
+      if (!(await this.wait(1600))) return;
+      // Brief think / blocked beat
+      if (this._monitorGlow) this._monitorGlow.setFillStyle(0xfbbf24);
+      this.track(makeChip(this, 'thinking…', '#fbbf24', 520, 152));
+      term.setText('?');
+      term.setColor('#fde68a');
+      if (!(await this.wait(900))) return;
+      if (this._monitorGlow) this._monitorGlow.setFillStyle(0x4ade80);
+      term.setText('$ npm t');
+      term.setColor('#86efac');
+      this.track(makeChip(this, 'typing again', '#4ade80', 580, 168));
+      if (!(await this.wait(1600))) return;
+    }
+
+    async sceneSkill(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.setPosition(200, 280);
+      this._npc.setFrame(0);
+
+      // Research cast on the left
+      this._npc.setPosition(240, 260);
+      this.castResearchSkill(240, 260);
+      const spin = this.track(this.add.text(240, 200, '⟳', {
+        fontSize: '18px', color: '#38bdf8',
+      }).setOrigin(0.5).setDepth(40));
+      this.tweens.add({ targets: spin, angle: 360, duration: 900, repeat: 2 });
+      if (!(await this.wait(2200))) return;
       if (!this.alive(gen)) return;
-      rob.setFrame(0);
-      this.track(makeChip(this, '$ terminal', '#22d3ee', 380, 198));
-      this.track(makeEmote(this, '$', 396, 188));
+      spin.setText('✓');
+      spin.setColor('#4ade80');
+      this.track(makeChip(this, 'sources found', '#60a5fa', 240, 168));
+      if (!(await this.wait(700))) return;
 
-      const dots = this.track(this.add.text(520, 210, '…', {
-        fontSize: '14px', fontFamily: 'monospace', color: '#0c4a6e',
-        backgroundColor: '#e0f2fede', padding: { x: 4, y: 2 },
-      }).setOrigin(0.5, 1).setDepth(40));
-      let n = 0;
-      this.time.addEvent({
-        delay: 350, loop: true,
-        callback: () => {
-          n = (n + 1) % 4;
-          dots.setText('.'.repeat(n) || '…');
-        },
+      // Walk to desk and cast coding-agent
+      if (!(await this.walkTo(500, 268, 'walk_right', 1000))) return;
+      if (!this.alive(gen)) return;
+      this._npc.setFrame(0);
+      this._npc.setCrop(0, 0, 32, 34);
+      this._npc.setPosition(520, 248);
+      this.startDeskCodingFx(520, 250);
+      this.castCodingSkill(520, 248);
+      if (!(await this.wait(2400))) return;
+      this.track(makeChip(this, 'diff ready', '#4ade80', 520, 140));
+      if (!(await this.wait(900))) return;
+    }
+
+    async sceneBoard(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.setPosition(480, 280);
+      this._npc.setFrame(4);
+      if (!(await this.wait(200))) return;
+      if (!(await this.walkTo(340, 250, 'walk_left', 900))) return;
+      if (!this.alive(gen)) return;
+      this._npc.anims.stop();
+      this._npc.setFrame(12); // face the board (up)
+      this.track(makeChip(this, 'whiteboard', '#fbbf24', 340, 150));
+      this.track(makeEmote(this, '✎', 358, 168));
+      // Marker in hand
+      const marker = this.track(this.add.rectangle(this._npc.x - 4, this._npc.y - 28, 3, 10, 0x0f172a).setDepth(20));
+      this.followHand(marker, -4, -28);
+      await this.drawBoardStrokes(gen);
+      if (!this.alive(gen)) return;
+      this.stopFollow();
+      marker.setVisible(false);
+      this.track(makeChip(this, 'plan sketched', '#fbbf24', 340, 134));
+      if (!(await this.wait(1200))) return;
+    }
+
+    async sceneShip(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.setPosition(520, 248);
+      this._npc.setFrame(0);
+      this._npc.setCrop(0, 0, 32, 34);
+      this.startDeskCodingFx(520, 250);
+      this.track(makeChip(this, 'taskPhase · finishing', '#22d3ee', 520, 160));
+      if (!(await this.wait(900))) return;
+      if (!this.alive(gen)) return;
+
+      // Artifact flies up from desk
+      const doc = this.track(this.add.rectangle(520, 230, 16, 20, 0xf8fafc).setDepth(40));
+      this.track(this.add.rectangle(520, 224, 10, 2, 0x94a3b8).setDepth(41));
+      this.track(this.add.rectangle(520, 230, 10, 2, 0x94a3b8).setDepth(41));
+      this.tweens.add({
+        targets: doc,
+        y: 140,
+        scaleX: 1.4,
+        scaleY: 1.4,
+        duration: 700,
+        ease: 'Cubic.easeOut',
       });
-      await this.wait(2800);
+      if (!(await this.wait(750))) return;
+
+      const badge = this.track(this.add.text(520, 120, 'shipped ✓', {
+        fontSize: '16px', fontFamily: 'monospace', fontStyle: 'bold',
+        color: '#052e16', backgroundColor: '#4ade80ee', padding: { x: 10, y: 5 },
+      }).setOrigin(0.5).setDepth(50).setAlpha(0));
+      this.tweens.add({ targets: badge, alpha: 1, y: 110, duration: 280, ease: 'Back.easeOut' });
+
+      // Subtle celebrate particles
+      for (let i = 0; i < 10; i++) {
+        const p = this.track(this.add.circle(
+          520 + (Math.random() * 40 - 20),
+          130,
+          2,
+          [0x4ade80, 0x22d3ee, 0xfbbf24][i % 3],
+          0.9
+        ).setDepth(45));
+        this.tweens.add({
+          targets: p,
+          x: p.x + (Math.random() * 60 - 30),
+          y: p.y - 20 - Math.random() * 30,
+          alpha: 0,
+          duration: 700 + Math.random() * 400,
+        });
+      }
+      this.track(makeChip(this, 'PR #42 merged', '#86efac', 520, 168));
+      if (!(await this.wait(2200))) return;
     }
 
     async sceneCoffee(gen) {
@@ -611,17 +860,18 @@
     }
 
     async sceneLoop(gen) {
-      const order = ['compare', 'water', 'work', 'coffee'];
+      const order = ['desk', 'skill', 'board', 'ship', 'water', 'coffee'];
       for (const key of order) {
         if (!this.alive(gen) || this._playing !== 'loop') return;
         setCaption('loop');
         document.getElementById('caption').innerHTML =
           CAPTIONS.loop + ' · now: <strong>' + key + '</strong>';
-        // Bump gen only via clearFx path — keep same loop gen, but reset fx carefully
         this.clearFx();
-        if (key === 'compare') await this.sceneCompare(gen);
+        if (key === 'desk') await this.sceneDesk(gen);
+        else if (key === 'skill') await this.sceneSkill(gen);
+        else if (key === 'board') await this.sceneBoard(gen);
+        else if (key === 'ship') await this.sceneShip(gen);
         else if (key === 'water') await this.sceneWater(gen);
-        else if (key === 'work') await this.sceneWork(gen);
         else if (key === 'coffee') await this.sceneCoffee(gen);
         if (!this.alive(gen) || this._playing !== 'loop') return;
         if (!(await this.wait(700))) return;

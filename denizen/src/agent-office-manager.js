@@ -2447,6 +2447,12 @@ class AgentOfficeManager {
       agent._taskLabel = message.slice(0, 30);
     } else if (decision.taskPhase === 'finished') {
       agent._taskLabel = null;
+      try {
+        const shipNpc = this.actions._getNpc?.(npcKey);
+        if (shipNpc && typeof this.actions._flashShipBeat === 'function') {
+          this.actions._flashShipBeat(shipNpc, npcKey, 2800);
+        }
+      } catch (_) { /* visual only */ }
     } else if (action === 'work' && message && message !== 'Working...') {
       agent._taskLabel = message.slice(0, 30);
     }
@@ -3002,6 +3008,13 @@ class AgentOfficeManager {
         if (agent.assignedDesk) {
           this.actions.useComputer(npcKey, agent.assignedDesk);
         }
+        try {
+          const castNpc = this.actions._getNpc?.(npcKey);
+          const skillName = String(decision.skill || '');
+          if (castNpc && typeof this.actions._flashSkillCast === 'function') {
+            this.actions._flashSkillCast(castNpc, npcKey, skillName, 3600);
+          }
+        } catch (_) { /* visual only */ }
         if (message) {
           this.scene.time.delayedCall(1200, () => {
             this.actions.speak(npcKey, message);
