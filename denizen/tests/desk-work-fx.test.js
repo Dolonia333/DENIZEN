@@ -149,18 +149,31 @@ describe('live office desk work FX', () => {
     assert.match(fn, /return 'light'/);
   });
 
+  it('desk props scale up and draw above the monitor rig', () => {
+    const src = fs.readFileSync(path.join(ROOT, 'src/agent-actions.js'), 'utf8');
+    const start = src.indexOf('_spawnDeskProp(kind, slot, deskSprite');
+    assert.ok(start >= 0, '_spawnDeskProp missing');
+    const fn = src.slice(start, start + 2200);
+    assert.match(fn, /setScale\(1\.75\)/);
+    assert.match(fn, /setScale\(1\.55\)/);
+    assert.match(fn, /_findDeskSetupSprite/);
+    assert.match(fn, /baseDepth \+ 2\.5/);
+    assert.match(src, /DESK_KEY_BOB_PX = 3/);
+  });
+
   it('anchors gems and chips to the NPC head, not a fixed npc.y-56', () => {
     const src = fs.readFileSync(path.join(ROOT, 'src/agent-actions.js'), 'utf8');
     const mgr = fs.readFileSync(path.join(ROOT, 'src/agent-office-manager.js'), 'utf8');
     assert.match(src, /npcHeadTopY\(/);
     assert.match(src, /npcFloatY\(/);
     assert.match(src, /displayHeight/);
-    assert.match(mgr, /npcFloatY\?\.\(npc,\s*10\)/);
+    assert.match(mgr, /npcFloatY\?\.\(npc,\s*seated \? 5 : 10\)/);
     const gemUpdate = mgr.slice(
       mgr.indexOf('_updateStatusIndicators()'),
       mgr.indexOf('_isAgentBlocked(agent, now = Date.now())')
     );
     assert.doesNotMatch(gemUpdate, /setPosition\(npc\.x,\s*npc\.y\s*-\s*56\)/);
+    assert.match(gemUpdate, /circle\(0, 0, 5,/);
     // Gem under chips; nameplate under gem.
     assert.match(mgr, /setDepth\(9995\)/);
     assert.match(src, /label\.setDepth\(9994\)/);

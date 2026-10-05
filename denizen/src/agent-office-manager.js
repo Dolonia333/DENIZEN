@@ -2198,17 +2198,21 @@ class AgentOfficeManager {
       if (!npc) return;
 
       const gem = this._statusGemFor(agent, now);
+      const seated = !!this.actions._sittingNpcs?.has?.(npcKey);
       let dot = this._statusDots.get(npcKey);
       if (!dot) {
-        dot = this.scene.add.circle(0, 0, 3, gem.color);
+        // Radius 5 reads at office zoom; 3px gems disappeared into the pixel noise.
+        dot = this.scene.add.circle(0, 0, 5, gem.color);
+        try { dot.setStrokeStyle?.(1.5, 0x0f172a, 0.85); } catch (_) {}
         // Under speech/thought chips (9998) and typing (9997); above nameplates (9994).
         dot.setDepth(9995);
         this._statusDots.set(npcKey, dot);
       }
       dot.setFillStyle(gem.color);
-      // Head-relative — fixed npc.y-56 drops gems onto monitor desks for sitters.
-      const gemY = this.actions.npcFloatY?.(npc, 10) ?? (npc.y - 40);
-      dot.setPosition(npc.x, gemY);
+      // Seated: float beside the crown (not into the monitor band).
+      const gemY = this.actions.npcFloatY?.(npc, seated ? 5 : 10) ?? (npc.y - 40);
+      const gemX = npc.x + (seated ? -12 : 0);
+      dot.setPosition(gemX, gemY);
       dot.setVisible(npc.visible !== false);
       this._setStatusGemPulse(dot, gem.pulse);
 

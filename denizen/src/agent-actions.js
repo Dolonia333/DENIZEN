@@ -33,8 +33,9 @@ class AgentActions {
     this._deskWork = new Map();       // npcKey -> loop state
     this._deskClutter = new Map();    // npcKey -> { deskSprite, kinds, props }
     this._deskSlotCache = new WeakMap(); // deskSprite -> { x, y, candidates }
-    this.DESK_KEY_TICK_MS = 140;
-    this.DESK_BEAT_MS = 1700;
+    this.DESK_KEY_TICK_MS = 120;
+    this.DESK_BEAT_MS = 2200;
+    this.DESK_KEY_BOB_PX = 3; // readable keyboard bob (was 1px — invisible at office zoom)
     // Prop base offsets (bottom-center) from a desk's bottom-center anchor,
     // measured on the pack art so props rest on the surface, not the lip/legs.
     this.DESK_CLUTTER_GEOMETRY = {
@@ -1576,23 +1577,27 @@ class AgentActions {
   _showTypingIndicator(npc, npcKey) {
     this._hideTypingIndicator(npcKey);
 
+    const seated = this._isSeatedSprite(npc);
     const indicator = this.scene.add.text(0, 0, '…', {
-      fontSize: '8px',
+      fontSize: seated ? '10px' : '9px',
       fontFamily: 'monospace',
       color: '#0c4a6e',
       backgroundColor: '#e0f2fede',
-      padding: { x: 3, y: 2 },
+      padding: { x: 4, y: 2 },
     });
     indicator.setOrigin(0.5, 1);
     // Above the gem, below speech/thought chips.
     indicator.setDepth(9997);
-    indicator.setAlpha(0.95);
-    indicator.x = npc.x;
-    indicator.y = this.npcFloatY(npc, 16);
+    indicator.setAlpha(0.98);
+    // Seated: park the chip beside the head so it isn't lost in monitors.
+    const xOff = seated ? 16 : 0;
+    const above = seated ? 6 : 16;
+    indicator.x = npc.x + xOff;
+    indicator.y = this.npcFloatY(npc, above);
 
     let dotCount = 0;
     const dotTimer = this.scene.time.addEvent({
-      delay: 400,
+      delay: 350,
       loop: true,
       callback: () => {
         dotCount = (dotCount + 1) % 4;
@@ -1600,7 +1605,13 @@ class AgentActions {
       }
     });
 
-    this._typingIndicators.set(npcKey, { text: indicator, timer: dotTimer, npc, aboveHead: 16 });
+    this._typingIndicators.set(npcKey, {
+      text: indicator,
+      timer: dotTimer,
+      npc,
+      aboveHead: above,
+      xOff,
+    });
   }
 
   _hideTypingIndicator(npcKey) {
@@ -2191,9 +2202,9 @@ class AgentActions {
     this._deskWork.delete(npcKey);
   }
 
-  /** ms until the next "Hmm." beat — the first one lands a little sooner. */
+  /** ms until the next "Hmm." beat — the first one lands soon so the floor reads. */
   _deskBeatGap(first = false) {
-    return first ? 14000 + Math.random() * 16000 : 22000 + Math.random() * 26000;
+    return first ? 3500 + Math.random() * 2500 : 12000 + Math.random() * 16000;
   }
 
   _tickDeskWork(npcKey) {
@@ -2239,8 +2250,9 @@ class AgentActions {
     if (!s.active) return;
     if (s._deskBobOriginY == null) s._deskBobOriginY = s.originY ?? 1;
     const h = s.displayHeight || s.height || 0;
+    const bob = this.DESK_KEY_BOB_PX || 3;
     // Nudge the render origin, never .y — layout saves persist sprite.x/y.
-    const oy = pressed && h ? s._deskBobOriginY - 1 / h : s._deskBobOriginY;
+    const oy = pressed && h ? s._deskBobOriginY - bob / h : s._deskBobOriginY;
     s.setOrigin(s.originX ?? 0.5, oy);
   }
 
@@ -2282,7 +2294,7 @@ class AgentActions {
       const slot = this._pickDeskClutterSlot(npcKey, sit, kinds[i], row.slots);
       row.kinds.push(kinds[i]);
       row.slots.push(slot);
-      row.props.push(slot ? this._spawnDeskProp(kinds[i], slot, deskSprite) : null);
+      row.props.push(slot ? this._spawnDeskProp(kinds[i], slot, deskSprite, sit) : null);
     }
     return row.props.filter(Boolean);
   }
@@ -2319,10 +2331,11 @@ class AgentActions {
     free.sort((a, b) => {
       const sideA = side && Math.sign(a.dx) === side ? 1 : 0;
       const sideB = side && Math.sign(b.dx) === side ? 1 : 0;
+      // Prefer outer desk edges (clear of dual monitors) so props read.
       return (sideA - sideB)
         || (a.blocked[kind] - b.blocked[kind])
-        || (a.row - b.row)
-        || (Math.abs(b.dx) - Math.abs(a.dx));
+        || (Math.abs(b.dx) - Math.abs(a.dx))
+        || (a.row - b.row);
     });
     return free[0] || null;
   }
@@ -2461,7 +2474,7 @@ class AgentActions {
     }
   }
 
-  _spawnDeskProp(kind, slot, deskSprite) {
+  _spawnDeskProp(kind, slot, deskSprite, sit = null) {
     const add = this.scene?.add;
     if (!add) return null;
     try {
@@ -2470,15 +2483,28 @@ class AgentActions {
         prop = add.sprite(slot.x, slot.y, 'vfx_coffee_mug', 0);
         // Mug body ends on row 25 of the 16x32 frame; steam rises above it.
         prop.setOrigin(0.5, 26 / 32);
+        prop.setScale(1.75);
         if (this._ensureDeskMugSteam()) {
           prop.play?.({ key: 'vfx_desk_mug_steam', startFrame: Math.floor(Math.random() * 7) });
         }
       } else {
         prop = add.image(slot.x, slot.y, 'vfx_desk_papers');
         prop.setOrigin(0.5, 1);
+        prop.setScale(1.55);
       }
-      // Same band as stacked desk items: over the desk, under walking people.
-      prop.setDepth((deskSprite?.depth || 2) + 8.2);
+      // Draw above the monitor/laptop rig on this desk — otherwise props vanish
+      // under dual screens and look like "nothing was added."
+      const deskEntry = (this.scene?._interactables || []).find((it) => it?.sprite === deskSprite) || null;
+      const deskObj = {
+        sprite: deskSprite,
+        instanceId: sit?.deskId || deskEntry?.instanceId || null,
+      };
+      const setup = this._findDeskSetupSprite(deskObj);
+      const ownDepths = (this.scene?._interactables || [])
+        .filter((it) => it?.sprite && this._isOwnDeskSetup(it, deskSprite, deskObj.instanceId))
+        .map((it) => it.sprite.depth || 0);
+      const baseDepth = Math.max(deskSprite?.depth || 2, setup?.depth || 0, ...ownDepths, 0);
+      prop.setDepth(baseDepth + 2.5);
       return prop;
     } catch (_) {
       return null;
@@ -2493,9 +2519,9 @@ class AgentActions {
       anims.create({
         key: 'vfx_desk_mug_steam',
         frames: anims.generateFrameNumbers('vfx_coffee_mug', { frames: [0, 1, 2, 3, 4, 5, 0] }),
-        frameRate: 5,
+        frameRate: 7,
         repeat: -1,
-        repeatDelay: 1400,
+        repeatDelay: 400,
       });
       return true;
     } catch (_) {
@@ -2656,8 +2682,11 @@ class AgentActions {
 
     this._typingIndicators.forEach((entry) => {
       if (entry.npc && entry.text) {
-        entry.text.x = entry.npc.x;
-        entry.text.y = this.npcFloatY(entry.npc, entry.aboveHead != null ? entry.aboveHead : 16);
+        const seated = this._isSeatedSprite(entry.npc);
+        const xOff = entry.xOff != null ? entry.xOff : (seated ? 16 : 0);
+        const above = entry.aboveHead != null ? entry.aboveHead : (seated ? 6 : 16);
+        entry.text.x = entry.npc.x + xOff;
+        entry.text.y = this.npcFloatY(entry.npc, above);
       }
     });
 
