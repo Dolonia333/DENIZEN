@@ -218,10 +218,7 @@
       this._cleanup = [];
       // Kill tweens only — do NOT removeAllEvents (that aborts in-flight walks).
       try { this.tweens.killAll(); } catch (_) {}
-      if (this._holdFollow) {
-        try { this._holdFollow.remove(false); } catch (_) {}
-        this._holdFollow = null;
-      }
+      this.stopFollow();
       this._can.setVisible(false);
       this._can.setAngle(0);
       this._can.setTexture('can_full');
@@ -233,7 +230,10 @@
       this._mug.setAngle(0);
       this._mug.setScale(1.4);
       this._mug.setPosition(120, 286);
-      if (this._mugCup) this._mugCup.setVisible(false);
+      if (this._mugCup) {
+        this._mugCup.setVisible(false);
+        this._mugCup.setAngle(0);
+      }
       this._npc.anims.stop();
       this._npc.setPosition(420, 280);
       this._npc.setFrame(0);
@@ -300,15 +300,26 @@
       });
     }
 
-    /** Face-aware mug hold — rim on the lower face (chibi mouth), cup hangs down. */
+    /** Face-aware mug hold — rim on Abby's lips (not eyes/hair).
+     * Abby 32×48 @1.5, origin at feet. Frame padding: hair ~row 10–23,
+     * eyes ~30–31 (oy≈-26), mouth pink ~32–33 (oy≈-23), chin ~34.
+     * Phaser spritesheet frames expose `.name` (not always `.index`). */
+    npcFrameIndex() {
+      const fr = this._npc?.frame;
+      if (!fr) return 0;
+      const n = Number(fr.name);
+      if (Number.isFinite(n)) return n;
+      if (typeof fr.index === 'number') return fr.index;
+      return 0;
+    }
+
     mugMouthOffset() {
-      const f = this._npc.frame?.index ?? 0;
-      // Abby is chibi: big head is ~top half of the 72px sprite. Mouth/cheeks sit
-      // near the bottom of that head (~36–40px above the feet), not mid-hair.
-      const y = -38;
-      if (f >= 4 && f <= 7) return { x: -6, y };      // facing left — on the face toward the machine
-      if (f >= 8 && f <= 11) return { x: 6, y };       // facing right
-      if (f >= 12) return { x: 0, y: -40 };
+      const f = this.npcFrameIndex();
+      // Rim on mouth (pink ~row 32–33 → oy≈-22). Eyes ~row 30–31 (oy≈-26).
+      const y = -22;
+      if (f >= 4 && f <= 7) return { x: -8, y };      // facing left — lips toward machine
+      if (f >= 8 && f <= 11) return { x: 8, y };       // facing right
+      if (f >= 12) return { x: 0, y: -23 };
       return { x: 0, y };
     }
 
@@ -318,15 +329,22 @@
       this._mug.setVisible(false);
       this._mugCup.setVisible(true);
       this._mugCup.setDepth(21);
-      // Origin near the rim so the cup hangs from the mouth down across the chin
-      this._mugCup.setOrigin(0.5, 0.15);
-      this._mugCup.setScale(1.9);
+      // Origin at texture top (= rim). cup_only has opaque rows 0–7; any
+      // originY > 0 leaves rim pixels above the mouth anchor (reads as eyes).
+      this._mugCup.setOrigin(0.5, 0);
+      this._mugCup.setScale(1.35);
+      this._mugCup.setAngle(-18);
       this.stopFollow();
       const tick = () => {
         if (!this._mugCup?.active || !this._npc?.active) return;
         const o = this.mugMouthOffset();
+        const f = this.npcFrameIndex();
         this._mugCup.x = this._npc.x + o.x;
         this._mugCup.y = this._npc.y + o.y;
+        // Tip toward the face she's looking at
+        if (f >= 4 && f <= 7) this._mugCup.setAngle(-18);
+        else if (f >= 8 && f <= 11) this._mugCup.setAngle(18);
+        else this._mugCup.setAngle(0);
       };
       tick();
       this._holdFollow = setInterval(tick, 16);
@@ -579,10 +597,12 @@
       if (!(await this.wait(700))) return;
 
       // Sip pose: cropped cup glued to her mouth (facing left toward machine)
+      try { this._npc.anims.stop(); } catch (_) {}
+      this._npc.setFrame(4);
       this.holdMugAtMouth();
       this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 72));
       // Hold the mouth pose long enough to read clearly
-      if (!(await this.wait(2200))) return;
+      if (!(await this.wait(2800))) return;
 
       // Walk away still holding cup at mouth (offset tracks facing)
       if (!(await this.walkTo(420, 280, 'walk_right', 1400))) return;

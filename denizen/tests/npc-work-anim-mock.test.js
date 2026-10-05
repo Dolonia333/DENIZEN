@@ -40,11 +40,12 @@ describe('npc-work-anim-mock', () => {
     assert.match(src, /vfx_watering_can_empty/);
     assert.match(src, /_flashCoffeeMug/);
     assert.match(src, /vfx_coffee_mug/);
-    assert.match(src, /vfx_mug_steam/);
+    assert.match(src, /vfx_coffee_cup/);
     assert.match(src, /angle:\s*-28/);
 
     const office = fs.readFileSync(path.join(ROOT, 'office-scene.js'), 'utf8');
     assert.match(office, /vfx_watering_can_empty/);
     assert.match(office, /vfx_coffee_mug/);
+    assert.match(office, /vfx_coffee_cup/);
   });
 });

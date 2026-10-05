@@ -1846,40 +1846,54 @@ class AgentActions {
     try {
       this._clearCoffeeMug?.(npcKey);
       let mug;
+      // Abby face: eyes ~row 30–31 (oy≈-26), mouth pink ~32–33 (oy≈-22)
+      const mouthY = 22;
       if (cupKey) {
-        mug = this.scene.add.image(npc.x, npc.y - 38, cupKey);
-        // Rim at chibi mouth — cup hangs down over the chin
-        mug.setOrigin(0.5, 0.15);
-        mug.setScale(1.6);
-      } else {
-        mug = this.scene.add.sprite(npc.x, npc.y - 38, sheetKey, 0);
-        mug.setOrigin(0.5, 0.15);
+        mug = this.scene.add.image(npc.x, npc.y - mouthY, cupKey);
+        // Texture top = rim on mouth (originY 0 — see mock holdMugAtMouth)
+        mug.setOrigin(0.5, 0);
         mug.setScale(1.3);
+        mug.setAngle(-15);
+      } else {
+        mug = this.scene.add.sprite(npc.x, npc.y - mouthY, sheetKey, 0);
+        mug.setOrigin(0.5, 0);
+        mug.setScale(1.15);
+        mug.setAngle(-15);
         try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
       }
       mug.setDepth((npc.depth || 10) + 2);
 
       try {
-        mug.y = npc.y - 22;
+        mug.y = npc.y - 12;
         this.scene.tweens.add({
           targets: mug,
-          y: npc.y - 38,
+          y: npc.y - mouthY,
           duration: 280,
           ease: 'Back.easeOut',
         });
       } catch (_) {}
+
+      const frameOf = (spr) => {
+        const fr = spr?.frame;
+        if (!fr) return 0;
+        const n = Number(fr.name);
+        if (Number.isFinite(n)) return n;
+        if (typeof fr.index === 'number') return fr.index;
+        return 0;
+      };
 
       const follow = this.scene.time.addEvent({
         delay: 40,
         loop: true,
         callback: () => {
           if (!mug.active || !npc.active) return;
-          const f = npc.frame?.index ?? 0;
+          const f = frameOf(npc);
           let ox = 0;
-          let oy = -38;
-          if (f >= 4 && f <= 7) ox = -6;
-          else if (f >= 8 && f <= 11) ox = 6;
-          else if (f >= 12) oy = -40;
+          let oy = -mouthY;
+          if (f >= 4 && f <= 7) { ox = -8; mug.setAngle(-15); }
+          else if (f >= 8 && f <= 11) { ox = 8; mug.setAngle(15); }
+          else if (f >= 12) { oy = -23; mug.setAngle(0); }
+          else mug.setAngle(0);
           mug.x = npc.x + ox;
           mug.y = npc.y + oy;
         },
