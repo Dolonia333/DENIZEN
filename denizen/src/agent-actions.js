@@ -994,7 +994,8 @@ class AgentActions {
   }
 
   /**
-   * goToCoffee(npcKey) - Walk to coffee-like furniture in the breakroom.
+   * goToCoffee(npcKey) - Walk to coffee-like furniture in the breakroom,
+   * then pick up a steaming LimeZu mug prop (when preloaded).
    * Falls back to a generic breakroom spot if no match is found.
    */
   goToCoffee(npcKey) {
@@ -1004,6 +1005,12 @@ class AgentActions {
     const item = (this.scene._interactables || []).find(it => {
       return it.sprite && it.id && /coffee|espresso|kettle|vending|snack|fridge|microwave/i.test(it.id);
     });
+    const afterArrive = () => {
+      const npc = this._getNpc(npcKey);
+      if (!npc) return;
+      this._flashCoffeeMug(npc, npcKey, 4200);
+      this._showEmote?.(npc, npcKey, '☕');
+    };
     if (item && item.sprite) {
       let x = item.sprite.x + Phaser.Math.Between(-12, 12);
       let y = item.sprite.y + 18 + Phaser.Math.Between(-4, 4);  // stand slightly in front
@@ -1012,9 +1019,9 @@ class AgentActions {
         const s = pf.findWalkableNear(x, y, 32);
         if (s) { x = s.x; y = s.y; }
       }
-      return this.walkTo(npcKey, x, y);
+      return this.walkTo(npcKey, x, y).then(afterArrive);
     }
-    return this.goToBreakroom(npcKey);
+    return this.goToBreakroom(npcKey).then(afterArrive);
   }
 
   /**
@@ -1721,28 +1728,94 @@ class AgentActions {
   }
 
   /**
-   * Attach a LimeZu watering-can prop beside the NPC for a short beat.
-   * No-op if the texture isn't loaded yet (demo page / forge can preload it).
+   * Attach a LimeZu watering-can prop, tip it, and stream droplets toward a target.
+   * No-op if the texture isn't loaded yet.
+   * @param {{x:number,y:number}|null} pourTarget world point to pour toward (plant soil)
    */
-  _flashWateringCan(npc, npcKey, ms = 2800) {
+  _flashWateringCan(npc, npcKey, ms = 2800, pourTarget = null) {
     if (!npc || !this.scene?.add) return null;
     const key = 'vfx_watering_can';
     if (!this.scene.textures?.exists?.(key)) return null;
     try {
       this._clearWateringCan?.(npcKey);
-      const can = this.scene.add.image(npc.x - 12, npc.y - 22, key);
-      can.setOrigin(0.5, 0.5);
+      const can = this.scene.add.image(npc.x - 11, npc.y - 24, key);
+      can.setOrigin(0.35, 0.55);
       can.setDepth((npc.depth || 10) + 2);
-      can.setScale(1.1);
+      can.setScale(1.15);
+      const ox = -11;
+      const oy = -24;
       const follow = this.scene.time.addEvent({
-        delay: 50,
+        delay: 30,
         loop: true,
         callback: () => {
           if (!can.active || !npc.active) return;
-          can.x = npc.x - 12;
-          can.y = npc.y - 22;
+          // Keep hand offset; angle is tweened separately
+          const ang = Phaser.Math.DegToRad(can.angle || 0);
+          const hx = ox * Math.cos(ang) - 0 * Math.sin(ang);
+          const hy = ox * Math.sin(ang) + 0 * Math.cos(ang);
+          // Simpler: lock to hand unless mid-tip uses absolute
+          can.x = npc.x + ox;
+          can.y = npc.y + oy;
+          void hx; void hy;
         },
       });
+
+      // Tip spout (left-facing can → negative angle) then pour
+      try {
+        this.scene.tweens.add({
+          targets: can,
+          angle: -48,
+          scale: 1.3,
+          duration: 380,
+          ease: 'Sine.easeInOut',
+          onComplete: () => {
+            if (!can.active) return;
+            const target = pourTarget || { x: npc.x - 18, y: npc.y - 10 };
+            for (let i = 0; i < 10; i++) {
+              this.scene.time.delayedCall(i * 70, () => {
+                if (!can.active) return;
+                const ang = Phaser.Math.DegToRad(can.angle || 0);
+                const spoutX = can.x + (-14) * Math.cos(ang) - (-2) * Math.sin(ang);
+                const spoutY = can.y + (-14) * Math.sin(ang) + (-2) * Math.cos(ang);
+                const drop = this.scene.add.circle(
+                  spoutX,
+                  spoutY,
+                  1.5,
+                  0x7ec8e3,
+                  0.95,
+                );
+                drop.setDepth((npc.depth || 10) + 3);
+                this.scene.tweens.add({
+                  targets: drop,
+                  x: target.x + Phaser.Math.Between(-5, 5),
+                  y: target.y + Phaser.Math.Between(-2, 3),
+                  alpha: 0.1,
+                  duration: 280,
+                  ease: 'Quad.easeIn',
+                  onComplete: () => { try { drop.destroy(); } catch (_) {} },
+                });
+              });
+            }
+            // Swap to empty can after stream starts
+            this.scene.time.delayedCall(700, () => {
+              if (!can.active) return;
+              if (this.scene.textures?.exists?.('vfx_watering_can_empty')) {
+                try { can.setTexture('vfx_watering_can_empty'); } catch (_) {}
+              }
+              try {
+                this.scene.tweens.add({
+                  targets: can,
+                  angle: 0,
+                  scale: 1.15,
+                  duration: 320,
+                  ease: 'Sine.easeOut',
+                });
+              } catch (_) {}
+            });
+          },
+        });
+      } catch (_) {}
+
       const timer = this.scene.time.delayedCall(ms, () => {
         try { follow.remove(); } catch (_) {}
         try { can.destroy(); } catch (_) {}
@@ -1766,8 +1839,77 @@ class AgentActions {
   }
 
   /**
-   * waterPlant(npcKey) - Walk to a potted plant and "water" it.
-   * Visual: watering-can prop (when preloaded) + 💦 splash emote.
+   * Hold a steaming LimeZu coffee mug beside the NPC for a short beat.
+   * No-op if vfx_coffee_mug isn't preloaded.
+   */
+  _flashCoffeeMug(npc, npcKey, ms = 4200) {
+    if (!npc || !this.scene?.add) return null;
+    const key = 'vfx_coffee_mug';
+    if (!this.scene.textures?.exists?.(key)) return null;
+    try {
+      this._clearCoffeeMug?.(npcKey);
+      // Ensure steam anim exists once
+      if (!this.scene.anims?.exists?.('vfx_mug_steam')) {
+        try {
+          this.scene.anims.create({
+            key: 'vfx_mug_steam',
+            frames: this.scene.anims.generateFrameNumbers(key, { start: 0, end: 5 }),
+            frameRate: 6,
+            repeat: -1,
+          });
+        } catch (_) {}
+      }
+      const mug = this.scene.add.sprite(npc.x - 10, npc.y - 26, key, 0);
+      mug.setOrigin(0.5, 1);
+      mug.setDepth((npc.depth || 10) + 2);
+      mug.setScale(1.15);
+      try { mug.anims.play('vfx_mug_steam', true); } catch (_) {}
+
+      // Arc into hand from slightly above (pickup feel)
+      try {
+        mug.y = npc.y - 40;
+        this.scene.tweens.add({
+          targets: mug,
+          y: npc.y - 26,
+          duration: 280,
+          ease: 'Back.easeOut',
+        });
+      } catch (_) {}
+
+      const follow = this.scene.time.addEvent({
+        delay: 40,
+        loop: true,
+        callback: () => {
+          if (!mug.active || !npc.active) return;
+          mug.x = npc.x - 10;
+          mug.y = npc.y - 26;
+        },
+      });
+      const timer = this.scene.time.delayedCall(ms, () => {
+        try { follow.remove(); } catch (_) {}
+        try { mug.destroy(); } catch (_) {}
+        this._coffeeMugs?.delete?.(npcKey);
+      });
+      if (!this._coffeeMugs) this._coffeeMugs = new Map();
+      this._coffeeMugs.set(npcKey, { mug, follow, timer });
+      return mug;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _clearCoffeeMug(npcKey) {
+    const row = this._coffeeMugs?.get?.(npcKey);
+    if (!row) return;
+    try { row.follow?.remove?.(); } catch (_) {}
+    try { row.timer?.remove?.(); } catch (_) {}
+    try { row.mug?.destroy?.(); } catch (_) {}
+    this._coffeeMugs.delete(npcKey);
+  }
+
+  /**
+   * waterPlant(npcKey) - Walk to a potted plant and pour into it.
+   * Visual: tip LimeZu can + droplet stream (when preloaded) + 💦 emote.
    */
   waterPlant(npcKey) {
     const plant = this._findFurnitureByKind(/plant|flora|pot|fern|bush/i);
@@ -1777,11 +1919,14 @@ class AgentActions {
     }
     return this._approachFurniture(npcKey, plant, {
       offsetY: 22,
-      dwellMs: 3200,
+      dwellMs: 3600,
       face: 'up',
       onArrive: () => {
         const npc = this._getNpc(npcKey);
-        this._flashWateringCan(npc, npcKey, 2800);
+        const soil = plant.sprite
+          ? { x: plant.sprite.x, y: plant.sprite.y - 8 }
+          : null;
+        this._flashWateringCan(npc, npcKey, 3200, soil);
         this._showEmote?.(npc, npcKey, '💦');
       },
     }).then(() => {

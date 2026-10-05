@@ -318,10 +318,19 @@ class OfficeScene extends Phaser.Scene {
       'mo_black_shadow_32',
       'assets/Modern_Office_Black_Shadow_32x32.png?v=2'
     );
-    // Held prop for waterPlant living-office behavior (LimeZu garden can)
+    // Held props for living-office waterPlant / goToCoffee (LimeZu garden can + steaming mug)
     this.load.image(
       'vfx_watering_can',
       'assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png'
+    );
+    this.load.image(
+      'vfx_watering_can_empty',
+      'assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Empty.png'
+    );
+    this.load.spritesheet(
+      'vfx_coffee_mug',
+      'assets/limezu/animated/coffee.png',
+      { frameWidth: 16, frameHeight: 32 }
     );
     // Unused sheets removed to prevent loader stall (were loading 90+ files)
 

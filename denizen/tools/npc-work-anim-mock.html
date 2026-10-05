@@ -12,8 +12,6 @@
     --text: #e8eef6;
     --muted: #8fa3b8;
     --accent: #5bb8a0;
-    --chip: #e0f2fe;
-    --chip-ink: #0c4a6e;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -64,16 +62,16 @@
   <div class="caption" id="caption"><strong>Booting…</strong></div>
   <div class="btns">
     <button type="button" data-scene="compare" class="active">1 · Before / after water</button>
-    <button type="button" data-scene="water">2 · Watering can</button>
+    <button type="button" data-scene="water">2 · Pour plant</button>
     <button type="button" data-scene="work">3 · Work chips</button>
-    <button type="button" data-scene="coffee">4 · Coffee prop</button>
+    <button type="button" data-scene="coffee">4 · Pick up coffee</button>
     <button type="button" data-scene="loop">▶ Auto loop</button>
   </div>
 </header>
 <div id="stage-wrap"><div id="game-host"></div></div>
 <footer>
-  Uses real office assets (<code>Abby.png</code>, LimeZu watering can, plant, coffee steam).
-  Demo only — press scenes or leave on Auto loop for the walkthrough video.
+  Uses LimeZu garden watering can (tip + stream) and LimeZu steaming mug + modern-office coffee machine.
+  Demo only — press scenes or leave on Auto loop.
 </footer>
 
 <script src="/vendor/phaser/phaser.min.js"></script>
@@ -81,15 +79,14 @@
 (() => {
   const W = 720, H = 420;
   const CAPTIONS = {
-    compare: '<strong>Before vs after</strong> — left: emoji-only 💧 (today). Right: watering can + splash.',
-    water: '<strong>Plant watering</strong> — walk up, hold LimeZu can, splash, speech.',
+    compare: '<strong>Before vs after</strong> — left: emoji-only 💧. Right: tip can + pour stream.',
+    water: '<strong>Plant pour</strong> — walk up, lift LimeZu can, tip spout, stream into soil, empty can.',
     work: '<strong>Work chips</strong> — same XP body, clearer job labels for code / research / terminal.',
-    coffee: '<strong>Coffee break</strong> — NPC walks to machine; LimeZu steam loop plays.',
+    coffee: '<strong>Coffee pickup</strong> — brew at machine, lift steaming LimeZu mug, walk away holding it.',
     loop: '<strong>Auto loop</strong> — cycling all mock scenes.',
   };
 
   let api = null;
-  let loopTimer = null;
 
   function setCaption(key) {
     document.getElementById('caption').innerHTML = CAPTIONS[key] || '';
@@ -103,6 +100,7 @@
     const ink = color === '#4ade80' ? '#052e16'
       : color === '#22d3ee' ? '#083344'
       : color === '#60a5fa' ? '#0c4a6e'
+      : color === '#fbbf24' ? '#422006'
       : '#0c4a6e';
     const t = scene.add.text(x, y, text, {
       fontSize: '12px',
@@ -127,21 +125,24 @@
       this._cleanup = [];
       this._npc = null;
       this._plant = null;
-      this._coffee = null;
+      this._machine = null;
       this._desk = null;
       this._can = null;
+      this._mug = null;
       this._playing = null;
+      this._holdFollow = null;
     }
 
     preload() {
       this.load.spritesheet('abby', '/assets/Abby.png', { frameWidth: 32, frameHeight: 48 });
       this.load.image('plant', '/assets/modern_office/named/plant_floor_leafy.png');
-      this.load.image('can', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png');
-      this.load.spritesheet('coffee', '/assets/limezu/animated/coffee.png', { frameWidth: 16, frameHeight: 32 });
+      this.load.image('can_full', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png');
+      this.load.image('can_empty', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Empty.png');
+      this.load.image('machine', '/assets/modern_office/named/coffee_machine_desk.png');
+      this.load.spritesheet('mug', '/assets/limezu/animated/coffee.png', { frameWidth: 16, frameHeight: 32 });
     }
 
     create() {
-      // Soft office floor
       const g = this.add.graphics();
       g.fillStyle(0x3a4d3a, 1);
       g.fillRect(0, 0, W, H);
@@ -149,9 +150,8 @@
       for (let x = 0; x < W; x += 32) g.lineBetween(x, 0, x, H);
       for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
 
-      // Cubicle-ish desk block
       this._desk = this.add.rectangle(520, 250, 90, 48, 0x6b5344).setDepth(2);
-      this.add.rectangle(520, 228, 70, 10, 0x89a4b8).setDepth(3); // monitor
+      this.add.rectangle(520, 228, 70, 10, 0x89a4b8).setDepth(3);
 
       this._plant = this.add.image(200, 210, 'plant').setOrigin(0.5, 1).setDepth(5).setScale(1.4);
       this.add.text(200, 220, 'office plant', {
@@ -179,26 +179,27 @@
         frameRate: 10, repeat: -1,
       });
       this.anims.create({
-        key: 'coffee_steam',
-        frames: this.anims.generateFrameNumbers('coffee', { start: 0, end: 5 }),
+        key: 'mug_steam',
+        frames: this.anims.generateFrameNumbers('mug', { start: 0, end: 5 }),
         frameRate: 6, repeat: -1,
       });
 
-      this._coffee = this.add.sprite(120, 300, 'coffee', 0).setOrigin(0.5, 1).setDepth(6).setScale(2);
-      this.add.text(120, 310, 'coffee', {
+      // Coffee machine (modern office) + resting mug on top
+      this._machine = this.add.image(120, 300, 'machine').setOrigin(0.5, 1).setDepth(6).setScale(2.4);
+      this.add.text(120, 310, 'coffee machine', {
         fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
       }).setOrigin(0.5, 0).setDepth(6);
 
+      this._mug = this.add.sprite(120, 286, 'mug', 0).setOrigin(0.5, 1).setDepth(8).setScale(1.4).setVisible(false);
+
       this._npc = this.add.sprite(420, 280, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
-      this._can = this.add.image(0, 0, 'can').setOrigin(0.5, 0.5).setDepth(12).setScale(1.2).setVisible(false);
+      this._can = this.add.image(0, 0, 'can_full').setOrigin(0.35, 0.55).setDepth(12).setScale(1.35).setVisible(false);
 
       this.add.text(16, 12, 'DENIZEN · work visibility mock', {
         fontSize: '11px', fontFamily: 'monospace', color: '#9eb0a0',
       }).setDepth(100);
 
-      api = {
-        play: (name) => this.playScene(name),
-      };
+      api = { play: (name) => this.playScene(name) };
       window.__npcAnimMock = api;
       this.playScene('compare');
     }
@@ -210,18 +211,33 @@
       this._cleanup = [];
       this.tweens.killAll();
       this.time.removeAllEvents();
+      if (this._holdFollow) {
+        try { this._holdFollow.remove(false); } catch (_) {}
+        this._holdFollow = null;
+      }
       this._can.setVisible(false);
-      this._coffee.anims.stop();
-      this._coffee.setFrame(0);
+      this._can.setAngle(0);
+      this._can.setTexture('can_full');
+      this._mug.setVisible(false);
+      this._mug.anims.stop();
+      this._mug.setFrame(0);
+      this._mug.setAngle(0);
+      this._mug.setScale(1.4);
+      this._mug.setPosition(120, 286);
       this._npc.anims.stop();
       this._npc.setPosition(420, 280);
       this._npc.setFrame(0);
       this._npc.setCrop();
+      this._npc.clearTint();
     }
 
     track(obj) {
       this._cleanup.push(obj);
       return obj;
+    }
+
+    wait(ms) {
+      return new Promise((r) => this.time.delayedCall(ms, r));
     }
 
     walkTo(x, y, anim, ms = 1400) {
@@ -240,6 +256,131 @@
       });
     }
 
+    walkSprite(sprite, x, y, anim, ms) {
+      return new Promise((resolve) => {
+        sprite.anims.play(anim, true);
+        this.tweens.add({
+          targets: sprite, x, y, duration: ms, ease: 'Linear',
+          onComplete: () => { sprite.anims.stop(); resolve(); },
+        });
+      });
+    }
+
+    /** Keep prop glued to NPC hand while held. */
+    followHand(prop, ox, oy, also = null) {
+      if (this._holdFollow) {
+        try { this._holdFollow.remove(false); } catch (_) {}
+      }
+      this._holdFollow = this.time.addEvent({
+        delay: 16,
+        loop: true,
+        callback: () => {
+          if (!prop.active || !this._npc.active) return;
+          prop.x = this._npc.x + ox;
+          prop.y = this._npc.y + oy;
+          if (also) also(prop, this._npc);
+        },
+      });
+      return this._holdFollow;
+    }
+
+    stopFollow() {
+      if (this._holdFollow) {
+        try { this._holdFollow.remove(false); } catch (_) {}
+        this._holdFollow = null;
+      }
+    }
+
+    /** Spout tip in world space for left-facing can (origin near body). */
+    canSpoutWorld() {
+      const ang = Phaser.Math.DegToRad(this._can.angle);
+      // Local spout offset when upright (spout left of body)
+      const lx = -14;
+      const ly = -2;
+      const cos = Math.cos(ang);
+      const sin = Math.sin(ang);
+      return {
+        x: this._can.x + lx * cos - ly * sin,
+        y: this._can.y + lx * sin + ly * cos,
+      };
+    }
+
+    emitPourStream(targetX, targetY, bursts = 10) {
+      for (let i = 0; i < bursts; i++) {
+        this.time.delayedCall(i * 70, () => {
+          if (!this._can.visible) return;
+          const spout = this.canSpoutWorld();
+          const drop = this.track(this.add.circle(
+            spout.x + Phaser.Math.Between(-1, 1),
+            spout.y,
+            1.4 + Math.random() * 0.8,
+            0x7ec8e3,
+          ).setDepth(16).setAlpha(0.95));
+          this.tweens.add({
+            targets: drop,
+            x: targetX + Phaser.Math.Between(-6, 6),
+            y: targetY + Phaser.Math.Between(-2, 4),
+            alpha: 0.15,
+            scale: 0.4,
+            duration: 280 + Math.random() * 80,
+            ease: 'Quad.easeIn',
+            onComplete: () => {
+              // soil splash ripple
+              const ripple = this.track(this.add.circle(drop.x, drop.y, 2, 0x9ad7ef, 0.35).setDepth(14));
+              this.tweens.add({
+                targets: ripple, scale: 2.2, alpha: 0, duration: 220,
+                onComplete: () => { try { ripple.destroy(); } catch (_) {} },
+              });
+              try { drop.destroy(); } catch (_) {}
+            },
+          });
+        });
+      }
+    }
+
+    async pourOntoPlant(plantX, plantY) {
+      this._can.setTexture('can_full');
+      this._can.setVisible(true);
+      this._can.setAngle(0);
+      this.followHand(this._can, -11, -26);
+      // Lift
+      await new Promise((resolve) => {
+        this.tweens.add({
+          targets: this._can,
+          scale: 1.55,
+          duration: 220,
+          yoyo: false,
+          onComplete: resolve,
+        });
+      });
+      // Tip spout toward plant (counter-clockwise — spout on left)
+      await new Promise((resolve) => {
+        this.tweens.add({
+          targets: this._can,
+          angle: -48,
+          duration: 380,
+          ease: 'Sine.easeInOut',
+          onComplete: resolve,
+        });
+      });
+      this.emitPourStream(plantX, plantY - 8, 12);
+      await this.wait(900);
+      // Empty after pour
+      this._can.setTexture('can_empty');
+      await this.wait(350);
+      // Untip
+      await new Promise((resolve) => {
+        this.tweens.add({
+          targets: this._can,
+          angle: 0,
+          scale: 1.35,
+          duration: 320,
+          ease: 'Sine.easeOut',
+          onComplete: resolve,
+        });
+      });
+    }
+
     async playScene(name) {
       this._playing = name;
       this.clearFx();
@@ -251,7 +392,6 @@
     }
 
     async sceneCompare() {
-      // Left: BEFORE (emoji only)
       const leftNpc = this.track(this.add.sprite(160, 300, 'abby', 12).setOrigin(0.5, 1).setScale(1.5).setDepth(10));
       this.track(this.add.image(160, 230, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
       this.track(makeEmote(this, '💧', 172, 248));
@@ -259,86 +399,54 @@
         fontSize: '12px', fontFamily: 'monospace', color: '#f0c27a', align: 'center',
       }).setOrigin(0.5, 0).setDepth(20));
 
-      // Divider
       this.track(this.add.rectangle(360, 210, 2, 260, 0x5a6a5a).setDepth(4));
 
-      // Right: AFTER
+      const rightPlant = this.track(this.add.image(560, 210, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
       this._npc.setPosition(560, 320);
       this._npc.setFrame(0);
       await this.walkTo(560, 250, 'walk_up', 900);
       this._npc.setFrame(12);
-      this._can.setVisible(true);
-      this._can.setPosition(this._npc.x - 14, this._npc.y - 22);
+      await this.pourOntoPlant(rightPlant.x, rightPlant.y - 18);
       this.track(makeEmote(this, '💦', this._npc.x + 10, this._npc.y - 54));
-      // splash dots
-      for (let i = 0; i < 5; i++) {
-        const d = this.track(this.add.circle(
-          this._npc.x - 8 + Math.random() * 10,
-          this._npc.y - 40 - Math.random() * 16,
-          1.5 + Math.random(),
-          0x7ec8e3,
-        ).setDepth(15));
-        this.tweens.add({
-          targets: d, y: d.y + 18, alpha: 0, duration: 700 + i * 80, delay: i * 60, repeat: -1,
-        });
-      }
-      this.track(this.add.text(560, 330, 'AFTER\ncan + splash', {
+      this.track(this.add.text(560, 330, 'AFTER\ntip + pour', {
         fontSize: '12px', fontFamily: 'monospace', color: '#8fd6b5', align: 'center',
       }).setOrigin(0.5, 0).setDepth(20));
-      this.track(this.add.image(560, 210, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
+      await this.wait(900);
+      this.stopFollow();
+      this._can.setVisible(false);
     }
 
     async sceneWater() {
       this._npc.setPosition(420, 300);
-      await this.walkTo(200, 236, 'walk_left', 1200);
-      this._npc.setFrame(12); // face plant (up)
-      this._can.setVisible(true);
-      this._can.setPosition(this._npc.x - 12, this._npc.y - 24);
-      const splash = this.track(makeEmote(this, '💦', this._npc.x + 8, this._npc.y - 56));
-      for (let i = 0; i < 6; i++) {
-        const d = this.track(this.add.circle(
-          this._plant.x - 4 + Math.random() * 12,
-          this._plant.y - 36 - Math.random() * 10,
-          1.5, 0x9ad7ef,
-        ).setDepth(15));
-        this.tweens.add({
-          targets: d, y: this._plant.y - 10, alpha: 0, duration: 650, delay: i * 90, repeat: 2,
-        });
-      }
-      await new Promise((r) => this.time.delayedCall(900, r));
+      await this.walkTo(232, 236, 'walk_left', 1200);
+      this._npc.setFrame(12);
+      await this.pourOntoPlant(this._plant.x, this._plant.y - 18);
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
         fontSize: '11px', fontFamily: 'monospace', color: '#0c4a6e',
         backgroundColor: '#f8fafcee', padding: { x: 6, y: 4 },
       }).setOrigin(0.5, 1).setDepth(40));
-      await new Promise((r) => this.time.delayedCall(1800, r));
-      splash.destroy();
+      await this.wait(1400);
       bubble.destroy();
+      this.stopFollow();
       this._can.setVisible(false);
       await this.walkTo(500, 260, 'walk_right', 1100);
       this._npc.setFrame(0);
     }
 
     async sceneWork() {
-      // Josh-like second NPC via tinted Abby for mock variety
       const rob = this.track(this.add.sprite(300, 280, 'abby', 0).setOrigin(0.5, 1).setScale(1.5).setDepth(10).setTint(0xc8e0ff));
       this._npc.setPosition(520, 248);
       this._npc.setFrame(0);
-      // Sit crop (legs under desk)
       this._npc.setCrop(0, 0, 32, 34);
 
-      const labels = [
-        { who: this._npc, text: 'Writing code', color: '#4ade80', x: 520, y: 198 },
-        { who: rob, text: 'Reading', color: '#60a5fa', x: 300, y: 228 },
-      ];
-      for (const L of labels) this.track(makeChip(this, L.text, L.color, L.x, L.y));
+      this.track(makeChip(this, 'Writing code', '#4ade80', 520, 198));
+      this.track(makeChip(this, 'Reading', '#60a5fa', 300, 228));
 
-      // Terminal NPC walks in
       await this.walkSprite(rob, 380, 250, 'walk_right', 900);
       rob.setFrame(0);
       this.track(makeChip(this, '$ terminal', '#22d3ee', 380, 198));
       this.track(makeEmote(this, '$', 396, 188));
 
-      // Typing dots on desk NPC
       const dots = this.track(this.add.text(520, 210, '…', {
         fontSize: '14px', fontFamily: 'monospace', color: '#0c4a6e',
         backgroundColor: '#e0f2fede', padding: { x: 4, y: 2 },
@@ -351,42 +459,84 @@
           dots.setText('.'.repeat(n) || '…');
         },
       });
-      await new Promise((r) => this.time.delayedCall(2800, r));
-    }
-
-    walkSprite(sprite, x, y, anim, ms) {
-      return new Promise((resolve) => {
-        sprite.anims.play(anim, true);
-        this.tweens.add({
-          targets: sprite, x, y, duration: ms, ease: 'Linear',
-          onComplete: () => { sprite.anims.stop(); resolve(); },
-        });
-      });
+      await this.wait(2800);
     }
 
     async sceneCoffee() {
       this._npc.setPosition(360, 300);
-      await this.walkTo(140, 310, 'walk_left', 1100);
-      this._npc.setFrame(4); // face left toward machine-ish
-      this._coffee.anims.play('coffee_steam', true);
-      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 54));
-      await new Promise((r) => this.time.delayedCall(2600, r));
+      // Mug starts hidden — brew first
+      this._mug.setVisible(false);
+      await this.walkTo(158, 308, 'walk_left', 1100);
+      this._npc.setFrame(4);
+
+      // Brew pulse on machine
+      this.track(makeChip(this, 'brewing…', '#fbbf24', this._machine.x, this._machine.y - 36));
+      await new Promise((resolve) => {
+        this.tweens.add({
+          targets: this._machine,
+          scale: 2.55,
+          duration: 180,
+          yoyo: true,
+          repeat: 3,
+          onComplete: resolve,
+        });
+      });
+
+      // Mug appears on machine, steam starts
+      this._mug.setPosition(this._machine.x + 2, this._machine.y - 14);
+      this._mug.setVisible(true);
+      this._mug.setScale(1.2);
+      this._mug.anims.play('mug_steam', true);
+      await this.wait(450);
+
+      // Reach / pick up — mug arcs into hand
+      await new Promise((resolve) => {
+        this.tweens.add({
+          targets: this._mug,
+          x: this._npc.x - 10,
+          y: this._npc.y - 28,
+          scale: 1.45,
+          duration: 420,
+          ease: 'Back.easeOut',
+          onComplete: resolve,
+        });
+      });
+      this.followHand(this._mug, -10, -28);
+      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 58));
+
+      // Sip bob
+      await new Promise((resolve) => {
+        this.tweens.add({
+          targets: this._mug,
+          y: this._npc.y - 34,
+          duration: 220,
+          yoyo: true,
+          ease: 'Sine.easeInOut',
+          onComplete: resolve,
+        });
+      });
+
+      // Walk away still holding steaming mug
+      const walk = this.walkTo(420, 280, 'walk_right', 1400);
+      // Keep mug steaming while walking (followHand already running)
+      await walk;
+      this._npc.setFrame(0);
+      await this.wait(900);
     }
 
     async sceneLoop() {
       const order = ['compare', 'water', 'work', 'coffee'];
       for (const key of order) {
         if (this._playing !== 'loop') return;
-        setCaption(key === order[0] ? 'loop' : key);
+        setCaption('loop');
         document.getElementById('caption').innerHTML =
           CAPTIONS.loop + ' · now: <strong>' + key + '</strong>';
-        // Don't recurse into loop
         this.clearFx();
         if (key === 'compare') await this.sceneCompare();
         else if (key === 'water') await this.sceneWater();
         else if (key === 'work') await this.sceneWork();
         else if (key === 'coffee') await this.sceneCoffee();
-        await new Promise((r) => this.time.delayedCall(700, r));
+        await this.wait(700);
         if (this._playing !== 'loop') return;
       }
       if (this._playing === 'loop') this.playScene('loop');
@@ -413,7 +563,6 @@
     });
   });
 
-  // Auto-start loop after load for walkthrough convenience
   window.addEventListener('load', () => {
     setTimeout(() => {
       setCaption('loop');
