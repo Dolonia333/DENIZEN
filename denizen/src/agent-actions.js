@@ -1738,25 +1738,19 @@ class AgentActions {
     if (!this.scene.textures?.exists?.(key)) return null;
     try {
       this._clearWateringCan?.(npcKey);
-      const can = this.scene.add.image(npc.x - 11, npc.y - 24, key);
-      can.setOrigin(0.35, 0.55);
+      const can = this.scene.add.image(npc.x - 2, npc.y - 20, key);
+      can.setOrigin(0.78, 0.62);
       can.setDepth((npc.depth || 10) + 2);
       can.setScale(1.15);
-      const ox = -11;
-      const oy = -24;
+      const ox = -2;
+      const oy = -20;
       const follow = this.scene.time.addEvent({
         delay: 30,
         loop: true,
         callback: () => {
           if (!can.active || !npc.active) return;
-          // Keep hand offset; angle is tweened separately
-          const ang = Phaser.Math.DegToRad(can.angle || 0);
-          const hx = ox * Math.cos(ang) - 0 * Math.sin(ang);
-          const hy = ox * Math.sin(ang) + 0 * Math.cos(ang);
-          // Simpler: lock to hand unless mid-tip uses absolute
           can.x = npc.x + ox;
           can.y = npc.y + oy;
-          void hx; void hy;
         },
       });
 
@@ -1764,19 +1758,20 @@ class AgentActions {
       try {
         this.scene.tweens.add({
           targets: can,
-          angle: -55,
-          scale: 1.45,
+          angle: -42,
+          scale: 1.35,
           duration: 650,
           ease: 'Sine.easeInOut',
           onComplete: () => {
             if (!can.active) return;
-            const target = pourTarget || { x: npc.x - 18, y: npc.y - 10 };
+            const target = pourTarget || { x: npc.x - 14, y: npc.y - 8 };
             for (let i = 0; i < 14; i++) {
               this.scene.time.delayedCall(i * 80, () => {
                 if (!can.active) return;
                 const ang = Phaser.Math.DegToRad(can.angle || 0);
-                const spoutX = can.x + (-14) * Math.cos(ang) - (-2) * Math.sin(ang);
-                const spoutY = can.y + (-14) * Math.sin(ang) + (-2) * Math.cos(ang);
+                // Spout relative to handle-grip origin
+                const spoutX = can.x + (-20) * Math.cos(ang) - (-3) * Math.sin(ang);
+                const spoutY = can.y + (-20) * Math.sin(ang) + (-3) * Math.cos(ang);
                 const drop = this.scene.add.circle(
                   spoutX,
                   spoutY,
@@ -1859,18 +1854,18 @@ class AgentActions {
           });
         } catch (_) {}
       }
-      const mug = this.scene.add.sprite(npc.x - 10, npc.y - 26, key, 0);
+      const mug = this.scene.add.sprite(npc.x - 2, npc.y - 46, key, 0);
       mug.setOrigin(0.5, 1);
       mug.setDepth((npc.depth || 10) + 2);
-      mug.setScale(1.15);
+      mug.setScale(1.05);
       try { mug.anims.play('vfx_mug_steam', true); } catch (_) {}
 
-      // Arc into hand from slightly above (pickup feel)
+      // Arc up to mouth
       try {
-        mug.y = npc.y - 40;
+        mug.y = npc.y - 28;
         this.scene.tweens.add({
           targets: mug,
-          y: npc.y - 26,
+          y: npc.y - 46,
           duration: 280,
           ease: 'Back.easeOut',
         });
@@ -1881,8 +1876,8 @@ class AgentActions {
         loop: true,
         callback: () => {
           if (!mug.active || !npc.active) return;
-          mug.x = npc.x - 10;
-          mug.y = npc.y - 26;
+          mug.x = npc.x - 2;
+          mug.y = npc.y - 46;
         },
       });
       const timer = this.scene.time.delayedCall(ms, () => {

@@ -194,7 +194,8 @@
       this._mug = this.add.sprite(120, 286, 'mug', 0).setOrigin(0.5, 1).setDepth(8).setScale(1.4).setVisible(false);
 
       this._npc = this.add.sprite(420, 280, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
-      this._can = this.add.image(0, 0, 'can_full').setOrigin(0.35, 0.55).setDepth(12).setScale(1.35).setVisible(false);
+      // Origin near the handle (right side) so the can body sits in her hands, spout out front
+      this._can = this.add.image(0, 0, 'can_full').setOrigin(0.78, 0.62).setDepth(12).setScale(1.35).setVisible(false);
 
       this.add.text(16, 12, 'DENIZEN · work visibility mock', {
         fontSize: '11px', fontFamily: 'monospace', color: '#9eb0a0',
@@ -202,11 +203,9 @@
 
       api = { play: (name) => this.playScene(name) };
       window.__npcAnimMock = api;
-      // Wall-clock defer so create() can finish before the first scene runs.
-      setTimeout(() => {
-        setCaption('water');
-        this.playScene('water');
-      }, 250);
+      // Do not auto-play — avoids double-start races with button clicks / refresh.
+      setCaption('water');
+      setTimeout(() => { if (this._sceneGen === 0) this.playScene('water'); }, 400);
     }
 
     clearFx() {
@@ -333,12 +332,12 @@
       });
     }
 
-    /** Spout tip in world space for left-facing can (origin near body). */
+    /** Spout tip in world space — handle-gripped left-facing can. */
     canSpoutWorld() {
       const ang = Phaser.Math.DegToRad(this._can.angle);
-      // Local spout offset when upright (spout left of body)
-      const lx = -14;
-      const ly = -2;
+      // Local spout offset from handle origin (spout is far left of the can art)
+      const lx = -20;
+      const ly = -3;
       const cos = Math.cos(ang);
       const sin = Math.sin(ang);
       return {
@@ -386,11 +385,12 @@
       this._can.setVisible(true);
       this._can.setDepth(20);
       this._can.setAngle(0);
-      this._can.setScale(1.8);
-      this.followHand(this._can, -14, -28);
+      this._can.setScale(1.55);
+      // Hands / mid-torso — not out on the left shoulder
+      this.followHand(this._can, -2, -20);
       if (!(await this.wait(350))) return false;
-      // Tip spout toward plant (counter-clockwise — spout on left)
-      await this.tweenProp(this._can, { angle: -55, scale: 2.05 }, 650);
+      // Tip spout toward plant (milder tip so it stays in her hands)
+      await this.tweenProp(this._can, { angle: -42, scale: 1.7 }, 650);
       if (!this.alive(gen)) return false;
       // Hold tipped while streaming so the pour reads clearly
       this.emitPourStream(plantX, plantY - 8, 16);
@@ -399,7 +399,7 @@
       this._can.setTexture('can_empty');
       if (!(await this.wait(500))) return false;
       // Untip
-      await this.tweenProp(this._can, { angle: 0, scale: 1.7 }, 420);
+      await this.tweenProp(this._can, { angle: 0, scale: 1.55 }, 420);
       if (!(await this.wait(400))) return false;
       return true;
     }
@@ -455,13 +455,13 @@
       this._npc.setPosition(232, 236);
       this._npc.setFrame(12);
       this.track(makeChip(this, 'pouring…', '#7dd3fc', 232, 178));
-      // Hard-place can on hand before async pour so it cannot miss a follow tick
+      // Hard-place can in her hands (handle grip) before async pour
       this._can.setTexture('can_full');
       this._can.setVisible(true);
       this._can.setDepth(20);
-      this._can.setScale(2.1);
+      this._can.setScale(1.55);
       this._can.setAngle(0);
-      this._can.setPosition(this._npc.x - 14, this._npc.y - 28);
+      this._can.setPosition(this._npc.x - 2, this._npc.y - 20);
       await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
       if (!this.alive(gen)) return;
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
@@ -528,23 +528,23 @@
       });
       if (!this.alive(gen)) return;
 
-      // Mug appears on machine, steam starts — scale up so pickup reads clearly
+      // Mug appears on machine, steam starts
       this._mug.setPosition(this._machine.x + 2, this._machine.y - 14);
       this._mug.setVisible(true);
-      this._mug.setScale(1.8);
+      this._mug.setScale(1.35);
       this._mug.setDepth(20);
       this._mug.anims.play('mug_steam', true);
       if (!(await this.wait(600))) return;
 
-      // Reach / pick up — mug arcs into hand (chest/hand height, not above head)
+      // Lift to mouth — facing left, mug sits just in front of her face
       await this.tweenProp(this._mug, {
-        x: this._npc.x - 14,
-        y: this._npc.y - 20,
-        scale: 2.0,
+        x: this._npc.x - 2,
+        y: this._npc.y - 46,
+        scale: 1.3,
       }, 480);
       if (!this.alive(gen)) return;
-      this.followHand(this._mug, -14, -20);
-      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 58));
+      this.followHand(this._mug, -2, -46);
+      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 62));
 
       if (!(await this.wait(500))) return;
 
