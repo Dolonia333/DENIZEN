@@ -445,13 +445,23 @@
     async sceneWater(gen) {
       try { this._npc.setCrop(); } catch (_) {}
       this._npc.setScale(1.5);
-      this._npc.setPosition(420, 300);
-      this._npc.setFrame(0);
-      this.track(makeChip(this, 'heading to plant…', '#67e8f9', 420, 240));
-      if (!(await this.walkTo(232, 236, 'walk_left', 1200))) return;
+      this._npc.clearTint();
+      // Start near plant, short walk in, then pour (prop tip is the point of the demo)
+      this._npc.setPosition(320, 250);
+      this._npc.setFrame(4);
+      this.track(makeChip(this, 'grabbing can…', '#67e8f9', 320, 190));
+      if (!(await this.walkTo(232, 236, 'walk_left', 700))) return;
       if (!this.alive(gen)) return;
+      this._npc.setPosition(232, 236);
       this._npc.setFrame(12);
-      this.track(makeChip(this, 'pouring…', '#7dd3fc', this._npc.x, this._npc.y - 58));
+      this.track(makeChip(this, 'pouring…', '#7dd3fc', 232, 178));
+      // Hard-place can on hand before async pour so it cannot miss a follow tick
+      this._can.setTexture('can_full');
+      this._can.setVisible(true);
+      this._can.setDepth(20);
+      this._can.setScale(2.1);
+      this._can.setAngle(0);
+      this._can.setPosition(this._npc.x - 14, this._npc.y - 28);
       await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
       if (!this.alive(gen)) return;
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
@@ -462,7 +472,7 @@
       try { bubble.destroy(); } catch (_) {}
       this.stopFollow();
       this._can.setVisible(false);
-      if (!(await this.walkTo(500, 260, 'walk_right', 1100))) return;
+      if (!(await this.walkTo(420, 280, 'walk_right', 900))) return;
       this._npc.setFrame(0);
     }
 
