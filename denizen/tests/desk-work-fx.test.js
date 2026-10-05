@@ -148,4 +148,37 @@ describe('live office desk work FX', () => {
     assert.match(fn, /return 'medium'/);
     assert.match(fn, /return 'light'/);
   });
+
+  it('anchors gems and chips to the NPC head, not a fixed npc.y-56', () => {
+    const src = fs.readFileSync(path.join(ROOT, 'src/agent-actions.js'), 'utf8');
+    const mgr = fs.readFileSync(path.join(ROOT, 'src/agent-office-manager.js'), 'utf8');
+    assert.match(src, /npcHeadTopY\(/);
+    assert.match(src, /npcFloatY\(/);
+    assert.match(src, /displayHeight/);
+    assert.match(mgr, /npcFloatY\?\.\(npc,\s*10\)/);
+    const gemUpdate = mgr.slice(
+      mgr.indexOf('_updateStatusIndicators()'),
+      mgr.indexOf('_isAgentBlocked(agent, now = Date.now())')
+    );
+    assert.doesNotMatch(gemUpdate, /setPosition\(npc\.x,\s*npc\.y\s*-\s*56\)/);
+    // Gem under chips; nameplate under gem.
+    assert.match(mgr, /setDepth\(9995\)/);
+    assert.match(src, /label\.setDepth\(9994\)/);
+    assert.match(src, /bubbleText\.setDepth\(9998\)/);
+  });
+
+  it('open-office desk money piles are replaced with paper stacks', () => {
+    const catalog = JSON.parse(
+      fs.readFileSync(path.join(ROOT, 'data/furniture_catalog_openplan.json'), 'utf8')
+    );
+    const moneyOnFloor = (catalog.placements || []).filter((p) =>
+      /^(money_|cash_)/.test(p.id || '')
+    );
+    assert.equal(moneyOnFloor.length, 0, `leftover money placements: ${moneyOnFloor.map((p) => p.id)}`);
+    const jennyDeskPaper = (catalog.placements || []).find(
+      (p) => p.instanceId === 'editor_money_small_34'
+    );
+    assert.ok(jennyDeskPaper, 'Jenny desk prop placement missing');
+    assert.equal(jennyDeskPaper.id, 'papers_stack_small');
+  });
 });

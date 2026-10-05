@@ -1417,6 +1417,22 @@ class AgentActions {
 
   // ---- Visual Helpers ----
 
+  /**
+   * World Y of the top of an NPC sprite (accounts for sit-crop / scale).
+   * Fixed offsets like `npc.y - 56` land gems on monitor desks for sitters.
+   */
+  npcHeadTopY(npc) {
+    if (!npc) return 0;
+    const h = Math.max(16, npc.displayHeight || npc.height || 48);
+    const oy = (npc.originY != null) ? npc.originY : 1;
+    return npc.y - h * oy;
+  }
+
+  /** Chip / gem Y above the head. Larger `above` → higher on screen. */
+  npcFloatY(npc, aboveHead = 8) {
+    return this.npcHeadTopY(npc) - aboveHead;
+  }
+
   _showSpeechBubble(npc, npcKey, text, style, duration) {
     this._clearBubble(npcKey, this._speechBubbles);
 
@@ -1463,18 +1479,19 @@ class AgentActions {
     });
     if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(1);
     bubbleText.setOrigin(0.5, 1);
+    // Above gems (9995) and nameplates (9996) so chips never punch through text.
     bubbleText.setDepth(9998);
     bubbleText.setAlpha(0.96);
     bubbleText.x = npc.x;
-    bubbleText.y = npc.y - (isThought ? 44 : 48);
+    const above = isThought ? 20 : 26;
+    bubbleText.y = this.npcFloatY(npc, above);
 
-    // Nudge up when another live bubble sits on roughly the same spot so
-    // clustered NPCs don't stack unreadable chips on top of each other.
+    // Nudge up off other bubbles and this NPC's nameplate.
     try {
       const bw = bubbleText.width || 80;
       const bh = bubbleText.height || 16;
       let guard = 0;
-      while (guard < 6) {
+      while (guard < 8) {
         let hit = false;
         for (const [otherKey, other] of this._speechBubbles) {
           if (otherKey === npcKey || !other?.text) continue;
@@ -1485,8 +1502,16 @@ class AgentActions {
             break;
           }
         }
+        const name = this._roleLabels.get(npcKey)?.text;
+        if (!hit && name) {
+          const dx = Math.abs(name.x - bubbleText.x);
+          const dy = Math.abs(name.y - bubbleText.y);
+          if (dx < (bw + (name.width || 40)) * 0.55 && dy < Math.max(bh, name.height || 10) + 3) {
+            hit = true;
+          }
+        }
         if (!hit) break;
-        bubbleText.y -= (bh + 6);
+        bubbleText.y -= (bh + 5);
         guard += 1;
       }
     } catch (_) { /* layout nudge is best-effort */ }
@@ -1497,7 +1522,13 @@ class AgentActions {
       this._clearBubble(npcKey, this._speechBubbles);
     }) : null;
 
-    this._speechBubbles.set(npcKey, { text: bubbleText, timer, npc, isThought });
+    this._speechBubbles.set(npcKey, {
+      text: bubbleText,
+      timer,
+      npc,
+      isThought,
+      aboveHead: above,
+    });
   }
 
   _showEmote(npc, npcKey, symbol) {
@@ -1512,15 +1543,15 @@ class AgentActions {
       padding: { x: 3, y: 1 },
     });
     emoteText.setOrigin(0.5, 1);
-    emoteText.setDepth(9999);
+    emoteText.setDepth(9998);
     emoteText.x = npc.x + 12;
-    emoteText.y = npc.y - 52;
+    emoteText.y = this.npcFloatY(npc, 28);
 
     const timer = this.scene.time.delayedCall(2500, () => {
       this._clearBubble(npcKey, this._emoteBubbles);
     });
 
-    this._emoteBubbles.set(npcKey, { text: emoteText, timer, npc });
+    this._emoteBubbles.set(npcKey, { text: emoteText, timer, npc, aboveHead: 28 });
   }
 
   _showTypingIndicator(npc, npcKey) {
@@ -1534,10 +1565,11 @@ class AgentActions {
       padding: { x: 3, y: 2 },
     });
     indicator.setOrigin(0.5, 1);
+    // Above the gem, below speech/thought chips.
     indicator.setDepth(9997);
     indicator.setAlpha(0.95);
     indicator.x = npc.x;
-    indicator.y = npc.y - 36;
+    indicator.y = this.npcFloatY(npc, 16);
 
     let dotCount = 0;
     const dotTimer = this.scene.time.addEvent({
@@ -1549,7 +1581,7 @@ class AgentActions {
       }
     });
 
-    this._typingIndicators.set(npcKey, { text: indicator, timer: dotTimer, npc });
+    this._typingIndicators.set(npcKey, { text: indicator, timer: dotTimer, npc, aboveHead: 16 });
   }
 
   _hideTypingIndicator(npcKey) {
@@ -1575,9 +1607,9 @@ class AgentActions {
     indicator.setDepth(9997);
     indicator.setAlpha(0.95);
     indicator.x = npc.x;
-    indicator.y = npc.y - 36;
+    indicator.y = this.npcFloatY(npc, 16);
 
-    this._typingIndicators.set(npcKey, { text: indicator, timer: null, npc });
+    this._typingIndicators.set(npcKey, { text: indicator, timer: null, npc, aboveHead: 16 });
   }
 
   _hideReadingIndicator(npcKey) {
@@ -1605,7 +1637,8 @@ class AgentActions {
       align: 'center',
     });
     label.setOrigin(0.5, 1);
-    label.setDepth(9996);
+    // Under gems and speech chips so status never punches through the name.
+    label.setDepth(9994);
     label.setAlpha(0.92);
     label.setData?.('npcKey', npcKey);
     label.setData?.('displayName', who);
@@ -1628,13 +1661,14 @@ class AgentActions {
     // Optional: keep role for tooltips if Phaser exposes it (no visual line).
     if (role && typeof label.setData === 'function') label.setData('role', String(role).trim());
 
+    // Just above the head top — gems sit above this, not on the desk.
     label.x = npc.x;
-    label.y = npc.y - 34;
+    label.y = this.npcFloatY(npc, 2);
 
     this._roleLabels.set(npcKey, {
       text: label,
       npc,
-      yOff: 34,
+      aboveHead: 2,
     });
   }
 
@@ -2584,25 +2618,27 @@ class AgentActions {
     // Keep "follow me" NPCs glued to the player.
     this._tickFollow();
 
-    const updateMap = (map, yOffset) => {
+    const updateMap = (map, defaultAbove) => {
       map.forEach((entry) => {
         if (entry.npc && entry.text && !entry.text.scene) return;
         if (entry.npc && entry.text) {
-          entry.text.x = entry.npc.x;
-          const off = entry.isThought ? 44 : (entry.yOff != null ? entry.yOff : yOffset);
-          entry.text.y = entry.npc.y - off;
+          entry.text.x = entry.npc.x + (entry.xOff || 0);
+          const above = entry.aboveHead != null
+            ? entry.aboveHead
+            : (entry.isThought ? 20 : defaultAbove);
+          entry.text.y = this.npcFloatY(entry.npc, above);
         }
       });
     };
 
-    updateMap(this._speechBubbles, 48);
-    updateMap(this._emoteBubbles, 56);
-    updateMap(this._roleLabels, 34);
+    updateMap(this._speechBubbles, 26);
+    updateMap(this._emoteBubbles, 28);
+    updateMap(this._roleLabels, 2);
 
     this._typingIndicators.forEach((entry) => {
       if (entry.npc && entry.text) {
         entry.text.x = entry.npc.x;
-        entry.text.y = entry.npc.y - 36;
+        entry.text.y = this.npcFloatY(entry.npc, entry.aboveHead != null ? entry.aboveHead : 16);
       }
     });
 

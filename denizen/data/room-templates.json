@@ -181,8 +181,8 @@
         { "id": "ac_unit_small",            "instanceId": "mgr_ac",    "x": 1200, "y": 72 },
         { "id": "plant_tree",               "instanceId": "mgr_plant1","x": 1228, "y": 120 },
         { "id": "plant_potted",             "instanceId": "mgr_plant2","x": 888,  "y": 100 },
-        { "id": "money_large",              "instanceId": "mgr_money", "x": 1140, "y": 152 },
-        { "id": "money_small",              "instanceId": "mgr_money2","x": 1180, "y": 160 },
+        { "id": "papers_stack_tall",        "instanceId": "mgr_money", "x": 1140, "y": 152 },
+        { "id": "papers_stack_small",       "instanceId": "mgr_money2","x": 1180, "y": 160 },
         { "id": "trash_can",                "instanceId": "mgr_trash", "x": 1060, "y": 184 },
         { "id": "paper_shredder",           "instanceId": "mgr_shred", "x": 1228, "y": 240 },
 

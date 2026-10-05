@@ -307,7 +307,7 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const catalogV = 'cat27breakroom';
+    const catalogV = 'cat28deskPapers';
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
     this.load.json('office_blueprint', `./data/office_blueprint.json?v=${catalogV}`);

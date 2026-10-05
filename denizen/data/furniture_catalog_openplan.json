@@ -1,6 +1,6 @@
 {
   "info": {
-    "purpose": "Open office \u00e2\u20ac\u201d hand-placed layout (89 items, sub-pixel tuned coords).",
+    "purpose": "Open office â€” hand-placed layout (89 items, sub-pixel tuned coords).",
     "origin": "bottom-center anchor.",
     "slice_margin_px": 2,
     "object_count": 227,
@@ -27,7 +27,7 @@
       "display_w": 64,
       "display_h": 32,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d small AC unit"
+      "_note": "User cut â€” small AC unit"
     },
     "books_stack": {
       "sheet": "mo_black_shadow_32",
@@ -40,7 +40,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d stack of books",
+      "_note": "User cut â€” stack of books",
       "stack_on": "surface"
     },
     "backpack_blue": {
@@ -56,7 +56,7 @@
       "display_w": 24,
       "display_h": 24,
       "type": "decor",
-      "_note": "candidate \u00e2\u20ac\u201d verify in verify-sprites.html; pale-blue floor bag from singles #153 (lobby prop)",
+      "_note": "candidate â€” verify in verify-sprites.html; pale-blue floor bag from singles #153 (lobby prop)",
       "stack_on": "surface"
     },
     "bookshelf_short": {
@@ -70,7 +70,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d bookshelf (64\u00c3\u201496)"
+      "_note": "User cut â€” bookshelf (64Ã—96)"
     },
     "box_desk": {
       "sheet": "mo_black_shadow_32",
@@ -83,7 +83,7 @@
       "display_w": 96,
       "display_h": 96,
       "type": "surface",
-      "_note": "User cut \u00e2\u20ac\u201d square/box desk",
+      "_note": "User cut â€” square/box desk",
       "action": "use_computer"
     },
     "cert_1": {
@@ -97,7 +97,7 @@
       "display_w": 32,
       "display_h": 36,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d certificate 1"
+      "_note": "User cut â€” certificate 1"
     },
     "cert_2": {
       "sheet": "mo_black_shadow_32",
@@ -110,7 +110,7 @@
       "display_w": 52,
       "display_h": 30,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d certificate 2"
+      "_note": "User cut â€” certificate 2"
     },
     "cert_4": {
       "sheet": "mo_black_shadow_32",
@@ -123,7 +123,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d certificate 4"
+      "_note": "User cut â€” certificate 4"
     },
     "chair_black_back": {
       "sheet": "mo_black_shadow_32",
@@ -206,7 +206,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d black back-facing chair with breathing holes",
+      "_note": "User cut â€” black back-facing chair with breathing holes",
       "action": "seat"
     },
     "chair_black_back_no_holes": {
@@ -220,7 +220,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d black back-facing chair no holes",
+      "_note": "User cut â€” black back-facing chair no holes",
       "action": "seat"
     },
     "chair_black_front": {
@@ -234,7 +234,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d black front-facing desk chair",
+      "_note": "User cut â€” black front-facing desk chair",
       "action": "seat"
     },
     "chair_black_front_holes": {
@@ -248,7 +248,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d black front-facing chair with breathing holes",
+      "_note": "User cut â€” black front-facing chair with breathing holes",
       "action": "seat"
     },
     "chair_black_side_left": {
@@ -262,7 +262,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d black side left-facing chair",
+      "_note": "User cut â€” black side left-facing chair",
       "action": "seat"
     },
     "chair_black_side_left_2": {
@@ -290,7 +290,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d black side right-facing chair",
+      "_note": "User cut â€” black side right-facing chair",
       "action": "seat"
     },
     "chair_black_side_right_2": {
@@ -335,7 +335,7 @@
       "display_h": 34,
       "type": "seat",
       "action": "seat",
-      "_note": "Lobby round grey pod chair \u00e2\u20ac\u201d singles #122 (matches reference lobby_side_chairs_grey)"
+      "_note": "Lobby round grey pod chair â€” singles #122 (matches reference lobby_side_chairs_grey)"
     },
     "chair_boss_g11_10_2x1": {
       "sheet": "mo_black_shadow_32",
@@ -474,7 +474,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d orange back-facing chair no holes",
+      "_note": "User cut â€” orange back-facing chair no holes",
       "action": "seat"
     },
     "chair_orange_front_holes": {
@@ -488,7 +488,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d orange front-facing chair with breathing holes",
+      "_note": "User cut â€” orange front-facing chair with breathing holes",
       "action": "seat"
     },
     "coffee_machine": {
@@ -534,7 +534,7 @@
       "display_w": 96,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d corner sofa"
+      "_note": "User cut â€” corner sofa"
     },
     "cubicle_desk": {
       "sheet": "mo_black_shadow_32",
@@ -547,7 +547,7 @@
       "display_w": 96,
       "display_h": 64,
       "type": "surface",
-      "_note": "User cut \u00e2\u20ac\u201d office desk for cubicle",
+      "_note": "User cut â€” office desk for cubicle",
       "action": "use_computer"
     },
     "cubicle_desk_back": {
@@ -561,7 +561,7 @@
       "display_w": 96,
       "display_h": 32,
       "type": "surface",
-      "_note": "User cut \u00e2\u20ac\u201d desk for back view of cubicle",
+      "_note": "User cut â€” desk for back view of cubicle",
       "action": "use_computer"
     },
     "cubicle_desk_front": {
@@ -575,7 +575,7 @@
       "display_w": 96,
       "display_h": 32,
       "type": "surface",
-      "_note": "User cut \u00e2\u20ac\u201d desk for front view of cubicle",
+      "_note": "User cut â€” desk for front view of cubicle",
       "action": "use_computer"
     },
     "cubicle_divider_full": {
@@ -589,7 +589,7 @@
       "display_w": 224,
       "display_h": 96,
       "type": "partition",
-      "_note": "User cut \u00e2\u20ac\u201d full cubicle divider set with end caps"
+      "_note": "User cut â€” full cubicle divider set with end caps"
     },
     "cubicle_g10_28_3x3": {
       "sheet": "mo_black_shadow_32",
@@ -1091,7 +1091,7 @@
       "display_w": 96,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d phone + laptop + paper + book + light setup",
+      "_note": "User cut â€” phone + laptop + paper + book + light setup",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1107,7 +1107,7 @@
       "display_w": 96,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d double monitors + phone + keyboard + mouse + photo",
+      "_note": "User cut â€” double monitors + phone + keyboard + mouse + photo",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1323,7 +1323,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d laptop front-facing",
+      "_note": "User cut â€” laptop front-facing",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1339,7 +1339,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d laptop front left-facing",
+      "_note": "User cut â€” laptop front left-facing",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1355,7 +1355,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d laptop front right-facing",
+      "_note": "User cut â€” laptop front right-facing",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1389,7 +1389,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d large pile of money",
+      "_note": "User cut â€” large pile of money",
       "stack_on": "surface"
     },
     "money_medium": {
@@ -1403,7 +1403,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d pile of money",
+      "_note": "User cut â€” pile of money",
       "stack_on": "surface"
     },
     "money_small": {
@@ -1417,7 +1417,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d small pile of money",
+      "_note": "User cut â€” small pile of money",
       "stack_on": "surface"
     },
     "monitor_dual_sheet": {
@@ -2331,7 +2331,7 @@
       "display_w": 64,
       "display_h": 32,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d small stack of paper",
+      "_note": "User cut â€” small stack of paper",
       "parent_offset_y": 0,
       "stack_on": "surface"
     },
@@ -2408,7 +2408,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d office phone",
+      "_note": "User cut â€” office phone",
       "parent_offset_y": 0,
       "stack_on": "surface"
     },
@@ -2437,7 +2437,7 @@
       "display_w": 31,
       "display_h": 44,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d potted plant",
+      "_note": "User cut â€” potted plant",
       "stack_on": "surface"
     },
     "plant_potted_2": {
@@ -2535,7 +2535,7 @@
       "display_w": 27,
       "display_h": 57,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d potted plant spikey",
+      "_note": "User cut â€” potted plant spikey",
       "stack_on": "surface"
     },
     "plant_tall": {
@@ -2605,7 +2605,7 @@
       "display_w": 64,
       "display_h": 128,
       "type": "decor",
-      "_note": "Auto-extract obj_49 \u00e2\u20ac\u201d composite prop cluster (mislabeled as plant); see shelf_metal_empty single #91",
+      "_note": "Auto-extract obj_49 â€” composite prop cluster (mislabeled as plant); see shelf_metal_empty single #91",
       "stack_on": "surface"
     },
     "shelf_metal_empty": {
@@ -2621,7 +2621,7 @@
       "display_w": 32,
       "display_h": 48,
       "type": "furniture",
-      "_note": "Empty metal shelving unit \u00e2\u20ac\u201d singles #91 (also appears in sheet obj_49 cluster)"
+      "_note": "Empty metal shelving unit â€” singles #91 (also appears in sheet obj_49 cluster)"
     },
     "plant_tall_6": {
       "sheet": "mo_black_shadow_32",
@@ -2690,7 +2690,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d potted plant tree",
+      "_note": "User cut â€” potted plant tree",
       "stack_on": "surface"
     },
     "pop_art_sheet": {
@@ -2744,7 +2744,7 @@
       "display_w": 85,
       "display_h": 83,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d right corner sofa"
+      "_note": "User cut â€” right corner sofa"
     },
     "small_table_sheet": {
       "sheet": "mo_black_shadow_32",
@@ -3052,7 +3052,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d stairs"
+      "_note": "User cut â€” stairs"
     },
     "trash_can": {
       "sheet": "mo_black_shadow_32",
@@ -3065,7 +3065,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d desk trash can"
+      "_note": "User cut â€” desk trash can"
     },
     "vending_2x3": {
       "sheet": "mo_black_shadow_32",
@@ -3092,7 +3092,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d empty vending machine"
+      "_note": "User cut â€” empty vending machine"
     },
     "vending_full": {
       "sheet": "mo_black_shadow_32",
@@ -3105,7 +3105,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d full vending machine"
+      "_note": "User cut â€” full vending machine"
     },
     "waiting_row_4": {
       "sheet": "mo_black_shadow_32",
@@ -3118,7 +3118,7 @@
       "display_w": 128,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u00e2\u20ac\u201d 4-chair waiting room row (blue, black, white, orange)",
+      "_note": "User cut â€” 4-chair waiting room row (blue, black, white, orange)",
       "action": "seat"
     },
     "waiting_row_5": {
@@ -3160,7 +3160,7 @@
       "display_w": 32,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u00e2\u20ac\u201d water dispenser"
+      "_note": "User cut â€” water dispenser"
     },
     "whiteboard_1x2": {
       "sheet": "mo_black_shadow_32",
@@ -3281,7 +3281,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d blank whiteboard"
+      "_note": "User cut â€” blank whiteboard"
     },
     "whiteboard_charts": {
       "sheet": "mo_black_shadow_32",
@@ -3294,7 +3294,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d whiteboard with graphs and charts"
+      "_note": "User cut â€” whiteboard with graphs and charts"
     },
     "whiteboard_graph_sheet": {
       "sheet": "mo_black_shadow_32",
@@ -3320,7 +3320,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u00e2\u20ac\u201d whiteboard with graphs"
+      "_note": "User cut â€” whiteboard with graphs"
     },
     "wall_screen_ui": {
       "sheet": "mo_black_shadow_32",
@@ -3333,7 +3333,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "Auto-extract obj_54 \u00e2\u20ac\u201d wall-mounted UI screen (4-quadrant charts); ref wall_screen_large / wall_screen_ui",
+      "_note": "Auto-extract obj_54 â€” wall-mounted UI screen (4-quadrant charts); ref wall_screen_large / wall_screen_ui",
       "stack_on": "surface"
     },
     "mo_single_001": {
@@ -4432,7 +4432,7 @@
         "w": 1,
         "h": 2
       },
-      "notes": "Empty metal shelving unit \u00e2\u20ac\u201d catalog shelf_metal_empty"
+      "notes": "Empty metal shelving unit â€” catalog shelf_metal_empty"
     },
     "mo_single_092": {
       "source_type": "single_file",
@@ -4810,7 +4810,7 @@
         "w": 1,
         "h": 1
       },
-      "notes": "Round grey waiting-area pod chair \u00e2\u20ac\u201d catalog chair_pod_grey"
+      "notes": "Round grey waiting-area pod chair â€” catalog chair_pod_grey"
     },
     "mo_single_123": {
       "source_type": "single_file",
@@ -5183,12 +5183,12 @@
       "type": "furniture",
       "theme": "modern_office",
       "_file": "Modern_Office_Singles_32x32_153.png",
-      "displayName": "Backpack (blue) \u00e2\u20ac\u201d candidate",
+      "displayName": "Backpack (blue) â€” candidate",
       "footprint": {
         "w": 1,
         "h": 1
       },
-      "notes": "Floor bag prop \u00e2\u20ac\u201d verify in verify-sprites.html; catalog backpack_blue"
+      "notes": "Floor bag prop â€” verify in verify-sprites.html; catalog backpack_blue"
     },
     "mo_single_154": {
       "source_type": "single_file",
@@ -14719,7 +14719,7 @@
       "flipY": false
     },
     {
-      "id": "money_small",
+      "id": "papers_stack_small",
       "instanceId": "editor_money_small_34",
       "x": 600,
       "y": 204,
@@ -14959,7 +14959,7 @@
       "flipY": false
     },
     {
-      "id": "money_large",
+      "id": "papers_stack_tall",
       "instanceId": "editor_money_large_67",
       "x": 1216,
       "y": 256,
@@ -14969,7 +14969,7 @@
       "flipY": false
     },
     {
-      "id": "money_medium",
+      "id": "papers_stack_medium",
       "instanceId": "editor_money_medium_68",
       "x": 1043,
       "y": 131,
@@ -14979,7 +14979,7 @@
       "flipY": false
     },
     {
-      "id": "money_small",
+      "id": "papers_stack_small",
       "instanceId": "editor_money_small_69",
       "x": 928,
       "y": 168,
@@ -14989,7 +14989,7 @@
       "flipY": false
     },
     {
-      "id": "money_large",
+      "id": "papers_stack_tall",
       "instanceId": "editor_money_large_71",
       "x": 1220,
       "y": 236,

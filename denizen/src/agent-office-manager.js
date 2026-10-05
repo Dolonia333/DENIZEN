@@ -2201,11 +2201,14 @@ class AgentOfficeManager {
       let dot = this._statusDots.get(npcKey);
       if (!dot) {
         dot = this.scene.add.circle(0, 0, 3, gem.color);
-        dot.setDepth(9999);
+        // Under speech/thought chips (9998) and typing (9997); above nameplates (9994).
+        dot.setDepth(9995);
         this._statusDots.set(npcKey, dot);
       }
       dot.setFillStyle(gem.color);
-      dot.setPosition(npc.x, npc.y - 56);
+      // Head-relative — fixed npc.y-56 drops gems onto monitor desks for sitters.
+      const gemY = this.actions.npcFloatY?.(npc, 10) ?? (npc.y - 40);
+      dot.setPosition(npc.x, gemY);
       dot.setVisible(npc.visible !== false);
       this._setStatusGemPulse(dot, gem.pulse);
 
