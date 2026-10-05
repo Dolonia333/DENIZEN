@@ -1854,18 +1854,18 @@ class AgentActions {
           });
         } catch (_) {}
       }
-      const mug = this.scene.add.sprite(npc.x + 2, npc.y - 52, key, 0);
+      const mug = this.scene.add.sprite(npc.x - 6, npc.y - 50, key, 0);
       mug.setOrigin(0.5, 0.72);
       mug.setDepth((npc.depth || 10) + 2);
       mug.setScale(0.95);
       try { mug.anims.play('vfx_mug_steam', true); } catch (_) {}
 
-      // Arc up to mouth
+      // Arc up to mouth (slightly left — matches common left/face-toward furniture poses)
       try {
         mug.y = npc.y - 30;
         this.scene.tweens.add({
           targets: mug,
-          y: npc.y - 52,
+          y: npc.y - 50,
           duration: 280,
           ease: 'Back.easeOut',
         });
@@ -1876,8 +1876,11 @@ class AgentActions {
         loop: true,
         callback: () => {
           if (!mug.active || !npc.active) return;
-          mug.x = npc.x + 2;
-          mug.y = npc.y - 52;
+          // Bias toward facing direction so the cup sits on the face, not behind the head
+          const face = npc.ai?.facing || npc.anims?.currentAnim?.key || '';
+          const leftish = /left|4|5|6|7/.test(String(face)) || (npc.frame && npc.frame.index >= 4 && npc.frame.index <= 7);
+          mug.x = npc.x + (leftish ? -6 : 2);
+          mug.y = npc.y - 50;
         },
       });
       const timer = this.scene.time.delayedCall(ms, () => {

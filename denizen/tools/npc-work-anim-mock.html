@@ -536,21 +536,23 @@
       this._mug.anims.play('mug_steam', true);
       if (!(await this.wait(600))) return;
 
-      // Lift to mouth — origin on the cup body so the mug sits on her face
+      // Facing left: mouth is on the left of the sprite — hold mug there
       await this.tweenProp(this._mug, {
-        x: this._npc.x + 2,
-        y: this._npc.y - 52,
+        x: this._npc.x - 6,
+        y: this._npc.y - 50,
         scale: 1.0,
       }, 480);
       if (!this.alive(gen)) return;
-      this.followHand(this._mug, 2, -52);
+      this.followHand(this._mug, -6, -50);
       this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 68));
 
       if (!(await this.wait(500))) return;
 
-      // Walk away still holding steaming mug
+      // Walk away still holding steaming mug — keep mug on the face while turning
       if (!(await this.walkTo(420, 280, 'walk_right', 1400))) return;
       this._npc.setFrame(0);
+      // Facing camera: mug centered on mouth
+      this.followHand(this._mug, 2, -50);
       await this.wait(1200);
     }
 
