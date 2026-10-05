@@ -1839,28 +1839,24 @@ class AgentActions {
    */
   _flashCoffeeMug(npc, npcKey, ms = 4200) {
     if (!npc || !this.scene?.add) return null;
-    const key = 'vfx_coffee_mug';
-    if (!this.scene.textures?.exists?.(key)) return null;
+    // Prefer the tight cup-only texture so it can sit on the mouth
+    const cupKey = this.scene.textures?.exists?.('vfx_coffee_cup') ? 'vfx_coffee_cup' : null;
+    const sheetKey = this.scene.textures?.exists?.('vfx_coffee_mug') ? 'vfx_coffee_mug' : null;
+    if (!cupKey && !sheetKey) return null;
     try {
       this._clearCoffeeMug?.(npcKey);
-      // Ensure steam anim exists once
-      if (!this.scene.anims?.exists?.('vfx_mug_steam')) {
-        try {
-          this.scene.anims.create({
-            key: 'vfx_mug_steam',
-            frames: this.scene.anims.generateFrameNumbers(key, { start: 0, end: 5 }),
-            frameRate: 6,
-            repeat: -1,
-          });
-        } catch (_) {}
+      let mug;
+      if (cupKey) {
+        mug = this.scene.add.image(npc.x, npc.y - 52, cupKey);
+        mug.setOrigin(0.5, 0.55);
+        mug.setScale(1.35);
+      } else {
+        mug = this.scene.add.sprite(npc.x, npc.y - 52, sheetKey, 0);
+        mug.setOrigin(0.5, 0.5);
+        mug.setScale(1.2);
+        try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
       }
-      const mug = this.scene.add.sprite(npc.x, npc.y - 52, key, 0);
-      mug.setOrigin(0.5, 0.5);
       mug.setDepth((npc.depth || 10) + 2);
-      mug.setScale(1.35);
-      // Cup only — the sheet's tall steam pad reads as "above the head" if left uncropped
-      try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
-      try { mug.anims.stop(); } catch (_) {}
 
       try {
         mug.y = npc.y - 30;
@@ -1880,8 +1876,8 @@ class AgentActions {
           const f = npc.frame?.index ?? 0;
           let ox = 0;
           let oy = -52;
-          if (f >= 4 && f <= 7) ox = -2;
-          else if (f >= 8 && f <= 11) ox = 2;
+          if (f >= 4 && f <= 7) ox = -1;
+          else if (f >= 8 && f <= 11) ox = 1;
           else if (f >= 12) oy = -56;
           mug.x = npc.x + ox;
           mug.y = npc.y + oy;
