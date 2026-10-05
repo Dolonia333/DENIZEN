@@ -1764,15 +1764,15 @@ class AgentActions {
       try {
         this.scene.tweens.add({
           targets: can,
-          angle: -48,
-          scale: 1.3,
-          duration: 380,
+          angle: -55,
+          scale: 1.45,
+          duration: 650,
           ease: 'Sine.easeInOut',
           onComplete: () => {
             if (!can.active) return;
             const target = pourTarget || { x: npc.x - 18, y: npc.y - 10 };
-            for (let i = 0; i < 10; i++) {
-              this.scene.time.delayedCall(i * 70, () => {
+            for (let i = 0; i < 14; i++) {
+              this.scene.time.delayedCall(i * 80, () => {
                 if (!can.active) return;
                 const ang = Phaser.Math.DegToRad(can.angle || 0);
                 const spoutX = can.x + (-14) * Math.cos(ang) - (-2) * Math.sin(ang);
@@ -1780,7 +1780,7 @@ class AgentActions {
                 const drop = this.scene.add.circle(
                   spoutX,
                   spoutY,
-                  1.5,
+                  2,
                   0x7ec8e3,
                   0.95,
                 );
@@ -1790,14 +1790,14 @@ class AgentActions {
                   x: target.x + Phaser.Math.Between(-5, 5),
                   y: target.y + Phaser.Math.Between(-2, 3),
                   alpha: 0.1,
-                  duration: 280,
+                  duration: 340,
                   ease: 'Quad.easeIn',
                   onComplete: () => { try { drop.destroy(); } catch (_) {} },
                 });
               });
             }
-            // Swap to empty can after stream starts
-            this.scene.time.delayedCall(700, () => {
+            // Swap to empty can after stream finishes
+            this.scene.time.delayedCall(1300, () => {
               if (!can.active) return;
               if (this.scene.textures?.exists?.('vfx_watering_can_empty')) {
                 try { can.setTexture('vfx_watering_can_empty'); } catch (_) {}
@@ -1807,7 +1807,7 @@ class AgentActions {
                   targets: can,
                   angle: 0,
                   scale: 1.15,
-                  duration: 320,
+                  duration: 420,
                   ease: 'Sine.easeOut',
                 });
               } catch (_) {}

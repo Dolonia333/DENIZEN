@@ -313,16 +313,16 @@
           const drop = this.track(this.add.circle(
             spout.x + Phaser.Math.Between(-1, 1),
             spout.y,
-            1.4 + Math.random() * 0.8,
+            2.2 + Math.random() * 1.2,
             0x7ec8e3,
-          ).setDepth(16).setAlpha(0.95));
+          ).setDepth(16).setAlpha(0.98));
           this.tweens.add({
             targets: drop,
             x: targetX + Phaser.Math.Between(-6, 6),
             y: targetY + Phaser.Math.Between(-2, 4),
-            alpha: 0.15,
-            scale: 0.4,
-            duration: 280 + Math.random() * 80,
+            alpha: 0.2,
+            scale: 0.45,
+            duration: 360 + Math.random() * 100,
             ease: 'Quad.easeIn',
             onComplete: () => {
               // soil splash ripple
@@ -342,43 +342,38 @@
       this._can.setTexture('can_full');
       this._can.setVisible(true);
       this._can.setAngle(0);
-      this.followHand(this._can, -11, -26);
-      // Lift
-      await new Promise((resolve) => {
-        this.tweens.add({
-          targets: this._can,
-          scale: 1.55,
-          duration: 220,
-          yoyo: false,
-          onComplete: resolve,
-        });
-      });
+      this._can.setScale(1.8);
+      this.followHand(this._can, -14, -28);
+      await this.wait(350);
       // Tip spout toward plant (counter-clockwise — spout on left)
       await new Promise((resolve) => {
         this.tweens.add({
           targets: this._can,
-          angle: -48,
-          duration: 380,
+          angle: -55,
+          scale: 2.05,
+          duration: 650,
           ease: 'Sine.easeInOut',
           onComplete: resolve,
         });
       });
-      this.emitPourStream(plantX, plantY - 8, 12);
-      await this.wait(900);
+      // Hold tipped while streaming so the pour reads clearly
+      this.emitPourStream(plantX, plantY - 8, 16);
+      await this.wait(1400);
       // Empty after pour
       this._can.setTexture('can_empty');
-      await this.wait(350);
+      await this.wait(500);
       // Untip
       await new Promise((resolve) => {
         this.tweens.add({
           targets: this._can,
           angle: 0,
-          scale: 1.35,
-          duration: 320,
+          scale: 1.7,
+          duration: 420,
           ease: 'Sine.easeOut',
           onComplete: resolve,
         });
       });
+      await this.wait(400);
     }
 
     async playScene(name) {
