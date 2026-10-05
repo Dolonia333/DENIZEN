@@ -1738,12 +1738,12 @@ class AgentActions {
     if (!this.scene.textures?.exists?.(key)) return null;
     try {
       this._clearWateringCan?.(npcKey);
-      const can = this.scene.add.image(npc.x + 2, npc.y - 18, key);
+      const can = this.scene.add.image(npc.x + 4, npc.y - 14, key);
       can.setOrigin(0.78, 0.62);
       can.setDepth((npc.depth || 10) + 2);
-      can.setScale(1.15);
-      const ox = 2;
-      const oy = -18;
+      can.setScale(1.1);
+      const ox = 4;
+      const oy = -14;
       const follow = this.scene.time.addEvent({
         delay: 30,
         loop: true,
@@ -1758,13 +1758,13 @@ class AgentActions {
       try {
         this.scene.tweens.add({
           targets: can,
-          angle: -42,
-          scale: 1.35,
+          angle: -28,
+          scale: 1.25,
           duration: 650,
           ease: 'Sine.easeInOut',
           onComplete: () => {
             if (!can.active) return;
-            const target = pourTarget || { x: npc.x - 14, y: npc.y - 8 };
+            const target = pourTarget || { x: npc.x - 12, y: npc.y - 6 };
             for (let i = 0; i < 14; i++) {
               this.scene.time.delayedCall(i * 80, () => {
                 if (!can.active) return;
@@ -1801,7 +1801,7 @@ class AgentActions {
                 this.scene.tweens.add({
                   targets: can,
                   angle: 0,
-                  scale: 1.15,
+                  scale: 1.1,
                   duration: 420,
                   ease: 'Sine.easeOut',
                 });
@@ -1854,18 +1854,18 @@ class AgentActions {
           });
         } catch (_) {}
       }
-      const mug = this.scene.add.sprite(npc.x + 1, npc.y - 38, key, 0);
+      const mug = this.scene.add.sprite(npc.x + 2, npc.y - 52, key, 0);
       mug.setOrigin(0.5, 0.72);
       mug.setDepth((npc.depth || 10) + 2);
-      mug.setScale(1.0);
+      mug.setScale(0.95);
       try { mug.anims.play('vfx_mug_steam', true); } catch (_) {}
 
       // Arc up to mouth
       try {
-        mug.y = npc.y - 24;
+        mug.y = npc.y - 30;
         this.scene.tweens.add({
           targets: mug,
-          y: npc.y - 38,
+          y: npc.y - 52,
           duration: 280,
           ease: 'Back.easeOut',
         });
@@ -1876,8 +1876,8 @@ class AgentActions {
         loop: true,
         callback: () => {
           if (!mug.active || !npc.active) return;
-          mug.x = npc.x + 1;
-          mug.y = npc.y - 38;
+          mug.x = npc.x + 2;
+          mug.y = npc.y - 52;
         },
       });
       const timer = this.scene.time.delayedCall(ms, () => {

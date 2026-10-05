@@ -385,12 +385,12 @@
       this._can.setVisible(true);
       this._can.setDepth(20);
       this._can.setAngle(0);
-      this._can.setScale(1.55);
-      // Hands / mid-torso in front of her — spout reaches the plant when tipped
-      this.followHand(this._can, 2, -18);
+      this._can.setScale(1.5);
+      // Grip in front of torso / hands — tip stays in her arms, not left shoulder
+      this.followHand(this._can, 4, -14);
       if (!(await this.wait(350))) return false;
-      // Tip spout toward plant (milder tip so it stays in her hands)
-      await this.tweenProp(this._can, { angle: -42, scale: 1.7 }, 650);
+      // Mild tip so the can body doesn't swing up beside her head
+      await this.tweenProp(this._can, { angle: -28, scale: 1.6 }, 650);
       if (!this.alive(gen)) return false;
       // Hold tipped while streaming so the pour reads clearly
       this.emitPourStream(plantX, plantY - 8, 16);
@@ -399,7 +399,7 @@
       this._can.setTexture('can_empty');
       if (!(await this.wait(500))) return false;
       // Untip
-      await this.tweenProp(this._can, { angle: 0, scale: 1.55 }, 420);
+      await this.tweenProp(this._can, { angle: 0, scale: 1.5 }, 420);
       if (!(await this.wait(400))) return false;
       return true;
     }
@@ -461,7 +461,7 @@
       this._can.setDepth(20);
       this._can.setScale(1.55);
       this._can.setAngle(0);
-      this._can.setPosition(this._npc.x + 2, this._npc.y - 18);
+      this._can.setPosition(this._npc.x + 4, this._npc.y - 14);
       await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
       if (!this.alive(gen)) return;
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
@@ -536,15 +536,15 @@
       this._mug.anims.play('mug_steam', true);
       if (!(await this.wait(600))) return;
 
-      // Lift to mouth — mug body origin sits on her face, not floating above hair
+      // Lift to mouth — origin on the cup body so the mug sits on her face
       await this.tweenProp(this._mug, {
-        x: this._npc.x + 1,
-        y: this._npc.y - 38,
-        scale: 1.15,
+        x: this._npc.x + 2,
+        y: this._npc.y - 52,
+        scale: 1.0,
       }, 480);
       if (!this.alive(gen)) return;
-      this.followHand(this._mug, 1, -38);
-      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 62));
+      this.followHand(this._mug, 2, -52);
+      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 68));
 
       if (!(await this.wait(500))) return;
 
