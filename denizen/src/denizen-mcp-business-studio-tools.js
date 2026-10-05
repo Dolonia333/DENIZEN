@@ -685,9 +685,17 @@ async function callTool(scope, name, args = {}) {
     const brief = chain.workingSetBrief(state);
     const sectionRaw = args.section || args.view || args.focus;
     const meta = sectionRaw ? sections.getSectionMeta(sectionRaw) : null;
+    const mcpActor = require('./denizen-mcp-actor');
+    const actor = mcpActor.actorFromMcpScope(scope);
     return {
       ok: true,
       local,
+      data_scope: mcpActor.isOrgWideScope(scope) ? 'org' : 'own',
+      viewer: {
+        identity_id: actor.identityId || null,
+        user: actor.user || null,
+        role: actor.role || null,
+      },
       business: state.business
         ? { id: state.business.id, name: state.business.name, founderName: state.business.founderName }
         : null,
@@ -774,7 +782,15 @@ async function callTool(scope, name, args = {}) {
   if (name === 'business_studio_apply_founder_pack') {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
-    const { state } = loaded;
+    const { state, orgId } = loaded;
+    // Personal Dolonia founder materials must not land in other teams.
+    if (orgId && denizenDb.orgId && String(orgId) !== String(denizenDb.orgId)) {
+      return {
+        ok: false,
+        error:
+          'Founder pack is operator-only. New teams start with an empty Business Studio — do not import another org\'s living materials.',
+      };
+    }
     let result;
     try {
       result = founderPack.applyFounderPack(state, {
@@ -876,6 +892,8 @@ async function callTool(scope, name, args = {}) {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
+    const mcpActor = require('./denizen-mcp-actor');
+    const actor = mcpActor.actorFromMcpScope(scope);
     let task = (state.tasks || []).find((t) => t.id === args.id);
     if (task) {
       Object.assign(task, {
@@ -885,6 +903,7 @@ async function callTool(scope, name, args = {}) {
         due: args.due ?? task.due,
         owner: args.owner ?? task.owner,
       });
+      if (!task.ownerIdentityId && actor.identityId) task.ownerIdentityId = actor.identityId;
     } else {
       task = {
         id: uid('task'),
@@ -892,7 +911,9 @@ async function callTool(scope, name, args = {}) {
         status: args.status || 'todo',
         priority: args.priority || 'medium',
         due: args.due || null,
-        owner: args.owner || null,
+        owner: args.owner || actor.user || null,
+        ownerIdentityId: actor.identityId || scope?.identity_id || null,
+        createdBy: actor.user || null,
         createdAt: new Date().toISOString(),
         source: 'mcp',
       };

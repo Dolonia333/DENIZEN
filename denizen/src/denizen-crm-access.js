@@ -1,8 +1,11 @@
 'use strict';
 
 /**
- * CRM record visibility: members see only their own rows in the browser CRM.
- * Owners/admins (and MCP / org-wide callers) keep the full org workspace.
+ * CRM record visibility: members see only their own rows (browser + MCP).
+ * Owners/admins / org-wide callers keep the full org workspace.
+ *
+ * Personal maps (userPrefs.profiles, calendarConnections) are keyed by
+ * identity so teammate profile edits cannot overwrite each other.
  */
 
 const ORG_WIDE_ROLES = new Set(['owner', 'admin', 'ceo']);
@@ -164,12 +167,19 @@ function filterWorkspaceForAccess(state, actor, { orgWide = false } = {}) {
     })
     : [];
 
+  // Calendars are team-view by default (so teammates see who's who).
+  // Only meetings explicitly marked visibility=private stay personal.
   const meetings = Array.isArray(raw.meetings)
     ? raw.meetings.filter((m) => {
-      if (recordOwnedBy(m, aliases, ['ownerId', 'assignee', 'createdBy', 'organizer'])) return true;
-      const attendees = Array.isArray(m.attendees) ? m.attendees : [];
-      if (attendees.some((a) => matchesAlias(typeof a === 'string' ? a : a?.name || a?.email, aliases))) return true;
-      return contactNames.has(norm(m.contact || m.clientName));
+      const vis = norm(m.visibility || 'team');
+      if (vis === 'private') {
+        if (recordOwnedBy(m, aliases, ['ownerId', 'assignee', 'createdBy', 'organizer', 'ownerIdentityId', 'ownerName'])) {
+          return true;
+        }
+        const attendees = Array.isArray(m.attendees) ? m.attendees : [];
+        return attendees.some((a) => matchesAlias(typeof a === 'string' ? a : a?.name || a?.email, aliases));
+      }
+      return true;
     })
     : [];
 
@@ -243,6 +253,33 @@ function filterWorkspaceForAccess(state, actor, { orgWide = false } = {}) {
   out.auditLog = auditLog;
   out.usageLog = usageLog;
 
+  // Personal prefs / OAuth calendar tokens — never leak teammates'.
+  const identityId = actor?.identityId || null;
+  const myPrefs = prefsForIdentity(raw.userPrefs, identityId);
+  out.userPrefs = {
+    ...myPrefs,
+    // Project caller's prefs into legacy shape the CRM UI expects.
+    profile: myPrefs.profile || null,
+    notifications: myPrefs.notifications || null,
+    profiles: identityId ? { [identityId]: myPrefs } : {},
+  };
+  out.calendarConnections = calendarConnectionsForIdentity(raw.calendarConnections, identityId);
+
+  if (Array.isArray(raw.noteBoards)) {
+    // Legacy unowned boards stay visible; owned boards only for their owner.
+    out.noteBoards = raw.noteBoards.filter((b) => !noteBoardHasOwner(b) || noteBoardOwnedBy(b, aliases));
+  }
+
+  // Availability is shared team scheduling — keep visible, but strip if
+  // it becomes a per-identity map in the future.
+  if (raw.availability && typeof raw.availability === 'object' && !Array.isArray(raw.availability)) {
+    const keys = Object.keys(raw.availability);
+    const looksKeyed = identityId && keys.length > 0 && keys.every((k) => k.length > 20 || k.includes('-'));
+    if (looksKeyed && raw.availability[identityId]) {
+      out.availability = raw.availability[identityId];
+    }
+  }
+
   return {
     state: out,
     scope: 'own',
@@ -274,6 +311,77 @@ function stampOwnerFields(record, actor) {
   if (actor?.identityId && !next.ownerIdentityId) next.ownerIdentityId = actor.identityId;
   if (actor?.email && !next.ownerEmail) next.ownerEmail = actor.email;
   return next;
+}
+
+/**
+ * Read the caller's personal prefs from the org workspace.
+ * Supports legacy flat `userPrefs.profile` and keyed `userPrefs.profiles[id]`.
+ */
+function prefsForIdentity(userPrefs, identityId) {
+  const raw = userPrefs && typeof userPrefs === 'object' ? userPrefs : {};
+  const profiles = raw.profiles && typeof raw.profiles === 'object' ? raw.profiles : {};
+  if (identityId && profiles[identityId] && typeof profiles[identityId] === 'object') {
+    return { ...profiles[identityId] };
+  }
+  // Legacy singleton — only expose when caller has no identity (or as seed).
+  const legacy = {};
+  if (raw.profile && typeof raw.profile === 'object') legacy.profile = { ...raw.profile };
+  if (raw.notifications && typeof raw.notifications === 'object') {
+    legacy.notifications = { ...raw.notifications };
+  }
+  for (const [k, v] of Object.entries(raw)) {
+    if (k === 'profiles' || k === 'profile' || k === 'notifications') continue;
+    legacy[k] = v;
+  }
+  return legacy;
+}
+
+/**
+ * Merge one member's prefs into keyed storage without clobbering teammates.
+ */
+function mergePrefsForIdentity(fullPrefs, memberPrefs, identityId) {
+  const full = fullPrefs && typeof fullPrefs === 'object' ? { ...fullPrefs } : {};
+  const member = memberPrefs && typeof memberPrefs === 'object' ? memberPrefs : {};
+  if (!identityId) {
+    // No identity → keep legacy shallow merge (automation / demos).
+    return { ...full, ...member };
+  }
+  const profiles = { ...(full.profiles && typeof full.profiles === 'object' ? full.profiles : {}) };
+  const prev = prefsForIdentity(full, identityId);
+  const incoming = { ...member };
+  // Prefer explicit profile object; otherwise treat top-level as prefs blob.
+  const nextProfile = incoming.profile && typeof incoming.profile === 'object'
+    ? { ...(prev.profile || {}), ...incoming.profile }
+    : (prev.profile || undefined);
+  const next = {
+    ...prev,
+    ...incoming,
+    ...(nextProfile ? { profile: nextProfile } : {}),
+  };
+  if (incoming.notifications && typeof incoming.notifications === 'object') {
+    next.notifications = { ...(prev.notifications || {}), ...incoming.notifications };
+  }
+  profiles[identityId] = next;
+  full.profiles = profiles;
+  // Do not keep a shared singleton profile once keyed profiles exist.
+  return full;
+}
+
+function calendarConnectionsForIdentity(connections, identityId) {
+  const raw = connections && typeof connections === 'object' ? connections : {};
+  if (!identityId) return {};
+  if (raw[identityId] != null) return { [identityId]: raw[identityId] };
+  return {};
+}
+
+function noteBoardHasOwner(board) {
+  return !!(board?.ownerId || board?.owner || board?.createdBy
+    || board?.user || board?.author || board?.ownerIdentityId);
+}
+
+function noteBoardOwnedBy(board, aliases) {
+  if (!noteBoardHasOwner(board)) return false;
+  return recordOwnedBy(board, aliases, ['ownerId', 'owner', 'createdBy', 'user', 'author', 'ownerIdentityId']);
 }
 
 /**
@@ -362,11 +470,29 @@ function mergeMemberWorkspace(fullState, memberState, actor) {
   }
 
   // Non-scoped keys the member may edit for themselves
+  const identityId = actor?.identityId || null;
   if (member.userPrefs && typeof member.userPrefs === 'object') {
-    full.userPrefs = { ...(full.userPrefs || {}), ...member.userPrefs };
+    full.userPrefs = mergePrefsForIdentity(full.userPrefs, member.userPrefs, identityId);
+  }
+  if (member.calendarConnections && typeof member.calendarConnections === 'object' && identityId) {
+    const all = {
+      ...(full.calendarConnections && typeof full.calendarConnections === 'object'
+        ? full.calendarConnections
+        : {}),
+    };
+    if (member.calendarConnections[identityId] != null) {
+      all[identityId] = member.calendarConnections[identityId];
+    } else if (Object.keys(member.calendarConnections).length) {
+      // Member payload may send their connections unscoped — keep under their id.
+      all[identityId] = member.calendarConnections[identityId] || member.calendarConnections;
+    }
+    full.calendarConnections = all;
   }
   if (member.noteBoards && Array.isArray(member.noteBoards)) {
-    full.noteBoards = member.noteBoards;
+    const fullBoards = Array.isArray(full.noteBoards) ? full.noteBoards : [];
+    const keepOthers = fullBoards.filter((b) => !noteBoardOwnedBy(b, aliases));
+    const stamped = member.noteBoards.map((b) => stampOwnerFields({ ...b }, actor));
+    full.noteBoards = [...keepOthers, ...stamped];
   }
 
   return full;
@@ -438,4 +564,7 @@ module.exports = {
   mergeMemberWorkspace,
   buildTeamActivity,
   stampOwnerFields,
+  prefsForIdentity,
+  mergePrefsForIdentity,
+  calendarConnectionsForIdentity,
 };

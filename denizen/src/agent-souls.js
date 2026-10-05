@@ -65,10 +65,11 @@ function displayToFolder(nameOrKey) {
   return hit?.folder || null;
 }
 
-function loadSoulsForTemplatePack(templatePack = '1921-govcon') {
+function loadSoulsForTemplatePack(templatePack = 'generic-office') {
   if (templatePack === genericSoulPack.TEMPLATE_PACK || templatePack === 'generic-office') {
     return genericSoulPack.loadAllGenericSouls();
   }
+  // Explicit operator packs only (e.g. 1921-govcon) — never the default for new teams.
   return loadAllSoulsFromFiles();
 }
 
@@ -111,11 +112,17 @@ async function listSoulsForOrg(denizenDb, orgId) {
   return loadAllSoulsFromFiles();
 }
 
-async function cloneTemplatePackToOrg(denizenDb, orgId, templatePack = '1921-govcon') {
+async function cloneTemplatePackToOrg(denizenDb, orgId, templatePack = 'generic-office') {
   if (!denizenDb?.enabled || !orgId) {
     throw new Error('database unavailable or missing orgId');
   }
-  const souls = loadSoulsForTemplatePack(templatePack);
+  const pack = String(templatePack || 'generic-office').trim() || 'generic-office';
+  if (pack === '1921-govcon' && !isOperatorOrgId(denizenDb, orgId)) {
+    throw new Error(
+      'Operator template pack "1921-govcon" cannot be applied to other teams. Use generic-office.',
+    );
+  }
+  const souls = loadSoulsForTemplatePack(pack);
   let upserted = 0;
   for (const s of souls) {
     if (!s.soul_content?.trim()) continue;
@@ -125,15 +132,15 @@ async function cloneTemplatePackToOrg(denizenDb, orgId, templatePack = '1921-gov
       displayName: s.display_name,
       soulContent: s.soul_content,
       memoryContent: s.memory_content || '',
-      templatePack,
+      templatePack: pack,
     });
     upserted += 1;
   }
   const businessContext = require('./denizen-business-context');
-  const isGeneric = templatePack === genericSoulPack.TEMPLATE_PACK || templatePack === 'generic-office';
+  const isGeneric = pack === genericSoulPack.TEMPLATE_PACK || pack === 'generic-office';
   await denizenDb.upsertOrgBusinessModel({
     orgId,
-    templatePack,
+    templatePack: pack,
     businessModel: isGeneric
       ? genericSoulPack.loadGenericBusinessModel()
       : businessContext.loadBusinessModel(),
@@ -141,7 +148,7 @@ async function cloneTemplatePackToOrg(denizenDb, orgId, templatePack = '1921-gov
       ? genericSoulPack.loadGenericCompanyBrief()
       : businessContext.loadCompanyBrief(),
   });
-  return { upserted, templatePack };
+  return { upserted, templatePack: pack };
 }
 module.exports = {
   loadSoulFromFiles,

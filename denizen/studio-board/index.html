@@ -138,6 +138,7 @@ input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
 .evt.done{opacity:.5;text-decoration:line-through}
 .evt .edot{width:6px;height:6px;border-radius:50%;background:var(--ec);flex:none}
 .evt .etitle{overflow:hidden;text-overflow:ellipsis}
+.evt .eown{flex:none;margin-left:4px;font-size:9px;font-weight:700;opacity:.85;letter-spacing:.02em}
 .more{font-size:11px;color:var(--muted);font-weight:500;padding-left:2px}
 
 /* ================= Table ================= */
@@ -2195,7 +2196,11 @@ function renderCalendar(){
     const meets=evl.filter(x=>x.kind==='meeting').sort((a,b)=>(a.time||'').localeCompare(b.time||''));
     const fups=evl.filter(x=>x.kind==='followup');
     const pills=[
-      ...meets.map(ev=>`<div class="evt evm" data-time="${esc(ev.time||'')}" onclick="event.stopPropagation();openMeetingEdit('${ev.id}')" title="${esc(ev.title)}">${ev.time?`<b>${ev.time}</b> `:''}${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span></div>`),
+      ...meets.map(ev=>{
+        const who=eventOwnerName(ev);
+        const tip=who?`${ev.title||''} · ${who}`:(ev.title||'');
+        return `<div class="evt evm" data-time="${esc(ev.time||'')}" onclick="event.stopPropagation();openMeetingEdit('${ev.id}')" title="${esc(tip)}">${ev.time?`<b>${ev.time}</b> `:''}${ev.repeat?'\u21bb ':''}<span class="etitle">${esc(ev.title)}</span>${who?`<span class="eown">${esc(who.split(' ')[0])}</span>`:''}</div>`;
+      }),
       ...shownTasks.map(({t,carry})=>calTaskPill(t,{carry})),
       ...fups.map(ev=>`<div class="evt evf ${ev.done?'done':''}" onclick="event.stopPropagation();selectDay('${dateStr}')" title="${esc(ev.title)}">\u2691 <span class="etitle">${esc(ev.title)}</span></div>`)
     ];
@@ -2311,7 +2316,12 @@ function dayPanelHTML(dateStr){
       ${avatar(t.assignee)}
     </div>`;
   };
-  const mrow=e=>`<div class="dpitem evrow" data-id="${e.id}"><span class="dptime">${e.time||'\u2014'}</span><span class="dptxt">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.client?` <span class="dpc">${esc(e.client)}</span>`:''}${e.duration?` <span class="dpc">${e.duration}m</span>`:''}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpedit" onclick="event.stopPropagation();openMeetingEdit('${e.id}')" title="Edit meeting">Edit</button><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
+  const mrow=e=>{
+    const who=eventOwnerName(e);
+    const ownerBit=who?` <span class="dpc" title="Owner">${esc(who.split(' ')[0])}</span>`:'';
+    const av=e.ownerPersonId?avatar(e.ownerPersonId):'';
+    return `<div class="dpitem evrow" data-id="${e.id}"><span class="dptime">${e.time||'\u2014'}</span><span class="dptxt">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.client?` <span class="dpc">${esc(e.client)}</span>`:''}${e.duration?` <span class="dpc">${e.duration}m</span>`:''}${ownerBit}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span>${av}<button class="dpedit" onclick="event.stopPropagation();openMeetingEdit('${e.id}')" title="Edit meeting">Edit</button><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
+  };
   const frow=e=>`<div class="dpitem evrow" data-id="${e.id}"><input type="checkbox" class="cbx"${e.done?' checked':''} onclick="event.stopPropagation();toggleFollow('${e.id}')"><span class="dptxt ${e.done?'done':''} ${!e.done&&dateStr<todayISO()?'late':''}">${esc(e.title)}${e.note?`<div class="evnote">\u270e ${esc(e.note)}</div>`:''}</span><button class="dpnote${e.note?' has':''}" onclick="event.stopPropagation();editEventNote('${e.id}')" title="${e.note?'Edit note':'Add note'}">\u270e</button><button class="dpconv" title="Convert to task" onclick="event.stopPropagation();convertFollow('${e.id}')">\u2192 task</button><button class="dpdel" onclick="event.stopPropagation();delEvent('${e.id}')" title="Delete">\u2715</button></div>`;
   const clientBar=clients.length?`<div class="dpops" style="margin:6px 0 2px">${clients.map(c=>`<button type="button" onclick="filterClient('${esc(c)}')">Filter ${esc(c)}</button>`).join('')}</div>`:'';
   return `<aside class="daypanel">
@@ -2326,11 +2336,29 @@ function dayPanelHTML(dateStr){
   </aside>`;
 }
 function selectDay(d){ ui.selDate=d; render(); }
+function eventOwnerName(e){
+  if(!e) return '';
+  if(e.ownerName) return e.ownerName;
+  if(e.ownerPersonId){ const p=personById(e.ownerPersonId); if(p?.name) return p.name; }
+  return e.owner||e.organizer||'';
+}
+function stampEventOwner(e){
+  if(!e) return e;
+  if(!e.ownerPersonId && me.id) e.ownerPersonId=me.id;
+  if(!e.ownerName){
+    const p=personById(e.ownerPersonId||me.id);
+    if(p?.name) e.ownerName=p.name;
+  }
+  const iid=loginProfile?.identity_id||null;
+  if(!e.ownerIdentityId && iid) e.ownerIdentityId=iid;
+  if(!e.visibility) e.visibility='team';
+  return e;
+}
 function addEvent(kind){
   const isM=kind==='meeting';
   const inp=document.getElementById(isM?'mtTitle':'fuTitle');
   const title=(inp.value||'').trim(); if(!title) return;
-  const e={id:uid(),kind,title,date:ui.selDate,done:false};
+  const e=stampEventOwner({id:uid(),kind,title,date:ui.selDate,done:false});
   if(isM){ const tv=document.getElementById('mtTime').value; if(tv) e.time=tv;
     if(document.getElementById('mtRep').checked) e.repeat='weekly'; }
   (state.events=state.events||[]).push(e); save(); render();
@@ -2377,6 +2405,7 @@ function saveMeetingEdit(){
   const note=(document.getElementById('me-note').value||'').trim();
   if(note) e.note=note; else delete e.note;
   if(document.getElementById('me-rep').checked) e.repeat='weekly'; else delete e.repeat;
+  stampEventOwner(e);
   ui.selDate=e.date;
   save(); closeMeetingEdit(); render();
   toast('Meeting updated');
@@ -3008,7 +3037,15 @@ function renderMyDay(container){
   const dueToday=mine.filter(t=>dayDiff(t.due)===0);
   const focus=[...overdue,...dueToday];
   const later=mine.filter(t=>dayDiff(t.due)>0).sort((a,b)=>a.due<b.due?-1:1);
-  const meetings=eventsOn(today).filter(e=>e.kind==='meeting'&&(!e.client||true)).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const meetings=eventsOn(today).filter(e=>{
+    if(e.kind!=='meeting') return false;
+    if(e.visibility==='private'){
+      return e.ownerPersonId===me.id || (Array.isArray(e.attendeeIds)&&e.attendeeIds.includes(me.id));
+    }
+    // My Day: show meetings I own or attend; team calendar still shows everyone.
+    return !e.ownerPersonId || e.ownerPersonId===me.id
+      || (Array.isArray(e.attendeeIds)&&e.attendeeIds.includes(me.id));
+  }).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const rem=(personal.reminders||[]);
   const taskRem=mine.filter(t=>t.remind!==false && dayDiff(t.due)<=0).sort((a,b)=>a.due<b.due?-1:1);
   const remOpen=rem.filter(r=>!r.done).length + taskRem.length;
@@ -3044,7 +3081,10 @@ function renderMyDay(container){
     ? later.map(t=>taskLine(t)).join('')
     : `<div class="mdempty">No upcoming tasks assigned to you.</div>`;
   const meetHtml = meetings.length
-    ? meetings.map(e=>`<div class="mdrow" onclick="setView('calendar')"><span class="dptime">${e.time||'\u2014'}</span><span class="mdtitle">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.note?`<span class="evnotetag" title="${esc(e.note)}">\u270e note</span>`:''}</span><span class="mdclient">${esc(e.client||'')}</span></div>`).join('')
+    ? meetings.map(e=>{
+        const who=eventOwnerName(e);
+        return `<div class="mdrow" onclick="setView('calendar')"><span class="dptime">${e.time||'\u2014'}</span><span class="mdtitle">${e.repeat?'\u21bb ':''}${esc(e.title)}${e.note?`<span class="evnotetag" title="${esc(e.note)}">\u270e note</span>`:''}</span><span class="mdclient">${esc(who||e.client||'')}</span></div>`;
+      }).join('')
     : `<div class="mdempty">No meetings today.</div>`;
   const taskRemHtml = taskRem.map(t=>{ const due=relDue(t);
     return `<div class="mdrow rem taskrem" onclick="openTask('${t.id}')" title="Task reminder \u2014 click to open"><span class="ddot" style="background:${typeHex(t.type)}"></span><span class="mdtitle">${esc(t.title)}<span class="tremtag">task</span></span><span class="t-date ${due.cls}" style="width:auto">${due.html}</span></div>`;

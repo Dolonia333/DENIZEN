@@ -289,6 +289,13 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const sessionId = sessionIdFrom(req, body, url);
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
+        if (orgId && denizenDb.orgId && String(orgId) !== String(denizenDb.orgId)) {
+          json(res, 403, {
+            ok: false,
+            error: 'Founder pack is operator-only. New teams start with an empty Business Studio.',
+          });
+          return true;
+        }
         const loaded = await loadOrgState(orgId);
         const maybeAdvisor = findAdvisor(loaded.state, access);
         if (!isFounderCapable(access, maybeAdvisor)) {

@@ -42,7 +42,8 @@ function createAccessGrant({ tier, orgSlug, accessMethod = 'team_code', email = 
   const payload = {
     typ: 'access_grant',
     tier: String(tier || 'team'),
-    org_slug: String(orgSlug || 'zion'),
+    // Never invent operator org slug — missing means grant is incomplete.
+    org_slug: String(orgSlug || '').trim(),
     access_method: accessMethod,
     email: email || null,
     exp: Date.now() + GRANT_TTL_MS,

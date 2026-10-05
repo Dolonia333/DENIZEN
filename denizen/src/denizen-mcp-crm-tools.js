@@ -9,6 +9,8 @@ const mcpActions = require('./denizen-mcp-actions');
 const crmStore = require('./denizen-crm-store');
 const workingSet = require('./denizen-crm-working-set');
 const crmMutations = require('./denizen-crm-mutations');
+const crmAccess = require('./denizen-crm-access');
+const mcpActor = require('./denizen-mcp-actor');
 const denizenDb = require('./denizen-db');
 const mailPolicy = require('./denizen-mail-policy');
 const { sendCrmEmail } = require('./denizen-crm-email');
@@ -243,20 +245,42 @@ function resolveOrgId(scope) {
   return scope?.org_id || denizenDb.orgId || null;
 }
 
+function scopedCrmState(scope, state) {
+  const actor = mcpActor.actorFromMcpScope(scope);
+  const orgWide = mcpActor.isOrgWideScope(scope);
+  const scoped = crmAccess.filterWorkspaceForAccess(state || {}, actor, { orgWide });
+  return {
+    state: scoped.state,
+    data_scope: scoped.scope,
+    filtered: !!scoped.filtered,
+    actor,
+  };
+}
+
 async function toolWorkingSet(scope, args = {}) {
   const orgId = resolveOrgId(scope);
   if (!orgId) return { ok: false, error: 'org_id unavailable' };
   const row = await crmStore.getWorkspace(orgId);
-  const state = row?.state || {};
+  const { state, data_scope, filtered, actor } = scopedCrmState(scope, row?.state || {});
   const board = workingSet.buildWorkingSet(state);
   const c = board.counts || {};
+  const scopeNote = filtered
+    ? ` Scoped to ${actor.user || 'you'} (personal CRM + team calendar).`
+    : ' Org-wide view.';
   return {
     ok: true,
     focus: args?.focus || null,
+    data_scope,
+    filtered,
+    viewer: {
+      identity_id: actor.identityId || null,
+      user: actor.user || null,
+      role: actor.role || null,
+    },
     summary: board.empty
-      ? 'Working set empty — no open pursuits. Do not invent seed data.'
+      ? `Working set empty — no open pursuits. Do not invent seed data.${scopeNote}`
       : `Working set: ${c.open_pipeline} live deal(s), $${Number(c.open_pipeline_value || 0).toLocaleString()}, `
-        + `${c.contacts} contacts, ${c.open_tasks} open tasks, ${c.watchlist} watchlist parked, ${c.at_risk} at-risk.`,
+        + `${c.contacts} contacts, ${c.open_tasks} open tasks, ${c.watchlist} watchlist parked, ${c.at_risk} at-risk.${scopeNote}`,
     ...board,
   };
 }
@@ -281,6 +305,7 @@ async function toolUpsertContact(scope, args = {}) {
   const orgId = resolveOrgId(scope);
   if (!orgId) return { ok: false, error: 'org_id unavailable' };
   const identityId = scope?.identity_id || null;
+  const actor = mcpActor.actorFromMcpScope(scope);
   const crmSkills = require('./denizen-crm-skills');
   try {
     const id = args?.id ?? args?.contact_id ?? args?.contactId;
@@ -290,6 +315,7 @@ async function toolUpsertContact(scope, args = {}) {
         const updated = await crmSkills.updateContact(orgId, {
           contactId: id,
           ...args,
+          actor,
         }, identityId);
         return { ok: true, updated: true, ...updated };
       } catch (err) {
@@ -297,7 +323,7 @@ async function toolUpsertContact(scope, args = {}) {
         // fall through to create when email not found
       }
     }
-    const created = await crmMutations.addContact(orgId, args || {}, identityId);
+    const created = await crmMutations.addContact(orgId, args || {}, identityId, actor);
     return { ok: true, created: true, ...created };
   } catch (err) {
     return { ok: false, error: err?.message || String(err) };
@@ -308,14 +334,15 @@ async function toolUpsertDeal(scope, args = {}) {
   const orgId = resolveOrgId(scope);
   if (!orgId) return { ok: false, error: 'org_id unavailable' };
   const identityId = scope?.identity_id || null;
+  const actor = mcpActor.actorFromMcpScope(scope);
   try {
     const dealId = args?.deal_id ?? args?.dealId ?? args?.id;
     if (dealId != null) {
-      const updated = await crmMutations.updateDeal(orgId, { ...args, deal_id: dealId }, identityId);
+      const updated = await crmMutations.updateDeal(orgId, { ...args, deal_id: dealId, actor }, identityId);
       return { ok: true, updated: true, ...updated };
     }
     if (!args?.title) return { ok: false, error: 'title required to create a deal' };
-    const created = await crmMutations.addDeal(orgId, args || {}, identityId);
+    const created = await crmMutations.addDeal(orgId, args || {}, identityId, actor);
     return { ok: true, created: !created.deal || created.summary?.includes('Created'), ...created };
   } catch (err) {
     return { ok: false, error: err?.message || String(err) };
@@ -342,6 +369,7 @@ async function toolMoveDeal(scope, args = {}) {
 async function toolUpsertTask(scope, args = {}) {
   const orgId = resolveOrgId(scope);
   if (!orgId) return { ok: false, error: 'org_id unavailable' };
+  const actor = mcpActor.actorFromMcpScope(scope);
   try {
     const result = await crmMutations.addTask(orgId, {
       title: args?.title,
@@ -351,7 +379,8 @@ async function toolUpsertTask(scope, args = {}) {
       notes: args?.notes,
       deal_id: args?.deal_id ?? args?.dealId,
       dealId: args?.deal_id ?? args?.dealId,
-    }, scope?.identity_id || null);
+      assignee: args?.assignee || actor.user,
+    }, scope?.identity_id || null, actor);
     return { ok: true, created: true, ...result };
   } catch (err) {
     return { ok: false, error: err?.message || String(err) };

@@ -1,7 +1,17 @@
 'use strict';
 
-/** Angela Van Zandt — 1920 Holding parent company; branded dossier PDFs like operator. */
-const ANGELA_HOLDING_EMAILS = new Set(['vzion253@gmail.com']);
+/**
+ * Holding-company dossier branding allowlist.
+ * Prefer DENIZEN_HOLDING_EMAILS=a@x,b@y — do not ship personal emails as product defaults.
+ */
+function holdingEmailsFromEnv() {
+  const raw = String(process.env.DENIZEN_HOLDING_EMAILS || process.env.DENIZEN_ANGELA_HOLDING_EMAILS || '').trim();
+  if (!raw) return new Set();
+  return new Set(raw.split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean));
+}
+
+/** @deprecated use holdingEmailsFromEnv(); kept for tests that inspect the export */
+const ANGELA_HOLDING_EMAILS = holdingEmailsFromEnv();
 
 function normalizeName(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -9,7 +19,10 @@ function normalizeName(value) {
 
 function isAngelaHoldingPrincipal(profile = {}) {
   const email = String(profile.email || '').trim().toLowerCase();
-  if (email && ANGELA_HOLDING_EMAILS.has(email)) return true;
+  const allow = holdingEmailsFromEnv();
+  if (email && allow.has(email)) return true;
+  // Name match only when an allowlist is configured (operator deploy).
+  if (!allow.size) return false;
   const name = normalizeName(
     profile.display_name || profile.displayName || profile.username || profile.name || '',
   );

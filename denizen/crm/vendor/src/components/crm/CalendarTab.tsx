@@ -1256,7 +1256,13 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                     <span style={{ fontSize: 12, color: T.text1, fontWeight: 500 }}>{m.title}</span>
                     {m.recurrence && m.recurrence !== 'none' && <span style={{ fontSize: 9 }}>🔁</span>}
                   </div>
-                  <div style={{ fontSize: 10, color: T.text3 }}>{m.duration}min · {m.contact}</div>
+                  <div style={{ fontSize: 10, color: T.text3 }}>
+                    {m.duration}min
+                    {m.contact ? ` · ${m.contact}` : ""}
+                    {(m.ownerName || m.ownerId || m.organizer)
+                      ? ` · ${m.ownerName || m.ownerId || m.organizer}`
+                      : ""}
+                  </div>
                 </div>
                 <div style={{ display: "flex", gap: 4 }}>
                   <button onClick={(e) => { e.stopPropagation(); downloadICS(m); }}

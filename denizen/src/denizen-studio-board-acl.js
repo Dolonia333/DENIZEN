@@ -2,7 +2,8 @@
 
 /**
  * Studio Board ACL — owner/admin vs member (CRM-style).
- * MCP stays org-wide; this gates the human UI/API for settings mutations.
+ * Settings mutations stay admin-gated. Calendar/events are team-view with
+ * per-person ownership stamps; private visibility stays personal.
  */
 
 function normalizeId(v) {

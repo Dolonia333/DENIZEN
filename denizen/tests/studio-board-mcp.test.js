@@ -128,4 +128,53 @@ describe('studio-board standup + events helpers', () => {
     assert.ok(Array.isArray(ws.upcoming_events));
     assert.ok(ws.upcoming_events.some((e) => e.title === 'Kickoff'));
   });
+
+  it('summarizeEvent includes owner and myDay filters personal meetings', async () => {
+    const mutations = require('../src/denizen-studio-board-mutations');
+    const today = new Date().toISOString().slice(0, 10);
+    const people = [
+      { id: 'p1', name: 'Kaiser', identityId: 'id-kaiser' },
+      { id: 'p2', name: 'Zion', identityId: 'id-zion' },
+    ];
+    const mine = {
+      id: 'e1',
+      kind: 'meeting',
+      title: 'Kaiser sync',
+      date: today,
+      time: '09:00',
+      ownerPersonId: 'p1',
+      ownerIdentityId: 'id-kaiser',
+      ownerName: 'Kaiser',
+      visibility: 'team',
+    };
+    const theirs = {
+      id: 'e2',
+      kind: 'meeting',
+      title: 'Zion private',
+      date: today,
+      time: '11:00',
+      ownerPersonId: 'p2',
+      ownerIdentityId: 'id-zion',
+      ownerName: 'Zion',
+      visibility: 'private',
+    };
+    const team = {
+      id: 'e3',
+      kind: 'meeting',
+      title: 'All-hands',
+      date: today,
+      time: '15:00',
+      ownerPersonId: 'p2',
+      ownerName: 'Zion',
+      visibility: 'team',
+    };
+    const summary = mutations.summarizeEvent(mine, people);
+    assert.equal(summary.owner_name, 'Kaiser');
+    assert.equal(summary.visibility, 'team');
+
+    assert.equal(mutations.eventVisibleToPerson(theirs, people[0], { identityId: 'id-kaiser' }), false);
+    assert.equal(mutations.eventVisibleToPerson(team, people[0], { identityId: 'id-kaiser' }), true);
+    assert.equal(mutations.eventInvolvesPerson(mine, people[0], { identityId: 'id-kaiser' }), true);
+    assert.equal(mutations.eventInvolvesPerson(team, people[0], { identityId: 'id-kaiser' }), false);
+  });
 });
