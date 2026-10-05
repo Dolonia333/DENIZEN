@@ -434,11 +434,15 @@ class AgentOfficeManager {
     // Everyone begins the day correctly seated at their assigned workstation.
     // Ambient routines release them gradually after the office has visibly
     // settled, which makes every later walk read as intentional.
+    // Seed a light spread of desk workload so gems + clutter read immediately
+    // (medium paper/mug, heavy both, one blocked pulse) without HUD chrome.
+    const seatedKeys = [];
     this.agents.forEach((agent, npcKey) => {
       if (agent.role === 'cofounder' && agent.assignedDesk) {
         // CTO anchors the private office
         this.actions.teleportToDesk(npcKey, agent.assignedDesk);
         agent.status = 'working';
+        seatedKeys.push(npcKey);
         this.scene.time.delayedCall(5000, () => {
           this.actions.speak(npcKey, 'Good morning team!');
         });
@@ -447,6 +451,7 @@ class AgentOfficeManager {
       if (agent.assignedDesk) {
         this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
         agent.status = 'working';
+        seatedKeys.push(npcKey);
       } else {
         // A roster entry without a usable chair must not remain frozen in the
         // boot hold forever; release only that NPC onto normal floor movement.
@@ -464,6 +469,8 @@ class AgentOfficeManager {
         agent.status = 'wandering';
       }
     });
+
+    this._seedDeskWorkloadShowcase(seatedKeys);
 
     // Grok home welcome (desk placement handled above via teleportToDesk)
     const grok = this.agents.get('xp_grok');
@@ -2247,6 +2254,68 @@ class AgentOfficeManager {
       dot._gemPulse = null;
       dot.setAlpha(1);
     }
+  }
+
+  /**
+   * First-paint desk readability: a few seated agents get real workload markers
+   * so paper/mug clutter + gem meanings show without inventing HUD chrome.
+   * Markers expire naturally via existing timers / think loop.
+   */
+  _seedDeskWorkloadShowcase(seatedKeys = []) {
+    const apply = (keys) => {
+      const now = Date.now();
+      const list = (keys || []).filter((k) => this.agents.get(k)?.assignedDesk);
+      if (list.length < 2) return;
+      // Spread medium load across several desks so paper/mug clutter reads at a glance.
+      for (let i = 0; i < Math.min(5, list.length); i++) {
+        const agent = this.agents.get(list[i]);
+        if (!agent || agent.role === 'cofounder' && i > 0) continue;
+        agent.currentTask = agent.currentTask || 'Desk work';
+        agent._lastSkillAt = now;
+        if (agent.status === 'idle' || agent.status === 'wandering') agent.status = 'working';
+      }
+      const heavy = this.agents.get(list[1]);
+      if (heavy) {
+        heavy.currentTask = 'Review mesh jobs';
+        heavy._taskLabel = 'queue';
+        heavy._lastSkillAt = now;
+        heavy.status = 'working';
+        if (heavy.assignedDesk) this.actions.useComputer(list[1], heavy.assignedDesk, { instant: true });
+      }
+      if (list.length >= 3) {
+        const blockedKey = list[2];
+        const blocked = this.agents.get(blockedKey);
+        if (blocked) {
+          blocked.status = 'waiting_on_skill';
+          blocked._skillPendingSince = now;
+          blocked.currentTask = 'Await skill result';
+          blocked._lastSkillAt = now;
+          if (blocked.assignedDesk) {
+            this.actions.useComputer(blockedKey, blocked.assignedDesk, { instant: true });
+          }
+        }
+      }
+      // Keep one talking gem visible without standing them up.
+      if (list.length >= 4) {
+        const talking = this.agents.get(list[3]);
+        if (talking && this.actions._sittingNpcs?.has?.(list[3])) {
+          talking.status = 'talking';
+          talking.currentTask = talking.currentTask || 'Sync';
+          talking._lastSkillAt = now;
+        }
+      }
+    };
+    apply(seatedKeys);
+    // Ambient chill can stand people up in the first seconds — re-apply once
+    // the floor has settled so gems + clutter stick for the first look.
+    this.scene?.time?.delayedCall?.(4500, () => {
+      const still = [];
+      this.agents.forEach((a, k) => {
+        if (a.assignedDesk && this.actions._sittingNpcs?.has?.(k)) still.push(k);
+      });
+      if (still.length) apply(still);
+      else apply(seatedKeys);
+    });
   }
 
   /**
