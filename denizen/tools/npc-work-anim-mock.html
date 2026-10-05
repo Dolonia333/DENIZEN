@@ -202,11 +202,11 @@
 
       api = { play: (name) => this.playScene(name) };
       window.__npcAnimMock = api;
-      // Defer until the scene clock is ticking (create-time awaits can stall).
-      this.time.delayedCall(200, () => {
+      // Wall-clock defer so create() can finish before the first scene runs.
+      setTimeout(() => {
         setCaption('water');
         this.playScene('water');
-      });
+      }, 250);
     }
 
     clearFx() {
@@ -287,37 +287,50 @@
           sprite.x = x0 + (x - x0) * t;
           sprite.y = y0 + (y - y0) * t;
           if (t >= 1) finish(true);
-          else this.time.delayedCall(ms / steps, step);
+          else setTimeout(step, ms / steps);
         };
-        // Hard ceiling — never hang a scene if timers glitch
-        this.time.delayedCall(ms + 500, () => finish(this._sceneGen === gen));
-        this.time.delayedCall(0, step);
+        // Hard ceiling on wall clock — never hang a scene
+        setTimeout(() => finish(this._sceneGen === gen), ms + 500);
+        setTimeout(step, 0);
       });
     }
 
-    /** Keep prop glued to NPC hand while held. */
+    /** Keep prop glued to NPC hand while held (wall-clock interval). */
     followHand(prop, ox, oy, also = null) {
-      if (this._holdFollow) {
-        try { this._holdFollow.remove(false); } catch (_) {}
-      }
-      this._holdFollow = this.time.addEvent({
-        delay: 16,
-        loop: true,
-        callback: () => {
-          if (!prop.active || !this._npc.active) return;
-          prop.x = this._npc.x + ox;
-          prop.y = this._npc.y + oy;
-          if (also) also(prop, this._npc);
-        },
-      });
+      this.stopFollow();
+      const tick = () => {
+        if (!prop || !prop.active || !this._npc || !this._npc.active) return;
+        prop.x = this._npc.x + ox;
+        prop.y = this._npc.y + oy;
+        if (also) also(prop, this._npc);
+      };
+      tick();
+      this._holdFollow = setInterval(tick, 16);
       return this._holdFollow;
     }
 
     stopFollow() {
       if (this._holdFollow) {
-        try { this._holdFollow.remove(false); } catch (_) {}
+        try { clearInterval(this._holdFollow); } catch (_) {}
         this._holdFollow = null;
       }
+    }
+
+    tweenProp(targets, props, duration) {
+      return new Promise((resolve) => {
+        const start = {};
+        for (const k of Object.keys(props)) start[k] = targets[k];
+        const t0 = performance.now();
+        const step = (now) => {
+          const t = Math.min(1, (now - t0) / duration);
+          for (const k of Object.keys(props)) {
+            targets[k] = start[k] + (props[k] - start[k]) * t;
+          }
+          if (t < 1) requestAnimationFrame(step);
+          else resolve();
+        };
+        requestAnimationFrame(step);
+      });
     }
 
     /** Spout tip in world space for left-facing can (origin near body). */
@@ -336,8 +349,8 @@
 
     emitPourStream(targetX, targetY, bursts = 10) {
       for (let i = 0; i < bursts; i++) {
-        this.time.delayedCall(i * 70, () => {
-          if (!this._can.visible) return;
+        setTimeout(() => {
+          if (!this._can || !this._can.visible) return;
           const spout = this.canSpoutWorld();
           const drop = this.track(this.add.circle(
             spout.x + Phaser.Math.Between(-1, 1),
@@ -345,25 +358,25 @@
             2.2 + Math.random() * 1.2,
             0x7ec8e3,
           ).setDepth(16).setAlpha(0.98));
-          this.tweens.add({
-            targets: drop,
-            x: targetX + Phaser.Math.Between(-6, 6),
-            y: targetY + Phaser.Math.Between(-2, 4),
-            alpha: 0.2,
-            scale: 0.45,
-            duration: 360 + Math.random() * 100,
-            ease: 'Quad.easeIn',
-            onComplete: () => {
-              // soil splash ripple
-              const ripple = this.track(this.add.circle(drop.x, drop.y, 2, 0x9ad7ef, 0.35).setDepth(14));
-              this.tweens.add({
-                targets: ripple, scale: 2.2, alpha: 0, duration: 220,
-                onComplete: () => { try { ripple.destroy(); } catch (_) {} },
-              });
+          const x1 = drop.x;
+          const y1 = drop.y;
+          const x2 = targetX + Phaser.Math.Between(-6, 6);
+          const y2 = targetY + Phaser.Math.Between(-2, 4);
+          const dur = 360 + Math.random() * 100;
+          const t0 = performance.now();
+          const step = (now) => {
+            if (!drop.active) return;
+            const t = Math.min(1, (now - t0) / dur);
+            drop.x = x1 + (x2 - x1) * t;
+            drop.y = y1 + (y2 - y1) * t;
+            drop.setAlpha(0.98 * (1 - t * 0.8));
+            if (t < 1) requestAnimationFrame(step);
+            else {
               try { drop.destroy(); } catch (_) {}
-            },
-          });
-        });
+            }
+          };
+          requestAnimationFrame(step);
+        }, i * 70);
       }
     }
 
@@ -371,21 +384,13 @@
       if (!this.alive(gen)) return false;
       this._can.setTexture('can_full');
       this._can.setVisible(true);
+      this._can.setDepth(20);
       this._can.setAngle(0);
       this._can.setScale(1.8);
       this.followHand(this._can, -14, -28);
       if (!(await this.wait(350))) return false;
       // Tip spout toward plant (counter-clockwise — spout on left)
-      await new Promise((resolve) => {
-        this.tweens.add({
-          targets: this._can,
-          angle: -55,
-          scale: 2.05,
-          duration: 650,
-          ease: 'Sine.easeInOut',
-          onComplete: resolve,
-        });
-      });
+      await this.tweenProp(this._can, { angle: -55, scale: 2.05 }, 650);
       if (!this.alive(gen)) return false;
       // Hold tipped while streaming so the pour reads clearly
       this.emitPourStream(plantX, plantY - 8, 16);
@@ -394,16 +399,7 @@
       this._can.setTexture('can_empty');
       if (!(await this.wait(500))) return false;
       // Untip
-      await new Promise((resolve) => {
-        this.tweens.add({
-          targets: this._can,
-          angle: 0,
-          scale: 1.7,
-          duration: 420,
-          ease: 'Sine.easeOut',
-          onComplete: resolve,
-        });
-      });
+      await this.tweenProp(this._can, { angle: 0, scale: 1.7 }, 420);
       if (!(await this.wait(400))) return false;
       return true;
     }
@@ -531,17 +527,11 @@
       if (!(await this.wait(600))) return;
 
       // Reach / pick up — mug arcs into hand (chest/hand height, not above head)
-      await new Promise((resolve) => {
-        this.tweens.add({
-          targets: this._mug,
-          x: this._npc.x - 14,
-          y: this._npc.y - 20,
-          scale: 2.0,
-          duration: 480,
-          ease: 'Back.easeOut',
-          onComplete: resolve,
-        });
-      });
+      await this.tweenProp(this._mug, {
+        x: this._npc.x - 14,
+        y: this._npc.y - 20,
+        scale: 2.0,
+      }, 480);
       if (!this.alive(gen)) return;
       this.followHand(this._mug, -14, -20);
       this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 58));
