@@ -7,6 +7,54 @@
 /** No heavy NPC bursts (think, tour, visitor, Grok pulse) during this window. */
 const PLAY_WARMUP_MS = 90 * 1000;
 
+/** Status gem palette — one meaning per color across the whole office. */
+const STATUS_GEM_COLORS = {
+  working: 0x4ade80,  // green
+  talking: 0x60a5fa,  // blue
+  break: 0xfacc15,    // yellow
+  meeting: 0xa855f7,  // purple
+  blocked: 0xf59e0b,  // amber (pulses)
+  error: 0xef4444,    // red
+  idle: 0x94a3b8,     // gray
+};
+
+/** agent.status → gem meaning. Unlisted statuses read as idle. */
+const STATUS_GEM_KIND = {
+  working: 'working',
+  task_override: 'working',
+  reading: 'working',
+  whiteboard: 'working',
+  checking: 'working',
+  patrolling: 'working',
+  receptionist_patrol: 'working',
+  securing: 'working',
+  honeypot: 'working',
+  talking: 'talking',
+  collaborating: 'talking',
+  visiting: 'talking',
+  reporting: 'talking',
+  engaging: 'talking',
+  ceo_conversation: 'talking',
+  tour_guide: 'talking',
+  visitor_arrival: 'talking',
+  break: 'break',
+  coffee_run: 'break',
+  delivering_coffee: 'break',
+  tending: 'break',
+  meeting: 'meeting',
+  blocked: 'blocked',
+  waiting: 'blocked',
+  waiting_on_skill: 'blocked',
+  error: 'error',
+  idle: 'idle',
+  wandering: 'idle',
+};
+
+/** A skill start with no result after this long is treated as lost, not pending. */
+const SKILL_PENDING_STALE_MS = 5 * 60 * 1000;
+/** Desk reads as "medium" workload for this long after a skill run. */
+const RECENT_SKILL_MS = 3 * 60 * 1000;
+
 class AgentOfficeManager {
   /**
    * @param {Phaser.Scene} scene - The office scene
@@ -2133,37 +2181,28 @@ class AgentOfficeManager {
   }
 
   /**
-   * Update visual status indicators (colored dots + task labels) above each NPC
+   * Update visual status indicators above each NPC: the status gem, plus
+   * workload clutter on the desk of anyone seated at one.
    */
   _updateStatusIndicators() {
+    const now = Date.now();
     this.agents.forEach((agent, npcKey) => {
       const npc = this.actions._getNpc(npcKey);
       if (!npc) return;
 
-      // Status dot color based on agent status
-      const colors = {
-        working: 0x4ade80,    // green
-        talking: 0x60a5fa,    // blue
-        collaborating: 0x60a5fa,
-        break: 0xfbbf24,      // yellow
-        meeting: 0xa855f7,    // purple
-        error: 0xef4444,      // red
-        idle: 0x94a3b8,       // gray
-        checking: 0x06b6d4,   // cyan
-        reporting: 0xf97316,  // orange
-      };
-      const color = colors[agent.status] || colors.idle;
-
-      // Create or update dot
+      const gem = this._statusGemFor(agent, now);
       let dot = this._statusDots.get(npcKey);
       if (!dot) {
-        dot = this.scene.add.circle(0, 0, 3, color);
+        dot = this.scene.add.circle(0, 0, 3, gem.color);
         dot.setDepth(9999);
         this._statusDots.set(npcKey, dot);
       }
-      dot.setFillStyle(color);
+      dot.setFillStyle(gem.color);
       dot.setPosition(npc.x, npc.y - 56);
-      dot.setVisible(true);
+      dot.setVisible(npc.visible !== false);
+      this._setStatusGemPulse(dot, gem.pulse);
+
+      this.actions.setDeskClutter?.(npcKey, this._deskLoadFor(agent, npcKey, now, gem));
 
       // Task scraps were tiny gray floaters that looked like random noise
       // over desks. Thoughts/speech bubbles already carry status — hide these.
@@ -2173,6 +2212,63 @@ class AgentOfficeManager {
         this._taskLabels.delete(npcKey);
       }
     });
+  }
+
+  /** Waiting on something outside their control: approval, explicit block, or an in-flight skill. */
+  _isAgentBlocked(agent, now = Date.now()) {
+    if (!agent) return false;
+    if (STATUS_GEM_KIND[agent.status] === 'blocked') return true;
+    if ((agent._awaitingApprovalUntil || 0) > now) return true;
+    const since = agent._skillPendingSince || 0;
+    return since > 0 && now - since < SKILL_PENDING_STALE_MS;
+  }
+
+  /** Gem meaning for an agent → { kind, color, pulse }. */
+  _statusGemFor(agent, now = Date.now()) {
+    let kind;
+    if (agent?.status === 'error' || (agent?._gemErrorUntil || 0) > now) kind = 'error';
+    else if (this._isAgentBlocked(agent, now) || (agent?._skillCastUntil || 0) > now) kind = 'blocked';
+    else kind = STATUS_GEM_KIND[agent?.status] || 'idle';
+    return { kind, color: STATUS_GEM_COLORS[kind], pulse: kind === 'blocked' };
+  }
+
+  _setStatusGemPulse(dot, on) {
+    if (on && !dot._gemPulse && this.scene.tweens?.add) {
+      dot._gemPulse = this.scene.tweens.add({
+        targets: dot,
+        alpha: 0.3,
+        duration: 420,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    } else if (!on && dot._gemPulse) {
+      try { dot._gemPulse.stop(); } catch (_) {}
+      dot._gemPulse = null;
+      dot.setAlpha(1);
+    }
+  }
+
+  /**
+   * Desk clutter level from agent state: idle/break → clear; blocked, error,
+   * or juggling 2+ tasks → heavy; a task label or a recent skill → medium.
+   */
+  _deskLoadFor(agent, npcKey, now = Date.now(), gem = null) {
+    if (!agent) return 'clear';
+    const kind = (gem || this._statusGemFor(agent, now)).kind;
+    if (kind === 'idle' || kind === 'break') return 'clear';
+    const queued = (this.tasks || []).filter((t) => t.agent === npcKey).length;
+    const taskCount = Math.max(queued, agent.currentTask ? 1 : 0) + (agent._taskLabel ? 1 : 0);
+    if (kind === 'error' || this._isAgentBlocked(agent, now) || taskCount >= 2) return 'heavy';
+    const recentSkill = (agent._lastSkillAt || 0) > now - RECENT_SKILL_MS;
+    if (agent._taskLabel || agent.currentTask || (agent.status === 'working' && recentSkill)) return 'medium';
+    return 'light';
+  }
+
+  _npcKeyForName(name) {
+    const want = String(name || '').toLowerCase();
+    if (!want) return null;
+    return Object.entries(this.NPC_NAMES).find(([, v]) => String(v).toLowerCase() === want)?.[0] || null;
   }
 
   /**
@@ -3005,6 +3101,8 @@ class AgentOfficeManager {
         // NPC is running an OpenClaw skill — treat visually like "work" (sit at desk)
         // The skill runs server-side; the NPC picks up the result in their next think cycle.
         agent.status = 'working';
+        agent._skillCastUntil = Date.now() + 3600;
+        agent._lastSkillAt = Date.now();
         if (agent.assignedDesk) {
           this.actions.useComputer(npcKey, agent.assignedDesk);
         }
@@ -3944,6 +4042,11 @@ class AgentOfficeManager {
         window.DenizenBrowserMirror?.onFrame?.(msg);
         break;
       case 'npc_skill_start': {
+        const pendingAgent = this.agents.get(this._npcKeyForName(msg.npcName));
+        if (pendingAgent) {
+          pendingAgent._skillPendingSince = Date.now();
+          pendingAgent._lastSkillAt = Date.now();
+        }
         // Desk skills animate at the desk; web-search keeps Lucy with the CEO.
         if (msg.skill === 'web-search') {
           window.DenizenBrowserMirror?.ingest?.({
@@ -3975,6 +4078,12 @@ class AgentOfficeManager {
         const skillResultKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
+        const resultAgent = this.agents.get(skillResultKey);
+        if (resultAgent) {
+          resultAgent._skillPendingSince = 0;
+          resultAgent._lastSkillAt = Date.now();
+          if (msg.ok === false) resultAgent._gemErrorUntil = Date.now() + 8000;
+        }
         if (skillResultKey) {
           try {
             this.actions.emote(skillResultKey, msg.ok ? '✓' : '!');
@@ -4134,6 +4243,8 @@ class AgentOfficeManager {
         const reqKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
+        const waitingAgent = this.agents.get(this._npcKeyForName(msg.onBehalfOf || msg.npcName));
+        if (waitingAgent) waitingAgent._awaitingApprovalUntil = Date.now() + 120000;
         if (reqKey) {
           try {
             // Walk toward the player (use visit action so they actually approach)
@@ -4160,6 +4271,10 @@ class AgentOfficeManager {
 
       case 'npc_permission_granted': {
         // A permission was granted — confirm it in the chat log.
+        [msg.npcName, msg.onBehalfOf].forEach((name) => {
+          const a = this.agents.get(this._npcKeyForName(name));
+          if (a) a._awaitingApprovalUntil = 0;
+        });
         if (this.scene._playerChat) {
           this.scene._playerChat._addToLog(
             'System',

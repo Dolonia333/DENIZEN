@@ -340,6 +340,11 @@ class OfficeScene extends Phaser.Scene {
       'vfx_whiteboard_drawn',
       'assets/modern_office/named/whiteboard_line_chart.png'
     );
+    // Desk workload clutter — paper stack; the desk mug reuses vfx_coffee_mug.
+    this.load.image(
+      'vfx_desk_papers',
+      'assets/modern_office/named/papers_stack_small.png'
+    );
     // Unused sheets removed to prevent loader stall (were loading 90+ files)
 
     // Singles for open-plan are loaded on demand in create() when a placement needs them.

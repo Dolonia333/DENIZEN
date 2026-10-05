@@ -51,6 +51,6 @@ describe('NPC map awareness / unstuck', () => {
   it('cache busters bumped', () => {
     const html = read('index.html');
     assert.match(html, /pathfinding\.js\?v=aislePad1/);
-    assert.match(html, /office-scene\.js\?v=mapAware1/);
+    assert.match(html, /office-scene\.js\?v=deskLife1/);
   });
 });
