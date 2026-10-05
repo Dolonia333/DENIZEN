@@ -446,6 +446,14 @@ class AgentActions {
     return this.queueAction(npcKey, () => {
       return new Promise((resolve) => {
         if (this.isSeatedAtDesk(npcKey, deskId)) {
+          // Already in the chair. Restart the work loop only if it died
+          // (a later useComputer used to return and leave the desk static).
+          const seated = this._getNpc(npcKey);
+          const deskNow = this._getFurniture(deskId);
+          if (seated && deskNow && !this._deskWork.has(npcKey)) {
+            this._showTypingIndicator(seated, npcKey);
+            this._startDeskWorkLoop(seated, npcKey, deskNow);
+          }
           resolve();
           return;
         }
@@ -2207,7 +2215,13 @@ class AgentActions {
       this._deskClutter.set(npcKey, row);
     }
     let keep = 0;
-    while (keep < row.kinds.length && keep < kinds.length && row.kinds[keep] === kinds[keep]) keep += 1;
+    while (keep < row.kinds.length && keep < kinds.length && row.kinds[keep] === kinds[keep]) {
+      const kept = row.props[keep];
+      // A missed slot (occluders not ready, texture not loaded) must retry
+      // on the next indicator tick instead of sticking as a hole.
+      if (!kept || kept.active === false) break;
+      keep += 1;
+    }
     row.props.splice(keep).forEach((p) => { try { p?.destroy?.(); } catch (_) {} });
     row.slots.length = keep;
     row.kinds.length = keep;
@@ -2302,12 +2316,19 @@ class AgentActions {
   _deskOccluders(desk, sit, npc) {
     const halfW = (desk.displayWidth || 96) / 2;
     const top = desk.y - (desk.displayHeight || 32);
+    const deskEntry = (this.scene?._interactables || []).find((it) => it?.sprite === desk) || null;
     const out = [];
     for (const it of this.scene?._interactables || []) {
       const s = it?.sprite;
       if (!s || s === desk || s.visible === false) continue;
       if (it.def?.type === 'surface' || it.def?.type === 'floor') continue;
       if (it.def?.wall_mount || it.def?._placement?.wallMount) continue;
+      // Cubicle walls sit behind the desktop. Props are meant to draw in
+      // front of them; treating the divider as solid left every monitor
+      // desk with zero legal slots.
+      const iid = String(it.id || '');
+      if (it.def?.type === 'partition' || /divider|partition/i.test(iid)) continue;
+      if (this._isOwnDeskSetup(it, desk, deskEntry?.instanceId)) continue;
       if (Math.abs(s.x - desk.x) > halfW + (s.displayWidth || 0) / 2) continue;
       const sTop = s.y - (s.displayHeight || 0) * (s.originY ?? 1);
       const sBottom = sTop + (s.displayHeight || 0);
@@ -2349,24 +2370,42 @@ class AgentActions {
     return total ? hits / total : 0;
   }
 
+  /**
+   * The monitor/laptop rig that belongs on this desk. Clutter is supposed to
+   * sit on that same surface (and draws just in front of it). Counting the
+   * rig as an occluder rejected every corner of a stock workstation.
+   * A neighbor's setup, still centered on the next desk, keeps blocking.
+   */
+  _isOwnDeskSetup(it, deskSprite, deskInstanceId) {
+    const id = String(it?.id || '');
+    if (!/desk_setup|monitor|laptop|keyboard/i.test(id) || /floor/i.test(id)) return false;
+    if (deskInstanceId && it.parentInstanceId === deskInstanceId) return true;
+    const reach = (deskSprite?.displayWidth || 96) * 0.35;
+    return Math.abs((it.sprite?.x ?? 0) - (deskSprite?.x ?? 0)) <= reach;
+  }
+
   /** Texture alpha under a world point (null when the renderer can't say). */
   _spriteAlphaAt(sprite, wx, wy) {
     const tex = this.scene?.textures;
     if (!sprite?.frame || typeof tex?.getPixelAlpha !== 'function') return null;
-    if (sprite.rotation) {
-      const b = sprite.getBounds?.();
-      return b?.contains?.(wx, wy) ? 255 : 0;
+    try {
+      if (sprite.rotation) {
+        const b = sprite.getBounds?.();
+        return b?.contains?.(wx, wy) ? 255 : 0;
+      }
+      const w = sprite.width || sprite.frame.realWidth || 0;
+      const h = sprite.height || sprite.frame.realHeight || 0;
+      let lx = (wx - sprite.x) / (sprite.scaleX || 1) + (sprite.originX ?? 0.5) * w;
+      let ly = (wy - sprite.y) / (sprite.scaleY || 1) + (sprite.originY ?? 0.5) * h;
+      if (sprite.flipX) lx = w - lx;
+      if (sprite.flipY) ly = h - ly;
+      if (lx < 0 || ly < 0 || lx >= w || ly >= h) return 0;
+      const px = Math.min(w - 1, Math.floor(lx));
+      const py = Math.min(h - 1, Math.floor(ly));
+      return tex.getPixelAlpha(px, py, sprite.texture?.key, sprite.frame.name) || 0;
+    } catch (_) {
+      return null;
     }
-    const w = sprite.width || sprite.frame.realWidth || 0;
-    const h = sprite.height || sprite.frame.realHeight || 0;
-    let lx = (wx - sprite.x) / (sprite.scaleX || 1) + (sprite.originX ?? 0.5) * w;
-    let ly = (wy - sprite.y) / (sprite.scaleY || 1) + (sprite.originY ?? 0.5) * h;
-    if (sprite.flipX) lx = w - lx;
-    if (sprite.flipY) ly = h - ly;
-    if (lx < 0 || ly < 0 || lx >= w || ly >= h) return 0;
-    const px = Math.min(w - 1, Math.floor(lx));
-    const py = Math.min(h - 1, Math.floor(ly));
-    return tex.getPixelAlpha(px, py, sprite.texture?.key, sprite.frame.name) || 0;
   }
 
   _spawnDeskProp(kind, slot, deskSprite) {

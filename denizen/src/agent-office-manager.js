@@ -2259,67 +2259,50 @@ class AgentOfficeManager {
   /**
    * First-paint desk readability: a few seated agents get real workload markers
    * so paper/mug clutter + gem meanings show without inventing HUD chrome.
-   * Markers expire naturally via existing timers / think loop.
+   * The blocked gem is an in-flight skill (`_skillPendingSince`), so it pulses
+   * now and drops back to working when SKILL_PENDING_STALE_MS elapses.
+   * Task labels stay until the think loop replaces them.
    */
   _seedDeskWorkloadShowcase(seatedKeys = []) {
-    const apply = (keys) => {
-      const now = Date.now();
-      const list = (keys || []).filter((k) => this.agents.get(k)?.assignedDesk);
-      if (list.length < 2) return;
-      // Spread medium load across several desks so paper/mug clutter reads at a glance.
-      // Do not clobber blocked/talking/break gems already set for the showcase.
-      const preserve = new Set(['waiting_on_skill', 'blocked', 'waiting', 'talking', 'break', 'meeting', 'error']);
-      for (let i = 0; i < Math.min(5, list.length); i++) {
-        const agent = this.agents.get(list[i]);
-        if (!agent || (agent.role === 'cofounder' && i > 0)) continue;
-        agent.currentTask = agent.currentTask || 'Desk work';
-        agent._lastSkillAt = now;
-        if (!preserve.has(agent.status) && (agent.status === 'idle' || agent.status === 'wandering' || !agent.status)) {
-          agent.status = 'working';
-        }
+    const now = Date.now();
+    const keys = (seatedKeys || []).filter((k) => this.agents.get(k)?.assignedDesk);
+    if (keys.length < 2) return;
+    const mediumCount = Math.min(5, keys.length);
+    for (let i = 0; i < mediumCount; i++) {
+      const agent = this.agents.get(keys[i]);
+      if (!agent) continue;
+      if (!agent.currentTask) agent.currentTask = 'Desk work';
+      agent._lastSkillAt = now;
+      if (agent.status === 'idle' || agent.status === 'wandering' || !agent.status) {
+        agent.status = 'working';
       }
-      const heavy = this.agents.get(list[1]);
-      if (heavy) {
-        heavy.currentTask = 'Review mesh jobs';
-        heavy._taskLabel = 'queue';
-        heavy._lastSkillAt = now;
-        heavy.status = 'working';
-        if (heavy.assignedDesk) this.actions.useComputer(list[1], heavy.assignedDesk, { instant: true });
+    }
+    const heavy = this.agents.get(keys[1]);
+    if (heavy) {
+      heavy.currentTask = 'Review mesh jobs';
+      heavy._taskLabel = 'queue';
+      heavy._lastSkillAt = now;
+      heavy.status = 'working';
+    }
+    if (keys.length >= 3) {
+      const blocked = this.agents.get(keys[2]);
+      if (blocked) {
+        // Stay `working` so the pending window can expire. Status
+        // `waiting_on_skill` would keep the amber pulse on forever.
+        blocked.status = 'working';
+        blocked._skillPendingSince = now;
+        blocked.currentTask = 'Await skill result';
+        blocked._lastSkillAt = now;
       }
-      if (list.length >= 3) {
-        const blockedKey = list[2];
-        const blocked = this.agents.get(blockedKey);
-        if (blocked) {
-          blocked.status = 'waiting_on_skill';
-          blocked._skillPendingSince = now;
-          blocked.currentTask = 'Await skill result';
-          blocked._lastSkillAt = now;
-          if (blocked.assignedDesk) {
-            this.actions.useComputer(blockedKey, blocked.assignedDesk, { instant: true });
-          }
-        }
+    }
+    if (keys.length >= 4) {
+      const talking = this.agents.get(keys[3]);
+      if (talking && this.actions._sittingNpcs?.has?.(keys[3])) {
+        talking.status = 'talking';
+        if (!talking.currentTask) talking.currentTask = 'Sync';
+        talking._lastSkillAt = now;
       }
-      // Keep one talking gem visible without standing them up.
-      if (list.length >= 4) {
-        const talking = this.agents.get(list[3]);
-        if (talking && this.actions._sittingNpcs?.has?.(list[3])) {
-          talking.status = 'talking';
-          talking.currentTask = talking.currentTask || 'Sync';
-          talking._lastSkillAt = now;
-        }
-      }
-    };
-    apply(seatedKeys);
-    // Ambient chill can stand people up in the first seconds — re-apply once
-    // the floor has settled so gems + clutter stick for the first look.
-    this.scene?.time?.delayedCall?.(4500, () => {
-      const still = [];
-      this.agents.forEach((a, k) => {
-        if (a.assignedDesk && this.actions._sittingNpcs?.has?.(k)) still.push(k);
-      });
-      if (still.length) apply(still);
-      else apply(seatedKeys);
-    });
+    }
   }
 
   /**
