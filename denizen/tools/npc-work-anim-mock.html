@@ -224,6 +224,8 @@
       this._can.setTexture('can_full');
       this._mug.setVisible(false);
       this._mug.anims.stop();
+      try { this._mug.setCrop(); } catch (_) {}
+      this._mug.setOrigin(0.5, 1);
       this._mug.setFrame(0);
       this._mug.setAngle(0);
       this._mug.setScale(1.4);
@@ -292,6 +294,37 @@
         setTimeout(() => finish(this._sceneGen === gen), ms + 500);
         setTimeout(step, 0);
       });
+    }
+
+    /** Face-aware mug hold — cup only (no tall steam sheet) parked on the mouth. */
+    mugMouthOffset() {
+      const f = this._npc.frame?.index ?? 0;
+      // Abby 32x48 @ 1.5 scale → mouth ~54px above feet (below eyes, between cheeks)
+      const y = -54;
+      if (f >= 4 && f <= 7) return { x: -2, y };      // facing left
+      if (f >= 8 && f <= 11) return { x: 2, y };       // facing right
+      if (f >= 12) return { x: 0, y: -58 };             // facing up — mug in front
+      return { x: 0, y };                              // facing down/camera
+    }
+
+    holdMugAtMouth() {
+      this._mug.anims.stop();
+      this._mug.setFrame(0);
+      // Coffee sheet is mostly empty steam above the cup — crop to the cup only
+      this._mug.setCrop(0, 15, 16, 17);
+      this._mug.setOrigin(0.5, 0.9);
+      this._mug.setScale(1.35);
+      this._mug.setDepth(20);
+      this._mug.setVisible(true);
+      this.stopFollow();
+      const tick = () => {
+        if (!this._mug?.active || !this._npc?.active) return;
+        const o = this.mugMouthOffset();
+        this._mug.x = this._npc.x + o.x;
+        this._mug.y = this._npc.y + o.y;
+      };
+      tick();
+      this._holdFollow = setInterval(tick, 16);
     }
 
     /** Keep prop glued to NPC hand while held (wall-clock interval). */
@@ -386,8 +419,8 @@
       this._can.setDepth(20);
       this._can.setAngle(0);
       this._can.setScale(1.5);
-      // Grip in front of torso / hands — tip stays in her arms, not left shoulder
-      this.followHand(this._can, 4, -14);
+      // Grip centered on torso; when facing the plant, can sits in front of her
+      this.followHand(this._can, 0, -16);
       if (!(await this.wait(350))) return false;
       // Mild tip so the can body doesn't swing up beside her head
       await this.tweenProp(this._can, { angle: -28, scale: 1.6 }, 650);
@@ -461,7 +494,7 @@
       this._can.setDepth(20);
       this._can.setScale(1.55);
       this._can.setAngle(0);
-      this._can.setPosition(this._npc.x + 4, this._npc.y - 14);
+      this._can.setPosition(this._npc.x + 0, this._npc.y - 16);
       await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
       if (!this.alive(gen)) return;
       const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
@@ -507,14 +540,16 @@
     }
 
     async sceneCoffee(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
       this._npc.setPosition(360, 300);
-      // Mug starts hidden — brew first
       this._mug.setVisible(false);
+      try { this._mug.setCrop(); } catch (_) {}
+      this._mug.setOrigin(0.5, 1);
       if (!(await this.walkTo(158, 308, 'walk_left', 1100))) return;
       if (!this.alive(gen)) return;
-      this._npc.setFrame(4);
+      this._npc.setFrame(4); // face the machine (left)
 
-      // Brew pulse on machine
       this.track(makeChip(this, 'brewing…', '#fbbf24', this._machine.x, this._machine.y - 36));
       await new Promise((resolve) => {
         this.tweens.add({
@@ -528,32 +563,26 @@
       });
       if (!this.alive(gen)) return;
 
-      // Mug appears on machine, steam starts
+      // Full steaming mug on the machine first
+      this._mug.setCrop();
+      this._mug.setOrigin(0.5, 1);
       this._mug.setPosition(this._machine.x + 2, this._machine.y - 14);
       this._mug.setVisible(true);
       this._mug.setScale(1.35);
       this._mug.setDepth(20);
       this._mug.anims.play('mug_steam', true);
-      if (!(await this.wait(600))) return;
+      if (!(await this.wait(700))) return;
 
-      // Facing left: mouth is on the left of the sprite — hold mug there
-      await this.tweenProp(this._mug, {
-        x: this._npc.x - 6,
-        y: this._npc.y - 50,
-        scale: 1.0,
-      }, 480);
-      if (!this.alive(gen)) return;
-      this.followHand(this._mug, -6, -50);
-      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 68));
+      // Sip pose: cropped cup glued to her mouth (facing left toward machine)
+      this.holdMugAtMouth();
+      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 72));
+      // Hold the mouth pose long enough to read clearly
+      if (!(await this.wait(2200))) return;
 
-      if (!(await this.wait(500))) return;
-
-      // Walk away still holding steaming mug — keep mug on the face while turning
+      // Walk away still holding cup at mouth (offset tracks facing)
       if (!(await this.walkTo(420, 280, 'walk_right', 1400))) return;
       this._npc.setFrame(0);
-      // Facing camera: mug centered on mouth
-      this.followHand(this._mug, 2, -50);
-      await this.wait(1200);
+      if (!(await this.wait(1000))) return;
     }
 
     async sceneLoop(gen) {

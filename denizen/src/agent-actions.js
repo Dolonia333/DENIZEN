@@ -1738,12 +1738,12 @@ class AgentActions {
     if (!this.scene.textures?.exists?.(key)) return null;
     try {
       this._clearWateringCan?.(npcKey);
-      const can = this.scene.add.image(npc.x + 4, npc.y - 14, key);
+      const can = this.scene.add.image(npc.x + 0, npc.y - 16, key);
       can.setOrigin(0.78, 0.62);
       can.setDepth((npc.depth || 10) + 2);
       can.setScale(1.1);
-      const ox = 4;
-      const oy = -14;
+      const ox = 0;
+      const oy = -16;
       const follow = this.scene.time.addEvent({
         delay: 30,
         loop: true,
@@ -1854,18 +1854,19 @@ class AgentActions {
           });
         } catch (_) {}
       }
-      const mug = this.scene.add.sprite(npc.x - 6, npc.y - 50, key, 0);
-      mug.setOrigin(0.5, 0.72);
+      const mug = this.scene.add.sprite(npc.x, npc.y - 54, key, 0);
+      mug.setOrigin(0.5, 0.9);
       mug.setDepth((npc.depth || 10) + 2);
-      mug.setScale(0.95);
-      try { mug.anims.play('vfx_mug_steam', true); } catch (_) {}
+      mug.setScale(1.2);
+      // Cup only — the sheet's tall steam pad reads as "above the head" if left uncropped
+      try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
+      try { mug.anims.stop(); } catch (_) {}
 
-      // Arc up to mouth (slightly left — matches common left/face-toward furniture poses)
       try {
         mug.y = npc.y - 30;
         this.scene.tweens.add({
           targets: mug,
-          y: npc.y - 50,
+          y: npc.y - 54,
           duration: 280,
           ease: 'Back.easeOut',
         });
@@ -1876,11 +1877,14 @@ class AgentActions {
         loop: true,
         callback: () => {
           if (!mug.active || !npc.active) return;
-          // Bias toward facing direction so the cup sits on the face, not behind the head
-          const face = npc.ai?.facing || npc.anims?.currentAnim?.key || '';
-          const leftish = /left|4|5|6|7/.test(String(face)) || (npc.frame && npc.frame.index >= 4 && npc.frame.index <= 7);
-          mug.x = npc.x + (leftish ? -6 : 2);
-          mug.y = npc.y - 50;
+          const f = npc.frame?.index ?? 0;
+          let ox = 0;
+          let oy = -54;
+          if (f >= 4 && f <= 7) ox = -2;
+          else if (f >= 8 && f <= 11) ox = 2;
+          else if (f >= 12) oy = -58;
+          mug.x = npc.x + ox;
+          mug.y = npc.y + oy;
         },
       });
       const timer = this.scene.time.delayedCall(ms, () => {
