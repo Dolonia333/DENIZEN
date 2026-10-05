@@ -202,9 +202,11 @@
 
       api = { play: (name) => this.playScene(name) };
       window.__npcAnimMock = api;
-      // Default: plant pour (clearest prop demo). Auto loop is opt-in.
-      setCaption('water');
-      this.playScene('water');
+      // Defer until the scene clock is ticking (create-time awaits can stall).
+      this.time.delayedCall(200, () => {
+        setCaption('water');
+        this.playScene('water');
+      });
     }
 
     clearFx() {
@@ -252,69 +254,43 @@
       return this._sceneGen === gen && this._playing != null;
     }
 
-    /** Time-based walk (avoids Phaser tween kill races with clearFx). */
+    /** Step-walk with hard timeout so a scene can never hang mid-move. */
     walkTo(x, y, anim, ms = 1400) {
-      const gen = this._sceneGen;
-      const sprite = this._npc;
-      const x0 = sprite.x;
-      const y0 = sprite.y;
-      try { sprite.anims.play(anim, true); } catch (_) {}
-      return new Promise((resolve) => {
-        const start = this.time.now;
-        const ev = this.time.addEvent({
-          delay: 16,
-          loop: true,
-          callback: () => {
-            if (this._sceneGen !== gen) {
-              try { ev.remove(false); } catch (_) {}
-              try { sprite.anims.stop(); } catch (_) {}
-              resolve(false);
-              return;
-            }
-            const t = Math.min(1, (this.time.now - start) / ms);
-            sprite.x = x0 + (x - x0) * t;
-            sprite.y = y0 + (y - y0) * t;
-            if (t >= 1) {
-              try { ev.remove(false); } catch (_) {}
-              try { sprite.anims.stop(); } catch (_) {}
-              sprite.x = x;
-              sprite.y = y;
-              resolve(true);
-            }
-          },
-        });
-      });
+      return this._walkSpriteTo(this._npc, x, y, anim, ms);
     }
 
     walkSprite(sprite, x, y, anim, ms) {
+      return this._walkSpriteTo(sprite, x, y, anim, ms);
+    }
+
+    _walkSpriteTo(sprite, x, y, anim, ms) {
       const gen = this._sceneGen;
       const x0 = sprite.x;
       const y0 = sprite.y;
       try { sprite.anims.play(anim, true); } catch (_) {}
       return new Promise((resolve) => {
-        const start = this.time.now;
-        const ev = this.time.addEvent({
-          delay: 16,
-          loop: true,
-          callback: () => {
-            if (this._sceneGen !== gen) {
-              try { ev.remove(false); } catch (_) {}
-              try { sprite.anims.stop(); } catch (_) {}
-              resolve(false);
-              return;
-            }
-            const t = Math.min(1, (this.time.now - start) / ms);
-            sprite.x = x0 + (x - x0) * t;
-            sprite.y = y0 + (y - y0) * t;
-            if (t >= 1) {
-              try { ev.remove(false); } catch (_) {}
-              try { sprite.anims.stop(); } catch (_) {}
-              sprite.x = x;
-              sprite.y = y;
-              resolve(true);
-            }
-          },
-        });
+        let done = false;
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          try { sprite.anims.stop(); } catch (_) {}
+          if (ok) { sprite.x = x; sprite.y = y; }
+          resolve(ok);
+        };
+        const steps = Math.max(8, Math.round(ms / 32));
+        let i = 0;
+        const step = () => {
+          if (this._sceneGen !== gen) { finish(false); return; }
+          i += 1;
+          const t = Math.min(1, i / steps);
+          sprite.x = x0 + (x - x0) * t;
+          sprite.y = y0 + (y - y0) * t;
+          if (t >= 1) finish(true);
+          else this.time.delayedCall(ms / steps, step);
+        };
+        // Hard ceiling — never hang a scene if timers glitch
+        this.time.delayedCall(ms + 500, () => finish(this._sceneGen === gen));
+        this.time.delayedCall(0, step);
       });
     }
 
