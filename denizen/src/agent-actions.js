@@ -1721,20 +1721,68 @@ class AgentActions {
   }
 
   /**
+   * Attach a LimeZu watering-can prop beside the NPC for a short beat.
+   * No-op if the texture isn't loaded yet (demo page / forge can preload it).
+   */
+  _flashWateringCan(npc, npcKey, ms = 2800) {
+    if (!npc || !this.scene?.add) return null;
+    const key = 'vfx_watering_can';
+    if (!this.scene.textures?.exists?.(key)) return null;
+    try {
+      this._clearWateringCan?.(npcKey);
+      const can = this.scene.add.image(npc.x - 12, npc.y - 22, key);
+      can.setOrigin(0.5, 0.5);
+      can.setDepth((npc.depth || 10) + 2);
+      can.setScale(1.1);
+      const follow = this.scene.time.addEvent({
+        delay: 50,
+        loop: true,
+        callback: () => {
+          if (!can.active || !npc.active) return;
+          can.x = npc.x - 12;
+          can.y = npc.y - 22;
+        },
+      });
+      const timer = this.scene.time.delayedCall(ms, () => {
+        try { follow.remove(); } catch (_) {}
+        try { can.destroy(); } catch (_) {}
+        this._wateringCans?.delete?.(npcKey);
+      });
+      if (!this._wateringCans) this._wateringCans = new Map();
+      this._wateringCans.set(npcKey, { can, follow, timer });
+      return can;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _clearWateringCan(npcKey) {
+    const row = this._wateringCans?.get?.(npcKey);
+    if (!row) return;
+    try { row.follow?.remove?.(); } catch (_) {}
+    try { row.timer?.remove?.(); } catch (_) {}
+    try { row.can?.destroy?.(); } catch (_) {}
+    this._wateringCans.delete(npcKey);
+  }
+
+  /**
    * waterPlant(npcKey) - Walk to a potted plant and "water" it.
+   * Visual: watering-can prop (when preloaded) + 💦 splash emote.
    */
   waterPlant(npcKey) {
     const plant = this._findFurnitureByKind(/plant|flora|pot|fern|bush/i);
     if (!plant) {
       // No plant placed — still look purposeful: short breakroom stretch.
-      return this.goToBreakroom(npcKey).then(() => this.emote(npcKey, '💧'));
+      return this.goToBreakroom(npcKey).then(() => this.emote(npcKey, '💦'));
     }
     return this._approachFurniture(npcKey, plant, {
       offsetY: 22,
       dwellMs: 3200,
       face: 'up',
       onArrive: () => {
-        this._showEmote?.(this._getNpc(npcKey), npcKey, '💧');
+        const npc = this._getNpc(npcKey);
+        this._flashWateringCan(npc, npcKey, 2800);
+        this._showEmote?.(npc, npcKey, '💦');
       },
     }).then(() => {
       const npc = this._getNpc(npcKey);

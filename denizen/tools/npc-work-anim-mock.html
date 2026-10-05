@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NPC Work Anim Mock — Denizen</title>
+<style>
+  :root {
+    --bg: #1a2332;
+    --panel: #243044;
+    --line: #3d4f66;
+    --text: #e8eef6;
+    --muted: #8fa3b8;
+    --accent: #5bb8a0;
+    --chip: #e0f2fe;
+    --chip-ink: #0c4a6e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px "IBM Plex Sans", "Segoe UI", sans-serif;
+  }
+  body { display: flex; flex-direction: column; }
+  header {
+    display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
+    padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  header h1 { margin: 0; font-size: 16px; color: var(--accent); letter-spacing: .02em; }
+  header .caption {
+    flex: 1; min-width: 220px; color: var(--muted); font-size: 13px;
+  }
+  header .caption strong { color: var(--text); font-weight: 600; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    appearance: none; border: 1px solid var(--line); background: #152033;
+    color: var(--text); border-radius: 8px; padding: 7px 12px; font: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.active { background: var(--accent); border-color: var(--accent); color: #082018; }
+  #stage-wrap {
+    flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+    padding: 16px; background:
+      radial-gradient(ellipse at 50% 30%, #2a3a52 0%, transparent 55%),
+      var(--bg);
+  }
+  #game-host {
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0,0,0,.35);
+    background: #2d3f2f;
+  }
+  footer {
+    padding: 10px 16px; border-top: 1px solid var(--line); background: var(--panel);
+    color: var(--muted); font-size: 12px;
+  }
+  footer code { color: #b7c9db; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NPC work anim mock</h1>
+  <div class="caption" id="caption"><strong>Booting…</strong></div>
+  <div class="btns">
+    <button type="button" data-scene="compare" class="active">1 · Before / after water</button>
+    <button type="button" data-scene="water">2 · Watering can</button>
+    <button type="button" data-scene="work">3 · Work chips</button>
+    <button type="button" data-scene="coffee">4 · Coffee prop</button>
+    <button type="button" data-scene="loop">▶ Auto loop</button>
+  </div>
+</header>
+<div id="stage-wrap"><div id="game-host"></div></div>
+<footer>
+  Uses real office assets (<code>Abby.png</code>, LimeZu watering can, plant, coffee steam).
+  Demo only — press scenes or leave on Auto loop for the walkthrough video.
+</footer>
+
+<script src="/vendor/phaser/phaser.min.js"></script>
+<script>
+(() => {
+  const W = 720, H = 420;
+  const CAPTIONS = {
+    compare: '<strong>Before vs after</strong> — left: emoji-only 💧 (today). Right: watering can + splash.',
+    water: '<strong>Plant watering</strong> — walk up, hold LimeZu can, splash, speech.',
+    work: '<strong>Work chips</strong> — same XP body, clearer job labels for code / research / terminal.',
+    coffee: '<strong>Coffee break</strong> — NPC walks to machine; LimeZu steam loop plays.',
+    loop: '<strong>Auto loop</strong> — cycling all mock scenes.',
+  };
+
+  let api = null;
+  let loopTimer = null;
+
+  function setCaption(key) {
+    document.getElementById('caption').innerHTML = CAPTIONS[key] || '';
+    document.querySelectorAll('button[data-scene]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.scene === key);
+    });
+  }
+
+  function makeChip(scene, text, color, x, y) {
+    const bg = color || '#e0f2fe';
+    const ink = color === '#4ade80' ? '#052e16'
+      : color === '#22d3ee' ? '#083344'
+      : color === '#60a5fa' ? '#0c4a6e'
+      : '#0c4a6e';
+    const t = scene.add.text(x, y, text, {
+      fontSize: '12px',
+      fontFamily: 'monospace',
+      fontStyle: 'bold',
+      color: ink,
+      backgroundColor: bg + 'ee',
+      padding: { x: 6, y: 3 },
+    });
+    t.setOrigin(0.5, 1);
+    t.setDepth(50);
+    return t;
+  }
+
+  function makeEmote(scene, symbol, x, y) {
+    return makeChip(scene, symbol, '#e0f2fe', x, y);
+  }
+
+  class MockScene extends Phaser.Scene {
+    constructor() {
+      super('mock');
+      this._cleanup = [];
+      this._npc = null;
+      this._plant = null;
+      this._coffee = null;
+      this._desk = null;
+      this._can = null;
+      this._playing = null;
+    }
+
+    preload() {
+      this.load.spritesheet('abby', '/assets/Abby.png', { frameWidth: 32, frameHeight: 48 });
+      this.load.image('plant', '/assets/modern_office/named/plant_floor_leafy.png');
+      this.load.image('can', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png');
+      this.load.spritesheet('coffee', '/assets/limezu/animated/coffee.png', { frameWidth: 16, frameHeight: 32 });
+    }
+
+    create() {
+      // Soft office floor
+      const g = this.add.graphics();
+      g.fillStyle(0x3a4d3a, 1);
+      g.fillRect(0, 0, W, H);
+      g.lineStyle(1, 0x2a382a, 0.5);
+      for (let x = 0; x < W; x += 32) g.lineBetween(x, 0, x, H);
+      for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
+
+      // Cubicle-ish desk block
+      this._desk = this.add.rectangle(520, 250, 90, 48, 0x6b5344).setDepth(2);
+      this.add.rectangle(520, 228, 70, 10, 0x89a4b8).setDepth(3); // monitor
+
+      this._plant = this.add.image(200, 210, 'plant').setOrigin(0.5, 1).setDepth(5).setScale(1.4);
+      this.add.text(200, 220, 'office plant', {
+        fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
+      }).setOrigin(0.5, 0).setDepth(5);
+
+      this.anims.create({
+        key: 'walk_down',
+        frames: this.anims.generateFrameNumbers('abby', { start: 0, end: 3 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'walk_left',
+        frames: this.anims.generateFrameNumbers('abby', { start: 4, end: 7 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'walk_right',
+        frames: this.anims.generateFrameNumbers('abby', { start: 8, end: 11 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'walk_up',
+        frames: this.anims.generateFrameNumbers('abby', { start: 12, end: 15 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'coffee_steam',
+        frames: this.anims.generateFrameNumbers('coffee', { start: 0, end: 5 }),
+        frameRate: 6, repeat: -1,
+      });
+
+      this._coffee = this.add.sprite(120, 300, 'coffee', 0).setOrigin(0.5, 1).setDepth(6).setScale(2);
+      this.add.text(120, 310, 'coffee', {
+        fontSize: '10px', fontFamily: 'monospace', color: '#c5d4c5',
+      }).setOrigin(0.5, 0).setDepth(6);
+
+      this._npc = this.add.sprite(420, 280, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
+      this._can = this.add.image(0, 0, 'can').setOrigin(0.5, 0.5).setDepth(12).setScale(1.2).setVisible(false);
+
+      this.add.text(16, 12, 'DENIZEN · work visibility mock', {
+        fontSize: '11px', fontFamily: 'monospace', color: '#9eb0a0',
+      }).setDepth(100);
+
+      api = {
+        play: (name) => this.playScene(name),
+      };
+      window.__npcAnimMock = api;
+      this.playScene('compare');
+    }
+
+    clearFx() {
+      for (const o of this._cleanup) {
+        try { o.destroy(); } catch (_) {}
+      }
+      this._cleanup = [];
+      this.tweens.killAll();
+      this.time.removeAllEvents();
+      this._can.setVisible(false);
+      this._coffee.anims.stop();
+      this._coffee.setFrame(0);
+      this._npc.anims.stop();
+      this._npc.setPosition(420, 280);
+      this._npc.setFrame(0);
+      this._npc.setCrop();
+    }
+
+    track(obj) {
+      this._cleanup.push(obj);
+      return obj;
+    }
+
+    walkTo(x, y, anim, ms = 1400) {
+      return new Promise((resolve) => {
+        this._npc.anims.play(anim, true);
+        this.tweens.add({
+          targets: this._npc,
+          x, y,
+          duration: ms,
+          ease: 'Linear',
+          onComplete: () => {
+            this._npc.anims.stop();
+            resolve();
+          },
+        });
+      });
+    }
+
+    async playScene(name) {
+      this._playing = name;
+      this.clearFx();
+      if (name === 'compare') await this.sceneCompare();
+      else if (name === 'water') await this.sceneWater();
+      else if (name === 'work') await this.sceneWork();
+      else if (name === 'coffee') await this.sceneCoffee();
+      else if (name === 'loop') await this.sceneLoop();
+    }
+
+    async sceneCompare() {
+      // Left: BEFORE (emoji only)
+      const leftNpc = this.track(this.add.sprite(160, 300, 'abby', 12).setOrigin(0.5, 1).setScale(1.5).setDepth(10));
+      this.track(this.add.image(160, 230, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
+      this.track(makeEmote(this, '💧', 172, 248));
+      this.track(this.add.text(160, 330, 'BEFORE\nemoji only', {
+        fontSize: '12px', fontFamily: 'monospace', color: '#f0c27a', align: 'center',
+      }).setOrigin(0.5, 0).setDepth(20));
+
+      // Divider
+      this.track(this.add.rectangle(360, 210, 2, 260, 0x5a6a5a).setDepth(4));
+
+      // Right: AFTER
+      this._npc.setPosition(560, 320);
+      this._npc.setFrame(0);
+      await this.walkTo(560, 250, 'walk_up', 900);
+      this._npc.setFrame(12);
+      this._can.setVisible(true);
+      this._can.setPosition(this._npc.x - 14, this._npc.y - 22);
+      this.track(makeEmote(this, '💦', this._npc.x + 10, this._npc.y - 54));
+      // splash dots
+      for (let i = 0; i < 5; i++) {
+        const d = this.track(this.add.circle(
+          this._npc.x - 8 + Math.random() * 10,
+          this._npc.y - 40 - Math.random() * 16,
+          1.5 + Math.random(),
+          0x7ec8e3,
+        ).setDepth(15));
+        this.tweens.add({
+          targets: d, y: d.y + 18, alpha: 0, duration: 700 + i * 80, delay: i * 60, repeat: -1,
+        });
+      }
+      this.track(this.add.text(560, 330, 'AFTER\ncan + splash', {
+        fontSize: '12px', fontFamily: 'monospace', color: '#8fd6b5', align: 'center',
+      }).setOrigin(0.5, 0).setDepth(20));
+      this.track(this.add.image(560, 210, 'plant').setOrigin(0.5, 1).setScale(1.3).setDepth(5));
+    }
+
+    async sceneWater() {
+      this._npc.setPosition(420, 300);
+      await this.walkTo(200, 236, 'walk_left', 1200);
+      this._npc.setFrame(12); // face plant (up)
+      this._can.setVisible(true);
+      this._can.setPosition(this._npc.x - 12, this._npc.y - 24);
+      const splash = this.track(makeEmote(this, '💦', this._npc.x + 8, this._npc.y - 56));
+      for (let i = 0; i < 6; i++) {
+        const d = this.track(this.add.circle(
+          this._plant.x - 4 + Math.random() * 12,
+          this._plant.y - 36 - Math.random() * 10,
+          1.5, 0x9ad7ef,
+        ).setDepth(15));
+        this.tweens.add({
+          targets: d, y: this._plant.y - 10, alpha: 0, duration: 650, delay: i * 90, repeat: 2,
+        });
+      }
+      await new Promise((r) => this.time.delayedCall(900, r));
+      const bubble = this.track(this.add.text(this._npc.x, this._npc.y - 70, 'Looking healthy.', {
+        fontSize: '11px', fontFamily: 'monospace', color: '#0c4a6e',
+        backgroundColor: '#f8fafcee', padding: { x: 6, y: 4 },
+      }).setOrigin(0.5, 1).setDepth(40));
+      await new Promise((r) => this.time.delayedCall(1800, r));
+      splash.destroy();
+      bubble.destroy();
+      this._can.setVisible(false);
+      await this.walkTo(500, 260, 'walk_right', 1100);
+      this._npc.setFrame(0);
+    }
+
+    async sceneWork() {
+      // Josh-like second NPC via tinted Abby for mock variety
+      const rob = this.track(this.add.sprite(300, 280, 'abby', 0).setOrigin(0.5, 1).setScale(1.5).setDepth(10).setTint(0xc8e0ff));
+      this._npc.setPosition(520, 248);
+      this._npc.setFrame(0);
+      // Sit crop (legs under desk)
+      this._npc.setCrop(0, 0, 32, 34);
+
+      const labels = [
+        { who: this._npc, text: 'Writing code', color: '#4ade80', x: 520, y: 198 },
+        { who: rob, text: 'Reading', color: '#60a5fa', x: 300, y: 228 },
+      ];
+      for (const L of labels) this.track(makeChip(this, L.text, L.color, L.x, L.y));
+
+      // Terminal NPC walks in
+      await this.walkSprite(rob, 380, 250, 'walk_right', 900);
+      rob.setFrame(0);
+      this.track(makeChip(this, '$ terminal', '#22d3ee', 380, 198));
+      this.track(makeEmote(this, '$', 396, 188));
+
+      // Typing dots on desk NPC
+      const dots = this.track(this.add.text(520, 210, '…', {
+        fontSize: '14px', fontFamily: 'monospace', color: '#0c4a6e',
+        backgroundColor: '#e0f2fede', padding: { x: 4, y: 2 },
+      }).setOrigin(0.5, 1).setDepth(40));
+      let n = 0;
+      this.time.addEvent({
+        delay: 350, loop: true,
+        callback: () => {
+          n = (n + 1) % 4;
+          dots.setText('.'.repeat(n) || '…');
+        },
+      });
+      await new Promise((r) => this.time.delayedCall(2800, r));
+    }
+
+    walkSprite(sprite, x, y, anim, ms) {
+      return new Promise((resolve) => {
+        sprite.anims.play(anim, true);
+        this.tweens.add({
+          targets: sprite, x, y, duration: ms, ease: 'Linear',
+          onComplete: () => { sprite.anims.stop(); resolve(); },
+        });
+      });
+    }
+
+    async sceneCoffee() {
+      this._npc.setPosition(360, 300);
+      await this.walkTo(140, 310, 'walk_left', 1100);
+      this._npc.setFrame(4); // face left toward machine-ish
+      this._coffee.anims.play('coffee_steam', true);
+      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 54));
+      await new Promise((r) => this.time.delayedCall(2600, r));
+    }
+
+    async sceneLoop() {
+      const order = ['compare', 'water', 'work', 'coffee'];
+      for (const key of order) {
+        if (this._playing !== 'loop') return;
+        setCaption(key === order[0] ? 'loop' : key);
+        document.getElementById('caption').innerHTML =
+          CAPTIONS.loop + ' · now: <strong>' + key + '</strong>';
+        // Don't recurse into loop
+        this.clearFx();
+        if (key === 'compare') await this.sceneCompare();
+        else if (key === 'water') await this.sceneWater();
+        else if (key === 'work') await this.sceneWork();
+        else if (key === 'coffee') await this.sceneCoffee();
+        await new Promise((r) => this.time.delayedCall(700, r));
+        if (this._playing !== 'loop') return;
+      }
+      if (this._playing === 'loop') this.playScene('loop');
+    }
+  }
+
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    width: W,
+    height: H,
+    parent: 'game-host',
+    backgroundColor: '#2d3f2f',
+    scene: [MockScene],
+    pixelArt: true,
+    scale: { mode: Phaser.Scale.NONE },
+  });
+  window.__game = game;
+
+  document.querySelectorAll('button[data-scene]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.scene;
+      setCaption(key);
+      if (api) api.play(key);
+    });
+  });
+
+  // Auto-start loop after load for walkthrough convenience
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      setCaption('loop');
+      if (api) api.play('loop');
+    }, 600);
+  });
+})();
+</script>
+</body>
+</html>
