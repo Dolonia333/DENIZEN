@@ -1428,9 +1428,35 @@ class AgentActions {
     return npc.y - h * oy;
   }
 
-  /** Chip / gem Y above the head. Larger `above` → higher on screen. */
+  /** True when this sprite is in a desk/chair sit pose (cropped torso). */
+  _isSeatedSprite(npc) {
+    if (!npc) return false;
+    if (npc.ai?.taskState === 'sitting') return true;
+    for (const [, sit] of this._sittingNpcs) {
+      // Same world object reference, or matching coordinates while sitting.
+      if (sit && this._getNpc) {
+        /* fall through */
+      }
+    }
+    // Keyed map — resolve via agents that point at this sprite.
+    for (const [key] of this._sittingNpcs) {
+      if (this._getNpc(key) === npc) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Chip / gem Y above the head. Larger `above` → higher on screen.
+   * Seated desk workers keep floats tight to the crown so gems/chips don't
+   * climb into the monitor band above a back-facing sitter.
+   */
   npcFloatY(npc, aboveHead = 8) {
-    return this.npcHeadTopY(npc) - aboveHead;
+    let above = aboveHead;
+    if (this._isSeatedSprite(npc)) {
+      // ~40% of the standing offset, never more than 12px into the desk.
+      above = Math.max(2, Math.min(12, Math.round(aboveHead * 0.4)));
+    }
+    return this.npcHeadTopY(npc) - above;
   }
 
   _showSpeechBubble(npc, npcKey, text, style, duration) {
