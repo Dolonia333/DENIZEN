@@ -247,7 +247,8 @@
 
     wait(ms) {
       const gen = this._sceneGen;
-      return new Promise((r) => this.time.delayedCall(ms, () => r(this._sceneGen === gen)));
+      // Wall clock — Phaser time can stall if the scene clock glitches
+      return new Promise((r) => setTimeout(() => r(this._sceneGen === gen), ms));
     }
 
     alive(gen) {
