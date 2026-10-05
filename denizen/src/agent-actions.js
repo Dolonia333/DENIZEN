@@ -1432,13 +1432,6 @@ class AgentActions {
   _isSeatedSprite(npc) {
     if (!npc) return false;
     if (npc.ai?.taskState === 'sitting') return true;
-    for (const [, sit] of this._sittingNpcs) {
-      // Same world object reference, or matching coordinates while sitting.
-      if (sit && this._getNpc) {
-        /* fall through */
-      }
-    }
-    // Keyed map — resolve via agents that point at this sprite.
     for (const [key] of this._sittingNpcs) {
       if (this._getNpc(key) === npc) return true;
     }
