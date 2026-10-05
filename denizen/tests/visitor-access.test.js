@@ -54,11 +54,23 @@ describe('visitor access config', () => {
     assert.equal(team.org_slug, 'zion');
     assert.equal(team.tier, 'team');
     assert.equal(promptTuning.verifyVisitorAccessCode('wrong', 'team').ok, false);
-    assert.deepEqual(promptTuning.verifyVisitorAccessCode('ceo-secret', 'ceo'), { ok: true });
+    assert.equal(promptTuning.verifyVisitorAccessCode('ceo-secret', 'ceo').ok, true);
     assert.equal(promptTuning.verifyVisitorAccessCode('CEO-SECRET', 'ceo').ok, true);
-    assert.equal(promptTuning.verifyVisitorAccessCode('Dolonia', 'ceo').ok, true);
-    assert.equal(promptTuning.verifyVisitorAccessCode('deloonya', 'ceo').ok, true);
+    // Personal mnemonic aliases are NOT shipped — only env-configured codes work.
+    assert.equal(promptTuning.verifyVisitorAccessCode('Dolonia', 'ceo').ok, false);
+    assert.equal(promptTuning.verifyVisitorAccessCode('deloonya', 'ceo').ok, false);
     assert.equal(promptTuning.verifyVisitorAccessCode('nope', 'ceo').ok, false);
+  });
+
+  it('does not accept operator codes when env is unset', () => {
+    delete process.env.DENIZEN_TEAM_CODE;
+    delete process.env.DENIZEN_TEAM_ORG_SLUG;
+    delete process.env.DENIZEN_CEO_ACCESS_CODE;
+    delete process.env.DENIZEN_CEO_ACCESS_CODES;
+    delete require.cache[require.resolve('../src/prompt-tuning.js')];
+    const promptTuning = require('../src/prompt-tuning.js');
+    assert.equal(promptTuning.verifyVisitorAccessCode('1921', 'team').ok, false);
+    assert.equal(promptTuning.verifyVisitorAccessCode('Dolonia', 'ceo').ok, false);
   });
 });
 
@@ -103,6 +115,7 @@ describe('visitor-access canUseRealWork', () => {
 
   it('verifyAccessCode issues signed access_grant for ceo code', () => {
     process.env.DENIZEN_CEO_ACCESS_CODE = 'ceo-secret';
+    process.env.DENIZEN_TEAM_ORG_SLUG = 'zion';
     delete require.cache[require.resolve('../src/prompt-tuning.js')];
     delete require.cache[require.resolve('../src/visitor-session-auth.js')];
     delete require.cache[require.resolve('../src/visitor-access.js')];
@@ -120,6 +133,7 @@ describe('visitor-access canUseRealWork', () => {
 
   it('verifyAccessCode issues signed access_grant for team code', () => {
     process.env.DENIZEN_TEAM_CODE = '1921';
+    process.env.DENIZEN_TEAM_ORG_SLUG = 'zion';
     delete require.cache[require.resolve('../src/prompt-tuning.js')];
     delete require.cache[require.resolve('../src/visitor-session-auth.js')];
     delete require.cache[require.resolve('../src/visitor-access.js')];

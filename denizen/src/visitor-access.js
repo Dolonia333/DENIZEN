@@ -108,19 +108,28 @@ function assertTeamFeature(access, feature) {
 function verifyAccessCode(code, kind) {
   const result = promptTuning.verifyVisitorAccessCode(code, kind);
   if (result.ok && result.tier === 'team') {
+    const orgSlug = result.org_slug || promptTuning.teamOrgSlug || null;
+    if (!orgSlug) {
+      return { ok: false, error: 'Team org not configured' };
+    }
+    result.org_slug = orgSlug;
     result.access_grant = sessionAuth.createAccessGrant({
       tier: 'team',
-      orgSlug: result.org_slug || promptTuning.teamOrgSlug,
+      orgSlug,
       accessMethod: 'team_code',
     });
   }
   if (result.ok && kind === 'ceo') {
+    const orgSlug = result.org_slug || promptTuning.teamOrgSlug || null;
+    if (!orgSlug) {
+      return { ok: false, error: 'Team org not configured' };
+    }
     result.ceo_grant = sessionAuth.createCeoGrant();
     result.tier = 'team';
-    result.org_slug = result.org_slug || promptTuning.teamOrgSlug;
+    result.org_slug = orgSlug;
     result.access_grant = sessionAuth.createAccessGrant({
       tier: 'team',
-      orgSlug: result.org_slug,
+      orgSlug,
       accessMethod: 'ceo_code',
     });
   }
@@ -145,7 +154,7 @@ function metadataFromAccessGrant(grantPayload) {
   if (!grantPayload) return null;
   return {
     tier: grantPayload.tier || 'team',
-    org_slug: grantPayload.org_slug || promptTuning.teamOrgSlug,
+    org_slug: grantPayload.org_slug || promptTuning.teamOrgSlug || null,
     access_method: grantPayload.access_method || 'grant',
     email: grantPayload.email || null,
   };

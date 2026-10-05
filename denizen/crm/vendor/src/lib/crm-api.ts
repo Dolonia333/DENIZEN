@@ -88,7 +88,7 @@ export type CrmTeamActivityResult = {
 const LEGACY_CEO_NAME = /^dolonia$/i;
 const GUEST_LABEL = /^guest$/i;
 const DEMO_PLACEHOLDER_NAME = /^(dolonia|guest)$/i;
-const CEO_DISPLAY_NAME = "Dolonia";
+const CEO_DISPLAY_NAME = "Owner";
 
 export type PublicQuote = {
   id: number;

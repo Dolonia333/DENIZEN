@@ -111,19 +111,21 @@ module.exports = {
   /** Shorter CEO/visitor chat system prompt — drops the 2k-token action catalog. */
   compactPlayerChat: envBool('DENIZEN_COMPACT_PLAYER_CHAT', true),
   playerChatTimeoutMs: envInt('DENIZEN_PLAYER_CHAT_TIMEOUT_MS', 45000),
-  /** Visitor onboarding — team/demo org slugs and access codes (server-side only). */
-  teamCode: String(process.env.DENIZEN_TEAM_CODE || '1921'),
-  ceoAccessCode: String(process.env.DENIZEN_CEO_ACCESS_CODE || 'Dolonia').trim(),
+  /**
+   * Visitor onboarding — team/demo org slugs and access codes (server-side only).
+   * Operator codes/slugs must come from env. Shipping hard-coded 1921/Dolonia/zion
+   * lets strangers join the operator org and bleed personal CRM/studio data.
+   */
+  teamCode: String(process.env.DENIZEN_TEAM_CODE || '').trim(),
+  ceoAccessCode: String(process.env.DENIZEN_CEO_ACCESS_CODE || '').trim(),
   demoOrgSlug: String(process.env.DENIZEN_DEMO_ORG_SLUG || 'acme'),
-  teamOrgSlug: String(process.env.DENIZEN_TEAM_ORG_SLUG || 'zion'),
+  teamOrgSlug: String(process.env.DENIZEN_TEAM_ORG_SLUG || '').trim(),
   minPasswordLength: minPasswordLength(),
   devPasswordRelaxed: isDevPasswordRelaxed(),
 };
 
-const CEO_CODE_ALIASES = ['dolonia', 'deloonya'];
-
 function ceoAccessCodeSet() {
-  const codes = new Set(CEO_CODE_ALIASES);
+  const codes = new Set();
   const list = String(process.env.DENIZEN_CEO_ACCESS_CODES || '');
   if (list) {
     for (const part of list.split(/[,;|]+/)) {
@@ -131,7 +133,7 @@ function ceoAccessCodeSet() {
       if (code) codes.add(code);
     }
   }
-  const primary = String(process.env.DENIZEN_CEO_ACCESS_CODE || 'Dolonia').trim().toLowerCase();
+  const primary = String(process.env.DENIZEN_CEO_ACCESS_CODE || '').trim().toLowerCase();
   if (primary) codes.add(primary);
   return codes;
 }
@@ -177,6 +179,11 @@ function verifyVisitorAccessCode(code, type) {
   const t = module.exports;
   const normalized = String(code || '').trim();
   if (type === 'team') {
+    // Legacy mnemonic only when both code + org slug are configured via env.
+    // Per-org team codes in denizen_organizations.settings still work via DB lookup.
+    if (!t.teamCode || !t.teamOrgSlug) {
+      return { ok: false, error: 'Invalid team code' };
+    }
     if (normalized && normalized.toLowerCase() === t.teamCode.toLowerCase()) {
       return { ok: true, org_slug: t.teamOrgSlug, tier: 'team' };
     }
@@ -185,10 +192,10 @@ function verifyVisitorAccessCode(code, type) {
   if (type === 'ceo') {
     const ceoCodes = ceoAccessCodeSet();
     if (ceoCodes.size === 0) {
-      return { ok: true };
+      return { ok: false, error: 'CEO access not configured' };
     }
     if (normalized && ceoCodes.has(normalized.toLowerCase())) {
-      return { ok: true };
+      return { ok: true, org_slug: t.teamOrgSlug || null };
     }
     return { ok: false, error: 'Invalid CEO access code' };
   }
