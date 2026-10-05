@@ -129,6 +129,7 @@
       this._desk = null;
       this._can = null;
       this._mug = null;
+      this._mugCup = null;
       this._playing = null;
       this._holdFollow = null;
       this._sceneGen = 0;
@@ -141,6 +142,7 @@
       this.load.image('can_empty', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Empty.png');
       this.load.image('machine', '/assets/modern_office/named/coffee_machine_desk.png');
       this.load.spritesheet('mug', '/assets/limezu/animated/coffee.png', { frameWidth: 16, frameHeight: 32 });
+      this.load.image('mug_cup', '/assets/limezu/animated/coffee_cup_only.png');
     }
 
     create() {
@@ -192,6 +194,7 @@
       }).setOrigin(0.5, 0).setDepth(6);
 
       this._mug = this.add.sprite(120, 286, 'mug', 0).setOrigin(0.5, 0.72).setDepth(8).setScale(1.4).setVisible(false);
+      this._mugCup = this.add.image(0, 0, 'mug_cup').setOrigin(0.5, 0.55).setDepth(21).setScale(1.7).setVisible(false);
 
       this._npc = this.add.sprite(420, 280, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
       // Origin near the handle (right side) so the can body sits in her hands, spout out front
@@ -230,6 +233,7 @@
       this._mug.setAngle(0);
       this._mug.setScale(1.4);
       this._mug.setPosition(120, 286);
+      if (this._mugCup) this._mugCup.setVisible(false);
       this._npc.anims.stop();
       this._npc.setPosition(420, 280);
       this._npc.setFrame(0);
@@ -296,33 +300,30 @@
       });
     }
 
-    /** Face-aware mug hold — cup only (no tall steam sheet) parked on the mouth. */
+    /** Face-aware mug hold — cup-only sprite parked on the mouth. */
     mugMouthOffset() {
       const f = this._npc.frame?.index ?? 0;
-      // Abby 32x48 @ 1.5 scale → mouth ~54px above feet (below eyes, between cheeks)
-      const y = -54;
-      if (f >= 4 && f <= 7) return { x: -2, y };      // facing left
-      if (f >= 8 && f <= 11) return { x: 2, y };       // facing right
-      if (f >= 12) return { x: 0, y: -58 };             // facing up — mug in front
+      // Abby 32x48 @ 1.5 → mouth between the cheek pixels (~52px above feet)
+      const y = -52;
+      if (f >= 4 && f <= 7) return { x: -1, y };      // facing left
+      if (f >= 8 && f <= 11) return { x: 1, y };       // facing right
+      if (f >= 12) return { x: 0, y: -56 };             // facing up
       return { x: 0, y };                              // facing down/camera
     }
 
     holdMugAtMouth() {
+      // Hide the tall steaming sheet — use the tight cup-only image
       this._mug.anims.stop();
-      this._mug.setFrame(0);
-      // Coffee sheet is mostly empty steam above the cup — crop to the cup only
-      this._mug.setCrop(0, 15, 16, 17);
-      // Center origin on the cup so it sits ON the mouth, not hanging above it
-      this._mug.setOrigin(0.5, 0.5);
-      this._mug.setScale(1.5);
-      this._mug.setDepth(20);
-      this._mug.setVisible(true);
+      this._mug.setVisible(false);
+      this._mugCup.setVisible(true);
+      this._mugCup.setDepth(21);
+      this._mugCup.setScale(1.7);
       this.stopFollow();
       const tick = () => {
-        if (!this._mug?.active || !this._npc?.active) return;
+        if (!this._mugCup?.active || !this._npc?.active) return;
         const o = this.mugMouthOffset();
-        this._mug.x = this._npc.x + o.x;
-        this._mug.y = this._npc.y + o.y;
+        this._mugCup.x = this._npc.x + o.x;
+        this._mugCup.y = this._npc.y + o.y;
       };
       tick();
       this._holdFollow = setInterval(tick, 16);

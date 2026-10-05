@@ -1854,10 +1854,10 @@ class AgentActions {
           });
         } catch (_) {}
       }
-      const mug = this.scene.add.sprite(npc.x, npc.y - 54, key, 0);
-      mug.setOrigin(0.5, 0.9);
+      const mug = this.scene.add.sprite(npc.x, npc.y - 52, key, 0);
+      mug.setOrigin(0.5, 0.5);
       mug.setDepth((npc.depth || 10) + 2);
-      mug.setScale(1.2);
+      mug.setScale(1.35);
       // Cup only — the sheet's tall steam pad reads as "above the head" if left uncropped
       try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
       try { mug.anims.stop(); } catch (_) {}
@@ -1866,7 +1866,7 @@ class AgentActions {
         mug.y = npc.y - 30;
         this.scene.tweens.add({
           targets: mug,
-          y: npc.y - 54,
+          y: npc.y - 52,
           duration: 280,
           ease: 'Back.easeOut',
         });
@@ -1879,10 +1879,10 @@ class AgentActions {
           if (!mug.active || !npc.active) return;
           const f = npc.frame?.index ?? 0;
           let ox = 0;
-          let oy = -54;
+          let oy = -52;
           if (f >= 4 && f <= 7) ox = -2;
           else if (f >= 8 && f <= 11) ox = 2;
-          else if (f >= 12) oy = -58;
+          else if (f >= 12) oy = -56;
           mug.x = npc.x + ox;
           mug.y = npc.y + oy;
         },

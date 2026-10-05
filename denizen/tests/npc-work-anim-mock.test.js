@@ -15,14 +15,14 @@ describe('npc-work-anim-mock', () => {
     assert.match(html, /NPC work anim mock/i);
     assert.match(html, /pourOntoPlant|tip \+ pour|Pour plant/i);
     assert.match(html, /Writing code/);
-    assert.match(html, /mug_steam/);
-    assert.match(html, /Pick up coffee|Coffee pickup/i);
+    assert.match(html, /mug_cup|coffee_cup_only|holdMugAtMouth/);
 
     const assets = [
       'assets/Abby.png',
       'assets/modern_office/named/plant_floor_leafy.png',
       'assets/modern_office/named/coffee_machine_desk.png',
       'assets/limezu/animated/coffee.png',
+      'assets/limezu/animated/coffee_cup_only.png',
       'assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png',
       'assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Empty.png',
       'vendor/phaser/phaser.min.js',
