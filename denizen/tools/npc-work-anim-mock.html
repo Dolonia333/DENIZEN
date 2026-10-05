@@ -506,12 +506,12 @@
       this._mug.anims.play('mug_steam', true);
       if (!(await this.wait(600))) return;
 
-      // Reach / pick up — mug arcs into hand
+      // Reach / pick up — mug arcs into hand (chest/hand height, not above head)
       await new Promise((resolve) => {
         this.tweens.add({
           targets: this._mug,
-          x: this._npc.x - 12,
-          y: this._npc.y - 30,
+          x: this._npc.x - 14,
+          y: this._npc.y - 20,
           scale: 2.0,
           duration: 480,
           ease: 'Back.easeOut',
@@ -519,8 +519,8 @@
         });
       });
       if (!this.alive(gen)) return;
-      this.followHand(this._mug, -12, -30);
-      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 62));
+      this.followHand(this._mug, -14, -20);
+      this.track(makeChip(this, 'Coffee break', '#fbbf24', this._npc.x, this._npc.y - 58));
 
       if (!(await this.wait(500))) return;
 
