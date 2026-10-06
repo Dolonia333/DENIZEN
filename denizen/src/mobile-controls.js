@@ -150,9 +150,9 @@
     style.id = STYLE_ID;
     style.textContent = `
       :root {
-        --denizen-play-top: var(--safe-top, env(safe-area-inset-top, 0px));
+        --denizen-play-top: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 2px;
-        --denizen-frame-chrome: 20px; /* HQ frame pad + margin so border fits on screen */
+        --denizen-frame-chrome: 128px; /* HQ pad + chrome row + floor strip */
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
           100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
@@ -168,9 +168,9 @@
 
       /* Landscape: notch is on the sides — reclaim vertical space; keep side safe-area only once */
       html.denizen-touch.denizen-landscape {
-        --denizen-play-top: max(2px, env(safe-area-inset-top, 0px));
+        --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
-        --denizen-frame-chrome: 12px;
+        --denizen-frame-chrome: 96px;
       }
 
       html.denizen-touch body {

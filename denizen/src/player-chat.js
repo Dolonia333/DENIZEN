@@ -965,6 +965,16 @@ class PlayerChat {
         previewUrl: a.previewUrl || null,
       })),
     });
+    const toName = this._ceoConvo?.npcName
+      || (this._targetLabel && this._targetLabel.textContent !== 'Messages' ? this._targetLabel.textContent : '');
+    globalThis.DenizenFloorStrip?.push?.({
+      from: 'You',
+      to: toName || '',
+      text: trimmed || 'Sent a file',
+      npcKey: this._lastTargetKey || '',
+      npcName: toName || '',
+      kind: 'you',
+    });
     if (trimmed) this._showPlayerBubble(trimmed);
     if (globalThis.DenizenVisitorSession?.isDemo?.()) {
       try { document.dispatchEvent(new CustomEvent('denizen-demo-engaged')); } catch (_) {}
@@ -1814,7 +1824,16 @@ class PlayerChat {
     const npcKey = this._nameToKey[npcName?.toLowerCase()] || this._lastTargetKey;
     const bubblePathFired = !!(npcKey && this.manager?.actions);
     if (bubblePathFired) {
-      this.manager.actions.speak(npcKey, safeText);
+      this.manager.actions.speak(npcKey, safeText, undefined, { toName: 'you', floorLog: false });
+    } else {
+      globalThis.DenizenFloorStrip?.push?.({
+        from: npcName,
+        to: 'you',
+        text: safeText,
+        npcKey: npcKey || '',
+        npcName,
+        kind: 'say',
+      });
     }
 
     // Audio fallback — only fire the explicit DenizenSpeak if the bubble
@@ -4070,6 +4089,23 @@ class PlayerChat {
       this._chatLog = this._chatLog.slice(-this._maxLog);
     }
     this._renderLog();
+  }
+
+  noteFloorLine({ npcKey, npcName, text } = {}) {
+    const body = String(text || '').trim();
+    const name = String(npcName || '').trim();
+    if (!npcKey || !name || !body || name === 'You') return;
+    const threadId = this._dmThreadId(npcKey);
+    const thread = this._ensureThread({
+      threadId,
+      type: 'dm',
+      npcKey: this._folderForNpcKey(npcKey),
+      npcName: name,
+      title: name,
+    });
+    const last = thread?.messages?.[thread.messages.length - 1];
+    if (last && last.from === name && last.text === body && Date.now() - (last.time || 0) < 2000) return;
+    this._addToLog(name, body, { threadId });
   }
 
   _messagesForRender() {

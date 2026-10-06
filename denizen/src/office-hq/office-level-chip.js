@@ -34,14 +34,15 @@
     }
     s.textContent = `
       #${CHIP_ID} {
-        position: fixed;
-        z-index: 100510;
-        /* Top-right — clear of phone FAB (bottom-right) and world clock (top-left). */
-        top: max(14px, env(safe-area-inset-top, 0px));
-        right: max(14px, env(safe-area-inset-right, 0px));
+        position: relative;
+        z-index: 5;
+        /* Lives in the HQ chrome row (right slot), not over the map. */
+        top: auto !important;
+        right: auto !important;
         bottom: auto !important;
         left: auto !important;
         width: max-content;
+        max-width: 100%;
         height: auto !important;
         max-height: none;
         display: inline-flex;
@@ -99,8 +100,9 @@
         text-align: left;
       }
       html.denizen-touch #${CHIP_ID} {
-        top: max(10px, env(safe-area-inset-top, 0px));
-        right: max(10px, env(safe-area-inset-right, 0px));
+        position: relative;
+        top: auto !important;
+        right: auto !important;
         padding: 6px 9px;
         font-size: 10px;
       }
@@ -114,7 +116,8 @@
     chipEl = document.createElement('div');
     chipEl.id = CHIP_ID;
     chipEl.innerHTML = '<span class="label">Level 1</span><div class="bar"><div class="bar-fill" style="width:0%"></div></div>';
-    document.body.appendChild(chipEl);
+    const slot = document.getElementById('denizen-frame-level-slot');
+    (slot || document.body).appendChild(chipEl);
     return chipEl;
   }
 

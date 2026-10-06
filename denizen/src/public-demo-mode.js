@@ -45,6 +45,18 @@
 
   let hideTimer = null;
 
+  function syncBannerOffset() {
+    const root = document.documentElement;
+    const banner = document.getElementById('denizen-public-demo-banner');
+    const open = root.classList.contains('denizen-public-demo-banner-open')
+      && banner
+      && !banner.classList.contains('is-gone')
+      && !banner.classList.contains('is-hiding');
+    const h = open ? Math.ceil(banner.getBoundingClientRect().height) : 0;
+    root.style.setProperty('--dz-banner-h', h + 'px');
+    window.DenizenFitOfficeFrame?.();
+  }
+
   function setBannerVisible(visible) {
     const banner = document.getElementById('denizen-public-demo-banner');
     if (!banner) return;
@@ -52,6 +64,7 @@
       banner.classList.remove('is-hiding', 'is-gone');
       banner.setAttribute('aria-hidden', 'false');
       document.documentElement.classList.add('denizen-public-demo-banner-open');
+      syncBannerOffset();
     } else {
       dismissBanner({ persist: false });
     }
@@ -67,6 +80,7 @@
     banner.classList.add('is-hiding');
     banner.setAttribute('aria-hidden', 'true');
     document.documentElement.classList.remove('denizen-public-demo-banner-open');
+    syncBannerOffset();
     if (persist) {
       try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch (_) {}
     }
@@ -168,5 +182,6 @@
 
     document.documentElement.classList.add('denizen-public-demo-banner-open');
     hideTimer = window.setTimeout(() => dismissBanner({ persist: true }), SHOW_MS);
+    requestAnimationFrame(syncBannerOffset);
   });
 })();

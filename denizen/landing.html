@@ -821,13 +821,17 @@
     }
     @media (max-width: 640px) {
       .tour-bar {
-        top: calc(56px + env(safe-area-inset-top, 0px));
+        /* In the page, under the fixed header. A fixed bar here sat on Buzz. */
+        position: relative;
+        top: auto;
         bottom: auto;
-        left: 50%;
+        left: auto;
         right: auto;
-        transform: translateX(-50%);
-        width: auto;
-        max-width: calc(100vw - 24px);
+        transform: none;
+        z-index: 1;
+        width: calc(100% - 24px);
+        max-width: 520px;
+        margin: calc(68px + env(safe-area-inset-top, 0px)) auto 12px;
         flex-direction: row;
         display: flex;
         align-items: center;
@@ -836,7 +840,7 @@
       }
       .tour-bar.is-fading {
         opacity: 0;
-        transform: translateX(-50%) translateY(-8px);
+        transform: none;
       }
       .tour-bar-top { margin: 0; min-width: 2.5rem; }
       .tour-track {
@@ -863,9 +867,6 @@
       .sound-toggle .ti { font-size: 17px; }
       /* Compact tour: count + ticks only */
       .tour-step .label { display: none; }
-    }
-    @media (max-width: 420px) {
-      .tour-bar { display: none; } /* free thumb space on tiny phones */
     }
 
     /* Accessible focus */
@@ -1687,6 +1688,9 @@
         width: min(380px, 100%);
       }
     }
+    @media (max-width: 640px) {
+      .hero { padding-top: 8px; }
+    }
     @media (max-width: 720px) {
       .hud-status { display: none; }
       .hud-enter { padding: 9px 12px; font-size: 0.68rem; }
@@ -1846,18 +1850,24 @@
       bottom: 16%;
       width: calc(var(--fw) * 1px * var(--scale));
       height: calc(var(--fh) * 1px * var(--scale));
-      overflow: hidden;
+      overflow: visible;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       filter: drop-shadow(0 2px 0 rgba(0,0,0,0.35));
       animation: walker-patrol var(--dur, 14s) linear infinite;
       animation-delay: var(--delay, 0s);
     }
+    .walker-sprite {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
     .walker.is-flip {
       --row: 1; /* left-facing */
       transform: scaleX(1);
     }
-    .walker > img {
+    .walker-sprite > img {
       position: absolute;
       left: 0;
       top: calc(var(--row) * var(--fh) * -1px * var(--scale));
@@ -1883,7 +1893,7 @@
     .walker-c { bottom: 18%; --dur: 15s; --delay: -9s; opacity: 0.9; }
     /* Pause CSS animations when compare is off-screen (toggled via JS) */
     .office-walkers.is-paused .walker,
-    .office-walkers.is-paused .walker > img {
+    .office-walkers.is-paused .walker-sprite > img {
       animation-play-state: paused;
     }
     @media (max-width: 640px) {
@@ -1893,6 +1903,8 @@
     @media (prefers-reduced-motion: reduce) {
       .office-walkers { display: none !important; }
       .hero-city-layer { transition: none; }
+      .log-line.is-typing { animation: none; white-space: normal; overflow: visible; }
+      .machine-packet { animation: none; opacity: 0; }
     }
 
     .split-stage {
@@ -2192,6 +2204,460 @@
       line-height: 1.45;
     }
 
+    .handoff-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.08fr);
+      gap: 28px 40px;
+      align-items: center;
+    }
+    .handoff-board {
+      background: rgba(8, 12, 22, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 18px;
+      padding: 14px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .handoff-board-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 4px 6px 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .handoff-live { color: var(--lime); letter-spacing: 0.06em; }
+    .handoff-row {
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+    }
+    .handoff-row .npc-portrait { --npc-scale: 1.15; }
+    .handoff-meta { min-width: 0; flex: 1; }
+    .handoff-meta .crew-name { margin: 0; }
+    .handoff-task {
+      margin: 2px 0 0;
+      color: var(--text-body);
+      font-size: 0.82rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .handoff-status {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+    .handoff-status i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 8px var(--lime-glow);
+    }
+    .handoff-status.is-wait { color: #fcd34d; }
+    .handoff-status.is-wait i { background: var(--amber); box-shadow: none; }
+    .handoff-pill {
+      align-self: flex-end;
+      margin: 0 8px 0 18%;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #1e1033;
+      color: #e9d5ff;
+      border: 1px solid rgba(216, 180, 254, 0.35);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .handoff-copy h2 {
+      font-family: var(--display);
+      font-size: clamp(1.7rem, 4vw, 2.6rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin: 0 0 12px;
+      color: var(--cream);
+    }
+    .handoff-checks {
+      margin: 0 0 16px;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+    .handoff-checks li {
+      padding-left: 22px;
+      position: relative;
+      color: var(--text-body);
+      font-size: 0.95rem;
+    }
+    .handoff-checks li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--lime);
+      font-weight: 700;
+    }
+    .handoff-focus {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(12, 15, 20, 0.72);
+      border: 1px solid rgba(80, 110, 160, 0.18);
+      margin-bottom: 12px;
+    }
+    .handoff-focus .crew-detail-body,
+    .handoff-focus .crew-detail-see { font-size: 0.88rem; }
+    .handoff-focus .crew-detail-name { font-size: 1.05rem; }
+
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .agent-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      gap: 8px;
+      min-width: 0;
+    }
+    .agent-bubble {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #1e293b;
+      background: #fff;
+      border: 2px solid #0f172a;
+      border-radius: 999px;
+      padding: 3px 8px;
+      line-height: 1.2;
+      box-shadow: 2px 2px 0 #0f172a;
+    }
+    .agent-tile .npc-portrait { --npc-scale: 1.7; }
+    .agent-card {
+      width: 100%;
+      background: rgba(244, 239, 228, 0.96);
+      color: #1e293b;
+      border-radius: 16px;
+      border: 2px solid #0f172a;
+      box-shadow: 3px 3px 0 #0f172a;
+      padding: 12px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .agent-card .brand-mark {
+      width: 32px;
+      height: 32px;
+      padding: 6px;
+      border-radius: 8px;
+      background: #1e293b;
+      box-sizing: border-box;
+    }
+    .agent-card .brand-mark svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+    .agent-tool {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .agent-who {
+      font-size: 0.78rem;
+      color: #475569;
+    }
+    .agent-grid-note {
+      margin: 16px 0 0;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      max-width: 62ch;
+    }
+
+    .machine-strip {
+      width: calc(100% - (var(--page-gutter) * 2));
+      max-width: 1080px;
+      margin: 0 auto var(--section-y);
+    }
+    .machine-layout {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+      gap: 28px 36px;
+      align-items: center;
+    }
+    .machine-copy h2 {
+      font-family: var(--display);
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin: 0 0 12px;
+      color: var(--cream);
+    }
+    .machine-stage {
+      background: #f6efe4;
+      border-radius: 22px;
+      padding: 16px 14px 14px;
+      overflow: hidden;
+    }
+    .machine-diagram {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(168px, 210px) minmax(0, 1fr);
+      column-gap: 8px;
+      row-gap: 8px;
+      align-items: center;
+    }
+    .machine-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+    .machine-col p {
+      margin: 0 0 2px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #78716c;
+      text-align: left;
+    }
+    .machine-col-tools p { text-align: right; }
+    .machine-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      min-width: 0;
+    }
+    .machine-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 1 auto;
+      min-width: 0;
+      background: #fffdf8;
+      color: #292524;
+      border-radius: 14px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 650;
+      border: 1px solid rgba(120, 90, 50, 0.12);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .machine-pill i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      flex: none;
+    }
+    .machine-wire {
+      flex: 1 1 28px;
+      min-width: 16px;
+      height: 0;
+      border-top: 1.5px dashed #c4a574;
+      position: relative;
+    }
+    .machine-packet {
+      position: absolute;
+      top: -4px;
+      width: 8px;
+      height: 8px;
+      margin-left: -4px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 0 1px rgba(28, 25, 23, 0.28);
+      animation: packet-from-laptop 2.4s linear infinite;
+    }
+    .machine-col-tools .machine-packet { animation-name: packet-from-laptop-right; }
+    .machine-row:nth-child(2) .machine-packet { animation-duration: 2.2s; animation-delay: -0.4s; }
+    .machine-row:nth-child(3) .machine-packet { animation-duration: 2.55s; animation-delay: -1.1s; }
+    .machine-row:nth-child(4) .machine-packet { animation-duration: 2.9s; animation-delay: -1.8s; }
+    .machine-row:nth-child(5) .machine-packet { animation-duration: 3.25s; animation-delay: -0.2s; }
+    @keyframes packet-from-laptop {
+      0% { left: 100%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { left: 0%; opacity: 0; }
+    }
+    @keyframes packet-from-laptop-right {
+      0% { left: 0%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+    .machine-laptop {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      align-self: stretch;
+      min-width: 0;
+      width: 100%;
+      text-align: center;
+    }
+    .machine-screen {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      background: #2a3344;
+      border: 8px solid #efd7b0;
+      border-radius: 18px;
+      padding: 8px 8px 10px;
+    }
+    .machine-screen .agent-bubble { margin-top: 2px; }
+    .machine-base {
+      width: 100%;
+      height: 12px;
+      margin-top: 3px;
+      background: #fff;
+      border-radius: 3px 3px 14px 14px;
+      border: 2px solid #e7e5e4;
+    }
+    .machine-dots {
+      display: flex;
+      gap: 4px;
+      margin: 0 0 6px;
+    }
+    .machine-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fb7185;
+    }
+    .machine-dots span:nth-child(2) { background: #fbbf24; }
+    .machine-dots span:nth-child(3) { background: #4ade80; }
+    .machine-people {
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      margin-top: 2px;
+    }
+    .machine-people .npc-portrait { --npc-scale: 0.95; }
+    .machine-term {
+      margin: auto 0 0;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: #86efac;
+      line-height: 1.35;
+    }
+    .machine-caption {
+      grid-column: 2;
+      justify-self: center;
+      margin: 2px 0 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #44403c;
+      font-weight: 700;
+    }
+    .machine-chip {
+      grid-column: 2;
+      justify-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: auto;
+      max-width: 100%;
+      margin-top: 0;
+      background: #ea580c;
+      color: #fff7ed;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .machine-chip .ti { font-size: 13px; }
+    .seal-log {
+      margin-top: 18px;
+      background: #12141c;
+      color: #e7e5e4;
+      border-radius: 18px;
+      padding: 18px 18px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .seal-log-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #a8a29e;
+      margin-bottom: 14px;
+    }
+    .seal-log-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    .seal-log h3 {
+      margin: 0 0 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fdba74;
+    }
+    .seal-log ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    .seal-log li {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+      color: #d6d3d1;
+    }
+    .seal-log li span {
+      display: block;
+      color: #a8a29e;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .seal-note {
+      margin: 0 0 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #e7e5e4;
+    }
+    .seal-note b {
+      display: block;
+      color: #fdba74;
+      font-size: 12px;
+    }
+    .seal-foot {
+      margin: 14px 0 0;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fdba74;
+      font-size: 13px;
+    }
+    .seal-foot a { color: #fff7ed; }
+    @media (max-width: 900px) {
+      .handoff-layout, .machine-layout, .seal-log-cols { grid-template-columns: 1fr; }
+      .agent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .handoff-pill { margin-left: 12%; }
+    }
+
     .reveal {
       opacity: 0;
       transform: translateY(24px);
@@ -2222,6 +2688,16 @@
       overflow: hidden;
     }
     .log-line { margin: 0; }
+    .log-line.is-typing {
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      animation: log-type 1.05s steps(32, end) both;
+    }
+    @keyframes log-type {
+      from { max-width: 0; }
+      to { max-width: 100%; }
+    }
     .log-line .ts { color: #475569; }
     .log-line .lvl-warn { color: #fbbf24; }
     .log-line .lvl-err { color: #f87171; }
@@ -2744,7 +3220,9 @@
       scroll-margin-top: 96px;
     }
     .how-strip .section-kicker,
-    .seat-ais .section-kicker {
+    .seat-ais .section-kicker,
+    .handoff-copy .section-kicker,
+    .machine-copy .section-kicker {
       font-family: var(--mono);
       font-size: 11px;
       letter-spacing: 0.12em;
@@ -3916,13 +4394,13 @@
         <img src="./assets/ref_Hu4Gzs.png" alt="Denizen pixel office preview" loading="lazy" decoding="async" />
         <div class="office-walkers" id="office-walkers" aria-hidden="true">
           <div class="walker walker-a" style="--dur:13s;--delay:0s">
-            <img src="./assets/Abby.png" alt="" loading="lazy" decoding="async" />
+            <span class="walker-sprite"><img src="./assets/Abby.png" alt="" loading="lazy" decoding="async" /></span>
           </div>
           <div class="walker walker-b" style="--dur:17s;--delay:-4s">
-            <img src="./assets/Lucy.png" alt="" loading="lazy" decoding="async" />
+            <span class="walker-sprite"><img src="./assets/Lucy.png" alt="" loading="lazy" decoding="async" /></span>
           </div>
           <div class="walker walker-c" style="--dur:15s;--delay:-8s">
-            <img src="./assets/Bouncer.png" alt="" loading="lazy" decoding="async" />
+            <span class="walker-sprite"><img src="./assets/Bouncer.png" alt="" loading="lazy" decoding="async" /></span>
           </div>
         </div>
         <span class="office-preview-badge">Preview · live in demo</span>
@@ -3942,6 +4420,180 @@
         <div class="name">Lucy · Front desk</div>
         <div id="speech-text">Click to talk — Lucy is at the desk.</div>
         <div class="speech-choices" id="speech-choices"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="crew-section handoff" id="crew" aria-label="Work handed across the floor">
+    <div class="handoff-layout">
+      <div class="handoff-board">
+        <div class="handoff-board-head">
+          <span>On the floor</span>
+          <span class="handoff-live">4 on the floor</span>
+        </div>
+        <button type="button" class="crew-card handoff-row is-active" role="option" aria-selected="true" data-crew="abby">
+          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
+            <img src="./assets/Abby.png" alt="" loading="lazy" decoding="async" />
+          </div>
+          <div class="handoff-meta crew-meta">
+            <div class="crew-name">Abby</div>
+            <div class="crew-role">CTO</div>
+            <p class="handoff-task">Ship the CRM follow-up</p>
+          </div>
+          <span class="handoff-status"><i></i> working</span>
+        </button>
+        <p class="handoff-pill">Lucy, chase the inbox</p>
+        <button type="button" class="crew-card handoff-row" role="option" aria-selected="false" data-crew="lucy">
+          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
+            <img src="./assets/Lucy.png" alt="" loading="lazy" decoding="async" />
+          </div>
+          <div class="handoff-meta crew-meta">
+            <div class="crew-name">Lucy</div>
+            <div class="crew-role">Front desk</div>
+            <p class="handoff-task">Chase the inbound mail</p>
+          </div>
+          <span class="handoff-status"><i></i> working</span>
+        </button>
+        <p class="handoff-pill">Marcus, pull standup</p>
+        <button type="button" class="crew-card handoff-row" role="option" aria-selected="false" data-crew="marcus">
+          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
+            <img src="./assets/Conference_man.png" alt="" loading="lazy" decoding="async" />
+          </div>
+          <div class="handoff-meta crew-meta">
+            <div class="crew-name">Marcus</div>
+            <div class="crew-role">Project lead</div>
+            <p class="handoff-task">Standup is slipping</p>
+          </div>
+          <span class="handoff-status is-wait"><i></i> waiting</span>
+        </button>
+        <p class="handoff-pill">Bouncer, check the gate</p>
+        <button type="button" class="crew-card handoff-row" role="option" aria-selected="false" data-crew="bouncer">
+          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
+            <img src="./assets/Bouncer.png" alt="" loading="lazy" decoding="async" />
+          </div>
+          <div class="handoff-meta crew-meta">
+            <div class="crew-name">Bouncer</div>
+            <div class="crew-role">Security</div>
+            <p class="handoff-task">Walk the patrol</p>
+          </div>
+          <span class="handoff-status"><i></i> working</span>
+        </button>
+      </div>
+      <div class="handoff-copy">
+        <p class="section-kicker">The floor</p>
+        <h2>They hand the work across the room.</h2>
+        <p class="section-lead">Abby breaks a job into the next desk. You see the pass on the floor, and you only get pulled in when it needs you.</p>
+        <ul class="handoff-checks">
+          <li>A trail you can read after the bubble fades</li>
+          <li>Approvals, Buzz, and handoffs are what interrupt you</li>
+          <li>Named staff, on the subscriptions you already have</li>
+          <li>The work stays on the desk you can see</li>
+        </ul>
+        <div class="handoff-focus">
+          <div class="npc-portrait npc-portrait--sm" id="crew-detail-portrait" role="img" aria-label="Abby">
+            <img src="./assets/Abby.png" alt="" id="crew-detail-img" loading="lazy" decoding="async" />
+          </div>
+          <div>
+            <p class="crew-detail-kicker" id="crew-detail-role">CTO</p>
+            <h3 class="crew-detail-name" id="crew-detail-name">Abby</h3>
+            <p class="crew-detail-body" id="crew-detail-body">Arbitration, code review, and the person who unsticks blocked work. When agents disagree, she makes the call.</p>
+            <p class="crew-detail-see" id="crew-detail-see"><strong>On the floor:</strong> Deep in reviews, escalating hard decisions, unblocking the eng floor.</p>
+          </div>
+        </div>
+        <div class="crew-detail-actions">
+          <a class="btn btn-primary" href="/office?demo=1">Watch in demo</a>
+          <button type="button" class="btn btn-ghost" id="crew-ask-lucy">Ask Lucy about them</button>
+          <a class="crew-brief-abby" href="/office?demo=1" data-tour-demo>Brief Abby in the office</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seat-ais reveal" id="seat-ais" aria-label="Seat an AI">
+    <p class="section-kicker">Seat an AI</p>
+    <h2>Your subscriptions. Their desks.</h2>
+    <p class="section-lead">Nothing new to buy. Import never auto-runs — you click Seat.</p>
+    <div class="agent-grid">
+      <a class="agent-tile" href="/office?demo=1&amp;seat=1&amp;provider=claude">
+        <span class="agent-bubble" data-lines="Shipping|Reviewing|Waiting on you">Shipping</span>
+        <div class="npc-portrait" role="img" aria-hidden="true"><img src="./assets/Abby.png" alt="" loading="lazy" decoding="async" /></div>
+        <span class="agent-card">
+          <img class="brand-mark" src="./assets/brands/anthropic.svg" alt="" width="22" height="22" />
+          <span class="agent-tool">Claude</span>
+          <span class="agent-who">Abby · Seat in demo</span>
+        </span>
+      </a>
+      <a class="agent-tile" href="/office?demo=1&amp;seat=1&amp;provider=cursor">
+        <span class="agent-bubble" data-lines="On it|Standup|Handing off">On it</span>
+        <div class="npc-portrait" role="img" aria-hidden="true"><img src="./assets/Conference_man.png" alt="" loading="lazy" decoding="async" /></div>
+        <span class="agent-card">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#fff" d="M4.2 2.4 4.2 17.6 8.8 13.6 12.6 20.8 15 19.8 11.2 12.6 17.4 12.6z"/></svg></span>
+          <span class="agent-tool">Cursor</span>
+          <span class="agent-who">Marcus · Seat in demo</span>
+        </span>
+      </a>
+      <a class="agent-tile" href="/office?demo=1&amp;seat=1&amp;provider=grok">
+        <span class="agent-bubble" data-lines="On watch|Patrolling|At the door">On watch</span>
+        <div class="npc-portrait" role="img" aria-hidden="true"><img src="./assets/Bouncer.png" alt="" loading="lazy" decoding="async" /></div>
+        <span class="agent-card">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2.4 14.1 9.2 21.2 9.4 15.6 13.6 17.6 20.4 12 16.4 6.4 20.4 8.4 13.6 2.8 9.4 9.9 9.2z"/></svg></span>
+          <span class="agent-tool">Grok</span>
+          <span class="agent-who">Bouncer · Seat in demo</span>
+        </span>
+      </a>
+      <a class="agent-tile" href="/office?demo=1&amp;seat=1&amp;provider=lmstudio">
+        <span class="agent-bubble" data-lines="Greeting|Chasing mail|At the desk">Greeting</span>
+        <div class="npc-portrait" role="img" aria-hidden="true"><img src="./assets/Lucy.png" alt="" loading="lazy" decoding="async" /></div>
+        <span class="agent-card">
+          <img class="brand-mark" src="./assets/brands/lmstudio.svg" alt="" width="22" height="22" />
+          <span class="agent-tool">LM Studio</span>
+          <span class="agent-who">Lucy · Seat in demo</span>
+        </span>
+      </a>
+    </div>
+    <p class="agent-grid-note">Each bubble is what you notice on the floor. The card under it is the subscription you already have. You click Seat. Nothing auto-runs.</p>
+  </section>
+
+  <section class="machine-strip reveal" id="your-machine" aria-label="Your machine">
+    <div class="machine-layout">
+      <div class="machine-copy">
+        <p class="section-kicker">Desktop</p>
+        <h2>Your subscriptions. Your machine.</h2>
+        <p class="section-lead">Denizen seats the models you already pay for and puts mail, CRM, and the workbench on the same floor. On Desktop, keys and files stay on the machine you pair.</p>
+        <a class="btn btn-ghost" href="desktop/download.html">Download Desktop</a>
+      </div>
+      <div class="machine-stage">
+      <div class="machine-diagram">
+        <div class="machine-col">
+          <p>Your subscriptions</p>
+          <div class="machine-row"><span class="machine-pill"><i></i> Claude</span><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span></div>
+          <div class="machine-row"><span class="machine-pill"><i></i> Cursor</span><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span></div>
+          <div class="machine-row"><span class="machine-pill"><i></i> Grok</span><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span></div>
+          <div class="machine-row"><span class="machine-pill"><i></i> LM Studio</span><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span></div>
+        </div>
+        <div class="machine-laptop">
+          <div class="machine-screen">
+            <div class="machine-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <span class="agent-bubble">ship the follow-up</span>
+            <div class="machine-people" aria-hidden="true">
+              <div class="npc-portrait"><img src="./assets/Abby.png" alt="" /></div>
+              <div class="npc-portrait"><img src="./assets/Lucy.png" alt="" /></div>
+              <div class="npc-portrait"><img src="./assets/Conference_man.png" alt="" /></div>
+            </div>
+            <p class="machine-term">abby › ship the CRM follow-up</p>
+          </div>
+          <div class="machine-base" aria-hidden="true"></div>
+        </div>
+        <div class="machine-col machine-col-tools">
+          <p>Your tools</p>
+          <div class="machine-row"><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span><span class="machine-pill"><i></i> Mail</span></div>
+          <div class="machine-row"><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span><span class="machine-pill"><i></i> Meridian CRM</span></div>
+          <div class="machine-row"><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span><span class="machine-pill"><i></i> Workbench</span></div>
+          <div class="machine-row"><span class="machine-wire" aria-hidden="true"><span class="machine-packet"></span></span><span class="machine-pill"><i></i> Buzz</span></div>
+        </div>
+        <p class="machine-caption">Your machine</p>
+        <span class="machine-chip"><i class="ti ti-lock" aria-hidden="true"></i> Keys stay on this machine</span>
+      </div>
       </div>
     </div>
   </section>
@@ -4132,46 +4784,6 @@
     </div>
   </section>
 
-  <section class="seat-ais reveal" id="seat-ais" aria-label="Seat an AI">
-    <p class="section-kicker">Seat an AI</p>
-    <h2>Your subscriptions. Their desks.</h2>
-    <p class="section-lead">Nothing new to buy. Import never auto-runs — you click Seat.</p>
-    <div class="seat-ais-grid">
-      <article class="seat-card">
-        <span class="provider-pill">
-          <img class="brand-mark" src="./assets/brands/cursor.svg" alt="" width="20" height="20" />
-          Cursor
-        </span>
-        <h3>Cursor</h3>
-        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=cursor">Seat in demo →</a>
-      </article>
-      <article class="seat-card">
-        <span class="provider-pill">
-          <img class="brand-mark" src="./assets/brands/anthropic.svg" alt="" width="20" height="20" />
-          Claude
-        </span>
-        <h3>Claude</h3>
-        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=claude">Seat in demo →</a>
-      </article>
-      <article class="seat-card">
-        <span class="provider-pill">
-          <img class="brand-mark" src="./assets/brands/xai.svg" alt="" width="20" height="20" />
-          Grok
-        </span>
-        <h3>Grok</h3>
-        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=grok">Seat in demo →</a>
-      </article>
-      <article class="seat-card">
-        <span class="provider-pill">
-          <img class="brand-mark" src="./assets/brands/lmstudio.svg" alt="" width="20" height="20" />
-          LM Studio
-        </span>
-        <h3>LM Studio</h3>
-        <a class="offer-try" href="/office?demo=1&amp;seat=1&amp;provider=lmstudio">Seat in demo →</a>
-      </article>
-    </div>
-  </section>
-
   <section class="meet-buzz reveal" id="meet-buzz" aria-label="Meet Buzz">
     <div class="meet-layout">
     <div class="meet-stage">
@@ -4251,72 +4863,6 @@
     </div>
   </section>
 
-  <section class="crew-section" id="crew" aria-label="Meet the crew">
-    <div class="crew-head">
-      <h2>Meet a few on the floor</h2>
-      <p>Sixteen agents live here — pick one to see what you’ll notice first.</p>
-    </div>
-    <div class="crew-layout">
-      <div class="crew-rail" role="listbox" aria-label="Crew members" id="crew-rail">
-        <button type="button" class="crew-card is-active" role="option" aria-selected="true" data-crew="lucy">
-          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
-            <img src="./assets/Lucy.png" alt="" loading="lazy" decoding="async" />
-          </div>
-          <div class="crew-meta">
-            <div class="crew-name">Lucy</div>
-            <div class="crew-role">Front desk</div>
-          </div>
-        </button>
-        <button type="button" class="crew-card" role="option" aria-selected="false" data-crew="marcus">
-          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
-            <img src="./assets/Conference_man.png" alt="" loading="lazy" decoding="async" />
-          </div>
-          <div class="crew-meta">
-            <div class="crew-name">Marcus</div>
-            <div class="crew-role">Project lead</div>
-          </div>
-        </button>
-        <button type="button" class="crew-card" role="option" aria-selected="false" data-crew="abby">
-          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
-            <img src="./assets/Abby.png" alt="" loading="lazy" decoding="async" />
-          </div>
-          <div class="crew-meta">
-            <div class="crew-name">Abby</div>
-            <div class="crew-role">CTO</div>
-          </div>
-        </button>
-        <button type="button" class="crew-card" role="option" aria-selected="false" data-crew="bouncer">
-          <div class="npc-portrait npc-portrait--sm" role="img" aria-hidden="true">
-            <img src="./assets/Bouncer.png" alt="" loading="lazy" decoding="async" />
-          </div>
-          <div class="crew-meta">
-            <div class="crew-name">Bouncer</div>
-            <div class="crew-role">Security</div>
-          </div>
-        </button>
-      </div>
-      <aside class="crew-detail" id="crew-detail" aria-live="polite">
-        <div class="crew-detail-top">
-          <div class="npc-portrait npc-portrait--lg" id="crew-detail-portrait" role="img" aria-label="Lucy">
-            <img src="./assets/Lucy.png" alt="" id="crew-detail-img" loading="lazy" decoding="async" />
-          </div>
-          <div>
-            <p class="crew-detail-kicker" id="crew-detail-role">Front desk</p>
-            <h3 class="crew-detail-name" id="crew-detail-name">Lucy</h3>
-          </div>
-        </div>
-        <p class="crew-detail-body" id="crew-detail-body">Mail, pipelines, and the first face you’ll meet when you walk in. She’s the bridge between outside systems and the floor.</p>
-        <p class="crew-detail-see" id="crew-detail-see"><strong>On the floor:</strong> Greeting visitors, chasing inboxes, kicking off job pipelines.</p>
-        <div class="crew-detail-actions">
-          <a class="btn btn-primary" href="/office?demo=1">Watch in demo</a>
-          <button type="button" class="btn btn-ghost" id="crew-ask-lucy">Ask Lucy about them</button>
-          <a class="crew-brief-abby" href="/office?demo=1" data-tour-demo>Brief Abby in the office</a>
-        </div>
-      </aside>
-    </div>
-    <p class="crew-keyhint">Pick someone, then open the live demo</p>
-  </section>
-
   <section class="biz-strip" id="for-teams" aria-label="How to start">
     <p class="biz-strip-kicker">Demo · Team · Desktop</p>
     <h2>Same office. Three doors.</h2>
@@ -4372,23 +4918,29 @@
         <p>Team sessions are yours — not the host’s. Pair Desktop to your real account, not a demo guest.</p>
       </article>
     </div>
-    <div class="privacy-wire" aria-label="What travels">
-      <article>
-        <h3>What Abby sees</h3>
-        <ul>
-          <li>Your note, and a transcript if you spoke</li>
-          <li>Desktop: a path under buzz-captures on your disk</li>
-          <li>Browser: a stored copy so she can look at the shot</li>
-        </ul>
-      </article>
-      <article>
-        <h3>What the wire sees</h3>
-        <ul>
-          <li>A session token, not a card number</li>
-          <li>Operator telemetry: counts, latency, 240-character previews — on the office host</li>
-          <li>MCP audit: tool name, not the body of the ask</li>
-        </ul>
-      </article>
+    <div class="seal-log" aria-label="What travels">
+      <div class="seal-log-head">
+        <span>What travels</span>
+        <span>Office host</span>
+      </div>
+      <div class="seal-log-cols">
+        <div>
+          <h3>On the host. What gets stored</h3>
+          <ul>
+            <li><span>Session</span>A token, not a card number</li>
+            <li><span>Call</span>Latency and token counts</li>
+            <li><span>Preview</span>The first 240 characters, on the office host</li>
+            <li><span>MCP audit</span>The tool name, not the body of the ask</li>
+          </ul>
+        </div>
+        <div>
+          <h3>What Abby sees</h3>
+          <p class="seal-note"><b>Your note</b>Screenshot of the floor — one line for Abby. A transcript if you spoke.</p>
+          <p class="seal-note"><b>Desktop</b>A path under buzz-captures on your disk.</p>
+          <p class="seal-note"><b>Browser</b>A stored copy so she can look at the shot, after you send.</p>
+        </div>
+      </div>
+      <p class="seal-foot">The table is public in <a href="docs/TELEMETRY.md">TELEMETRY.md</a>.</p>
     </div>
   </section>
 
@@ -5194,7 +5746,10 @@
     const lines = [];
     function pushLog() {
       const tpl = LOG_TEMPLATES[Math.floor(Math.random() * LOG_TEMPLATES.length)];
-      lines.push(`<p class="log-line">${tpl()}</p>`);
+      lines.forEach((html, i) => {
+        lines[i] = html.replace(' is-typing', '');
+      });
+      lines.push(`<p class="log-line is-typing">${tpl()}</p>`);
       if (lines.length > 18) lines.shift();
       logEl.innerHTML = lines.join('');
     }
@@ -5221,6 +5776,39 @@
     } else {
       startLogStream();
     }
+
+    const motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (motionOk) {
+      const cycleNodes = document.querySelectorAll('[data-lines]');
+      setInterval(() => {
+        cycleNodes.forEach((node) => {
+          const lineset = (node.dataset.lines || '').split('|').filter(Boolean);
+          if (lineset.length < 2) return;
+          const i = lineset.indexOf(node.textContent.trim());
+          node.textContent = lineset[(i + 1) % lineset.length];
+        });
+      }, 2800);
+    }
+
+    function fitMachine() {
+      const stage = document.querySelector('.machine-stage');
+      const diagram = document.querySelector('.machine-diagram');
+      if (!stage || !diagram) return;
+      diagram.style.width = '';
+      diagram.style.transform = '';
+      diagram.style.marginBottom = '';
+      const pad = parseFloat(getComputedStyle(stage).paddingLeft) + parseFloat(getComputedStyle(stage).paddingRight);
+      const avail = stage.clientWidth - pad;
+      const natural = 560;
+      if (avail >= natural) return;
+      diagram.style.width = `${natural}px`;
+      const scale = avail / natural;
+      diagram.style.transformOrigin = 'top left';
+      diagram.style.transform = `scale(${scale})`;
+      diagram.style.marginBottom = `${diagram.offsetHeight * (scale - 1)}px`;
+    }
+    fitMachine();
+    window.addEventListener('resize', fitMachine, { passive: true });
 
 
     // ── Lucy dialogue tree (FAQ lives here so the page stays short) ──
@@ -5463,7 +6051,7 @@
       const key = e.currentTarget.dataset.dialogue || 'crew';
       showNode(key, { scroll: true, fromUser: true });
     });
-    selectCrew('lucy');
+    selectCrew('abby');
 
     // sticky HUD shadow after scroll
     const hud = document.getElementById('hud-top');

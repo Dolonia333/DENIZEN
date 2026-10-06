@@ -50,11 +50,11 @@
     }
     s.textContent = `
       #${TAB_ID} {
-        position: fixed;
+        position: absolute;
         top: 50%;
         right: 0;
-        z-index: 10040;
-        transform: translateY(-50%);
+        z-index: 6;
+        transform: translate(calc(100% + 8px), -50%);
         writing-mode: vertical-rl;
         text-orientation: mixed;
         border: 1px solid rgba(163,230,53,0.35);
@@ -71,6 +71,13 @@
       html.denizen-phone #${TAB_ID},
       html.denizen-work-rail-open #${TAB_ID},
       html.denizen-work-rail-phone #${TAB_ID} { display: none; }
+      /* Phones size the frame edge-to-edge, so the tab stays on the screen edge. */
+      html.denizen-touch #${TAB_ID} {
+        position: fixed;
+        right: 0;
+        z-index: 10040;
+        transform: translateY(-50%);
+      }
       #${RAIL_ID} {
         position: fixed;
         top: 0;
@@ -380,7 +387,8 @@
     tabEl.textContent = 'Workbench';
     tabEl.title = 'Open the workbench (])';
     tabEl.addEventListener('click', openRail);
-    document.body.appendChild(tabEl);
+    const frame = document.getElementById('game-frame');
+    (frame || document.body).appendChild(tabEl);
   }
 
   function buildPhoneChrome() {
@@ -485,17 +493,18 @@
       return;
     }
     if (tab === 'trail') {
-      // Only the desktop rail hosts the floating work feed node.
+      const floor = globalThis.DenizenFloorStrip?.recent?.() || [];
+      const cards = floor.slice(0, 8).map((line) => {
+        const who = line.to ? `${line.from} → ${line.to}` : line.from;
+        return `<div class="wr-card"><b>${esc(who)}</b><div>${esc(line.text)}</div></div>`;
+      }).join('');
+      body.innerHTML = cards || '<p class="wr-empty">Lines from the floor show up here as people talk.</p>';
       if (el === railEl) {
-        body.classList.add('denizen-work-rail-host');
-        body.innerHTML = '<p class="wr-empty">Live work trail. Tab still toggles the floating feed.</p>';
         const feed = document.getElementById('denizen-work-feed');
         if (feed) {
           body.appendChild(feed);
           feed.style.display = 'flex';
         }
-      } else {
-        body.innerHTML = '<p class="wr-empty">Live work trail stays on the laptop rail. Use Abby / Crew / Inbox here on the phone.</p>';
       }
       return;
     }

@@ -6,7 +6,6 @@
   'use strict';
 
   const TICK_MS = 500;
-  const Y_OFFSET = 58;
   const LUCY_TEXTURE_KEY = 'xp_lucy';
 
   let scene = null;
@@ -72,7 +71,7 @@
     }
 
     clearLabel(npcKey);
-    const text = scene.add.text(npc.x, npc.y - Y_OFFSET, labelText, {
+    const text = scene.add.text(npc.x, npc.y - 48, labelText, {
       fontSize: '8px',
       fontFamily: 'monospace',
       color: '#0f172a',
@@ -109,11 +108,21 @@
       }
     }
 
+    placeAll();
+  }
+
+  function placeAll() {
     for (const entry of labels.values()) {
-      if (entry.text && entry.npc) {
-        entry.text.x = entry.npc.x;
-        entry.text.y = entry.npc.y - Y_OFFSET;
-      }
+      const npc = entry.npc;
+      if (!entry.text?.scene || !npc) continue;
+      entry.text.setOrigin(0.5, 1);
+      const plate = agentManager?.actions?._roleLabels?.get(entry.npcKey);
+      const x = plate?.container?.scene ? plate.container.x : npc.x;
+      const plateTop = plate?.container?.scene
+        ? plate.container.y - (plate.plateH || 0)
+        : npc.y - (npc.displayHeight || 48);
+      entry.text.x = x;
+      entry.text.y = plateTop - 4;
     }
   }
 
@@ -133,6 +142,14 @@
     refresh() {
       clearAllLabels();
       tick();
+    },
+
+    placeAll,
+
+    topFor(npcKey) {
+      const entry = labels.get(npcKey);
+      if (!entry?.text?.scene) return null;
+      return entry.text.y - (entry.text.displayHeight || entry.text.height || 8);
     },
 
     detach() {

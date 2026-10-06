@@ -39,6 +39,16 @@
         --safe-right: env(safe-area-inset-right, 0px);
         --safe-bottom: env(safe-area-inset-bottom, 0px);
         --safe-left: env(safe-area-inset-left, 0px);
+        /* Demo banner height. public-demo-mode.js measures the real bar. */
+        --dz-banner-h: 0px;
+        /* Room for the Workbench tab, which hangs off the frame's right edge. */
+        --dz-workbench-gutter: 44px;
+        --dz-frame-chrome-h: 34px;
+        /* Three-line floor strip under the map. */
+        --dz-floor-strip-h: 78px;
+      }
+      html.denizen-public-demo-banner-open {
+        --dz-banner-h: 34px;
       }
       body {
         margin: 0;
@@ -49,7 +59,12 @@
         min-height: 100dvh;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         overflow: hidden;
-        padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+        box-sizing: border-box;
+        padding:
+          calc(var(--safe-top) + var(--dz-banner-h) + 12px)
+          calc(var(--safe-right) + var(--dz-workbench-gutter))
+          calc(var(--safe-bottom) + 12px)
+          calc(var(--safe-left) + 12px);
         position: relative;
       }
       /* Night city letterbox — CSS day/night driven by WorldClock vars */
@@ -211,7 +226,13 @@
         position: relative;
         z-index: 1;
         flex-shrink: 0;
-        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: fit-content;
+        max-width: 100%;
+        padding: 8px 10px 10px;
+        overflow: visible;
         border-radius: 6px;
         background:
           linear-gradient(160deg, rgba(51, 65, 85, 0.95) 0%, rgba(15, 23, 42, 0.98) 38%, rgba(2, 6, 23, 0.98) 100%);
@@ -271,11 +292,30 @@
         border-left: 0;
         border-top: 0;
       }
+      /* Clock, HQ name, and level live in this row — never on the map, never above the frame. */
+      #game-frame .dz-frame-chrome {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        min-height: var(--dz-frame-chrome-h);
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 4;
+      }
+      #game-frame .dz-frame-chrome-left { justify-self: start; min-width: 0; }
+      #game-frame .dz-frame-chrome-right {
+        justify-self: end;
+        min-width: 0;
+        display: flex;
+        justify-content: flex-end;
+      }
       #game-frame .dz-frame-label {
-        position: absolute;
-        top: -11px;
-        left: 50%;
-        transform: translateX(-50%);
+        position: static;
+        top: auto;
+        left: auto;
+        transform: none;
+        justify-self: center;
         padding: 2px 10px;
         font-size: 10px;
         font-weight: 700;
@@ -290,11 +330,11 @@
         z-index: 3;
         transition: color 0.55s linear, border-color 0.55s linear;
       }
-      /* Visible world-clock — outside the Phaser canvas so it can't get lost */
+      /* World clock sits in the chrome row, not over the playfield. */
       #denizen-tod-hud {
-        position: absolute;
-        top: 18px;
-        left: 22px;
+        position: static;
+        top: auto;
+        left: auto;
         z-index: 5;
         display: flex;
         align-items: center;
@@ -328,10 +368,15 @@
       #denizen-tod-hud[data-phase="night"] .tod-phase { color: #a5b4fc; }
       #denizen-tod-hud[data-phase="day"] .tod-phase { color: #38bdf8; }
       #game-container {
-        width: min(84vw, 84dvw, calc(78dvh * 16 / 9));
-        height: min(78dvh, calc(84vw * 9 / 16));
-        max-width: 1100px;
-        max-height: 620px;
+        /* Exact 16:9, capped at the 1280×720 buffer (or 2×). Fit script snaps to whole pixels. */
+        width: min(
+          2560px,
+          calc(100dvw - var(--dz-workbench-gutter) - var(--safe-left) - var(--safe-right) - 36px),
+          calc((100dvh - var(--dz-banner-h) - var(--dz-frame-chrome-h) - var(--dz-floor-strip-h) - var(--safe-top) - var(--safe-bottom) - 48px) * 16 / 9)
+        );
+        height: auto;
+        max-width: none;
+        max-height: none;
         aspect-ratio: 16 / 9;
         border: 1px solid rgba(15, 23, 42, 0.95);
         outline: 1px solid rgba(56, 189, 248, 0.22);
@@ -355,30 +400,13 @@
         width: 100% !important;
         height: 100% !important;
       }
-      @media (max-width: 1024px), (max-height: 900px) {
-        body {
-          align-items: flex-start;
-          justify-content: center;
-          padding-top: max(var(--safe-top), 16px);
-        }
+      @media (max-height: 760px) {
+        body { align-items: flex-start; }
         #denizen-night-city .dz-skyline,
         #denizen-night-city .dz-windows {
           height: min(55vh, 420px);
         }
-        #game-frame {
-          padding: 8px;
-          margin: 8px;
-        }
-        #game-frame .dz-frame-label {
-          font-size: 9px;
-          top: -10px;
-        }
-        #game-container {
-          width: min(92dvw - 24px, calc((88dvh - 40px) * 16 / 9));
-          height: min(88dvh - 40px, calc((92dvw - 24px) * 9 / 16));
-          max-width: none;
-          max-height: none;
-        }
+        #game-frame .dz-frame-label { font-size: 9px; }
       }
       /* Touch: keep Denizen HQ frame chrome (compact), size owned by mobile-controls.js */
       html.denizen-touch body {
@@ -431,14 +459,23 @@
         width: 12px;
         height: 12px;
       }
+      html.denizen-touch #game-frame .dz-frame-chrome {
+        min-height: 26px;
+        margin-bottom: 4px;
+      }
       html.denizen-touch #game-frame .dz-frame-label {
+        position: static;
+        top: auto;
         font-size: 8px;
-        top: -9px;
         letter-spacing: 0.14em;
+      }
+      html.denizen-touch.denizen-landscape #game-frame .dz-frame-chrome {
+        min-height: 20px;
+        margin-bottom: 2px;
       }
       html.denizen-touch.denizen-landscape #game-frame .dz-frame-label {
         font-size: 7px;
-        top: -8px;
+        top: auto;
         padding: 1px 6px;
       }
       html.denizen-touch #denizen-tod-hud {
@@ -668,15 +705,16 @@
     <!-- Pathfinding -->
     <script src="./src/pathfinding.js?v=aislePad1" defer></script>
     <script src="./src/npc-roster.js" defer></script>
-    <script src="./src/public-demo-mode.js?v=busy8" defer></script>
+    <script src="./src/public-demo-mode.js?v=frame1" defer></script>
     <script src="./src/spectate-routing.js?v=spectate2" defer></script>
     <script src="./src/spectate-ui.js" defer></script>
     <script src="./src/npc-capabilities.js?v=cap2roki" defer></script>
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=dedupe1" defer></script>
     <!-- Agent Office System -->
-    <script src="./src/agent-actions.js?v=livingOffice1" defer></script>
-    <script src="./src/agent-office-manager.js?v=livingOffice1" defer></script>
+    <script src="./src/floor-strip.js?v=floorStrip2" defer></script>
+    <script src="./src/agent-actions.js?v=headTrack5" defer></script>
+    <script src="./src/agent-office-manager.js?v=headTrack1" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
     <!-- OpenClaw → WorldState bridge (translator must load BEFORE the bridge runner) -->
     <script src="./src/openclaw-translator.js?v=mobfix2" defer></script>
@@ -688,7 +726,7 @@
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
     <script src="./src/device-profile.js?v=smooth1" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=hqLand4" defer></script>
+    <script src="./src/mobile-controls.js?v=floorStrip2" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
     <script src="./src/visitor-session.js?v=hqPassKbd1" defer></script>
@@ -701,11 +739,11 @@
     <script src="./src/visitor-onboarding.js?v=buzzTour9" defer></script>
     <script src="./src/visitor-capabilities-guide.js?v=guide2" defer></script>
     <script src="./src/visitor-superuser-onboarding.js?v=suTourOff1" defer></script>
-    <script src="./src/visitor-claim-ui.js?v=noChip2" defer></script>
+    <script src="./src/visitor-claim-ui.js?v=frameClaim1" defer></script>
     <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
     <script src="./src/visitor-market-panel.js?v=rokiRhLive1" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=floorChat8" defer></script>
+    <script src="./src/player-chat.js?v=floorStrip2" defer></script>
     <script src="./src/denizen-phone-chat-ui.js?v=phchatNoSpin1" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/tabler-icons.js?v=ti6" defer></script>
@@ -717,7 +755,7 @@
     <!-- In-game smartphone HUD -->
     <script src="./src/denizen-phone-ui.js?v=phone42nexen" defer></script>
     <script src="./src/buzz-capture.js?v=buzz14" defer></script>
-    <script src="./src/work-rail.js?v=wr6" defer></script>
+    <script src="./src/work-rail.js?v=floorStrip2" defer></script>
     <script src="./src/corner-hud-autohide.js?v=corner14note" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=measured1" defer></script>
@@ -727,7 +765,7 @@
     <script src="./src/movement-guard.js?v=npclife1" defer></script>
     <script src="./src/freeze-watchdog.js?v=collide1" defer></script>
     <!-- Night-city time-of-day + map editor pro helpers — must load before scene -->
-    <script src="./src/city-tod.js?v=tod4align" defer></script>
+    <script src="./src/city-tod.js?v=tod5frame" defer></script>
     <script src="./src/map-editor-pro.js?v=pro6tiles" defer></script>
     <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
     <script src="./office-scene.js?v=mapAware1" defer></script>
@@ -741,10 +779,53 @@
       <div class="dz-haze"></div>
     </div>
     <div id="game-frame">
-      <span class="dz-frame-label">Denizen HQ</span>
+      <div class="dz-frame-chrome">
+        <div class="dz-frame-chrome-left" id="denizen-frame-clock-slot"></div>
+        <span class="dz-frame-label">Denizen HQ</span>
+        <div class="dz-frame-chrome-right" id="denizen-frame-level-slot"></div>
+      </div>
       <div class="dz-frame-corners" aria-hidden="true"></div>
       <div id="game-container"></div>
     </div>
+    <script>
+      /* Snap the playfield to a whole-pixel 16:9 of the 1280×720 buffer. */
+      (function () {
+        var BASE_W = 1280;
+        var BASE_H = 720;
+        function fit() {
+          var root = document.documentElement;
+          var box = document.getElementById('game-container');
+          if (!box) return;
+          if (root.classList.contains('denizen-touch')) {
+            box.style.width = '';
+            box.style.height = '';
+            return;
+          }
+          box.style.width = '';
+          box.style.height = '';
+          var w = box.getBoundingClientRect().width;
+          if (!(w > 0)) return;
+          var scale = w / BASE_W;
+          var snapped = scale >= 1 ? Math.floor(scale) : scale;
+          if (snapped < 0.4) snapped = scale;
+          var pw = snapped >= 1 ? BASE_W * snapped : Math.round(BASE_W * snapped);
+          var ph = snapped >= 1 ? BASE_H * snapped : Math.round(pw * 9 / 16);
+          box.style.width = pw + 'px';
+          box.style.height = ph + 'px';
+        }
+        window.DenizenFitOfficeFrame = fit;
+        function boot() {
+          fit();
+          window.addEventListener('resize', fit);
+          var root = document.documentElement;
+          if (window.MutationObserver) {
+            new MutationObserver(fit).observe(root, { attributes: true, attributeFilter: ['class', 'style'] });
+          }
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+        else boot();
+      })();
+    </script>
     <!-- Inline boot HUD (not in an external JS file — survives Brave cache of old bundles) -->
     <div id="denizen-boot-hud" style="position:fixed;left:8px;bottom:8px;z-index:2147483647;max-width:min(520px,92vw);padding:10px 12px;border-radius:8px;background:rgba(0,0,0,0.88);color:#e2e8f0;font:12px/1.4 ui-monospace,Consolas,monospace;border:1px solid #334155;pointer-events:none;">
       <div style="color:#4ade80;font-weight:700;">Denizen boot v7</div>

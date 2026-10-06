@@ -2162,7 +2162,6 @@ class AgentOfficeManager {
         this._statusDots.set(npcKey, dot);
       }
       dot.setFillStyle(color);
-      dot.setPosition(npc.x, npc.y - 56);
       dot.setVisible(true);
 
       // Task scraps were tiny gray floaters that looked like random noise
@@ -3940,12 +3939,33 @@ class AgentOfficeManager {
             query: msg.skillParams?.query || '',
           });
           window.DenizenBrowserMirror?.show?.();
+          const searchKey = Object.entries(this.NPC_NAMES).find(
+            ([, v]) => v.toLowerCase() === String(msg.npcName || '').toLowerCase()
+          )?.[0];
+          if (searchKey) {
+            try { this.actions.setDeskStatus(searchKey, 'Researching'); } catch (_) {}
+          }
+          globalThis.DenizenFloorStrip?.push?.({
+            from: msg.npcName || 'Lucy',
+            text: 'Researching · web-search',
+            npcKey: searchKey || '',
+            npcName: msg.npcName || 'Lucy',
+            kind: 'work',
+          });
           break;
         }
         const skillNpcKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
         if (skillNpcKey) {
+          try { this.actions.setDeskStatus(skillNpcKey, 'Researching'); } catch (_) {}
+          globalThis.DenizenFloorStrip?.push?.({
+            from: msg.npcName,
+            text: `Researching · ${msg.skill || 'a task'}`,
+            npcKey: skillNpcKey,
+            npcName: msg.npcName,
+            kind: 'work',
+          });
           const inCeoConvo = this.scene._playerChat?._ceoConvo?.npcKey === skillNpcKey;
           if (inCeoConvo) break;
           const skillAgent = this.agents.get(skillNpcKey);
@@ -3965,7 +3985,18 @@ class AgentOfficeManager {
         if (skillResultKey) {
           try {
             this.actions.emote(skillResultKey, msg.ok ? '✓' : '!');
+            this.actions.setDeskStatus(
+              skillResultKey,
+              msg.ok ? '' : `Couldn’t finish ${msg.skill || 'that'}`,
+            );
           } catch (_) {}
+          globalThis.DenizenFloorStrip?.push?.({
+            from: msg.npcName,
+            text: msg.ok ? `Finished ${msg.skill || 'the task'}` : `Couldn’t finish ${msg.skill || 'the task'}`,
+            npcKey: skillResultKey,
+            npcName: msg.npcName,
+            kind: 'work',
+          });
         }
         // web-search/research post full replies in chat — skip robot status lines.
         if (this.scene._playerChat?.notifySkillResult) {
@@ -5546,29 +5577,26 @@ class AgentOfficeManager {
    * director. DOM (not Phaser) so it survives scene churn and stays fixed.
    */
   _updateDirectorBanner(health = {}) {
-    const ID = 'denizen-director-offline-banner';
-    let el = document.getElementById(ID);
+    const abbyKey = Object.entries(this.NPC_NAMES || {}).find(([, v]) => v === 'Abby')?.[0] || 'xp_abby';
+    const old = document.getElementById('denizen-director-offline-banner');
+    if (old) old.remove();
     if (!health.offline) {
-      if (el) el.remove();
+      globalThis.DenizenFloorStrip?.unpin?.();
+      try { this.actions?.setDeskStatus?.(abbyKey, ''); } catch (_) {}
       return;
     }
-    if (!el) {
-      el = document.createElement('div');
-      el.id = ID;
-      el.setAttribute('role', 'status');
-      el.setAttribute('aria-live', 'polite');
-      el.style.cssText = [
-        'position:fixed', 'top:10px', 'left:50%', 'transform:translateX(-50%)',
-        'z-index:99999', 'padding:8px 16px', 'border-radius:8px',
-        'background:#7f1d1d', 'color:#fecaca', 'border:1px solid #ef4444',
-        'font:600 13px system-ui,sans-serif', 'pointer-events:none',
-        'box-shadow:0 4px 16px rgba(0,0,0,0.4)',
-      ].join(';');
-      document.body.appendChild(el);
-    }
-    el.textContent = health.demoLoop
-      ? '⚠ Director offline — Abby is running the scripted demo loop (LM Studio unreachable)'
-      : `⚠ Director degraded — ${health.consecutiveErrors || 3}+ consecutive think errors`;
+    const text = health.demoLoop
+      ? 'Can’t reach the model — running the scripted demo'
+      : 'Can’t reach the model';
+    globalThis.DenizenFloorStrip?.pin?.({
+      from: 'Abby',
+      to: '',
+      text,
+      npcKey: abbyKey,
+      npcName: 'Abby',
+      kind: 'status',
+    });
+    try { this.actions?.setDeskStatus?.(abbyKey, 'Can’t reach the model'); } catch (_) {}
   }
 
   /**

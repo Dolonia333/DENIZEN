@@ -758,11 +758,11 @@ class AgentActions {
   /**
    * speak(npcKey, text) - Show speech bubble above NPC
    */
-  speak(npcKey, text, duration) {
+  speak(npcKey, text, duration, extra) {
     return this.queueAction(npcKey, () => {
       const npc = this._getNpc(npcKey);
       if (!npc) return;
-      this._showSpeechBubble(npc, npcKey, text, 'speech', duration);
+      this._showSpeechBubble(npc, npcKey, text, 'speech', duration, extra);
     });
   }
 
@@ -876,7 +876,7 @@ class AgentActions {
             // Small idle pause before speaking — looks like settling in
             this.scene.time.delayedCall(350, () => {
               // Show speech bubble after the pause
-              this._showSpeechBubble(npc, npcKey, text, 'speech');
+              this._showSpeechBubble(npc, npcKey, text, 'speech', undefined, { toKey: targetNpcKey });
               // After a beat, resolve
               this.scene.time.delayedCall(1500, () => resolve());
             });
@@ -1374,13 +1374,37 @@ class AgentActions {
 
   // ---- Visual Helpers ----
 
-  _showSpeechBubble(npc, npcKey, text, style, duration) {
+  _displayName(npcKey) {
+    if (!npcKey) return '';
+    if (npcKey === 'you') return 'you';
+    return this.scene?._agentManager?.agents?.get?.(npcKey)?.name
+      || globalThis.DenizenNpcRoster?.keyToDisplay?.[npcKey]
+      || npcKey;
+  }
+
+  _showSpeechBubble(npc, npcKey, text, style, duration, extra) {
     this._clearBubble(npcKey, this._speechBubbles);
 
     const isThought = style === 'thought';
-    // Compact — thoughts shorter than spoken lines so the head isn't buried.
     const maxChars = isThought ? 42 : 52;
-    const truncated = text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
+    const body = String(text || '').replace(/\s+/g, ' ').trim();
+    const truncated = body.length > maxChars ? body.slice(0, maxChars - 1) + '…' : body;
+    const who = this._displayName(npcKey);
+    const toName = extra?.toName || (extra?.toKey ? this._displayName(extra.toKey) : '');
+    const whoLine = toName ? `${who} → ${toName}` : who;
+
+    if (!isThought && extra?.floorLog !== false) {
+      globalThis.DenizenFloorStrip?.push?.({
+        from: who,
+        to: toName,
+        text: body,
+        npcKey,
+        npcName: who,
+        kind: 'say',
+      });
+      globalThis.__DenizenPlayerChat?.noteFloorLine?.({ npcKey, npcName: who, text: body });
+      this.setDeskStatus(npcKey, toName ? `Talking to ${toName}` : 'Talking', { temporary: true });
+    }
 
     // Voice — route speech (not thought) through DenizenSpeak. The voice
     // gate handles the presence check and the provider override
@@ -1407,7 +1431,7 @@ class AgentActions {
     const bgColor = isThought ? '#e0f2fede' : '#f8fafcee';
     const textColor = isThought ? '#0c4a6e' : '#0f172a';
     const prefix = isThought ? '…' : '';
-    const label = prefix ? `${prefix}${truncated}` : truncated;
+    const label = `${whoLine}\n${prefix}${truncated}`;
 
     const bubbleText = this.scene.add.text(0, 0, label, {
       fontSize: isThought ? '8px' : '9px',
@@ -1415,7 +1439,7 @@ class AgentActions {
       color: textColor,
       backgroundColor: bgColor,
       padding: { x: 4, y: 3 },
-      wordWrap: { width: isThought ? 110 : 130 },
+      wordWrap: { width: isThought ? 120 : 160 },
       align: 'center',
     });
     if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(1);
@@ -1423,7 +1447,7 @@ class AgentActions {
     bubbleText.setDepth(9998);
     bubbleText.setAlpha(0.96);
     bubbleText.x = npc.x;
-    bubbleText.y = npc.y - (isThought ? 44 : 48);
+    bubbleText.y = npc.y - (isThought ? 64 : 78);
 
     // Nudge up when another live bubble sits on roughly the same spot so
     // clustered NPCs don't stack unreadable chips on top of each other.
@@ -1452,9 +1476,17 @@ class AgentActions {
     const dur = duration !== undefined ? duration : (isThought ? 3500 : 5000);
     const timer = dur > 0 ? this.scene.time.delayedCall(dur, () => {
       this._clearBubble(npcKey, this._speechBubbles);
+      const plate = this._roleLabels.get(npcKey);
+      if (plate?.statusTemporary) this.setDeskStatus(npcKey, '');
     }) : null;
 
-    this._speechBubbles.set(npcKey, { text: bubbleText, timer, npc, isThought });
+    this._speechBubbles.set(npcKey, {
+      text: bubbleText,
+      timer,
+      npc,
+      isThought,
+      yOff: isThought ? 64 : 78,
+    });
   }
 
   _showEmote(npc, npcKey, symbol) {
@@ -1552,47 +1584,137 @@ class AgentActions {
     // name label now doubles as the click target for the MCP-connect dialog.
     const who = String(name || npcKey || '').trim() || 'Agent';
 
+    // Name chip is a container centered on the sprite origin (0.5, 1).
+    // A Phaser text background plus setResolution was painting the box off
+    // to one side of that origin, so the name looked stuck on a neighbor.
     const label = this.scene.add.text(0, 0, who, {
       fontSize: '5px',
       fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
       fontStyle: '600',
       color: '#0f172a',
-      backgroundColor: '#ffffffee',
-      padding: { x: 2, y: 0 },
       align: 'center',
     });
-    label.setOrigin(0.5, 1);
-    label.setDepth(9996);
-    label.setAlpha(0.92);
+    label.setOrigin(0.5, 0.5);
     label.setData?.('npcKey', npcKey);
     label.setData?.('displayName', who);
-    label.setInteractive({ useHandCursor: true });
-    label.on('pointerover', () => { try { label.setAlpha(1); label.setScale(1.08); } catch (_) {} });
-    label.on('pointerout', () => { try { label.setAlpha(0.92); label.setScale(1); } catch (_) {} });
-    label.on('pointerdown', (pointer, _lx, _ly, event) => {
+    if (role && typeof label.setData === 'function') label.setData('role', String(role).trim());
+    const bg = this.scene.add.graphics();
+    const container = this.scene.add.container(npc.x, npc.y);
+    container.setDepth(9996);
+    container.setAlpha(0.92);
+    container.add([bg, label]);
+    const entry = {
+      text: label,
+      bg,
+      container,
+      npc,
+      plateH: 8,
+      plateW: 16,
+      yOff: 54,
+      status: '',
+      statusTemporary: false,
+    };
+    this._layoutNameplate(entry);
+    const w = entry.plateW;
+    const h = entry.plateH;
+    const PhaserRef = globalThis.Phaser;
+    if (PhaserRef?.Geom?.Rectangle) {
+      container.setInteractive(
+        new PhaserRef.Geom.Rectangle(-w / 2, -h, w, h),
+        PhaserRef.Geom.Rectangle.Contains,
+      );
+      if (container.input) container.input.cursor = 'pointer';
+    }
+    container.on('pointerover', () => { try { container.setAlpha(1); container.setScale(1.06); } catch (_) {} });
+    container.on('pointerout', () => { try { container.setAlpha(0.92); container.setScale(1); } catch (_) {} });
+    container.on('pointerdown', (pointer, _lx, _ly, event) => {
       try { event?.stopPropagation?.(); } catch (_) {}
       try { pointer?.event?.stopPropagation?.(); } catch (_) {}
       this._openNpcMcpConnect(npcKey, who);
     });
-    // Crisp on retina; 1 on light-perf phones.
-    let res = 2;
-    try {
-      const light = globalThis.DenizenDeviceProfile?.lightPerf?.()?.light
-        || globalThis.DenizenDeviceProfile?.wantsLightPerf?.();
-      if (light) res = 1;
-    } catch (_) {}
-    if (typeof label.setResolution === 'function') label.setResolution(res);
-    // Optional: keep role for tooltips if Phaser exposes it (no visual line).
-    if (role && typeof label.setData === 'function') label.setData('role', String(role).trim());
+    const head = this._spriteAnchor(npc);
+    container.x = head.x;
+    container.y = head.top - 8;
 
-    label.x = npc.x;
-    label.y = npc.y - 34;
+    this._roleLabels.set(npcKey, entry);
+    const pending = this._pendingDeskStatus?.get(npcKey);
+    if (pending) {
+      this._pendingDeskStatus.delete(npcKey);
+      this.setDeskStatus(npcKey, pending.status, { temporary: pending.temporary });
+    }
+  }
 
-    this._roleLabels.set(npcKey, {
-      text: label,
-      npc,
-      yOff: 34,
-    });
+  setDeskStatus(npcKey, status, opts = {}) {
+    const text = String(status || '').replace(/\s+/g, ' ').trim();
+    const entry = this._roleLabels.get(npcKey);
+    if (!entry?.text) {
+      if (!this._pendingDeskStatus) this._pendingDeskStatus = new Map();
+      if (text) this._pendingDeskStatus.set(npcKey, { status: text, temporary: !!opts.temporary });
+      else this._pendingDeskStatus.delete(npcKey);
+      return;
+    }
+    if (opts.temporary && entry.status && !entry.statusTemporary) return;
+    entry.status = text;
+    entry.statusTemporary = text ? !!opts.temporary : false;
+    entry.yOff = text ? 66 : 54;
+    const who = entry.text.getData?.('displayName') || this._displayName(npcKey);
+    try { entry.text.setText(who); } catch (_) {}
+    if (text && !entry.statusText?.scene && entry.container?.scene) {
+      const statusText = this.scene.add.text(0, 0, text, {
+        fontSize: '5px',
+        fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
+        color: '#9a3412',
+        align: 'center',
+        wordWrap: { width: 88 },
+      });
+      statusText.setOrigin(0.5, 0.5);
+      const statusBg = this.scene.add.graphics();
+      entry.container.add([statusBg, statusText]);
+      entry.statusText = statusText;
+      entry.statusBg = statusBg;
+    }
+    if (entry.statusText?.scene) {
+      try { entry.statusText.setText(text); } catch (_) {}
+      entry.statusText.setVisible(!!text);
+    }
+    this._layoutNameplate(entry);
+  }
+
+  _layoutNameplate(entry) {
+    const text = entry?.text;
+    const bg = entry?.bg;
+    if (!text || !bg) return;
+    const nameW = Math.max(10, Math.ceil(text.width) + 4);
+    const nameH = Math.max(6, Math.ceil(text.height) + 2);
+    text.setOrigin(0.5, 0.5);
+    text.setPosition(0, -nameH / 2);
+    bg.clear();
+    bg.fillStyle(0xffffff, 0.94);
+    bg.fillRoundedRect(-nameW / 2, -nameH, nameW, nameH, 1);
+
+    let top = nameH;
+    let maxW = nameW;
+    const status = entry.statusText;
+    const statusBg = entry.statusBg;
+    if (status?.scene && entry.status) {
+      const sw = Math.max(10, Math.ceil(status.width) + 4);
+      const sh = Math.max(6, Math.ceil(status.height) + 2);
+      const gap = 3;
+      status.setOrigin(0.5, 0.5);
+      status.setPosition(0, -(nameH + gap + sh / 2));
+      statusBg.clear();
+      statusBg.fillStyle(0xfff7ed, 0.96);
+      statusBg.fillRoundedRect(-sw / 2, -(nameH + gap + sh), sw, sh, 1);
+      top = nameH + gap + sh;
+      maxW = Math.max(maxW, sw);
+    } else if (statusBg?.clear) {
+      statusBg.clear();
+    }
+
+    entry.plateW = maxW;
+    entry.plateH = top;
+    const hit = entry.container?.input?.hitArea;
+    if (hit && typeof hit.setTo === 'function') hit.setTo(-maxW / 2, -top, maxW, top);
   }
 
   _folderForNpcKey(npcKey) {
@@ -1630,7 +1752,9 @@ class AgentActions {
   _clearRoleLabel(npcKey) {
     const existing = this._roleLabels.get(npcKey);
     if (existing) {
+      try { existing.container?.destroy?.(); } catch (_) {}
       try { existing.text?.destroy?.(); } catch (_) {}
+      try { existing.bg?.destroy?.(); } catch (_) {}
       this._roleLabels.delete(npcKey);
     }
   }
@@ -1892,6 +2016,15 @@ class AgentActions {
   }
 
 
+  _spriteAnchor(npc) {
+    // Sprite origin is the feet, centered. The physics body is a small
+    // foot box and getBounds() follows that, which slid the name sideways.
+    return {
+      x: npc.x,
+      top: npc.y - (npc.displayHeight || 48),
+    };
+  }
+
   update() {
     // Keep "follow me" NPCs glued to the player.
     this._tickFollow();
@@ -1907,15 +2040,59 @@ class AgentActions {
       });
     };
 
-    updateMap(this._speechBubbles, 48);
-    updateMap(this._emoteBubbles, 56);
-    updateMap(this._roleLabels, 34);
+    updateMap(this._speechBubbles, 78);
+    updateMap(this._emoteBubbles, 86);
 
-    this._typingIndicators.forEach((entry) => {
-      if (entry.npc && entry.text) {
-        entry.text.x = entry.npc.x;
-        entry.text.y = entry.npc.y - 36;
+    const dots = this.scene?._agentManager?._statusDots;
+    this._roleLabels.forEach((entry, npcKey) => {
+      if (!entry.npc || !entry.container?.scene) return;
+      const head = this._spriteAnchor(entry.npc);
+      entry.container.x = head.x;
+      entry.container.y = head.top - 8;
+      const dot = dots?.get(npcKey);
+      if (dot?.scene) dot.setPosition(head.x, head.top - 4);
+    });
+    dots?.forEach((dot, npcKey) => {
+      if (!dot?.scene || this._roleLabels.has(npcKey)) return;
+      const npc = this._getNpc(npcKey);
+      if (!npc) return;
+      const head = this._spriteAnchor(npc);
+      dot.setPosition(head.x, head.top - 6);
+    });
+    try { globalThis.DenizenVisitorAssistantLabels?.placeAll?.(); } catch (_) {}
+
+    // Speech, thoughts, and emotes sit above the name so the message
+    // never paints over it.
+    const placeAboveName = (entry, npcKey) => {
+      if (!entry.npc || !entry.text?.scene) return;
+      const npc = entry.npc;
+      entry.text.x = npc.x;
+      let top = this._spriteAnchor(npc).top - 8;
+      const plate = this._roleLabels.get(npcKey);
+      if (plate?.container?.scene) top = plate.container.y - (plate.plateH || 0);
+      const asst = globalThis.DenizenVisitorAssistantLabels?.topFor?.(npcKey);
+      if (typeof asst === 'number') top = Math.min(top, asst);
+      entry.text.y = top - 4;
+    };
+    this._speechBubbles.forEach(placeAboveName);
+    this._emoteBubbles.forEach((entry, npcKey) => {
+      placeAboveName(entry, npcKey);
+      const say = this._speechBubbles.get(npcKey);
+      if (say?.text?.scene && entry.text?.scene) {
+        entry.text.y = say.text.y - (say.text.displayHeight || say.text.height || 12) - 2;
       }
+    });
+
+    this._typingIndicators.forEach((entry, npcKey) => {
+      if (!entry.npc || !entry.text?.scene) return;
+      const npc = entry.npc;
+      entry.text.x = npc.x;
+      let top = this._spriteAnchor(npc).top - 8;
+      const plate = this._roleLabels.get(npcKey);
+      if (plate?.container?.scene) top = plate.container.y - (plate.plateH || 0);
+      const say = this._speechBubbles.get(npcKey);
+      if (say?.text?.scene) top = Math.min(top, say.text.y - (say.text.displayHeight || say.text.height || 12));
+      entry.text.y = top - 4;
     });
 
     // Keep sitting NPCs from being moved by Y-sort (lock their depth)
