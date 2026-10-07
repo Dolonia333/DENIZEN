@@ -90,12 +90,20 @@ describe('mobile UI layout fixes', () => {
     const mobile = read('src/mobile-controls.js');
     assert.match(
       mobile,
-      /denizen-portrait body,\s*\n\s*html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*center/
+      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?align-items:\s*center/
+    );
+    assert.match(
+      mobile,
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*center/
+    );
+    assert.match(
+      mobile,
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?padding-bottom:\s*calc\(/
     );
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapFill6/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill7/);
   });
 
   it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
@@ -161,8 +169,8 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=kbdFill2/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill6/);
+    assert.match(html, /player-chat\.js\?v=kbdFill3/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill7/);
   });
 
   it('Floor Line expands to the visual viewport when the soft keyboard opens', () => {
@@ -252,18 +260,23 @@ describe('mobile UI layout fixes', () => {
     assert.match(scene, /isCompactPhone \? 2\.45 : 2\.3/);
     assert.match(html, /device-profile\.js\?v=mapFill6/);
     assert.match(html, /office-scene\.js\?v=mapFill6/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill6/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill7/);
   });
 
-  it('portrait Floor Line is a bottom sheet so the HQ card stays mid-screen', () => {
+  it('portrait Floor Line starts below the HQ frame so it never overlaps the map', () => {
     const chat = read('src/player-chat.js');
+    const mobile = read('src/mobile-controls.js');
     assert.match(
       chat,
-      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?top:\s*auto !important/
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?--denizen-game-frame-bottom/
     );
     assert.match(
       chat,
-      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?height:\s*min\(34dvh,\s*260px\)/
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?max-height:\s*min\(34dvh,\s*260px\)/
+    );
+    assert.match(
+      mobile,
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?padding-bottom:\s*calc\(/
     );
   });
 });

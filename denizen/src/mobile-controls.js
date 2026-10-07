@@ -312,11 +312,24 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: HQ stays in the middle of the screen (chat is a bottom sheet). */
-      html.denizen-touch.denizen-portrait body,
+      /* Portrait: HQ stays mid-screen when chat is closed. */
+      html.denizen-touch.denizen-portrait body {
+        align-items: center;
+        justify-content: center;
+      }
+      /*
+       * Chat open: still center HQ, but only in the band above the Floor Line
+       * sheet so the map and chat never overlap.
+       */
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: center;
         justify-content: center;
+        padding-bottom: calc(
+          var(--denizen-dock-height, 48px)
+          + min(34dvh, 260px)
+          + 20px
+          + env(safe-area-inset-bottom, 0px)
+        );
       }
 
       /*

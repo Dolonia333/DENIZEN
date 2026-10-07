@@ -3113,18 +3113,21 @@ class PlayerChat {
         z-index: 2147483630 !important;
       }
       /*
-       * Portrait Floor Line: bottom sheet under the mid-screen HQ card.
-       * Cap height so the centered map stays visible above the chat.
+       * Portrait Floor Line: always starts below the live HQ frame bottom
+       * (no overlap with the map / Abby strip).
        */
       html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel,
       html.denizen-touch.denizen-phone-mode.denizen-chat-open.denizen-portrait #player-chat-panel:not([data-phone-chat="1"]) {
-        top: auto !important;
+        top: calc(
+          var(--denizen-game-frame-bottom,
+            calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
+          ) + 8px
+        ) !important;
         bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
         right: max(8px, env(safe-area-inset-right, 0px)) !important;
         width: auto !important;
-        /* Shorter sheet so the mid-screen HQ card stays fully visible above it */
-        height: min(34dvh, 260px) !important;
+        height: auto !important;
         max-height: min(34dvh, 260px) !important;
         z-index: 2147483630 !important;
       }
