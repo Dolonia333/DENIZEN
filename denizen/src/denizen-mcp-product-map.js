@@ -163,6 +163,7 @@ function chatgptProductInstructions({ npcLabel = 'the connected Denizen assistan
     'In Business Studio never invent traction, TAM, or checklist ticks — use business-studio-add-evidence and business-studio-chain-status (or business_studio_* MCP tools).',
     'If scope_denied, tell the human to mint a Connect AI token with Full access (crm_write).',
     'Also use getTeamStandup / listNpcSkills for office skills when the Custom GPT Actions path is active.',
+    'Browser eyes: for web work call browserOpen → browserScreenshot → browserAct in a loop — YOU see Lucy\'s page via screenshot_markdown / base64. Prefer that over computer-use when screenshots work.',
   ].join(' ');
 }
 

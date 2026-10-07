@@ -47,8 +47,9 @@ const VIEWPORT_H  = 800;
 const MAX_STEPS   = 50;       // safety cap
 const STEP_DELAY  = 600;      // ms between action → screenshot cycles
 
-// Default provider preference order — first one with a key/config wins
-const PROVIDER_PREFERENCE = ['anthropic', 'kimi', 'lmstudio'];
+// Default provider preference order — first one with a key/config wins.
+// openai (gpt-4o) lets ChatGPT's model be the eyes inside the Denizen loop.
+const PROVIDER_PREFERENCE = ['anthropic', 'openai', 'kimi', 'lmstudio'];
 
 // ── HTTP helper ───────────────────────────────────────────────────────────
 
@@ -459,10 +460,17 @@ function buildSystemPrompt({ instruction, profile = null, taskMode = 'general' }
 
 // Read all provider credentials from ~/.openclaw/openclaw.json + env
 function _loadProviders() {
-  const out = { anthropic: null, kimi: null, lmstudio: null };
+  const out = { anthropic: null, openai: null, kimi: null, lmstudio: null };
 
   // Env vars
   if (process.env.ANTHROPIC_API_KEY) out.anthropic = { apiKey: process.env.ANTHROPIC_API_KEY };
+  if (process.env.OPENAI_API_KEY) {
+    out.openai = {
+      apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com',
+      model: process.env.OPENAI_VISION_MODEL || process.env.OPENAI_MODEL || 'gpt-4o',
+    };
+  }
   if (process.env.KIMI_API_KEY || process.env.MOONSHOT_API_KEY) {
     out.kimi = { apiKey: process.env.KIMI_API_KEY || process.env.MOONSHOT_API_KEY };
   }
@@ -479,6 +487,13 @@ function _loadProviders() {
     const cfg = require('../jelly/config-provider').getConfig();
     const p = cfg?.models?.providers || {};
     if (p.anthropic?.apiKey) out.anthropic = { apiKey: p.anthropic.apiKey };
+    if (p.openai?.apiKey) {
+      out.openai = {
+        apiKey: p.openai.apiKey,
+        baseUrl: p.openai.baseUrl || 'https://api.openai.com',
+        model: p.openai.visionModel || p.openai.model || 'gpt-4o',
+      };
+    }
     if (p.moonshot?.apiKey)  out.kimi = {
       apiKey: p.moonshot.apiKey,
       baseUrl: p.moonshot.baseUrl || 'https://api.moonshot.cn',
@@ -512,7 +527,11 @@ async function runBrowserTask({
   if (apiKey) {
     // Explicit key override — respect explicit provider or guess from preference
     if (provider === 'kimi') providers.kimi = { ...(providers.kimi || {}), apiKey };
-    else                     providers.anthropic = { apiKey };
+    else if (provider === 'openai') {
+      providers.openai = { ...(providers.openai || {}), apiKey, baseUrl: 'https://api.openai.com', model: 'gpt-4o' };
+    } else {
+      providers.anthropic = { apiKey };
+    }
   }
 
   let chosenProvider = provider;
@@ -662,6 +681,25 @@ async function runBrowserTask({
         parsed = _parseKimi(raw); // same OpenAI response shape
         if (!parsed.error && parsed.rawMsg) {
           messages.push({ role: 'assistant', ...parsed.rawMsg,
+            content: parsed.rawMsg.content || '',
+            tool_calls: parsed.toolCalls?.length ? parsed.toolCalls : undefined,
+          });
+        }
+      } else if (chosenProvider === 'openai') {
+        const raw = await _postOpenAICompat(
+          providerCfg.apiKey,
+          messages,
+          systemPrompt,
+          {
+            baseUrl: providerCfg.baseUrl || 'https://api.openai.com',
+            model: providerCfg.model || 'gpt-4o',
+          },
+        );
+        parsed = _parseKimi(raw);
+        if (!parsed.error && parsed.rawMsg) {
+          messages.push({
+            role: 'assistant',
+            ...parsed.rawMsg,
             content: parsed.rawMsg.content || '',
             tool_calls: parsed.toolCalls?.length ? parsed.toolCalls : undefined,
           });

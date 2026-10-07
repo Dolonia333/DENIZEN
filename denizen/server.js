@@ -3286,6 +3286,26 @@ npcMcpGateway.configure({
   computeQueue,
   lmStudioRouter,
   denizenDb,
+  writeBrowserInput: _writeBrowserInputCommand,
+  isBrowserLive: (npcKey) => {
+    const key = normalizeNpcKey(npcKey || 'lucy');
+    const active = normalizeNpcKey(global._activeBrowserNpc || 'lucy');
+    return key === active && (_lucyBrowserChildAlive() || !!global._lucyBrowserOpen);
+  },
+  readMirrorState: (npcKey) => _readMirrorState(normalizeNpcKey(npcKey || 'lucy')),
+  openBrowser: async (npcKey, opts = {}) => {
+    const key = normalizeNpcKey(npcKey || 'lucy');
+    const npcName = key.charAt(0).toUpperCase() + key.slice(1);
+    const url = opts.url ? String(opts.url).trim() : '';
+    const query = opts.query ? String(opts.query).trim() : '';
+    return runNpcWebSearch(npcName, query || (url ? 'browser' : ''), {
+      broadcast: _agentBroadcast,
+      directUrl: url || null,
+      openOnly: !url && !query,
+      quiet: true,
+      keepOpen: true,
+    });
+  },
   getInferenceHealth: async () => {
     const queueDepth = npcBrains?.getQueueDepth?.() || 0;
     const status = lmStudioRouter.buildStatus(queueDepth);
@@ -4036,7 +4056,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity|list-skills|skill-job|run-skill|assign-task|team-standup|handoffs|ack-handoff)\/?$/);
+  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity|list-skills|skill-job|run-skill|assign-task|team-standup|handoffs|ack-handoff|browser-open|browser-screenshot|browser-act|browser-frame)\/?$/);
   if (npcSyncMatch) {
     npcMcpGateway.handleRestSync(req, res, npcSyncMatch[1]).catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });

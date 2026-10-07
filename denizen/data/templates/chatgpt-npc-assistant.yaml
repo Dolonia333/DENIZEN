@@ -38,6 +38,13 @@ gpt_instructions: |
   4. Summarize output for the user
   5. Optionally logNpcActivity
 
+  Browser eyes (YOU see Lucy's page — prefer this for web tasks):
+  1. browserOpen with url or query
+  2. browserScreenshot — inspect screenshot_markdown / screenshot_jpeg_base64 / screenshot_url
+  3. browserAct (click/type/key/scroll/navigate) using viewport coordinates from the screenshot
+  4. browserScreenshot again; repeat until the task is done
+  5. Only fall back to runNpcSkill computer-use if you cannot see frames
+
   Memory / status:
   - NPC-only status: getNpcStatus
   - Lasting context: updateNpcMemory (under 200 words, factual)
@@ -61,6 +68,9 @@ actions:
   - updateNpcMemory
   - logNpcActivity
   - runNpcSkill
+  - browserOpen
+  - browserScreenshot
+  - browserAct
 
 example_run_skill_payload:
   skill: studio-board-working-set

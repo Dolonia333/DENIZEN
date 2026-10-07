@@ -26,6 +26,7 @@ const mcpResources = require('./denizen-mcp-resources.js');
 const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const mcpActor = require('./denizen-mcp-actor.js');
+const browserEyes = require('./browser-eyes.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
@@ -89,6 +90,55 @@ const TOOL_DEFINITIONS = [
     name: 'list_skills',
     description: 'List OpenClaw/Jelly skills this NPC is allowed to run (research, canvas-render, CRM, etc.).',
     inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'browser_open',
+    description:
+      'Open or focus this NPC\'s live Playwright browser (Lucy). Use before browser_screenshot / browser_act when YOU are the eyes.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Optional URL to open' },
+        query: { type: 'string', description: 'Optional search query if no URL' },
+      },
+    },
+  },
+  {
+    name: 'browser_screenshot',
+    description:
+      'YOU are the eyes: capture the live browser frame (image + url/title). Then decide the next browser_act. Prefer this over computer-use when you can see screenshots.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        include_base64: {
+          type: 'boolean',
+          description: 'Include screenshot_jpeg_base64 when small enough (default true)',
+        },
+      },
+    },
+  },
+  {
+    name: 'browser_act',
+    description:
+      'Perform one action on the live browser: click, type, key, scroll, or navigate. Coordinates are viewport pixels from the last browser_screenshot.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['click', 'type', 'key', 'scroll', 'navigate'],
+          description: 'Action type',
+        },
+        x: { type: 'number', description: 'X for click/scroll (viewport pixels)' },
+        y: { type: 'number', description: 'Y for click/scroll (viewport pixels)' },
+        text: { type: 'string', description: 'Text to type, or navigate URL' },
+        key: { type: 'string', description: 'Key name for type=key (Enter, Tab, …)' },
+        deltaX: { type: 'number' },
+        deltaY: { type: 'number' },
+        url: { type: 'string', description: 'URL when type=navigate' },
+      },
+      required: ['type'],
+    },
   },
   {
     name: 'run_skill',
@@ -384,6 +434,16 @@ async function callToolImpl(scope, name, args) {
     case 'list_skills': return mcpActions.toolListSkills(scope, args);
     case 'run_skill': return mcpActions.toolRunSkill(scope, args);
     case 'get_skill_job': return mcpActions.toolGetSkillJob(scope, args);
+    case 'browser_open': return browserEyes.browserOpen(scope.npc_key, args || {});
+    case 'browser_screenshot': {
+      const shot = browserEyes.browserScreenshot(scope.npc_key, {
+        includeBase64: args?.include_base64 !== false,
+        baseUrl: getPublicBaseUrl(),
+      });
+      if (shot?.ok) shot._mcp_image = true;
+      return shot;
+    }
+    case 'browser_act': return browserEyes.browserAct(scope.npc_key, args || {});
     case 'assign_task': return mcpActions.toolAssignTask(scope, args);
     case 'delegate_task': return mcpActions.toolDelegateTask(scope, args);
     case 'announce_in_office': return mcpActions.toolAnnounce(scope, args);
@@ -422,6 +482,13 @@ function configure(deps = {}) {
   mcpMeshTools.configure(deps);
   mcpCursorTools.configure(deps);
   mcpActor.configure(deps);
+  browserEyes.configure({
+    writeBrowserInput: deps.writeBrowserInput,
+    isBrowserLive: deps.isBrowserLive,
+    openBrowser: deps.openBrowser,
+    getPublicBaseUrl: () => getPublicBaseUrl(),
+    readMirrorState: deps.readMirrorState,
+  });
   mcpMentorTools.configure({
     announceInOffice: ({ npcName, message }) => {
       if (typeof deps.broadcast === 'function') {
@@ -501,11 +568,20 @@ async function handleRpc(scope, req, res, message, sessionId) {
     const toolArgs = params?.arguments || {};
     try {
       const result = await callTool(scope, toolName, toolArgs);
+      const content = [{ type: 'text', text: JSON.stringify(result, null, 2) }];
+      // Claude MCP (and vision clients): attach the JPEG so the model IS the eyes.
+      if (result?._mcp_image && result.screenshot_jpeg_base64) {
+        content.push({
+          type: 'image',
+          data: result.screenshot_jpeg_base64,
+          mimeType: result.mime || 'image/jpeg',
+        });
+      }
       return sendJson(res, 200, {
         jsonrpc: '2.0',
         id,
         result: {
-          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          content,
           isError: !result?.ok,
         },
       });
@@ -730,6 +806,29 @@ async function authenticateBearerRequest(req, res) {
 }
 
 async function handleRestSync(req, res, action) {
+  // Short-lived screenshot tokens are meant for ChatGPT vision fetches (no Bearer).
+  if (action === 'browser-frame') {
+    if (req.method !== 'GET') {
+      return sendJson(res, 405, { ok: false, error: 'GET only' });
+    }
+    let token = null;
+    try {
+      const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+      token = u.searchParams.get('token');
+    } catch (_) { /* keep null */ }
+    const frame = browserEyes.readFrameBytesForToken(token);
+    if (!frame) {
+      return sendJson(res, 404, { ok: false, error: 'frame token expired or invalid — call browserScreenshot again' });
+    }
+    res.writeHead(200, {
+      'Content-Type': frame.mime,
+      'Cache-Control': 'no-store',
+      'Content-Length': frame.buf.length,
+    });
+    res.end(frame.buf);
+    return;
+  }
+
   const scope = await authenticateBearerRequest(req, res);
   if (!scope) return;
 
@@ -813,7 +912,33 @@ async function handleRestSync(req, res, action) {
     return sendJson(res, result?.ok ? 200 : 400, result);
   }
 
-  if (action === 'run-skill' || action === 'assign-task' || action === 'ack-handoff') {
+  if (action === 'browser-screenshot') {
+    if (req.method !== 'GET' && req.method !== 'POST') {
+      return sendJson(res, 405, { ok: false, error: 'GET or POST' });
+    }
+    let includeBase64 = true;
+    if (req.method === 'POST') {
+      try {
+        const body = await readBody(req);
+        if (body && body.include_base64 === false) includeBase64 = false;
+      } catch (_) { /* keep default */ }
+    } else {
+      try {
+        const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+        if (u.searchParams.get('include_base64') === 'false') includeBase64 = false;
+      } catch (_) { /* keep default */ }
+    }
+    const result = await callTool(scope, 'browser_screenshot', { include_base64: includeBase64 });
+    return sendJson(res, result?.ok ? 200 : 400, result);
+  }
+
+  if (
+    action === 'run-skill'
+    || action === 'assign-task'
+    || action === 'ack-handoff'
+    || action === 'browser-act'
+    || action === 'browser-open'
+  ) {
     if (req.method !== 'POST') {
       return sendJson(res, 405, { ok: false, error: 'POST only' });
     }
@@ -826,6 +951,14 @@ async function handleRestSync(req, res, action) {
     const payload = { ...(body || {}) };
     if (action === 'ack-handoff') {
       const result = await callTool(scope, 'acknowledge_handoff', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'browser-open') {
+      const result = await callTool(scope, 'browser_open', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'browser-act') {
+      const result = await callTool(scope, 'browser_act', payload);
       return sendJson(res, result?.ok ? 200 : 400, result);
     }
     if (action === 'run-skill') {
@@ -961,6 +1094,86 @@ function buildOpenApiSpec(baseUrl) {
             },
           },
           responses: { 200: { description: 'Activity logged' } },
+        },
+      },
+      '/api/npc-sync/browser-open': {
+        post: {
+          operationId: 'browserOpen',
+          summary: 'Open Lucy\'s live Playwright browser (start of YOU-are-the-eyes loop)',
+          requestBody: {
+            required: false,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    url: { type: 'string' },
+                    query: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Browser launch started' } },
+        },
+      },
+      '/api/npc-sync/browser-screenshot': {
+        get: {
+          operationId: 'browserScreenshot',
+          summary: 'YOU are the eyes — capture the live browser frame, then call browserAct',
+          parameters: [{
+            name: 'include_base64',
+            in: 'query',
+            schema: { type: 'boolean', default: true },
+          }],
+          responses: { 200: { description: 'Screenshot metadata + markdown image URL (+ base64 when small)' } },
+        },
+        post: {
+          operationId: 'browserScreenshotPost',
+          summary: 'Same as browserScreenshot (POST body)',
+          requestBody: {
+            required: false,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { include_base64: { type: 'boolean' } },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Screenshot payload' } },
+        },
+      },
+      '/api/npc-sync/browser-act': {
+        post: {
+          operationId: 'browserAct',
+          summary: 'Click / type / key / scroll / navigate on the live browser (after browserScreenshot)',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['type'],
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['click', 'type', 'key', 'scroll', 'navigate'],
+                    },
+                    x: { type: 'number' },
+                    y: { type: 'number' },
+                    text: { type: 'string' },
+                    key: { type: 'string' },
+                    deltaX: { type: 'number' },
+                    deltaY: { type: 'number' },
+                    url: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Action queued' } },
         },
       },
       '/api/npc-sync/run-skill': {
@@ -1121,6 +1334,9 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
       activity_url: `${base}/api/npc-sync/activity`,
       run_skill_url: `${base}/api/npc-sync/run-skill`,
       skill_job_url: `${base}/api/npc-sync/skill-job`,
+      browser_open_url: `${base}/api/npc-sync/browser-open`,
+      browser_screenshot_url: `${base}/api/npc-sync/browser-screenshot`,
+      browser_act_url: `${base}/api/npc-sync/browser-act`,
       assign_task_url: `${base}/api/npc-sync/assign-task`,
       team_standup_url: `${base}/api/npc-sync/team-standup`,
       handoffs_url: `${base}/api/npc-sync/handoffs`,
@@ -1135,6 +1351,7 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
         'Actions → Import from URL → paste the OpenAPI URL (re-import after Denizen updates)',
         'Authentication → API Key → Auth Type: Bearer → paste your token (standard or full scope)',
         'Paste the gpt_instructions below — YOU run skills async; never assignNpcTask; poll team standup',
+        'Re-import OpenAPI after updates so browserOpen / browserScreenshot / browserAct appear',
       ],
       gpt_instructions: [
         mcpProductMap.chatgptProductInstructions({
@@ -1143,6 +1360,7 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
         'Never use assignNpcTask — it is blocked and only queues the slow local office AI.',
         'Start collaborative sessions with getTeamStandup (includes CRM + Studio Board + Business Studio briefs). Follow action_items. Poll listHandoffs; after you act, call ackHandoff.',
         'Do work with runNpcSkill (default wait=false). If you get a job_id / status=running, poll getSkillJob until status is done or failed, then summarize output.',
+        'Browser eyes (YOU see the page): For web tasks, call browserOpen → browserScreenshot → decide → browserAct → browserScreenshot until done. Use screenshot_markdown / screenshot_jpeg_base64 / screenshot_url as your vision of Lucy\'s browser. Prefer this over runNpcSkill computer-use when you can see frames. The human can also watch/Drive/Point in the Denizen 🌐 mirror.',
         'Operating surfaces via runNpcSkill: Meridian CRM (crm-*), Studio Board /studio-board/ (studio-board-*), Business Studio Founder OS /business-studio/ (business-studio-*).',
         'Before creating Studio Board tasks: studio-board-working-set then studio-board-brief. Updates: studio-board-upsert-task, studio-board-advance-task, studio-board-assign-task, studio-board-add-comment.',
         'Before changing Founder OS: business-studio-catalog / business-studio-section (name the app) then business-studio-working-set / business-studio-brief. Evidence is gated — use business-studio-add-evidence / business-studio-explain; check business-studio-funding-readiness. Lean Canvas / PAVE / Moat / Capital / Data Room have get+upsert skills.',
