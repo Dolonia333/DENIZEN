@@ -9,12 +9,16 @@ const ROOT = path.join(__dirname, '..');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
 describe('Compact readable speech bubbles', () => {
-  it('uses short high-contrast chips with side-then-up collision', () => {
+  it('uses hi-res chips, hides nameplate while speaking, side-then-up collision', () => {
     const actions = read('src/agent-actions.js');
     assert.match(actions, /maxChars = isThought \? 28 : 34/);
     assert.match(actions, /Segoe UI, system-ui/);
-    assert.match(actions, /Compact chips/);
-    assert.match(actions, /setScale\(0\.95\)/);
+    assert.match(actions, /hide the white nameplate/i);
+    assert.match(actions, /_setNameplateVisible\(npcKey, false\)/);
+    assert.match(actions, /_clearSpeechBubble/);
+    assert.match(actions, /setResolution\(3\)/);
+    assert.match(actions, /fontSize: isThought \? '12px' : '14px'/);
+    assert.match(actions, /setScale\(0\.5\)/);
     assert.match(actions, /sideCandidates/);
     assert.match(actions, /Nudge up when another live bubble/);
     assert.match(actions, /worldView/);
@@ -24,6 +28,6 @@ describe('Compact readable speech bubbles', () => {
 
   it('cache-busts the bubble chip pass', () => {
     const html = read('index.html');
-    assert.match(html, /agent-actions\.js\?v=bubbleChip5/);
+    assert.match(html, /agent-actions\.js\?v=bubbleChip6/);
   });
 });
