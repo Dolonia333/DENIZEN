@@ -1031,22 +1031,35 @@ class AgentActions {
   }
 
   /**
-   * goToCoffee(npcKey) - Walk to coffee-like furniture in the breakroom,
-   * then pick up a steaming LimeZu mug prop (when preloaded).
+   * goToCoffee(npcKey, opts?) - Walk to coffee-like furniture in the breakroom,
+   * sip briefly, then carry a LimeZu mug (when preloaded).
+   * opts.holdMs — how long to keep the mug after pickup (null = until cleared).
+   * opts.carry — after a short mouth sip, pin the mug to the hand for walking.
    * Falls back to a generic breakroom spot if no match is found.
    */
-  goToCoffee(npcKey) {
+  goToCoffee(npcKey, opts = {}) {
     if (this._sittingNpcs.has(npcKey)) {
       this._standUpNpc(npcKey);
     }
+    const holdMs = Object.prototype.hasOwnProperty.call(opts, 'holdMs') ? opts.holdMs : 4200;
+    const carry = opts.carry !== false;
     const item = (this.scene._interactables || []).find(it => {
       return it.sprite && it.id && /coffee|espresso|kettle|vending|snack|fridge|microwave/i.test(it.id);
     });
     const afterArrive = () => {
       const npc = this._getNpc(npcKey);
       if (!npc) return;
-      this._flashCoffeeMug(npc, npcKey, 4200);
+      // Sip at the machine, then switch to a hand carry for the walk back.
+      this._holdCoffeeMug(npc, npcKey, { ms: holdMs, mode: 'sip' });
       this._showEmote?.(npc, npcKey, '☕');
+      if (carry) {
+        this.scene.time.delayedCall(1400, () => {
+          if (!this._coffeeMugs?.has?.(npcKey)) return;
+          const again = this._getNpc(npcKey);
+          if (!again) return;
+          this._holdCoffeeMug(again, npcKey, { ms: holdMs, mode: 'carry' });
+        });
+      }
     };
     if (item && item.sprite) {
       let x = item.sprite.x + Phaser.Math.Between(-12, 12);
@@ -1059,6 +1072,44 @@ class AgentActions {
       return this.walkTo(npcKey, x, y).then(afterArrive);
     }
     return this.goToBreakroom(npcKey).then(afterArrive);
+  }
+
+  /**
+   * Hand off a carried mug onto the recipient's desk clutter (or clear it).
+   * Returns true when a desk mug was placed.
+   */
+  deliverCoffeeMug(fromKey, toKey) {
+    this._clearCoffeeMug(fromKey);
+    if (!toKey || typeof this.setDeskClutter !== 'function') return false;
+    try {
+      // Ensure the recipient has at least a mug on their desk after delivery.
+      const sit = this._sittingNpcs.get(toKey);
+      if (!sit?.deskSprite) {
+        // They may still be seated via useComputer — try seating them first.
+        return false;
+      }
+      this.setDeskClutter(toKey, 'medium');
+      const row = this._deskClutter.get(toKey);
+      if (row?.kinds?.includes('mug')) return true;
+      // Force a mug prop even if medium rolled papers-only for this NPC.
+      if (!this.scene?.textures?.exists?.('vfx_coffee_mug')) return false;
+      if (!row) {
+        this.setDeskClutter(toKey, 'heavy');
+        return !!this._deskClutter.get(toKey)?.kinds?.includes('mug');
+      }
+      if (!row.kinds.includes('mug')) {
+        const slot = this._pickDeskClutterSlot(toKey, sit, 'mug', row.slots);
+        if (slot) {
+          row.kinds.push('mug');
+          row.slots.push(slot);
+          row.props.push(this._spawnDeskProp('mug', slot, sit.deskSprite, sit));
+          return true;
+        }
+      }
+      return !!row.kinds.includes('mug');
+    } catch (_) {
+      return false;
+    }
   }
 
   /**
@@ -1934,10 +1985,18 @@ class AgentActions {
   }
 
   /**
-   * Hold a steaming LimeZu coffee mug beside the NPC for a short beat.
-   * No-op if vfx_coffee_mug isn't preloaded.
+   * Brief sip beat at the machine (legacy name kept for mock/tests).
    */
   _flashCoffeeMug(npc, npcKey, ms = 4200) {
+    return this._holdCoffeeMug(npc, npcKey, { ms, mode: 'sip' });
+  }
+
+  /**
+   * Hold a LimeZu coffee mug on the NPC.
+   * mode 'sip' pins to the mouth; 'carry' follows the walking hand.
+   * ms null/<=0 keeps the prop until _clearCoffeeMug.
+   */
+  _holdCoffeeMug(npc, npcKey, { ms = 4200, mode = 'sip' } = {}) {
     if (!npc || !this.scene?.add) return null;
     // Prefer the tight cup-only texture so it can sit on the mouth
     const cupKey = this.scene.textures?.exists?.('vfx_coffee_cup') ? 'vfx_coffee_cup' : null;
@@ -1948,30 +2007,34 @@ class AgentActions {
       let mug;
       // Abby face: eyes ~row 30–31 (oy≈-26), mouth pink ~32–33 (oy≈-22)
       const mouthY = 22;
+      const handY = 6;
+      const baseY = mode === 'carry' ? handY : mouthY;
       if (cupKey) {
-        mug = this.scene.add.image(npc.x, npc.y - mouthY, cupKey);
+        mug = this.scene.add.image(npc.x, npc.y - baseY, cupKey);
         // Texture top = rim on mouth (originY 0 — see mock holdMugAtMouth)
-        mug.setOrigin(0.5, 0);
-        mug.setScale(1.3);
-        mug.setAngle(-15);
+        mug.setOrigin(0.5, mode === 'carry' ? 0.55 : 0);
+        mug.setScale(mode === 'carry' ? 1.15 : 1.3);
+        mug.setAngle(mode === 'carry' ? -8 : -15);
       } else {
-        mug = this.scene.add.sprite(npc.x, npc.y - mouthY, sheetKey, 0);
-        mug.setOrigin(0.5, 0);
-        mug.setScale(1.15);
-        mug.setAngle(-15);
+        mug = this.scene.add.sprite(npc.x, npc.y - baseY, sheetKey, 0);
+        mug.setOrigin(0.5, mode === 'carry' ? 0.55 : 0);
+        mug.setScale(mode === 'carry' ? 1.05 : 1.15);
+        mug.setAngle(mode === 'carry' ? -8 : -15);
         try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
       }
       mug.setDepth((npc.depth || 10) + 2);
 
-      try {
-        mug.y = npc.y - 12;
-        this.scene.tweens.add({
-          targets: mug,
-          y: npc.y - mouthY,
-          duration: 280,
-          ease: 'Back.easeOut',
-        });
-      } catch (_) {}
+      if (mode === 'sip') {
+        try {
+          mug.y = npc.y - 12;
+          this.scene.tweens.add({
+            targets: mug,
+            y: npc.y - mouthY,
+            duration: 280,
+            ease: 'Back.easeOut',
+          });
+        } catch (_) {}
+      }
 
       const frameOf = (spr) => {
         const fr = spr?.frame;
@@ -1989,22 +2052,34 @@ class AgentActions {
           if (!mug.active || !npc.active) return;
           const f = frameOf(npc);
           let ox = 0;
-          let oy = -mouthY;
-          if (f >= 4 && f <= 7) { ox = -8; mug.setAngle(-15); }
-          else if (f >= 8 && f <= 11) { ox = 8; mug.setAngle(15); }
-          else if (f >= 12) { oy = -23; mug.setAngle(0); }
-          else mug.setAngle(0);
+          let oy = mode === 'carry' ? -handY : -mouthY;
+          if (mode === 'carry') {
+            // Hand carry: sit beside the torso while walking.
+            if (f >= 4 && f <= 7) { ox = -10; mug.setAngle(-12); }
+            else if (f >= 8 && f <= 11) { ox = 10; mug.setAngle(12); }
+            else if (f >= 12) { ox = 0; oy = -10; mug.setAngle(0); }
+            else { ox = 9; mug.setAngle(-6); }
+          } else {
+            if (f >= 4 && f <= 7) { ox = -8; mug.setAngle(-15); }
+            else if (f >= 8 && f <= 11) { ox = 8; mug.setAngle(15); }
+            else if (f >= 12) { oy = -23; mug.setAngle(0); }
+            else mug.setAngle(0);
+          }
           mug.x = npc.x + ox;
           mug.y = npc.y + oy;
+          mug.setDepth((npc.depth || 10) + 2);
         },
       });
-      const timer = this.scene.time.delayedCall(ms, () => {
-        try { follow.remove(); } catch (_) {}
-        try { mug.destroy(); } catch (_) {}
-        this._coffeeMugs?.delete?.(npcKey);
-      });
+      let timer = null;
+      if (ms != null && ms > 0) {
+        timer = this.scene.time.delayedCall(ms, () => {
+          try { follow.remove(); } catch (_) {}
+          try { mug.destroy(); } catch (_) {}
+          this._coffeeMugs?.delete?.(npcKey);
+        });
+      }
       if (!this._coffeeMugs) this._coffeeMugs = new Map();
-      this._coffeeMugs.set(npcKey, { mug, follow, timer });
+      this._coffeeMugs.set(npcKey, { mug, follow, timer, mode });
       return mug;
     } catch (_) {
       return null;

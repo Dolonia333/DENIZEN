@@ -1097,13 +1097,34 @@ class AgentOfficeManager {
     const pick = (lines) => lines[Math.floor(Math.random() * lines.length)];
 
     this.actions.speak(requester.npcKey, pick(requestLines));
+    try {
+      window.DenizenFloorStrip?.push?.({
+        npcKey: requester.npcKey,
+        name: requester.agent.name,
+        kind: 'status',
+        text: `Asked ${runner.agent.name} for a coffee run`,
+      });
+    } catch (_) {}
     this.scene.time.delayedCall(1800, () => {
       this.actions.speak(runner.npcKey, pick(acceptLines));
       this.actions.standUp(runner.npcKey);
       runner.agent.status = 'coffee_run';
       const sprite = this.actions._getNpc?.(runner.npcKey);
       if (sprite) sprite._purposefulWalkUntil = Date.now() + 50000;
-      this.actions.goToCoffee?.(runner.npcKey) || this.actions.goToBreakroom?.(runner.npcKey);
+      // Hold the mug through the walk back (cleared on delivery).
+      if (typeof this.actions.goToCoffee === 'function') {
+        this.actions.goToCoffee(runner.npcKey, { holdMs: null, carry: true });
+      } else {
+        this.actions.goToBreakroom?.(runner.npcKey);
+      }
+      try {
+        window.DenizenFloorStrip?.push?.({
+          npcKey: runner.npcKey,
+          name: runner.agent.name,
+          kind: 'work',
+          text: `Coffee run for ${requester.agent.name}`,
+        });
+      } catch (_) {}
     });
 
     this.scene.time.delayedCall(11500, () => {
@@ -1113,22 +1134,49 @@ class AgentOfficeManager {
     });
     this.scene.time.delayedCall(16500, () => {
       this.actions.speak(runner.npcKey, pick(deliveryLines));
+      // Drop the carried mug onto the requester's desk once they're seated.
+      const handoff = () => {
+        try {
+          this.actions.deliverCoffeeMug?.(runner.npcKey, requester.npcKey);
+        } catch (_) {
+          this.actions._clearCoffeeMug?.(runner.npcKey);
+        }
+      };
+      if (this._isAtAssignedDesk(requester.npcKey, requester.agent)) {
+        handoff();
+      } else {
+        // Seat requester first so desk clutter has a home, then place mug.
+        try {
+          this.actions.useComputer(requester.npcKey, requester.agent.assignedDesk, { instant: false });
+        } catch (_) {}
+        this.scene.time.delayedCall(900, handoff);
+      }
     });
     this.scene.time.delayedCall(18500, () => {
       this.actions.speak(requester.npcKey, pick(thanksLines));
     });
     this.scene.time.delayedCall(22000, () => {
       try {
+        this.actions._clearCoffeeMug?.(runner.npcKey);
         this.actions.useComputer(runner.npcKey, runner.agent.assignedDesk, { instant: false });
         runner.agent.status = 'working';
         this.actions.useComputer(requester.npcKey, requester.agent.assignedDesk, { instant: false });
         requester.agent.status = 'working';
+        // After they sit, make sure the delivered mug is on the desk.
+        this.scene.time.delayedCall(1200, () => {
+          try {
+            if (!this.actions._deskClutter?.get?.(requester.npcKey)?.kinds?.includes('mug')) {
+              this.actions.deliverCoffeeMug?.(runner.npcKey, requester.npcKey);
+            }
+          } catch (_) {}
+        });
       } finally {
         this._ambientCoffeeFavorActive = false;
       }
     });
     // Safety release if navigation is interrupted by another office event.
     this.scene.time.delayedCall(45000, () => {
+      try { this.actions._clearCoffeeMug?.(runner.npcKey); } catch (_) {}
       this._ambientCoffeeFavorActive = false;
     });
   }
