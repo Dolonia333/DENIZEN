@@ -331,33 +331,58 @@
         justify-content: center;
       }
       /*
-       * Chat open: still center HQ, but only in the band above the Floor Line
-       * sheet so the map and chat never overlap.
+       * Chat open: keep HQ vertically centered in the band above the Floor Line
+       * sheet. Chat itself is a bottom sheet with fixed height (player-chat.js),
+       * so mid-centering no longer collapses the panel.
        */
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: center;
         justify-content: center;
         padding-bottom: calc(
           var(--denizen-dock-height, 48px)
-          + min(34dvh, 260px)
-          + 20px
+          + min(38dvh, 280px)
+          + 16px
           + env(safe-area-inset-bottom, 0px)
         );
       }
 
       /*
-       * Soft keyboard open: hide the HQ map so Floor Line can use the visual
-       * viewport above the keys (history stays readable while typing).
+       * Soft keyboard open: keep a compact HQ visible so you can still see the
+       * office while typing. Floor Line sits between HQ and the keys.
        */
-      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #game-frame {
-        visibility: hidden !important;
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open.denizen-portrait body {
+        justify-content: flex-start !important;
+        align-items: center !important;
+        padding-top: calc(
+          var(--denizen-vv-offset-top, 0px) + max(4px, env(safe-area-inset-top, 0px))
+        ) !important;
+        padding-bottom: calc(var(--denizen-keyboard-offset, 0px) + 4px) !important;
+        height: var(--denizen-vv-h) !important;
+        max-height: var(--denizen-vv-h) !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open.denizen-portrait #game-frame {
+        visibility: visible !important;
         pointer-events: none !important;
-        position: absolute !important;
-        width: 0 !important;
-        height: 0 !important;
+        position: relative !important;
+        width: fit-content !important;
+        height: fit-content !important;
+        max-width: calc(100dvw - 8px) !important;
+        margin: 0 auto 4px !important;
+        flex: 0 0 auto !important;
         overflow: hidden !important;
+      }
+      /* Compact 16:9 office — sized from width, not the crushed visualViewport height */
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open.denizen-portrait #game-container {
+        --denizen-kbd-hq-w: min(
+          calc(100dvw - max(8px, env(safe-area-inset-left, 0px)) - max(8px, env(safe-area-inset-right, 0px))),
+          360px
+        );
+        width: var(--denizen-kbd-hq-w) !important;
+        height: calc(var(--denizen-kbd-hq-w) * 9 / 16) !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: 16 / 9 !important;
         margin: 0 !important;
-        padding: 0 !important;
       }
       html.denizen-touch.denizen-keyboard-open.denizen-chat-open #denizen-floor-strip {
         display: none !important;
@@ -970,19 +995,29 @@
     else btn.addEventListener('click', (e) => { e.preventDefault(); pulse(); });
   }
 
+  function chatInputFocused() {
+    const el = document.activeElement;
+    if (!el) return false;
+    if (el.id === 'player-chat-input') return true;
+    return !!el.closest?.('#player-chat-composer, #player-chat-panel .pc-composer-shell, #player-chat-panel .pc-composer-bar');
+  }
+
   function syncVisualViewport() {
     const vv = window.visualViewport;
     const h = vv && vv.height > 80 ? vv.height : window.innerHeight;
     const root = document.documentElement;
     root.style.setProperty('--denizen-vv-h', `${Math.round(h)}px`);
+    let offset = 0;
+    let offsetTop = 0;
     if (vv) {
-      const offsetTop = Math.max(0, vv.offsetTop || 0);
-      const offset = Math.max(0, window.innerHeight - vv.height - offsetTop);
+      offsetTop = Math.max(0, vv.offsetTop || 0);
+      offset = Math.max(0, window.innerHeight - vv.height - offsetTop);
       root.style.setProperty('--denizen-vv-offset-top', `${Math.round(offsetTop)}px`);
       root.style.setProperty('--denizen-keyboard-offset', `${Math.round(offset)}px`);
-      // Same threshold as visitor-session — Floor Line expands when keyboard is up.
-      root.classList.toggle('denizen-keyboard-open', offset > 80);
     }
+    // Viewport shrink OR chat composer focused (iOS sometimes under-reports inset).
+    const kbd = offset > 60 || (chatInputFocused() && root.classList.contains('denizen-chat-open'));
+    root.classList.toggle('denizen-keyboard-open', kbd);
   }
 
   function installKeyboardViewportSync() {
@@ -993,12 +1028,16 @@
       vv.addEventListener('scroll', sync);
     }
     window.addEventListener('resize', sync);
+    // Composer focus is the reliable keyboard signal on iOS Safari.
+    document.addEventListener('focusin', sync, true);
+    document.addEventListener('focusout', () => setTimeout(sync, 80), true);
     sync();
   }
 
   /**
-   * Publish the live bottom of HQ (+ portrait Abby strip when outside the box)
-   * so FLOOR LINE starts clear of both.
+   * Publish the live bottom of HQ (+ portrait Abby strip when outside the box).
+   * Clamp so a Floor Line sheet with min height still fits above the dock —
+   * never publish a bottom that would collapse the chat panel.
    */
   function syncGameFrameBottom() {
     const frame = document.getElementById('game-frame') || document.getElementById('game-container');
@@ -1012,7 +1051,15 @@
         if (sb > bottom) bottom = sb;
       }
     }
-    document.documentElement.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
+    const root = document.documentElement;
+    const vv = Math.round(window.visualViewport?.height || window.innerHeight || 0);
+    if (vv > 80 && root.classList.contains('denizen-portrait')) {
+      const dock = 50;
+      const minChat = Math.min(Math.round(vv * 0.38), 200);
+      const maxBottom = vv - dock - minChat - 12;
+      if (maxBottom > 0 && bottom > maxBottom) bottom = maxBottom;
+    }
+    root.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
   }
 
   /**

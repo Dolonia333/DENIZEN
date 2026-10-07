@@ -94,7 +94,11 @@ describe('mobile UI layout fixes', () => {
     );
     assert.match(
       mobile,
-      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*center/
+      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?justify-content:\s*center/
+    );
+    assert.match(
+      mobile,
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*center/
     );
     assert.match(
       mobile,
@@ -103,7 +107,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapFill10/);
+    assert.match(html, /mobile-controls\.js\?v=kbdOffice1/);
   });
 
   it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
@@ -169,25 +173,34 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=kbdFill3/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill10/);
+    assert.match(html, /player-chat\.js\?v=kbdOffice1/);
+    assert.match(html, /mobile-controls\.js\?v=kbdOffice1/);
   });
 
-  it('Floor Line expands to the visual viewport when the soft keyboard opens', () => {
+  it('soft keyboard keeps a compact HQ visible while Floor Line stays above the keys', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
-    assert.match(chat, /Soft keyboard open: fill the visual viewport/);
+    assert.match(chat, /keep typing above the keys while a compact HQ stays/);
     assert.match(
       chat,
-      /denizen-keyboard-open\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?--denizen-vv-offset-top/
+      /denizen-keyboard-open\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?top:\s*calc\(/
     );
     assert.match(
       chat,
-      /denizen-keyboard-open\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\) #player-chat-log \{[\s\S]*?min-height:\s*140px/
+      /denizen-keyboard-open\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\) #player-chat-log \{[\s\S]*?min-height:\s*48px/
     );
     assert.match(mobile, /classList\.toggle\('denizen-keyboard-open'/);
+    assert.match(mobile, /chatInputFocused/);
     assert.match(mobile, /--denizen-vv-offset-top/);
     assert.match(
+      mobile,
+      /denizen-keyboard-open\.denizen-chat-open\.denizen-portrait #game-frame \{[\s\S]*?visibility:\s*visible/
+    );
+    assert.match(
+      mobile,
+      /denizen-keyboard-open\.denizen-chat-open\.denizen-portrait #game-container \{[\s\S]*?--denizen-kbd-hq-w/
+    );
+    assert.doesNotMatch(
       mobile,
       /denizen-keyboard-open\.denizen-chat-open #game-frame \{[\s\S]*?visibility:\s*hidden/
     );
@@ -273,19 +286,27 @@ describe('mobile UI layout fixes', () => {
     assert.match(scene, /isCompactPhone \? 2\.65 : 2\.5/);
     assert.match(html, /device-profile\.js\?v=mapFill10/);
     assert.match(html, /office-scene\.js\?v=mapFill10/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill10/);
+    assert.match(html, /mobile-controls\.js\?v=kbdOffice1/);
   });
 
-  it('portrait Floor Line starts below the HQ frame so it never overlaps the map', () => {
+  it('portrait Floor Line is a bottom sheet with guaranteed height when chat opens', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
     assert.match(
       chat,
-      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?--denizen-game-frame-bottom/
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?top:\s*auto\s*!important/
     );
     assert.match(
       chat,
-      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?max-height:\s*min\(34dvh,\s*260px\)/
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?height:\s*min\(38dvh,\s*280px\)/
+    );
+    assert.match(
+      chat,
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?min-height:\s*min\(38dvh,\s*200px\)/
+    );
+    assert.match(
+      mobile,
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*center/
     );
     assert.match(
       mobile,
