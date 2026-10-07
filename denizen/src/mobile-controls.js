@@ -183,7 +183,7 @@
       }
 
       html.denizen-touch body {
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
         box-sizing: border-box;
         height: var(--denizen-vv-h);
@@ -197,8 +197,9 @@
       }
 
       html.denizen-touch.denizen-landscape body {
-        /* Don't double-pad: size math below already subtracts safe-area + dock */
+        /* Center HQ in the short viewport; chat overlays as a bottom sheet */
         align-items: center;
+        justify-content: center;
         padding:
           var(--denizen-play-top)
           max(6px, env(safe-area-inset-right, 0px))
@@ -213,7 +214,6 @@
                   - 12px
         );
         --denizen-play-h: var(--denizen-available-play-h);
-        /* Fill the available play box at 16:9 — no giant chrome gutters */
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
         height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
         max-width: none;
@@ -225,6 +225,7 @@
 
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
+        /* Use nearly the full short side — leave a little for frame chrome only */
         --denizen-play-w: calc(
           100dvw
           - max(6px, env(safe-area-inset-left, 0px))
@@ -245,19 +246,12 @@
         flex: 0 0 auto;
       }
 
-      /* Portrait phones: pin HQ to the top, maximize 16:9 width, trim skyline waste */
+      /* Portrait phones: 16:9 map floats mid-screen over the city (centered). */
       html.denizen-touch.denizen-phone.denizen-portrait #game-container {
         width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
         height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
         flex: 0 0 auto;
         margin: 0 auto;
-      }
-      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city {
-        opacity: 0.28 !important;
-      }
-      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city .dz-skyline,
-      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city .dz-windows {
-        height: min(32vh, 220px) !important;
       }
 
       /* Portrait hint — non-blocking toast, shown once per session */
@@ -284,9 +278,9 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: pin HQ to the top — mid-screen float wasted the map under skyline. */
+      /* Portrait: HQ centered over the skyline. Pin to top only while Floor Line is open. */
       html.denizen-touch.denizen-portrait body {
-        align-items: flex-start;
+        align-items: center;
       }
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: flex-start;
@@ -432,19 +426,22 @@
         ) !important;
         max-height: min(38dvh, 280px) !important;
       }
-      /* Landscape Floor Line: short LEFT rail — must leave the HQ map visible */
+      /*
+       * Landscape Floor Line: bottom sheet across the short side.
+       * Left-rail + tall panel buried the HQ map under Safari's chrome.
+       */
       html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
-        right: auto !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
         bottom: calc(
-          var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
+          var(--denizen-dock-height, 40px) + 6px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;
-        width: min(340px, calc(100dvw - 100px)) !important;
-        max-width: min(340px, calc(100dvw - 100px)) !important;
+        width: auto !important;
+        max-width: none !important;
         min-width: 0 !important;
-        height: min(34dvh, 200px) !important;
-        max-height: min(34dvh, 200px) !important;
+        height: min(42dvh, 220px) !important;
+        max-height: min(42dvh, 220px) !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;
