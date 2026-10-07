@@ -520,19 +520,26 @@ describe('npc-mcp-gateway rate limit', () => {
       assert.equal(note.status, 200);
     }
 
-    const call1 = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    // Read tools (get_status) do not burn the bucket — non-read tools/call do.
+    const readOk = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    assert.equal(readOk.status, 200);
+
+    const skillArgs = { name: 'research', arguments: { query: 'rate-limit probe' } };
+    const call1 = await rpc('tools/call', { name: 'run_skill', arguments: skillArgs });
     assert.equal(call1.status, 200);
-    const call2 = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    const call2 = await rpc('tools/call', { name: 'run_skill', arguments: skillArgs });
     assert.equal(call2.status, 200);
-    const call3 = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    const call3 = await rpc('tools/call', { name: 'run_skill', arguments: skillArgs });
     assert.equal(call3.status, 429);
     assert.ok(call3.headers.get('retry-after'));
     const body = await call3.json();
     assert.equal(body.error, 'rate limit exceeded');
 
-    // Handshakes still work after tools/call is limited.
+    // Handshakes + read tools still work after non-read tools/call is limited.
     const stillInit = await rpc('initialize');
     assert.equal(stillInit.status, 200);
+    const stillRead = await rpc('tools/call', { name: 'get_status', arguments: { limit: 1 } });
+    assert.equal(stillRead.status, 200);
 
     await new Promise((resolve) => server.close(resolve));
   });
