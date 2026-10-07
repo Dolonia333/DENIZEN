@@ -155,7 +155,7 @@
         --denizen-vv-h: 100dvh;
         --denizen-play-top: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 2px;
-        /* Slim chrome: pad + HQ label row + thin floor caption under the map */
+        /* Slim chrome: HQ label row + thin floor caption under the map */
         --denizen-frame-chrome: 48px;
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
@@ -164,22 +164,28 @@
                    - var(--denizen-play-gap)
                    - var(--denizen-frame-chrome)
         );
+        /* Portrait HQ stays a compact 16:9 box — chat sits under it */
         --denizen-phone-portrait-game-height: min(
           var(--denizen-available-play-h),
           calc(100dvw * 9 / 16)
         );
       }
 
-      /* Phones: spend almost all width on the map; city is atmosphere only */
+      /*
+       * Phones: chrome overlays the map; portrait Abby strip sits outside the
+       * HQ box (floor-strip.js). Chrome budget stays tiny so canvas fills brackets.
+       */
       html.denizen-touch.denizen-phone {
-        --denizen-frame-chrome: 32px;
+        --denizen-frame-chrome: 0px;
+        --denizen-play-gap: 2px;
       }
 
-      /* Landscape: notch is on the sides — reclaim vertical space hard */
+      /* Landscape: notch is on the sides — reclaim vertical space hard.
+       * Frame chrome overlays the map (see index.html) so chrome budget is tiny. */
       html.denizen-touch.denizen-landscape {
         --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
-        --denizen-frame-chrome: 20px;
+        --denizen-frame-chrome: 18px; /* thin floor caption under map only */
       }
 
       html.denizen-touch body {
@@ -207,25 +213,60 @@
           max(6px, env(safe-area-inset-left, 0px));
       }
 
+      /* Portrait / default touch: compact 16:9 HQ box, centered mid-screen. */
       html.denizen-touch #game-container {
         --denizen-play-w: calc(
           100dvw - max(var(--denizen-play-gap), env(safe-area-inset-left, 0px))
                   - max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
-                  - 12px
+                  - 8px
         );
         --denizen-play-h: var(--denizen-available-play-h);
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
         height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
-        max-width: none;
-        max-height: none;
-        border-radius: 4px;
-        border-width: 0;
-        box-shadow: none;
+        max-width: none !important;
+        max-height: none !important;
+        border: none !important;
+        outline: none !important;
+        border-radius: 0 !important;
+        border-width: 0 !important;
+        box-shadow: none !important;
+        overflow: hidden;
+        position: relative;
+        margin: 0 !important;
+        flex: 0 0 auto;
+        aspect-ratio: 16 / 9;
+      }
+      /*
+       * Portrait: cover-scale the 1280×720 canvas into the 16:9 HQ box so the
+       * office meets the blue corner brackets (no side gutters from rounding).
+       */
+      html.denizen-touch:not(.denizen-landscape) #game-container canvas {
+        /* Cover math applied in coverPlayCanvas(); don't force stretch. */
+        width: auto !important;
+        height: auto !important;
       }
 
+      /* Portrait phones: wider 16:9 HQ card, centered over the city. */
+      html.denizen-touch.denizen-phone.denizen-portrait #game-container {
+        --denizen-play-w: calc(
+          100dvw
+          - max(4px, env(safe-area-inset-left, 0px))
+          - max(4px, env(safe-area-inset-right, 0px))
+          - 4px
+        );
+        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9)) !important;
+        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16)) !important;
+        flex: 0 0 auto;
+        margin: 0 !important;
+        aspect-ratio: 16 / 9;
+      }
+
+      /*
+       * Landscape only: fill the HQ play rect edge-to-edge (not a 16:9
+       * letterbox). Canvas is cover-scaled in coverPlayCanvas().
+       */
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
-        /* Fill the HQ box — spend nearly all of the short viewport on the map */
         --denizen-play-w: calc(
           100dvw
           - max(4px, env(safe-area-inset-left, 0px))
@@ -240,18 +281,20 @@
           - var(--denizen-frame-chrome)
           - 2px
         );
-        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
-        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
+        width: var(--denizen-play-w) !important;
+        height: var(--denizen-play-h) !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
         margin: 0 auto;
         flex: 0 0 auto;
+        overflow: hidden;
+        position: relative;
       }
-
-      /* Portrait phones: 16:9 map floats mid-screen over the city (centered). */
-      html.denizen-touch.denizen-phone.denizen-portrait #game-container {
-        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
-        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
-        flex: 0 0 auto;
-        margin: 0 auto;
+      html.denizen-touch.denizen-landscape #game-container canvas {
+        /* Cover math applied in JS (inline !important); don't force 100% stretch */
+        width: auto !important;
+        height: auto !important;
       }
 
       /* Portrait hint — non-blocking toast, shown once per session */
@@ -278,12 +321,50 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: HQ centered over the skyline. Pin to top only while Floor Line is open. */
+      /*
+       * Portrait: column so the Abby floor strip (sibling under #game-frame)
+       * stacks below the HQ box instead of beside it (body defaults to row).
+       */
       html.denizen-touch.denizen-portrait body {
+        flex-direction: column;
         align-items: center;
+        justify-content: center;
       }
+      /*
+       * Chat open: still center HQ, but only in the band above the Floor Line
+       * sheet so the map and chat never overlap.
+       */
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: calc(
+          var(--denizen-dock-height, 48px)
+          + min(34dvh, 260px)
+          + 20px
+          + env(safe-area-inset-bottom, 0px)
+        );
+      }
+
+      /*
+       * Soft keyboard open: hide the HQ map so Floor Line can use the visual
+       * viewport above the keys (history stays readable while typing).
+       */
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #game-frame {
+        visibility: hidden !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #denizen-floor-strip {
+        display: none !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #denizen-bottom-dock {
+        visibility: hidden !important;
+        pointer-events: none !important;
       }
 
       #${CONTROLS_ID} {
@@ -892,19 +973,21 @@
   function syncVisualViewport() {
     const vv = window.visualViewport;
     const h = vv && vv.height > 80 ? vv.height : window.innerHeight;
-    document.documentElement.style.setProperty('--denizen-vv-h', `${Math.round(h)}px`);
+    const root = document.documentElement;
+    root.style.setProperty('--denizen-vv-h', `${Math.round(h)}px`);
     if (vv) {
-      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      document.documentElement.style.setProperty('--denizen-keyboard-offset', `${Math.round(offset)}px`);
+      const offsetTop = Math.max(0, vv.offsetTop || 0);
+      const offset = Math.max(0, window.innerHeight - vv.height - offsetTop);
+      root.style.setProperty('--denizen-vv-offset-top', `${Math.round(offsetTop)}px`);
+      root.style.setProperty('--denizen-keyboard-offset', `${Math.round(offset)}px`);
+      // Same threshold as visitor-session — Floor Line expands when keyboard is up.
+      root.classList.toggle('denizen-keyboard-open', offset > 80);
     }
   }
 
   function installKeyboardViewportSync() {
     const vv = window.visualViewport;
-    const sync = () => {
-      syncVisualViewport();
-      syncGameFrameBottom();
-    };
+    const sync = () => syncPlayfieldLayout();
     if (vv) {
       vv.addEventListener('resize', sync);
       vv.addEventListener('scroll', sync);
@@ -913,12 +996,66 @@
     sync();
   }
 
-  /** Publish the live game-frame bottom so FLOOR LINE can sit flush under it. */
+  /**
+   * Publish the live bottom of HQ (+ portrait Abby strip when outside the box)
+   * so FLOOR LINE starts clear of both.
+   */
   function syncGameFrameBottom() {
     const frame = document.getElementById('game-frame') || document.getElementById('game-container');
     if (!frame) return;
-    const bottom = Math.round(frame.getBoundingClientRect().bottom);
+    let bottom = Math.round(frame.getBoundingClientRect().bottom);
+    const strip = document.getElementById('denizen-floor-strip');
+    if (strip && strip.classList.contains('has-lines')) {
+      const style = window.getComputedStyle(strip);
+      if (style.display !== 'none' && style.visibility !== 'hidden') {
+        const sb = Math.round(strip.getBoundingClientRect().bottom);
+        if (sb > bottom) bottom = sb;
+      }
+    }
     document.documentElement.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
+  }
+
+  /**
+   * Touch: scale the 1280×720 canvas with object-fit:cover into #game-container
+   * so the office meets the blue corner brackets (no pillarbox gutters).
+   * Portrait stays a compact 16:9 HQ card; landscape uses the full play rect.
+   */
+  function coverPlayCanvas() {
+    const root = document.documentElement;
+    const box = document.getElementById('game-container');
+    const canvas = box?.querySelector?.('canvas');
+    if (!box || !canvas) return;
+    const touch = root.classList.contains('denizen-touch');
+    if (!touch) {
+      canvas.style.removeProperty('width');
+      canvas.style.removeProperty('height');
+      canvas.style.removeProperty('left');
+      canvas.style.removeProperty('top');
+      canvas.style.removeProperty('position');
+      return;
+    }
+    const bw = box.clientWidth;
+    const bh = box.clientHeight;
+    if (bw < 40 || bh < 40) return;
+    const scale = Math.max(bw / 1280, bh / 720);
+    const cw = Math.round(1280 * scale);
+    const ch = Math.round(720 * scale);
+    canvas.style.setProperty('position', 'absolute', 'important');
+    canvas.style.setProperty('width', `${cw}px`, 'important');
+    canvas.style.setProperty('height', `${ch}px`, 'important');
+    canvas.style.setProperty('left', `${Math.round((bw - cw) / 2)}px`, 'important');
+    canvas.style.setProperty('top', `${Math.round((bh - ch) / 2)}px`, 'important');
+  }
+
+  /** @deprecated alias — coverPlayCanvas covers portrait + landscape */
+  function coverLandscapeCanvas() { coverPlayCanvas(); }
+
+  function syncPlayfieldLayout() {
+    syncVisualViewport();
+    // Re-place Abby strip (portrait outside HQ / landscape under map).
+    try { globalThis.DenizenFloorStrip?.place?.(); } catch (_) {}
+    syncGameFrameBottom();
+    coverPlayCanvas();
   }
 
   function boot() {
@@ -930,27 +1067,28 @@
     removeCeoUiArtifacts();
     installKeyboardViewportSync();
     syncLayoutClasses();
-    syncGameFrameBottom();
+    syncPlayfieldLayout();
 
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         syncLayoutClasses();
-        syncGameFrameBottom();
+        syncPlayfieldLayout();
         try { window.game?.scale?.refresh?.(); } catch (_) {}
       }, 120);
       setTimeout(() => {
-        syncGameFrameBottom();
+        syncPlayfieldLayout();
         try { window.game?.scale?.refresh?.(); } catch (_) {}
       }, 400);
     });
     window.addEventListener('resize', () => {
       syncLayoutClasses();
-      syncGameFrameBottom();
+      syncPlayfieldLayout();
       try { window.game?.scale?.refresh?.(); } catch (_) {}
     });
-    // Phaser may resize the canvas a beat after first paint
-    setTimeout(syncGameFrameBottom, 250);
-    setTimeout(syncGameFrameBottom, 1000);
+    // Phaser may create/resize the canvas a beat after first paint
+    setTimeout(syncPlayfieldLayout, 250);
+    setTimeout(syncPlayfieldLayout, 1000);
+    setTimeout(syncPlayfieldLayout, 2500);
 
     console.log('[MobilePlay] touch controls ready — portrait and landscape supported');
   }
@@ -964,6 +1102,9 @@
   window.DenizenMobilePlay = {
     syncLayout: syncLayoutClasses,
     syncGameFrameBottom,
+    coverPlayCanvas,
+    coverLandscapeCanvas,
+    syncPlayfieldLayout,
     isTouch: () => true,
     isPhoneLike,
     useTapMove,

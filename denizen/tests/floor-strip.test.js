@@ -17,6 +17,8 @@ describe('floor conversation strip', () => {
     assert.match(strip, /STRIP_ID = 'denizen-floor-strip'/);
     assert.match(strip, /openWithNpc\(key, name, \{ walk: false \}\)/);
     assert.match(strip, /map\.insertAdjacentElement\('afterend'/);
+    assert.match(strip, /frame\.insertAdjacentElement\('afterend'/);
+    assert.match(strip, /isPortraitTouch/);
     assert.match(strip, /has-lines/);
     assert.match(strip, /raw\.from \|\| raw\.name/);
     assert.doesNotMatch(strip, /The floor is quiet/);
@@ -25,6 +27,16 @@ describe('floor conversation strip', () => {
     assert.match(actions, /\$\{who\} → \$\{toName\}/);
     assert.match(actions, /setDeskStatus\(npcKey, status/);
     assert.match(actions, /yOff: 54/);
+  });
+
+  it('portrait mount puts Abby captions outside the HQ box', () => {
+    const strip = read('src/floor-strip.js');
+    assert.match(strip, /OUTSIDE the HQ box/);
+    assert.match(strip, /denizen-portrait #\$\{STRIP_ID\} \{[\s\S]*?position:\s*static/);
+    assert.doesNotMatch(
+      strip,
+      /denizen-portrait #\$\{STRIP_ID\} \{[\s\S]*?position:\s*absolute/
+    );
   });
 
   it('does not replace in-world NPC speech bubbles', () => {

@@ -3112,16 +3112,11 @@ class PlayerChat {
         max-height: none !important;
         z-index: 2147483630 !important;
       }
-      html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel {
-        /* Prefer live game-frame bottom (set by mobile-controls); fall back to 16:9 estimate */
-        top: calc(
-          var(--denizen-game-frame-bottom,
-            calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
-          ) + 8px
-        ) !important;
-      }
-      /* Phone-mode class can be on while FLOOR LINE is still a floor overlay (T key),
-         not docked inside the phone Chat app — close the gap under the game frame. */
+      /*
+       * Portrait Floor Line: always starts below the live HQ frame bottom
+       * (no overlap with the map / Abby strip).
+       */
+      html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel,
       html.denizen-touch.denizen-phone-mode.denizen-chat-open.denizen-portrait #player-chat-panel:not([data-phone-chat="1"]) {
         top: calc(
           var(--denizen-game-frame-bottom,
@@ -3133,8 +3128,47 @@ class PlayerChat {
         right: max(8px, env(safe-area-inset-right, 0px)) !important;
         width: auto !important;
         height: auto !important;
-        max-height: none !important;
+        max-height: min(34dvh, 260px) !important;
         z-index: 2147483630 !important;
+      }
+      /*
+       * Soft keyboard open: fill the visual viewport above the keys so message
+       * history stays readable. Do not pin under the game frame or clamp to
+       * a tiny dvh card — that was crushing past conversations.
+       */
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
+        top: calc(
+          var(--denizen-vv-offset-top, 0px) + max(6px, env(safe-area-inset-top, 0px))
+        ) !important;
+        bottom: calc(var(--denizen-keyboard-offset, 0px) + 6px) !important;
+        left: max(6px, env(safe-area-inset-left, 0px)) !important;
+        right: max(6px, env(safe-area-inset-right, 0px)) !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        z-index: 2147483640 !important;
+        overflow: hidden !important;
+        pointer-events: auto !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) #player-chat-log {
+        flex: 1 1 auto !important;
+        min-height: 140px !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) #player-chat-composer,
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) .pc-composer-shell {
+        flex: 0 0 auto !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) #player-chat-header {
+        flex: 0 0 auto !important;
       }
       html.denizen-touch.denizen-tablet.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
         top: max(8px, env(safe-area-inset-top, 0px)) !important;

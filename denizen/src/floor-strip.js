@@ -77,9 +77,9 @@
         color: #94a3b8;
       }
       /*
-       * Touch: one thin caption under the map canvas (still inside #game-frame
-       * so body row-flex does not park it beside the HQ). NPC speech bubbles
-       * over sprites are unchanged (agent-actions).
+       * Touch landscape / desktop: one thin caption under the map canvas
+       * (still inside #game-frame so body row-flex does not park it beside HQ).
+       * NPC speech bubbles over sprites are unchanged (agent-actions).
        */
       html.denizen-touch #${STRIP_ID} {
         width: 0;
@@ -88,6 +88,27 @@
         margin: 2px 0 0;
         gap: 0;
         flex: 0 0 auto;
+      }
+      /*
+       * Portrait: caption lives OUTSIDE the HQ box (sibling under #game-frame)
+       * so Abby / coffee-run lines never sit on the map.
+       */
+      html.denizen-touch.denizen-portrait #${STRIP_ID} {
+        position: static;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        z-index: 5;
+        margin: 4px 0 0;
+        padding: 0 2px;
+        width: auto;
+        min-width: 0;
+        max-width: calc(100dvw - 8px);
+        flex: 0 0 auto;
+        align-self: center;
+        box-sizing: border-box;
+        background: none;
+        pointer-events: auto;
       }
       html.denizen-touch #${STRIP_ID} .dz-floor-line {
         font-size: 10px;
@@ -121,19 +142,41 @@
     document.head.appendChild(s);
   }
 
+  function isPortraitTouch() {
+    const root = document.documentElement;
+    return root.classList.contains('denizen-touch')
+      && root.classList.contains('denizen-portrait');
+  }
+
+  /** Portrait: sibling under #game-frame. Else: under the map inside the frame. */
+  function placeStrip(el) {
+    const frame = document.getElementById('game-frame');
+    const map = document.getElementById('game-container');
+    if (!el || !frame) return;
+    if (isPortraitTouch()) {
+      if (el.previousElementSibling !== frame || el.parentElement !== frame.parentElement) {
+        frame.insertAdjacentElement('afterend', el);
+      }
+      const w = Math.round(frame.getBoundingClientRect().width);
+      if (w > 40) el.style.width = `${w}px`;
+      return;
+    }
+    el.style.width = '';
+    if (map && map.parentElement === frame) {
+      if (el.parentElement !== frame || el.previousElementSibling !== map) {
+        map.insertAdjacentElement('afterend', el);
+      }
+    } else if (el.parentElement !== frame) {
+      frame.appendChild(el);
+    }
+  }
+
   function ensureStrip() {
     injectStyles();
     let el = document.getElementById(STRIP_ID);
     const frame = document.getElementById('game-frame');
-    const map = document.getElementById('game-container');
     if (el) {
-      // Keep under the map canvas inside the HQ frame (body is row-flex).
-      if (frame && el.parentElement !== frame) {
-        if (map && map.parentElement === frame) map.insertAdjacentElement('afterend', el);
-        else frame.appendChild(el);
-      } else if (frame && map && map.parentElement === frame && el.previousElementSibling !== map) {
-        map.insertAdjacentElement('afterend', el);
-      }
+      placeStrip(el);
       return el;
     }
     if (!frame) return null;
@@ -141,8 +184,7 @@
     el.id = STRIP_ID;
     el.setAttribute('role', 'log');
     el.setAttribute('aria-label', 'Floor conversation');
-    if (map && map.parentElement === frame) map.insertAdjacentElement('afterend', el);
-    else frame.appendChild(el);
+    placeStrip(el);
     return el;
   }
 
@@ -180,20 +222,22 @@
     el.classList.toggle('has-lines', rows.length > 0);
     if (!rows.length) {
       el.innerHTML = '';
-      return;
+    } else {
+      el.innerHTML = rows.map((line, i) => (
+        `<button type="button" class="dz-floor-line kind-${esc(line.kind)}" data-i="${i}">`
+        + `<span class="who">${esc(whoLabel(line))}</span>`
+        + `<span class="what">${esc(line.text)}</span>`
+        + `</button>`
+      )).join('');
+      const shown = rows;
+      el.querySelectorAll('.dz-floor-line').forEach((btn) => {
+        const line = shown[Number(btn.dataset.i)];
+        if (!line || line.kind === 'quiet') return;
+        btn.addEventListener('click', () => openLine(line));
+      });
     }
-    el.innerHTML = rows.map((line, i) => (
-      `<button type="button" class="dz-floor-line kind-${esc(line.kind)}" data-i="${i}">`
-      + `<span class="who">${esc(whoLabel(line))}</span>`
-      + `<span class="what">${esc(line.text)}</span>`
-      + `</button>`
-    )).join('');
-    const shown = rows;
-    el.querySelectorAll('.dz-floor-line').forEach((btn) => {
-      const line = shown[Number(btn.dataset.i)];
-      if (!line || line.kind === 'quiet') return;
-      btn.addEventListener('click', () => openLine(line));
-    });
+    // Chat pins under strip+HQ; refresh after show/hide/relayout.
+    try { globalThis.DenizenMobilePlay?.syncGameFrameBottom?.(); } catch (_) {}
   }
 
   function openLine(line) {
@@ -237,10 +281,26 @@
     return lines.slice().reverse();
   }
 
-  globalThis.DenizenFloorStrip = { push, pin, unpin, recent, render };
+  function place() {
+    const el = document.getElementById(STRIP_ID);
+    if (el) placeStrip(el);
+    try { globalThis.DenizenMobilePlay?.syncGameFrameBottom?.(); } catch (_) {}
+  }
+
+  globalThis.DenizenFloorStrip = { push, pin, unpin, recent, render, place };
 
   function boot() {
     render();
+    window.addEventListener('resize', () => {
+      try { placeStrip(document.getElementById(STRIP_ID)); } catch (_) {}
+      try { globalThis.DenizenMobilePlay?.syncGameFrameBottom?.(); } catch (_) {}
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        try { placeStrip(document.getElementById(STRIP_ID)); } catch (_) {}
+        try { globalThis.DenizenMobilePlay?.syncGameFrameBottom?.(); } catch (_) {}
+      }, 150);
+    });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
