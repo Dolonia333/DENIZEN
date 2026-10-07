@@ -1378,9 +1378,9 @@ class AgentActions {
     this._clearBubble(npcKey, this._speechBubbles);
 
     const isThought = style === 'thought';
-    // Compact chips: prefer 1 short line (2 max) so speech stays readable
-    // without climbing into half the viewport.
-    const maxChars = isThought ? 28 : 36;
+    // Single-line chips only — wrapping made tall opaque slabs that ate the
+    // playfield. Match nameplate scale (5–6px) so talk stays a thin strip.
+    const maxChars = isThought ? 22 : 24;
     const truncated = text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
 
     // Voice — route speech (not thought) through DenizenSpeak. The voice
@@ -1404,24 +1404,20 @@ class AgentActions {
       }
     }
 
-    // Compact readable chip — same UI face as nameplates, higher contrast,
-    // narrow wrap so tall multi-line blocks don't eat the playfield.
-    const bgColor = isThought ? '#e0f2fef5' : '#fffffff5';
+    // Compact readable chip — same UI face as nameplates, one line, soft edge.
+    const bgColor = isThought ? '#e0f2fef2' : '#fffffff2';
     const textColor = isThought ? '#0c4a6e' : '#0f172a';
     const prefix = isThought ? '…' : '';
     const label = prefix ? `${prefix}${truncated}` : truncated;
-    const wrapW = isThought ? 86 : 98;
 
     const bubbleText = this.scene.add.text(0, 0, label, {
-      fontSize: isThought ? '7px' : '8px',
+      fontSize: isThought ? '5px' : '6px',
       fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
-      fontStyle: isThought ? '500' : '600',
+      fontStyle: 'bold',
       color: textColor,
       backgroundColor: bgColor,
-      padding: { x: 3, y: 2 },
-      wordWrap: { width: wrapW },
+      padding: { x: 3, y: 1 },
       align: 'center',
-      maxLines: 2,
     });
     let res = 2;
     try {
@@ -1432,7 +1428,8 @@ class AgentActions {
     if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(res);
     bubbleText.setOrigin(0.5, 1);
     bubbleText.setDepth(9998);
-    try { bubbleText.setShadow(0, 1, 'rgba(15,23,42,0.22)', 2, false, true); } catch (_) {}
+    // Scale under 1 keeps chips petite at office camera zoom (often 2×+).
+    try { bubbleText.setScale(0.82); } catch (_) {}
     bubbleText.setAlpha(0);
     const yOff = isThought ? 40 : 44;
     let xOff = 0;
@@ -1498,6 +1495,26 @@ class AgentActions {
           while (guard < 3 && overlaps(bubbleText.x, bubbleText.y)) {
             bubbleText.y -= (bh + 3);
             guard += 1;
+          }
+        }
+      }
+
+      // If the speaker is on-screen, nudge the chip inward so long lines
+      // don't clip the frame. Never yank off-screen NPCs into the camera.
+      const cam = this.scene?.cameras?.main;
+      if (cam?.worldView && bubbleText.width) {
+        const view = cam.worldView;
+        const margin = 28;
+        const npcOnScreen = npc.x > view.x - margin && npc.x < view.right + margin
+          && npc.y > view.y - margin && npc.y < view.bottom + margin;
+        if (npcOnScreen) {
+          const half = (bubbleText.width * (bubbleText.scaleX || 1)) * 0.5 + 4;
+          const minX = view.x + half;
+          const maxX = view.right - half;
+          if (Number.isFinite(minX) && Number.isFinite(maxX) && maxX > minX) {
+            const clamped = Math.min(maxX, Math.max(minX, bubbleText.x));
+            xOff += clamped - bubbleText.x;
+            bubbleText.x = clamped;
           }
         }
       }

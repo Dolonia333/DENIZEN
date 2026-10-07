@@ -99,7 +99,7 @@ describe('Living-office furniture & social behaviors', () => {
 
   it('cache busters bumped for living-office ship', () => {
     const html = read('index.html');
-    assert.match(html, /agent-actions\.js\?v=bubbleChip1/);
+    assert.match(html, /agent-actions\.js\?v=bubbleChip4/);
     assert.match(html, /agent-office-manager\.js\?v=livingOffice1/);
   });
 });
