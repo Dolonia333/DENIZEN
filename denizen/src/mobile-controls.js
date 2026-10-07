@@ -438,6 +438,29 @@
         flex-direction: column !important;
         transform: none !important;
         overflow: hidden !important;
+        pointer-events: auto !important;
+      }
+      /* Fat corner ✕ — must stay tappable when PROJECTS/Briefing fill the actions row */
+      html.denizen-touch.denizen-landscape #player-chat-header {
+        position: relative !important;
+        padding-right: 56px !important;
+        overflow: visible !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions {
+        max-width: none !important;
+        overflow: visible !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions #player-chat-close-btn {
+        position: absolute !important;
+        top: 4px !important;
+        right: 4px !important;
+        z-index: 6 !important;
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
       }
 
       html.denizen-touch.denizen-tablet #denizen-diag-panel,

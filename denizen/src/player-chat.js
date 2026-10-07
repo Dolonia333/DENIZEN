@@ -3147,13 +3147,16 @@ class PlayerChat {
         transform: none !important;
         z-index: 2147483630 !important;
         overflow: hidden !important;
+        pointer-events: auto !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header {
-        padding: 6px 8px !important;
+        position: relative !important;
+        padding: 6px 56px 6px 8px !important;
         flex: 0 0 auto !important;
         grid-template-columns: 32px minmax(0, 1fr) auto !important;
         grid-template-areas: "avatar main actions" !important;
         grid-auto-flow: column !important;
+        overflow: visible !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header > *:not(.pc-header-avatar):not(.chat-header-main):not(#player-chat-header-actions) {
         display: none !important;
@@ -3189,9 +3192,50 @@ class PlayerChat {
         padding: 0;
         flex-shrink: 0;
       }
+      /*
+       * iPad landscape: PROJECTS + Briefing used to squeeze the ✕ past the
+       * 140px actions cap; overflow:hidden then clipped the hit target.
+       * Pin a fat close control to the header corner — always tappable.
+       */
       html.denizen-touch.denizen-landscape #player-chat-header-actions {
-        max-width: min(42vw, 140px);
-        flex-wrap: nowrap !important;
+        max-width: none !important;
+        width: auto !important;
+        flex-wrap: wrap !important;
+        justify-content: flex-end !important;
+        gap: 4px !important;
+        padding-right: 0 !important;
+        overflow: visible !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions #player-chat-close-btn {
+        position: absolute !important;
+        top: 4px !important;
+        right: 4px !important;
+        z-index: 6 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        max-width: 48px !important;
+        flex: 0 0 48px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 6px !important;
+        border: 2px solid var(--pc-amber, #f59e0b) !important;
+        background: rgba(2, 6, 23, 0.92) !important;
+        color: #f8fafc !important;
+        font-size: 18px !important;
+        line-height: 1 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: rgba(245, 158, 11, 0.35);
+        box-shadow: 2px 2px 0 #020617 !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions #player-chat-close-btn svg {
+        width: 20px !important;
+        height: 20px !important;
       }
       /* Claim proximity pill must not peek under Floor Line */
       html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-visitor-claim-btn {
@@ -3563,13 +3607,22 @@ class PlayerChat {
     const paintClose = () => {
       if (!closeBtn) return;
       const T = globalThis.DenizenTablerIcons;
-      closeBtn.innerHTML = T?.x ? T.x({ size: 14 }) : '✕';
+      const touch = !!window.__DenizenIsTouch
+        || document.documentElement.classList.contains('denizen-touch');
+      const landscape = document.documentElement.classList.contains('denizen-landscape');
+      const size = touch && landscape ? 20 : touch ? 16 : 14;
+      closeBtn.innerHTML = T?.x ? T.x({ size }) : '✕';
     };
     if (closeBtn) {
       paintClose();
       window.addEventListener('denizen-tabler-ready', paintClose);
-      if (bindPress) bindPress(closeBtn, onCloseChat);
-      else closeBtn.addEventListener('click', onCloseChat);
+      window.addEventListener('denizen-device-profile-change', paintClose);
+      // stop:true so game/canvas handlers never swallow the iPad landscape tap
+      if (bindPress) bindPress(closeBtn, onCloseChat, { stop: true });
+      else {
+        closeBtn.addEventListener('click', onCloseChat);
+        closeBtn.addEventListener('pointerup', onCloseChat);
+      }
     }
 
     const refreshSpeakBtn = () => {

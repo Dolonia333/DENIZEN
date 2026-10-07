@@ -97,7 +97,7 @@ describe('mobile UI layout fixes', () => {
       /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
     );
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=floorStrip2/);
+    assert.match(html, /mobile-controls\.js\?v=ipadClose1/);
   });
 
   it('landscape Floor Line is a compact left rail so Buzz stays bottom-right', () => {
@@ -140,10 +140,37 @@ describe('mobile UI layout fixes', () => {
     assert.match(chat, /#player-chat-header > #player-chat-close-btn/);
   });
 
+  it('iPad landscape pins a fat tappable close button outside the actions squeeze', () => {
+    const chat = read('src/player-chat.js');
+    const mobile = read('src/mobile-controls.js');
+    assert.match(chat, /Pin a fat close control to the header corner/);
+    assert.match(
+      chat,
+      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?position:\s*absolute !important/
+    );
+    assert.match(
+      chat,
+      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?width:\s*48px !important/
+    );
+    assert.match(
+      chat,
+      /denizen-landscape #player-chat-header-actions \{[\s\S]*?max-width:\s*none !important/
+    );
+    assert.match(
+      chat,
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?pointer-events:\s*auto !important/
+    );
+    assert.match(mobile, /Fat corner ✕/);
+    assert.match(
+      mobile,
+      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?48px/
+    );
+  });
+
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=floorStrip2/);
-    assert.match(html, /mobile-controls\.js\?v=floorStrip2/);
+    assert.match(html, /player-chat\.js\?v=ipadClose1/);
+    assert.match(html, /mobile-controls\.js\?v=ipadClose1/);
   });
 
   it('HQ frame keeps its badge, clock, and level chip in a chrome row', () => {
