@@ -331,16 +331,13 @@
         justify-content: center;
       }
       /*
-       * Chat open: pin HQ to the top band and reserve the bottom for Floor Line
-       * so the sheet is always visible (mid-center + frame-bottom top was
-       * collapsing the panel when the HQ sat too low).
+       * Chat open: keep HQ vertically centered in the band above the Floor Line
+       * sheet. Chat itself is a bottom sheet with fixed height (player-chat.js),
+       * so mid-centering no longer collapses the panel.
        */
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: center;
-        justify-content: flex-start;
-        padding-top: calc(
-          var(--denizen-play-top, 0px) + max(6px, env(safe-area-inset-top, 0px))
-        );
+        justify-content: center;
         padding-bottom: calc(
           var(--denizen-dock-height, 48px)
           + min(38dvh, 280px)

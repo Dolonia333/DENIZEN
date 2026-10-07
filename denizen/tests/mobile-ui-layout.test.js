@@ -86,7 +86,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(html, /#game-container canvas \{[^}]*display:\s*block;/s);
   });
 
-  it('portrait phones center HQ mid-screen; chat-open pins HQ top for Floor Line', () => {
+  it('portrait phones keep HQ centered mid-screen even when chat is open', () => {
     const mobile = read('src/mobile-controls.js');
     assert.match(
       mobile,
@@ -98,7 +98,7 @@ describe('mobile UI layout fixes', () => {
     );
     assert.match(
       mobile,
-      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*flex-start/
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*center/
     );
     assert.match(
       mobile,
@@ -107,7 +107,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=chatSheet1/);
+    assert.match(html, /mobile-controls\.js\?v=chatSheet2/);
   });
 
   it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
@@ -173,8 +173,8 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=chatSheet1/);
-    assert.match(html, /mobile-controls\.js\?v=chatSheet1/);
+    assert.match(html, /player-chat\.js\?v=chatSheet2/);
+    assert.match(html, /mobile-controls\.js\?v=chatSheet2/);
   });
 
   it('Floor Line expands to the visual viewport when the soft keyboard opens', () => {
@@ -277,7 +277,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(scene, /isCompactPhone \? 2\.65 : 2\.5/);
     assert.match(html, /device-profile\.js\?v=mapFill10/);
     assert.match(html, /office-scene\.js\?v=mapFill10/);
-    assert.match(html, /mobile-controls\.js\?v=chatSheet1/);
+    assert.match(html, /mobile-controls\.js\?v=chatSheet2/);
   });
 
   it('portrait Floor Line is a bottom sheet with guaranteed height when chat opens', () => {
@@ -297,7 +297,7 @@ describe('mobile UI layout fixes', () => {
     );
     assert.match(
       mobile,
-      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*flex-start/
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*center/
     );
     assert.match(
       mobile,
