@@ -987,6 +987,7 @@ class PlayerChat {
     const extractJobBoard = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractJobBoardSearchIntent;
     const extractObserve = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractScreenObserveIntent;
     const extractScreenControl = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractScreenControlIntent;
+    const extractComputerUse = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractComputerUseIntent;
     const extractBrowserStatus = window.DenizenOpenClawDispatch?.extractBrowserStatusIntent;
     const extractOpenBrowser = window.DenizenOpenClawDispatch?.extractOpenBrowserIntent;
     const extractOpenBrave = window.DenizenOpenClawDispatch?.extractOpenBraveIntent;
@@ -1209,6 +1210,35 @@ class PlayerChat {
       }).catch(err => {
         this._addToLog('System', `Brave: ${err?.message || err}`);
         if (targetKey) this._refreshCeoConversationHold(targetKey, targetName, null);
+      });
+      return;
+    }
+
+    // Computer-use — Lucy's Playwright browser (Muse/Grok-style), not the CEO desktop.
+    const computerUseIntent = extractComputerUse
+      ? (extractComputerUse(trimmed) || extractComputerUse(normalized))
+      : null;
+    if (computerUseIntent && !searchQueryEarly) {
+      const cuNpc = targetName || 'Lucy';
+      this._updateTargetLabel(cuNpc);
+      if (targetKey) this._beginCeoConversation(targetKey, cuNpc, trimmed);
+      this._showPlayerBubble(trimmed);
+      this._addToLog(cuNpc, 'Driving my browser — open the browser mirror to watch…');
+      fetch('/api/computer-use', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          npcName: cuNpc,
+          instruction: computerUseIntent.instruction || trimmed,
+          url: computerUseIntent.url || null,
+          taskMode: 'general',
+        }),
+      }).then(r => r.json()).then(j => {
+        if (!j.ok) this._addToLog('System', j.error || 'Computer-use failed.');
+        if (targetKey) this._refreshCeoConversationHold(targetKey, cuNpc, null);
+      }).catch(err => {
+        this._addToLog('System', `Computer-use: ${err?.message || err}`);
+        if (targetKey) this._refreshCeoConversationHold(targetKey, cuNpc, null);
       });
       return;
     }

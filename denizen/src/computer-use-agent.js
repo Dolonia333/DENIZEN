@@ -3,14 +3,20 @@
  * Computer Use Agent
  *
  * Gives Lucy the ability to control a real browser — take screenshots,
- * click, type, scroll — using Claude's computer-use API, exactly the
- * same way Claude Code works.
+ * click, type, scroll — using Claude's computer-use API (or Kimi / LM Studio
+ * vision function-calling), in the same general style as Muse / Grok
+ * computer-use bots.
  *
  * Flow:
  *   1. Launch a VISIBLE stealth browser via shared browser-helpers (Playwright Chromium/Chrome/Edge).
- *   2. Loop: screenshot → Claude API (computer_use tool) → execute action.
- *   3. Broadcast progress events back to Denizen WS so Lucy animates.
- *   4. Leave browser open for 30s after finishing so user can review.
+ *   2. Mirror frames into the CEO browser-mirror panel (heartbeat + live JPEG/PNG).
+ *   3. Loop: screenshot → vision model (computer_use tool) → execute action.
+ *   4. Broadcast progress events back to Denizen WS so Lucy animates.
+ *   5. Leave browser open briefly after finishing so the CEO can review.
+ *
+ * taskMode:
+ *   - 'general'   — arbitrary browser tasks (chat / skill / API)
+ *   - 'job-apply' — form-fill only; never Submit/Apply (legacy job path)
  *
  * Requires:
  *   npm install playwright
@@ -370,6 +376,70 @@ async function _execute(page, input) {
   }
 }
 
+// ── prompts ───────────────────────────────────────────────────────────────
+
+/**
+ * Build the system prompt for a computer-use run.
+ * @param {{ instruction: string, profile?: object|null, taskMode?: string }} opts
+ */
+function buildSystemPrompt({ instruction, profile = null, taskMode = 'general' } = {}) {
+  const mode = String(taskMode || 'general').toLowerCase() === 'job-apply' ? 'job-apply' : 'general';
+  const profileLines = profile ? [
+    'Applicant profile (use when filling forms):',
+    `  Full Name:  ${profile.name || ''}`,
+    `  Email:      ${profile.email || '(leave blank if empty)'}`,
+    `  Phone:      ${profile.phone || '(leave blank if empty)'}`,
+    `  Location:   ${profile.location || ''}`,
+    `  LinkedIn:   ${profile.linkedin || ''}`,
+    `  GitHub:     ${profile.github || ''}`,
+    `  Portfolio:  ${profile.portfolio || ''}`,
+    `  Job Title:  ${profile.title || ''}`,
+    `  Summary:    ${profile.summary || ''}`,
+    `  Skills:     ${(profile.skills || []).slice(0, 10).join(', ')}`,
+    `  Years exp:  ${profile.autofillDefaults?.yearsExperience || '3+'}`,
+    `  Work auth:  ${profile.autofillDefaults?.workAuthorization || 'US Citizen'}`,
+    `  Sponsorship:${profile.autofillDefaults?.requiresSponsorship ? 'Yes' : 'No'}`,
+    `  Remote:     ${profile.autofillDefaults?.remotePreference || 'remote'}`,
+  ].join('\n') : '';
+
+  if (mode === 'job-apply') {
+    return [
+      'You are Lucy, an AI secretary controlling a real web browser.',
+      `Task: ${instruction}`,
+      '',
+      profileLines,
+      '',
+      'Rules:',
+      '- Always start with a screenshot to see the current page.',
+      '- Scroll down to find all form fields.',
+      '- Fill every field you can using the profile above.',
+      '- For cover letter / "Why do you want to work here?" fields, write 2-3 sentences.',
+      '- Do NOT click Submit or Apply — fill everything, then signal task_done.',
+      '- If you hit Cloudflare "Additional Verification Required", Turnstile, or a captcha, call task_blocked — tell the CEO to complete it in the browser window.',
+      '- Type slowly and scroll naturally — bot-like speed gets blocked.',
+    ].filter(Boolean).join('\n');
+  }
+
+  return [
+    'You are Lucy, Denizen\'s browser computer-use agent — same class of capability as Muse / Grok computer-use bots.',
+    'You control a real headed Playwright browser the CEO can watch in the live browser mirror.',
+    `Task: ${instruction}`,
+    '',
+    profileLines,
+    '',
+    'Rules:',
+    '- Always start with a screenshot to see the current page.',
+    '- Complete the task end-to-end: navigate, click, type, scroll, extract what you need.',
+    '- Prefer staying on the web page the CEO asked about; do not open unrelated sites.',
+    '- When filling forms, use the profile above if present; otherwise ask via task_blocked if required data is missing.',
+    '- Do NOT submit payments, purchases, or irreversible destructive actions unless the task explicitly says to.',
+    '- Job applications: do NOT click Submit/Apply unless the task explicitly says to submit.',
+    '- If you hit Cloudflare Turnstile, captcha, or a login wall you cannot pass, call task_blocked with a clear reason.',
+    '- When finished, call task_done with a short summary of what you did and what the CEO should know.',
+    '- Type at a natural pace; avoid bot-like bursts that trigger anti-automation.',
+  ].filter(Boolean).join('\n');
+}
+
 // ── main entry point ──────────────────────────────────────────────────────
 
 /**
@@ -380,8 +450,10 @@ async function _execute(page, input) {
  *   @param {string}   [opts.url]        Starting URL to navigate to
  *   @param {object}   [opts.profile]    User profile for form data
  *   @param {function} [opts.broadcast]  fn(wsMsg) to push events to the game
- *   @param {string}   [opts.provider]   'anthropic' | 'kimi' (auto-detects if omitted)
+ *   @param {string}   [opts.provider]   'anthropic' | 'kimi' | 'lmstudio' (auto-detects if omitted)
  *   @param {string}   [opts.apiKey]     Override API key
+ *   @param {string}   [opts.taskMode]   'general' | 'job-apply' (default general)
+ *   @param {boolean}  [opts.mirror]     Feed live frames to browser mirror (default true)
  * @returns {Promise<{ok:boolean, steps:number, provider:string, error?:string}>}
  */
 
@@ -424,7 +496,17 @@ function _loadProviders() {
   return out;
 }
 
-async function runBrowserTask({ instruction, url, profile, broadcast, provider, apiKey, browserMode } = {}) {
+async function runBrowserTask({
+  instruction,
+  url,
+  profile,
+  broadcast,
+  provider,
+  apiKey,
+  browserMode,
+  taskMode = 'general',
+  mirror = true,
+} = {}) {
   // Pick provider
   const providers = _loadProviders();
   if (apiKey) {
@@ -447,16 +529,20 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
   }
 
   const providerCfg = providers[chosenProvider];
-  console.log(`[ComputerUseAgent] Using provider: ${chosenProvider}`);
+  const mode = String(taskMode || 'general').toLowerCase() === 'job-apply' ? 'job-apply' : 'general';
+  console.log(`[ComputerUseAgent] Using provider: ${chosenProvider} mode=${mode}`);
 
   const emit = (msg) => { try { if (typeof broadcast === 'function') broadcast(msg); } catch (_) {} };
 
   emit({ type: 'computer_use_status', status: 'starting', provider: chosenProvider, message: 'Lucy is opening a browser...' });
-  console.log('[ComputerUseAgent] Starting task:', instruction.slice(0, 80));
+  console.log('[ComputerUseAgent] Starting task:', String(instruction || '').slice(0, 80));
 
   let context, contextKey, page, browserEngine, cloudflareChallenge;
+  let stopMirror = null;
+  let helpers = null;
   try {
-    const { launchJobBrowser, formatBrowserLabel, closeBrowser } = await _loadBrowserHelpers();
+    helpers = await _loadBrowserHelpers();
+    const { launchJobBrowser, formatBrowserLabel, closeBrowser } = helpers;
     const session = await launchJobBrowser({
       url: url || null,
       headless: false,
@@ -467,6 +553,41 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
     page = session.page;
     browserEngine = session.browserEngine;
     cloudflareChallenge = session.cloudflareChallenge;
+
+    // Own the CEO browser-mirror slot so the dock panel shows this session live.
+    try {
+      global._activeBrowserNpc = 'lucy';
+      global._lucyBrowserOpen = true;
+      global._lucyLastBrowser = {
+        label: formatBrowserLabel(browserEngine),
+        url: url || null,
+        query: String(instruction || '').slice(0, 120),
+        engine: browserEngine,
+        at: Date.now(),
+        kind: 'computer-use',
+      };
+    } catch (_) {}
+
+    if (mirror !== false && helpers.startMirrorStream) {
+      try {
+        helpers.writeMirrorState?.({
+          status: 'computer-use',
+          streaming: true,
+          npcKey: 'lucy',
+          query: String(instruction || '').slice(0, 160),
+          url: url || null,
+          browserEngine,
+          lastActivity: 'Computer-use starting…',
+        });
+        helpers.appendMirrorActivity?.(`Computer-use: ${String(instruction || '').slice(0, 120)}`);
+        stopMirror = helpers.startMirrorStream(() => page, { intervalMs: 200 });
+        emit({ type: 'npc_browser_mirror', npcKey: 'lucy', open: true, streaming: true, status: 'computer-use', ts: Date.now() });
+        emit({ type: 'lucy_browser_mirror', npcKey: 'lucy', open: true, streaming: true, status: 'computer-use', ts: Date.now() });
+      } catch (mirrorErr) {
+        console.warn('[ComputerUseAgent] Mirror stream failed:', mirrorErr?.message || mirrorErr);
+      }
+    }
+
     emit({
       type: 'computer_use_status',
       status: 'navigating',
@@ -478,8 +599,13 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
       const ray = cloudflareChallenge.rayId ? ` Ray ID ${cloudflareChallenge.rayId}` : '';
       const msg = `Cloudflare is blocking this application page.${ray} Complete verification in Lucy's browser window, then ask her to retry.`;
       emit({ type: 'computer_use_status', status: 'blocked', message: msg });
+      if (typeof stopMirror === 'function') {
+        try { stopMirror(); } catch (_) {}
+        stopMirror = null;
+      }
       setTimeout(async () => {
         try { await closeBrowser(context, { key: contextKey }); } catch (_) {}
+        try { global._lucyBrowserOpen = false; } catch (_) {}
       }, APPLY_LINGER_MS);
       return { ok: false, error: msg, browserEngine, cloudflareChallenge };
     }
@@ -487,47 +613,14 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
     return { ok: false, error: 'Browser launch failed: ' + (err?.message || err) };
   }
 
-  // ── system prompt (same for both providers) ───────────────────────────
-  const profileLines = profile ? [
-    'Fill every form field using this profile:',
-    `  Full Name:  ${profile.name || ''}`,
-    `  Email:      ${profile.email || '(leave blank if empty)'}`,
-    `  Phone:      ${profile.phone || '(leave blank if empty)'}`,
-    `  Location:   ${profile.location || ''}`,
-    `  LinkedIn:   ${profile.linkedin || ''}`,
-    `  GitHub:     ${profile.github || ''}`,
-    `  Portfolio:  ${profile.portfolio || ''}`,
-    `  Job Title:  ${profile.title || ''}`,
-    `  Summary:    ${profile.summary || ''}`,
-    `  Skills:     ${(profile.skills || []).slice(0, 10).join(', ')}`,
-    `  Years exp:  ${profile.autofillDefaults?.yearsExperience || '3+'}`,
-    `  Work auth:  ${profile.autofillDefaults?.workAuthorization || 'US Citizen'}`,
-    `  Sponsorship:${profile.autofillDefaults?.requiresSponsorship ? 'Yes' : 'No'}`,
-    `  Remote:     ${profile.autofillDefaults?.remotePreference || 'remote'}`,
-  ].join('\n') : '';
-
-  const systemPrompt = [
-    'You are Lucy, an AI secretary controlling a real web browser.',
-    `Task: ${instruction}`,
-    '',
-    profileLines,
-    '',
-    'Rules:',
-    '- Always start with a screenshot to see the current page.',
-    '- Scroll down to find all form fields.',
-    '- Fill every field you can using the profile above.',
-    '- For cover letter / "Why do you want to work here?" fields, write 2-3 sentences.',
-    '- Do NOT click Submit or Apply — fill everything, then signal task_done.',
-    '- If you hit Cloudflare "Additional Verification Required", Turnstile, or a captcha, call task_blocked — tell the CEO to complete it in the browser window.',
-    '- Type slowly and scroll naturally — bot-like speed gets blocked.',
-  ].filter(Boolean).join('\n');
+  const systemPrompt = buildSystemPrompt({ instruction, profile, taskMode: mode });
 
   // ── conversation loop ─────────────────────────────────────────────────
   const messages = [];
   let lastActions = [];  // track last round's actions for tool_result attachment
   let steps = 0;
   let done = false;
-  let result = { ok: true, steps: 0, provider: chosenProvider, browserEngine };
+  let result = { ok: true, steps: 0, provider: chosenProvider, browserEngine, taskMode: mode };
 
   while (steps < MAX_STEPS && !done) {
     steps++;
@@ -612,6 +705,9 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
       const actionLabel = inp.action + (inp.text ? ': ' + String(inp.text).slice(0, 40) : '');
       console.log(`[ComputerUseAgent]  → ${actionLabel}`);
       emit({ type: 'computer_use_status', status: 'acting', step: steps, message: actionLabel });
+      try {
+        helpers?.appendMirrorActivity?.(actionLabel);
+      } catch (_) {}
       try { await _execute(page, inp); } catch (err) {
         console.warn('[ComputerUseAgent] Action error:', err.message);
       }
@@ -630,17 +726,30 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
   try {
     const finalBuf = await page.screenshot({ type: 'png' });
     emit({ type: 'computer_use_final_screenshot', data: finalBuf.toString('base64'), steps });
+    helpers?.appendMirrorActivity?.(`Computer-use done (${steps} steps)`);
+    helpers?.writeMirrorState?.({
+      status: result.ok ? 'open' : 'error',
+      streaming: true,
+      lastActivity: `Computer-use done (${steps} steps)`,
+    });
   } catch (_) {}
 
   // Leave browser open so the CEO can review / complete CF challenges, then close
   setTimeout(async () => {
+    if (typeof stopMirror === 'function') {
+      try { stopMirror(); } catch (_) {}
+    }
     try {
-      const { closeBrowser } = await _loadBrowserHelpers();
+      const { closeBrowser } = helpers || await _loadBrowserHelpers();
       await closeBrowser(context, { key: contextKey });
+    } catch (_) {}
+    try {
+      global._lucyBrowserOpen = false;
+      helpers?.clearLiveHeartbeat?.();
     } catch (_) {}
   }, APPLY_LINGER_MS);
 
   return result;
 }
 
-module.exports = { runBrowserTask };
+module.exports = { runBrowserTask, buildSystemPrompt };

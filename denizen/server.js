@@ -141,6 +141,7 @@ const { getRfpPipelineSummary } = require('./src/federal-pipeline');
 const mirofishPrediction = require('./src/mirofish-prediction');
 const pcActivity = require('./src/pc-activity-tracker');
 const jobApplication = require('./src/job-application');
+const computerUseAgent = require('./src/computer-use-agent');
 const jobCrm         = require('./src/job-crm');
 const desktopAgent = require('./src/desktop-agent');
 const desktopPermissionBridge = require('./src/desktop-permission-bridge');
@@ -229,6 +230,7 @@ const {
   extractBareSearchTopic,
   extractScreenObserveIntent,
   extractScreenControlIntent,
+  extractComputerUseIntent,
   extractJobBoardSearchIntent,
   extractBrowserStatusIntent,
   extractOpenBrowserIntent,
@@ -5733,6 +5735,95 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Computer-use (Lucy drives her Playwright browser — Muse/Grok-style) ---
+  if (urlPath === '/api/computer-use' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const instruction = String(payload.instruction || payload.task || '').trim();
+      if (!instruction) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'instruction required' }));
+        return;
+      }
+      const broadcast = (msg) => {
+        const raw = JSON.stringify(msg);
+        (agentWss ? agentWss.clients : new Set()).forEach((c) => {
+          if (c.readyState === 1) c.send(raw);
+        });
+        try {
+          cofounderAgent?.wsClients?.forEach?.((ws) => {
+            if (ws.readyState === 1) ws.send(raw);
+          });
+        } catch (_) {}
+      };
+      const npcName = String(payload.npcName || 'Lucy');
+      const taskMode = String(payload.taskMode || 'general').toLowerCase() === 'job-apply'
+        ? 'job-apply'
+        : 'general';
+      const act = pcActivity.record({
+        npc: npcName,
+        kind: 'computer-use',
+        task: instruction.slice(0, 240),
+        mode: 'visible',
+        status: 'started',
+      });
+      const t0 = Date.now();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        async: true,
+        note: `${npcName} is running computer-use — watch the browser mirror.`,
+      }));
+      computerUseAgent.runBrowserTask({
+        instruction,
+        url: payload.url || null,
+        profile: payload.profile || null,
+        broadcast,
+        provider: payload.provider || null,
+        browserMode: payload.browserMode || process.env.LUCY_BROWSER_MODE || 'auto',
+        taskMode,
+        mirror: payload.mirror !== false,
+      }).then((result) => {
+        pcActivity.record({
+          id: act.id,
+          npc: npcName,
+          kind: 'computer-use',
+          task: act.task,
+          mode: 'visible',
+          status: result?.ok ? 'done' : 'failed',
+          durationMs: Date.now() - t0,
+          detail: String(result?.error || `steps=${result?.steps || 0}`).slice(0, 240),
+        });
+        try {
+          npcBrains.injectSkillResult(
+            npcName,
+            'computer-use',
+            result?.ok
+              ? `Computer-use finished in ${result.steps || 0} steps.`
+              : `Computer-use failed: ${result?.error || 'unknown'}`,
+          );
+        } catch (_) {}
+      }).catch((err) => {
+        pcActivity.record({
+          id: act.id,
+          npc: npcName,
+          kind: 'computer-use',
+          task: act.task,
+          mode: 'visible',
+          status: 'failed',
+          durationMs: Date.now() - t0,
+          detail: String(err?.message || err).slice(0, 240),
+        });
+        console.error('[computer-use] error:', err?.message);
+      });
+    });
+    return;
+  }
+
   // --- Bouncer investigation proxy (dolonia agent) ---
   if (urlPath === '/api/bouncer-investigate' && req.method === 'POST') {
     if (!bouncerInvestigation.validateInvestigationAuth(req)) {
@@ -6028,9 +6119,9 @@ const server = http.createServer((req, res) => {
         try { payload = JSON.parse(body || '{}'); } catch (_) {}
         const type = String(payload.type || '').toLowerCase();
         const activeKey = normalizeNpcKey(global._activeBrowserNpc || 'lucy');
-        if (!['scroll', 'click'].includes(type)) {
+        if (!['scroll', 'click', 'type', 'key'].includes(type)) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: false, error: 'type must be scroll or click' }));
+          res.end(JSON.stringify({ ok: false, error: 'type must be scroll, click, type, or key' }));
           return;
         }
         if (!_lucyBrowserChildAlive() || activeKey !== normalizeNpcKey(npcKey)) {
@@ -6049,10 +6140,22 @@ const server = http.createServer((req, res) => {
           y: Number(payload.y),
           deltaX: Number(payload.deltaX) || 0,
           deltaY: Number(payload.deltaY) || 0,
+          text: payload.text != null ? String(payload.text) : undefined,
+          key: payload.key != null ? String(payload.key) : undefined,
         };
         if (type === 'click' && (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y))) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ ok: false, error: 'click requires x and y' }));
+          return;
+        }
+        if (type === 'type' && !cmd.text) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'type requires text' }));
+          return;
+        }
+        if (type === 'key' && !(cmd.key || cmd.text)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'key requires key' }));
           return;
         }
         const queued = _writeBrowserInputCommand(cmd);
@@ -6131,7 +6234,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // POST /api/lucy-browser/input — remote scroll / tap on Lucy's open Playwright page
+  // POST /api/lucy-browser/input — remote scroll / tap / type on Lucy's open Playwright page
   if (urlPath === '/api/lucy-browser/input' && req.method === 'POST') {
     let body = '';
     req.on('data', (c) => { body += c; });
@@ -6139,9 +6242,9 @@ const server = http.createServer((req, res) => {
       let payload = {};
       try { payload = JSON.parse(body || '{}'); } catch (_) {}
       const type = String(payload.type || '').toLowerCase();
-      if (!['scroll', 'click'].includes(type)) {
+      if (!['scroll', 'click', 'type', 'key'].includes(type)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'type must be scroll or click' }));
+        res.end(JSON.stringify({ ok: false, error: 'type must be scroll, click, type, or key' }));
         return;
       }
       if (!_lucyBrowserChildAlive()) {
@@ -6156,10 +6259,22 @@ const server = http.createServer((req, res) => {
         y: Number(payload.y),
         deltaX: Number(payload.deltaX) || 0,
         deltaY: Number(payload.deltaY) || 0,
+        text: payload.text != null ? String(payload.text) : undefined,
+        key: payload.key != null ? String(payload.key) : undefined,
       };
       if (type === 'click' && (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y))) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: false, error: 'click requires x and y' }));
+        return;
+      }
+      if (type === 'type' && !cmd.text) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'type requires text' }));
+        return;
+      }
+      if (type === 'key' && !(cmd.key || cmd.text)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'key requires key' }));
         return;
       }
       const queued = _writeBrowserInputCommand(cmd);
@@ -12523,6 +12638,53 @@ agentWss.on('connection', (ws) => {
               }
             })
             .catch((err) => console.error('[open-brave] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Computer-use — Lucy's Playwright browser (Muse/Grok-style), not the CEO desktop.
+        const computerUseIntent = !hasChatAttachments && !blockBrowserForCrm
+          ? (extractComputerUseIntent(playerText) || extractComputerUseIntent(normPlayerText) || extractComputerUseIntent(rawPlayerText))
+          : null;
+        if (computerUseIntent && !searchQuery) {
+          if (blockDemoTools()) return;
+          const cuNpc = npcName === 'Lucy' || !npcName ? 'Lucy' : npcName;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName: cuNpc,
+            text: `On it — driving my browser now. Open the browser mirror to watch.`,
+            delegation: null, actions: [],
+          }));
+          const cuAct = pcActivity.record({
+            npc: cuNpc, kind: 'computer-use',
+            task: computerUseIntent.instruction.slice(0, 240),
+            mode: 'visible', status: 'started',
+          });
+          const cuStart = Date.now();
+          computerUseAgent.runBrowserTask({
+            instruction: computerUseIntent.instruction,
+            url: computerUseIntent.url,
+            broadcast: _broadcast,
+            taskMode: 'general',
+            mirror: true,
+            browserMode: process.env.LUCY_BROWSER_MODE || 'auto',
+          }).then((result) => {
+            pcActivity.record({
+              id: cuAct.id, npc: cuNpc, kind: 'computer-use',
+              task: cuAct.task, mode: 'visible',
+              status: result?.ok ? 'done' : 'failed',
+              durationMs: Date.now() - cuStart,
+              detail: String(result?.error || `steps=${result?.steps || 0}`).slice(0, 240),
+            });
+          }).catch((err) => {
+            pcActivity.record({
+              id: cuAct.id, npc: cuNpc, kind: 'computer-use',
+              task: cuAct.task, mode: 'visible', status: 'failed',
+              durationMs: Date.now() - cuStart,
+              detail: String(err?.message || err).slice(0, 240),
+            });
+            console.error('[computer-use] chat error:', err?.message);
+          });
           global._npcStats.playerChatSucceeded++;
           return;
         }

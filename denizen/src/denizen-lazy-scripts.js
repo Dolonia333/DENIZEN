@@ -77,7 +77,7 @@
         './src/voice-input.js?v=voicevc4buzz',
         './src/llm-telemetry-panel.js?v=lmfix8',
         './src/mesh-jobs-panel.js?v=mesh2',
-        './src/browser-mirror-panel.js?v=lucymirror6',
+        './src/browser-mirror-panel.js?v=lucymirror7',
         './src/diag.js?v=diag2',
         './src/security-feed.js?v=sec2',
       ]);

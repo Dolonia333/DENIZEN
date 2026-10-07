@@ -788,6 +788,36 @@
     };
     viewport.addEventListener('pointerup', endPointer, { capture: true });
     viewport.addEventListener('pointercancel', endPointer, { capture: true });
+
+    // Keyboard: when the viewport is focused, forward keys into Lucy's browser.
+    if (!viewport.hasAttribute('tabindex')) viewport.setAttribute('tabindex', '0');
+    viewport.addEventListener('keydown', (e) => {
+      if (!canControlBrowser()) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key.length === 1) {
+        sendBrowserInput({ type: 'type', text: e.key });
+        return;
+      }
+      const map = {
+        Enter: 'Enter',
+        Backspace: 'Backspace',
+        Tab: 'Tab',
+        Escape: 'Escape',
+        ArrowUp: 'ArrowUp',
+        ArrowDown: 'ArrowDown',
+        ArrowLeft: 'ArrowLeft',
+        ArrowRight: 'ArrowRight',
+        Delete: 'Delete',
+        Home: 'Home',
+        End: 'End',
+        PageUp: 'PageUp',
+        PageDown: 'PageDown',
+      };
+      const key = map[e.key];
+      if (key) sendBrowserInput({ type: 'key', key });
+    }, { capture: true });
   }
 
   function dockBottomInset() {
