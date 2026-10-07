@@ -101,6 +101,6 @@ describe('Living-office furniture & social behaviors', () => {
     const html = read('index.html');
     assert.match(html, /agent-actions\.js\?v=bubbleChip4/);
     assert.match(html, /agent-office-manager\.js\?v=headTrack1/);
-    assert.match(html, /floor-strip\.js\?v=mapSpace3/);
+    assert.match(html, /floor-strip\.js\?v=mapSpace4/);
   });
 });

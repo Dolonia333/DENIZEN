@@ -77,16 +77,17 @@
         color: #94a3b8;
       }
       /*
-       * Touch: sit under the HQ frame as a thin caption — not a second chat
-       * panel. NPC speech bubbles over sprites are unchanged (agent-actions).
+       * Touch: one thin caption under the map canvas (still inside #game-frame
+       * so body row-flex does not park it beside the HQ). NPC speech bubbles
+       * over sprites are unchanged (agent-actions).
        */
       html.denizen-touch #${STRIP_ID} {
-        width: min(100%, var(--denizen-floor-strip-w, 100%));
-        min-width: 0;
-        max-width: min(100%, calc(100dvw - 16px));
-        margin: 4px auto 0;
+        width: 0;
+        min-width: 100%;
+        max-width: 100%;
+        margin: 2px 0 0;
         gap: 0;
-        align-self: center;
+        flex: 0 0 auto;
       }
       html.denizen-touch #${STRIP_ID} .dz-floor-line {
         font-size: 10px;
@@ -114,8 +115,7 @@
       /* One caption line under the map on all touch sizes */
       html.denizen-touch #${STRIP_ID} .dz-floor-line:nth-child(n+2) { display: none; }
       html.denizen-touch.denizen-landscape #${STRIP_ID} {
-        margin-top: 2px;
-        max-width: min(520px, calc(100dvw - 24px));
+        margin-top: 1px;
       }
     `;
     document.head.appendChild(s);
@@ -124,33 +124,38 @@
   function ensureStrip() {
     injectStyles();
     let el = document.getElementById(STRIP_ID);
+    const frame = document.getElementById('game-frame');
+    const map = document.getElementById('game-container');
     if (el) {
-      // Prefer under the HQ frame (not inside it) so the map chrome stays tight.
-      const frame = document.getElementById('game-frame');
-      if (frame && el.parentElement === frame) {
-        frame.insertAdjacentElement('afterend', el);
+      // Keep under the map canvas inside the HQ frame (body is row-flex).
+      if (frame && el.parentElement !== frame) {
+        if (map && map.parentElement === frame) map.insertAdjacentElement('afterend', el);
+        else frame.appendChild(el);
+      } else if (frame && map && map.parentElement === frame && el.previousElementSibling !== map) {
+        map.insertAdjacentElement('afterend', el);
       }
       return el;
     }
-    const frame = document.getElementById('game-frame');
-    if (!frame || !frame.parentElement) return null;
+    if (!frame) return null;
     el = document.createElement('div');
     el.id = STRIP_ID;
     el.setAttribute('role', 'log');
     el.setAttribute('aria-label', 'Floor conversation');
-    frame.insertAdjacentElement('afterend', el);
+    if (map && map.parentElement === frame) map.insertAdjacentElement('afterend', el);
+    else frame.appendChild(el);
     return el;
   }
 
   function normalize(raw) {
     const text = String(raw?.text || '').replace(/\s+/g, ' ').trim();
     if (!text) return null;
+    const from = String(raw.from || raw.name || 'Someone').trim() || 'Someone';
     return {
-      from: String(raw.from || 'Someone').trim() || 'Someone',
+      from,
       to: String(raw.to || '').trim(),
       text: text.slice(0, 180),
       npcKey: raw.npcKey || '',
-      npcName: raw.npcName || raw.from || '',
+      npcName: raw.npcName || raw.name || raw.from || '',
       kind: raw.kind || 'say',
       at: Date.now(),
     };
@@ -189,14 +194,6 @@
       if (!line || line.kind === 'quiet') return;
       btn.addEventListener('click', () => openLine(line));
     });
-    // Match caption width to the HQ frame when possible
-    try {
-      const frame = document.getElementById('game-frame');
-      const w = frame?.getBoundingClientRect?.().width;
-      if (w > 40) {
-        document.documentElement.style.setProperty('--denizen-floor-strip-w', `${Math.round(w)}px`);
-      }
-    } catch (_) {}
   }
 
   function openLine(line) {

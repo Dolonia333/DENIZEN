@@ -155,8 +155,8 @@
         --denizen-vv-h: 100dvh;
         --denizen-play-top: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 2px;
-        /* Slim chrome: pad + HQ label row (floor caption sits outside the frame) */
-        --denizen-frame-chrome: 40px;
+        /* Slim chrome: pad + HQ label row + thin floor caption under the map */
+        --denizen-frame-chrome: 48px;
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
           var(--denizen-vv-h) - var(--denizen-dock-height, 48px) - var(--denizen-play-top)

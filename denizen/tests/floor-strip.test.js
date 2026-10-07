@@ -12,12 +12,13 @@ function read(rel) {
 }
 
 describe('floor conversation strip', () => {
-  it('keeps lines under the frame and opens the matching thread', () => {
+  it('keeps lines under the map canvas and opens the matching thread', () => {
     const strip = read('src/floor-strip.js');
     assert.match(strip, /STRIP_ID = 'denizen-floor-strip'/);
     assert.match(strip, /openWithNpc\(key, name, \{ walk: false \}\)/);
-    assert.match(strip, /insertAdjacentElement\('afterend'/);
+    assert.match(strip, /map\.insertAdjacentElement\('afterend'/);
     assert.match(strip, /has-lines/);
+    assert.match(strip, /raw\.from \|\| raw\.name/);
     assert.doesNotMatch(strip, /The floor is quiet/);
     const actions = read('src/agent-actions.js');
     assert.match(actions, /DenizenFloorStrip\?\.push/);

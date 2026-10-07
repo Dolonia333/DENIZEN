@@ -99,7 +99,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapSpace3/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace4/);
   });
 
   it('landscape Floor Line is a compact right floating card so the HQ map stays large', () => {
@@ -121,7 +121,7 @@ describe('mobile UI layout fixes', () => {
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?right:\s*max\(8px/
     );
     assert.match(mobile, /Landscape Floor Line: compact floating card/);
-    assert.match(mobile, /--denizen-frame-chrome:\s*28px/);
+    assert.match(mobile, /html\.denizen-touch\.denizen-landscape \{[\s\S]*?--denizen-frame-chrome:\s*28px/);
     assert.match(
       chat,
       /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
@@ -165,21 +165,22 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=mapSpace3/);
-    assert.match(html, /mobile-controls\.js\?v=mapSpace3/);
+    assert.match(html, /player-chat\.js\?v=mapSpace4/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace4/);
   });
 
-  it('phones reclaim map real estate; floor caption is a thin one-line strip under the frame', () => {
+  it('phones reclaim map real estate; floor caption is a thin one-line strip under the map', () => {
     const mobile = read('src/mobile-controls.js');
     const strip = read('src/floor-strip.js');
     const html = read('index.html');
     assert.match(mobile, /html\.denizen-touch\.denizen-phone \{[\s\S]*?--denizen-frame-chrome:\s*32px/);
     assert.match(html, /--dz-floor-strip-h:\s*28px/);
-    assert.match(strip, /insertAdjacentElement\('afterend'/);
+    assert.match(strip, /map\.insertAdjacentElement\('afterend'/);
     assert.match(strip, /html\.denizen-touch #\$\{STRIP_ID\} \.dz-floor-line:nth-child\(n\+2\)/);
     assert.match(strip, /:not\(\.has-lines\) \{ display: none !important/);
     assert.match(strip, /kind-quiet \{ display: none !important/);
-    assert.match(strip, /NPC speech bubbles over sprites are unchanged/);
+    assert.match(strip, /speech bubbles .* are separate/i);
+    assert.match(strip, /raw\.from \|\| raw\.name/);
     assert.match(html, /denizen-touch\.denizen-phone #game-frame \.dz-frame-label/);
   });
 
