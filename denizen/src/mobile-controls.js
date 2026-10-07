@@ -175,11 +175,12 @@
         --denizen-frame-chrome: 32px;
       }
 
-      /* Landscape: notch is on the sides — reclaim vertical space hard */
+      /* Landscape: notch is on the sides — reclaim vertical space hard.
+       * Frame chrome overlays the map (see index.html) so chrome budget is tiny. */
       html.denizen-touch.denizen-landscape {
         --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
-        --denizen-frame-chrome: 20px;
+        --denizen-frame-chrome: 18px; /* thin floor caption under map only */
       }
 
       html.denizen-touch body {
@@ -225,7 +226,10 @@
 
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
-        /* Fill the HQ box — spend nearly all of the short viewport on the map */
+        /*
+         * Fill the HQ play rect edge-to-edge (not a 16:9 letterbox inside a
+         * taller middle). Canvas is cover-scaled in coverLandscapeCanvas().
+         */
         --denizen-play-w: calc(
           100dvw
           - max(4px, env(safe-area-inset-left, 0px))
@@ -240,10 +244,20 @@
           - var(--denizen-frame-chrome)
           - 2px
         );
-        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
-        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
+        width: var(--denizen-play-w) !important;
+        height: var(--denizen-play-h) !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
         margin: 0 auto;
         flex: 0 0 auto;
+        overflow: hidden;
+        position: relative;
+      }
+      html.denizen-touch.denizen-landscape #game-container canvas {
+        /* Cover math applied in JS (inline !important); don't force 100% stretch */
+        width: auto !important;
+        height: auto !important;
       }
 
       /* Portrait phones: 16:9 map floats mid-screen over the city (centered). */
@@ -901,10 +915,7 @@
 
   function installKeyboardViewportSync() {
     const vv = window.visualViewport;
-    const sync = () => {
-      syncVisualViewport();
-      syncGameFrameBottom();
-    };
+    const sync = () => syncPlayfieldLayout();
     if (vv) {
       vv.addEventListener('resize', sync);
       vv.addEventListener('scroll', sync);
@@ -921,6 +932,43 @@
     document.documentElement.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
   }
 
+  /**
+   * Landscape: scale the 1280×720 canvas with object-fit:cover so the office
+   * fills the HQ box (no dark letterbox bands inside the frame).
+   */
+  function coverLandscapeCanvas() {
+    const root = document.documentElement;
+    const box = document.getElementById('game-container');
+    const canvas = box?.querySelector?.('canvas');
+    if (!box || !canvas) return;
+    const landscape = root.classList.contains('denizen-touch')
+      && root.classList.contains('denizen-landscape');
+    if (!landscape) {
+      canvas.style.removeProperty('width');
+      canvas.style.removeProperty('height');
+      canvas.style.removeProperty('left');
+      canvas.style.removeProperty('top');
+      return;
+    }
+    const bw = box.clientWidth;
+    const bh = box.clientHeight;
+    if (bw < 40 || bh < 40) return;
+    const scale = Math.max(bw / 1280, bh / 720);
+    const cw = Math.round(1280 * scale);
+    const ch = Math.round(720 * scale);
+    canvas.style.setProperty('position', 'absolute', 'important');
+    canvas.style.setProperty('width', `${cw}px`, 'important');
+    canvas.style.setProperty('height', `${ch}px`, 'important');
+    canvas.style.setProperty('left', `${Math.round((bw - cw) / 2)}px`, 'important');
+    canvas.style.setProperty('top', `${Math.round((bh - ch) / 2)}px`, 'important');
+  }
+
+  function syncPlayfieldLayout() {
+    syncVisualViewport();
+    syncGameFrameBottom();
+    coverLandscapeCanvas();
+  }
+
   function boot() {
     injectStyles();
     buildRotateHint();
@@ -930,27 +978,28 @@
     removeCeoUiArtifacts();
     installKeyboardViewportSync();
     syncLayoutClasses();
-    syncGameFrameBottom();
+    syncPlayfieldLayout();
 
     window.addEventListener('orientationchange', () => {
       setTimeout(() => {
         syncLayoutClasses();
-        syncGameFrameBottom();
+        syncPlayfieldLayout();
         try { window.game?.scale?.refresh?.(); } catch (_) {}
       }, 120);
       setTimeout(() => {
-        syncGameFrameBottom();
+        syncPlayfieldLayout();
         try { window.game?.scale?.refresh?.(); } catch (_) {}
       }, 400);
     });
     window.addEventListener('resize', () => {
       syncLayoutClasses();
-      syncGameFrameBottom();
+      syncPlayfieldLayout();
       try { window.game?.scale?.refresh?.(); } catch (_) {}
     });
-    // Phaser may resize the canvas a beat after first paint
-    setTimeout(syncGameFrameBottom, 250);
-    setTimeout(syncGameFrameBottom, 1000);
+    // Phaser may create/resize the canvas a beat after first paint
+    setTimeout(syncPlayfieldLayout, 250);
+    setTimeout(syncPlayfieldLayout, 1000);
+    setTimeout(syncPlayfieldLayout, 2500);
 
     console.log('[MobilePlay] touch controls ready — portrait and landscape supported');
   }
@@ -964,6 +1013,8 @@
   window.DenizenMobilePlay = {
     syncLayout: syncLayoutClasses,
     syncGameFrameBottom,
+    coverLandscapeCanvas,
+    syncPlayfieldLayout,
     isTouch: () => true,
     isPhoneLike,
     useTapMove,

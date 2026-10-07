@@ -99,7 +99,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapSpace5/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill2/);
   });
 
   it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
@@ -121,7 +121,7 @@ describe('mobile UI layout fixes', () => {
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?right:\s*auto !important/
     );
     assert.match(mobile, /Landscape Floor Line: compact floating card on the LEFT/);
-    assert.match(mobile, /html\.denizen-touch\.denizen-landscape \{[\s\S]*?--denizen-frame-chrome:\s*20px/);
+    assert.match(mobile, /html\.denizen-touch\.denizen-landscape \{[\s\S]*?--denizen-frame-chrome:\s*18px/);
     assert.match(
       chat,
       /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
@@ -166,7 +166,7 @@ describe('mobile UI layout fixes', () => {
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
     assert.match(html, /player-chat\.js\?v=mapSpace5/);
-    assert.match(html, /mobile-controls\.js\?v=mapSpace5/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill2/);
   });
 
   it('phones reclaim map real estate; floor caption is a thin one-line strip under the map', () => {
@@ -209,15 +209,21 @@ describe('mobile UI layout fixes', () => {
     assert.match(actions, /Nudge up when another live bubble/);
   });
 
-  it('landscape HQ frame hugs the map; tablet zoom fills the box', () => {
+  it('landscape HQ map fills the play rect with cover-scaled canvas', () => {
     const html = read('index.html');
+    const mobile = read('src/mobile-controls.js');
     const profile = read('src/device-profile.js');
     const scene = read('office-scene.js');
-    assert.match(html, /frame hugs the map/);
-    assert.match(html, /dz-frame-chrome \{[\s\S]*?width:\s*0;/);
-    assert.match(profile, /isLandscape \? 2\.2/);
-    assert.match(scene, /isLandscape \? 2\.2/);
-    assert.match(html, /device-profile\.js\?v=mapFill1/);
-    assert.match(html, /office-scene\.js\?v=mapFill1/);
+    assert.match(html, /chrome overlays so the office fills the box/);
+    assert.match(html, /position:\s*absolute/);
+    assert.match(mobile, /coverLandscapeCanvas/);
+    assert.match(mobile, /width: var\(--denizen-play-w\) !important/);
+    assert.match(mobile, /height: var\(--denizen-play-h\) !important/);
+    assert.match(mobile, /object-fit:cover/);
+    assert.match(profile, /isLandscape \? 2\.55/);
+    assert.match(scene, /isLandscape \? 2\.55/);
+    assert.match(html, /device-profile\.js\?v=mapFill2/);
+    assert.match(html, /office-scene\.js\?v=mapFill2/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill2/);
   });
 });
