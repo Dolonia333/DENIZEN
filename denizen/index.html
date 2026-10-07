@@ -505,13 +505,26 @@
       html[data-denizen-modal="open"] #denizen-tod-hud {
         display: none !important;
       }
-      /* No inset border — canvas meets the blue corner brackets */
+      /* No inset border/shadow — canvas meets the blue corner brackets */
       html.denizen-touch #game-container {
-        max-width: none;
-        max-height: none;
-        border: none;
-        outline: none;
-        border-radius: 0;
+        max-width: none !important;
+        max-height: none !important;
+        border: none !important;
+        outline: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+      }
+      /* Portrait: frame is exactly the map — no padding, no extra in-flow chrome */
+      html.denizen-touch.denizen-portrait #game-frame {
+        padding: 0 !important;
+        width: fit-content;
+        height: fit-content;
+        align-items: stretch;
+      }
+      html.denizen-touch.denizen-portrait #game-container {
+        display: block;
+        flex: 0 0 auto;
       }
     </style>
     <script>
@@ -537,6 +550,20 @@
         } catch (_) {
           window.__DenizenIsTouch = force === true;
         }
+        // Apply touch layout classes before first paint so the HQ map meets the
+        // corner brackets (no desktop frame padding flash / gutters).
+        try {
+          var root = document.documentElement;
+          if (window.__DenizenIsTouch) {
+            root.classList.add('denizen-touch');
+            root.classList.add(
+              window.innerWidth > window.innerHeight ? 'denizen-landscape' : 'denizen-portrait'
+            );
+            if (Math.min(window.innerWidth, window.innerHeight) < 520) {
+              root.classList.add('denizen-phone');
+            }
+          }
+        } catch (_) {}
       })();
     </script>
     <script>
@@ -732,7 +759,7 @@
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=dedupe1" defer></script>
     <!-- Agent Office System -->
-    <script src="./src/floor-strip.js?v=mapFill9" defer></script>
+    <script src="./src/floor-strip.js?v=mapFill10" defer></script>
     <script src="./src/agent-actions.js?v=bubbleChip6" defer></script>
     <script src="./src/agent-office-manager.js?v=headTrack1" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
@@ -744,9 +771,9 @@
     <!-- Mobile haptics (tap / impact / notify vibration patterns) -->
     <script src="./src/mobile-haptics.js?v=mobplay2" defer></script>
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
-    <script src="./src/device-profile.js?v=mapFill6" defer></script>
+    <script src="./src/device-profile.js?v=mapFill10" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=mapFill9" defer></script>
+    <script src="./src/mobile-controls.js?v=mapFill10" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
     <script src="./src/visitor-session.js?v=hqPassKbd1" defer></script>
@@ -789,7 +816,7 @@
     <script src="./src/city-tod.js?v=tod5frame" defer></script>
     <script src="./src/map-editor-pro.js?v=pro6tiles" defer></script>
     <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
-    <script src="./office-scene.js?v=mapFill6" defer></script>
+    <script src="./office-scene.js?v=mapFill10" defer></script>
   </head>
   <body>
     <div id="denizen-night-city" aria-hidden="true" data-tod="day">

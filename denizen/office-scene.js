@@ -198,7 +198,7 @@ function playfieldZoomForProfile(profile) {
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
   if (profile?.isPhone || profile?.tier === 'phone-compact') {
     if (profile?.isLandscape) return 1.85;
-    return profile?.isCompactPhone ? 2.45 : 2.3;
+    return profile?.isCompactPhone ? 2.65 : 2.5;
   }
   if (profile?.isTablet) return profile?.isLandscape ? 2.55 : 2.15;
   return 2.75;
@@ -4098,9 +4098,8 @@ function bootOfficeGame() {
     backgroundColor: '#020617',
     pixelArt: true,
     scale: {
-      // Fixed 1280x720 on every device. Portrait CSS stretches this into a
-      // compact 16:9 HQ box; landscape cover-scales into the play rect
-      // (coverLandscapeCanvas in mobile-controls.js).
+      // Fixed 1280x720 on every device. Touch cover-scales into the HQ box
+      // (coverPlayCanvas in mobile-controls.js) so the map meets the brackets.
       pauseOnBlur: false,
     },
     // Snap every draw to whole pixels. Without this, NPCs at fractional

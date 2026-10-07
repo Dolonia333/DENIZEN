@@ -223,22 +223,27 @@
         --denizen-play-h: var(--denizen-available-play-h);
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
         height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
-        max-width: none;
-        max-height: none;
-        border-radius: 4px;
-        border-width: 0;
-        box-shadow: none;
+        max-width: none !important;
+        max-height: none !important;
+        border: none !important;
+        outline: none !important;
+        border-radius: 0 !important;
+        border-width: 0 !important;
+        box-shadow: none !important;
         overflow: hidden;
         position: relative;
-        margin: 0 auto;
+        margin: 0 !important;
         flex: 0 0 auto;
+        aspect-ratio: 16 / 9;
       }
-      /* Stretch the 1280×720 canvas to fill the 16:9 HQ box (no side gutters). */
+      /*
+       * Portrait: cover-scale the 1280×720 canvas into the 16:9 HQ box so the
+       * office meets the blue corner brackets (no side gutters from rounding).
+       */
       html.denizen-touch:not(.denizen-landscape) #game-container canvas {
-        width: 100% !important;
-        height: 100% !important;
-        left: 0 !important;
-        top: 0 !important;
+        /* Cover math applied in coverPlayCanvas(); don't force stretch. */
+        width: auto !important;
+        height: auto !important;
       }
 
       /* Portrait phones: wider 16:9 HQ card, centered over the city. */
@@ -249,15 +254,16 @@
           - max(4px, env(safe-area-inset-right, 0px))
           - 4px
         );
-        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
-        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
+        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9)) !important;
+        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16)) !important;
         flex: 0 0 auto;
-        margin: 0 auto;
+        margin: 0 !important;
+        aspect-ratio: 16 / 9;
       }
 
       /*
        * Landscape only: fill the HQ play rect edge-to-edge (not a 16:9
-       * letterbox). Canvas is cover-scaled in coverLandscapeCanvas().
+       * letterbox). Canvas is cover-scaled in coverPlayCanvas().
        */
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
@@ -1010,22 +1016,22 @@
   }
 
   /**
-   * Landscape only: scale the 1280×720 canvas with object-fit:cover so the
-   * office fills the HQ box. Portrait keeps a compact 16:9 box and stretches
-   * the canvas to 100% via CSS (fill the box, not the whole screen).
+   * Touch: scale the 1280×720 canvas with object-fit:cover into #game-container
+   * so the office meets the blue corner brackets (no pillarbox gutters).
+   * Portrait stays a compact 16:9 HQ card; landscape uses the full play rect.
    */
-  function coverLandscapeCanvas() {
+  function coverPlayCanvas() {
     const root = document.documentElement;
     const box = document.getElementById('game-container');
     const canvas = box?.querySelector?.('canvas');
     if (!box || !canvas) return;
-    const landscape = root.classList.contains('denizen-touch')
-      && root.classList.contains('denizen-landscape');
-    if (!landscape) {
+    const touch = root.classList.contains('denizen-touch');
+    if (!touch) {
       canvas.style.removeProperty('width');
       canvas.style.removeProperty('height');
       canvas.style.removeProperty('left');
       canvas.style.removeProperty('top');
+      canvas.style.removeProperty('position');
       return;
     }
     const bw = box.clientWidth;
@@ -1041,12 +1047,15 @@
     canvas.style.setProperty('top', `${Math.round((bh - ch) / 2)}px`, 'important');
   }
 
+  /** @deprecated alias — coverPlayCanvas covers portrait + landscape */
+  function coverLandscapeCanvas() { coverPlayCanvas(); }
+
   function syncPlayfieldLayout() {
     syncVisualViewport();
     // Re-place Abby strip (portrait outside HQ / landscape under map).
     try { globalThis.DenizenFloorStrip?.place?.(); } catch (_) {}
     syncGameFrameBottom();
-    coverLandscapeCanvas();
+    coverPlayCanvas();
   }
 
   function boot() {
@@ -1093,6 +1102,7 @@
   window.DenizenMobilePlay = {
     syncLayout: syncLayoutClasses,
     syncGameFrameBottom,
+    coverPlayCanvas,
     coverLandscapeCanvas,
     syncPlayfieldLayout,
     isTouch: () => true,
