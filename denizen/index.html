@@ -415,28 +415,42 @@
       html.denizen-touch #denizen-night-city {
         opacity: 0.55;
       }
-      /* Touch: frame = map size; chrome overlays so the office fills the box */
+      /* Portrait touch: compact HQ frame with chrome row above the 16:9 map */
       html.denizen-touch #game-frame {
-        padding: 0;
-        margin: 0 auto;
-        border-radius: 4px;
+        padding: 6px;
+        margin: 4px auto;
+        border-radius: 6px;
         width: fit-content;
         max-width: calc(100dvw - 8px);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: stretch;
-        position: relative;
         /* Keep the same lit pane look as desktop — do not strip the HQ border */
         background:
           linear-gradient(160deg, rgba(51, 65, 85, 0.95) 0%, rgba(15, 23, 42, 0.98) 38%, rgba(2, 6, 23, 0.98) 100%);
+        box-shadow:
+          0 0 0 1px rgba(148, 163, 184, 0.22),
+          0 0 0 3px rgba(2, 6, 23, 0.85),
+          0 0 40px var(--frame-glow, rgba(56, 189, 248, 0.12)),
+          0 16px 40px rgba(0, 0, 0, 0.55);
+      }
+      /* Landscape: frame = map size; chrome overlays so the office fills the box */
+      html.denizen-touch.denizen-landscape #game-frame {
+        padding: 0;
+        margin: 0 auto;
+        width: fit-content;
+        max-width: calc(100dvw - 8px);
+        border-radius: 4px;
+        align-items: stretch;
+        position: relative;
         box-shadow:
           0 0 0 1px rgba(148, 163, 184, 0.22),
           0 0 0 2px rgba(2, 6, 23, 0.85),
           0 0 24px var(--frame-glow, rgba(56, 189, 248, 0.1)),
           0 8px 24px rgba(0, 0, 0, 0.45);
       }
-      html.denizen-touch #game-frame .dz-frame-chrome {
+      html.denizen-touch.denizen-landscape #game-frame .dz-frame-chrome {
         position: absolute;
         top: 0;
         left: 0;
@@ -452,21 +466,36 @@
         pointer-events: none;
         background: linear-gradient(180deg, rgba(2, 6, 23, 0.55), transparent);
       }
-      html.denizen-touch #game-frame .dz-frame-chrome * {
+      html.denizen-touch.denizen-landscape #game-frame .dz-frame-chrome * {
         pointer-events: auto;
       }
       html.denizen-touch #game-frame::before,
       html.denizen-touch #game-frame::after,
       html.denizen-touch #game-frame .dz-frame-corners::before,
       html.denizen-touch #game-frame .dz-frame-corners::after {
+        width: 16px;
+        height: 16px;
+      }
+      html.denizen-touch.denizen-landscape #game-frame::before,
+      html.denizen-touch.denizen-landscape #game-frame::after,
+      html.denizen-touch.denizen-landscape #game-frame .dz-frame-corners::before,
+      html.denizen-touch.denizen-landscape #game-frame .dz-frame-corners::after {
         width: 12px;
         height: 12px;
+      }
+      html.denizen-touch #game-frame .dz-frame-chrome {
+        min-height: 22px;
+        margin-bottom: 2px;
       }
       html.denizen-touch #game-frame .dz-frame-label {
         position: static;
         top: auto;
-        font-size: 7px;
+        font-size: 8px;
         letter-spacing: 0.14em;
+      }
+      html.denizen-touch.denizen-landscape #game-frame .dz-frame-label {
+        font-size: 7px;
+        top: auto;
         padding: 1px 6px;
       }
       /* Phones: drop the "Denizen HQ" stamp — keep clock/XP slots in one thin row */
@@ -475,7 +504,7 @@
       }
       html.denizen-touch.denizen-phone #game-frame .dz-frame-chrome {
         min-height: 18px;
-        padding: 2px 6px;
+        margin-bottom: 1px;
       }
       html.denizen-touch #denizen-tod-hud {
         /* Phone/tablet: hide world clock — it sat on the playfield and blocked taps */
@@ -723,9 +752,9 @@
     <!-- Mobile haptics (tap / impact / notify vibration patterns) -->
     <script src="./src/mobile-haptics.js?v=mobplay2" defer></script>
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
-    <script src="./src/device-profile.js?v=mapFill3" defer></script>
+    <script src="./src/device-profile.js?v=mapFill5" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=mapFill4" defer></script>
+    <script src="./src/mobile-controls.js?v=mapFill5" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
     <script src="./src/visitor-session.js?v=hqPassKbd1" defer></script>
@@ -768,7 +797,7 @@
     <script src="./src/city-tod.js?v=tod5frame" defer></script>
     <script src="./src/map-editor-pro.js?v=pro6tiles" defer></script>
     <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
-    <script src="./office-scene.js?v=mapFill3" defer></script>
+    <script src="./office-scene.js?v=mapFill5" defer></script>
   </head>
   <body>
     <div id="denizen-night-city" aria-hidden="true" data-tod="day">
