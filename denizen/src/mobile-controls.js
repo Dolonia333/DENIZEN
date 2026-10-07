@@ -331,16 +331,20 @@
         justify-content: center;
       }
       /*
-       * Chat open: still center HQ, but only in the band above the Floor Line
-       * sheet so the map and chat never overlap.
+       * Chat open: pin HQ to the top band and reserve the bottom for Floor Line
+       * so the sheet is always visible (mid-center + frame-bottom top was
+       * collapsing the panel when the HQ sat too low).
        */
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
+        padding-top: calc(
+          var(--denizen-play-top, 0px) + max(6px, env(safe-area-inset-top, 0px))
+        );
         padding-bottom: calc(
           var(--denizen-dock-height, 48px)
-          + min(34dvh, 260px)
-          + 20px
+          + min(38dvh, 280px)
+          + 16px
           + env(safe-area-inset-bottom, 0px)
         );
       }
@@ -997,8 +1001,9 @@
   }
 
   /**
-   * Publish the live bottom of HQ (+ portrait Abby strip when outside the box)
-   * so FLOOR LINE starts clear of both.
+   * Publish the live bottom of HQ (+ portrait Abby strip when outside the box).
+   * Clamp so a Floor Line sheet with min height still fits above the dock —
+   * never publish a bottom that would collapse the chat panel.
    */
   function syncGameFrameBottom() {
     const frame = document.getElementById('game-frame') || document.getElementById('game-container');
@@ -1012,7 +1017,15 @@
         if (sb > bottom) bottom = sb;
       }
     }
-    document.documentElement.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
+    const root = document.documentElement;
+    const vv = Math.round(window.visualViewport?.height || window.innerHeight || 0);
+    if (vv > 80 && root.classList.contains('denizen-portrait')) {
+      const dock = 50;
+      const minChat = Math.min(Math.round(vv * 0.38), 200);
+      const maxBottom = vv - dock - minChat - 12;
+      if (maxBottom > 0 && bottom > maxBottom) bottom = maxBottom;
+    }
+    root.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
   }
 
   /**

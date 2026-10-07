@@ -357,7 +357,16 @@ class PlayerChat {
     try { globalThis.DenizenVoiceInput?.refreshSpeakFab?.(); } catch (_) {}
     if (next && window.__DenizenIsTouch) {
       globalThis.DenizenMobileSidebar?.close?.();
-      try { globalThis.DenizenMobilePlay?.syncGameFrameBottom?.(); } catch (_) {}
+      const sync = () => {
+        try { globalThis.DenizenMobilePlay?.syncPlayfieldLayout?.(); } catch (_) {
+          try { globalThis.DenizenMobilePlay?.syncGameFrameBottom?.(); } catch (_) {}
+        }
+      };
+      sync();
+      requestAnimationFrame(() => {
+        sync();
+        requestAnimationFrame(sync);
+      });
     }
     if (next) {
       if (!window.__DenizenIsTouch) this._input?.focus();
@@ -3113,23 +3122,27 @@ class PlayerChat {
         z-index: 2147483630 !important;
       }
       /*
-       * Portrait Floor Line: always starts below the live HQ frame bottom
-       * (no overlap with the map / Abby strip).
+       * Portrait Floor Line: bottom sheet above the dock with a guaranteed
+       * height. Do not pin top to --denizen-game-frame-bottom — when HQ is
+       * mid-screen that made top+bottom collapse the panel to ~0px.
        */
       html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel,
       html.denizen-touch.denizen-phone-mode.denizen-chat-open.denizen-portrait #player-chat-panel:not([data-phone-chat="1"]) {
-        top: calc(
-          var(--denizen-game-frame-bottom,
-            calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
-          ) + 8px
-        ) !important;
+        top: auto !important;
         bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
         right: max(8px, env(safe-area-inset-right, 0px)) !important;
         width: auto !important;
-        height: auto !important;
-        max-height: min(34dvh, 260px) !important;
+        height: min(38dvh, 280px) !important;
+        min-height: min(38dvh, 200px) !important;
+        max-height: min(38dvh, 280px) !important;
+        display: flex !important;
+        flex-direction: column !important;
         z-index: 2147483630 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: none !important;
       }
       /*
        * Soft keyboard open: fill the visual viewport above the keys so message

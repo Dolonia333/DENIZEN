@@ -86,7 +86,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(html, /#game-container canvas \{[^}]*display:\s*block;/s);
   });
 
-  it('portrait phones keep HQ centered mid-screen even when chat is open', () => {
+  it('portrait phones center HQ mid-screen; chat-open pins HQ top for Floor Line', () => {
     const mobile = read('src/mobile-controls.js');
     assert.match(
       mobile,
@@ -94,7 +94,11 @@ describe('mobile UI layout fixes', () => {
     );
     assert.match(
       mobile,
-      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*center/
+      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?justify-content:\s*center/
+    );
+    assert.match(
+      mobile,
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*flex-start/
     );
     assert.match(
       mobile,
@@ -103,7 +107,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapFill10/);
+    assert.match(html, /mobile-controls\.js\?v=chatSheet1/);
   });
 
   it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
@@ -169,8 +173,8 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=kbdFill3/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill10/);
+    assert.match(html, /player-chat\.js\?v=chatSheet1/);
+    assert.match(html, /mobile-controls\.js\?v=chatSheet1/);
   });
 
   it('Floor Line expands to the visual viewport when the soft keyboard opens', () => {
@@ -273,19 +277,27 @@ describe('mobile UI layout fixes', () => {
     assert.match(scene, /isCompactPhone \? 2\.65 : 2\.5/);
     assert.match(html, /device-profile\.js\?v=mapFill10/);
     assert.match(html, /office-scene\.js\?v=mapFill10/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill10/);
+    assert.match(html, /mobile-controls\.js\?v=chatSheet1/);
   });
 
-  it('portrait Floor Line starts below the HQ frame so it never overlaps the map', () => {
+  it('portrait Floor Line is a bottom sheet with guaranteed height when chat opens', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
     assert.match(
       chat,
-      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?--denizen-game-frame-bottom/
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?top:\s*auto\s*!important/
     );
     assert.match(
       chat,
-      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?max-height:\s*min\(34dvh,\s*260px\)/
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?height:\s*min\(38dvh,\s*280px\)/
+    );
+    assert.match(
+      chat,
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?min-height:\s*min\(38dvh,\s*200px\)/
+    );
+    assert.match(
+      mobile,
+      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?justify-content:\s*flex-start/
     );
     assert.match(
       mobile,
