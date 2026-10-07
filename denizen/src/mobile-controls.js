@@ -172,8 +172,8 @@
       }
 
       /*
-       * Phones: chrome + Abby strip overlay the map (see index.html / floor-strip),
-       * so the canvas can reach the blue corner brackets. Budget is tiny.
+       * Phones: chrome overlays the map; portrait Abby strip sits outside the
+       * HQ box (floor-strip.js). Chrome budget stays tiny so canvas fills brackets.
        */
       html.denizen-touch.denizen-phone {
         --denizen-frame-chrome: 0px;
@@ -315,8 +315,12 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: HQ stays mid-screen when chat is closed. */
+      /*
+       * Portrait: column so the Abby floor strip (sibling under #game-frame)
+       * stacks below the HQ box instead of beside it (body defaults to row).
+       */
       html.denizen-touch.denizen-portrait body {
+        flex-direction: column;
         align-items: center;
         justify-content: center;
       }
@@ -986,11 +990,22 @@
     sync();
   }
 
-  /** Publish the live game-frame bottom so FLOOR LINE can sit flush under it. */
+  /**
+   * Publish the live bottom of HQ (+ portrait Abby strip when outside the box)
+   * so FLOOR LINE starts clear of both.
+   */
   function syncGameFrameBottom() {
     const frame = document.getElementById('game-frame') || document.getElementById('game-container');
     if (!frame) return;
-    const bottom = Math.round(frame.getBoundingClientRect().bottom);
+    let bottom = Math.round(frame.getBoundingClientRect().bottom);
+    const strip = document.getElementById('denizen-floor-strip');
+    if (strip && strip.classList.contains('has-lines')) {
+      const style = window.getComputedStyle(strip);
+      if (style.display !== 'none' && style.visibility !== 'hidden') {
+        const sb = Math.round(strip.getBoundingClientRect().bottom);
+        if (sb > bottom) bottom = sb;
+      }
+    }
     document.documentElement.style.setProperty('--denizen-game-frame-bottom', `${Math.max(0, bottom)}px`);
   }
 
@@ -1028,6 +1043,8 @@
 
   function syncPlayfieldLayout() {
     syncVisualViewport();
+    // Re-place Abby strip (portrait outside HQ / landscape under map).
+    try { globalThis.DenizenFloorStrip?.place?.(); } catch (_) {}
     syncGameFrameBottom();
     coverLandscapeCanvas();
   }

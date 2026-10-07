@@ -103,7 +103,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapFill8/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill9/);
   });
 
   it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
@@ -170,7 +170,7 @@ describe('mobile UI layout fixes', () => {
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
     assert.match(html, /player-chat\.js\?v=kbdFill3/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill8/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill9/);
   });
 
   it('Floor Line expands to the visual viewport when the soft keyboard opens', () => {
@@ -193,21 +193,28 @@ describe('mobile UI layout fixes', () => {
     );
   });
 
-  it('phones reclaim map real estate; floor caption is a thin one-line strip under the map', () => {
+  it('phones reclaim map real estate; portrait Abby strip sits outside the HQ box', () => {
     const mobile = read('src/mobile-controls.js');
     const strip = read('src/floor-strip.js');
     const html = read('index.html');
     assert.match(mobile, /html\.denizen-touch\.denizen-phone \{[\s\S]*?--denizen-frame-chrome:\s*0px/);
+    assert.match(mobile, /denizen-portrait body \{[\s\S]*?flex-direction:\s*column/);
+    assert.match(mobile, /denizen-floor-strip/);
     assert.match(html, /--dz-floor-strip-h:\s*28px/);
+    assert.match(strip, /frame\.insertAdjacentElement\('afterend'/);
     assert.match(strip, /map\.insertAdjacentElement\('afterend'/);
     assert.match(strip, /html\.denizen-touch #\$\{STRIP_ID\} \.dz-floor-line:nth-child\(n\+2\)/);
     assert.match(strip, /:not\(\.has-lines\) \{ display: none !important/);
     assert.match(strip, /kind-quiet \{ display: none !important/);
     assert.match(strip, /speech bubbles .* are separate/i);
     assert.match(strip, /raw\.from \|\| raw\.name/);
-    assert.match(strip, /denizen-portrait #\$\{STRIP_ID\} \{[\s\S]*?position:\s*absolute/);
+    assert.match(strip, /denizen-portrait #\$\{STRIP_ID\} \{[\s\S]*?position:\s*static/);
+    assert.doesNotMatch(
+      strip,
+      /denizen-portrait #\$\{STRIP_ID\} \{[\s\S]*?position:\s*absolute/
+    );
     assert.match(html, /denizen-touch\.denizen-phone #game-frame \.dz-frame-label/);
-    assert.match(html, /floor-strip\.js\?v=mapFill8/);
+    assert.match(html, /floor-strip\.js\?v=mapFill9/);
   });
 
   it('HQ frame keeps its badge, clock, and level chip in a chrome row', () => {
@@ -264,7 +271,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(scene, /isCompactPhone \? 2\.45 : 2\.3/);
     assert.match(html, /device-profile\.js\?v=mapFill6/);
     assert.match(html, /office-scene\.js\?v=mapFill6/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill8/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill9/);
   });
 
   it('portrait Floor Line starts below the HQ frame so it never overlaps the map', () => {
