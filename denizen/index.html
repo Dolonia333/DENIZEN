@@ -410,20 +410,21 @@
       }
       /* Touch: keep Denizen HQ frame chrome (compact), size owned by mobile-controls.js */
       html.denizen-touch body {
-        align-items: center;
+        align-items: flex-start;
       }
       html.denizen-touch #denizen-night-city {
-        opacity: 0.55;
+        opacity: 0.4;
       }
       html.denizen-touch #game-frame {
-        padding: 6px;
-        margin: 4px;
+        padding: 4px;
+        margin: 2px auto 0;
         border-radius: 6px;
         width: fit-content;
         max-width: calc(100dvw - 8px);
         display: flex;
-        justify-content: center;
-        align-items: center;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
         /* Keep the same lit pane look as desktop — do not strip the HQ border */
         background:
           linear-gradient(160deg, rgba(51, 65, 85, 0.95) 0%, rgba(15, 23, 42, 0.98) 38%, rgba(2, 6, 23, 0.98) 100%);
@@ -435,8 +436,8 @@
       }
       /* Landscape: compact frame so the office fills the short side cleanly */
       html.denizen-touch.denizen-landscape #game-frame {
-        padding: 3px;
-        margin: 0;
+        padding: 2px;
+        margin: 0 auto;
         max-width: 100%;
         border-radius: 4px;
         box-shadow:
@@ -460,8 +461,8 @@
         height: 12px;
       }
       html.denizen-touch #game-frame .dz-frame-chrome {
-        min-height: 26px;
-        margin-bottom: 4px;
+        min-height: 22px;
+        margin-bottom: 2px;
       }
       html.denizen-touch #game-frame .dz-frame-label {
         position: static;
@@ -470,13 +471,21 @@
         letter-spacing: 0.14em;
       }
       html.denizen-touch.denizen-landscape #game-frame .dz-frame-chrome {
-        min-height: 20px;
-        margin-bottom: 2px;
+        min-height: 16px;
+        margin-bottom: 1px;
       }
       html.denizen-touch.denizen-landscape #game-frame .dz-frame-label {
         font-size: 7px;
         top: auto;
         padding: 1px 6px;
+      }
+      /* Phones: drop the "Denizen HQ" stamp — keep clock/XP slots in one thin row */
+      html.denizen-touch.denizen-phone #game-frame .dz-frame-label {
+        display: none !important;
+      }
+      html.denizen-touch.denizen-phone #game-frame .dz-frame-chrome {
+        min-height: 18px;
+        margin-bottom: 1px;
       }
       html.denizen-touch #denizen-tod-hud {
         /* Phone/tablet: hide world clock — it sat on the playfield and blocked taps */
@@ -712,7 +721,7 @@
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=dedupe1" defer></script>
     <!-- Agent Office System -->
-    <script src="./src/floor-strip.js?v=floorStrip2" defer></script>
+    <script src="./src/floor-strip.js?v=mapSpace1" defer></script>
     <script src="./src/agent-actions.js?v=bubbleChip4" defer></script>
     <script src="./src/agent-office-manager.js?v=headTrack1" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
@@ -726,7 +735,7 @@
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
     <script src="./src/device-profile.js?v=smooth1" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=floorStrip2" defer></script>
+    <script src="./src/mobile-controls.js?v=mapSpace1" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
     <script src="./src/visitor-session.js?v=hqPassKbd1" defer></script>
@@ -743,7 +752,7 @@
     <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
     <script src="./src/visitor-market-panel.js?v=rokiRhLive1" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=floorStrip2" defer></script>
+    <script src="./src/player-chat.js?v=mapSpace1" defer></script>
     <script src="./src/denizen-phone-chat-ui.js?v=phchatNoSpin1" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/tabler-icons.js?v=ti6" defer></script>
@@ -755,7 +764,7 @@
     <!-- In-game smartphone HUD -->
     <script src="./src/denizen-phone-ui.js?v=phone42nexen" defer></script>
     <script src="./src/buzz-capture.js?v=buzz14" defer></script>
-    <script src="./src/work-rail.js?v=floorStrip2" defer></script>
+    <script src="./src/work-rail.js?v=mapSpace1" defer></script>
     <script src="./src/corner-hud-autohide.js?v=corner14note" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=measured1" defer></script>

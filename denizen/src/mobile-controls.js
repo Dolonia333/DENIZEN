@@ -150,12 +150,16 @@
     style.id = STYLE_ID;
     style.textContent = `
       :root {
+        /* Prefer visualViewport height (set by syncVisualViewport) over 100dvh —
+           Safari's URL/tab chrome eats real pixels that 100dvh still counts. */
+        --denizen-vv-h: 100dvh;
         --denizen-play-top: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 2px;
-        --denizen-frame-chrome: 128px; /* HQ pad + chrome row + floor strip */
+        /* Slim chrome: pad + HQ label row + one floor-strip line */
+        --denizen-frame-chrome: 64px;
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
-          100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
+          var(--denizen-vv-h) - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
                    - max(var(--denizen-play-gap), env(safe-area-inset-bottom, 0px))
                    - var(--denizen-play-gap)
                    - var(--denizen-frame-chrome)
@@ -166,19 +170,25 @@
         );
       }
 
-      /* Landscape: notch is on the sides — reclaim vertical space; keep side safe-area only once */
+      /* Phones: spend almost all width on the map; city is atmosphere only */
+      html.denizen-touch.denizen-phone {
+        --denizen-frame-chrome: 52px;
+      }
+
+      /* Landscape: notch is on the sides — reclaim vertical space hard */
       html.denizen-touch.denizen-landscape {
         --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
-        --denizen-frame-chrome: 96px;
+        --denizen-frame-chrome: 36px;
       }
 
       html.denizen-touch body {
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         box-sizing: border-box;
-        height: 100dvh;
-        min-height: 100dvh;
+        height: var(--denizen-vv-h);
+        min-height: var(--denizen-vv-h);
+        max-height: var(--denizen-vv-h);
         padding:
           var(--denizen-play-top)
           max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
@@ -188,6 +198,7 @@
 
       html.denizen-touch.denizen-landscape body {
         /* Don't double-pad: size math below already subtracts safe-area + dock */
+        align-items: center;
         padding:
           var(--denizen-play-top)
           max(6px, env(safe-area-inset-right, 0px))
@@ -199,13 +210,10 @@
         --denizen-play-w: calc(
           100dvw - max(var(--denizen-play-gap), env(safe-area-inset-left, 0px))
                   - max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
-                  - var(--denizen-frame-chrome)
+                  - 12px
         );
         --denizen-play-h: var(--denizen-available-play-h);
-        /* 16:9 letterbox, matching desktop: the game is a fixed-aspect box that
-           floats in the night-city skyline instead of stretching edge to edge.
-           (An earlier build dropped this cap to fill the screen; the desktop
-           framing was preferred.) */
+        /* Fill the available play box at 16:9 — no giant chrome gutters */
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
         height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
         max-width: none;
@@ -217,16 +225,14 @@
 
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
-        /* Match the padded content box — 100dvw alone overshoots and looks off-center */
         --denizen-play-w: calc(
           100dvw
           - max(6px, env(safe-area-inset-left, 0px))
           - max(6px, env(safe-area-inset-right, 0px))
-          - var(--denizen-frame-chrome)
-          - 4px
+          - 8px
         );
         --denizen-play-h: calc(
-          100dvh
+          var(--denizen-vv-h)
           - var(--denizen-play-top)
           - var(--denizen-dock-height, 40px)
           - env(safe-area-inset-bottom, 0px)
@@ -239,13 +245,19 @@
         flex: 0 0 auto;
       }
 
-      /* Portrait phones: 16:9 letterbox like desktop — the game sits in the
-         upper area and the night-city skyline fills the space below it. */
+      /* Portrait phones: pin HQ to the top, maximize 16:9 width, trim skyline waste */
       html.denizen-touch.denizen-phone.denizen-portrait #game-container {
         width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
         height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
         flex: 0 0 auto;
         margin: 0 auto;
+      }
+      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city {
+        opacity: 0.28 !important;
+      }
+      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city .dz-skyline,
+      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city .dz-windows {
+        height: min(32vh, 220px) !important;
       }
 
       /* Portrait hint — non-blocking toast, shown once per session */
@@ -272,10 +284,9 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: float the HQ map box mid-screen over the skyline.
-         When FLOOR LINE opens, pin back to the top so chat has room below. */
+      /* Portrait: pin HQ to the top — mid-screen float wasted the map under skyline. */
       html.denizen-touch.denizen-portrait body {
-        align-items: center;
+        align-items: flex-start;
       }
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: flex-start;
@@ -421,7 +432,7 @@
         ) !important;
         max-height: min(38dvh, 280px) !important;
       }
-      /* Landscape Floor Line: LEFT rail — Buzz phone FAB stays bottom-right */
+      /* Landscape Floor Line: short LEFT rail — must leave the HQ map visible */
       html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
         right: auto !important;
@@ -429,15 +440,38 @@
         bottom: calc(
           var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;
-        width: min(420px, calc(100dvw - 120px)) !important;
-        max-width: min(420px, calc(100dvw - 120px)) !important;
+        width: min(340px, calc(100dvw - 100px)) !important;
+        max-width: min(340px, calc(100dvw - 100px)) !important;
         min-width: 0 !important;
-        height: min(58dvh, 320px) !important;
-        max-height: min(58dvh, 320px) !important;
+        height: min(34dvh, 200px) !important;
+        max-height: min(34dvh, 200px) !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;
         overflow: hidden !important;
+        pointer-events: auto !important;
+      }
+      /* Fat corner ✕ — must stay tappable when PROJECTS/Briefing fill the actions row */
+      html.denizen-touch.denizen-landscape #player-chat-header {
+        position: relative !important;
+        padding-right: 56px !important;
+        overflow: visible !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions {
+        max-width: none !important;
+        overflow: visible !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header-actions #player-chat-close-btn {
+        position: absolute !important;
+        top: 4px !important;
+        right: 4px !important;
+        z-index: 6 !important;
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
       }
 
       html.denizen-touch.denizen-tablet #denizen-diag-panel,
@@ -853,15 +887,26 @@
     else btn.addEventListener('click', (e) => { e.preventDefault(); pulse(); });
   }
 
-  function installKeyboardViewportSync() {
+  function syncVisualViewport() {
     const vv = window.visualViewport;
-    if (!vv) return;
-    const sync = () => {
+    const h = vv && vv.height > 80 ? vv.height : window.innerHeight;
+    document.documentElement.style.setProperty('--denizen-vv-h', `${Math.round(h)}px`);
+    if (vv) {
       const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
       document.documentElement.style.setProperty('--denizen-keyboard-offset', `${Math.round(offset)}px`);
+    }
+  }
+
+  function installKeyboardViewportSync() {
+    const vv = window.visualViewport;
+    const sync = () => {
+      syncVisualViewport();
+      syncGameFrameBottom();
     };
-    vv.addEventListener('resize', sync);
-    vv.addEventListener('scroll', sync);
+    if (vv) {
+      vv.addEventListener('resize', sync);
+      vv.addEventListener('scroll', sync);
+    }
     window.addEventListener('resize', sync);
     sync();
   }
