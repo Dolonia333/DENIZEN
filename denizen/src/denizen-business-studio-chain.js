@@ -259,6 +259,7 @@ function attachEvidence(state, input = {}) {
     linkedFundingKeys: links.fundingKeys,
     contactId: input.contactId || input.contact_id || null,
     contactName: input.contactName || input.contact_name || null,
+    qualifying: input.qualifying === false ? false : (input.qualifying === true ? true : undefined),
     createdAt: input.createdAt || new Date().toISOString(),
     source: input.source || 'chain',
     revoked: false,
@@ -307,6 +308,35 @@ function attachDiscoveryInterview(state, input = {}) {
     kind: 'discovery_interview',
     autoLinkDiscovery: true,
   });
+}
+
+function linkValidatedInterview(state, input = {}) {
+  const qualifying = input.qualifying === true || input.validated === true;
+  if (!qualifying) {
+    throw new Error('qualifying: true required — an unvalidated conversation is not interview evidence');
+  }
+  const contactId = input.contactId || input.contact_id;
+  if (contactId == null || contactId === '') throw new Error('contact_id required');
+  const title = String(input.title || '').trim();
+  if (!title) throw new Error('title required');
+  const result = attachEvidence(state, {
+    ...input,
+    title,
+    contactId,
+    type: 'interview',
+    kind: 'discovery_interview',
+    qualifying: true,
+    stance: input.stance || 'validated',
+    autoLinkDiscovery: true,
+  });
+  const nextTask = {
+    title: `Review qualifying interview: ${result.evidence.title}`,
+    contactId,
+    evidenceId: result.evidence.id,
+    experimentId: result.evidence.experimentId || null,
+    source: 'evidence-chain',
+  };
+  return { ...result, nextTask, counted: result.duplicate !== true };
 }
 
 function revokeAndResync(state, evidenceId, opts = {}) {
@@ -495,6 +525,7 @@ module.exports = {
   goalProgress,
   attachEvidence,
   attachDiscoveryInterview,
+  linkValidatedInterview,
   revokeAndResync,
   chainSnapshot,
   workingSetBrief,

@@ -17,6 +17,55 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function validateAutomation(input = {}) {
+  const templateId = String(input.template || input.template_id || '').trim();
+  const templates = {
+    'follow-up': {
+      name: 'Follow up',
+      when: { type: 'status_changed', to: 'done' },
+      then: [{ type: 'create_followup', title: 'Follow up on the finished task' }],
+    },
+    overdue: {
+      name: 'Overdue item',
+      when: { type: 'due_passed' },
+      then: [{ type: 'notify_assignee', text: 'This item is overdue.' }],
+    },
+    'engineering-done': {
+      name: 'Completed engineering work',
+      when: { type: 'status_changed', to: 'done' },
+      then: [{ type: 'add_comment', text: 'Record what shipped. Do not invent a customer result.' }],
+    },
+    'discovery-evidence': {
+      name: 'Discovery evidence',
+      when: { type: 'status_changed' },
+      then: [{ type: 'create_followup', title: 'Mark the interview qualifying before it counts as evidence' }],
+    },
+  };
+  const template = templateId ? templates[templateId] : null;
+  if (templateId && !template) {
+    return { ok: false, error: 'unknown automation template', templates: Object.keys(templates) };
+  }
+  const when = input.when || template?.when;
+  const then = Array.isArray(input.then) ? input.then : template?.then;
+  const name = String(input.name || template?.name || '').trim();
+  const whenType = String(when?.type || '');
+  if (!name || !['status_changed', 'field_changed', 'due_passed'].includes(whenType)) {
+    return { ok: false, error: 'name and a when.type of status_changed, field_changed, or due_passed are required', templates: Object.keys(templates) };
+  }
+  if (!Array.isArray(then) || !then.length || then.some((action) => !action?.type)) {
+    return { ok: false, error: 'then actions are required' };
+  }
+  return {
+    ok: true,
+    rule: {
+      name: name.slice(0, 80),
+      enabled: input.enabled !== false,
+      when,
+      then,
+    },
+  };
+}
+
 function listAutomations(state) {
   const list = state?.config?.automations;
   return Array.isArray(list) ? list : [];
@@ -233,6 +282,7 @@ function sweepDuePassed(state, who = 'Automation') {
 module.exports = {
   MAX_DEPTH,
   listAutomations,
+  validateAutomation,
   runRules,
   sweepDuePassed,
   matchWhen,

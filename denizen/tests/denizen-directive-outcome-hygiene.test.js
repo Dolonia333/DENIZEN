@@ -27,7 +27,6 @@ describe('outcome ledger + directive lifecycle + hygiene', () => {
 
   it('appendOutcome + standup returns receipts', () => {
     const ledger = require('../src/denizen-outcome-ledger');
-    const before = ledger.readRecent({ hours: 1, limit: 200 }).length;
     const entry = ledger.appendOutcome({
       actor: 'test',
       outcome_type: 'test.receipt',
@@ -39,8 +38,34 @@ describe('outcome ledger + directive lifecycle + hygiene', () => {
     });
     assert.ok(entry.id);
     const stand = ledger.standup({ hours: 1, limit: 50 });
-    assert.ok(stand.count >= before + 1);
+    assert.ok(stand.outcomes.some((row) => row.id === entry.id));
     assert.ok(stand.breakdown['test.receipt'] >= 1);
+  });
+
+  it('founder standup omits Jenny presence ticks', () => {
+    const ledger = require('../src/denizen-outcome-ledger');
+    const skipped = ledger.appendOutcome({
+      actor: 'jenny-durable',
+      outcome_type: 'jenny.durable.tick',
+      entity_type: 'npc',
+      entity_key: 'jenny',
+      value_text: 'presence held',
+      source: 'test',
+    });
+    assert.equal(skipped.stored, false);
+    assert.equal(skipped.skipped, 'presence');
+    ledger.appendOutcome({
+      actor: 'test',
+      outcome_type: 'interview.completed',
+      entity_type: 'evidence',
+      entity_key: 'interview-1',
+      value_text: 'qualifying interview completed',
+      source: 'test',
+    });
+    const stand = ledger.standup({ hours: 1, limit: 50 });
+    assert.ok(stand.breakdown['interview.completed'] >= 1);
+    assert.equal(stand.breakdown['jenny.durable.tick'], undefined);
+    assert.ok(!stand.outcomes.some((row) => row.outcome_type === 'jenny.durable.tick'));
   });
 
   it('assignDirective → running → complete writes ledger', () => {

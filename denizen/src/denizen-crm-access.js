@@ -80,10 +80,24 @@ function buildActorAliases(actor = {}) {
   return [...aliases];
 }
 
+function tokensOf(value) {
+  return norm(value).split(/[^a-z0-9]+/).filter((t) => t.length >= 2);
+}
+
 function matchesAlias(value, aliases) {
   const n = norm(value);
   if (!n || !aliases?.length) return false;
-  return aliases.some((a) => a && (n === a || n.includes(a) || a.includes(n)));
+  const nTokens = tokensOf(n);
+  return aliases.some((a) => {
+    if (!a) return false;
+    if (n === a) return true;
+    const aTokens = tokensOf(a);
+    if (!aTokens.length || !nTokens.length) return false;
+    // Whole tokens only — "zion" must not match inside "vzion253".
+    if (aTokens.every((t) => nTokens.includes(t))) return true;
+    if (n.length >= 4 && nTokens.every((t) => aTokens.includes(t))) return true;
+    return false;
+  });
 }
 
 function recordOwnedBy(record, aliases, fields = []) {
@@ -134,11 +148,14 @@ function collectOwnedContactNames(deals, contacts, aliases) {
  * Filter full org workspace down to records the member may see.
  * Owners/admins get state unchanged (orgWide=true).
  */
-function filterWorkspaceForAccess(state, actor, { orgWide = false } = {}) {
+function filterWorkspaceForAccess(state, actor, { orgWide = false, forceOwn = false } = {}) {
   const raw = state && typeof state === 'object' ? state : {};
-  if (orgWide || isOrgWideRole(actor?.role)) {
+  if (!forceOwn && orgWide) {
     return {
-      state: raw,
+      state: {
+        ...raw,
+        calendarConnections: stripAllConnectionSecrets(raw.calendarConnections),
+      },
       scope: 'org',
       filtered: false,
     };
@@ -369,9 +386,56 @@ function mergePrefsForIdentity(fullPrefs, memberPrefs, identityId) {
 
 function calendarConnectionsForIdentity(connections, identityId) {
   const raw = connections && typeof connections === 'object' ? connections : {};
-  if (!identityId) return {};
-  if (raw[identityId] != null) return { [identityId]: raw[identityId] };
-  return {};
+  if (!identityId || raw[identityId] == null) return {};
+  return { [identityId]: stripConnectionSecrets(raw[identityId]) };
+}
+
+const CONNECTION_SECRET_KEYS = ['access_token', 'refresh_token', 'id_token', 'token'];
+
+function stripAllConnectionSecrets(connections) {
+  const raw = connections && typeof connections === 'object' ? connections : {};
+  const out = {};
+  for (const [identityId, bundle] of Object.entries(raw)) {
+    out[identityId] = stripConnectionSecrets(bundle);
+  }
+  return out;
+}
+
+function stripConnectionSecrets(bundle) {
+  if (!bundle || typeof bundle !== 'object') return bundle;
+  const out = {};
+  for (const [provider, conn] of Object.entries(bundle)) {
+    if (!conn || typeof conn !== 'object' || Array.isArray(conn)) {
+      out[provider] = conn;
+      continue;
+    }
+    const clean = { ...conn };
+    for (const key of CONNECTION_SECRET_KEYS) delete clean[key];
+    out[provider] = clean;
+  }
+  return out;
+}
+
+function preserveConnectionSecrets(previous, incoming) {
+  const prev = previous && typeof previous === 'object' ? previous : {};
+  const next = incoming && typeof incoming === 'object' ? incoming : {};
+  const merged = {};
+  for (const provider of new Set([...Object.keys(prev), ...Object.keys(next)])) {
+    const oldP = prev[provider];
+    const newP = next[provider];
+    if (!oldP || typeof oldP !== 'object') continue;
+    if (!newP || typeof newP !== 'object') {
+      merged[provider] = oldP;
+      continue;
+    }
+    const combined = { ...oldP, ...newP };
+    for (const key of CONNECTION_SECRET_KEYS) {
+      if (oldP[key]) combined[key] = oldP[key];
+      else delete combined[key];
+    }
+    merged[provider] = combined;
+  }
+  return merged;
 }
 
 function noteBoardHasOwner(board) {
@@ -438,13 +502,28 @@ function mergeMemberWorkspace(fullState, memberState, actor) {
       return recordOwnedBy(row, aliases, ['ownerId', 'assignee', 'createdBy', 'user']);
     };
 
+    const fullById = indexById(fullList);
+    const memberMayTouch = (row) => {
+      const existing = row?.id == null ? null : fullById.get(String(row.id));
+      // A row already owned by someone else stays theirs.
+      if (existing && !ownedFilter(existing)) return false;
+      return true;
+    };
     const keepOthers = fullList.filter((row) => !ownedFilter(row));
-    const memberIds = new Set(memberList.map((r) => String(r?.id)).filter(Boolean));
+    const memberIds = new Set(
+      memberList.filter(memberMayTouch).map((r) => String(r?.id)).filter(Boolean),
+    );
     // Drop owned rows the member deleted (were owned, not in member payload)
-    const stampedMember = memberList.map((row) => {
-      const base = stampOwnerFields(row, actor);
+    const stampedMember = memberList.filter(memberMayTouch).map((row) => {
+      const existing = row?.id == null ? null : fullById.get(String(row.id));
+      const base = existing ? { ...existing, ...row } : stampOwnerFields(row, actor);
+      if (existing) {
+        // Never rewrite another person's ownership onto a row the member may edit.
+        for (const field of ['ownerId', 'owner', 'ownerEmail', 'ownerIdentityId', 'assignee', 'createdBy']) {
+          if (existing[field]) base[field] = existing[field];
+        }
+      }
       const name = actor.user || actor.displayName || null;
-      // Prefer keeping ownership stamps
       if (key === 'deals' && !base.ownerId && name) {
         base.ownerId = name;
       }
@@ -461,7 +540,6 @@ function mergeMemberWorkspace(fullState, memberState, actor) {
       return base;
     });
 
-    // Also allow member to update rows they own that still exist
     const othersById = indexById(keepOthers);
     for (const id of memberIds) {
       othersById.delete(id);
@@ -481,10 +559,12 @@ function mergeMemberWorkspace(fullState, memberState, actor) {
         : {}),
     };
     if (member.calendarConnections[identityId] != null) {
-      all[identityId] = member.calendarConnections[identityId];
+      all[identityId] = preserveConnectionSecrets(all[identityId], member.calendarConnections[identityId]);
     } else if (Object.keys(member.calendarConnections).length) {
-      // Member payload may send their connections unscoped — keep under their id.
-      all[identityId] = member.calendarConnections[identityId] || member.calendarConnections;
+      all[identityId] = preserveConnectionSecrets(
+        all[identityId],
+        member.calendarConnections[identityId] || member.calendarConnections,
+      );
     }
     full.calendarConnections = all;
   }

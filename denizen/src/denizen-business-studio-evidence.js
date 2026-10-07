@@ -90,6 +90,11 @@ function qualifyingEvidence(state, query = {}) {
   const dedupe = query.dedupe !== false;
   let list = (Array.isArray(state?.evidence) ? state.evidence : []).filter(isActiveEvidence);
 
+  list = list.filter((e) => {
+    if (e.type !== 'interview' && e.kind !== 'discovery_interview') return true;
+    return e.qualifying !== false;
+  });
+
   if (query.type) {
     list = list.filter((e) => e.type === query.type);
   }

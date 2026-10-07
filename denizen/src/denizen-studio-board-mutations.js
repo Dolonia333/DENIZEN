@@ -75,7 +75,7 @@ function findPerson(state, idOrName) {
   const people = state.people || [];
   return people.find((p) => String(p.id) === q)
     || people.find((p) => String(p.email || '').toLowerCase() === q)
-    || people.find((p) => String(p.identityId || p.identity_id || '').toLowerCase() === q)
+    || people.find((p) => String(p.identityId || p.identity_id || p.userId || p.user_id || '').toLowerCase() === q)
     || people.find((p) => String(p.name || '').toLowerCase() === q)
     || people.find((p) => String(p.name || '').toLowerCase().startsWith(q))
     || null;
@@ -259,10 +259,38 @@ function slugUnique(name, existing) {
   return `${base} ${n}`;
 }
 
+function personIdentity(person) {
+  return String(person?.identityId || person?.identity_id || person?.userId || person?.user_id || '').toLowerCase();
+}
+
+function hintNamesJenny(person) {
+  return /jenny/i.test(String(person?.name || person?.npc_key || person?.npcKey || ''));
+}
+
+function hintIsThisPerson(person, hint) {
+  const email = String(hint?.email || '').trim().toLowerCase();
+  const identity = String(hint?.identityId || hint?.identity_id || '').trim().toLowerCase();
+  const personEmail = String(person?.email || '').trim().toLowerCase();
+  const personId = personIdentity(person);
+  if (email && personEmail && email === personEmail) return true;
+  if (identity && personId && identity === personId) return true;
+  return false;
+}
+
 function personHint(state, hint) {
   if (!hint) return null;
-  return findPerson(state, hint.assignee || hint.person || hint.person_id || hint.name || hint.displayName || hint.user)
-    || null;
+  if (typeof hint !== 'object') return findPerson(state, hint);
+  const identity = hint.identityId || hint.identity_id;
+  const email = hint.email;
+  const byIdentity = identity ? findPerson(state, identity) : null;
+  if (byIdentity) return byIdentity;
+  const byEmail = email ? findPerson(state, email) : null;
+  if (byEmail) return byEmail;
+  const name = hint.assignee || hint.person || hint.person_id || hint.personId
+    || hint.name || hint.displayName || hint.display_name || hint.user;
+  const named = findPerson(state, name);
+  if (named && hintNamesJenny(named) && (identity || email) && !hintIsThisPerson(named, hint)) return null;
+  return named || null;
 }
 
 function summarizeTask(t) {
@@ -1161,6 +1189,8 @@ async function listAutomations(orgId) {
 }
 
 async function upsertAutomation(orgId, input = {}, identityId = null, actor = {}) {
+  const checked = boardAutomations.validateAutomation(input);
+  if (!checked.ok) return { ok: false, error: checked.error, ...checked };
   const { state, row } = await loadState(orgId);
   if (!state.config) state.config = {};
   boardStore.migrateConfig(state.config);
@@ -1169,19 +1199,14 @@ async function upsertAutomation(orgId, input = {}, identityId = null, actor = {}
   let rule = list.find((r) => String(r.id) === id);
   const creating = !rule;
   if (creating) {
-    rule = {
-      id,
-      name: String(input.name || 'Automation').slice(0, 80),
-      enabled: input.enabled !== false,
-      when: input.when || { type: 'status_changed' },
-      then: Array.isArray(input.then) ? input.then : [],
-    };
+    rule = checked.rule;
+    rule.id = id;
     list.push(rule);
   } else {
-    if (input.name != null) rule.name = String(input.name).slice(0, 80);
-    if (input.enabled != null) rule.enabled = !!input.enabled;
-    if (input.when != null) rule.when = input.when;
-    if (input.then != null) rule.then = Array.isArray(input.then) ? input.then : rule.then;
+    rule.name = checked.rule.name;
+    rule.enabled = checked.rule.enabled;
+    rule.when = checked.rule.when;
+    rule.then = checked.rule.then;
   }
   state.config.automations = list;
   act(state, actorName(actor), `${creating ? 'Added' : 'Updated'} automation “${rule.name}”`);
@@ -1228,6 +1253,7 @@ module.exports = {
   updateConfig,
   standup,
   myDay,
+  personHint,
   loadState,
   standupText,
   recapText,

@@ -23,12 +23,22 @@ function ledgerPath() {
 }
 
 function appendOutcome(row) {
+  const outcomeType = String(row.outcome_type || 'unspecified').slice(0, 120);
+  if (isPresenceOutcome({ outcome_type: outcomeType })) {
+    return {
+      id: null,
+      ts: row.ts || new Date().toISOString(),
+      outcome_type: outcomeType,
+      stored: false,
+      skipped: 'presence',
+    };
+  }
   const entry = {
     id: row.id || `out_${crypto.randomBytes(8).toString('base64url')}`,
     ts: row.ts || new Date().toISOString(),
     org_id: row.org_id || null,
     actor: String(row.actor || 'system').slice(0, 80),
-    outcome_type: String(row.outcome_type || 'unspecified').slice(0, 120),
+    outcome_type: outcomeType,
     entity_type: String(row.entity_type || 'workspace').slice(0, 80),
     entity_key: row.entity_key != null ? String(row.entity_key).slice(0, 200) : null,
     value_text: String(row.value_text || '').slice(0, 2000),
@@ -76,20 +86,33 @@ function readRecent({ hours = 168, limit = 40, outcome_type = null } = {}) {
   }
 }
 
-function standup({ hours = 168, limit = 20 } = {}) {
-  const outcomes = readRecent({ hours, limit: Math.max(limit, 50) });
+function isPresenceOutcome(row) {
+  const type = String(row?.outcome_type || '').toLowerCase();
+  if (!type) return false;
+  if (type === 'jenny.durable.tick' || type === 'heartbeat' || type === 'presence') return true;
+  if (type.includes('heartbeat') || type.endsWith('.tick') || type.includes('.presence')) return true;
+  return false;
+}
+
+function standup({ hours = 168, limit = 20, include_presence = false } = {}) {
+  const all = readRecent({ hours, limit: Math.max(limit, 80) });
+  const presence = all.filter(isPresenceOutcome);
+  const outcomes = include_presence ? all : all.filter((row) => !isPresenceOutcome(row));
   const byType = {};
   for (const o of outcomes) {
     byType[o.outcome_type] = (byType[o.outcome_type] || 0) + 1;
   }
   const recent = outcomes.slice(-limit).reverse();
+  const omitted = include_presence ? 0 : presence.length;
+  const presenceNote = omitted ? `${omitted} presence tick(s) omitted. ` : '';
   return {
     ok: true,
     hours,
     count: outcomes.length,
+    presence_omitted: omitted,
     breakdown: byType,
     outcomes: recent,
-    summary: `Last ${hours}h: ${outcomes.length} outcome receipt(s). ${JSON.stringify(byType)}`,
+    summary: `Last ${hours}h: ${outcomes.length} accomplishment receipt(s). ${presenceNote}${JSON.stringify(byType)}`,
   };
 }
 
@@ -98,4 +121,5 @@ module.exports = {
   appendOutcome,
   readRecent,
   standup,
+  isPresenceOutcome,
 };

@@ -83,6 +83,27 @@ describe('business-studio store', () => {
     });
     assert.equal(filtered.programs.length, 0);
   });
+
+  it('keeps a member studio separate from the founder workspace', () => {
+    const store = require('../src/denizen-business-studio-store');
+    const founder = store.sanitizeState({
+      business: { id: 'b1', name: 'Dolonia' },
+      programs: [{ id: 'p1', name: 'E3' }],
+    });
+    const angela = store.emptyState();
+    angela.business = { id: 'a1', name: 'Angela Studio' };
+    const stored = store.writePrivateStudio(founder, 'angela', angela);
+    const hers = store.readPrivateStudio(stored, 'angela');
+    const publicState = store.stripPrivateStudios(stored);
+    assert.equal(hers.business.name, 'Angela Studio');
+    assert.equal(publicState.business.name, 'Dolonia');
+    assert.equal(publicState.config.privateStudios, undefined);
+    const kept = store.preservePrivateStudios(stored, store.sanitizeState({
+      business: { id: 'b1', name: 'Dolonia updated' },
+    }));
+    assert.equal(kept.business.name, 'Dolonia updated');
+    assert.equal(store.readPrivateStudio(kept, 'angela').business.name, 'Angela Studio');
+  });
 });
 
 describe('business-studio E3 template', () => {
@@ -102,6 +123,133 @@ describe('business-studio E3 template', () => {
     assert.ok(bundle.assumptions.length >= 1);
     assert.ok(bundle.strategyNodes.length >= 5);
     assert.throws(() => e3.applyProgramTemplate('nope'), /Unknown program template/);
+  });
+});
+
+describe('business-studio personal workspace', () => {
+  it('keeps every studio private and parks the shared record on the operator', async () => {
+    const store = require('../src/denizen-business-studio-store');
+    const tools = require('../src/denizen-mcp-business-studio-tools');
+    const founder = store.sanitizeState({
+      business: { name: 'DENIZEN / Dolonia Data Tech', founderName: 'Zion Alexander Van Zandt' },
+      goals: [{ id: 'g1', title: 'Operator goal' }],
+    });
+    const angela = store.emptyState();
+    angela.business = { name: '1921 HOLDING CO., LLC', founderName: 'Angela Van Zandt' };
+    const stored = store.writePrivateStudio(founder, 'angela', angela);
+    const parked = store.parkOperatorStudio(stored);
+    assert.equal(parked.parked, true);
+    assert.equal(store.stripPrivateStudios(parked.state).business, null);
+    assert.equal(store.readPrivateStudio(parked.state, store.operatorStudioKey()).business.name, 'DENIZEN / Dolonia Data Tech');
+    assert.equal(store.readPrivateStudio(parked.state, 'angela').business.name, '1921 HOLDING CO., LLC');
+    const stranger = store.selectPersonalState(parked.state, 'email:maddie@example.com');
+    assert.equal(stranger.state.business, null);
+    assert.equal(stranger.state.config.privateStudios, undefined);
+    assert.equal(store.parkOperatorStudio(parked.state).parked, false);
+    assert.equal(store.studioKeyForProfile({ email: 'zionvanzandt@gmail.com' }), store.operatorStudioKey());
+    const previousHolding = process.env.DENIZEN_HOLDING_EMAILS;
+    process.env.DENIZEN_HOLDING_EMAILS = 'angelavanzandt1921@gmail.com';
+    try {
+      assert.equal(store.studioKeyForProfile({ email: 'angelavanzandt1921@gmail.com' }), 'angela');
+    } finally {
+      if (previousHolding == null) delete process.env.DENIZEN_HOLDING_EMAILS;
+      else process.env.DENIZEN_HOLDING_EMAILS = previousHolding;
+    }
+    assert.equal(store.studioKeyForProfile({ email: 'maddie@example.com' }), 'email:maddie@example.com');
+    assert.equal(tools.studioKeyFromAccount('founder'), store.operatorStudioKey());
+    assert.equal(tools.studioKeyFromAccount('angela'), 'angela');
+    assert.equal(await tools.resolveStudioKey({ npc_key: '_team', scope_mode: 'team' }, {}), 'angela');
+    assert.equal(await tools.resolveStudioKey({ npc_key: '_team', scope_mode: 'team' }, { account: 'founder' }), 'angela');
+    assert.equal(await tools.resolveStudioKey({ email: 'maddie@example.com' }, { account: 'angela' }), 'email:maddie@example.com');
+    assert.equal(await tools.resolveStudioKey({ email: 'zionvanzandt@gmail.com' }, { account: 'angela' }), store.operatorStudioKey());
+  });
+
+  it('does not copy another studio canvas into an empty personal page', () => {
+    const store = require('../src/denizen-business-studio-store');
+    const line = '1921 revenue lines include awards, consulting, compliance, partner delivery, logistics, and DENIZEN.';
+    const canvas = {};
+    for (const key of ['problem', 'solution', 'uniqueValueProposition', 'unfairAdvantage', 'customerSegments', 'keyMetrics', 'channels', 'costStructure', 'revenueStreams']) {
+      canvas[key] = line;
+    }
+    const root = store.sanitizeState({
+      business: { name: 'DENIZEN / Dolonia Data Tech', founderName: 'Zion Alexander Van Zandt' },
+      funding: { leanCanvas: canvas },
+    });
+    const thin = store.emptyState();
+    thin.business = { name: '1921 HOLDING CO., LLC', founderName: 'Angela Van Zandt' };
+    const stored = store.writePrivateStudio(root, 'angela', thin);
+    const selected = store.selectPersonalState(stored, 'angela');
+    assert.equal(selected.adopted, false);
+    assert.equal(selected.state.business.name, '1921 HOLDING CO., LLC');
+    assert.equal(selected.state.funding.leanCanvas.problem, '');
+    const other = store.selectPersonalState(stored, 'email:someone@example.com');
+    assert.equal(other.state.business, null);
+    assert.notEqual(other.state.funding.leanCanvas.problem, line);
+  });
+
+  it('saves a phase 2 record without inventing a figure', () => {
+    const tools = require('../src/denizen-mcp-business-studio-tools');
+    const store = require('../src/denizen-business-studio-store');
+    const written = tools.applySectionWrite(store.emptyState(), {
+      section: 'financials',
+      title: 'Consulting note',
+      body: 'No contract value yet',
+    });
+    assert.equal(written.ok, true);
+    assert.equal(written.state.phase2.financials.rows[0].title, 'Consulting note');
+    assert.equal(written.state.phase2.financials.rows[0].amount, undefined);
+    const empty = tools.applySectionWrite(store.emptyState(), { section: 'reports' });
+    assert.equal(empty.ok, false);
+  });
+});
+
+describe('business-studio company header and holding dashboard', () => {
+  it('writes the company name from the field the header was ignoring', () => {
+    const store = require('../src/denizen-business-studio-store');
+    const profile = store.applyBusinessProfile(
+      { name: 'DENIZEN / Dolonia Data Tech Solutions', founderName: 'Angela Van Zandt' },
+      { company_name: '1921 HOLDING CO., LLC' },
+    );
+    assert.equal(profile.business.name, '1921 HOLDING CO., LLC');
+    assert.equal(profile.business.founderName, 'Angela Van Zandt');
+    assert.equal(profile.business.structure, 'holding');
+    assert.deepEqual(profile.applied, ['name', 'structure']);
+  });
+
+  it('keeps the product workbook off the company dashboard', () => {
+    const store = require('../src/denizen-business-studio-store');
+    const e3 = require('../src/denizen-business-studio-e3-template');
+    const progress = require('../src/denizen-business-studio-progress');
+    const funding = require('../src/denizen-business-studio-funding');
+    const bundle = e3.applyProgramTemplate('i2e-e3-pave', { businessName: '1921', founderName: 'Angela' });
+    const state = {
+      business: { name: '1921 HOLDING CO., LLC', founderName: 'Angela Van Zandt', structure: 'holding' },
+      programs: [bundle.program],
+      experiments: bundle.experiments,
+      milestones: bundle.milestones,
+      tasks: [],
+      evidence: [],
+      metrics: bundle.metrics,
+      goals: bundle.goals,
+      strategyNodes: bundle.strategyNodes,
+    };
+    assert.equal(store.strategyMapIsE3Template(state.strategyNodes), true);
+    const health = progress.businessHealth(state);
+    assert.equal(health.program.percent, null);
+    assert.match(health.program.why, /product workbook/i);
+    const discovery = health.categories.find((category) => category.id === 'customer_discovery');
+    assert.match(discovery.reason, /No discovery experiment/);
+    const sized = funding.calculateMarketSizing({
+      serviceLines: [
+        { name: 'Logistics', tam: 10, sam: 4, som: null },
+        { name: 'DENIZEN commercialization', tam: null, sam: null, som: null },
+      ],
+    });
+    assert.equal(sized.serviceRollup.tam, 10);
+    assert.equal(sized.serviceRollup.sam, 4);
+    assert.equal(sized.serviceRollup.som, null);
+    assert.equal(sized.serviceRollup.sizedLines, 1);
+    assert.equal(sized.serviceRollup.totalLines, 2);
   });
 });
 
@@ -234,8 +382,29 @@ describe('business-studio MCP tools + scopes', () => {
     assert.equal(scopes.requiredScope('business_studio_revoke_evidence'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_upsert_task'), 'crm_write');
     assert.equal(scopes.requiredScope('business_studio_create_experiment'), 'crm_write');
+    assert.equal(scopes.requiredScope('business_studio_get_workspace'), 'read');
+    assert.equal(scopes.requiredScope('business_studio_patch'), 'crm_write');
+    assert.equal(scopes.requiredScope('crm_upsert_company'), 'crm_write');
+    assert.ok(tools.isBusinessStudioTool('business_studio_patch'));
     assert.ok(tools.isBusinessStudioTool('business_studio_chain_status'));
     assert.ok(tools.isBusinessStudioTool('business_studio_revoke_evidence'));
+  });
+
+  it('patches studio fields and keeps unrelated lists', () => {
+    const tools = require('../src/denizen-mcp-business-studio-tools');
+    const next = tools.applyStudioPatch({
+      business: { id: 'b1', name: 'Dolonia' },
+      programs: [{ id: 'p1', name: 'E3' }],
+      config: { privateStudios: { angela: { business: { name: 'Hidden' } } } },
+    }, {
+      business: { founderName: 'Zion' },
+      goals: [{ id: 'g1', title: 'Fit' }],
+    });
+    assert.equal(next.business.name, 'Dolonia');
+    assert.equal(next.business.founderName, 'Zion');
+    assert.equal(next.programs[0].id, 'p1');
+    assert.equal(next.goals[0].title, 'Fit');
+    assert.equal(next.config.privateStudios, undefined);
   });
 });
 
@@ -384,8 +553,8 @@ describe('business-studio lean canvas', () => {
     const draft = funding.denizenLeanCanvasDraft();
     assert.ok(funding.leanCanvasIsSubstantial(draft));
     assert.equal(funding.leanCanvasFilledCount(draft), 9);
-    assert.match(draft.problem, /API Cost Trap/);
-    assert.match(draft.uniqueValueProposition, /zero marginal cloud cost/i);
+    assert.match(draft.problem, /school and district/i);
+    assert.doesNotMatch(draft.uniqueValueProposition, /guaranteeing|zero marginal cloud cost/i);
     assert.match(funding.leanCanvasPlainText(draft), /Customer Segments/);
   });
 });
@@ -397,18 +566,21 @@ describe('business-studio living PAVE workbook', () => {
     assert.equal(pave.paveFilledCount(pave.emptyPave()), 0);
     const draft = pave.denizenPaveDraft();
     assert.match(draft.snapshot.company, /DENIZEN/);
-    assert.match(draft.partA.customer, /Dana/);
-    assert.match(draft.partB.targetPersona, /Dana/);
+    assert.match(draft.snapshot.founders, /Zion Alexander Van Zandt/);
+    assert.match(draft.partA.customer, /school and district/i);
+    assert.doesNotMatch(draft.partA.customer, /Dana/);
+    assert.match(draft.partB.targetPersona, /school or district/i);
     assert.ok(draft.living !== false);
     assert.ok(Array.isArray(draft.partC.risks));
     assert.ok(draft.partC.risks.length >= 3);
-    assert.match(draft.partD.pitch90, /ten Danas/i);
+    assert.doesNotMatch(draft.partD.pitch90, /ten Danas/i);
     assert.ok(pave.paveFilledCount(draft) > 20);
     assert.ok(pave.pavePartBIsSubstantial(draft));
     assert.match(draft.partA.salesCycleDiagram.productTitle, /DENIZEN/);
     assert.equal(draft.partA.salesCycleDiagram.roles.length, 5);
     assert.equal(draft.partA.salesCycleDiagram.cycle.length, 4);
-    assert.match(draft.partA.salesCycleDiagram.roles.find((r) => r.id === 'decides').text, /Dana/);
+    assert.match(draft.partA.salesCycleDiagram.roles.find((r) => r.id === 'decides').text, /school or district/i);
+    assert.doesNotMatch(draft.partA.salesCycleDiagram.roles.find((r) => r.id === 'decides').text, /\$49|\$199/);
   });
 
   it('keeps Part B living from discovery evidence and mentors ask WHY', () => {
@@ -447,6 +619,117 @@ describe('business-studio living PAVE workbook', () => {
     const prog = { ...bundle.program, pave: withReview, requirements: bundle.program.requirements };
     pave.syncPavePartBEvidence(state, prog);
     assert.ok(state.evidence.some((e) => e.source === 'pave_part_b' && !e.revoked));
+  });
+
+  it('overwrites nested PAVE fields from the shapes an agent actually sends', () => {
+    const pave = require('../src/denizen-business-studio-pave');
+    const stored = pave.denizenPaveDraft();
+    stored.partA.customer = 'Dana — founder-operator of a small shop';
+    stored.snapshot.founders = 'Dolonia';
+    stored.partD.foundingTeam = 'Shawnaya is co-founder';
+    stored.partA.salesCycle = 'Dana pays $49/team or $199/lab';
+    stored.partC.directCompetitors = 'Old small-shop competitive positioning';
+
+    const fromRoot = pave.applyPaveFields(stored, {
+      snapshot: { founders: 'Zion Alexander Van Zandt', company: 'DENIZEN / Dolonia Data Tech Solutions' },
+      partA: { customer: 'School and district economic buyers', salesCycle: 'Price is not validated' },
+      partD: { foundingTeam: 'Zion Alexander Van Zandt, founder' },
+    });
+    assert.ok(fromRoot.applied.includes('partA.customer'));
+    assert.equal(fromRoot.pave.partA.customer, 'School and district economic buyers');
+    assert.equal(fromRoot.pave.snapshot.founders, 'Zion Alexander Van Zandt');
+    assert.equal(fromRoot.pave.partD.foundingTeam, 'Zion Alexander Van Zandt, founder');
+    assert.equal(fromRoot.pave.partA.salesCycle, 'Price is not validated');
+    assert.equal(fromRoot.pave.partC.directCompetitors, 'Old small-shop competitive positioning');
+
+    const fromLabel = pave.applyPaveFields(stored, {
+      fields: {
+        'Our customer (the person who pays) is': 'District buyer, unvalidated',
+        'partC.directCompetitors': 'Name competitors only from interviews',
+      },
+    });
+    assert.equal(fromLabel.pave.partA.customer, 'District buyer, unvalidated');
+    assert.equal(fromLabel.pave.partC.directCompetitors, 'Name competitors only from interviews');
+
+    const fromSnake = pave.applyPaveFields(stored, {
+      part_a: { customer: 'One school buyer at a time' },
+    });
+    assert.equal(fromSnake.pave.partA.customer, 'One school buyer at a time');
+
+    const ignored = pave.applyPaveFields(stored, { program_id: 'prog_1', note: 'hello' });
+    assert.equal(ignored.applied.length, 0);
+    assert.ok(ignored.ignored.includes('note'));
+    assert.match(ignored.pave.partA.customer, /Dana/);
+
+    const fromObjects = pave.applyPaveFields(stored, {
+      partA: {
+        problem: { text: 'Buyers cannot see which work is actually done.' },
+        solution: { body: 'DENIZEN keeps the operating record in one office.' },
+      },
+      part_b: 'Ten qualifying interviews are still ahead.',
+    });
+    assert.equal(fromObjects.pave.partA.problem, 'Buyers cannot see which work is actually done.');
+    assert.equal(fromObjects.pave.partA.solution, 'DENIZEN keeps the operating record in one office.');
+    assert.equal(fromObjects.pave.partB.summaryOfCalls, 'Ten qualifying interviews are still ahead.');
+    assert.deepEqual(fromObjects.ignored, []);
+  });
+
+  it('keeps every supplied Lean Canvas box and names the ones it cannot store', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    const written = funding.applyLeanCanvasFields(funding.emptyLeanCanvas(), {
+      problem: { text: 'Operators cannot tell which work is real.' },
+      customer_segments: 'Technical founders running a company from chat.',
+      unique_value_proposition: { body: 'One office that remembers the company.' },
+      solution: ['Capture the work', 'Show the evidence'],
+      channels: 'Founder conversations',
+      revenue_streams: 'Pilot fees once a buyer commits.',
+      cost_structure: 'Founder time and hosting.',
+      key_metrics: 'Qualifying interviews completed.',
+      unfair_advantage: 'The operating record compounds.',
+      keyPartners: 'Not a Lean Canvas box',
+    });
+    assert.equal(written.canvas.problem, 'Operators cannot tell which work is real.');
+    assert.equal(written.canvas.customerSegments, 'Technical founders running a company from chat.');
+    assert.equal(written.canvas.uniqueValueProposition, 'One office that remembers the company.');
+    assert.equal(written.canvas.solution, 'Capture the work\nShow the evidence');
+    assert.equal(written.canvas.channels, 'Founder conversations');
+    assert.equal(written.canvas.revenueStreams, 'Pilot fees once a buyer commits.');
+    assert.equal(written.canvas.costStructure, 'Founder time and hosting.');
+    assert.equal(written.canvas.keyMetrics, 'Qualifying interviews completed.');
+    assert.equal(written.canvas.unfairAdvantage, 'The operating record compounds.');
+    assert.deepEqual(written.applied.sort(), [
+      'channels', 'costStructure', 'customerSegments', 'keyMetrics', 'problem',
+      'revenueStreams', 'solution', 'unfairAdvantage', 'uniqueValueProposition',
+    ]);
+    assert.deepEqual(written.ignored, ['keyPartners']);
+  });
+
+  it('overwrites moat and capital fields instead of keeping the stored template', () => {
+    const funding = require('../src/denizen-business-studio-funding');
+    const moat = funding.applyMoatFields({
+      primaryClaim: 'FERPA and zero cloud cost',
+      primaryWhy: '80% margins',
+      sources: { hardware_sovereignty: { claim: 'old mesh claim' } },
+    }, {
+      primary_claim: 'No defensibility claim until evidence is linked',
+      primary_why: 'Copy difficulty is not established',
+      sources: { hardware_sovereignty: { claim: '' } },
+    });
+    assert.equal(moat.moat.primaryClaim, 'No defensibility claim until evidence is linked');
+    assert.equal(moat.moat.primaryWhy, 'Copy difficulty is not established');
+    assert.equal(moat.moat.sources.hardware_sovereignty.claim, '');
+    assert.equal(funding.applyMoatFields({ primaryClaim: 'keep' }, { program_id: 'x' }).applied.length, 0);
+
+    const capital = funding.applyCapitalFields({
+      notes: 'find ten Danas — $49/team or $199/lab',
+      stage: 'pre_revenue',
+      amountNeeded: 500000,
+    }, {
+      capital_plan: { notes: 'Pre-revenue. No fundraising amount.', amountNeeded: null },
+    });
+    assert.equal(capital.capitalPlan.notes, 'Pre-revenue. No fundraising amount.');
+    assert.equal(capital.capitalPlan.amountNeeded, null);
+    assert.equal(capital.capitalPlan.stage, 'pre_revenue');
   });
 
   it('sanitizes legacy thin PAVE shapes', () => {

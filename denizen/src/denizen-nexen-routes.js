@@ -74,15 +74,19 @@ function hubSummary(state, mode, orgId) {
     mode,
     org_id: orgId,
     status: {
-      online: true,
+      online: mode === 'cloud' || mode === 'local',
       open_tasks: open.length,
       urgent_tasks: urgent.length,
       planned_requests: planned.length,
       activity: (state.activity || []).length,
     },
-    brief: mode === 'local'
-      ? 'NEXEN is running on DENIZEN in local mode. Cloud workspace persistence needs your org database.'
-      : 'NEXEN Command Center is live on your DENIZEN org workspace.',
+    brief: mode === 'cloud'
+      ? 'Working on Denizen — tasks and requests save on your org workspace.'
+      : mode === 'local'
+        ? 'Local mode — API is up; connect the org database to persist like CRM.'
+        : mode === 'cloud-empty'
+          ? 'Signed in, but this session is not linked to an org workspace yet.'
+          : 'Signed out — open NEXEN from Buzz after signing in to save work.',
     focus: {
       title: state.config?.focusTitle || 'Your next move',
       detail: state.config?.focusDetail || '',

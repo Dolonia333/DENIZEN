@@ -12,7 +12,7 @@ const CRM_READ_SKILLS_LIST = [
   'crm-recommend-package', 'crm-qualify-deal', 'crm-enrich-contact', 'crm-audit-workspace',
   'crm-export-snapshot', 'crm-draft-followup', 'intake-triage', 'lead-monitor',
   'rfp-pipeline-summary', 'proposal-outline', 'outcome-standup', 'org-benchmark',
-  'crm-list-companies', 'crm-list-quotes', 'crm-list-automations', 'crm-analytics-summary',
+  'crm-list-companies', 'crm-list-contacts', 'crm-list-records', 'crm-list-quotes', 'crm-list-automations', 'crm-analytics-summary',
   'crm-marketing-funnel', 'crm-calendar-status', 'crm-list-meetings',
 ];
 
@@ -25,6 +25,9 @@ const CRM_WRITE_SKILLS_LIST = [
   'crm-add-company', 'crm-link-company', 'crm-portal-link', 'crm-add-automation',
   'crm-add-sequence', 'crm-add-email-template', 'crm-import-contacts', 'crm-add-note',
   'crm-schedule-meeting', 'crm-sync-calendar', 'crm-capture',
+  'crm-bulk-update-deals', 'crm-bulk-update-tasks', 'crm-bulk-update-contacts',
+  'crm-bulk-link-records', 'crm-upsert-package', 'crm-update-task',
+  'crm-delete-contact', 'crm-upsert-company', 'crm-link-records', 'crm-close-task',
 ];
 
 const CRM_NPC_PERSONAS = [
@@ -103,9 +106,16 @@ const SKILL_OWNERS = {
   'crm-marketing-funnel': 'Sarah',
 };
 
+const CRM_AGENT_WRITE = [
+  'crm-bulk-update-deals', 'crm-bulk-update-tasks', 'crm-bulk-update-contacts',
+  'crm-bulk-link-records', 'crm-upsert-package', 'crm-update-task', 'crm-update-profile',
+  'crm-delete-contact', 'crm-operate', 'business-context-sync',
+];
+
 const NPC_ALLOWED_SKILLS = {
   lucy: new Set([
     ...CRM_READ_SKILLS_LIST,
+    ...CRM_AGENT_WRITE,
     'crm-add-contact', 'crm-update-contact', 'crm-qualify-submission', 'crm-intake-to-pipeline',
     'crm-draft-email', 'crm-enroll-sequence', 'crm-invite-teammate', 'crm-schedule-followup',
     'crm-get-intake-link', 'crm-setup-wizard', 'crm-add-task', 'intake-triage', 'intake-to-client',
@@ -113,17 +123,22 @@ const NPC_ALLOWED_SKILLS = {
   ]),
   molly: new Set([
     ...CRM_READ_SKILLS_LIST,
+    ...CRM_AGENT_WRITE,
     'crm-capture', 'crm-add-note', 'crm-add-task', 'crm-schedule-followup', 'crm-list-tasks',
     'crm-update-deal', 'crm-update-contact', 'crm-move-deal',
+    'crm-add-company', 'crm-link-company', 'crm-link-records', 'crm-upsert-company',
+    'crm-close-task', 'crm-generate-quote', 'crm-create-quote', 'crm-calendar-status',
   ]),
   sarah: new Set([
     ...CRM_READ_SKILLS_LIST,
+    ...CRM_AGENT_WRITE,
     'crm-apply-industry', 'crm-setup-wizard', 'crm-generate-quote', 'crm-recommend-package',
     'crm-qualify-deal', 'crm-add-deal', 'lead-monitor', 'proposal-outline', 'rfp-pipeline-summary',
     'crm-portal-link', 'crm-marketing-funnel',
   ]),
   marcus: new Set([
     ...CRM_READ_SKILLS_LIST,
+    ...CRM_AGENT_WRITE,
     'crm-add-deal', 'crm-update-deal', 'crm-move-deal', 'crm-mark-deal-outcome',
     'crm-save-at-risk-deal', 'crm-add-task', 'crm-schedule-followup',
     'crm-add-company', 'crm-link-company', 'crm-schedule-meeting',
@@ -134,11 +149,13 @@ const NPC_ALLOWED_SKILLS = {
   ]),
   pier: new Set([
     ...CRM_READ_SKILLS_LIST,
+    ...CRM_AGENT_WRITE,
     'crm-dedupe-contacts', 'crm-audit-workspace', 'crm-export-snapshot', 'crm-update-contact',
     'entity-link', 'crm-import-contacts',
   ]),
   abby: new Set([
     ...CRM_READ_SKILLS_LIST,
+    ...CRM_AGENT_WRITE,
     'crm-pipeline-brief', 'crm-setup-wizard', 'outcome-standup', 'org-benchmark',
     'crm-apply-industry', 'crm-mark-deal-outcome', 'crm-analytics-summary',
   ]),

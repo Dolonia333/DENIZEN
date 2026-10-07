@@ -487,14 +487,14 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
   return (
     <div>
-      {(calStatus?.googleConfigured || calStatus?.microsoftConfigured) && (
+      {(calStatus) && (
         <div style={{
           marginBottom: 16, padding: "14px 16px", borderRadius: 12,
           background: `${T.blue}10`, border: `1px solid ${T.blue}33`,
           display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center",
         }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: T.text1 }}>External calendars</span>
-          {calStatus?.googleConfigured && (
+          <span style={{ fontSize: 12, fontWeight: 700, color: T.text1 }}>Connect Google</span>
+          {calStatus.googleConfigured ? (
             <button
               type="button"
               onClick={() => {
@@ -508,6 +508,10 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 ? (syncing === "google" ? "Syncing Google…" : `Sync Google${calStatus.google.email ? ` (${calStatus.google.email})` : ""}`)
                 : "Connect Google"}
             </button>
+          ) : (
+            <span style={{ fontSize: 11, color: T.text2 }}>
+              {calStatus.setup?.message || "Google sign-in is not set up on this Denizen yet."}
+            </span>
           )}
           {calStatus?.microsoftConfigured && (
             <button

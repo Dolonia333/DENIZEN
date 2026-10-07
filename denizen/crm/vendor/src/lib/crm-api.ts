@@ -1127,6 +1127,10 @@ export type CalendarConnectionStatus = {
   microsoft: { connected: boolean; email?: string | null; lastSync?: string | null };
   googleConfigured: boolean;
   microsoftConfigured: boolean;
+  redirectUri?: string;
+  sendsMail?: boolean;
+  pageUrl?: string;
+  setup?: { message: string; redirectUri: string } | null;
 };
 
 export async function fetchCalendarStatus(): Promise<CalendarConnectionStatus | null> {

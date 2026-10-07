@@ -33,7 +33,15 @@ module.exports = {
     try {
       await bridgeHealth(config);
       const result = await runAction(action, { npcName, params: params || {}, config });
-      const output = result.summary || JSON.stringify(result).slice(0, 800);
+      const records = result?.records || result?.deals || result?.tasks || result?.contacts || result?.companies || null;
+      const output = records
+        ? JSON.stringify({
+          summary: result.summary || null,
+          records,
+          counts: result.counts || null,
+          results: result.results || null,
+        })
+        : (result.summary || JSON.stringify(result).slice(0, 4000));
 
       pcActivity.record({
         id: activity.id,
@@ -48,11 +56,14 @@ module.exports = {
 
       return { ok: true, output, skill: tag, data: result };
     } catch (err) {
-      const output = `Denizen data skill failed (${tag}): ${err.message}. ${
-        useDirectSupabase()
-          ? 'Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on this host.'
-          : 'Start bridge: python denizen/jelly/services/supabase-bridge/secure-bridge.py'
-      }`;
+      const msg = String(err?.message || err || 'unknown error');
+      const infra = /ECONNREFUSED|ENOTFOUND|PostgREST|fetch failed|network|SUPABASE|getaddrinfo/i.test(msg);
+      const hint = !infra
+        ? ''
+        : (useDirectSupabase()
+          ? ' Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on this host.'
+          : ' Start bridge: python denizen/jelly/services/supabase-bridge/secure-bridge.py');
+      const output = `Denizen data skill failed (${tag}): ${msg}.${hint}`;
       pcActivity.record({
         id: activity.id,
         npc: npcName,

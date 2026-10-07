@@ -67,33 +67,15 @@ async function enrichMcpScope(scope = {}) {
     } catch (_) { /* optional */ }
   }
 
-  // Team MCP operator tokens without a Connect-AI session stay org-wide
-  // (they are explicitly shared operator credentials).
   const isTeamOperator = out.scope_mode === 'team' || out.npc_key === '_team';
   let orgWide = false;
-  if (isTeamOperator && !sessionId) {
-    orgWide = true;
-    role = role || 'admin';
-  } else if (isOrgWideRole(role)) {
-    orgWide = true;
-  } else if (sessionId && teamAuth?.resolveCeoPrincipalForSession) {
-    try {
-      const principal = await teamAuth.resolveCeoPrincipalForSession(sessionId, {}).catch(() => null);
-      if (principal?.ceo) {
-        orgWide = true;
-        role = role || 'owner';
-      }
-    } catch (_) { /* optional */ }
-  }
-
-  // Default: identified humans are members (own scope). Unidentified
-  // CLI/API tokens without session stay org-wide for backward compat
-  // with office automation, but never invent a profile.
   if (!sessionId && !identityId && !memberId) {
     orgWide = true;
-  } else if (!role) {
-    role = 'member';
+  } else if (isTeamOperator && !sessionId) {
+    orgWide = true;
+    role = role || 'admin';
   }
+  if (!role) role = (sessionId || identityId) ? 'member' : null;
 
   out.identity_id = identityId || null;
   out.identityId = identityId || null;
@@ -124,8 +106,8 @@ function actorFromMcpScope(scope = {}) {
 }
 
 function isOrgWideScope(scope = {}) {
-  if (scope.org_wide === true) return true;
-  if (scope.data_scope === 'org') return true;
+  if (scope.identity_id || scope.identityId || scope.session_id) return false;
+  if (scope.org_wide === true || scope.data_scope === 'org') return true;
   return isOrgWideRole(scope.role);
 }
 

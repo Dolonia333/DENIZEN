@@ -3088,14 +3088,25 @@ class PlayerChat {
         z-index: 2147483630 !important;
       }
       html.denizen-touch.denizen-tablet.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
-        top: auto !important;
+        top: max(8px, env(safe-area-inset-top, 0px)) !important;
         bottom: calc(var(--denizen-dock-height, 44px) + 12px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: 50% !important;
         right: auto !important;
         width: min(var(--denizen-panel-max-width, 540px), calc(100dvw - 24px)) !important;
-        height: min(48dvh, 520px) !important;
-        max-height: min(48dvh, 520px) !important;
+        height: auto !important;
+        max-height: none !important;
         transform: translateX(-50%) !important;
+      }
+      html.denizen-touch.denizen-tablet #player-chat-header-actions {
+        flex-wrap: nowrap !important;
+      }
+      html.denizen-touch.denizen-tablet #player-chat-header-actions #player-chat-close-btn {
+        display: inline-flex !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        flex: 0 0 44px !important;
       }
       /*
        * Landscape Floor Line: compact LEFT rail.
@@ -3103,15 +3114,15 @@ class PlayerChat {
        * Sized for readable message text while leaving Buzz clear (~120px).
        */
       html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
-        top: auto !important;
+        top: max(8px, env(safe-area-inset-top, 0px)) !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         right: auto !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
         width: min(420px, calc(100dvw - 120px)) !important;
         min-width: 0 !important;
         max-width: min(420px, calc(100dvw - 120px)) !important;
-        height: min(58dvh, 320px) !important;
-        max-height: min(58dvh, 320px) !important;
+        height: auto !important;
+        max-height: none !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;

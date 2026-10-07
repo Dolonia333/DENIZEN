@@ -755,6 +755,8 @@
       const t = chat()?.getActiveThread?.();
       setText(title, t?.title || t?.npcName || 'Chat');
       setHidden(back, false);
+      back.textContent = '‹';
+      back.setAttribute('aria-label', 'Back');
       setHidden(newGroup, true);
       if (speakBtn) {
         const vi = window.DenizenVoiceInput;
@@ -766,11 +768,15 @@
     } else if (view === 'group-pick') {
       setText(title, 'New group');
       setHidden(back, false);
+      back.textContent = '‹';
+      back.setAttribute('aria-label', 'Back');
       setHidden(newGroup, true);
       setHidden(speakBtn, true);
     } else {
       setText(title, view === 'contacts' ? 'Contacts' : 'Messages');
-      setHidden(back, true);
+      setHidden(back, false);
+      back.textContent = '✕';
+      back.setAttribute('aria-label', 'Close chat');
       setHidden(newGroup, view !== 'contacts');
       setHidden(speakBtn, true);
     }

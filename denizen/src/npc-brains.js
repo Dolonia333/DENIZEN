@@ -450,8 +450,9 @@ class NpcBrainManager {
   _getCompanyContext(npcName) {
     try {
       const businessContext = require('./denizen-business-context');
-      const brief = businessContext.loadCompanyBrief();
-      const model = businessContext.loadBusinessModel();
+      const fileModel = businessContext.loadBusinessModel();
+      const model = businessContext.applyLivePriorities(fileModel, {});
+      const brief = businessContext.scrubStaleNarrative(businessContext.loadCompanyBrief(), model);
       const ent = model?.entity || {};
       const snapshot = {
         company: ent.legal_name

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Coming soon · NEXEN · Denizen</title>
+<link rel="icon" type="image/png" href="/nexen/branding/NEXEN-logo.png" />
+<style>
+:root{color-scheme:dark;--ink:#eaf6ff;--muted:#94adc9;--blue:#83cfff;--line:#8bc6ff2c;font-family:"Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;color:var(--ink);background:radial-gradient(ellipse at 80% 0,#174e8266,transparent 48%),#07101f;display:grid;place-items:center;padding:24px}
+.card{max-width:520px;width:100%;padding:28px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(125deg,#9bd4ff13,#183b592f)}
+.eyebrow{font-size:10px;letter-spacing:.16em;color:var(--blue);font-weight:800}
+h1{font-size:28px;letter-spacing:-1px;margin:10px 0}
+p{font-size:14px;line-height:1.7;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+a{display:inline-flex;padding:10px 14px;border-radius:10px;border:1px solid #93c8ff40;background:#17385866;color:inherit;text-decoration:none;font-size:12px;font-weight:700}
+a.primary{color:#0b2a49;background:linear-gradient(140deg,#c8f0ff,#62a9ef);border-color:#b3e9ff}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="eyebrow">PREVIEW · NOT CONNECTED</div>
+  <h1 id="title">Coming soon on Denizen</h1>
+  <p id="detail">This NEXEN surface is not wired to a live backend here. Use Today for tasks and requests that actually save.</p>
+  <div class="actions">
+    <a class="primary" href="/nexen/">Back to Today</a>
+    <a href="/">Denizen office</a>
+  </div>
+</main>
+<script>
+(function () {
+  var from = new URLSearchParams(location.search).get('from') || 'this page';
+  var labels = {
+    agents: 'Agent Desk',
+    game: 'WDR City',
+    memory: 'Memory',
+    lab: 'Local lab',
+    tasks: 'Task room',
+    day: 'Plan my day',
+    plans: 'Consolidated plans',
+    kilo: 'Kilo Code',
+    lookbook: 'WDR lookbook',
+  };
+  document.getElementById('title').textContent = (labels[from] || from) + ' — coming soon';
+  document.getElementById('detail').textContent =
+    '“' + (labels[from] || from) + '” is not connected on Denizen yet. Tasks, requests, Money Engine, Needs you, and Readiness are the working surfaces.';
+})();
+</script>
+</body>
+</html>

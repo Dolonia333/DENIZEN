@@ -108,11 +108,34 @@ function experimentProgress(exp, state) {
   };
 }
 
+function isHoldingCompany(state) {
+  const structure = state?.business?.structure;
+  return structure === 'holding' || structure === 'portfolio';
+}
+
+function isProductProgram(state, program) {
+  if (!program) return false;
+  if (program.scope === 'product') return true;
+  return isHoldingCompany(state) && program.templateId === 'i2e-e3-pave';
+}
+
+function companyProgram(state) {
+  const programs = Array.isArray(state?.programs) ? state.programs : [];
+  const company = programs.filter((program) => program && !isProductProgram(state, program));
+  return company.find((program) => program.status === 'active') || company[0] || null;
+}
+
 function businessHealth(state) {
   const programs = Array.isArray(state.programs) ? state.programs : [];
-  const activeProgram = programs.find((p) => p.status === 'active') || programs[0] || null;
+  const activeProgram = companyProgram(state);
   const prog = programProgress(state, activeProgram);
-  const experiments = (state.experiments || []).map((e) => experimentProgress(e, state));
+  if (isHoldingCompany(state) && !activeProgram) {
+    prog.label = 'Company roadmap not started';
+    prog.why = 'The product workbook does not drive company strategy, metrics, or this dashboard.';
+  }
+  const productIds = new Set(programs.filter((program) => isProductProgram(state, program)).map((program) => program.id));
+  const companyExperiments = (state.experiments || []).filter((experiment) => !experiment?.programId || !productIds.has(experiment.programId));
+  const experiments = (isHoldingCompany(state) ? companyExperiments : (state.experiments || [])).map((e) => experimentProgress(e, state));
   const openTasks = (state.tasks || []).filter((t) => t && t.status !== 'done' && t.status !== 'cancelled');
   const overdueTasks = openTasks.filter((t) => t.due && new Date(t.due) < new Date());
 
@@ -255,6 +278,9 @@ module.exports = {
   requirementProgress,
   programProgress,
   experimentProgress,
+  isHoldingCompany,
+  isProductProgram,
+  companyProgram,
   businessHealth,
   explainStatus,
 };

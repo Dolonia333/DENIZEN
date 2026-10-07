@@ -855,7 +855,7 @@ html.embed .dz-app-chrome{display:none}
 <body>
 <div class="dz-app-chrome" role="navigation" aria-label="Business Studio app bar">
   <a href="/">← Back to office</a>
-  <span class="dz-app-title"><strong>Business Studio</strong><span>Founder OS · Denizen</span></span>
+  <span class="dz-app-title"><strong>Business Studio</strong><span id="studioChromeName">Business Studio</span></span>
   <span class="dz-app-spacer"></span>
   <a href="/crm/">Open CRM</a>
   <a href="/studio-board/">Studio Board</a>
@@ -983,15 +983,15 @@ function emptyLeanCanvas(){
 }
 function denizenLeanCanvasDraft(){
   return {
-    problem:'API Cost Trap: Public school districts cannot sustain recurring cloud AI API token bills across hundreds of active lab students.\n\nFERPA & Privacy Barriers: Federal student privacy laws restrict transmitting unvetted student data/prompts to third-party public AI providers.\n\nStranded Lab Hardware: High-spec campus lab and esports computers sit idle for 16+ hours daily.',
-    solution:'Localized Mesh Overlay: Distributes local AI model inference across idle campus computers, eliminating external API costs.\n\nIsolated Sandbox Client: Containerized local node execution with zero lateral network traversal and encrypted mTLS communications.\n\nGamified Learning Hub: Interactive visual simulation interface for cybersecurity, AI, and network routing curriculum.',
-    uniqueValueProposition:'Enterprise-grade AI simulation capabilities at zero marginal cloud cost, guaranteeing student data privacy by keeping all prompts and network traffic inside the campus perimeter.',
-    unfairAdvantage:'Hardware Sovereignty Architecture: Proprietary localized mesh clustering that mathematically removes external API fees while enforcing local compliance out-of-the-box.\n\nHigh Gross Margins (80%+): Infrastructure runs on customer-owned edge hardware, avoiding platform cloud hosting bloat.',
-    customerSegments:'Economic Buyers: High School CTE Directors, District IT Directors, and STEM Curriculum Coordinators.\n\nEnd Users: High School Computer Science Teachers, Cybersecurity Instructors, and CTE Students.\n\nEarly Adopters: High school labs with dedicated GPU/gaming hardware (e.g., esports labs, 3D/CAD labs).',
-    keyMetrics:'Total district cloud API costs avoided/saved ($).\nActive connected mesh lab nodes per campus.\nLocal inference token throughput & latency vs. public cloud benchmarks.\nDiscovery pilot to multi-year SaaS contract conversion rate.',
-    channels:'Direct B2B / B2G pilot demonstrations to regional school district IT admins.\nState CareerTech & STEM education consortiums and conferences.\nAccelerator introductions (i2E, OCN network).',
-    costStructure:'Platform software development & visualization engine maintenance.\nContainer agent testing, security verification, and sandbox auditing.\nDistrict pilot deployment support and sales discovery travel.',
-    revenueStreams:'Annual B2B SaaS Subscriptions: Per-campus or per-seat licensing for orchestration and curriculum simulation interfaces.\nGrant Procurement: Funded via existing Perkins V (CTE) and federal STEM grant allocations.',
+    problem:'Hypothesis to test with school and district buyers: AI work dies in disposable chat, and the buyer cannot see whether an agent did real work. Cost, privacy, and idle hardware are not established facts.',
+    solution:'DENIZEN is a visual office where named agents keep memory, use allowed tools, and leave receipts. A campus deployment is a separate hypothesis, not a finished infrastructure product.',
+    uniqueValueProposition:'A buyer could see which agent finished work. Privacy compliance, zero cloud cost, and margin claims are excluded until evidence exists.',
+    unfairAdvantage:'No unfair advantage is claimed. Copy difficulty and margins stay unsupported until evidence is linked.',
+    customerSegments:'School and district buyers: CTE, curriculum, and IT decision-makers. The economic buyer is not confirmed by qualifying interviews.',
+    keyMetrics:'Qualifying school or district buyer interviews, target 10. Contradictory evidence counts. Meetings and CRM contacts do not count.',
+    channels:'Founder-led discovery with schools and districts. Introductions are channels to test, not a closed pipeline.',
+    costStructure:'Product development and founder time. Cloud, hardware, and delivery costs are not modeled as zero.',
+    revenueStreams:'Pricing is not validated. No list price, grant award, or margin until a buyer or a sourced model says so.',
     updatedAt:null
   };
 }
@@ -1076,18 +1076,18 @@ function emptySalesCycleDiagram(){
 }
 function denizenSalesCycleDiagram(){
   return {
-    title:'DENIZEN sales cycle · E3 Workshop A',
-    subtitle:'Buying center around the product. One paying persona: Dana.',
+    title:'DENIZEN sales cycle',
+    subtitle:'School or district buying center. Unvalidated until qualifying interviews exist.',
     productTitle:'DENIZEN', productSubtitle:'visual AI office',
     roles:[
-      {id:'uses',label:'USES',tone:'sage',text:'Dana + one operator\nlives in Cursor / Grok\nworks in the office daily'},
-      {id:'recommends',label:'RECOMMENDS',tone:'blue',text:'Shawnaya (co-founder)\nor a peer founder\nwho already uses agents'},
-      {id:'influences',label:'INFLUENCES',tone:'tan',text:'1921 / Angela — only if the\nseat is bought through 1921\nRM Cyber — if joint ops'},
-      {id:'decides',label:'DECIDES & PAYS',tone:'teal',text:'Dana on a card\n$49 / team or $199 / lab\nnot E3, not a federal vehicle'},
-      {id:'saboteur',label:'SABOTEUR',tone:'red',text:"IT / security:\n'agents cannot send mail'\nor 'we already have ChatGPT'"}
+      {id:'uses',label:'USES',tone:'sage',text:'Teachers and operators\nwho would use the office\nNot confirmed by interviews'},
+      {id:'recommends',label:'RECOMMENDS',tone:'blue',text:'Curriculum or CTE staff\nwho might champion a pilot\nUnvalidated'},
+      {id:'influences',label:'INFLUENCES',tone:'tan',text:'IT and compliance\ncan block or shape a purchase\nNo compliance claim yet'},
+      {id:'decides',label:'DECIDES & PAYS',tone:'teal',text:'Economic buyer at the\nschool or district\nPrice is not validated'},
+      {id:'saboteur',label:'SABOTEUR',tone:'red',text:'Status quo tools\nor a security veto\nCount this if interviews say so'}
     ],
     cycle:SALES_CYCLE_STEPS.map(function(s){return {id:s.id,label:s.label};}),
-    cycleNote:'HOW A DEAL MOVES (honest cycle — no invented close dates)'
+    cycleNote:'HOW A DEAL MOVES (honest cycle — no invented close dates or prices)'
   };
 }
 function sanitizeSalesCycleDiagram(raw){
@@ -1268,56 +1268,59 @@ function sanitizePave(raw){
 function denizenPaveDraft(){
   return sanitizePave({
     snapshot:{
-      company:'Dolonia (product: DENIZEN)',
-      founders:'Zion Van Zandt and Shawnaya Williams',
-      i2eAdvisor:'Final PAVE advisor TBD. E3 mentor: Srijita Ghosh (Mentor Call A: Mon Aug 31, 1:00–1:45 PM CDT).',
-      cohort:'i2E E3 Cohort 63. Workshop A completed Thu Aug 27, 2026. Feedback session Fri Aug 28. Mentor Call A Mon Aug 31.',
-      productDescription:'DENIZEN is a visual AI operating environment: a persistent pixel-art office where named agents keep memory, use real tools (CRM, mail drafts, GitHub/Cursor, MCP), and leave receipts when work finishes. It is built so a small team can see whether agents did real work — not just chat.'
+      company:'DENIZEN / Dolonia Data Tech Solutions',
+      founders:'Zion Alexander Van Zandt',
+      i2eAdvisor:'Srijita Ghosh, i2E E3 mentor. Final PAVE advisor is not assigned.',
+      cohort:'i2E E3 Cohort 63. Workshops and the mentor call are historical context, not customer evidence.',
+      productDescription:'DENIZEN is a visual AI operating environment: a persistent office where named agents keep memory, use allowed tools, and leave receipts when work finishes.'
     },
     partA:{
-      customer:'Dana — founder-operator of a 3–8 person technical shop (Oklahoma / similar) who already pays for ChatGPT, Claude, or Cursor. Title: founder / head of ops. B2B. Dana writes the card; Dana is not a school district and not i2E.',
-      problem:'Every AI session dies. Work lives in chat tabs. There is no shared memory, no audit of what an agent actually did, and no working set of real accounts — so the team cannot tell chatbots from operators.',
-      currentAlternative:'Stacked chat tabs + a CRM nobody trusts + Slack/Notion notes + hoping a VA or intern follows up. Status quo is ChatGPT/Claude/Cursor with no office, no outcomes ledger, and no durable agent when the window closes.',
-      solution:'Putting persistent agents in one office Dana can watch. Agents keep memory, run allowed tools, park junk off the sales board, and write outcomes. Faster than hiring a coordinator; clearer than another chatbot; cheaper than a full ops hire. Mail stays gated until Dana says send.',
-      valueProposition:'With DENIZEN, Dana can: (1) See which agent is on and what it last finished. (2) Keep a sales board that only shows live humans and next verbs. (3) Leave an agent on overnight without this chat staying open. (4) Draft follow-ups without auto-sending mail. (5) Hand a coding fix to Cursor and get a closed ticket. (6) Prove to a partner or mentor what ran, with receipts — not vibes.',
-      salesCycle:'Text map until we draw it. DENIZEN in the center. USER: Dana plus one technical operator. DECIDES AND PAYS: Dana on a card ($49/team or $199/lab). CYCLE TODAY: demo office → one real account → weekly receipt → paid seat.',
+      customer:'School and district buyers — CTE, curriculum, and IT decision-makers. The economic buyer is not confirmed. CRM contacts and meetings are not qualifying interviews.',
+      problem:'Hypothesis to test: AI work dies in chat tabs, and a school or district cannot tell whether an agent did real work. Do not treat cost savings or compliance as proven.',
+      currentAlternative:'Chat tools, campus software, and manual follow-up. What buyers actually use is unknown until interviews say so.',
+      solution:'DENIZEN gives a small team a visible office, durable agents, and receipts. A campus deployment is a separate hypothesis, not a finished product claim.',
+      valueProposition:'With DENIZEN, a buyer could see which agent finished work and keep a record of it. Pricing, privacy compliance, and infrastructure savings are not claimed here.',
+      salesCycle:'Unvalidated. Likely users are teachers or operators. The economic buyer is a school or district role. Price is not set. Count a security or status-quo veto if interviews say so.',
       salesCycleDiagram:denizenSalesCycleDiagram()
     },
     partB:{
-      targetPersona:'Same as Part A: Dana, founder-operator of a 3–8 person technical shop. Do not mix CareerTech, OMES, and E3 into this list.',
+      targetPersona:'One school or district buyer at a time. Do not mix government capture, a small-business persona, or CRM contacts into this list.',
       interviewGoal:'10+',
-      interviewsCompletedNote:'0 of 10. Start after Mentor Call A. Interviews are discovery calls, not CRM deals.',
-      summaryOfCalls:'None yet. Workshop A only.',
-      expectedFindings:'TBD after first interviews.',
-      unexpectedFindings:'TBD after first interviews.',
-      personaDecision:'Hold Dana as the paying persona until 5 interviews say otherwise. 1921 / OMES / RM Cyber is a separate capture motion under the parent company — not this E3 customer.'
+      interviewsCompletedNote:'0 of 10 qualifying school or district interviews. Contradictory evidence counts. Meetings are not interviews.',
+      summaryOfCalls:'None yet. No qualifying interviews are on file.',
+      expectedFindings:'Not written until interviews exist.',
+      unexpectedFindings:'Not written until interviews exist. Contradictory evidence is recorded here.',
+      personaDecision:'Persona is unvalidated. Hold or change it only after qualifying interviews, including interviews that disagree.'
     },
     partC:{
-      directCompetitors:'ChatGPT / Claude Teams / Cursor background agents. (Workshop C — refine.)',
-      indirectCompetitors:'Notion AI, HubSpot + a VA, Slack bots, n8n dashboards with no office.',
-      potentialCompetitors:'Any lab that wraps MCP + a game skin. Open-source agent dashboards.',
-      statusQuo:'A pile of chat tabs and a CRM they ignore.',
-      competitiveMatrix:'Paste your competitive matrix here.',
-      shortTermAdvantages:'Working office + durable NPC + outcomes ledger + mail default-deny + a CRM that parks scrape junk.',
-      longTermAdvantages:'Persistent identity + tool policy + visual audit trail on a stack we operate. First-mover is not the moat.',
-      competitorAdvantages:'Model quality, distribution, and brand of OpenAI / Anthropic / Cursor.',
-      competitiveResponse:'They ship “agents” inside the chat product. We stay the visible office + policy + receipts layer, not another model.',
-      distributionAccess:'Not yet. Channel today is founder-led demo. 1921 gov channel is a different product motion — do not mix into E3 distribution.',
+      directCompetitors:'Existing chat and campus software the buyer already pays for. Name them from interviews, not from a template.',
+      indirectCompetitors:'Status quo process: staff, spreadsheets, and tools already in the building.',
+      potentialCompetitors:'Any vendor that can show the same work with receipts. Not listed as a fact.',
+      statusQuo:'Whatever the buyer uses today. Unknown until interviews.',
+      competitiveMatrix:'Not filled. A matrix needs sources.',
+      shortTermAdvantages:'A visible office and receipts. This is a product description, not a proven advantage.',
+      longTermAdvantages:'No moat is claimed. First-mover, compliance, and cost claims need evidence.',
+      competitorAdvantages:'Incumbent tools already have distribution and trust. Specific names come from interviews.',
+      competitiveResponse:'Unknown until a buyer describes how they would switch or refuse.',
+      distributionAccess:'Not established. Founder-led discovery is the current path.',
       risks:[
-        {risk:'Wrong buyer (district / gov vs Dana)',why:'Burns cohort weeks on non-payers',mitigate:'One persona at a time; park 1921 under parent'},
-        {risk:'Chatbots “good enough”',why:'No urgency to switch',mitigate:'Lead with receipts + overnight agent, not chat quality'},
-        {risk:'Mail / security veto',why:'IT blocks agents',mitigate:'Default-deny mail; human gate on send'}
+        {risk:'Wrong buyer',why:'A persona without interviews wastes the cohort',mitigate:'Ten qualifying interviews, contradictions included'},
+        {risk:'Unproven pricing',why:'A list price would be invented',mitigate:'Leave price blank until a buyer discusses it'},
+        {risk:'Unsupported compliance or cost claim',why:'Mentors and buyers will challenge it',mitigate:'Do not state FERPA, cloud cost, or margin as fact'}
       ],
-      marketSizing:{tam:{customers:'',acv:'',size:'TBD — Workshop C'},sam:{customers:'',acv:'',size:'TBD — Workshop C'},som:{customers:'',acv:'',size:'TBD — Workshop C'}},
-      futureSegments:'After Dana: multi-seat shops, then 1921 capture visibility as a separate line — not Year-1 E3 TAM.'
+      marketSizing:{tam:{customers:'',acv:'',size:''},sam:{customers:'',acv:'',size:''},som:{customers:'',acv:'',size:''}},
+      revenueYear1:'Not modeled',
+      revenueYear2:'Not modeled',
+      revenueYear3:'Not modeled',
+      futureSegments:'Other public-sector buyers only after the school or district persona is supported or rejected by interviews.'
     },
     partD:{
-      foundingTeam:'Zion Van Zandt — founder, systems / product / infrastructure.\nShawnaya Williams — co-founder, software / product.\nAngela Van Zandt — 1921 Holding Co. (parent; not E3 product owner).\nDr. Ed Van Zandt — engineering advisor.',
-      teamGaps:'Repeatable sales motion and customer-discovery interviews (10+). Also: a durable runner that does useful work, not just presence ticks.',
-      gapStrategy:'Lean on E3 mentor (Srijita) + do the 10 interviews ourselves this cohort. Do not hire a salesperson before Dana exists as a real buyer.',
-      pitch90:'Founders of small technical teams already pay for chatbots that forget everything when the tab closes. DENIZEN is a visual office where named agents keep memory, use real tools, and leave receipts. We are not selling i2E a product. We are finding ten Danas.'
+      foundingTeam:'Zion Alexander Van Zandt — founder. Other teammates are recorded only when the workspace already names them.',
+      teamGaps:'Qualifying customer discovery: 10 school or district interviews, with contradictory evidence counted.',
+      gapStrategy:'Run the interviews with the i2E E3 mentor, Srijita Ghosh. Do not hire ahead of a validated buyer.',
+      pitch90:'DENIZEN is a visual office where named agents keep memory, use allowed tools, and leave receipts. It is pre-revenue and pre-validation. The next proof is 10 qualifying school or district buyer interviews.'
     },
-    final:{discoveredRisks:'[completed in the meeting]',recommendedNextSteps:'[completed in the meeting]',advisorOutcome:''},
+    final:{discoveredRisks:'Pricing, compliance, margins, and infrastructure savings are not established.',recommendedNextSteps:'Keep the 10-interview goal. Do not fill Funding Readiness without evidence.',advisorOutcome:''},
     living:true
   });
 }
@@ -1446,6 +1449,7 @@ function emptyState(){
     config:emptyConfig(),
     documents:[],
     workbooks:[],
+    phase2:{templates:[],financials:{notes:'',rows:[]},diagrams:[],reports:[]},
     funding:emptyFunding()
   };
 }
@@ -1480,6 +1484,17 @@ function sanitizeState(raw){
     };
   }
   if(raw.config && typeof raw.config==='object') out.config={...out.config,...raw.config};
+  if(raw.phase2 && typeof raw.phase2==='object'){
+    out.phase2={
+      templates:Array.isArray(raw.phase2.templates)?raw.phase2.templates:[],
+      diagrams:Array.isArray(raw.phase2.diagrams)?raw.phase2.diagrams:[],
+      reports:Array.isArray(raw.phase2.reports)?raw.phase2.reports:[],
+      financials:{
+        notes:raw.phase2.financials&&raw.phase2.financials.notes!=null?String(raw.phase2.financials.notes):'',
+        rows:Array.isArray(raw.phase2.financials&&raw.phase2.financials.rows)?raw.phase2.financials.rows:[]
+      }
+    };
+  }
   return out;
 }
 
@@ -1503,7 +1518,7 @@ function buildE3Template(opts){
     {
       id:uid('req'),programId,stageId:'validate',key:'discovery_interviews',
       title:'Customer discovery interviews',
-      description:'Complete 10 interviews with Dana-style founder-operators (3–8 person technical shops).',
+      description:'Complete 10 qualifying interviews with school or district buyers. Meetings and CRM contacts do not count. Contradictory evidence counts.',
       evidenceType:'interview',targetCount:10,
       linkedAssumptionKey:'sessions_die_no_office'
     },
@@ -1516,7 +1531,7 @@ function buildE3Template(opts){
     {
       id:uid('req'),programId,stageId:'pilot',key:'pilot_agreement',
       title:'Pilot evaluation agreement',
-      description:'At least one Dana (or shop) agrees to evaluate a paid seat / pilot.',
+      description:'At least one school or district economic buyer agrees to evaluate a pilot. Not assumed.',
       evidenceType:'document',targetCount:1
     }
   ];
@@ -1549,13 +1564,13 @@ function buildE3Template(opts){
   }];
 
   const experiments=[{
-    id:uid('exp'),title:'Interview 10 Dana founder-operators',
+    id:uid('exp'),title:'10 qualifying school or district buyer interviews',
     assumptionKey:'sessions_die_no_office',status:'active',targetCount:10,completedCount:0,
     programId,method:'customer_interview',createdAt:now
   }];
 
   const goals=[{
-    id:uid('goal'),title:'Validate DENIZEN problem-solution fit for Dana buyers',
+    id:uid('goal'),title:'Validate DENIZEN with 10 qualifying school or district buyer interviews',
     status:'active',programId,metricKeys:['discovery_interviews'],createdAt:now
   }];
 
@@ -1681,11 +1696,34 @@ function experimentProgress(exp, st){
     evidenceIds:evidence.map(function(e){return e.id;})
   };
 }
+function isHoldingCompany(st){
+  const structure=st&&st.business&&st.business.structure;
+  return structure==='holding'||structure==='portfolio';
+}
+function isProductProgram(st, program){
+  if(!program) return false;
+  if(program.scope==='product') return true;
+  return isHoldingCompany(st)&&program.templateId==='i2e-e3-pave';
+}
+function companyProgram(st){
+  const programs=Array.isArray(st&&st.programs)?st.programs:[];
+  const company=programs.filter(function(program){return program&&!isProductProgram(st, program);});
+  return company.find(function(program){return program.status==='active';})||company[0]||null;
+}
 function businessHealth(st){
   const programs=Array.isArray(st.programs)?st.programs:[];
-  const activeProgram=programs.find(function(p){return p.status==='active';})||programs[0]||null;
-  const prog=programProgress(st, activeProgram);
-  const experiments=(st.experiments||[]).map(function(e){return experimentProgress(e,st);});
+  const activeProg=companyProgram(st);
+  const prog=programProgress(st, activeProg);
+  if(isHoldingCompany(st)&&!activeProg){
+    prog.label='Company roadmap not started';
+    prog.why='The product workbook does not drive company strategy, metrics, or this dashboard.';
+  }
+  const productIds={};
+  programs.forEach(function(program){ if(isProductProgram(st, program)) productIds[program.id]=true; });
+  const sourceExperiments=isHoldingCompany(st)
+    ?(st.experiments||[]).filter(function(experiment){return !experiment||!experiment.programId||!productIds[experiment.programId];})
+    :(st.experiments||[]);
+  const experiments=sourceExperiments.map(function(e){return experimentProgress(e,st);});
   const openTasks=(st.tasks||[]).filter(function(t){return t && t.status!=='done' && t.status!=='cancelled';});
   const overdueTasks=openTasks.filter(function(t){return t.due && new Date(t.due)<new Date();});
   const categories=[];
@@ -2032,18 +2070,30 @@ function logActivity(text, meta){
 }
 
 /* ---------- 7. Persistence + cloud sync ---------- */
-function persistLocal(){
-  try{ window.storage.setItem('workspace', JSON.stringify(state)); }catch(e){}
+function workspaceStorageKey(){
+  const sess=readVisitorSession();
+  const who=(sess&&(sess.email||sess.session_id))||'local';
+  return 'workspace:'+String(who).toLowerCase();
 }
+function persistLocal(){
+  try{ window.storage.setItem(workspaceStorageKey(), JSON.stringify(state)); }catch(e){}
+}
+let studioReady=false;
 function scheduleSave(){
+  if(!studioReady) return;
   persistLocal();
   clearTimeout(saveTimer);
   saveTimer=setTimeout(function(){ pushRemoteWorkspace().catch(function(){}); },600);
 }
 function loadLocal(){
   try{
-    const raw=window.storage.getItem('workspace');
+    const sess=readVisitorSession();
+    const raw=window.storage.getItem(workspaceStorageKey());
     if(raw) state=sanitizeState(JSON.parse(raw));
+    else if(!sess){
+      const legacy=window.storage.getItem('workspace');
+      if(legacy) state=sanitizeState(JSON.parse(legacy));
+    }
   }catch(e){ state=emptyState(); }
 }
 function readVisitorSession(){
@@ -2109,19 +2159,10 @@ async function pushRemoteWorkspace(){
 async function bootstrapSync(){
   const remote=await fetchRemoteWorkspace();
   if(remote && remote.state){
-    const remoteHas=remote.state.business || (remote.state.programs&&remote.state.programs.length);
-    const localHas=state.business || (state.programs&&state.programs.length);
-    if(remoteHas || !localHas){
-      state=sanitizeState(remote.state);
-      persistLocal();
-    } else if(localHas){
-      await pushRemoteWorkspace();
-    }
-    if(remote.viewer && remote.viewer.role && /mentor|advisor|investor|viewer/i.test(remote.viewer.role)){
-      state.config=state.config||{};
-      state.config.advisorMode=true;
-    }
+    state=sanitizeState(remote.state);
+    persistLocal();
   }
+  studioReady=true;
 }
 async function postStudioApi(path, payload){
   const sess=readVisitorSession();
@@ -2144,9 +2185,15 @@ async function postStudioApi(path, payload){
 
 /* ---------- 8. Mutations ---------- */
 function applyE3Template(opts){
-  const built=buildE3Template(opts||{
-    businessName:(state.business&&state.business.name)||'My Business',
-    founderName:(state.business&&state.business.founderName)||'Founder'
+  opts=opts||{};
+  const existing=(state.programs||[]).find(function(p){return p.templateId==='i2e-e3-pave';});
+  if(existing && !opts.force){
+    if(!opts.silent) toast('E3 program kept — saved PAVE, goals, and experiments were not replaced');
+    return existing;
+  }
+  const built=buildE3Template(opts.businessName?opts:{
+    businessName:(state.business&&state.business.name)||'DENIZEN / Dolonia Data Tech Solutions',
+    founderName:(state.business&&state.business.founderName)||'Zion Alexander Van Zandt'
   });
   if(!state.business){
     state.business={
@@ -2180,42 +2227,48 @@ function applyE3Template(opts){
 }
 
 /** One-shot: business + E3 + living PAVE + Lean Canvas + strategic moat (Dolonia docs). */
+function studioTextFilled(value){
+  return String(value||'').trim().length>=8;
+}
 function applyDoloniaFounderPack(){
-  const businessName='Dolonia (product: DENIZEN)';
-  const founderName='Zion Van Zandt and Shawnaya Williams';
+  const existingBiz=state.business||{};
+  const businessName=studioTextFilled(existingBiz.name)?existingBiz.name:'DENIZEN / Dolonia Data Tech Solutions';
+  const founderName=studioTextFilled(existingBiz.founderName)?existingBiz.founderName:'Zion Alexander Van Zandt';
   state.business={
-    id:(state.business&&state.business.id)||uid('biz'),
+    id:existingBiz.id||uid('biz'),
     name:businessName,
     founderName:founderName,
-    createdAt:(state.business&&state.business.createdAt)||nowISO()
+    createdAt:existingBiz.createdAt||nowISO()
   };
-  applyE3Template({businessName:businessName,founderName:founderName});
+  applyE3Template({businessName:businessName,founderName:founderName,silent:true});
   const prog=activeProgram();
-  if(prog){
+  if(prog && paveFilledCount(prog.pave)===0){
     prog.pave=Object.assign(emptyPave(), denizenPaveDraft(), {updatedAt:nowISO(), reviews:(prog.pave&&prog.pave.reviews)||[]});
     prog.pave.snapshot=Object.assign({}, prog.pave.snapshot, {
       company:businessName,
       founders:founderName,
-      i2eAdvisor:'Srijita Ghosh (i2E) — Mentor Call A: Mon Aug 31, 1:00–1:45 PM CDT',
+      i2eAdvisor:'Srijita Ghosh, i2E E3 mentor',
       cohort:'i2E E3 Cohort 63'
     });
-    prog.pave=syncPartBFromDiscovery(prog.pave, state, {force:true});
-    syncPavePartBEvidence(prog);
   }
   state.funding=state.funding||emptyFunding();
-  state.funding.leanCanvas=Object.assign(emptyLeanCanvas(), denizenLeanCanvasDraft(), {updatedAt:nowISO()});
-  syncLeanCanvasEvidence(state.funding.leanCanvas);
-  state.funding.moat=Object.assign({}, state.funding.moat||{}, {
-    primaryClaim:'Hardware sovereignty + opt-in campus mesh: local inference on idle lab hardware removes recurring cloud API cost and keeps student prompts on-campus (FERPA).',
-    primaryWhy:'Districts cannot sustain OpenAI/AWS token bills; FERPA blocks unvetted prompts; labs sit idle 16+ hours/day.',
-    primaryCopyDifficulty:'hard',
-    primaryMonthsToCopy:18
-  });
-  state.funding.capitalPlan=Object.assign({}, state.funding.capitalPlan||{}, {
-    stage:'pre_revenue',
-    pathwayStep:'readiness',
-    notes:'Education mesh: annual B2B SaaS + Perkins V / STEM grants. DENIZEN E3: find ten Danas ($49/team or $199/lab).'
-  });
+  if(leanCanvasFilledCount(state.funding.leanCanvas||{})===0){
+    state.funding.leanCanvas=Object.assign(emptyLeanCanvas(), denizenLeanCanvasDraft(), {updatedAt:nowISO()});
+    syncLeanCanvasEvidence(state.funding.leanCanvas);
+  }
+  state.funding.moat=state.funding.moat||{};
+  if(!studioTextFilled(state.funding.moat.primaryClaim)){
+    state.funding.moat.primaryClaim='';
+    state.funding.moat.primaryWhy='No defensibility claim until linked evidence supports it.';
+    state.funding.moat.primaryCopyDifficulty='';
+    state.funding.moat.primaryMonthsToCopy=null;
+  }
+  state.funding.capitalPlan=state.funding.capitalPlan||{};
+  if(!studioTextFilled(state.funding.capitalPlan.notes)){
+    state.funding.capitalPlan.stage=state.funding.capitalPlan.stage||'pre_revenue';
+    state.funding.capitalPlan.pathwayStep=state.funding.capitalPlan.pathwayStep||'readiness';
+    state.funding.capitalPlan.notes='Pre-revenue and pre-validation. No fundraising amount. Next evidence is 10 qualifying school or district buyer interviews, and contradictory evidence counts.';
+  }
   state.advisors=state.advisors||[];
   if(!state.advisors.some(function(a){return /Srijita/i.test(a.name||'');})){
     state.advisors.push({
@@ -2227,11 +2280,11 @@ function applyDoloniaFounderPack(){
       createdAt:nowISO()
     });
   }
-  logActivity('Applied Dolonia founder pack (Lean Canvas + PAVE + moat)');
+  logActivity('Founder pack kept saved PAVE, moat, and capital text');
   scheduleSave();
   ui.view='overview';
   render();
-  toast('Dolonia account filled — Lean Canvas + PAVE + moat from your E3 docs');
+  toast('Saved PAVE, moat, and capital notes were kept');
 }
 function startBusiness(name, founder){
   state.business={
@@ -2498,9 +2551,33 @@ function statusChip(s){
   const key=String(s||'unknown').replace(/\s+/g,'_');
   return '<span class="status status-'+esc(key)+'">'+esc(String(s||'unknown').replace(/_/g,' '))+'</span>';
 }
-function phase2Stub(name){
-  return '<div class="stub-phase2"><h3>Phase 2 — not built yet</h3>'
-    +'<p>'+esc(name)+' will ship in Phase 2 (template gallery, workbooks, finance, diagrams, reports, document import).</p></div>';
+function personalItems(id){
+  const phase=state.phase2||{templates:[],financials:{notes:'',rows:[]},diagrams:[],reports:[]};
+  if(id==='documents') return state.documents||[];
+  if(id==='financials') return (phase.financials&&phase.financials.rows)||[];
+  return phase[id]||[];
+}
+function renderPersonalSection(id, title, blurb){
+  const items=personalItems(id);
+  let html='<div class="page-head"><div><h2>'+esc(title)+'</h2><p>'+esc(blurb)+'</p></div></div>';
+  html+='<div class="panel"><h3>Saved in this studio</h3>';
+  if(!items.length) html+='<div class="empty">Nothing saved yet.</div>';
+  else {
+    html+='<div class="list">';
+    items.forEach(function(item){
+      html+='<div class="row-item"><div><div class="rt">'+esc(item.title||'Untitled')+'</div>'
+        +(item.body||item.notes?'<div class="rm">'+esc(item.body||item.notes)+'</div>':'')
+        +(item.amount!=null&&item.amount!==''?'<div class="rm">'+esc(String(item.amount))+'</div>':'')
+        +'</div></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div><div class="panel" style="margin-top:14px"><h3>Add</h3>'
+    +'<label class="field"><span>Title</span><input id="p2Title" type="text"></label>'
+    +'<label class="field"><span>Notes</span><textarea id="p2Body" rows="4"></textarea></label>'
+    +(id==='financials'?'<label class="field"><span>Amount, only if you already have one</span><input id="p2Amount" type="text"></label>':'')
+    +'<button type="button" class="btn btn-primary" data-action="save-personal-section" data-section="'+esc(id)+'">Save</button></div>';
+  return html;
 }
 function renderSidebar(){
   const el=document.getElementById('sidebar');
@@ -2550,7 +2627,7 @@ function renderOnboarding(){
     +'<button type="button" class="btn btn-forest" data-action="apply-e3-onboard">Apply E3 / PAVE</button>'
     +'<button type="button" class="btn" data-action="start-business">Start blank</button>'
     +'</div>'
-    +'<p class="field-hint">Fill Dolonia account loads your Lean Canvas (campus mesh), living PAVE (Dana), moat, and E3 mentor from the E3 docs.</p>'
+    +'<p class="field-hint">Fill account only seeds empty sections. A saved PAVE, moat, or capital plan is kept.</p>'
     +'</div></div></div>';
 }
 
@@ -2589,7 +2666,9 @@ function renderOverview(){
   // Program progress detail
   html+='<div class="panel" style="margin-bottom:14px"><h3>Program progress</h3>';
   if(prog.percent==null && !(prog.requirements||[]).length){
-    html+='<div class="empty"><strong>No evidence-gated requirements</strong>Apply the E3 / PAVE template or add requirements to track real progress.</div>';
+    html+=isHoldingCompany(state)
+      ?'<div class="empty"><strong>Company dashboard</strong>The product workbook stays on its own page. Company progress comes from company milestones and goals.</div>'
+      :'<div class="empty"><strong>No evidence-gated requirements</strong>Apply the E3 / PAVE template or add requirements to track real progress.</div>';
   } else {
     const pct=prog.percent==null?0:prog.percent;
     html+='<div class="progress-bar" aria-label="'+esc(prog.label)+'"><span style="width:'+pct+'%"></span></div>'
@@ -2869,13 +2948,16 @@ function renderExperiments(){
 }
 
 function renderRoadmap(){
-  const prog=activeProgram();
+  const prog=isHoldingCompany(state)?companyProgram(state):activeProgram();
   const pp=programProgress(state,prog);
   let html='<div class="page-head"><div><h2>Roadmap</h2><p>Stage timeline derived from requirements and evidence — not decorative percentages.</p></div></div>';
   if(!prog){
-    html+='<div class="empty"><strong>No active program</strong>Apply E3 / PAVE from Programs.</div>';
-    return html;
+    html+=isHoldingCompany(state)
+      ?'<div class="empty"><strong>Company roadmap</strong>Product milestones stay on the product workbook. Add company milestones here.</div>'
+      :'<div class="empty"><strong>No active program</strong>Apply E3 / PAVE from Programs.</div>';
+    if(!isHoldingCompany(state)) return html;
   }
+  if(prog){
   html+='<div class="panel"><h3>'+esc(prog.name)+'</h3><div class="stage-rail" style="flex-wrap:nowrap">';
   (pp.stageStatuses||[]).forEach(function(s){
     html+='<button type="button" class="stage-node '+esc(s.status)+'" data-why="stage:'+esc(s.id)+'">'
@@ -2884,15 +2966,21 @@ function renderRoadmap(){
       +'<div class="rm" style="margin-top:8px;font-size:11.5px;color:var(--muted)">'+esc(s.why)+'</div></button>';
   });
   html+='</div><p class="field-hint" style="margin-top:10px">Click any stage for full WHY (reason, evidence ids, missing, action).</p></div>';
+  }
 
   html+='<div class="panel" style="margin-top:14px"><h3>Milestones</h3>';
-  const ms=state.milestones.filter(function(m){return !prog||m.programId===prog.id;});
+  const productIds={};
+  (state.programs||[]).forEach(function(program){ if(isProductProgram(state, program)) productIds[program.id]=true; });
+  const ms=(state.milestones||[]).filter(function(m){
+    if(isHoldingCompany(state)) return !m.programId||!productIds[m.programId];
+    return !prog||m.programId===prog.id;
+  });
   if(!ms.length) html+='<div class="empty">No milestones.</div>';
   else {
     html+='<div class="list">';
     ms.forEach(function(m){
       const keys=m.requirementKeys||[];
-      const reqs=(prog.requirements||[]).filter(function(r){return keys.indexOf(r.key)>=0;});
+      const reqs=((prog&&prog.requirements)||[]).filter(function(r){return keys.indexOf(r.key)>=0;});
       const rps=reqs.map(function(r){return requirementProgress(state,r);});
       let derived=m.status;
       let why='';
@@ -3594,6 +3682,31 @@ function renderMarket(){
   });
   let html='<div class="page-head"><div><h2>Market Sizing Builder</h2>'
     +'<p>Who buys · how many · geography · realistic reach · ACV. Sources required — mentors challenge assumptions.</p></div></div>';
+  const lines=Array.isArray(ms.serviceLines)?ms.serviceLines:[];
+  if(lines.length){
+    const rollup=lines.reduce(function(sum, line){
+      ['tam','sam','som'].forEach(function(key){
+        const num=Number(line[key]);
+        if(line[key]!=null && line[key]!=='' && isFinite(num)){
+          sum[key]=(sum[key]||0)+num;
+          sum[key+'Count']=(sum[key+'Count']||0)+1;
+        }
+      });
+      return sum;
+    }, {});
+    html+='<div class="panel" style="margin-bottom:14px"><h3>Service lines</h3>'
+      +'<p class="field-hint">The company total adds only figures entered on a line. It does not add outside industry numbers.</p><div class="list">';
+    lines.forEach(function(line){
+      html+='<div class="row-item"><div><div class="rt">'+esc(line.name||'Untitled line')+'</div>'
+        +'<div class="rm">TAM '+(line.tam==null||line.tam===''?'not sized':moneyFmt(Number(line.tam)))
+        +' · SAM '+(line.sam==null||line.sam===''?'not sized':moneyFmt(Number(line.sam)))
+        +' · SOM '+(line.som==null||line.som===''?'not sized':moneyFmt(Number(line.som)))
+        +(line.source?' · '+esc(line.source):'')+'</div></div></div>';
+    });
+    html+='</div><p class="rm" style="margin-top:8px">Entered rollup: TAM '+(rollup.tamCount?moneyFmt(rollup.tam):'not sized')
+      +' · SAM '+(rollup.samCount?moneyFmt(rollup.sam):'not sized')
+      +' · SOM '+(rollup.somCount?moneyFmt(rollup.som):'not sized')+'</p></div>';
+  }
 
   html+='<div class="ms-nest"><div class="ms-tam">'
     +'<div class="ms-label">TAM</div>'
@@ -3891,7 +4004,15 @@ function fitAllBoards(){
   document.querySelectorAll('[data-fit-stage]').forEach(fitBoardToStage);
 }
 
+function paintStudioChrome(){
+  const name=(state.business&&state.business.name)||'';
+  const label=name||'Business Studio';
+  const el=document.getElementById('studioChromeName');
+  if(el) el.textContent=label;
+  document.title=name?('Business Studio · '+name):'Business Studio';
+}
 function render(){
+  paintStudioChrome();
   renderSidebar();
   renderBottomNav();
   const main=document.getElementById('main');
@@ -3921,11 +4042,11 @@ function render(){
     metrics:renderMetrics,
     crm:renderCrm,
     calendar:renderCalendar,
-    templates:function(){return '<div class="page-head"><h2>Templates</h2></div>'+phase2Stub('Template gallery');},
-    financials:function(){return '<div class="page-head"><h2>Financials</h2></div>'+phase2Stub('Financials');},
-    diagrams:function(){return '<div class="page-head"><h2>Diagrams</h2></div>'+phase2Stub('Diagrams');},
-    documents:function(){return '<div class="page-head"><h2>Documents</h2></div>'+phase2Stub('Documents');},
-    reports:function(){return '<div class="page-head"><h2>Reports</h2></div>'+phase2Stub('Reports');},
+    templates:function(){return renderPersonalSection('templates','Templates','Notes for this studio. These are not the E3 program template.');},
+    financials:function(){return renderPersonalSection('financials','Financials','Only figures you enter are stored. Nothing is calculated from outside industry totals.');},
+    diagrams:function(){return renderPersonalSection('diagrams','Diagrams','Diagram notes for this studio. The sales-cycle diagram stays in the PAVE workbook.');},
+    documents:function(){return renderPersonalSection('documents','Documents','Document titles and notes for this studio.');},
+    reports:function(){return renderPersonalSection('reports','Reports','Report notes for this studio.');},
     settings:renderSettings
   };
   const fn=map[ui.view]||renderOverview;
@@ -4038,6 +4159,10 @@ document.addEventListener('click', function(e){
     }
     if(a==='lean-load-denizen'){
       state.funding=state.funding||emptyFunding();
+      if(leanCanvasFilledCount(state.funding.leanCanvas||{})>0){
+        toast('Saved Lean Canvas kept. Edit the boxes and Save — the draft will not replace it.');
+        return;
+      }
       state.funding.leanCanvas=Object.assign(emptyLeanCanvas(), denizenLeanCanvasDraft(), {updatedAt:nowISO()});
       syncLeanCanvasEvidence(state.funding.leanCanvas);
       logActivity('Loaded DENIZEN Lean Canvas draft');
@@ -4064,9 +4189,11 @@ document.addEventListener('click', function(e){
     if(a==='pave-load-denizen'){
       const prog=activeProgram();
       if(!prog){ toast('Apply E3 / PAVE first'); return; }
+      if(paveFilledCount(prog.pave)>0){
+        toast('Saved PAVE kept. Edit the fields and Save — the draft will not replace it.');
+        return;
+      }
       prog.pave=Object.assign(emptyPave(), denizenPaveDraft(), {updatedAt:nowISO(), reviews:(prog.pave&&prog.pave.reviews)||[]});
-      prog.pave=syncPartBFromDiscovery(prog.pave, state, {force:true});
-      syncPavePartBEvidence(prog);
       logActivity('Loaded DENIZEN PAVE draft');
       scheduleSave(); render(); toast('DENIZEN PAVE draft loaded — edit any section, then Save');
     }
@@ -4391,10 +4518,43 @@ document.addEventListener('click', function(e){
       });
       scheduleSave(); render(); toast('Recommendation added');
     }
+    if(a==='save-personal-section'){
+      const section=act.getAttribute('data-section');
+      const title=((document.getElementById('p2Title')||{}).value||'').trim();
+      const body=((document.getElementById('p2Body')||{}).value||'').trim();
+      const amountRaw=(document.getElementById('p2Amount')||{}).value;
+      if(!title && !body){ toast('Add a title or notes'); return; }
+      const row={id:uid('p2'),title:title||'Note',body:body,notes:body};
+      if(amountRaw!=null && String(amountRaw).trim()) row.amount=String(amountRaw).trim();
+      state.phase2=state.phase2||{templates:[],financials:{notes:'',rows:[]},diagrams:[],reports:[]};
+      if(section==='documents'){
+        state.documents=state.documents||[];
+        state.documents.unshift(row);
+      } else if(section==='financials'){
+        state.phase2.financials=state.phase2.financials||{notes:'',rows:[]};
+        if(body) state.phase2.financials.notes=body;
+        state.phase2.financials.rows=state.phase2.financials.rows||[];
+        state.phase2.financials.rows.unshift(row);
+      } else if(state.phase2[section]){
+        state.phase2[section].unshift(row);
+      }
+      scheduleSave(); toast('Saved'); render();
+    }
     if(a==='save-business'){
       if(!state.business) return;
       state.business.name=(document.getElementById('setBizName')||{}).value||state.business.name;
       state.business.founderName=(document.getElementById('setFounderName')||{}).value||state.business.founderName;
+      if(state.business.name && !/^DENIZEN\s*\/\s*Dolonia/i.test(state.business.name)){
+        if(!state.business.structure) state.business.structure='holding';
+        (state.programs||[]).forEach(function(program){
+          if(program.templateId==='i2e-e3-pave') program.scope='product';
+        });
+        const templateIds={n_vision:1,n_market:1,n_problem:1,n_customer:1,n_assumption:1,n_experiment:1,n_evidence:1,n_decision:1,n_milestone:1,n_outcome:1};
+        if((state.strategyNodes||[]).length && (state.strategyNodes||[]).every(function(node){return templateIds[node.id];})){
+          state.strategyNodes=[];
+          state.strategyEdges=[];
+        }
+      }
       scheduleSave(); toast('Saved'); render();
     }
     if(a==='sync-now'){

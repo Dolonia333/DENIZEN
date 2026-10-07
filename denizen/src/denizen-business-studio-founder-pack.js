@@ -1,12 +1,9 @@
 'use strict';
 
 /**
- * Dolonia / DENIZEN founder pack — fills Business Studio from the living E3 materials:
- * - Lean Canvas + Strategic Brief (education mesh / edge inference pitch)
- * - PAVE workbook (Dana founder-operator customer for DENIZEN product)
- * - Advisors, moat claims, document evidence pointers
- *
- * Narratives stay separate on purpose: Lean Canvas = campus mesh; PAVE = Dana + DENIZEN office.
+ * Founder pack seeds an empty Business Studio.
+ * A filled PAVE, Lean Canvas, moat, capital plan, or evidence locker is left as saved.
+ * Seeds do not assert a buyer, a price, FERPA, cloud cost, or a margin.
  */
 
 const e3 = require('./denizen-business-studio-e3-template');
@@ -14,11 +11,14 @@ const funding = require('./denizen-business-studio-funding');
 const pave = require('./denizen-business-studio-pave');
 
 const DOLONIA_BUSINESS = Object.freeze({
-  name: 'Dolonia (product: DENIZEN)',
-  founderName: 'Zion Van Zandt and Shawnaya Williams',
+  name: 'DENIZEN / Dolonia Data Tech Solutions',
+  founderName: 'Zion Alexander Van Zandt',
   cohort: 'i2E E3 Cohort 63',
-  mentor: 'Srijita Ghosh (i2E) — Mentor Call A: Mon Aug 31, 1:00–1:45 PM CDT',
+  mentor: 'Srijita Ghosh, i2E E3 mentor',
 });
+
+const CAPITAL_NOTES =
+  'Pre-revenue and pre-validation. No fundraising amount. Next evidence is 10 qualifying school or district buyer interviews, and contradictory evidence counts.';
 
 function uid(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -28,37 +28,26 @@ function nowISO() {
   return new Date().toISOString();
 }
 
+function hasText(value) {
+  return String(value || '').trim().length >= 8;
+}
+
+function moatHasClaim(moat) {
+  if (!moat || typeof moat !== 'object') return false;
+  if (hasText(moat.primaryClaim)) return true;
+  const sources = moat.sources || {};
+  return Object.keys(sources).some((key) => hasText(sources[key] && sources[key].claim));
+}
+
 function strategicBriefMoat() {
+  const empty = funding.emptyFundingState().moat;
   return {
-    primaryClaim:
-      'Hardware sovereignty + opt-in campus mesh: local inference on idle lab hardware removes recurring cloud API cost and keeps student prompts on-campus (FERPA).',
-    primaryWhy:
-      'Public districts cannot sustain OpenAI/AWS token bills across hundreds of lab students; FERPA blocks unvetted prompts to public AI; esports/CAD labs sit idle 16+ hours/day.',
-    primaryCopyDifficulty: 'hard',
-    primaryMonthsToCopy: 18,
-    sources: {
-      hardware_sovereignty: {
-        status: 'claimed',
-        claim: 'Localized mesh clustering runs inference on customer-owned edge hardware with containerized nodes + mTLS (zero lateral traversal).',
-        why: 'Removes external API fees while enforcing local compliance out of the box.',
-        copyDifficulty: 'hard',
-        monthsToCopy: 18,
-      },
-      saas_orchestration: {
-        status: 'claimed',
-        claim: 'Monetize annual per-seat / per-campus SaaS for orchestration + gamified learning — not compute time.',
-        why: 'High gross margins (80%+) because infrastructure runs on customer hardware.',
-        copyDifficulty: 'medium',
-        monthsToCopy: 12,
-      },
-      grant_channel: {
-        status: 'claimed',
-        claim: 'Procurement via Perkins V (CTE) and federal STEM grant allocations.',
-        why: 'Matches how districts already buy curriculum software.',
-        copyDifficulty: 'medium',
-        monthsToCopy: 9,
-      },
-    },
+    ...empty,
+    primaryClaim: '',
+    primaryWhy: 'No defensibility claim until linked evidence supports it.',
+    primaryCopyDifficulty: '',
+    primaryMonthsToCopy: null,
+    sources: empty.sources,
   };
 }
 
@@ -79,19 +68,28 @@ function documentEvidence(title, notes, extra = {}) {
 }
 
 /**
- * Mutate an in-memory Business Studio state with the full Dolonia founder pack.
- * Safe to re-run: replaces E3 program + lean canvas + moat; merges advisors/docs by title.
+ * Seed an empty studio. Re-running does not replace a PAVE, moat, capital plan,
+ * lean canvas, goal, experiment, or evidence item that already has text.
+ * opts.force replaces the E3 program and empty-only sections still stay unless force.
  */
 function applyFounderPack(state, opts = {}) {
   if (!state || typeof state !== 'object') {
     throw new Error('state required');
   }
-  const businessName = opts.businessName || DOLONIA_BUSINESS.name;
-  const founderName = opts.founderName || DOLONIA_BUSINESS.founderName;
-  const fillLean = opts.fillLeanCanvas !== false;
-  const fillPave = opts.fillPave !== false;
-  const fillMoat = opts.fillMoat !== false;
-  const fillEvidence = opts.fillEvidence !== false;
+  const force = opts.force === true;
+  const fillLean = opts.fillLeanCanvas !== false && opts.fill_lean_canvas !== false;
+  const fillPave = opts.fillPave !== false && opts.fill_pave !== false;
+  const fillMoat = opts.fillMoat !== false && opts.fill_moat !== false;
+  const fillEvidence = opts.fillEvidence !== false && opts.fill_evidence !== false;
+  const existingProgram = (state.programs || []).find((p) => p.templateId === 'i2e-e3-pave') || null;
+  const namedBusiness = opts.businessName || opts.business_name;
+  const namedFounder = opts.founderName || opts.founder_name;
+  const businessName = (!force && hasText(state.business && state.business.name))
+    ? state.business.name
+    : (namedBusiness || DOLONIA_BUSINESS.name);
+  const founderName = (!force && hasText(state.business && state.business.founderName))
+    ? state.business.founderName
+    : (namedFounder || DOLONIA_BUSINESS.founderName);
 
   state.business = {
     id: (state.business && state.business.id) || uid('biz'),
@@ -101,103 +99,123 @@ function applyFounderPack(state, opts = {}) {
     updatedAt: nowISO(),
   };
 
-  const bundle = e3.applyProgramTemplate('i2e-e3-pave', {
-    businessName,
-    founderName,
-  });
+  const preserved = {
+    program: false,
+    pave: false,
+    lean: false,
+    moat: false,
+    capital: false,
+    evidence: false,
+  };
 
-  // Drop prior E3 template program + re-attach filled PAVE
-  state.programs = (state.programs || []).filter((p) => p.templateId !== 'i2e-e3-pave');
-  let program = bundle.program;
-  if (fillPave) {
-    program = {
-      ...program,
-      pave: {
+  let program = existingProgram;
+  if (!existingProgram || force) {
+    const bundle = e3.applyProgramTemplate('i2e-e3-pave', { businessName, founderName });
+    program = bundle.program;
+    if (fillPave) {
+      program = {
+        ...program,
+        pave: {
+          ...pave.denizenPaveDraft(),
+          updatedAt: nowISO(),
+          reviews: (existingProgram && existingProgram.pave && existingProgram.pave.reviews) || [],
+        },
+      };
+      program.pave.snapshot = {
+        ...program.pave.snapshot,
+        company: businessName,
+        founders: founderName,
+        i2eAdvisor: program.pave.snapshot.i2eAdvisor || DOLONIA_BUSINESS.mentor,
+        cohort: program.pave.snapshot.cohort || DOLONIA_BUSINESS.cohort,
+      };
+    } else {
+      program = pave.ensureProgramPave(program, {
+        businessName,
+        founderName,
+        cohort: DOLONIA_BUSINESS.cohort,
+        advisor: DOLONIA_BUSINESS.mentor,
+      });
+    }
+    state.programs = (state.programs || []).filter((p) => p.templateId !== 'i2e-e3-pave');
+    state.programs.push(program);
+    const priorId = existingProgram && existingProgram.id;
+    state.milestones = [
+      ...(state.milestones || []).filter((m) => m.programId !== program.id && m.programId !== priorId),
+      ...bundle.milestones,
+    ];
+    state.tasks = [
+      ...(state.tasks || []).filter((t) => t.programId !== program.id && t.programId !== priorId),
+      ...bundle.tasks,
+    ];
+    state.assumptions = [
+      ...(state.assumptions || []).filter((a) => a.programId !== program.id && a.programId !== priorId),
+      ...bundle.assumptions,
+    ];
+    state.experiments = [
+      ...(state.experiments || []).filter((e) => e.programId !== program.id && e.programId !== priorId),
+      ...bundle.experiments,
+    ];
+    state.goals = [
+      ...(state.goals || []).filter((g) => g.programId !== program.id && g.programId !== priorId),
+      ...bundle.goals,
+    ];
+    (bundle.metrics || []).forEach((m) => {
+      const existing = (state.metrics || []).find((x) => x.key === m.key);
+      if (!existing) {
+        state.metrics = state.metrics || [];
+        state.metrics.push(m);
+      }
+    });
+    if (!(state.strategyNodes || []).length) {
+      state.strategyNodes = bundle.strategyNodes;
+      state.strategyEdges = bundle.strategyEdges;
+    }
+  } else {
+    preserved.program = true;
+    if (fillPave && pave.paveFilledCount(program.pave) === 0) {
+      program.pave = {
         ...pave.denizenPaveDraft(),
         updatedAt: nowISO(),
         reviews: (program.pave && program.pave.reviews) || [],
-      },
-    };
-    program.pave.snapshot = {
-      ...program.pave.snapshot,
-      company: businessName,
-      founders: founderName,
-      i2eAdvisor: DOLONIA_BUSINESS.mentor,
-      cohort: DOLONIA_BUSINESS.cohort,
-    };
-  } else {
-    program = pave.ensureProgramPave(program, {
-      businessName,
-      founderName,
-      cohort: DOLONIA_BUSINESS.cohort,
-      advisor: DOLONIA_BUSINESS.mentor,
-    });
-  }
-  state.programs.push(program);
-
-  // Replace template-sourced rows for this program only
-  state.milestones = [
-    ...(state.milestones || []).filter((m) => m.programId !== program.id),
-    ...bundle.milestones,
-  ];
-  state.tasks = [
-    ...(state.tasks || []).filter((t) => t.programId !== program.id),
-    ...bundle.tasks,
-  ];
-  state.assumptions = [
-    ...(state.assumptions || []).filter((a) => a.programId !== program.id),
-    ...bundle.assumptions,
-  ];
-  state.experiments = [
-    ...(state.experiments || []).filter((e) => e.programId !== program.id),
-    ...bundle.experiments,
-  ];
-  state.goals = [
-    ...(state.goals || []).filter((g) => g.programId !== program.id),
-    ...bundle.goals,
-  ];
-  (bundle.metrics || []).forEach((m) => {
-    const existing = (state.metrics || []).find((x) => x.key === m.key);
-    if (!existing) {
-      state.metrics = state.metrics || [];
-      state.metrics.push(m);
+      };
+      program.pave.snapshot = {
+        ...program.pave.snapshot,
+        company: businessName,
+        founders: founderName,
+      };
+    } else {
+      preserved.pave = true;
     }
-  });
-  if (!(state.strategyNodes || []).length) {
-    state.strategyNodes = bundle.strategyNodes;
-    state.strategyEdges = bundle.strategyEdges;
   }
 
   state.funding = state.funding || funding.emptyFundingState();
-  if (fillLean) {
+  const canvasCount = funding.leanCanvasFilledCount(state.funding.leanCanvas);
+  if (fillLean && (force || canvasCount === 0)) {
     state.funding.leanCanvas = {
       ...funding.denizenLeanCanvasDraft(),
       updatedAt: nowISO(),
     };
+  } else if (canvasCount > 0) {
+    preserved.lean = true;
   }
-  if (fillMoat) {
+  if (fillMoat && (force || !moatHasClaim(state.funding.moat))) {
     state.funding.moat = {
       ...funding.emptyFundingState().moat,
       ...strategicBriefMoat(),
     };
+  } else if (moatHasClaim(state.funding.moat)) {
+    preserved.moat = true;
+  }
+  const capitalNotes = state.funding.capitalPlan && state.funding.capitalPlan.notes;
+  if (fillMoat && (force || !hasText(capitalNotes))) {
     state.funding.capitalPlan = {
-      ...state.funding.capitalPlan,
-      stage: 'pre_revenue',
-      pathwayStep: 'readiness',
-      notes:
-        'Education mesh: annual B2B SaaS (per-campus / per-seat) + Perkins V / STEM grants. '
-        + 'DENIZEN E3 path: find ten Danas — $49/team or $199/lab card seats before contracts.',
+      ...(state.funding.capitalPlan || funding.emptyFundingState().capitalPlan),
+      stage: (state.funding.capitalPlan && state.funding.capitalPlan.stage) || 'pre_revenue',
+      pathwayStep: (state.funding.capitalPlan && state.funding.capitalPlan.pathwayStep) || 'readiness',
+      notes: CAPITAL_NOTES,
     };
-    state.funding.marketSizing = {
-      ...state.funding.marketSizing,
-      geography: 'Oklahoma / regional CareerTech + early CTE labs with GPU/esports hardware',
-      buyerWho: 'Lean Canvas: CTE/IT directors. PAVE (E3): Dana founder-operator (do not mix).',
-      sources: {
-        tam: 'Strategic brief — decentralized edge orchestration for education',
-        sam: 'State CareerTech & STEM consortiums + i2E/OCN introductions',
-        som: 'Discovery pilots → multi-year SaaS conversion',
-      },
-    };
+  } else if (hasText(capitalNotes)) {
+    preserved.capital = true;
   }
 
   state.advisors = Array.isArray(state.advisors) ? state.advisors : [];
@@ -214,54 +232,41 @@ function applyFounderPack(state, opts = {}) {
 
   if (fillEvidence) {
     state.evidence = Array.isArray(state.evidence) ? state.evidence : [];
-    const docs = [
-      documentEvidence(
-        'Dolonia E3 Strategic Brief — Edge orchestration for education',
-        'Decentralized edge orchestration pitch: cost trap, FERPA, idle lab hardware → opt-in mesh, sandbox client, gamified learning hub. Moat: hardware sovereignty, 80%+ gross margins, Perkins V channel.',
-        { fundingKeys: ['moat', 'lean_canvas'], linkedFundingKeys: ['moat', 'lean_canvas'] },
-      ),
-      documentEvidence(
-        'Lean Canvas — campus mesh / CTE labs',
-        funding.leanCanvasPlainText(funding.denizenLeanCanvasDraft()),
-        { fundingKeys: ['lean_canvas'], linkedFundingKeys: ['lean_canvas'], requirementKey: 'lean_canvas' },
-      ),
-      documentEvidence(
-        'PAVE E3 Working Document — Dolonia / DENIZEN (Dana)',
-        'Living PAVE: company Dolonia (DENIZEN); founders Zion Van Zandt + Shawnaya Williams; customer Dana founder-operator; Workshop A complete; 0/10 discovery interviews. Do not mix CareerTech into E3 persona.',
-        {
-          programId: program.id,
-          requirementKey: 'pave_part_b',
-          linkedRequirementIds: (program.requirements || [])
-            .filter((r) => r.key === 'pave_part_b')
-            .map((r) => r.id),
-        },
-      ),
-    ];
-    for (const doc of docs) {
-      const idx = state.evidence.findIndex((e) => e.title === doc.title && !e.revoked);
-      if (idx >= 0) state.evidence[idx] = { ...state.evidence[idx], ...doc, id: state.evidence[idx].id };
-      else state.evidence.unshift(doc);
+    const hasEvidence = state.evidence.some((e) => e && !e.revoked);
+    if (hasEvidence && !force) {
+      preserved.evidence = true;
+    } else {
+      const docs = [
+        documentEvidence(
+          'Education Strategic Brief — on file',
+          'The education strategic brief is a source document. Compliance, margins, cloud cost, and infrastructure savings are not established.',
+        ),
+      ];
+      for (const doc of docs) {
+        const idx = state.evidence.findIndex((e) => e.title === doc.title && !e.revoked);
+        if (idx >= 0 && !force) continue;
+        if (idx >= 0) state.evidence[idx] = { ...state.evidence[idx], ...doc, id: state.evidence[idx].id };
+        else state.evidence.unshift(doc);
+      }
     }
-
-    // Sync PAVE Part B document evidence when substantial
-    try {
-      pave.syncPavePartBEvidence(state, program);
-    } catch (_) { /* non-fatal */ }
   }
 
   state.activity = Array.isArray(state.activity) ? state.activity : [];
   state.activity.unshift({
     id: uid('act'),
     at: nowISO(),
-    text: 'Applied Dolonia founder pack (Lean Canvas + PAVE + strategic moat)',
+    text: preserved.pave || preserved.moat || preserved.capital
+      ? 'Founder pack kept saved PAVE, moat, and capital text'
+      : 'Seeded empty Business Studio sections without a buyer, price, or margin claim',
   });
 
   return {
     state,
     programId: program.id,
     business: state.business,
-    leanFilled: fillLean ? funding.leanCanvasFilledCount(state.funding.leanCanvas) : 0,
-    paveFilled: fillPave ? pave.paveFilledCount(program.pave) : 0,
+    leanFilled: funding.leanCanvasFilledCount(state.funding.leanCanvas),
+    paveFilled: pave.paveFilledCount(program.pave),
+    preserved,
   };
 }
 

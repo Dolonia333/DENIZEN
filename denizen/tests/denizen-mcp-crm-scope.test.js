@@ -70,7 +70,7 @@ describe('CRM MCP member scoping', () => {
     assert.ok(!String(res.summary || '').includes('Zion Deal'));
   });
 
-  it('keeps org-wide working set for owners', async () => {
+  it('keeps a signed-in owner on their own working set', async () => {
     const res = await crmTools.callTool({
       org_id: 'org-1',
       npc_key: 'abby',
@@ -80,12 +80,13 @@ describe('CRM MCP member scoping', () => {
       role: 'owner',
       org_wide: true,
       data_scope: 'org',
+      session_id: 'sess-angela',
       _mcp_actor_enriched: true,
     }, 'crm_working_set', {});
 
     assert.equal(res.ok, true);
-    assert.equal(res.data_scope, 'org');
-    assert.equal(res.filtered, false);
-    assert.match(String(res.summary || ''), /Org-wide view/i);
+    assert.equal(res.data_scope, 'own');
+    assert.equal(res.filtered, true);
+    assert.ok(!String(res.summary || '').includes('Zion Deal'));
   });
 });

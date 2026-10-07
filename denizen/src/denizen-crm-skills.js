@@ -11,12 +11,18 @@ function nextId(list) {
   return ids.length ? Math.max(...ids) + 1 : Date.now();
 }
 
+function contactLookupId(params = {}) {
+  const value = params.contactId ?? params.contact_id ?? params.id;
+  return value != null && value !== '' ? value : null;
+}
+
 function findContact(state, params = {}) {
   const contacts = Array.isArray(state.contacts) ? state.contacts : [];
-  if (params.contactId != null) {
-    return contacts.find((c) => String(c?.id) === String(params.contactId)) || null;
+  const contactId = contactLookupId(params);
+  if (contactId != null) {
+    return contacts.find((c) => String(c?.id) === String(contactId)) || null;
   }
-  const email = String(params.email || '').trim().toLowerCase();
+  const email = String(params.current_email || params.currentEmail || params.match_email || params.email || '').trim().toLowerCase();
   if (email) {
     return contacts.find((c) => String(c?.email || '').toLowerCase() === email) || null;
   }
@@ -97,21 +103,22 @@ function withCrmActions(result, actions = []) {
 async function updateContact(orgId, params = {}, identityId = null) {
   const { state, updated_at: ifUpdatedAt } = await crmMutations.loadOrgWorkspace(orgId);
   const contacts = Array.isArray(state.contacts) ? [...state.contacts] : [];
-  const idx = contacts.findIndex((c) => {
-    if (params.contactId != null) return String(c?.id) === String(params.contactId);
-    const email = String(params.email || '').toLowerCase();
-    if (email && String(c?.email || '').toLowerCase() === email) return true;
-    const name = String(params.name || params.contact || '').toLowerCase();
-    return name && String(c?.name || '').toLowerCase().includes(name);
-  });
-  if (idx < 0) throw new Error('contact not found');
+  const existing = findContact({ contacts }, params);
+  const idx = existing ? contacts.findIndex((c) => String(c?.id) === String(existing.id)) : -1;
+  if (idx < 0) {
+    const looked = contactLookupId(params);
+    throw new Error(looked != null ? `contact not found: ${looked}` : 'contact not found');
+  }
   const prev = contacts[idx];
   const updated = {
     ...prev,
     ...(params.name != null ? { name: String(params.name) } : {}),
-    ...(params.email != null ? { email: String(params.email) } : {}),
+    ...(params.email != null ? { email: String(params.email).trim() } : {}),
     ...(params.company != null ? { company: String(params.company) } : {}),
     ...(params.phone != null ? { phone: String(params.phone) } : {}),
+    ...(params.role != null ? { role: String(params.role) } : {}),
+    ...(params.title != null ? { title: String(params.title) } : {}),
+    ...(params.notes != null ? { notes: String(params.notes).slice(0, 2000) } : {}),
     ...(params.status != null ? { status: String(params.status) } : {}),
     ...(params.score != null ? { score: Number(params.score) || prev.score } : {}),
     ...(params.tags ? { tags: Array.isArray(params.tags) ? params.tags : [...(prev.tags || []), params.tags] } : {}),
@@ -165,7 +172,12 @@ async function recommendPackage(orgId, params = {}) {
     : null;
   const tier = parseBudgetTier(submission?.answers || {}, params.budget || params.task);
   const pkg = pickPackage(state, tier);
-  if (!pkg) return { summary: 'No packages configured — ask Sarah to seed packages.' };
+  if (!pkg) {
+    return {
+      summary: 'No packages configured. Create one with crm_upsert_package (name, tier, features, line_items).',
+      packages: [],
+    };
+  }
   return {
     summary: `For budget tier "${tier}", recommend ${pkg.icon || ''} ${pkg.name} — ${pkg.tagline}. ${(pkg.features || []).slice(0, 3).join(', ')}.`,
     package: pkg,
@@ -179,7 +191,42 @@ async function recommendPackage(orgId, params = {}) {
 async function generateQuote(orgId, params = {}, identityId = null) {
   const { state, updated_at: ifUpdatedAt } = await crmMutations.loadOrgWorkspace(orgId);
   const submission = findSubmission(state, params);
-  if (!submission) throw new Error('submission not found for quote');
+  const directItems = params.line_items || params.lineItems;
+  const directCompany = String(params.company || params.clientName || params.client_name || '').trim();
+  const directTitle = String(params.title || params.name || '').trim();
+  if (!submission && (directCompany || directTitle || Array.isArray(directItems) || params.package || params.package_id || params.packageId)) {
+    const quotes = Array.isArray(state.quotes) ? [...state.quotes] : [];
+    const pkg = params.package_id || params.packageId || params.package
+      ? (state.packages || []).find((p) => String(p.id) === String(params.package_id || params.packageId) || String(p.name || '').toLowerCase() === String(params.package || '').toLowerCase())
+      : null;
+    const lineItems = Array.isArray(directItems) && directItems.length
+      ? directItems
+      : (pkg?.lineItems || []).map((li, i) => ({ id: i + 1, name: li.name, price: li.price, unit: li.unit }));
+    const monthly = lineItems.reduce((sum, li) => sum + (Number(li.price) || 0), 0);
+    const quote = {
+      id: nextId(quotes),
+      company: directCompany || pkg?.name || '',
+      clientName: String(params.clientName || params.client_name || directCompany || '').trim(),
+      title: directTitle || (pkg ? pkg.name : 'Quote'),
+      createdAt: new Date().toISOString().slice(0, 10),
+      status: 'draft',
+      recommendedPackage: pkg?.name || null,
+      package_id: pkg?.id || null,
+      lineItems,
+      monthlyTotal: monthly,
+      onetimeTotal: Number(params.onetimeTotal || params.onetime_total) || 0,
+      notes: String(params.notes || '').slice(0, 500),
+      validUntil: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+    };
+    quotes.unshift(quote);
+    const crmStore = require('./denizen-crm-store');
+    await crmStore.upsertWorkspace(orgId, { ...state, quotes }, identityId, { ifUpdatedAt });
+    return withCrmActions({
+      summary: `Draft quote #${quote.id} for ${quote.company || quote.clientName || quote.title}.`,
+      quote,
+    }, [chatActions.openTabAction('portal', 'Open quotes')]);
+  }
+  if (!submission) throw new Error('submission not found for quote — pass company, title, or line_items');
   const tier = parseBudgetTier(submission.answers || {}, params.budget);
   const pkg = pickPackage(state, tier);
   if (!pkg) throw new Error('no packages available');
@@ -555,10 +602,47 @@ async function enrichContact(orgId, params = {}, npcName = null) {
   ]);
 }
 
+function companyLookupId(params = {}) {
+  const explicit = params.companyId ?? params.company_id;
+  if (explicit != null && explicit !== '') return explicit;
+  if (params.contact_id == null && params.contactId == null && params.id != null && params.id !== '') {
+    return params.id;
+  }
+  return null;
+}
+
+function removeContactFromState(state, params = {}) {
+  const contactId = contactLookupId(params);
+  if (contactId == null) return { state, removed: null, error: 'contact_id required' };
+  const contacts = Array.isArray(state.contacts) ? [...state.contacts] : [];
+  const idx = contacts.findIndex((c) => String(c?.id) === String(contactId));
+  if (idx < 0) return { state, removed: null, error: `contact not found: ${contactId}` };
+  const [removed] = contacts.splice(idx, 1);
+  const companies = (Array.isArray(state.companies) ? state.companies : []).map((company) => ({
+    ...company,
+    linkedContacts: (company.linkedContacts || []).filter((id) => String(id) !== String(removed.id)),
+  }));
+  return { state: { ...state, contacts, companies }, removed, error: null };
+}
+
+async function deleteContact(orgId, params = {}, identityId = null) {
+  const { state, updated_at: ifUpdatedAt } = await crmMutations.loadOrgWorkspace(orgId);
+  const removedState = removeContactFromState(state, params);
+  if (!removedState.removed) throw new Error(removedState.error || 'contact not found');
+  const crmStore = require('./denizen-crm-store');
+  await crmStore.upsertWorkspace(orgId, removedState.state, identityId, { ifUpdatedAt });
+  return {
+    summary: `Deleted contact ${removedState.removed.name} (${removedState.removed.id}).`,
+    contact_id: removedState.removed.id,
+    deleted: true,
+  };
+}
+
 function findCompany(state, params = {}) {
   const companies = Array.isArray(state.companies) ? state.companies : [];
-  if (params.companyId != null) {
-    return companies.find((c) => String(c?.id) === String(params.companyId)) || null;
+  const companyId = companyLookupId(params);
+  if (companyId != null) {
+    return companies.find((c) => String(c?.id) === String(companyId)) || null;
   }
   const name = String(params.company || params.name || '').trim().toLowerCase();
   if (!name) return null;
@@ -601,13 +685,16 @@ function parseContactImportRows(params = {}) {
 async function listCompanies(orgId, params = {}) {
   const { state } = await crmMutations.loadOrgWorkspace(orgId);
   const companies = Array.isArray(state.companies) ? state.companies : [];
-  const limit = Math.min(30, Math.max(1, Number(params.limit) || 15));
+  const limit = Math.min(200, Math.max(1, Number(params.limit) || 100));
   const rows = companies.slice(0, limit).map((c) => ({
+    company_id: c.id,
     id: c.id,
     name: c.name,
     industry: c.industry,
     arr: c.arr,
     health: c.health,
+    linked_contact_ids: c.linkedContacts || [],
+    linked_deal_ids: c.linkedDeals || [],
     linkedContacts: (c.linkedContacts || []).length,
   }));
   return {
@@ -749,10 +836,79 @@ async function listAutomations(orgId) {
   }, [chatActions.openTabAction('automations', 'Open automations')]);
 }
 
+const CRM_AUTOMATION_TRIGGERS = Object.freeze([
+  'deal_created', 'deal_won', 'deal_lost', 'deal_moved', 'deal_stale',
+  'task_overdue', 'contact_added', 'form_submitted',
+]);
+const CRM_AUTOMATION_ACTIONS = Object.freeze([
+  'create_task', 'notify', 'update_field', 'draft_email', 'webhook',
+]);
+const CRM_AUTOMATION_TEMPLATES = Object.freeze([
+  {
+    id: 'follow-up',
+    name: 'Follow up',
+    trigger: 'deal_stale',
+    action: 'create_task',
+    actionDetail: 'Follow up with the contact. Do not change the deal from inference.',
+  },
+  {
+    id: 'overdue',
+    name: 'Overdue item',
+    trigger: 'task_overdue',
+    action: 'create_task',
+    actionDetail: 'Review the overdue task and set the next step.',
+  },
+  {
+    id: 'engineering-done',
+    name: 'Completed engineering work',
+    trigger: 'deal_moved',
+    action: 'notify',
+    actionDetail: 'Engineering work moved. Record an outcome receipt if something shipped.',
+  },
+  {
+    id: 'discovery-evidence',
+    name: 'Discovery evidence',
+    trigger: 'contact_added',
+    action: 'create_task',
+    actionDetail: 'Decide whether this contact is a qualifying interview before counting evidence.',
+  },
+]);
+
+function validateCrmAutomation(params = {}) {
+  const templateId = String(params.template || params.template_id || '').trim();
+  const template = templateId
+    ? CRM_AUTOMATION_TEMPLATES.find((row) => row.id === templateId)
+    : null;
+  if (templateId && !template) {
+    return { ok: false, error: 'unknown automation template', templates: CRM_AUTOMATION_TEMPLATES.map((row) => row.id) };
+  }
+  const name = String(params.name || template?.name || '').trim();
+  const trigger = String(params.trigger || template?.trigger || '').trim();
+  const action = String(params.action || template?.action || '').trim();
+  const actionDetail = String(params.actionDetail || params.detail || template?.actionDetail || '').trim();
+  if (!name || !trigger || !action) {
+    return { ok: false, error: 'name, trigger, and action are required', templates: CRM_AUTOMATION_TEMPLATES.map((row) => row.id) };
+  }
+  if (!CRM_AUTOMATION_TRIGGERS.includes(trigger)) {
+    return { ok: false, error: `invalid trigger "${trigger}"`, triggers: CRM_AUTOMATION_TRIGGERS };
+  }
+  if (!CRM_AUTOMATION_ACTIONS.includes(action)) {
+    return { ok: false, error: `invalid action "${action}"`, actions: CRM_AUTOMATION_ACTIONS };
+  }
+  if (!actionDetail) {
+    return { ok: false, error: 'action detail required' };
+  }
+  return { ok: true, name, trigger, action, actionDetail };
+}
+
 async function addAutomation(orgId, params = {}, identityId = null) {
-  const name = String(params.name || '').trim() || 'NPC automation';
-  const trigger = String(params.trigger || 'deal_stale').trim();
-  const action = String(params.action || 'create_task').trim();
+  const checked = validateCrmAutomation(params);
+  if (!checked.ok) {
+    const err = new Error(checked.error);
+    err.details = checked;
+    throw err;
+  }
+  const { name, trigger, action, actionDetail } = checked;
   const triggerLabels = {
     deal_created: 'Deal created',
     deal_won: 'Deal won',
@@ -781,7 +937,7 @@ async function addAutomation(orgId, params = {}, identityId = null) {
     conditions: String(params.conditions || '').trim(),
     action,
     actionLabel: actionLabels[action] || action,
-    actionDetail: String(params.actionDetail || params.detail || 'Follow up from automation').slice(0, 500),
+    actionDetail,
     runCount: 0,
     lastRun: null,
   };
@@ -1048,7 +1204,10 @@ async function addNote(orgId, params = {}, identityId = null) {
 }
 
 module.exports = {
+  contactLookupId,
   findContact,
+  removeContactFromState,
+  deleteContact,
   findDeal,
   findSubmission,
   updateContact,
@@ -1079,6 +1238,8 @@ module.exports = {
   portalLink,
   listAutomations,
   addAutomation,
+  validateCrmAutomation,
+  CRM_AUTOMATION_TEMPLATES,
   analyticsSummary,
   marketingFunnel,
   calendarStatusSkill,

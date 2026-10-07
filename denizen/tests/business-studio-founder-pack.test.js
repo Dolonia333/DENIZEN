@@ -14,27 +14,47 @@ describe('Dolonia founder pack', () => {
   it('fills business, lean canvas, PAVE, moat, and mentor', () => {
     const state = store.emptyState();
     const result = founderPack.applyFounderPack(state);
-    assert.equal(result.business.name, 'Dolonia (product: DENIZEN)');
-    assert.match(result.business.founderName, /Shawnaya/);
+    assert.equal(result.business.name, 'DENIZEN / Dolonia Data Tech Solutions');
+    assert.equal(result.business.founderName, 'Zion Alexander Van Zandt');
     assert.equal(result.leanFilled, 9);
     assert.ok(result.paveFilled > 20);
-    assert.match(state.funding.leanCanvas.problem, /API Cost Trap/);
-    assert.match(state.funding.moat.primaryClaim, /Hardware sovereignty|mesh/i);
+    assert.match(state.funding.leanCanvas.customerSegments, /school and district/i);
+    assert.doesNotMatch(state.funding.leanCanvas.unfairAdvantage, /80%\+|zero marginal/i);
+    assert.equal(state.funding.moat.primaryClaim, '');
+    assert.doesNotMatch(state.funding.moat.primaryWhy, /FERPA|80%\+/i);
+    assert.doesNotMatch(state.funding.capitalPlan.notes, /ten Danas|\$49|\$199/i);
     const prog = state.programs.find((p) => p.templateId === 'i2e-e3-pave');
     assert.ok(prog);
-    assert.match(prog.pave.partA.customer, /Dana/);
-    assert.match(prog.pave.snapshot.founders, /Zion/);
+    assert.match(prog.pave.partA.customer, /school and district/i);
+    assert.doesNotMatch(prog.pave.partA.customer, /Dana/);
+    assert.match(prog.pave.snapshot.founders, /Zion Alexander Van Zandt/);
     assert.ok(state.advisors.some((a) => /Srijita/i.test(a.name)));
     assert.ok(state.evidence.some((e) => /Strategic Brief/i.test(e.title)));
   });
 
-  it('keeps lean canvas (education) separate from PAVE Dana persona', () => {
+  it('does not restore template text over a saved PAVE, moat, or capital plan', () => {
     const state = store.emptyState();
     founderPack.applyFounderPack(state);
-    assert.match(state.funding.leanCanvas.customerSegments, /CTE Directors/);
     const prog = state.programs[0];
-    assert.match(prog.pave.partA.customer, /Dana/);
-    assert.doesNotMatch(prog.pave.partA.customer, /CTE Director/);
+    prog.pave.partA.customer = 'KEEP THIS BUYER TEXT PLEASE';
+    state.funding.moat.primaryClaim = 'KEEP THIS MOAT CLAIM PLEASE';
+    state.funding.capitalPlan.notes = 'KEEP THESE CAPITAL NOTES PLEASE';
+    state.funding.leanCanvas.problem = 'KEEP THIS LEAN PROBLEM PLEASE';
+    state.business.name = 'DENIZEN / Dolonia Data Tech Solutions';
+    state.business.founderName = 'Zion Alexander Van Zandt';
+    const goalCount = state.goals.length;
+    founderPack.applyFounderPack(state, {
+      businessName: 'Dolonia (product: DENIZEN)',
+      founderName: 'Dolonia',
+    });
+    assert.equal(prog.pave.partA.customer, 'KEEP THIS BUYER TEXT PLEASE');
+    assert.equal(state.funding.moat.primaryClaim, 'KEEP THIS MOAT CLAIM PLEASE');
+    assert.equal(state.funding.capitalPlan.notes, 'KEEP THESE CAPITAL NOTES PLEASE');
+    assert.equal(state.funding.leanCanvas.problem, 'KEEP THIS LEAN PROBLEM PLEASE');
+    assert.equal(state.business.founderName, 'Zion Alexander Van Zandt');
+    assert.equal(state.business.name, 'DENIZEN / Dolonia Data Tech Solutions');
+    assert.equal(state.goals.length, goalCount);
+    assert.equal(state.programs.length, 1);
   });
 
   it('MCP tool is registered and skill is advertised', () => {
@@ -45,8 +65,10 @@ describe('Dolonia founder pack', () => {
   it('draft helpers still match uploaded materials', () => {
     const canvas = funding.denizenLeanCanvasDraft();
     assert.ok(funding.leanCanvasIsSubstantial(canvas));
-    assert.match(canvas.unfairAdvantage, /80%\+/);
+    assert.doesNotMatch(canvas.unfairAdvantage, /80%\+/);
+    assert.doesNotMatch(canvas.uniqueValueProposition, /guaranteeing/i);
     const draft = pave.denizenPaveDraft();
-    assert.match(draft.partD.pitch90, /ten Danas/);
+    assert.doesNotMatch(draft.partD.pitch90, /ten Danas/i);
+    assert.doesNotMatch(JSON.stringify(draft), /\$49|\$199/);
   });
 });

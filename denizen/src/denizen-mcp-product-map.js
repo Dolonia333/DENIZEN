@@ -50,7 +50,7 @@ const SURFACES = [
       'Every menu app: Funding Readiness, Lean Canvas, PAVE, Strategy, Roadmap, Goals, Tasks, Evidence, Experiments, Discovery Lab, Market Sizing, Moat, Capital Pathway, Data Room, Investor Stress-Test, Mentors',
       'Sales-cycle workshop diagram (inside PAVE) and mentor recommendations',
       'Assumptions never auto-validate',
-      'Phase 2 stubs (Templates, Financials, Diagrams, Documents, Reports) are documented as coming_soon — not fake write tools',
+      'Templates, Financials, Diagrams, Documents, and Reports save personal records with business_studio_upsert_section — no invented figures',
     ],
     does_not: [
       'Invent market size, traction, or checklist checks',
@@ -145,6 +145,7 @@ function mcpInitializeInstructions({ mode = 'team' } = {}) {
   return [
     who,
     'Denizen is not a mystery chat: CRM sells, Studio Board delivers client work, Business Studio proves founder progress with evidence, Agency links CRM deals to Board tasks.',
+    'CRM cleanup is crm_operate or run_skill crm-operate. Actions: list-records, update-contact, delete-contact, upsert-company, link, update-task, close-task, upsert-package, sync-business-context. Use the contact_id from list-records when updating email or phone.',
     'Always orient with crm_working_set / studio_board_working_set / business_studio_working_set / agency_working_set (or business_studio_explain) before creating records.',
     'Business Studio menu apps: call business_studio_catalog or business_studio_section (Lean Canvas, PAVE, Moat, Capital Pathway, …) so you know what each app is and which tools read/update it.',
     'Never invent pipeline data, board people, or funding evidence. Empty boards are valid.',

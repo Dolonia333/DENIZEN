@@ -24,6 +24,7 @@ const visitorAccess = require('./visitor-access');
 const sessionCookie = require('./visitor-session-cookie');
 const teamAuth = require('./denizen-team-auth');
 const crmAccess = require('./denizen-crm-access');
+const approvalsScope = require('./denizen-approvals-scope');
 const agencyBridge = require('./denizen-agency-bridge');
 
 function sessionIdFrom(req, body, url) {
@@ -35,6 +36,19 @@ function sessionIdFrom(req, body, url) {
     || sessionCookie.sessionIdFromCookies(req)
     || '',
   ).trim() || null;
+}
+
+function identityFromAccess(access) {
+  return access?.session?.identity_id || access?.session?.identityId || null;
+}
+
+async function readFormBody(req) {
+  const raw = await readRawBody(req);
+  const type = String(req.headers['content-type'] || '');
+  if (type.includes('application/json')) {
+    try { return JSON.parse(raw || '{}'); } catch (_) { return {}; }
+  }
+  return Object.fromEntries(new URLSearchParams(raw));
 }
 
 function json(res, status, payload) {
@@ -237,6 +251,34 @@ async function resolveCrmActor(access, sessionId) {
   };
 }
 
+const ANGELA_CRM_ALIASES = [
+  'angela van zandt',
+  'angelavanzandt',
+  'vzion253@gmail.com',
+  'angelavanzandt1921@gmail.com',
+];
+
+function applyAngelaOwnScope(scope) {
+  const actor = scope?.actor || {};
+  if (!approvalsScope.isAngelaHoldingPrincipal({
+    email: actor.email,
+    display_name: actor.displayName || actor.user,
+    username: actor.username,
+  })) {
+    return scope;
+  }
+  return {
+    ...scope,
+    actor: {
+      ...actor,
+      aliases: [...(actor.aliases || []), ...ANGELA_CRM_ALIASES],
+    },
+    orgWide: false,
+    forceOwn: true,
+    scope: 'own',
+  };
+}
+
 async function resolveCrmAccessScope(access, sessionId) {
   const actor = await resolveCrmActor(access, sessionId);
   const isDemo = isDemoAccess(access);
@@ -250,19 +292,14 @@ async function resolveCrmAccessScope(access, sessionId) {
     } catch (_) { /* optional */ }
   }
   if (isDemo) {
-    // Demo sandbox stays org-wide so the sample dataset remains usable.
-    return { actor: { ...actor, role: role || 'demo' }, orgWide: true, scope: 'org' };
+    return applyAngelaOwnScope({ actor: { ...actor, role: role || 'demo' }, orgWide: true, scope: 'org' });
   }
-  const principal = await teamAuth.resolveCeoPrincipalForSession(sessionId, { access }).catch(() => null);
-  if (principal?.ceo || isCeoAccess(access, principal)) {
-    return { actor: { ...actor, role: role || 'owner' }, orgWide: true, scope: 'org' };
-  }
-  const orgWide = crmAccess.isOrgWideRole(role);
-  return {
+  return applyAngelaOwnScope({
     actor: { ...actor, role: role || 'member' },
-    orgWide,
-    scope: orgWide ? 'org' : 'own',
-  };
+    orgWide: false,
+    forceOwn: true,
+    scope: 'own',
+  });
 }
 
 async function loadWorkspacePayload(orgId, access, pullSpine = true, { sessionId = null, applyMemberScope = true } = {}) {
@@ -280,6 +317,7 @@ async function loadWorkspacePayload(orgId, access, pullSpine = true, { sessionId
     actor = accessScope.actor;
     const scoped = crmAccess.filterWorkspaceForAccess(state, accessScope.actor, {
       orgWide: accessScope.orgWide,
+      forceOwn: !!accessScope.forceOwn,
     });
     state = scoped.state;
     scope = scoped.scope;
@@ -367,11 +405,19 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
           return true;
         }
-        const actor = await resolveCrmActor(access, sessionId);
+        const accessScope = await resolveCrmAccessScope(access, sessionId);
+        const actor = accessScope.actor;
         const row = await crmStore.getWorkspace(orgId);
+        let dayState = row?.state || {};
+        if (!accessScope.orgWide) {
+          dayState = crmAccess.filterWorkspaceForAccess(dayState, actor, {
+            orgWide: false,
+            forceOwn: !!accessScope.forceOwn,
+          }).state;
+        }
         const hours = Math.min(168, Math.max(1, Number(url.searchParams.get('hours') || 168)));
         const crmCapture = require('./denizen-crm-capture');
-        const myDay = crmCapture.buildMyDay(row?.state || {}, {
+        const myDay = crmCapture.buildMyDay(dayState, {
           email: actor.email,
           user: actor.user,
           displayName: actor.user,
@@ -666,7 +712,14 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           }).catch(() => {});
         }
         const teamRole = isDemo ? null : (approval.role === 'ceo' ? 'owner' : (approval.role || null));
-        const crmScope = isDemo || isCeo || crmAccess.isOrgWideRole(teamRole) ? 'org' : 'own';
+        const angelaOwn = approvalsScope.isAngelaHoldingPrincipal({
+          email,
+          display_name: profile.displayName,
+          username: profile.username,
+        });
+        const crmScope = angelaOwn
+          ? 'own'
+          : (isDemo || isCeo || crmAccess.isOrgWideRole(teamRole) ? 'org' : 'own');
         json(res, 200, {
           ok: true,
           session_id: sessionId,
@@ -1131,7 +1184,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           return true;
         }
         const row = await crmStore.getWorkspace(orgId);
-        const identityId = access.session?.identity_id || 'default';
+        const identityId = identityFromAccess(access);
         json(res, 200, { ok: true, ...crmCalendar.calendarStatus(row?.state || {}, identityId) });
         return true;
       } catch (err) {
@@ -1141,7 +1194,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
       }
     }
 
-    if (path === '/api/crm/calendar/google/connect' && req.method === 'GET') {
+    if ((path === '/api/crm/google/connect' || path === '/api/crm/calendar/google/connect') && req.method === 'GET') {
       try {
         const body = {};
         const sessionId = sessionIdFrom(req, body, url);
@@ -1151,10 +1204,15 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
           return true;
         }
-        const identityId = access.session?.identity_id || 'default';
-        const result = crmCalendar.buildGoogleAuthUrl(orgId, identityId);
+        const identityId = identityFromAccess(access);
+        if (!identityId) {
+          json(res, 409, { ok: false, error: 'identity_required' });
+          return true;
+        }
+        const returnTo = path.includes('/calendar/') ? '/crm/#schedule' : '/api/crm/google/app';
+        const result = crmCalendar.buildGoogleAuthUrl(orgId, identityId, { returnTo });
         if (!result.ok) {
-          json(res, 503, result);
+          json(res, result.error === 'identity_required' ? 409 : 503, result);
           return true;
         }
         redirect(res, result.url);
@@ -1166,19 +1224,127 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
       }
     }
 
-    if (path === '/api/crm/calendar/google/callback' && req.method === 'GET') {
+    if ((path === '/api/crm/google/callback' || path === '/api/crm/calendar/google/callback') && req.method === 'GET') {
       try {
         const code = url.searchParams.get('code');
         const state = url.searchParams.get('state');
         if (!code || !state) {
-          redirect(res, `${crmPublicBase()}/crm/#schedule?calendar=google&error=missing_code`);
+          redirect(res, '/api/crm/google/app?error=missing_code');
           return true;
         }
-        await crmCalendar.handleGoogleCallback(code, state);
-        redirect(res, `${crmPublicBase()}/crm/#schedule?calendar=google&connected=1`);
+        const result = await crmCalendar.handleGoogleCallback(code, state);
+        if (!result.ok) {
+          redirect(res, `/api/crm/google/app?error=${encodeURIComponent(result.error || 'oauth_failed')}`);
+          return true;
+        }
+        const dest = result.returnTo || '/api/crm/google/app';
+        if (String(dest).includes('#schedule')) {
+          redirect(res, `${crmPublicBase()}/crm/#schedule?calendar=google&connected=1`);
+        } else {
+          const join = dest.includes('?') ? '&' : '?';
+          redirect(res, `${dest}${join}connected=1`);
+        }
         return true;
       } catch (err) {
-        redirect(res, `${crmPublicBase()}/crm/#schedule?calendar=google&error=${encodeURIComponent(err?.message || 'oauth_failed')}`);
+        redirect(res, `/api/crm/google/app?error=${encodeURIComponent(err?.message || 'oauth_failed')}`);
+        return true;
+      }
+    }
+
+    if (path === '/api/crm/google/app' && req.method === 'GET') {
+      let signedIn = false;
+      let sessionId = null;
+      let status = crmCalendar.calendarStatus({}, null);
+      try {
+        const body = {};
+        sessionId = sessionIdFrom(req, body, url);
+        if (sessionId) {
+          const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+          const orgId = await resolveOrgIdAsync(access);
+          const identityId = identityFromAccess(access);
+          if (orgId && identityId) {
+            const row = await crmStore.getWorkspace(orgId);
+            status = crmCalendar.calendarStatus(row?.state || {}, identityId);
+            signedIn = true;
+          }
+        }
+      } catch (err) {
+        if (err?.code !== 'DENIED') throw err;
+      }
+      const notice = url.searchParams.get('connected') === '1'
+        ? 'Google connected for this Denizen account.'
+        : (url.searchParams.get('disconnected') === '1'
+          ? 'Google disconnected.'
+          : (url.searchParams.get('error') || ''));
+      const html = crmCalendar.renderConnectPage({ status, signedIn, sessionId, notice });
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+      return true;
+    }
+
+    if (path === '/api/crm/google/status' && req.method === 'GET') {
+      try {
+        const body = {};
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const row = await crmStore.getWorkspace(orgId);
+        json(res, 200, { ok: true, ...crmCalendar.calendarStatus(row?.state || {}, identityFromAccess(access)) });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    if (path === '/api/crm/google/disconnect' && req.method === 'POST') {
+      try {
+        const body = await readFormBody(req);
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        const identityId = identityFromAccess(access);
+        if (!orgId || !identityId) {
+          json(res, 409, { ok: false, error: 'identity_required' });
+          return true;
+        }
+        await crmCalendar.disconnectGoogle(orgId, identityId);
+        const wantsHtml = String(req.headers['content-type'] || '').includes('application/x-www-form-urlencoded');
+        if (wantsHtml) {
+          redirect(res, '/api/crm/google/app?disconnected=1');
+          return true;
+        }
+        json(res, 200, { ok: true, disconnected: true });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    if (path === '/api/crm/google/sync' && req.method === 'POST') {
+      try {
+        const body = await readFormBody(req);
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        const identityId = identityFromAccess(access);
+        if (!orgId || !identityId) {
+          redirect(res, '/api/crm/google/app?error=identity_required');
+          return true;
+        }
+        const result = await crmCalendar.syncCalendar(orgId, identityId, 'google');
+        const flag = result.ok ? `synced=${result.imported || 0}` : `error=${encodeURIComponent(result.error || 'sync_failed')}`;
+        redirect(res, `/api/crm/google/app?${flag}`);
+        return true;
+      } catch (err) {
+        redirect(res, `/api/crm/google/app?error=${encodeURIComponent(err?.message || 'sync_failed')}`);
         return true;
       }
     }
@@ -1235,7 +1401,11 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
           return true;
         }
-        const identityId = access.session?.identity_id || 'default';
+        const identityId = identityFromAccess(access);
+        if (!identityId) {
+          json(res, 409, { ok: false, error: 'identity_required' });
+          return true;
+        }
         const provider = String(body.provider || 'google').toLowerCase();
         const result = await crmCalendar.syncCalendar(orgId, identityId, provider);
         if (!result.ok) {
@@ -1308,10 +1478,18 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         const accounts = await denizenDb._get(
           `denizen_team_accounts?select=display_name,email,role&org_id=eq.${encodeURIComponent(orgId)}&order=display_name`,
         ).catch(() => []);
-        const teamMembers = (accounts || [])
+        let activityState = row?.state || {};
+        let teamMembers = (accounts || [])
           .map((a) => a.display_name)
           .filter(Boolean);
-        const activity = crmAccess.buildTeamActivity(row?.state || {}, { limit, teamMembers });
+        if (!accessScope.orgWide) {
+          activityState = crmAccess.filterWorkspaceForAccess(activityState, accessScope.actor, {
+            orgWide: false,
+            forceOwn: !!accessScope.forceOwn,
+          }).state;
+          teamMembers = [accessScope.actor.user || accessScope.actor.displayName].filter(Boolean);
+        }
+        const activity = crmAccess.buildTeamActivity(activityState, { limit, teamMembers });
 
         // Members still get the team viewer feed (who is doing what) without
         // receiving other people's CRM record payloads.
@@ -1390,7 +1568,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
             role: row.tier === 'ceo' ? 'owner' : (row.tier === 'team' ? 'member' : (row.tier || 'member')),
           });
         }
-        const members = [...memberMap.values()]
+        let members = [...memberMap.values()]
           .sort((a, b) => String(a.display_name).localeCompare(String(b.display_name)))
           .map((m) => ({
             ...m,
@@ -1399,6 +1577,16 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
               || (selfName && m.display_name === selfName)
             ),
           }));
+        if (approvalsScope.isAngelaHoldingPrincipal({
+          email: selfEmail,
+          display_name: selfName,
+          username: identityRow?.username,
+        })) {
+          members = members.filter((m) => m.is_self || approvalsScope.isAngelaHoldingPrincipal({
+            email: m.email,
+            display_name: m.display_name,
+          }));
+        }
         json(res, 200, { ok: true, members, self: { display_name: selfName, email: selfEmail } });
         return true;
       } catch (err) {
@@ -1564,6 +1752,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         if (saved?.conflict) {
           const conflictScoped = crmAccess.filterWorkspaceForAccess(saved.state || {}, actor, {
             orgWide: accessScope.orgWide,
+            forceOwn: !!accessScope.forceOwn,
           });
           json(res, 409, {
             ok: false,

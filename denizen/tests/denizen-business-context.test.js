@@ -22,15 +22,75 @@ describe('denizen-business-context', () => {
     assert.match(omes.name, /OMES/i);
   });
 
-  it('detects teaming agreement proactive signal', () => {
+  it('does not treat a past-due opportunity as the current priority', () => {
     const model = businessContext.loadBusinessModel();
     const signals = businessContext.detectProactiveSignals(model, '');
-    assert.ok(signals.length >= 1);
-    const top = signals[0];
-    assert.equal(top.priority, 'high');
-    assert.match(top.message, /teaming agreement/i);
-    assert.match(top.message, /OMES/i);
-    assert.equal(top.owner_npc, 'Marcus');
+    assert.equal(signals.some((s) => /teaming agreement/i.test(s.message)), false);
+    const live = businessContext.applyLivePriorities(model, {
+      deals: [
+        { id: 1, title: 'FAA NEST', stage: 'Qualified', status: 'active', value: 0 },
+        { id: 2, title: 'OMES EV00000919', stage: 'Closed Lost', status: 'historical', deadline: '2026-10-01' },
+      ],
+      goals: [{ title: '10 qualifying school/government discovery interviews' }],
+    });
+    assert.equal(live.active_opportunities[0].name, 'FAA NEST');
+    assert.ok(live.historical_opportunities.some((opp) => /OMES/i.test(opp.name)));
+    assert.match(live.strategic_goals[0], /qualifying/i);
+  });
+
+  it('does not resurrect legacy DENIZEN template goals', () => {
+    const live = businessContext.applyLivePriorities({
+      strategic_goals: [
+        '30-Day Revenue Conversion Sprint',
+        'Validate DENIZEN problem-solution fit for Dana buyers',
+      ],
+    }, {
+      goals: [
+        { title: 'Build 1921 revenue operating system' },
+        { title: 'Validate DENIZEN problem-solution fit for Dana buyers' },
+        { title: 'Validate DENIZEN problem-solution fit for Dana (founder-operator) buyers' },
+      ],
+    });
+    assert.deepEqual(live.strategic_goals, ['Build 1921 revenue operating system']);
+    const storedOnly = businessContext.applyLivePriorities({
+      strategic_goals: ['Validate DENIZEN problem-solution fit for Dana buyers'],
+    }, { goals: [] });
+    assert.deepEqual(storedOnly.strategic_goals, []);
+    const brief = businessContext.scrubStaleNarrative({
+      current_focus: [
+        'NISC Enterprise Support Tasking (NEST) (RFP Released)',
+        'Validate DENIZEN problem-solution fit for Dana buyers',
+      ],
+    }, live);
+    assert.deepEqual(brief.current_focus, ['NISC Enterprise Support Tasking (NEST) (RFP Released)']);
+  });
+
+  it('removes an expired opportunity from the narrative agents see', () => {
+    const model = businessContext.applyLivePriorities(businessContext.loadBusinessModel(), {});
+    const brief = businessContext.scrubStaleNarrative(businessContext.loadCompanyBrief(), model);
+    const block = businessContext.buildPromptBlock({
+      company: '1921',
+      current_focus: brief.current_focus,
+      pain_points: brief.pain_points,
+      opportunities: (model.active_opportunities || []).map(businessContext.formatOpportunity),
+      proactive_signals: [],
+    });
+    assert.equal(/OMES EV00000919/.test(block), false);
+    assert.equal(/before October 2026/.test(block), false);
+  });
+
+  it('still flags a future critical blocker', () => {
+    const signals = businessContext.detectProactiveSignals({
+      active_opportunities: [{
+        id: 'future',
+        name: 'Future bid',
+        deadline: '2027-04-01',
+        status: 'pursuing',
+        blockers: [{ label: 'Execute teaming agreement', severity: 'critical', owner_npc: 'Marcus', due: '2027-04-01' }],
+      }],
+    }, '');
+    assert.equal(signals[0].priority, 'high');
+    assert.match(signals[0].message, /teaming agreement/i);
   });
 
   it('builds prompt block with opportunities and flags', () => {
@@ -55,10 +115,17 @@ describe('denizen-business-context', () => {
     assert.match(block, /Current focus/i);
   });
 
-  it('buildThinkNudge targets Marcus for OMES blocker', () => {
-    const model = businessContext.loadBusinessModel();
+  it('buildThinkNudge targets Marcus for a current blocker', () => {
     const snapshot = {
-      proactive_signals: businessContext.detectProactiveSignals(model, ''),
+      proactive_signals: businessContext.detectProactiveSignals({
+        active_opportunities: [{
+          id: 'future',
+          name: 'Future bid',
+          deadline: '2027-04-01',
+          status: 'pursuing',
+          blockers: [{ label: 'Execute teaming agreement', severity: 'critical', owner_npc: 'Marcus', due: '2027-04-01' }],
+        }],
+      }, ''),
     };
     const nudge = businessContext.buildThinkNudge(snapshot, 'Marcus');
     assert.match(nudge, /PROACTIVE/i);
@@ -67,7 +134,7 @@ describe('denizen-business-context', () => {
 
   it('shouldInjectForNpc includes Marcus', () => {
     assert.equal(businessContext.shouldInjectForNpc('Marcus'), true);
-    assert.equal(businessContext.shouldInjectForNpc('Molly'), false);
+    assert.equal(businessContext.shouldInjectForNpc('Molly'), true);
   });
 
   it('isBusinessRelatedMessage matches pipeline and OMES', () => {

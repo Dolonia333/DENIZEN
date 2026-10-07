@@ -245,6 +245,25 @@ async function toolCompleteCursorWork(scope, args) {
   rows[idx] = row;
   writeAllRows(rows);
 
+  if (succeeded) {
+    try {
+      require('./denizen-outcome-ledger').appendOutcome({
+        org_id: scope.org_id || row.org_id || null,
+        actor: args?.agent || 'cursor',
+        outcome_type: 'cursor.completed',
+        entity_type: 'cursor_work',
+        entity_key: workId,
+        value_text: `Completed Cursor work: ${row.title || workId}`,
+        value_json: {
+          work_id: workId,
+          files_changed: row.result.files_changed,
+          pr_url: row.result.pr_url,
+        },
+        source: 'cursor-bridge',
+      });
+    } catch (_) { /* receipt is best-effort */ }
+  }
+
   const note = `[cursor-bridge] ${succeeded ? 'Done' : 'Failed'}: ${row.title} — ${String(row.result.summary || '').slice(0, 200)}`;
   if (_deps.denizenDb?.recordWorkOutput) {
     _deps.denizenDb.recordWorkOutput({

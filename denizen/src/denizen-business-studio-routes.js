@@ -61,10 +61,28 @@ async function resolveOrgId(access) {
 function actorFromAccess(access) {
   return {
     identityId: access?.session?.identity_id || null,
-    email: access?.session?.email || access?.user?.email || null,
+    email: access?.session?.email || access?.user?.email || access?.session?.metadata?.email || null,
     displayName: access?.session?.display_name || access?.user?.display_name || null,
     tier: access?.tier || access?.session?.tier || null,
   };
+}
+
+function studioKeyForAccess(access) {
+  const actor = actorFromAccess(access);
+  return studioStore.studioKeyForProfile({
+    email: actor.email,
+    display_name: actor.displayName,
+    username: access?.session?.username || access?.user?.username,
+    identityId: actor.identityId,
+  });
+}
+
+function ownSlice(fullState, access) {
+  const studioKey = studioKeyForAccess(access);
+  const state = studioKey
+    ? studioStore.readPrivateStudio(fullState, studioKey)
+    : studioStore.emptyState();
+  return { studioKey, state, role: 'own' };
 }
 
 function findAdvisor(state, access) {
@@ -92,18 +110,39 @@ function isAdvisorRole(role) {
 
 function isFounderCapable(access, advisor) {
   if (advisor && isAdvisorRole(advisor.role)) return false;
-  // Members / owners / admins without an advisor role can mutate founder workspace.
   return true;
+}
+
+function presentedWorkspace(fullState, access) {
+  const own = ownSlice(fullState, access);
+  return { state: own.state, studioKey: own.studioKey, advisor: null, role: own.role };
+}
+
+function editableWorkspace(fullState, access) {
+  const own = ownSlice(fullState, access);
+  return { own: true, full: fullState, state: own.state, studioKey: own.studioKey };
+}
+
+async function persistEditable(orgId, editable, identityId) {
+  if (!editable.studioKey) {
+    return { state: studioStore.emptyState(), updated_at: null };
+  }
+  const next = studioStore.writePrivateStudio(editable.full, editable.studioKey, editable.state);
+  const saved = await persistOrgState(orgId, next, identityId);
+  return {
+    ...saved,
+    state: studioStore.readPrivateStudio(saved.state, editable.studioKey),
+  };
 }
 
 async function loadOrgState(orgId) {
   if (!orgId || !denizenDb.enabled) {
     return { state: studioStore.emptyState(), updated_at: null, mode: 'local' };
   }
-  const row = await studioStore.getWorkspace(orgId);
+  const isolated = await studioStore.loadIsolatedWorkspace(orgId);
   return {
-    state: row?.state || studioStore.emptyState(),
-    updated_at: row?.updated_at || null,
+    state: isolated.state,
+    updated_at: isolated.updated_at,
     mode: 'cloud',
   };
 }
@@ -175,21 +214,21 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           });
           return true;
         }
-        const row = await studioStore.getWorkspace(orgId);
-        let state = row?.state || studioStore.emptyState();
-        const viewed = viewerState(state, access);
-        state = viewed.state;
+        const loaded = await loadOrgState(orgId);
+        const viewed = presentedWorkspace(loaded.state, access);
+        const actor = actorFromAccess(access);
         json(res, 200, {
           ok: true,
           mode: 'cloud',
           org_id: orgId,
-          state,
-          updated_at: row?.updated_at || null,
-          schema_version: row?.schema_version || studioStore.SCHEMA_VERSION,
+          state: viewed.state,
+          updated_at: loaded.updated_at,
+          schema_version: studioStore.SCHEMA_VERSION,
           viewer: {
-            role: viewed.role || 'member',
-            email: actorFromAccess(access).email,
-            displayName: actorFromAccess(access).displayName,
+            role: 'own',
+            scope: 'own',
+            email: actor.email,
+            displayName: actor.displayName,
           },
         });
         return true;
@@ -208,22 +247,40 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           json(res, 503, { ok: false, error: 'Database not configured — use local storage' });
           return true;
         }
-        const existing = await studioStore.getWorkspace(orgId);
-        const existingState = existing?.state || studioStore.emptyState();
-        const maybeAdvisor = findAdvisor(existingState, access);
+        const loaded = await loadOrgState(orgId);
+        const existingState = loaded.state;
+        const own = ownSlice(existingState, access);
+        const maybeAdvisor = findAdvisor(own.state, access);
         if (isAdvisorRole(maybeAdvisor?.role)) {
           json(res, 403, { ok: false, error: 'Advisors cannot overwrite the founder workspace' });
           return true;
         }
+        if (!own.studioKey) {
+          json(res, 403, { ok: false, error: 'Sign in to open your studio' });
+          return true;
+        }
         const actor = actorFromAccess(access);
-        const result = await studioStore.upsertWorkspace(orgId, body.state, actor.identityId, {
+        const nextState = studioStore.writePrivateStudio(existingState, own.studioKey, body.state);
+        const result = await studioStore.upsertWorkspace(orgId, nextState, actor.identityId, {
           ifUpdatedAt: body.ifUpdatedAt || body.if_updated_at || null,
         });
         if (result?.conflict) {
-          json(res, 409, { ok: false, conflict: true, ...result });
+          json(res, 409, {
+            ok: false,
+            conflict: true,
+            updated_at: result.updated_at,
+            state: studioStore.readPrivateStudio(result.state, own.studioKey),
+          });
           return true;
         }
-        json(res, 200, { ok: true, ...result });
+        json(res, 200, {
+          ok: true,
+          org_id: result.org_id,
+          updated_at: result.updated_at,
+          schema_version: result.schema_version,
+          state: studioStore.readPrivateStudio(result.state, own.studioKey),
+          viewer: { scope: 'own', role: 'own' },
+        });
         return true;
       }
 
@@ -233,7 +290,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
         const loaded = await loadOrgState(orgId);
-        const maybeAdvisor = findAdvisor(loaded.state, access);
+        const maybeAdvisor = findAdvisor(ownSlice(loaded.state, access).state, access);
         if (!isFounderCapable(access, maybeAdvisor)) {
           json(res, 403, { ok: false, error: 'Advisors cannot apply program templates' });
           return true;
@@ -249,7 +306,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         });
 
         if (orgId && denizenDb.enabled && body.persist) {
-          const state = loaded.state;
+          const editable = editableWorkspace(loaded.state, access);
+          const state = editable.state;
           state.business = state.business || {
             id: `biz_${Date.now().toString(36)}`,
             name: body.businessName || 'My Business',
@@ -275,7 +333,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
             },
             ...(state.activity || []),
           ].slice(0, 200);
-          const saved = await persistOrgState(orgId, state, actorFromAccess(access).identityId);
+          const saved = await persistEditable(orgId, editable, actorFromAccess(access).identityId);
           json(res, 200, { ok: true, bundle, workspace: saved });
           return true;
         }
@@ -297,14 +355,15 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           return true;
         }
         const loaded = await loadOrgState(orgId);
-        const maybeAdvisor = findAdvisor(loaded.state, access);
+        const maybeAdvisor = findAdvisor(ownSlice(loaded.state, access).state, access);
         if (!isFounderCapable(access, maybeAdvisor)) {
           json(res, 403, { ok: false, error: 'Advisors cannot apply the founder pack' });
           return true;
         }
+        const editable = editableWorkspace(loaded.state, access);
         let result;
         try {
-          result = founderPack.applyFounderPack(loaded.state, {
+          result = founderPack.applyFounderPack(editable.state, {
             businessName: body.businessName || body.business_name,
             founderName: body.founderName || body.founder_name,
             fillLeanCanvas: body.fillLeanCanvas !== false && body.fill_lean_canvas !== false,
@@ -317,7 +376,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           return true;
         }
         if (orgId && denizenDb.enabled && body.persist !== false) {
-          const saved = await persistOrgState(orgId, result.state, actorFromAccess(access).identityId);
+          editable.state = result.state;
+          const saved = await persistEditable(orgId, editable, actorFromAccess(access).identityId);
           json(res, 200, {
             ok: true,
             business: result.business,
@@ -346,7 +406,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
         const loaded = await loadOrgState(orgId);
-        const viewed = viewerState(loaded.state, access);
+        const viewed = presentedWorkspace(loaded.state, access);
         json(res, 200, {
           ok: true,
           health: progress.businessHealth(viewed.state),
@@ -361,7 +421,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
         const loaded = await loadOrgState(orgId);
-        const viewed = viewerState(loaded.state, access);
+        const viewed = presentedWorkspace(loaded.state, access);
         const subject = url.searchParams.get('subject') || 'program';
         json(res, 200, {
           ok: true,
@@ -382,7 +442,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           return true;
         }
         const loaded = await loadOrgState(orgId);
-        const maybeAdvisor = findAdvisor(loaded.state, access);
+        const maybeAdvisor = findAdvisor(ownSlice(loaded.state, access).state, access);
         if (!isFounderCapable(access, maybeAdvisor)) {
           json(res, 403, { ok: false, error: 'Advisors cannot invite other advisors' });
           return true;
@@ -394,7 +454,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           json(res, 400, { ok: false, error: 'name and email required' });
           return true;
         }
-        const state = loaded.state;
+        const editable = editableWorkspace(loaded.state, access);
+        const state = editable.state;
         const existing = (state.advisors || []).find((a) => String(a.email || '').toLowerCase() === email);
         if (existing) {
           existing.name = name;
@@ -422,7 +483,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           { id: uid('act'), type: 'advisor_invited', message: `Invited ${name} as ${role}`, at: new Date().toISOString() },
           ...(state.activity || []),
         ].slice(0, 200);
-        const saved = await persistOrgState(orgId, state, actorFromAccess(access).identityId);
+        const saved = await persistEditable(orgId, editable, actorFromAccess(access).identityId);
         json(res, 200, { ok: true, advisors: saved.state.advisors, updated_at: saved.updated_at });
         return true;
       }
@@ -439,7 +500,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         }
         const loaded = await loadOrgState(orgId);
         const actor = actorFromAccess(access);
-        const advisor = findAdvisor(loaded.state, access);
+        const advisor = findAdvisor(ownSlice(loaded.state, access).state, access);
         const title = String(body.title || '').trim();
         const recBody = String(body.body || body.text || '').trim();
         if (!title) {
@@ -467,7 +528,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           targetId: body.targetId || body.target_id || null,
           createdAt: new Date().toISOString(),
         };
-        const state = loaded.state;
+        const editable = editableWorkspace(loaded.state, access);
+        const state = editable.state;
         state.recommendations = [rec, ...(state.recommendations || [])];
         state.notifications = [
           {
@@ -480,7 +542,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           },
           ...(state.notifications || []),
         ].slice(0, 100);
-        const saved = await persistOrgState(orgId, state, actor.identityId);
+        const saved = await persistEditable(orgId, editable, actor.identityId);
         json(res, 200, { ok: true, recommendation: rec, updated_at: saved.updated_at });
         return true;
       }
@@ -496,7 +558,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           return true;
         }
         const loaded = await loadOrgState(orgId);
-        const maybeAdvisor = findAdvisor(loaded.state, access);
+        const maybeAdvisor = findAdvisor(ownSlice(loaded.state, access).state, access);
         if (!isFounderCapable(access, maybeAdvisor)) {
           json(res, 403, { ok: false, error: 'Only founders can accept or decline recommendations' });
           return true;
@@ -507,7 +569,8 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           json(res, 400, { ok: false, error: 'id and decision (accepted|declined) required' });
           return true;
         }
-        const state = loaded.state;
+        const editable = editableWorkspace(loaded.state, access);
+        const state = editable.state;
         const rec = (state.recommendations || []).find((r) => r.id === recId);
         if (!rec) {
           json(res, 404, { ok: false, error: 'Recommendation not found' });
@@ -539,7 +602,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           },
           ...(state.activity || []),
         ].slice(0, 200);
-        const saved = await persistOrgState(orgId, state, actorFromAccess(access).identityId);
+        const saved = await persistEditable(orgId, editable, actorFromAccess(access).identityId);
         json(res, 200, {
           ok: true,
           recommendation: rec,
@@ -561,7 +624,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         }
         const loaded = await loadOrgState(orgId);
         const actor = actorFromAccess(access);
-        const advisor = findAdvisor(loaded.state, access);
+        const advisor = findAdvisor(ownSlice(loaded.state, access).state, access);
         if (advisor && String(advisor.role).toLowerCase() === 'viewer') {
           json(res, 403, { ok: false, error: 'Viewers cannot comment' });
           return true;
@@ -585,9 +648,10 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           resolved: false,
           createdAt: new Date().toISOString(),
         };
-        const state = loaded.state;
+        const editable = editableWorkspace(loaded.state, access);
+        const state = editable.state;
         state.comments = [comment, ...(state.comments || [])];
-        const saved = await persistOrgState(orgId, state, actor.identityId);
+        const saved = await persistEditable(orgId, editable, actor.identityId);
         json(res, 200, { ok: true, comment, updated_at: saved.updated_at });
         return true;
       }
@@ -598,7 +662,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         const access = await verifyStudioSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgId(access);
         const loaded = await loadOrgState(orgId);
-        const viewed = viewerState(loaded.state, access);
+        const viewed = presentedWorkspace(loaded.state, access);
         json(res, 200, {
           ok: true,
           readiness: funding.evaluateFundingReadiness(viewed.state),
@@ -623,12 +687,13 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
           return true;
         }
         const loaded = await loadOrgState(orgId);
-        const maybeAdvisor = findAdvisor(loaded.state, access);
+        const maybeAdvisor = findAdvisor(ownSlice(loaded.state, access).state, access);
         if (!isFounderCapable(access, maybeAdvisor)) {
           json(res, 403, { ok: false, error: 'Advisors cannot overwrite funding workspace' });
           return true;
         }
-        const state = loaded.state;
+        const editable = editableWorkspace(loaded.state, access);
+        const state = editable.state;
         state.funding = {
           ...funding.emptyFundingState(),
           ...(state.funding || {}),
@@ -650,7 +715,7 @@ function mountBusinessStudioRoutes({ verifyVisitorSession, readJsonBody } = {}) 
         if (body.capitalPlan) {
           state.funding.capitalPlan = { ...state.funding.capitalPlan, ...body.capitalPlan };
         }
-        const saved = await persistOrgState(orgId, state, actorFromAccess(access).identityId);
+        const saved = await persistEditable(orgId, editable, actorFromAccess(access).identityId);
         json(res, 200, {
           ok: true,
           funding: saved.state.funding,

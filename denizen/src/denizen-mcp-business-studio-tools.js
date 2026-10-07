@@ -33,7 +33,7 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
     description:
       'READ-ONLY: open one Business Studio section by id or label (e.g. leancanvas, "PAVE Workbook", moat). '
       + 'Returns what/used_for, capability, tools, and a live snapshot so ChatGPT can help based on where the founder is. '
-      + 'Phase 2 sections return coming_soon guidance instead of fake data.',
+      + 'Phase 2 sections are personal records on this studio. Do not invent figures.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -97,10 +97,9 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   {
     name: 'business_studio_apply_founder_pack',
     description:
-      'Fill the org Business Studio with Dolonia / DENIZEN living materials: business profile, '
-      + 'E3 PAVE (Dana customer), Lean Canvas (campus mesh / strategic brief), moat, mentor advisor, '
-      + 'and document evidence. Use when the founder asks to update their account from E3 docs. '
-      + 'Requires crm_write. Does not invent interview outcomes.',
+      'Seed empty Business Studio sections only. Does not replace a saved PAVE, moat, capital plan, '
+      + 'lean canvas, goal, experiment, or evidence item. Does not restore a buyer persona, a price, '
+      + 'or a compliance or margin claim. Requires crm_write.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -116,9 +115,9 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   {
     name: 'business_studio_add_evidence',
     description:
-      'Attach real evidence (interview, document, meeting, metric, manual). Never fabricate. '
-      + 'Interviews auto-link discovery experiment + requirement + Funding Readiness customer_discovery when an E3 program is active. '
-      + 'Optional contact_id stores a CRM relation without inventing CRM data.',
+      'Attach real evidence (document, meeting, metric, manual). Never fabricate. '
+      + 'A customer interview must use business_studio_link_validated_interview with qualifying true and a contact_id. '
+      + 'An unvalidated conversation is not evidence and is not counted.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -140,6 +139,25 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
         },
       },
       required: ['title', 'type'],
+    },
+  },
+  {
+    name: 'business_studio_link_validated_interview',
+    description:
+      'Record one qualifying customer interview and connect it: CRM contact, Business Studio evidence, '
+      + 'experiment count, funding readiness, and the next Studio Board task. '
+      + 'Requires qualifying true, title, and an existing contact_id. Does not scan Gmail and does not invent funding checkmarks.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        contact_id: { type: 'string' },
+        contact_name: { type: 'string' },
+        qualifying: { type: 'boolean', description: 'Must be true' },
+        description: { type: 'string' },
+        experiment_id: { type: 'string' },
+      },
+      required: ['title', 'contact_id', 'qualifying'],
     },
   },
   {
@@ -222,7 +240,8 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   {
     name: 'business_studio_upsert_lean_canvas',
     description:
-      'Update Lean Canvas fields (partial merge). Pass any of the nine boxes as strings. Requires crm_write.',
+      'Update Lean Canvas fields. Snake_case, labels, and {text,body} values are accepted. '
+      + 'Unrecognized boxes are rejected and nothing is saved. Requires crm_write.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -253,13 +272,21 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   {
     name: 'business_studio_upsert_pave',
     description:
-      'Patch PAVE fields via dotted paths (e.g. partA.customer, snapshot.company) or a nested fields object. Requires crm_write.',
+      'Overwrite PAVE fields. Use snapshot, partA, partB, partC, partD, and final, or dotted paths such as partA.problem. '
+      + 'A section may be a string or {text,body}. Unrecognized keys are rejected and nothing is saved. Requires crm_write.',
     inputSchema: {
       type: 'object',
+      additionalProperties: true,
       properties: {
         program_id: { type: 'string' },
-        fields: { type: 'object', description: 'Map of dotted.path → string value' },
-        pave: { type: 'object', description: 'Partial pave object to deep-merge' },
+        fields: { type: 'object', description: 'Dotted paths, labels, or nested sections. Supplied keys overwrite.' },
+        pave: { type: 'object', description: 'Nested PAVE object. Supplied keys overwrite stored keys.' },
+        snapshot: { type: 'object' },
+        partA: { type: 'object' },
+        partB: { type: 'object' },
+        partC: { type: 'object' },
+        partD: { type: 'object' },
+        final: { type: 'object' },
       },
     },
   },
@@ -308,11 +335,16 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   },
   {
     name: 'business_studio_upsert_moat',
-    description: 'Update moat primaryClaim and/or sources map. Requires crm_write. Does not invent evidence.',
+    description:
+      'Overwrite moat fields. Supplied primaryClaim, primaryWhy, and sources replace the stored values. '
+      + 'A call that matches no field is rejected and does not save. Requires crm_write.',
     inputSchema: {
       type: 'object',
+      additionalProperties: true,
       properties: {
         primaryClaim: { type: 'string' },
+        primary_claim: { type: 'string' },
+        primaryWhy: { type: 'string' },
         sources: { type: 'object' },
         moat: { type: 'object' },
       },
@@ -340,14 +372,19 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   },
   {
     name: 'business_studio_upsert_capital_plan',
-    description: 'Update capitalPlan (stage, raise target, use of funds notes). Requires crm_write.',
+    description:
+      'Overwrite capital plan fields. Supplied notes, stage, amount, uses, and types replace the stored values. '
+      + 'A call that matches no field is rejected and does not save. Requires crm_write.',
     inputSchema: {
       type: 'object',
+      additionalProperties: true,
       properties: {
         capitalPlan: { type: 'object' },
+        capital_plan: { type: 'object' },
         stage: { type: 'string' },
-        raise_target: { type: 'string' },
         notes: { type: 'string' },
+        amount_needed: { type: 'number' },
+        raise_target: { type: 'string' },
       },
     },
   },
@@ -424,12 +461,120 @@ const BUSINESS_STUDIO_TOOL_DEFINITIONS = [
   },
   {
     name: 'business_studio_upsert_settings',
-    description: 'Update business name / founder name (Settings). Requires crm_write.',
+    description:
+      'Overwrite the workspace company name and founder. company_name, company, legal_name, name, and business_name all set the header name. Requires crm_write.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        business_name: { type: 'string' },
+        company_name: { type: 'string' },
+        company: { type: 'string' },
+        name: { type: 'string' },
+        founder_name: { type: 'string' },
+        business: { type: 'object', description: 'Partial business profile. name and founderName overwrite.' },
+        config: { type: 'object', description: 'Partial settings config' },
+      },
+    },
+  },
+  {
+    name: 'business_studio_get_workspace',
+    description:
+      'The signed-in person’s Business Studio only. A connector cannot open another account by passing account. '
+      + 'Team and Molly connectors open Angela’s studio. Returns business, programs, goals, milestones, tasks, '
+      + 'strategy, evidence, experiments, funding, advisors, metrics, and phase 2 records.',
     inputSchema: {
       type: 'object',
       properties: {
-        business_name: { type: 'string' },
-        founder_name: { type: 'string' },
+        account: { type: 'string', description: 'angela (default for the team connector) or founder' },
+      },
+    },
+  },
+  {
+    name: 'business_studio_patch',
+    description:
+      'Update any Business Studio lists or objects. Pass only the keys to change: business, programs, goals, '
+      + 'milestones, tasks, strategyNodes, strategyEdges, assumptions, experiments, evidence, metrics, '
+      + 'metricValues, advisors, recommendations, comments, meetings, funding, activity, notifications, config. '
+      + 'Objects merge. Arrays replace. Requires crm_write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        patch: { type: 'object', description: 'Partial workspace. Keys match the studio state.' },
+      },
+      required: ['patch'],
+    },
+  },
+  {
+    name: 'business_studio_upsert_strategy',
+    description: 'Replace or merge the strategy map. Pass nodes and edges arrays.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        nodes: { type: 'array' },
+        edges: { type: 'array' },
+      },
+    },
+  },
+  {
+    name: 'business_studio_upsert_milestone',
+    description: 'Create or update a roadmap milestone by id.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        title: { type: 'string' },
+        status: { type: 'string' },
+        stage: { type: 'string' },
+        notes: { type: 'string' },
+      },
+    },
+  },
+  {
+    name: 'business_studio_upsert_advisor',
+    description: 'Create or update a Business Studio advisor/mentor by id or email.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        email: { type: 'string' },
+        role: { type: 'string' },
+        share: { type: 'object' },
+      },
+    },
+  },
+  {
+    name: 'business_studio_upsert_section',
+    description:
+      'Create or update a personal Business Studio record in templates, financials, diagrams, documents, reports, '
+      + 'experiments, programs, or links (crm, calendar). Stores only what you send. Does not invent revenue, '
+      + 'contract values, or market totals. Requires crm_write.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        section: { type: 'string', description: 'templates, financials, diagrams, documents, reports, experiments, programs, crm, calendar' },
+        title: { type: 'string' },
+        body: { type: 'string' },
+        notes: { type: 'string' },
+        amount: { type: 'string', description: 'Only a figure the founder supplied' },
+        account: { type: 'string' },
+      },
+      required: ['section'],
+    },
+  },
+  {
+    name: 'business_studio_upsert_metric',
+    description: 'Create or update a founder metric by id or name.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        value: {},
+        unit: { type: 'string' },
+        notes: { type: 'string' },
       },
     },
   },
@@ -458,7 +603,50 @@ function resolveOrgId(scope) {
   return scope?.orgId || scope?.org_id || denizenDb.orgId || null;
 }
 
-async function loadState(scope) {
+function isTeamConnector(scope) {
+  return scope?.npc_key === 'molly' || scope?.npc_key === '_team' || scope?.scope_mode === 'team';
+}
+
+function studioKeyFromAccount(raw) {
+  const explicit = String(raw || '').trim().toLowerCase();
+  if (!explicit) return undefined;
+  if (['founder', 'org', 'zion', 'operator'].includes(explicit)) return studioStore.operatorStudioKey();
+  if (explicit === 'angela' || explicit === '1921' || explicit.includes('angela')) return 'angela';
+  if (explicit.includes('@')) return studioStore.studioKeyForProfile({ email: explicit });
+  const cleaned = explicit.replace(/[^a-z0-9:_-]/g, '').slice(0, 80);
+  return cleaned || null;
+}
+
+async function profileFromScope(scope) {
+  const profile = {
+    email: scope?.email || scope?.session_email || null,
+    display_name: scope?.display_name || scope?.displayName || null,
+    username: scope?.username || null,
+    identityId: scope?.identity_id || scope?.identityId || null,
+  };
+  if (!profile.email && !profile.display_name && scope?.session_id && denizenDb.enabled) {
+    try {
+      const session = await require('./denizen-visitor').getSession(scope.session_id);
+      profile.email = session?.email || session?.metadata?.email || null;
+      profile.display_name = session?.display_name || session?.metadata?.display_name || null;
+      profile.username = session?.username || session?.metadata?.username || null;
+      profile.identityId = profile.identityId || session?.identity_id || null;
+    } catch (_) { /* personal routing still falls through */ }
+  }
+  return profile;
+}
+
+async function resolveStudioKey(scope, args = {}) {
+  if (isTeamConnector(scope)) return 'angela';
+  const ownKey = studioStore.studioKeyForProfile(await profileFromScope(scope));
+  const requested = studioKeyFromAccount(
+    args.account || args.studio || args.owner || args.studio_account,
+  );
+  if (requested && ownKey && requested !== ownKey) return ownKey;
+  return ownKey || null;
+}
+
+async function loadOrgState(scope) {
   const orgId = resolveOrgId(scope);
   if (!orgId) {
     return { orgId: null, state: null, error: 'org_id unavailable' };
@@ -466,11 +654,11 @@ async function loadState(scope) {
   if (!denizenDb.enabled) {
     return { orgId, state: studioStore.emptyState(), local: true };
   }
-  const row = await studioStore.getWorkspace(orgId);
-  return { orgId, state: row?.state || studioStore.emptyState(), local: false, updated_at: row?.updated_at };
+  const isolated = await studioStore.loadIsolatedWorkspace(orgId, scope?.identity_id || scope?.identityId || null);
+  return { orgId, state: isolated.state, local: false, updated_at: isolated.updated_at };
 }
 
-async function saveState(scope, state) {
+async function saveOrgState(scope, state) {
   const orgId = resolveOrgId(scope);
   if (!orgId || !denizenDb.enabled) {
     return { ok: false, error: 'Database not configured — persist via Business Studio UI local mode' };
@@ -479,8 +667,186 @@ async function saveState(scope, state) {
   return { ok: true, updated_at: saved?.updated_at };
 }
 
+async function loadState(scope) {
+  const loaded = await loadOrgState(scope);
+  if (loaded.error || !loaded.state) return loaded;
+  if (!scope?.studioKey) {
+    return {
+      ...loaded,
+      state: studioStore.emptyState(),
+      studioKey: null,
+      adopted: false,
+    };
+  }
+  const selected = studioStore.selectPersonalState(loaded.state, scope.studioKey);
+  return {
+    ...loaded,
+    state: selected.state,
+    studioKey: selected.studioKey,
+    adopted: false,
+  };
+}
+
+async function saveState(scope, state) {
+  const key = scope?.studioKey || null;
+  if (!key) return { ok: false, error: 'This studio is personal. No shared workspace was written.' };
+  const loaded = await loadOrgState(scope);
+  if (loaded.error) return { ok: false, error: loaded.error };
+  const next = studioStore.writePrivateStudio(loaded.state, key, state);
+  const saved = await saveOrgState(scope, next);
+  return { ...saved, studio: key };
+}
+
+const STUDIO_PATCH_KEYS = [
+  'business', 'programs', 'goals', 'milestones', 'projects', 'tasks',
+  'strategyNodes', 'strategyEdges', 'assumptions', 'experiments', 'evidence',
+  'findings', 'decisions', 'metrics', 'metricValues', 'advisors', 'comments',
+  'meetings', 'recommendations', 'relations', 'documents', 'workbooks',
+  'funding', 'activity', 'notifications', 'config',
+];
+
+function applyStudioPatch(state, patch = {}) {
+  const next = studioStore.sanitizeState(state);
+  for (const key of STUDIO_PATCH_KEYS) {
+    if (patch[key] === undefined) continue;
+    if (key === 'business' || key === 'funding' || key === 'config') {
+      const incoming = patch[key] && typeof patch[key] === 'object' && !Array.isArray(patch[key])
+        ? patch[key]
+        : {};
+      next[key] = { ...(next[key] || {}), ...incoming };
+      continue;
+    }
+    next[key] = patch[key];
+  }
+  if (next.config && next.config.privateStudios) {
+    const config = { ...next.config };
+    delete config.privateStudios;
+    next.config = config;
+  }
+  return next;
+}
+
+function applySectionWrite(state, args = {}) {
+  const section = sections.normalizeSectionId(args.section || args.view || args.app);
+  if (!section) {
+    return { ok: false, error: 'section required', received_keys: Object.keys(args || {}) };
+  }
+  const source = args.record && typeof args.record === 'object' && !Array.isArray(args.record)
+    ? args.record
+    : args;
+  const title = source.title || source.name || '';
+  const body = source.body || source.notes || source.text || source.description || '';
+  const id = source.id || source.record_id || null;
+  if (!String(title).trim() && !String(body).trim() && source.amount == null && !Array.isArray(source.rows) && source.notes == null) {
+    return {
+      ok: false,
+      error: 'no section fields applied',
+      section,
+      hint: 'Send title or body. Nothing was saved.',
+    };
+  }
+  const next = studioStore.sanitizeState(state);
+  next.phase2 = studioStore.sanitizePhase2(next.phase2);
+
+  if (section === 'financials') {
+    const financials = next.phase2.financials;
+    if (source.notes != null || body) financials.notes = String(source.notes != null ? source.notes : body);
+    if (Array.isArray(source.rows)) financials.rows = source.rows;
+    else if (String(title).trim() || source.amount != null) {
+      const row = {
+        id: id || uid('fin'),
+        title: String(title || 'Financial note'),
+        ...(body ? { notes: String(body) } : {}),
+        ...(source.amount != null && source.amount !== '' ? { amount: source.amount } : {}),
+        ...(source.source ? { source: String(source.source) } : {}),
+      };
+      financials.rows = upsertById(financials.rows, row, (item) => String(item?.id) === String(row.id) || (
+        title && String(item?.title || '').toLowerCase() === String(title).toLowerCase()
+      ));
+    }
+    return { ok: true, section, phase2: next.phase2, state: next };
+  }
+
+  const listKey = {
+    templates: ['phase2', 'templates'],
+    diagrams: ['phase2', 'diagrams'],
+    reports: ['phase2', 'reports'],
+    documents: ['documents'],
+    experiments: ['experiments'],
+    programs: ['programs'],
+    crm: ['relations'],
+    calendar: ['relations'],
+    links: ['relations'],
+  }[section];
+  if (!listKey) {
+    return {
+      ok: false,
+      error: `section ${section} has its own writer`,
+      hint: 'Use that section’s write tool from business_studio_section.',
+    };
+  }
+  const row = {
+    id: id || uid(section.slice(0, 3)),
+    title: String(title || section),
+    ...(body ? { body: String(body), notes: String(body) } : {}),
+    ...(source.amount != null && source.amount !== '' ? { amount: source.amount } : {}),
+    ...(source.url ? { url: String(source.url) } : {}),
+    ...(section === 'crm' || section === 'calendar' || section === 'links' ? { kind: section } : {}),
+  };
+  if (listKey[0] === 'phase2') {
+    next.phase2[listKey[1]] = upsertById(next.phase2[listKey[1]], row, (item) => String(item?.id) === String(row.id) || (
+      title && String(item?.title || '').toLowerCase() === String(title).toLowerCase()
+    ));
+  } else {
+    next[listKey[0]] = upsertById(next[listKey[0]], row, (item) => String(item?.id) === String(row.id) || (
+      title && String(item?.title || '').toLowerCase() === String(title).toLowerCase()
+    ));
+  }
+  return { ok: true, section, record: row, state: next };
+}
+
+function upsertById(list, row, match) {
+  const items = Array.isArray(list) ? [...list] : [];
+  const idx = items.findIndex(match);
+  if (idx >= 0) items[idx] = { ...items[idx], ...row, id: items[idx].id };
+  else items.push(row);
+  return items;
+}
+
 function uid(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
+const HOLDING_SERVICE_LINES = Object.freeze([
+  'Government and institutional awards',
+  'Consulting and capture',
+  'Compliance and operations',
+  'IT and cyber partner delivery',
+  'Logistics',
+  'DENIZEN commercialization',
+]);
+
+function asNodeList(...candidates) {
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+  return null;
+}
+
+function strategyReplacement(args = {}) {
+  const nested = args.strategy && typeof args.strategy === 'object' ? args.strategy : {};
+  const map = args.map && typeof args.map === 'object' ? args.map : {};
+  const nodes = asNodeList(args.nodes, args.strategy_nodes, args.strategyNodes, nested.nodes, map.nodes);
+  const edges = asNodeList(args.edges, args.strategy_edges, args.strategyEdges, nested.edges, map.edges);
+  const applied = [];
+  if (nodes) applied.push('nodes');
+  if (edges) applied.push('edges');
+  return { nodes, edges, applied };
+}
+
+function milestoneList(args = {}) {
+  const nested = args.roadmap && typeof args.roadmap === 'object' ? args.roadmap : {};
+  return asNodeList(args.milestones, args.roadmap_milestones, nested.milestones);
 }
 
 function ensureFunding(state) {
@@ -520,6 +886,7 @@ function sectionSnapshot(state, sectionId) {
       link_url: meta.link_url,
       use_tools: [...meta.read_tools, ...meta.write_tools],
       tip: meta.used_for,
+      links: (state.relations || []).filter((item) => !item.kind || item.kind === id || item.kind === 'links'),
     };
   }
 
@@ -626,6 +993,20 @@ function sectionSnapshot(state, sectionId) {
         business: state.business,
         config: state.config || {},
       };
+    case 'templates':
+    case 'diagrams':
+    case 'reports':
+      return { status: 'live', items: (state.phase2 && state.phase2[sectionId]) || [] };
+    case 'financials':
+      return { status: 'live', financials: state.phase2?.financials || { notes: '', rows: [] } };
+    case 'documents':
+      return { status: 'live', documents: state.documents || [] };
+    case 'crm':
+    case 'calendar':
+      return {
+        status: 'live',
+        links: (state.relations || []).filter((item) => !item.kind || item.kind === sectionId || item.kind === 'links'),
+      };
     default:
       return { status: 'unknown' };
   }
@@ -636,6 +1017,7 @@ async function callTool(scope, name, args = {}) {
   if (!hasBusinessStudioAccess(key) && scope?.scope_mode !== 'team') {
     return { ok: false, error: `Business Studio tools not available for ${key}` };
   }
+  scope = { ...scope, studioKey: await resolveStudioKey(scope, args) };
 
   if (name === 'business_studio_catalog') {
     return sections.catalogForAgent({
@@ -755,7 +1137,18 @@ async function callTool(scope, name, args = {}) {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state, orgId } = loaded;
-    const bundle = e3.applyProgramTemplate(args.template_id || args.templateId, {
+    const templateId = args.template_id || args.templateId || 'i2e-e3-pave';
+    const existing = (state.programs || []).find((p) => p.templateId === templateId);
+    if (existing && args.force !== true) {
+      return {
+        ok: true,
+        preserved: true,
+        template: existing.name || existing.templateId,
+        program_id: existing.id,
+        guidance: 'This program is already saved. PAVE, goals, and experiments were kept.',
+      };
+    }
+    const bundle = e3.applyProgramTemplate(templateId, {
       businessName: args.business_name || args.businessName,
       founderName: args.founder_name || args.founderName,
     });
@@ -812,9 +1205,11 @@ async function callTool(scope, name, args = {}) {
       lean_canvas_boxes: result.leanFilled,
       pave_fields: result.paveFilled,
       persist: saved,
+      preserved: result.preserved,
       guidance:
-        'Lean Canvas = campus mesh / education strategic brief. '
-        + 'PAVE = Dana founder-operator for DENIZEN. Do not mix personas when summarizing.',
+        'Saved PAVE, moat, capital notes, and lean canvas stay in place. '
+        + 'Update them with business_studio_upsert_pave, business_studio_upsert_moat, '
+        + 'and business_studio_upsert_capital_plan. This pack does not restore a template.',
     };
   }
 
@@ -822,6 +1217,13 @@ async function callTool(scope, name, args = {}) {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
+    const evidenceType = String(args.type || '').trim().toLowerCase();
+    if (evidenceType === 'interview' || evidenceType === 'discovery_interview') {
+      return {
+        ok: false,
+        error: 'Use business_studio_link_validated_interview with qualifying true and contact_id. An unvalidated conversation is not counted.',
+      };
+    }
     let result;
     try {
       result = chain.attachEvidence(state, {
@@ -851,6 +1253,67 @@ async function callTool(scope, name, args = {}) {
       links: result.links,
       duplicate: !!result.duplicate,
       working_set: result.chain?.workingSet || chain.workingSetBrief(state),
+      chain: result.chain,
+      persist: saved,
+    };
+  }
+
+  if (name === 'business_studio_link_validated_interview') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { state, orgId } = loaded;
+    let result;
+    try {
+      result = chain.linkValidatedInterview(state, {
+        title: args.title,
+        contactId: args.contact_id || args.contactId,
+        contactName: args.contact_name || args.contactName,
+        qualifying: args.qualifying === true || args.validated === true,
+        description: args.description,
+        notes: args.description || args.notes,
+        experimentId: args.experiment_id || args.experimentId,
+        source: 'mcp',
+      });
+    } catch (err) {
+      return { ok: false, error: err?.message || String(err) };
+    }
+    const saved = await saveState(scope, state);
+    let boardTask = null;
+    if (orgId && result.duplicate !== true) {
+      try {
+        const board = require('./denizen-studio-board-mutations');
+        boardTask = await board.upsertTask(orgId, {
+          title: result.nextTask.title,
+          contact_id: result.nextTask.contactId,
+          notes: `Qualifying interview evidence ${result.evidence.id}.`,
+        }, scope?.identity_id || null, { name: 'evidence-chain' });
+      } catch (err) {
+        boardTask = { ok: false, error: err?.message || String(err) };
+      }
+      try {
+        require('./denizen-outcome-ledger').appendOutcome({
+          org_id: orgId,
+          actor: scope?.identity_id || 'business-studio',
+          outcome_type: 'interview.validated',
+          entity_type: 'evidence',
+          entity_key: String(result.evidence.id),
+          value_text: `Validated interview "${result.evidence.title}" linked to contact ${result.evidence.contactId}.`,
+          value_json: {
+            evidence_id: result.evidence.id,
+            contact_id: result.evidence.contactId,
+            experiment_id: result.evidence.experimentId || null,
+          },
+          source: 'evidence-chain',
+        });
+      } catch (_) { /* receipt is best-effort */ }
+    }
+    return {
+      ok: true,
+      evidence: result.evidence,
+      next_task: result.nextTask,
+      board_task: boardTask,
+      counted: result.counted,
+      duplicate: !!result.duplicate,
       chain: result.chain,
       persist: saved,
     };
@@ -1002,19 +1465,24 @@ async function callTool(scope, name, args = {}) {
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
     const fund = ensureFunding(state);
-    const allowed = new Set(funding.LEAN_CANVAS_FIELDS.map((f) => f.key));
-    const patch = { ...(args.canvas && typeof args.canvas === 'object' ? args.canvas : {}) };
-    for (const [k, v] of Object.entries(args)) {
-      if (allowed.has(k) && typeof v === 'string') patch[k] = v;
+    const written = funding.applyLeanCanvasFields(fund.leanCanvas, args || {});
+    if (!written.applied.length || written.ignored.length) {
+      return {
+        ok: false,
+        error: written.applied.length
+          ? 'unrecognized lean canvas fields were not saved'
+          : 'no lean canvas fields applied',
+        applied: written.applied,
+        ignored: written.ignored,
+        fields: funding.LEAN_CANVAS_FIELDS.map((f) => f.key),
+        hint: 'Send the nine boxes by name. Snake_case and {text,body} values are kept. Nothing was saved.',
+      };
     }
-    fund.leanCanvas = funding.sanitizeLeanCanvas({
-      ...fund.leanCanvas,
-      ...patch,
-      updatedAt: new Date().toISOString(),
-    });
+    fund.leanCanvas = written.canvas;
     const saved = await saveState(scope, state);
     return {
       ok: true,
+      applied: written.applied,
       leanCanvas: fund.leanCanvas,
       filled: funding.leanCanvasFilledCount(fund.leanCanvas),
       persist: saved,
@@ -1057,21 +1525,28 @@ async function callTool(scope, name, args = {}) {
       return { ok: false, error: 'No Business Studio program to update — apply a template first' };
     }
     program = paveMod.ensureProgramPave(program);
-    let pave = paveMod.sanitizePave(program.pave);
-    if (args.pave && typeof args.pave === 'object') {
-      pave = paveMod.sanitizePave({ ...pave, ...args.pave });
+    const written = paveMod.applyPaveFields(program.pave, args || {});
+    if (!written.applied.length || written.ignored.length) {
+      return {
+        ok: false,
+        error: written.applied.length
+          ? 'unrecognized pave fields were not saved'
+          : 'no pave fields applied',
+        applied: written.applied,
+        ignored: written.ignored,
+        fields: written.fields,
+        received_keys: Object.keys(args || {}),
+        hint: 'Send snapshot, partA, partB, partC, partD, or final, or dotted paths such as partA.problem. Nothing was saved.',
+      };
     }
-    const fields = args.fields && typeof args.fields === 'object' ? args.fields : {};
-    for (const [path, value] of Object.entries(fields)) {
-      paveMod.setNested(pave, path, value);
-    }
-    program.pave = paveMod.sanitizePave(pave);
+    program.pave = written.pave;
     const idx = (state.programs || []).findIndex((p) => p.id === program.id);
     if (idx >= 0) state.programs[idx] = program;
     const saved = await saveState(scope, state);
     return {
       ok: true,
       program_id: program.id,
+      applied: written.applied,
       pave: program.pave,
       filled: paveMod.paveFilledCount(program.pave),
       persist: saved,
@@ -1140,19 +1615,18 @@ async function callTool(scope, name, args = {}) {
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
     const fund = ensureFunding(state);
-    const patch = args.moat && typeof args.moat === 'object' ? args.moat : {};
-    fund.moat = {
-      ...fund.moat,
-      ...patch,
-      primaryClaim: args.primaryClaim ?? patch.primaryClaim ?? fund.moat.primaryClaim,
-      sources: {
-        ...(fund.moat.sources || {}),
-        ...(patch.sources || {}),
-        ...(args.sources || {}),
-      },
-    };
+    const written = funding.applyMoatFields(fund.moat, args || {});
+    if (!written.applied.length) {
+      return {
+        ok: false,
+        error: 'no moat fields applied',
+        received_keys: Object.keys(args || {}),
+        hint: 'Send primaryClaim, primaryWhy, or sources. Supplied fields overwrite stored ones. Nothing was saved.',
+      };
+    }
+    fund.moat = written.moat;
     const saved = await saveState(scope, state);
-    return { ok: true, moat: funding.evaluateMoat(state), persist: saved };
+    return { ok: true, applied: written.applied, moat: funding.evaluateMoat(state), raw: fund.moat, persist: saved };
   }
 
   if (name === 'business_studio_get_market_sizing') {
@@ -1172,10 +1646,24 @@ async function callTool(scope, name, args = {}) {
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
     const fund = ensureFunding(state);
-    const patch = args.marketSizing || args.market_sizing || args;
+    const patch = { ...(args.marketSizing || args.market_sizing || {}) };
+    for (const key of ['tamOrgs', 'samOrgs', 'somPct', 'acv', 'geography', 'buyerWho']) {
+      if (args[key] !== undefined) patch[key] = args[key];
+    }
     const next = { ...fund.marketSizing, ...patch };
     delete next.marketSizing;
     delete next.market_sizing;
+    const serviceLines = asNodeList(args.service_lines, args.serviceLines, patch.service_lines, patch.serviceLines);
+    if (serviceLines) {
+      next.serviceLines = serviceLines.map((line) => ({
+        id: line?.id || uid('line'),
+        name: String(line?.name || line?.line || ''),
+        tam: line?.tam == null || line.tam === '' ? null : Number(line.tam),
+        sam: line?.sam == null || line.sam === '' ? null : Number(line.sam),
+        som: line?.som == null || line.som === '' ? null : Number(line.som),
+        source: String(line?.source || ''),
+      }));
+    }
     fund.marketSizing = {
       ...next,
       calculated: funding.calculateMarketSizing(next),
@@ -1195,16 +1683,18 @@ async function callTool(scope, name, args = {}) {
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
     const fund = ensureFunding(state);
-    const patch = args.capitalPlan || args.capital_plan || {};
-    fund.capitalPlan = {
-      ...fund.capitalPlan,
-      ...patch,
-      stage: args.stage ?? patch.stage ?? fund.capitalPlan.stage,
-      raiseTarget: args.raise_target ?? args.raiseTarget ?? patch.raiseTarget ?? fund.capitalPlan.raiseTarget,
-      notes: args.notes ?? patch.notes ?? fund.capitalPlan.notes,
-    };
+    const written = funding.applyCapitalFields(fund.capitalPlan, args || {});
+    if (!written.applied.length) {
+      return {
+        ok: false,
+        error: 'no capital fields applied',
+        received_keys: Object.keys(args || {}),
+        hint: 'Send notes, stage, or capitalPlan. Supplied fields overwrite stored ones. Nothing was saved.',
+      };
+    }
+    fund.capitalPlan = written.capitalPlan;
     const saved = await saveState(scope, state);
-    return { ok: true, capital: funding.capitalPathwayBrief(state), persist: saved };
+    return { ok: true, applied: written.applied, capital: funding.capitalPathwayBrief(state), persist: saved };
   }
 
   if (name === 'business_studio_data_room') {
@@ -1345,15 +1835,178 @@ async function callTool(scope, name, args = {}) {
     const loaded = await loadState(scope);
     if (loaded.error) return { ok: false, error: loaded.error };
     const { state } = loaded;
-    state.business = state.business || { id: uid('biz'), name: 'My Business', founderName: 'Founder' };
-    if (args.business_name || args.businessName) {
-      state.business.name = args.business_name || args.businessName;
+    state.business = state.business || { id: uid('biz'), name: '', founderName: '' };
+    const written = studioStore.applyBusinessProfile(state.business, args || {});
+    if (!written.applied.length && !(args.config && typeof args.config === 'object')) {
+      return {
+        ok: false,
+        error: 'no settings fields applied',
+        received_keys: Object.keys(args || {}),
+        hint: 'Send company_name or name for the header, and founder_name for the founder. Nothing was saved.',
+      };
     }
-    if (args.founder_name || args.founderName) {
-      state.business.founderName = args.founder_name || args.founderName;
+    state.business = { ...state.business, ...written.business, id: state.business.id || uid('biz') };
+    if (state.business.structure === 'holding' || state.business.structure === 'portfolio') {
+      for (const program of state.programs || []) {
+        if (program && program.templateId === 'i2e-e3-pave') program.scope = 'product';
+      }
+      if (studioStore.strategyMapIsE3Template(state.strategyNodes)) {
+        state.strategyNodes = [];
+        state.strategyEdges = [];
+      }
+      state.funding = state.funding || funding.emptyFundingState();
+      state.funding.marketSizing = state.funding.marketSizing || funding.emptyFundingState().marketSizing;
+      if (!Array.isArray(state.funding.marketSizing.serviceLines) || !state.funding.marketSizing.serviceLines.length) {
+        state.funding.marketSizing.serviceLines = HOLDING_SERVICE_LINES.map((line) => ({
+          id: uid('line'),
+          name: line,
+          tam: null,
+          sam: null,
+          som: null,
+          source: '',
+        }));
+      }
+    }
+    if (args.config && typeof args.config === 'object') {
+      const config = { ...(state.config || {}), ...args.config };
+      delete config.privateStudios;
+      state.config = config;
     }
     const saved = await saveState(scope, state);
-    return { ok: true, business: state.business, persist: saved };
+    return {
+      ok: true,
+      applied: written.applied,
+      business: state.business,
+      config: state.config || {},
+      persist: saved,
+    };
+  }
+
+  if (name === 'business_studio_get_workspace') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    return {
+      ok: true,
+      studio: loaded.studioKey || 'founder',
+      adopted: !!loaded.adopted,
+      updated_at: loaded.updated_at || null,
+      state: studioStore.stripPrivateStudios(loaded.state),
+    };
+  }
+
+  if (name === 'business_studio_patch') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const patch = args.patch && typeof args.patch === 'object' ? args.patch : args;
+    const next = applyStudioPatch(loaded.state, patch);
+    const saved = await saveState(scope, next);
+    return { ok: true, persist: saved, state: studioStore.stripPrivateStudios(next) };
+  }
+
+  if (name === 'business_studio_upsert_strategy') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { state } = loaded;
+    const written = strategyReplacement(args || {});
+    if (!written.applied.length) {
+      return {
+        ok: false,
+        error: 'no strategy fields applied',
+        received_keys: Object.keys(args || {}),
+        hint: 'Send nodes (or strategy_nodes) to replace the strategy map. Nothing was saved.',
+      };
+    }
+    if (written.nodes) state.strategyNodes = written.nodes;
+    if (written.edges) state.strategyEdges = written.edges;
+    const saved = await saveState(scope, state);
+    return {
+      ok: true,
+      applied: written.applied,
+      nodes: state.strategyNodes || [],
+      edges: state.strategyEdges || [],
+      persist: saved,
+    };
+  }
+
+  if (name === 'business_studio_upsert_milestone') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { state } = loaded;
+    const replacement = milestoneList(args || {});
+    if (replacement) {
+      state.milestones = replacement;
+      const saved = await saveState(scope, state);
+      return { ok: true, applied: ['milestones'], milestones: state.milestones, persist: saved };
+    }
+    const id = args.id || uid('ms');
+    const row = {
+      id,
+      title: args.title || args.name || 'Milestone',
+      ...(args.status != null ? { status: String(args.status) } : {}),
+      ...(args.stage != null ? { stage: String(args.stage) } : {}),
+      ...(args.notes != null ? { notes: String(args.notes) } : {}),
+    };
+    state.milestones = upsertById(state.milestones, row, (item) => String(item?.id) === String(id) || (
+      args.title && String(item?.title || '').toLowerCase() === String(args.title).toLowerCase()
+    ));
+    const saved = await saveState(scope, state);
+    return { ok: true, milestone: state.milestones.find((item) => String(item.id) === String(id)), persist: saved };
+  }
+
+  if (name === 'business_studio_upsert_advisor') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { state } = loaded;
+    const email = String(args.email || '').trim().toLowerCase();
+    const id = args.id || uid('adv');
+    const row = {
+      id,
+      name: args.name || email || 'Advisor',
+      ...(email ? { email } : {}),
+      ...(args.role != null ? { role: String(args.role) } : {}),
+      ...(args.share && typeof args.share === 'object' ? { share: args.share } : {}),
+    };
+    state.advisors = upsertById(state.advisors, row, (item) => (
+      (args.id && String(item?.id) === String(args.id))
+      || (email && String(item?.email || '').toLowerCase() === email)
+    ));
+    const saved = await saveState(scope, state);
+    return { ok: true, advisors: state.advisors, persist: saved };
+  }
+
+  if (name === 'business_studio_upsert_section') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const written = applySectionWrite(loaded.state, args || {});
+    if (!written.ok) return written;
+    const saved = await saveState(scope, written.state);
+    return {
+      ok: true,
+      studio: scope.studioKey || 'founder',
+      section: written.section,
+      record: written.record || null,
+      phase2: written.state.phase2 || null,
+      persist: saved,
+    };
+  }
+
+  if (name === 'business_studio_upsert_metric') {
+    const loaded = await loadState(scope);
+    if (loaded.error) return { ok: false, error: loaded.error };
+    const { state } = loaded;
+    const id = args.id || uid('met');
+    const row = {
+      id,
+      name: args.name || 'Metric',
+      ...(args.value != null ? { value: args.value } : {}),
+      ...(args.unit != null ? { unit: String(args.unit) } : {}),
+      ...(args.notes != null ? { notes: String(args.notes) } : {}),
+    };
+    state.metrics = upsertById(state.metrics, row, (item) => String(item?.id) === String(id) || (
+      args.name && String(item?.name || '').toLowerCase() === String(args.name).toLowerCase()
+    ));
+    const saved = await saveState(scope, state);
+    return { ok: true, metric: state.metrics.find((item) => String(item.id) === String(id)), persist: saved };
   }
 
   return { ok: false, error: `Unknown Business Studio tool: ${name}` };
@@ -1362,6 +2015,10 @@ async function callTool(scope, name, args = {}) {
 module.exports = {
   BUSINESS_STUDIO_TOOL_DEFINITIONS,
   hasBusinessStudioAccess,
+  applyStudioPatch,
+  applySectionWrite,
+  studioKeyFromAccount,
+  resolveStudioKey,
   isBusinessStudioTool,
   toolsForNpc,
   callTool,

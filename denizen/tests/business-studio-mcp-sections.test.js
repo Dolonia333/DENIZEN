@@ -32,7 +32,7 @@ describe('Business Studio section catalog for MCP/ChatGPT', () => {
     }
     const phase2 = cat.sections.filter((s) => s.phase2);
     assert.ok(phase2.length >= 5);
-    assert.ok(phase2.every((s) => s.capability === 'coming_soon'));
+    assert.ok(phase2.every((s) => s.write_tools.includes('business_studio_upsert_section')));
   });
 
   it('resolves menu labels and aliases', () => {
@@ -89,8 +89,8 @@ describe('Business Studio section catalog for MCP/ChatGPT', () => {
 
     const p2 = await tools.callTool(SCOPE, 'business_studio_section', { section: 'Financials' });
     assert.equal(p2.ok, true);
-    assert.equal(p2.snapshot.status, 'coming_soon');
-    assert.match(p2.how_to_help, /Phase 2/);
+    assert.equal(p2.snapshot.status, 'live');
+    assert.ok(p2.section.write_tools.includes('business_studio_upsert_section'));
   });
 
   it('funding readiness includes capital + data room; lean canvas helpers stay consistent', async () => {

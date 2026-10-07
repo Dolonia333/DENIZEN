@@ -133,17 +133,20 @@ function buildWorkingSet(input = {}) {
     pipelineDeals: pipelineDeals.map(summarizeDeal),
     watchlistDeals: watchlistDeals.slice(0, 15).map(summarizeDeal),
     expiredDeals: expiredDeals.slice(0, 5).map(summarizeDeal),
-    openTasks: openTasks.slice(0, 15).map(summarizeTask),
-    overdueTasks: overdueTasks.slice(0, 10).map(summarizeTask),
+    openTasks: openTasks.slice(0, 100).map(summarizeTask),
+    overdueTasks: overdueTasks.slice(0, 100).map(summarizeTask),
     atRiskDeals: atRiskDeals.map(summarizeDeal),
-    contacts: contacts.slice(0, 20).map((c) => ({
+    contacts: contacts.slice(0, 100).map((c) => ({
+      contact_id: c.id,
       id: c.id,
       name: c.name,
       email: c.email,
       company: c.company,
+      company_id: c.companyId ?? null,
       status: c.status,
     })),
-    companies: companies.slice(0, 15).map((c) => ({
+    companies: companies.slice(0, 100).map((c) => ({
+      company_id: c.id,
       id: c.id,
       name: c.name,
       status: c.status,
@@ -165,15 +168,21 @@ function buildWorkingSet(input = {}) {
 
 function summarizeDeal(d) {
   return {
+    deal_id: d.id,
     id: d.id,
+    name: d.title || '',
     title: d.title,
     stage: d.stage,
     status: d.status,
     value: Number(d.value) || 0,
     contact: d.contact || '',
+    contact_id: d.contactId ?? null,
     company: d.company || '',
+    company_id: d.companyId ?? null,
     health: d.health,
+    deadline: d.deadline || d.closeDate || '',
     closeDate: d.closeDate || '',
+    next_action: d.nextAction || d.next_action || null,
     tags: d.tags || [],
     studio_task_ids: Array.isArray(d.studioTaskIds) ? d.studioTaskIds.map(String)
       : (Array.isArray(d.studio_task_ids) ? d.studio_task_ids.map(String) : []),
@@ -181,11 +190,16 @@ function summarizeDeal(d) {
 }
 
 function summarizeTask(t) {
+  const status = t.status || (t.done ? 'done' : 'open');
   return {
+    task_id: t.id,
     id: t.id,
     title: t.title,
+    status,
     due: t.due,
     contact: t.contact || '',
+    contact_id: t.contactId ?? null,
+    deal_id: t.dealId ?? t.deal_id ?? null,
     dealId: t.dealId ?? t.deal_id ?? null,
     priority: t.priority,
   };

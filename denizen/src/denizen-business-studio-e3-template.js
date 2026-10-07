@@ -12,7 +12,7 @@ function uid(prefix) {
 }
 
 function buildE3Template(opts = {}) {
-  const businessName = opts.businessName || 'Dolonia / DENIZEN';
+  const businessName = opts.businessName || 'DENIZEN / Dolonia Data Tech Solutions';
   const founderName = opts.founderName || 'Founder';
   const now = new Date().toISOString();
   const programId = uid('prog');
@@ -32,7 +32,7 @@ function buildE3Template(opts = {}) {
       stageId: 'validate',
       key: 'discovery_interviews',
       title: 'Customer discovery interviews',
-      description: 'Complete 10 interviews with Dana-style founder-operators (3–8 person technical shops). Do not mix CareerTech into this E3 list.',
+      description: 'Complete 10 qualifying interviews with school or district buyers. Meetings and CRM contacts do not count. Contradictory evidence counts.',
       evidenceType: 'interview',
       targetCount: 10,
       linkedAssumptionKey: 'sessions_die_no_office',
@@ -53,7 +53,7 @@ function buildE3Template(opts = {}) {
       stageId: 'pilot',
       key: 'pilot_agreement',
       title: 'Pilot evaluation agreement',
-      description: 'At least one Dana (or shop) agrees to evaluate a paid seat / pilot.',
+      description: 'At least one school or district economic buyer agrees to evaluate a pilot. Not assumed.',
       evidenceType: 'signed_pilot',
       targetCount: 1,
     },
@@ -150,7 +150,7 @@ function buildE3Template(opts = {}) {
   const experiments = [
     {
       id: uid('exp'),
-      title: 'Interview 10 Dana founder-operators',
+      title: '10 qualifying school or district buyer interviews',
       assumptionKey: 'sessions_die_no_office',
       status: 'active',
       targetCount: 10,
@@ -164,7 +164,7 @@ function buildE3Template(opts = {}) {
   const goals = [
     {
       id: uid('goal'),
-      title: 'Validate DENIZEN problem-solution fit for Dana (founder-operator) buyers',
+      title: 'Validate DENIZEN with 10 qualifying school or district buyer interviews',
       status: 'active',
       programId,
       metricKeys: ['discovery_interviews'],

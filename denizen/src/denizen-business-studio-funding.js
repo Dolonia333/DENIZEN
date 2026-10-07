@@ -184,38 +184,23 @@ const LEAN_CANVAS_FIELDS = Object.freeze([
 function denizenLeanCanvasDraft() {
   return {
     problem:
-      'API Cost Trap: Public school districts cannot sustain recurring cloud AI API token bills across hundreds of active lab students.\n\n'
-      + 'FERPA & Privacy Barriers: Federal student privacy laws restrict transmitting unvetted student data/prompts to third-party public AI providers.\n\n'
-      + 'Stranded Lab Hardware: High-spec campus lab and esports computers sit idle for 16+ hours daily.',
+      'Hypothesis to test with school and district buyers: AI work dies in disposable chat, and the buyer cannot see whether an agent did real work. Cost, privacy, and idle hardware are not established facts.',
     solution:
-      'Localized Mesh Overlay: Distributes local AI model inference across idle campus computers, eliminating external API costs.\n\n'
-      + 'Isolated Sandbox Client: Containerized local node execution with zero lateral network traversal and encrypted mTLS communications.\n\n'
-      + 'Gamified Learning Hub: Interactive visual simulation interface for cybersecurity, AI, and network routing curriculum.',
+      'DENIZEN is a visual office where named agents keep memory, use allowed tools, and leave receipts. A campus deployment is a separate hypothesis, not a finished infrastructure product.',
     uniqueValueProposition:
-      'Enterprise-grade AI simulation capabilities at zero marginal cloud cost, guaranteeing student data privacy by keeping all prompts and network traffic inside the campus perimeter.',
+      'A buyer could see which agent finished work. Privacy compliance, zero cloud cost, and margin claims are excluded until evidence exists.',
     unfairAdvantage:
-      'Hardware Sovereignty Architecture: Proprietary localized mesh clustering that mathematically removes external API fees while enforcing local compliance out-of-the-box.\n\n'
-      + 'High Gross Margins (80%+): Infrastructure runs on customer-owned edge hardware, avoiding platform cloud hosting bloat.',
+      'No unfair advantage is claimed. Copy difficulty and margins stay unsupported until evidence is linked.',
     customerSegments:
-      'Economic Buyers: High School CTE Directors, District IT Directors, and STEM Curriculum Coordinators.\n\n'
-      + 'End Users: High School Computer Science Teachers, Cybersecurity Instructors, and CTE Students.\n\n'
-      + 'Early Adopters: High school labs with dedicated GPU/gaming hardware (e.g., esports labs, 3D/CAD labs).',
+      'School and district buyers: CTE, curriculum, and IT decision-makers. The economic buyer is not confirmed by qualifying interviews.',
     keyMetrics:
-      'Total district cloud API costs avoided/saved ($).\n'
-      + 'Active connected mesh lab nodes per campus.\n'
-      + 'Local inference token throughput & latency vs. public cloud benchmarks.\n'
-      + 'Discovery pilot to multi-year SaaS contract conversion rate.',
+      'Qualifying school or district buyer interviews, target 10. Contradictory evidence counts. Meetings and CRM contacts do not count.',
     channels:
-      'Direct B2B / B2G pilot demonstrations to regional school district IT admins.\n'
-      + 'State CareerTech & STEM education consortiums and conferences.\n'
-      + 'Accelerator introductions (i2E, OCN network).',
+      'Founder-led discovery with schools and districts. Introductions are channels to test, not a closed pipeline.',
     costStructure:
-      'Platform software development & visualization engine maintenance.\n'
-      + 'Container agent testing, security verification, and sandbox auditing.\n'
-      + 'District pilot deployment support and sales discovery travel.',
+      'Product development and founder time. Cloud, hardware, and delivery costs are not modeled as zero.',
     revenueStreams:
-      'Annual B2B SaaS Subscriptions: Per-campus or per-seat licensing for orchestration and curriculum simulation interfaces.\n'
-      + 'Grant Procurement: Funded via existing Perkins V (CTE) and federal STEM grant allocations.',
+      'Pricing is not validated. No list price, grant award, or margin until a buyer or a sourced model says so.',
     updatedAt: null,
   };
 }
@@ -224,10 +209,107 @@ function sanitizeLeanCanvas(raw) {
   const out = emptyLeanCanvas();
   if (!raw || typeof raw !== 'object') return out;
   for (const f of LEAN_CANVAS_FIELDS) {
-    if (typeof raw[f.key] === 'string') out[f.key] = raw[f.key];
+    const text = canvasFieldText(raw[f.key]);
+    if (text != null) out[f.key] = text;
   }
   if (raw.updatedAt) out.updatedAt = raw.updatedAt;
   return out;
+}
+
+function canvasFieldText(value) {
+  if (value == null) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    return value.map(canvasFieldText).filter((line) => line != null && String(line).trim()).join('\n');
+  }
+  if (typeof value === 'object') {
+    const inner = value.text ?? value.body ?? value.content ?? value.value ?? value.notes ?? value.description;
+    if (inner != null && inner !== value) return canvasFieldText(inner);
+  }
+  return null;
+}
+
+const LEAN_CANVAS_ALIASES = new Map([
+  ['problem', 'problem'],
+  ['solution', 'solution'],
+  ['uniquevalueproposition', 'uniqueValueProposition'],
+  ['valueproposition', 'uniqueValueProposition'],
+  ['uvp', 'uniqueValueProposition'],
+  ['unfairadvantage', 'unfairAdvantage'],
+  ['customersegments', 'customerSegments'],
+  ['customersegment', 'customerSegments'],
+  ['keymetrics', 'keyMetrics'],
+  ['metrics', 'keyMetrics'],
+  ['channels', 'channels'],
+  ['coststructure', 'costStructure'],
+  ['costs', 'costStructure'],
+  ['revenuestreams', 'revenueStreams'],
+  ['revenue', 'revenueStreams'],
+]);
+
+function leanCanvasKey(name) {
+  return LEAN_CANVAS_ALIASES.get(String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '')) || null;
+}
+
+function canvasSourceObject(value) {
+  if (value == null) return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return null;
+    try {
+      const parsed = JSON.parse(trimmed);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch (_) {
+      return null;
+    }
+  }
+  if (typeof value === 'object' && !Array.isArray(value)) return value;
+  return null;
+}
+
+function applyLeanCanvasFields(canvas, args = {}) {
+  const base = sanitizeLeanCanvas(canvas);
+  const applied = [];
+  const ignored = [];
+  const skip = new Set([
+    'canvas', 'fields', 'lean_canvas', 'leanCanvas', 'program_id', 'programId', 'updatedAt', 'updated_at',
+  ]);
+  const sources = [
+    args.canvas,
+    args.fields,
+    args.lean_canvas,
+    args.leanCanvas,
+    args,
+  ];
+  for (const source of sources) {
+    const obj = canvasSourceObject(source);
+    if (!obj) continue;
+    for (const [key, value] of Object.entries(obj)) {
+      if (skip.has(key)) continue;
+      const mapped = leanCanvasKey(key);
+      const text = canvasFieldText(value);
+      const present = value != null && (
+        (typeof value === 'string' && value.trim().length > 0)
+        || typeof value === 'number'
+        || typeof value === 'boolean'
+        || (Array.isArray(value) && value.length > 0)
+        || (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length > 0)
+      );
+      if (!mapped || text == null) {
+        if (present) ignored.push(key);
+        continue;
+      }
+      base[mapped] = text;
+      applied.push(mapped);
+    }
+  }
+  if (applied.length) base.updatedAt = new Date().toISOString();
+  return {
+    canvas: sanitizeLeanCanvas(base),
+    applied: [...new Set(applied)],
+    ignored: [...new Set(ignored)],
+  };
 }
 
 function leanCanvasFilledCount(canvas) {
@@ -383,6 +465,12 @@ function evaluateFundingReadiness(state) {
   };
 }
 
+function numberOrNull(value) {
+  if (value == null || value === '') return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
 function calculateMarketSizing(input = {}) {
   const tamOrgs = Number(input.tamOrgs);
   const samOrgs = Number(input.samOrgs);
@@ -421,6 +509,29 @@ function calculateMarketSizing(input = {}) {
   if (!input.sources?.som) out.warnings.push('SOM assumption source missing.');
   if (!out.inputs.buyerWho) out.warnings.push('Buyer definition missing — who exactly buys this?');
   if (!out.inputs.geography) out.warnings.push('Geography missing — where can you sell today?');
+  const serviceLines = Array.isArray(input.serviceLines) ? input.serviceLines : [];
+  out.serviceLines = serviceLines.map((line) => ({
+    id: line?.id || '',
+    name: String(line?.name || ''),
+    tam: numberOrNull(line?.tam),
+    sam: numberOrNull(line?.sam),
+    som: numberOrNull(line?.som),
+    source: String(line?.source || ''),
+  }));
+  const summed = { tam: 0, sam: 0, som: 0, tamLines: 0, samLines: 0, somLines: 0 };
+  for (const line of out.serviceLines) {
+    if (line.tam != null) { summed.tam += line.tam; summed.tamLines += 1; }
+    if (line.sam != null) { summed.sam += line.sam; summed.samLines += 1; }
+    if (line.som != null) { summed.som += line.som; summed.somLines += 1; }
+  }
+  out.serviceRollup = {
+    tam: summed.tamLines ? summed.tam : null,
+    sam: summed.samLines ? summed.sam : null,
+    som: summed.somLines ? summed.som : null,
+    sizedLines: out.serviceLines.filter((line) => line.tam != null || line.sam != null || line.som != null).length,
+    totalLines: out.serviceLines.length,
+    why: 'Adds only the service-line figures entered. It does not add outside industry totals.',
+  };
   // Jenny-style challenge lines (advisory, not auto-verdicts)
   out.jenny = out.warnings.map((w) => {
     if (/TAM source/i.test(w)) return 'Jenny: Your TAM number is not sourced yet — investors will ask where it came from.';
@@ -666,6 +777,113 @@ function defaultFundingSeed() {
   return emptyFundingState();
 }
 
+function firstDefined(...vals) {
+  for (const value of vals) {
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
+function applyMoatFields(moat, args = {}) {
+  const base = {
+    ...emptyFundingState().moat,
+    ...(moat || {}),
+    sources: { ...((moat && moat.sources) || {}) },
+  };
+  const patch = {
+    ...(args.moat && typeof args.moat === 'object' ? args.moat : {}),
+    ...(args.fields && typeof args.fields === 'object' && !Array.isArray(args.fields) ? args.fields : {}),
+  };
+  const applied = [];
+  const claim = firstDefined(args.primaryClaim, args.primary_claim, args.claim, patch.primaryClaim, patch.primary_claim, patch.claim);
+  if (claim !== undefined) {
+    base.primaryClaim = claim == null ? '' : String(claim);
+    applied.push('primaryClaim');
+  }
+  const why = firstDefined(args.primaryWhy, args.primary_why, args.why, patch.primaryWhy, patch.primary_why, patch.why);
+  if (why !== undefined) {
+    base.primaryWhy = why == null ? '' : String(why);
+    applied.push('primaryWhy');
+  }
+  const copy = firstDefined(
+    args.primaryCopyDifficulty, args.primary_copy_difficulty, args.copyDifficulty,
+    patch.primaryCopyDifficulty, patch.primary_copy_difficulty, patch.copyDifficulty,
+  );
+  if (copy !== undefined) {
+    base.primaryCopyDifficulty = copy == null ? '' : String(copy);
+    applied.push('primaryCopyDifficulty');
+  }
+  const months = firstDefined(
+    args.primaryMonthsToCopy, args.primary_months_to_copy, args.monthsToCopy,
+    patch.primaryMonthsToCopy, patch.primary_months_to_copy, patch.monthsToCopy,
+  );
+  if (months !== undefined) {
+    const num = months === '' || months == null ? null : Number(months);
+    base.primaryMonthsToCopy = Number.isFinite(num) ? num : null;
+    applied.push('primaryMonthsToCopy');
+  }
+  const sources = firstDefined(args.sources, patch.sources);
+  if (sources !== undefined) {
+    base.sources = {};
+    if (sources && typeof sources === 'object' && !Array.isArray(sources)) {
+      for (const [key, row] of Object.entries(sources)) {
+        base.sources[key] = typeof row === 'string' ? { claim: row } : { ...(row || {}) };
+      }
+    }
+    applied.push('sources');
+  }
+  return { moat: base, applied };
+}
+
+function applyCapitalFields(plan, args = {}) {
+  const base = { ...emptyFundingState().capitalPlan, ...(plan || {}) };
+  const patch = {
+    ...(args.capitalPlan && typeof args.capitalPlan === 'object' ? args.capitalPlan : {}),
+    ...(args.capital_plan && typeof args.capital_plan === 'object' ? args.capital_plan : {}),
+    ...(args.plan && typeof args.plan === 'object' ? args.plan : {}),
+    ...(args.fields && typeof args.fields === 'object' && !Array.isArray(args.fields) ? args.fields : {}),
+  };
+  const applied = [];
+  const notes = firstDefined(args.notes, patch.notes, patch.capital_notes);
+  if (notes !== undefined) {
+    base.notes = notes == null ? '' : String(notes);
+    applied.push('notes');
+  }
+  const stage = firstDefined(args.stage, patch.stage);
+  if (stage !== undefined && stage !== null && stage !== '') {
+    base.stage = String(stage);
+    applied.push('stage');
+  }
+  const amount = firstDefined(
+    args.amountNeeded, args.amount_needed, args.raiseTarget, args.raise_target,
+    patch.amountNeeded, patch.amount_needed, patch.raiseTarget, patch.raise_target,
+  );
+  if (amount !== undefined) {
+    if (amount === '' || amount == null) base.amountNeeded = null;
+    else {
+      const num = Number(amount);
+      base.amountNeeded = Number.isFinite(num) ? num : null;
+    }
+    applied.push('amountNeeded');
+  }
+  const uses = firstDefined(args.uses, patch.uses);
+  if (uses !== undefined) {
+    base.uses = Array.isArray(uses) ? uses : [];
+    applied.push('uses');
+  }
+  const types = firstDefined(args.types, patch.types);
+  if (types !== undefined) {
+    base.types = Array.isArray(types) ? types : [];
+    applied.push('types');
+  }
+  const step = firstDefined(args.pathwayStep, args.pathway_step, patch.pathwayStep, patch.pathway_step);
+  if (step !== undefined && step !== null && step !== '') {
+    base.pathwayStep = String(step);
+    applied.push('pathwayStep');
+  }
+  return { capitalPlan: base, applied };
+}
+
 module.exports = {
   FUNDING_READINESS_SECTIONS,
   MOAT_SOURCES,
@@ -678,6 +896,7 @@ module.exports = {
   emptyLeanCanvas,
   denizenLeanCanvasDraft,
   sanitizeLeanCanvas,
+  applyLeanCanvasFields,
   leanCanvasFilledCount,
   leanCanvasIsSubstantial,
   leanCanvasPlainText,
@@ -688,6 +907,8 @@ module.exports = {
   evaluateFundingReadiness,
   calculateMarketSizing,
   evaluateMoat,
+  applyMoatFields,
+  applyCapitalFields,
   discoveryPatterns,
   evaluateDataRoom,
   capitalPathwayBrief,

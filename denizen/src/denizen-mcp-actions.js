@@ -235,6 +235,7 @@ async function toolRunSkill(scope, args) {
     skill: gate.skill,
     npc_key: scope.npc_key,
     output: result?.output || result?.summary || finished?.output || null,
+    data: result?.data || finished?.data || null,
     error: finished?.error || null,
     status: finished?.status || (result?.ok !== false ? 'done' : 'failed'),
     routed: result?.routed,

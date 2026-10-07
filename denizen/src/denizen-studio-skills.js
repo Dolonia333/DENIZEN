@@ -74,6 +74,7 @@ const BUSINESS_STUDIO_READ_SKILLS = Object.freeze([
   'business-studio-get-roadmap',
   'business-studio-list-advisors',
   'business-studio-get-settings',
+  'business-studio-get-workspace',
 ]);
 
 const BUSINESS_STUDIO_WRITE_SKILLS = Object.freeze([
@@ -93,6 +94,12 @@ const BUSINESS_STUDIO_WRITE_SKILLS = Object.freeze([
   'business-studio-upsert-discovery-lab',
   'business-studio-answer-investor-question',
   'business-studio-upsert-settings',
+  'business-studio-upsert-strategy',
+  'business-studio-upsert-milestone',
+  'business-studio-upsert-advisor',
+  'business-studio-upsert-metric',
+  'business-studio-patch',
+  'business-studio-upsert-section',
 ]);
 
 const ALL_STUDIO_SKILLS = Object.freeze([

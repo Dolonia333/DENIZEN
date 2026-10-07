@@ -47,19 +47,19 @@ function emptySalesCycleDiagram() {
 
 function denizenSalesCycleDiagram() {
   return {
-    title: 'DENIZEN sales cycle · E3 Workshop A',
-    subtitle: 'Buying center around the product. One paying persona: Dana.',
+    title: 'DENIZEN sales cycle',
+    subtitle: 'School or district buying center. Unvalidated until qualifying interviews exist.',
     productTitle: 'DENIZEN',
     productSubtitle: 'visual AI office',
     roles: [
-      { id: 'uses', label: 'USES', tone: 'sage', text: 'Dana + one operator\nlives in Cursor / Grok\nworks in the office daily' },
-      { id: 'recommends', label: 'RECOMMENDS', tone: 'blue', text: 'Shawnaya (co-founder)\nor a peer founder\nwho already uses agents' },
-      { id: 'influences', label: 'INFLUENCES', tone: 'tan', text: '1921 / Angela — only if the\nseat is bought through 1921\nRM Cyber — if joint ops' },
-      { id: 'decides', label: 'DECIDES & PAYS', tone: 'teal', text: 'Dana on a card\n$49 / team or $199 / lab\nnot E3, not a federal vehicle' },
-      { id: 'saboteur', label: 'SABOTEUR', tone: 'red', text: "IT / security:\n'agents cannot send mail'\nor 'we already have ChatGPT'" },
+      { id: 'uses', label: 'USES', tone: 'sage', text: 'Teachers and operators\nwho would use the office\nNot confirmed by interviews' },
+      { id: 'recommends', label: 'RECOMMENDS', tone: 'blue', text: 'Curriculum or CTE staff\nwho might champion a pilot\nUnvalidated' },
+      { id: 'influences', label: 'INFLUENCES', tone: 'tan', text: 'IT and compliance\ncan block or shape a purchase\nNo compliance claim yet' },
+      { id: 'decides', label: 'DECIDES & PAYS', tone: 'teal', text: 'Economic buyer at the\nschool or district\nPrice is not validated' },
+      { id: 'saboteur', label: 'SABOTEUR', tone: 'red', text: 'Status quo tools\nor a security veto\nCount this if interviews say so' },
     ],
     cycle: SALES_CYCLE_STEPS.map((s) => ({ id: s.id, label: s.label })),
-    cycleNote: 'HOW A DEAL MOVES (honest cycle — no invented close dates)',
+    cycleNote: 'HOW A DEAL MOVES (honest cycle — no invented close dates or prices)',
   };
 }
 
@@ -277,11 +277,226 @@ function setNested(obj, path, value) {
   return obj;
 }
 
+function normPaveKey(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+const PAVE_STRUCTURED_PATHS = new Set([
+  'partA.salesCycleDiagram',
+  'partC.risks',
+  'partC.marketSizing',
+]);
+
+let paveFieldIndexCache = null;
+
+function paveFieldIndex() {
+  if (paveFieldIndexCache) return paveFieldIndexCache;
+  const fields = new Map();
+  const sections = new Map();
+  const addField = (alias, path) => {
+    const key = normPaveKey(alias);
+    if (key && !fields.has(key)) fields.set(key, path);
+  };
+  const addSection = (alias, id) => {
+    const key = normPaveKey(alias);
+    if (key && !sections.has(key)) sections.set(key, id);
+  };
+  for (const sec of PAVE_SECTIONS) {
+    addSection(sec.id, sec.id);
+    addSection(sec.title, sec.id);
+    addSection(sec.id.replace(/([A-Z])/g, '_$1'), sec.id);
+    for (const field of sec.fields) {
+      const leaf = field.key.slice(field.key.indexOf('.') + 1);
+      addField(field.key, field.key);
+      addField(leaf, field.key);
+      addField(field.label, field.key);
+      addField(`${sec.id}.${leaf}`, field.key);
+      addField(`${sec.id}_${leaf}`, field.key);
+    }
+  }
+  addSection('parta', 'partA');
+  addSection('partb', 'partB');
+  addSection('partc', 'partC');
+  addSection('partd', 'partD');
+  addSection('part_a', 'partA');
+  addSection('part_b', 'partB');
+  addSection('part_c', 'partC');
+  addSection('part_d', 'partD');
+  addField('founder', 'snapshot.founders');
+  addField('founderName', 'snapshot.founders');
+  addField('founder_name', 'snapshot.founders');
+  addField('companyName', 'snapshot.company');
+  addField('company_name', 'snapshot.company');
+  addField('salesCycleDiagram', 'partA.salesCycleDiagram');
+  addField('sales_cycle_diagram', 'partA.salesCycleDiagram');
+  addField('sales_cycle', 'partA.salesCycle');
+  addField('founding_team', 'partD.foundingTeam');
+  addField('pitch', 'partD.pitch90');
+  paveFieldIndexCache = { fields, sections };
+  return paveFieldIndexCache;
+}
+
+function paveFieldText(value) {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return value.map(paveFieldText).filter(Boolean).join('\n');
+  if (typeof value === 'object') {
+    const inner = value.value ?? value.text ?? value.content ?? value.body ?? value.notes ?? value.description ?? value.label;
+    if (inner != null && inner !== value) return paveFieldText(inner);
+  }
+  return '';
+}
+
+const PAVE_SECTION_PROSE = Object.freeze({
+  snapshot: 'snapshot.productDescription',
+  partA: 'partA.problem',
+  partB: 'partB.summaryOfCalls',
+  partC: 'partC.statusQuo',
+  partD: 'partD.pitch90',
+  final: 'final.advisorOutcome',
+});
+
+const PAVE_SKIP_KEYS = new Set([
+  'program_id', 'programId', 'fields', 'pave', 'workbook', 'updates', 'sections', 'updatedAt', 'updated_at',
+]);
+
+function paveValueIsSubstantive(value) {
+  if (value == null) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (typeof value === 'number' || typeof value === 'boolean') return true;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return false;
+}
+
+function paveAssignmentsFrom(input, prefixSection, ignored) {
+  const out = [];
+  const missed = ignored || [];
+  if (input == null) return out;
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        return paveAssignmentsFrom(JSON.parse(trimmed), prefixSection, missed);
+      } catch (_) { /* a plain string is not a field map */ }
+    }
+    return out;
+  }
+  if (Array.isArray(input)) {
+    for (const row of input) {
+      if (!row || typeof row !== 'object') continue;
+      const path = row.path || row.field || row.key || row.name || row.label;
+      const value = row.value ?? row.text ?? row.content ?? row.body;
+      if (path != null && value !== undefined) {
+        const found = paveResolveAssignment(path, value, prefixSection, missed);
+        if (!found.length && paveValueIsSubstantive(value) && (typeof value !== 'object' || Array.isArray(value))) {
+          missed.push(String(path));
+        }
+        out.push(...found);
+      }
+    }
+    return out;
+  }
+  if (typeof input !== 'object') return out;
+  for (const [key, value] of Object.entries(input)) {
+    if (PAVE_SKIP_KEYS.has(key)) continue;
+    const found = paveResolveAssignment(key, value, prefixSection, missed);
+    if (!found.length && paveValueIsSubstantive(value) && (typeof value !== 'object' || Array.isArray(value))) {
+      missed.push(key);
+    }
+    out.push(...found);
+  }
+  return out;
+}
+
+function paveResolveAssignment(key, value, prefixSection, ignored) {
+  const index = paveFieldIndex();
+  const norm = normPaveKey(key);
+  const prefixed = normPaveKey(`${prefixSection || ''}${key}`);
+  const sectionId = index.sections.get(norm) || index.sections.get(prefixed);
+  if (sectionId && value && typeof value === 'object' && !Array.isArray(value)) {
+    return paveAssignmentsFrom(value, sectionId, ignored);
+  }
+  if (sectionId && typeof value === 'string' && value.trim() && PAVE_SECTION_PROSE[sectionId]) {
+    return [{ path: PAVE_SECTION_PROSE[sectionId], value: value.trim() }];
+  }
+  let path = index.fields.get(norm) || index.fields.get(prefixed);
+  if (!path && String(key).includes('.')) {
+    const parts = String(key).split('.');
+    const section = index.sections.get(normPaveKey(parts[0]));
+    const leaf = index.fields.get(normPaveKey(parts.slice(1).join('.')))
+      || index.fields.get(normPaveKey(parts[parts.length - 1]));
+    if (section && leaf && leaf.startsWith(`${section}.`)) path = leaf;
+    else if (leaf) path = leaf;
+  }
+  if (!path) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return paveAssignmentsFrom(value, prefixSection, ignored);
+    }
+    return [];
+  }
+  if (PAVE_STRUCTURED_PATHS.has(path) && value && typeof value === 'object') {
+    return [{ path, value }];
+  }
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const wrapperKeys = new Set(['text', 'body', 'content', 'value', 'notes', 'description', 'label']);
+    const extras = {};
+    for (const [child, childValue] of Object.entries(value)) {
+      if (!wrapperKeys.has(child)) extras[child] = childValue;
+    }
+    const nested = Object.keys(extras).length
+      ? paveAssignmentsFrom(extras, path.split('.')[0], ignored)
+      : [];
+    const text = paveFieldText(value);
+    if (nested.length && text) return [{ path, value: text }, ...nested];
+    if (nested.length) return nested;
+    if (!text) return [];
+    return [{ path, value: text }];
+  }
+  return [{ path, value: paveFieldText(value) }];
+}
+
+function applyPaveFields(pave, args = {}) {
+  const base = sanitizePave(pave);
+  const applied = [];
+  const ignored = [];
+  const chunks = [];
+  const top = args && typeof args === 'object' ? { ...args } : {};
+  for (const key of ['program_id', 'programId', 'fields', 'pave', 'workbook', 'updates', 'sections']) {
+    delete top[key];
+  }
+  chunks.push(top);
+  for (const key of ['fields', 'updates', 'sections', 'pave', 'workbook']) {
+    if (args && args[key] != null) chunks.push(args[key]);
+  }
+  for (const chunk of chunks) {
+    for (const assignment of paveAssignmentsFrom(chunk, null, ignored)) {
+      setNested(base, assignment.path, assignment.value);
+      applied.push(assignment.path);
+    }
+  }
+  return {
+    pave: sanitizePave({ ...base, updatedAt: new Date().toISOString() }),
+    applied: [...new Set(applied)],
+    ignored: [...new Set(ignored)],
+    fields: PAVE_SECTIONS.map((section) => ({
+      section: section.id,
+      keys: section.fields.map((field) => field.key),
+    })),
+  };
+}
+
 function coerceString(v) {
   if (v == null) return '';
   if (typeof v === 'string') return v;
-  if (Array.isArray(v)) return v.map((x) => (typeof x === 'string' ? x : String(x?.name || x?.title || x || ''))).filter(Boolean).join('\n');
-  if (typeof v === 'object') return String(v.text || v.label || '');
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v)) return v.map((x) => coerceString(x)).filter(Boolean).join('\n');
+  if (typeof v === 'object') {
+    const inner = v.text ?? v.body ?? v.content ?? v.value ?? v.notes ?? v.description ?? v.label;
+    if (inner != null && inner !== v) return coerceString(inner);
+    return '';
+  }
   return String(v);
 }
 
@@ -409,83 +624,101 @@ function sanitizePave(raw) {
   return out;
 }
 
+function mergePavePatch(base, patch) {
+  const merged = { ...(base || {}), ...(patch || {}) };
+  for (const key of ['snapshot', 'partA', 'partB', 'partC', 'partD', 'final']) {
+    if (patch && patch[key] && typeof patch[key] === 'object' && !Array.isArray(patch[key])) {
+      merged[key] = { ...((base && base[key]) || {}), ...patch[key] };
+    }
+  }
+  if (patch && patch.partA && patch.partA.salesCycleDiagram && typeof patch.partA.salesCycleDiagram === 'object') {
+    merged.partA = merged.partA || {};
+    merged.partA.salesCycleDiagram = {
+      ...((base && base.partA && base.partA.salesCycleDiagram) || {}),
+      ...patch.partA.salesCycleDiagram,
+    };
+  }
+  if (patch && patch.partC && patch.partC.marketSizing && typeof patch.partC.marketSizing === 'object') {
+    merged.partC = merged.partC || {};
+    merged.partC.marketSizing = {
+      ...((base && base.partC && base.partC.marketSizing) || {}),
+      ...patch.partC.marketSizing,
+    };
+  }
+  return merged;
+}
+
 function denizenPaveDraft() {
   return sanitizePave({
     snapshot: {
-      company: 'Dolonia (product: DENIZEN)',
-      founders: 'Zion Van Zandt and Shawnaya Williams',
-      i2eAdvisor: 'Final PAVE advisor TBD. E3 mentor: Srijita Ghosh (Mentor Call A: Mon Aug 31, 1:00–1:45 PM CDT).',
-      cohort: 'i2E E3 Cohort 63. Workshop A completed Thu Aug 27, 2026. Feedback session Fri Aug 28. Mentor Call A Mon Aug 31.',
+      company: 'DENIZEN / Dolonia Data Tech Solutions',
+      founders: 'Zion Alexander Van Zandt',
+      i2eAdvisor: 'Srijita Ghosh, i2E E3 mentor. Final PAVE advisor is not assigned.',
+      cohort: 'i2E E3 Cohort 63. Workshops and the mentor call are historical context, not customer evidence.',
       productDescription:
-        'DENIZEN is a visual AI operating environment: a persistent pixel-art office where named agents keep memory, use real tools (CRM, mail drafts, GitHub/Cursor, MCP), and leave receipts when work finishes. It is built so a small team can see whether agents did real work — not just chat.',
+        'DENIZEN is a visual AI operating environment: a persistent office where named agents keep memory, use allowed tools, and leave receipts when work finishes.',
     },
     partA: {
       customer:
-        'Dana — founder-operator of a 3–8 person technical shop (Oklahoma / similar) who already pays for ChatGPT, Claude, or Cursor. Title: founder / head of ops. B2B. Dana writes the card; Dana is not a school district and not i2E.',
+        'School and district buyers — CTE, curriculum, and IT decision-makers. The economic buyer is not confirmed. CRM contacts and meetings are not qualifying interviews.',
       problem:
-        'Every AI session dies. Work lives in chat tabs. There is no shared memory, no audit of what an agent actually did, and no working set of real accounts — so the team cannot tell chatbots from operators.',
+        'Hypothesis to test: AI work dies in chat tabs, and a school or district cannot tell whether an agent did real work. Do not treat cost savings or compliance as proven.',
       currentAlternative:
-        'Stacked chat tabs + a CRM nobody trusts + Slack/Notion notes + hoping a VA or intern follows up. Status quo is ChatGPT/Claude/Cursor with no office, no outcomes ledger, and no durable agent when the window closes.',
+        'Chat tools, campus software, and manual follow-up. What buyers actually use is unknown until interviews say so.',
       solution:
-        'Putting persistent agents in one office Dana can watch. Agents keep memory, run allowed tools, park junk off the sales board, and write outcomes. Faster than hiring a coordinator; clearer than another chatbot; cheaper than a full ops hire. Mail stays gated until Dana says send.',
+        'DENIZEN gives a small team a visible office, durable agents, and receipts. A campus deployment is a separate hypothesis, not a finished product claim.',
       valueProposition:
-        'With DENIZEN, Dana can: (1) See which agent is on and what it last finished. (2) Keep a sales board that only shows live humans and next verbs. (3) Leave an agent on overnight without this chat staying open. (4) Draft follow-ups without auto-sending mail. (5) Hand a coding fix to Cursor and get a closed ticket. (6) Prove to a partner or mentor what ran, with receipts — not vibes.',
+        'With DENIZEN, a buyer could see which agent finished work and keep a record of it. Pricing, privacy compliance, and infrastructure savings are not claimed here.',
       salesCycle:
-        'Text map until we draw it. DENIZEN in the center. USER: Dana plus one technical operator in Cursor or Grok. RECOMMENDS: co-founder Shawnaya or a peer founder who already uses agents. INFLUENCES: 1921 / Angela only if the seat is bought through the holding company; RM Cyber if the story is joint ops. DECIDES AND PAYS: Dana on a card ($49/team or $199/lab). SABOTEUR: IT or security (agents cannot send mail) or “we already have ChatGPT.” CYCLE TODAY: demo office → one real account → weekly receipt → paid seat.',
+        'Unvalidated. Likely users are teachers or operators. The economic buyer is a school or district role. Price is not set. Count a security or status-quo veto if interviews say so.',
       salesCycleDiagram: denizenSalesCycleDiagram(),
     },
     partB: {
       targetPersona:
-        'Same as Part A: Dana, founder-operator of a 3–8 person technical shop. Do not mix CareerTech, OMES, and E3 into this list.',
+        'One school or district buyer at a time. Do not mix government capture, a small-business persona, or CRM contacts into this list.',
       interviewGoal: '10+',
-      interviewsCompletedNote: '0 of 10. Start after Mentor Call A. Interviews are discovery calls, not CRM deals.',
-      summaryOfCalls: 'None yet. Workshop A only.',
-      expectedFindings: 'TBD after first interviews.',
-      unexpectedFindings: 'TBD after first interviews.',
-      personaDecision:
-        'Hold Dana as the paying persona until 5 interviews say otherwise. 1921 / OMES / RM Cyber is a separate capture motion under the parent company — not this E3 customer.',
+      interviewsCompletedNote: '0 of 10 qualifying school or district interviews. Contradictory evidence counts. Meetings are not interviews.',
+      summaryOfCalls: 'None yet. No qualifying interviews are on file.',
+      expectedFindings: 'Not written until interviews exist.',
+      unexpectedFindings: 'Not written until interviews exist. Contradictory evidence is recorded here.',
+      personaDecision: 'Persona is unvalidated. Hold or change it only after qualifying interviews, including interviews that disagree.',
     },
     partC: {
-      directCompetitors: 'ChatGPT / Claude Teams / Cursor background agents. (Workshop C — refine.)',
-      indirectCompetitors: 'Notion AI, HubSpot + a VA, Slack bots, n8n dashboards with no office.',
-      potentialCompetitors: 'Any lab that wraps MCP + a game skin. Open-source agent dashboards.',
-      statusQuo: 'A pile of chat tabs and a CRM they ignore.',
-      competitiveMatrix: 'Paste your competitive matrix here.',
-      shortTermAdvantages:
-        'Working office + durable NPC + outcomes ledger + mail default-deny + a CRM that parks scrape junk. We use the product to run the company.',
-      longTermAdvantages:
-        'Persistent identity + tool policy + visual audit trail on a stack we operate. First-mover is not the moat.',
-      competitorAdvantages: 'Model quality, distribution, and brand of OpenAI / Anthropic / Cursor.',
-      competitiveResponse:
-        'They ship “agents” inside the chat product. We stay the visible office + policy + receipts layer, not another model.',
-      distributionAccess:
-        'Not yet. Channel today is founder-led demo. 1921 gov channel is a different product motion — do not mix into E3 distribution.',
+      directCompetitors: 'Existing chat and campus software the buyer already pays for. Name them from interviews, not from a template.',
+      indirectCompetitors: 'Status quo process: staff, spreadsheets, and tools already in the building.',
+      potentialCompetitors: 'Any vendor that can show the same work with receipts. Not listed as a fact.',
+      statusQuo: 'Whatever the buyer uses today. Unknown until interviews.',
+      competitiveMatrix: 'Not filled. A matrix needs sources.',
+      shortTermAdvantages: 'A visible office and receipts. This is a product description, not a proven advantage.',
+      longTermAdvantages: 'No moat is claimed. First-mover, compliance, and cost claims need evidence.',
+      competitorAdvantages: 'Incumbent tools already have distribution and trust. Specific names come from interviews.',
+      competitiveResponse: 'Unknown until a buyer describes how they would switch or refuse.',
+      distributionAccess: 'Not established. Founder-led discovery is the current path.',
       risks: [
-        { risk: 'Wrong buyer (district / gov vs Dana)', why: 'Burns cohort weeks on non-payers', mitigate: 'One persona at a time; park 1921 under parent' },
-        { risk: 'Chatbots “good enough”', why: 'No urgency to switch', mitigate: 'Lead with receipts + overnight agent, not chat quality' },
-        { risk: 'Mail / security veto', why: 'IT blocks agents', mitigate: 'Default-deny mail; human gate on send' },
+        { risk: 'Wrong buyer', why: 'A persona without interviews wastes the cohort', mitigate: 'Ten qualifying interviews, contradictions included' },
+        { risk: 'Unproven pricing', why: 'A list price would be invented', mitigate: 'Leave price blank until a buyer discusses it' },
+        { risk: 'Unsupported compliance or cost claim', why: 'Mentors and buyers will challenge it', mitigate: 'Do not state FERPA, cloud cost, or margin as fact' },
       ],
       marketSizing: {
-        tam: { customers: '', acv: '', size: 'TBD — Workshop C' },
-        sam: { customers: '', acv: '', size: 'TBD — Workshop C' },
-        som: { customers: '', acv: '', size: 'TBD — Workshop C' },
+        tam: { customers: '', acv: '', size: '' },
+        sam: { customers: '', acv: '', size: '' },
+        som: { customers: '', acv: '', size: '' },
       },
-      futureSegments:
-        'After Dana: multi-seat shops, then 1921 capture visibility (OMES / RM Cyber) as a separate line — not Year-1 E3 TAM.',
+      revenueYear1: 'Not modeled',
+      revenueYear2: 'Not modeled',
+      revenueYear3: 'Not modeled',
+      futureSegments: 'Other public-sector buyers only after the school or district persona is supported or rejected by interviews.',
     },
     partD: {
-      foundingTeam:
-        'Zion Van Zandt — founder, systems / product / infrastructure (DENIZEN, home lab, MCP).\nShawnaya Williams — co-founder, software / product.\nAngela Van Zandt — 1921 Holding Co. (parent / gov-contracting vehicle; not the E3 product owner).\nDr. Ed Van Zandt — engineering advisor in the family ecosystem.',
-      teamGaps:
-        'Repeatable sales motion and customer-discovery interviews (10+). Also: a durable runner that does useful work, not just presence ticks.',
-      gapStrategy:
-        'Lean on E3 mentor (Srijita) + do the 10 interviews ourselves this cohort. Do not hire a salesperson before Dana exists as a real buyer.',
+      foundingTeam: 'Zion Alexander Van Zandt — founder. Other teammates are recorded only when the workspace already names them.',
+      teamGaps: 'Qualifying customer discovery: 10 school or district interviews, with contradictory evidence counted.',
+      gapStrategy: 'Run the interviews with the i2E E3 mentor, Srijita Ghosh. Do not hire ahead of a validated buyer.',
       pitch90:
-        'Founders of small technical teams already pay for chatbots that forget everything when the tab closes. DENIZEN is a visual office where named agents keep memory, use real tools, and leave receipts. Zion and Shawnaya built it on their own stack in Oklahoma City — local models, MCP, a CRM that refuses fake pipeline. We are not selling i2E a product. We are finding ten Danas.',
+        'DENIZEN is a visual office where named agents keep memory, use allowed tools, and leave receipts. It is pre-revenue and pre-validation. The next proof is 10 qualifying school or district buyer interviews.',
     },
     final: {
-      discoveredRisks: '[completed in the meeting]',
-      recommendedNextSteps: '[completed in the meeting]',
+      discoveredRisks: 'Pricing, compliance, margins, and infrastructure savings are not established.',
+      recommendedNextSteps: 'Keep the 10-interview goal. Do not fill Funding Readiness without evidence.',
       advisorOutcome: '',
     },
     living: true,
@@ -733,6 +966,7 @@ module.exports = {
   SALES_CYCLE_STEPS,
   PAVE_SECTIONS,
   sanitizePave,
+  mergePavePatch,
   denizenPaveDraft,
   paveFieldPaths,
   paveFilledCount,
@@ -748,4 +982,5 @@ module.exports = {
   ensureProgramPave,
   getNested,
   setNested,
+  applyPaveFields,
 };

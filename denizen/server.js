@@ -177,6 +177,7 @@ const { mountCrmRoutes } = require('./src/denizen-crm-routes');
 const { mountStudioBoardRoutes } = require('./src/denizen-studio-board-routes');
 const { mountBusinessStudioRoutes } = require('./src/denizen-business-studio-routes');
 const { mountNexenRoutes } = require('./src/denizen-nexen-routes');
+const nexenUiStubs = require('./src/denizen-nexen-ui-stubs');
 const { mountN8nRoutes } = require('./src/n8n-routes');
 const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
 const { startJennyDurableLoop } = require('./src/npc-jenny-durable-loop');
@@ -3920,6 +3921,19 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
+  }
+
+  // NEXEN Command Center UI stubs (/api/hub, /api/money, auth session, …)
+  // Scoped prefixes only — does not catch-all /api/*.
+  if (nexenUiStubs.matchesNexenUiApi(urlPath)) {
+    let nexenQuery = null;
+    try {
+      nexenQuery = new URL(req.url || '/', 'http://x').searchParams;
+    } catch (_) {
+      nexenQuery = null;
+    }
+    const handled = nexenUiStubs.tryHandleNexenUiApi(req, res, urlPath, nexenQuery);
+    if (handled) return;
   }
 
   if (urlPath.startsWith('/api/nexen/')) {
@@ -10631,7 +10645,8 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         return body.lmStudio.reachable ? 10000 : 20000;
       };
 
-      if (cache.body && (now - cache.at) < cacheTtlMs(cache.body)) {
+      const healthStale = !cache.body || (now - cache.at) >= cacheTtlMs(cache.body);
+      if (cache.body && !healthStale) {
         const cachedHardware = buildHealthHardwarePayload(req) || cache.body.hardware;
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -10657,7 +10672,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         return;
       }
 
-      if (!cache.inflight) {
+      if (healthStale && !cache.inflight) {
         cache.inflight = (async () => {
           const builtAt = Date.now();
           const lmStudioStatus = await hostCompute.probeLmStudio(npcBrains).catch(() => ({
@@ -10841,7 +10856,17 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         });
       }
 
-      const body = await cache.inflight;
+      const body = cache.body;
+      if (!body) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: true,
+          warming: true,
+          ts: Date.now(),
+          server: { port: Number(process.env.PORT) || 8080 },
+        }));
+        return;
+      }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         ...body,
@@ -11393,24 +11418,42 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
-  // NEXEN — Command Center at /nexen/
+  // NEXEN — working Command Center at /nexen/ (Denizen-native hub + preview shells)
   // Phone app navigates here like CRM + Studio Board + Business Studio (full page).
   if (urlPath === '/nexen' || urlPath.startsWith('/nexen/')) {
     const NEXEN_ROOT = path.join(ROOT, 'nexen');
-    let rel = urlPath.replace(/^\/nexen\/?/, '') || 'index.html';
-    if (rel.endsWith('/')) rel += 'index.html';
-    const filePath = path.resolve(NEXEN_ROOT, rel);
+    let rel = urlPath.replace(/^\/nexen\/?/, '') || '';
+    if (rel.endsWith('/')) rel = rel.slice(0, -1);
+    const pretty = rel.split('?')[0].split('#')[0];
+    const mapped = nexenUiStubs.resolveNexenPage(pretty);
+    // Honest redirect for dead pretty paths mapped to coming-soon
+    if (
+      mapped === 'coming-soon.html'
+      && pretty
+      && pretty !== 'coming-soon'
+      && !pretty.includes('.')
+    ) {
+      res.writeHead(302, { Location: `/nexen/coming-soon?from=${encodeURIComponent(pretty)}` });
+      res.end();
+      return;
+    }
+    const filePath = path.resolve(NEXEN_ROOT, mapped);
     const inside = path.relative(NEXEN_ROOT, filePath);
     if (inside.startsWith('..') || path.isAbsolute(inside)) {
       res.writeHead(403);
       res.end('Forbidden');
       return;
     }
-    const sendNexen = (target) => {
+    const sendNexen = (target, fallbackComingSoon) => {
       fs.readFile(target, (err, data) => {
         if (err) {
+          const comingSoon = path.join(NEXEN_ROOT, 'coming-soon.html');
+          if (fallbackComingSoon !== false && target !== comingSoon && fs.existsSync(comingSoon)) {
+            sendNexen(comingSoon, false);
+            return;
+          }
           if (target !== path.join(NEXEN_ROOT, 'index.html')) {
-            sendNexen(path.join(NEXEN_ROOT, 'index.html'));
+            sendNexen(path.join(NEXEN_ROOT, 'index.html'), false);
             return;
           }
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -11427,7 +11470,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         res.end(data);
       });
     };
-    sendNexen(path.extname(rel) ? filePath : path.join(NEXEN_ROOT, 'index.html'));
+    sendNexen(filePath);
     return;
   }
 

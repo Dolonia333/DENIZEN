@@ -24,6 +24,32 @@ describe('studio-board store sanitize', () => {
   });
 });
 
+describe('studio-board my day identity', () => {
+  it('resolves the signed-in person by identity and leaves Jenny separate', () => {
+    const mutations = require('../src/denizen-studio-board-mutations');
+    const state = {
+      people: [
+        { id: 'jenny', name: 'Jenny', npc_key: 'jenny' },
+        {
+          id: 'zion',
+          name: 'Zion Van Zandt',
+          email: 'zionvanzandt@gmail.com',
+          identityId: '59cae3f1-12b5-423e-98f8-1d8271adf4a6',
+        },
+      ],
+    };
+    const actor = {
+      displayName: 'Dolonia',
+      user: 'Dolonia',
+      email: 'zionvanzandt@gmail.com',
+      identityId: '59cae3f1-12b5-423e-98f8-1d8271adf4a6',
+    };
+    assert.equal(mutations.personHint(state, actor).id, 'zion');
+    assert.equal(mutations.personHint(state, { user: 'Jenny' }).id, 'jenny');
+    assert.equal(mutations.personHint(state, { displayName: 'Jenny', email: actor.email }).id, 'zion');
+  });
+});
+
 describe('studio-board mutations working set', () => {
   it('counts open / overdue / stuck', () => {
     const mutations = require('../src/denizen-studio-board-mutations');

@@ -96,6 +96,20 @@ const ACTIONS = new Set([
   'crm-import-contacts',
   'crm-add-note',
   'crm-capture',
+  'crm-list-records',
+  'crm-bulk-update-deals',
+  'crm-bulk-update-tasks',
+  'crm-bulk-update-contacts',
+  'crm-bulk-link-records',
+  'crm-upsert-package',
+  'crm-update-task',
+  'crm-upsert-company',
+  'crm-link-records',
+  'crm-close-task',
+  'crm-create-quote',
+  'crm-delete-contact',
+  'crm-operate',
+  'business-context-sync',
   'help',
 ]);
 
@@ -178,6 +192,12 @@ async function runAction(action, { npcName, params, config }) {
       return crmListTickets(config, params);
     case 'crm-update-contact':
       return crmUpdateContact(config, params);
+    case 'crm-delete-contact':
+      return crmDeleteContact(config, params);
+    case 'crm-operate':
+      return crmOperateAction(config, params);
+    case 'business-context-sync':
+      return crmOperateAction(config, { ...(params || {}), action: 'sync-business-context' });
     case 'crm-qualify-submission':
       return crmQualifySubmission(config, params);
     case 'crm-draft-email':
@@ -254,6 +274,28 @@ async function runAction(action, { npcName, params, config }) {
       return crmAddNote(config, params, npcName);
     case 'crm-capture':
       return crmCaptureAction(config, params, npcName);
+    case 'crm-list-records':
+      return crmListRecords(config, params);
+    case 'crm-bulk-update-deals':
+      return crmBulkUpdateDeals(config, params);
+    case 'crm-bulk-update-tasks':
+      return crmBulkUpdateTasks(config, params);
+    case 'crm-bulk-update-contacts':
+      return crmBulkUpdateContacts(config, params);
+    case 'crm-bulk-link-records':
+      return crmBulkLinkRecords(config, params);
+    case 'crm-upsert-package':
+      return crmUpsertPackage(config, params);
+    case 'crm-update-task':
+      return crmUpdateTask(config, params);
+    case 'crm-upsert-company':
+      return crmUpsertCompany(config, params);
+    case 'crm-link-records':
+      return crmBulkLinkRecords(config, params);
+    case 'crm-close-task':
+      return crmCloseTask(config, params);
+    case 'crm-create-quote':
+      return crmCreateQuote(config, params);
     default:
       return {
         summary: `Denizen data skills: ${[...ACTIONS].filter((a) => a !== 'help').join(', ')}`,
@@ -1064,6 +1106,21 @@ async function crmUpdateContact(config, params, npcName) {
   return crmWrap(orgId, params, npcName, crmSkills.updateContact);
 }
 
+async function crmDeleteContact(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.deleteContact);
+}
+
+async function crmOperateAction(config, params) {
+  const orgId = await defaultOrgId(config);
+  const operate = require('../../src/denizen-crm-operate');
+  const result = await operate.operateCrm(orgId, params || {}, params?.identityId || null);
+  return {
+    summary: result.summary || result.error || `CRM ${result.action || 'operate'} ${result.ok ? 'ok' : 'failed'}.`,
+    ...result,
+  };
+}
+
 async function crmQualifySubmission(config, params, npcName) {
   const orgId = await defaultOrgId(config);
   return crmWrap(orgId, params, npcName, crmSkills.qualifySubmission);
@@ -1323,6 +1380,72 @@ async function crmAddNote(config, params, npcName) {
     return { summary: viaAgent.error || viaAgent.summary, error: viaAgent.error };
   }
   return crmWrap(orgId, params, npcName, crmSkills.addNote);
+}
+
+async function crmAgent(config, fn, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const agentRecords = require('../../src/denizen-crm-agent-records');
+  return fn(agentRecords, orgId, params || {});
+}
+
+async function crmListRecords(config, params) {
+  return crmAgent(config, (api, orgId) => api.listRecords(orgId, params));
+}
+
+async function crmBulkUpdateDeals(config, params) {
+  return crmAgent(config, (api, orgId) => api.bulkUpdateDeals(orgId, params, params.identityId || null));
+}
+
+async function crmBulkUpdateTasks(config, params) {
+  return crmAgent(config, (api, orgId) => api.bulkUpdateTasks(orgId, params, params.identityId || null));
+}
+
+async function crmBulkUpdateContacts(config, params) {
+  return crmAgent(config, (api, orgId) => api.bulkUpdateContacts(orgId, params, params.identityId || null));
+}
+
+async function crmBulkLinkRecords(config, params) {
+  return crmAgent(config, (api, orgId) => api.bulkLinkRecords(orgId, params, params.identityId || null));
+}
+
+async function crmUpsertPackage(config, params) {
+  return crmAgent(config, (api, orgId) => api.upsertPackage(orgId, params, params.identityId || null));
+}
+
+async function crmUpsertCompany(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const companyId = params.company_id ?? params.companyId ?? params.id;
+  if (companyId != null && companyId !== '') {
+    try {
+      return await crmMutations.updateCompany(orgId, { ...params, company_id: companyId });
+    } catch (err) {
+      const missing = /company not found/i.test(err?.message || '');
+      if (!missing || !(params.name || params.company)) throw err;
+    }
+  }
+  return crmSkills.addCompany(orgId, params);
+}
+
+async function crmCloseTask(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.closeTask(orgId, params);
+}
+
+async function crmCreateQuote(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.generateQuote(orgId, params);
+}
+
+async function crmUpdateTask(config, params) {
+  const taskId = params.task_id ?? params.taskId ?? params.id;
+  const updates = Array.isArray(params.updates)
+    ? params.updates
+    : [{ ...params, task_id: taskId }];
+  return crmAgent(config, (api, orgId) => api.bulkUpdateTasks(orgId, { updates }, params.identityId || null));
 }
 
 async function crmCaptureAction(config, params, npcName) {

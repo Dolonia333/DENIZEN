@@ -84,21 +84,18 @@ function startJennyDurableLoop(deps = {}) {
       } catch (_) {}
 
       try {
-        outcomeLedger.appendOutcome({
-          actor: 'jenny-durable',
-          outcome_type: 'jenny.durable.tick',
-          entity_type: 'npc',
-          entity_key: 'jenny',
-          value_text: `Jenny durable tick: presence held; jenny_dirs=${jennyDirs.length}; expired=${expired}`,
-          value_json: {
-            jenny_directives: jennyDirs.length,
-            expired,
-            completed,
-            interval_ms: intervalMs,
-          },
-          source: 'npc-jenny-durable-loop',
-          pass: true,
-        });
+        if (expired > 0) {
+          outcomeLedger.appendOutcome({
+            actor: 'jenny-durable',
+            outcome_type: 'directive.expired',
+            entity_type: 'npc_directive',
+            entity_key: 'jenny',
+            value_text: `Expired ${expired} stale directive(s) while Grok chat was closed.`,
+            value_json: { expired, completed, jenny_directives: jennyDirs.length },
+            source: 'npc-jenny-durable-loop',
+            pass: true,
+          });
+        }
       } catch (_) {}
 
       log.info?.('JennyDurable', `tick jenny_dirs=${jennyDirs.length} expired=${expired}`);

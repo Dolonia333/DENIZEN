@@ -24,6 +24,19 @@ const NOTIFICATION_NPC = {
   'team-inactive': 'Lucy',
 };
 
+function namedProfile(state = {}, ctx = {}) {
+  const fromCtx = ctx.profile && typeof ctx.profile === 'object' ? ctx.profile : null;
+  if (fromCtx?.name && fromCtx.name !== 'Guest') return fromCtx;
+  const raw = state.userPrefs && typeof state.userPrefs === 'object' ? state.userPrefs : {};
+  if (raw.profile?.name && raw.profile.name !== 'Guest') return raw.profile;
+  const profiles = raw.profiles && typeof raw.profiles === 'object' ? raw.profiles : {};
+  for (const entry of Object.values(profiles)) {
+    const name = entry?.profile?.name || entry?.name;
+    if (name && name !== 'Guest') return { name };
+  }
+  return {};
+}
+
 function computeOnboardingProgress(state = {}, ctx = {}) {
   const onboarding = state.onboarding && typeof state.onboarding === 'object' ? state.onboarding : {};
   const industry = state.industryConfig && typeof state.industryConfig === 'object' ? state.industryConfig : {};
@@ -31,11 +44,11 @@ function computeOnboardingProgress(state = {}, ctx = {}) {
   const deals = Array.isArray(state.deals) ? state.deals : [];
   const packages = Array.isArray(state.packages) ? state.packages : [];
   const submissions = Array.isArray(state.submissions) ? state.submissions : [];
-  const profile = ctx.profile || state.userPrefs?.profile || {};
+  const profile = namedProfile(state, ctx);
 
   const done = {
     profile: !!(profile.name && profile.name !== 'Guest'),
-    invite: Number(ctx.teamCount || 0) > 1,
+    invite: Number(ctx.teamCount || onboarding.teamCount || 0) > 1,
     packages: packages.length > 0,
     intake: submissions.length > 0,
     contact: contacts.length > 0,

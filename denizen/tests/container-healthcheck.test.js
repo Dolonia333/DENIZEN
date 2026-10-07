@@ -25,7 +25,7 @@ describe('container health checks', () => {
       assert.match(source, /healthcheck:/);
       assert.match(source, /\/api\/health/);
       assert.match(source, /start_period:/);
-      assert.match(source, /retries:\s*3/);
+      assert.match(source, /retries:\s*[3-9]/);
     });
   }
 

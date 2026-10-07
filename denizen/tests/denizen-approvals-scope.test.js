@@ -19,6 +19,7 @@ describe('denizen-approvals-scope', () => {
 
   it('detects holding principal only when allowlist is configured', () => {
     assert.equal(scope.isAngelaHoldingPrincipal({ email: 'vzion253@gmail.com' }), true);
+    assert.equal(scope.isAngelaHoldingPrincipal({ email: 'angelavanzandt1921@gmail.com' }), false);
     assert.equal(scope.isAngelaHoldingPrincipal({ display_name: 'Angela Van Zandt' }), true);
     assert.equal(scope.isAngelaHoldingPrincipal({ display_name: 'Rilwan Hollis' }), false);
   });

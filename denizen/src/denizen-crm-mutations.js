@@ -38,7 +38,7 @@ async function listPipeline(orgId, params = {}) {
   const workingSet = require('./denizen-crm-working-set');
   const { state } = await loadOrgWorkspace(orgId);
   const deals = Array.isArray(state.deals) ? state.deals : [];
-  const limit = Math.min(50, Math.max(1, Number(params.limit) || 20));
+  const limit = Math.min(200, Math.max(1, Number(params.limit) || 100));
   const stageFilter = String(params.stage || '').trim().toLowerCase();
   const includeWatchlist = params.includeWatchlist === true || params.include_watchlist === true;
   let open = includeWatchlist
@@ -47,17 +47,18 @@ async function listPipeline(orgId, params = {}) {
   if (stageFilter) {
     open = open.filter((d) => String(d.stage || '').toLowerCase().includes(stageFilter));
   }
-  const rows = open.slice(0, limit).map((d) => ({
-    id: d.id,
-    title: d.title,
-    contact: d.contact,
-    company: d.company,
-    value: d.value,
-    stage: d.stage,
-    status: d.status,
-    probability: d.probability,
-    health: d.health,
-  }));
+  const agentRecords = require('./denizen-crm-agent-records');
+  const contactsByName = new Map();
+  for (const c of Array.isArray(state.contacts) ? state.contacts : []) {
+    const key = String(c?.name || '').trim().toLowerCase();
+    if (key && !contactsByName.has(key)) contactsByName.set(key, c);
+  }
+  const companiesByName = new Map();
+  for (const c of Array.isArray(state.companies) ? state.companies : []) {
+    const key = String(c?.name || '').trim().toLowerCase();
+    if (key && !companiesByName.has(key)) companiesByName.set(key, c);
+  }
+  const rows = open.slice(0, limit).map((d) => agentRecords.dealRecord(d, contactsByName, companiesByName));
   const totalValue = open.reduce((s, d) => s + (Number(d.value) || 0), 0);
   const watchCount = deals.filter((d) => workingSet.isWatchlistDeal(d)).length;
   const empty = open.length === 0 && !(Array.isArray(state.contacts) && state.contacts.length);
@@ -66,6 +67,7 @@ async function listPipeline(orgId, params = {}) {
       ? 'Working set empty — no open pursuits. Add real companies/contacts/deals; do not invent seed data.'
       : `Working set: ${open.length} open deal(s), $${totalValue.toLocaleString()} pipeline${watchCount ? ` (${watchCount} watchlist parked)` : ''}.`,
     deals: rows,
+    records: rows,
     openCount: open.length,
     totalValue,
     watchlistCount: watchCount,
@@ -207,6 +209,20 @@ async function updateDeal(orgId, params = {}, identityId = null) {
       title: updated.title,
     });
   }
+  if (String(prev.stage || '') !== String(updated.stage || '')) {
+    try {
+      require('./denizen-outcome-ledger').appendOutcome({
+        org_id: orgId,
+        actor: identityId || 'crm',
+        outcome_type: 'deal.progressed',
+        entity_type: 'deal',
+        entity_key: String(updated.id),
+        value_text: `Deal "${updated.title}" moved from ${prev.stage || 'unset'} to ${updated.stage}.`,
+        value_json: { from: prev.stage || null, to: updated.stage, deal_id: updated.id },
+        source: 'crm-update-deal',
+      });
+    } catch (_) { /* receipt is best-effort */ }
+  }
 
   return {
     summary: `Updated deal "${updated.title}" → stage ${updated.stage}, value ${updated.value}.`,
@@ -235,6 +251,9 @@ async function addTask(orgId, params = {}, identityId = null, actor = null) {
     ...(params.dealId != null || params.deal_id != null
       ? { dealId: params.dealId ?? params.deal_id }
       : {}),
+    ...(params.ownerEmail ? { ownerEmail: params.ownerEmail } : {}),
+    ...(params.ownerIdentityId ? { ownerIdentityId: params.ownerIdentityId } : {}),
+    ...(params.assignee ? { assignee: params.assignee } : {}),
   };
   if (who) task = crmAccess.stampOwnerFields(task, who);
   tasks.push(task);
@@ -249,18 +268,17 @@ async function listTasks(orgId, params = {}) {
   const tasks = Array.isArray(state.tasks) ? state.tasks : [];
   const open = tasks.filter((t) => t && !t.done);
   const overdue = open.filter((t) => t.due && String(t.due) < today);
-  const limit = Math.min(30, Math.max(1, Number(params.limit) || 15));
-  const rows = (params.overdue ? overdue : open).slice(0, limit).map((t) => ({
-    id: t.id,
-    title: t.title,
-    due: t.due,
-    priority: t.priority,
-    contact: t.contact,
-    overdue: !!(t.due && String(t.due) < today),
-  }));
+  const limit = Math.min(200, Math.max(1, Number(params.limit) || 100));
+  const agentRecords = require('./denizen-crm-agent-records');
+  const rows = (params.overdue ? overdue : open).slice(0, limit).map((t) => {
+    const row = agentRecords.taskRecord(t);
+    row.overdue = !!(t.due && String(t.due) < today && row.status !== 'done' && row.status !== 'cancelled');
+    return row;
+  });
   return {
-    summary: `${open.length} open task(s), ${overdue.length} overdue. ${rows.slice(0, 5).map((t) => t.title).join('; ') || 'None'}.`,
+    summary: `${open.length} open task(s), ${overdue.length} overdue. ${rows.slice(0, 5).map((t) => `${t.title} [${t.task_id}]`).join('; ') || 'None'}.`,
     tasks: rows,
+    records: rows,
     openCount: open.length,
     overdueCount: overdue.length,
   };
@@ -317,7 +335,19 @@ async function applyIndustry(orgId, params = {}, identityId = null) {
 async function getSetupStatus(orgId, ctx = {}) {
   const crmSetup = require('./denizen-crm-setup');
   const { state } = await loadOrgWorkspace(orgId);
-  const setup = crmSetup.buildSetupSummary(state, ctx);
+  let teamCount = Number(ctx.teamCount || 0);
+  if (!teamCount) {
+    try {
+      const denizenDb = require('./denizen-db');
+      if (denizenDb.enabled) {
+        const rows = await denizenDb._get(
+          `denizen_team_accounts?select=id&org_id=eq.${encodeURIComponent(orgId)}`,
+        );
+        teamCount = Array.isArray(rows) ? rows.length : 0;
+      }
+    } catch (_) { teamCount = Number(state.onboarding?.teamCount || 0); }
+  }
+  const setup = crmSetup.buildSetupSummary(state, { ...ctx, teamCount });
   return {
     summary: crmSetup.formatSetupSummaryText(setup),
     setup,
@@ -637,6 +667,23 @@ async function closeTask(orgId, params = {}, identityId = null) {
     return { summary: 'No matching open tasks to close.', closed: [], tasksClosed: 0 };
   }
   await saveOrgWorkspace(orgId, { ...state, tasks: nextTasks }, identityId, ifUpdatedAt);
+  if (!deleteTask) {
+    try {
+      const ledger = require('./denizen-outcome-ledger');
+      for (const task of closed) {
+        ledger.appendOutcome({
+          org_id: orgId,
+          actor: identityId || 'crm',
+          outcome_type: 'task.completed',
+          entity_type: 'task',
+          entity_key: String(task.id),
+          value_text: `Completed task "${task.title}".`,
+          value_json: { task_id: task.id },
+          source: 'crm-close-task',
+        });
+      }
+    } catch (_) { /* receipt is best-effort */ }
+  }
   return {
     summary: `${deleteTask ? 'Deleted' : 'Closed'} ${closed.length} task(s).`,
     closed,
@@ -669,6 +716,9 @@ async function updateCompany(orgId, params = {}, identityId = null) {
     ...(params.mailingAddress != null || params.mailing_address != null
       ? { mailingAddress: String(params.mailingAddress ?? params.mailing_address) }
       : {}),
+    ...(params.domain != null ? { domain: String(params.domain) } : {}),
+    ...(params.industry != null ? { industry: String(params.industry) } : {}),
+    ...(params.website != null ? { website: String(params.website) } : {}),
     ...(params.notes != null ? { notes: String(params.notes).slice(0, 2000) } : {}),
     ...(params.type != null ? { type: String(params.type) } : {}),
     ...(params.status != null ? { status: String(params.status) } : {}),
@@ -677,6 +727,64 @@ async function updateCompany(orgId, params = {}, identityId = null) {
   companies[idx] = updated;
   await saveOrgWorkspace(orgId, { ...state, companies }, identityId, ifUpdatedAt);
   return { summary: `Updated company "${updated.name}".`, company: updated };
+}
+
+async function deleteDeal(orgId, params = {}, identityId = null) {
+  if (params.confirm !== true) throw new Error('confirm: true required');
+  const dealId = params.dealId ?? params.deal_id ?? params.id;
+  if (dealId == null || dealId === '') throw new Error('deal_id required');
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const deals = Array.isArray(state.deals) ? [...state.deals] : [];
+  const idx = deals.findIndex((d) => String(d?.id) === String(dealId));
+  if (idx < 0) throw new Error('deal not found');
+  const [removed] = deals.splice(idx, 1);
+  await saveOrgWorkspace(orgId, { ...state, deals }, identityId, ifUpdatedAt);
+  return { summary: `Deleted deal "${removed.title}".`, deal: { id: removed.id, title: removed.title } };
+}
+
+async function linkDealContact(orgId, params = {}, identityId = null) {
+  const dealId = params.dealId ?? params.deal_id;
+  const contactId = params.contactId ?? params.contact_id;
+  if (dealId == null || contactId == null) throw new Error('deal_id and contact_id required');
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const contacts = Array.isArray(state.contacts) ? state.contacts : [];
+  const contact = contacts.find((c) => String(c?.id) === String(contactId));
+  if (!contact) throw new Error('contact not found');
+  const deals = Array.isArray(state.deals) ? [...state.deals] : [];
+  const idx = deals.findIndex((d) => String(d?.id) === String(dealId));
+  if (idx < 0) throw new Error('deal not found');
+  deals[idx] = {
+    ...deals[idx],
+    contactId: contact.id,
+    contact: contact.name || deals[idx].contact || '',
+  };
+  await saveOrgWorkspace(orgId, { ...state, deals }, identityId, ifUpdatedAt);
+  return { summary: `Linked deal "${deals[idx].title}" to ${contact.name || contact.id}.`, deal: deals[idx] };
+}
+
+async function mergeContacts(orgId, params = {}, identityId = null) {
+  if (params.confirm !== true) throw new Error('confirm: true required');
+  const keepId = params.keep_id ?? params.keepId;
+  const dropId = params.drop_id ?? params.dropId;
+  if (keepId == null || dropId == null || String(keepId) === String(dropId)) {
+    throw new Error('keep_id and drop_id required');
+  }
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const contacts = Array.isArray(state.contacts) ? [...state.contacts] : [];
+  const keep = contacts.find((c) => String(c?.id) === String(keepId));
+  const dropIdx = contacts.findIndex((c) => String(c?.id) === String(dropId));
+  if (!keep || dropIdx < 0) throw new Error('contact not found');
+  const drop = contacts[dropIdx];
+  if (!keep.email && drop.email) keep.email = drop.email;
+  const deals = (state.deals || []).map((deal) => {
+    if (String(deal?.contactId) === String(drop.id)) {
+      return { ...deal, contactId: keep.id, contact: keep.name || deal.contact };
+    }
+    return deal;
+  });
+  contacts.splice(dropIdx, 1);
+  await saveOrgWorkspace(orgId, { ...state, contacts, deals }, identityId, ifUpdatedAt);
+  return { summary: `Merged contact ${drop.id} into ${keep.id}.`, contact: keep, removed_id: drop.id };
 }
 
 module.exports = {
@@ -701,4 +809,7 @@ module.exports = {
   detachNote,
   closeTask,
   updateCompany,
+  deleteDeal,
+  linkDealContact,
+  mergeContacts,
 };

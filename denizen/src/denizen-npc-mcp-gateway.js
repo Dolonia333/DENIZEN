@@ -93,7 +93,10 @@ const TOOL_DEFINITIONS = [
   {
     name: 'run_skill',
     description:
-      'Run a real skill as this NPC (research, CRM, web-search, …). '
+      'Run a real skill as this NPC. CRM cleanup skill is crm-operate '
+      + '(params.action: list-records, update-contact, delete-contact, upsert-company, link, '
+      + 'update-task, close-task, upsert-package, sync-business-context). '
+      + 'Same actions exist as the crm_operate tool. '
       + 'For ChatGPT: use wait=false (returns job_id) then poll get_skill_job. '
       + 'For Cursor/local: wait=true returns the result.',
     inputSchema: {
@@ -437,10 +440,13 @@ function configure(deps = {}) {
 }
 
 function toolsForScope(scope) {
-  const base = [...TOOL_DEFINITIONS];
+  const base = [];
+  if (scope?.npc_key) {
+    base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
+  }
+  base.push(...TOOL_DEFINITIONS);
   if (scope?.npc_key) {
     base.push(...mcpTeamTools.toolsForNpc(scope.npc_key));
-    base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
     base.push(...mcpStudioBoardTools.toolsForNpc(scope.npc_key));
     base.push(...mcpBusinessStudioTools.toolsForNpc(scope.npc_key));
     base.push(...mcpAgencyTools.toolsForNpc(scope.npc_key));
@@ -483,13 +489,15 @@ async function handleRpc(scope, req, res, message, sessionId) {
   }
 
   if (method === 'tools/call') {
-    const rate = checkRateLimit(scope.token_id);
-    if (!rate.allowed) {
-      return sendJson(res, 429, { ok: false, error: 'rate limit exceeded' }, {
-        'Retry-After': String(rate.retryAfterSec),
-      });
-    }
     const toolName = params?.name;
+    if (mcpScopes.requiredScope(toolName) !== 'read') {
+      const rate = checkRateLimit(scope.token_id);
+      if (!rate.allowed) {
+        return sendJson(res, 429, { ok: false, error: 'rate limit exceeded' }, {
+          'Retry-After': String(rate.retryAfterSec),
+        });
+      }
+    }
     const toolArgs = params?.arguments || {};
     try {
       const result = await callTool(scope, toolName, toolArgs);

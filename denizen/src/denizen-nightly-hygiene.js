@@ -118,24 +118,27 @@ async function runNightlyHygiene(opts = {}) {
     expired = opts.npcBrains.expireStaleDirectives(opts.directiveTtlMs || DEFAULT_DIRECTIVE_TTL_MS) || [];
   }
 
-  const receipt = outcomeLedger.appendOutcome({
-    org_id: orgId,
-    actor: 'nightly-hygiene',
-    outcome_type: 'hygiene.nightly',
-    entity_type: 'crm_workspace',
-    entity_key: String(orgId),
-    value_text: `Parked ${parked.length} scrape deal(s); expired ${expired.length} directive(s).`,
-    value_json: {
-      parked_deal_ids: parked.map((p) => p.id),
-      parked,
-      expired_directives: expired,
-      receipt: true,
-    },
-    source: 'denizen-nightly-hygiene',
-    pass: true,
-  });
+  let receipt = null;
+  if (parked.length || expired.length) {
+    receipt = outcomeLedger.appendOutcome({
+      org_id: orgId,
+      actor: 'nightly-hygiene',
+      outcome_type: 'hygiene.nightly',
+      entity_type: 'crm_workspace',
+      entity_key: String(orgId),
+      value_text: `Parked ${parked.length} scrape deal(s); expired ${expired.length} directive(s).`,
+      value_json: {
+        parked_deal_ids: parked.map((p) => p.id),
+        parked,
+        expired_directives: expired,
+        receipt: true,
+      },
+      source: 'denizen-nightly-hygiene',
+      pass: true,
+    });
+  }
 
-  const msg = `[hygiene] parked=${parked.length} expired_directives=${expired.length} outcome=${receipt.id}`;
+  const msg = `[hygiene] parked=${parked.length} expired_directives=${expired.length} outcome=${receipt?.id || 'none'}`;
   if (typeof log.info === 'function') log.info('Hygiene', msg);
   else log.log?.(msg);
 

@@ -66,6 +66,30 @@ describe('denizen-crm-access', () => {
     assert.equal(state.packages.length, 1);
   });
 
+  it('forceOwn still filters an admin down to their rows', () => {
+    const angela = {
+      user: 'Angela Van Zandt',
+      displayName: 'Angela Van Zandt',
+      email: 'angelavanzandt1921@gmail.com',
+      role: 'admin',
+      aliases: ['vzion253@gmail.com'],
+    };
+    const stateIn = {
+      ...fullState,
+      deals: [
+        ...fullState.deals,
+        { id: 4, title: 'Angela Deal', contact: 'Holding', ownerId: 'Angela Van Zandt', value: 10, stage: 'Lead' },
+      ],
+    };
+    const { state, scope, filtered } = access.filterWorkspaceForAccess(stateIn, angela, {
+      orgWide: false,
+      forceOwn: true,
+    });
+    assert.equal(scope, 'own');
+    assert.equal(filtered, true);
+    assert.deepEqual(state.deals.map((d) => d.id), [4]);
+  });
+
   it('filterWorkspaceForAccess is a no-op for owners', () => {
     const { state, scope, filtered } = access.filterWorkspaceForAccess(fullState, {
       ...kaiser,
@@ -74,6 +98,31 @@ describe('denizen-crm-access', () => {
     assert.equal(scope, 'org');
     assert.equal(filtered, false);
     assert.equal(state.deals.length, 3);
+  });
+
+  it('mergeMemberWorkspace does not let a member claim someone else\'s deal', () => {
+    const angela = {
+      user: 'Angela Van Zandt',
+      displayName: 'Angela Van Zandt',
+      email: 'angelavanzandt1921@gmail.com',
+      role: 'admin',
+    };
+    const stolen = {
+      deals: [{
+        id: 2,
+        title: 'Zion Deal renamed',
+        contact: 'Beta',
+        ownerId: 'Angela Van Zandt',
+        ownerEmail: 'angelavanzandt1921@gmail.com',
+        value: 110,
+        stage: 'Closed Won',
+      }],
+    };
+    const merged = access.mergeMemberWorkspace(fullState, stolen, angela);
+    const zion = merged.deals.find((d) => d.id === 2);
+    assert.equal(zion.title, 'Zion Deal');
+    assert.equal(zion.ownerId, 'Zion');
+    assert.equal(zion.value, 200);
   });
 
   it('mergeMemberWorkspace does not wipe teammate deals', () => {
@@ -143,6 +192,8 @@ describe('denizen-crm-access', () => {
     assert.equal(scoped.state.userPrefs.profile.name, 'Kaiser');
     assert.equal(scoped.state.userPrefs.profiles['id-zion'], undefined);
     assert.deepEqual(Object.keys(scoped.state.calendarConnections), ['id-kaiser']);
+    assert.equal(scoped.state.calendarConnections['id-kaiser'].google.token, undefined);
+    assert.equal(scoped.state.calendarConnections['id-zion'], undefined);
     assert.ok(scoped.state.meetings.some((m) => m.id === 1), 'team calendar visible');
     assert.ok(scoped.state.meetings.some((m) => m.id === 2), 'own private meeting visible');
     assert.ok(!scoped.state.meetings.some((m) => m.id === 3), 'teammate private hidden');

@@ -431,7 +431,7 @@ class AgentOfficeManager {
       lastWin: 'Mesh monitoring and research integration',
       recentDelegations: [],
       personalLog: ['Arrived and claimed this desk as home base.'],
-      currentFocus: '1921 capture (OMES/RM Cyber), fleet health, and proactive lead gen / CRM pipeline',
+      currentFocus: 'Current CRM pursuits and Business Studio goals — use business-context-brief, not expired solicitations',
       leadsTracked: 0,
       relationships: { Bob: 'trusted researcher partner', Claude: 'valued verifier peer', Lucy: 'key for outreach and intake', Sarah: 'pipeline closer' }
     };
@@ -467,13 +467,13 @@ class AgentOfficeManager {
             // Proactive lead gen / CRM: explicit delegation so Lucy (triage/monitor), Bob (research), Sarah (add-deal) act for real
             if (Math.random() < 0.45) {
               this.scene.time.delayedCall(2800, () => {
-                this.actions.speak('xp_grok', 'Lucy: run lead-monitor and intake-triage. Pull open leads and new submissions. Enrich the top prospects with crm-enrich-contact then hand fits to Sarah or Marcus for crm-add-deal or pipeline move. Reference current OMES/RM Cyber focus.');
+                this.actions.speak('xp_grok', 'Lucy: run lead-monitor and intake-triage. Pull open leads and new submissions. Enrich the top prospects with crm-enrich-contact then hand fits to Sarah or Marcus for crm-add-deal or pipeline move. Use business-context-brief for the current priority.');
                 if (this._grokHomeMemory) this._grokHomeMemory.leadsTracked = (this._grokHomeMemory.leadsTracked || 0) + 1;
               });
             }
             if (Math.random() < 0.25) {
               this.scene.time.delayedCall(5200, () => {
-                this.actions.speak('xp_grok', 'Bob: research targeted prospects for our GovCon / 1921 work — OMES partners, Oklahoma federal, RM Cyber adjacents. Write briefs, extract company/contact signals, then use crm-enrich-contact on promising ones.');
+                this.actions.speak('xp_grok', 'Bob: research targeted prospects for current GovCon / 1921 pursuits. Write briefs, extract company/contact signals, then use crm-enrich-contact on promising ones.');
               });
             }
             // Surface live pipeline snapshot for awareness

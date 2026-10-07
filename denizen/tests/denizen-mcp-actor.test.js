@@ -70,15 +70,15 @@ describe('denizen-mcp-actor', () => {
     assert.equal(actor.user, 'Kaiser');
   });
 
-  it('keeps owners org-wide', async () => {
+  it('keeps a signed-in owner on their own records', async () => {
     const scope = await mcpActor.enrichMcpScope({
       org_id: 'org-1',
       npc_key: 'abby',
       session_id: 'sess-owner',
     });
     assert.equal(scope.role, 'owner');
-    assert.equal(scope.org_wide, true);
-    assert.equal(scope.data_scope, 'org');
+    assert.equal(scope.org_wide, false);
+    assert.equal(scope.data_scope, 'own');
   });
 
   it('treats team operator tokens without session as org-wide', async () => {
