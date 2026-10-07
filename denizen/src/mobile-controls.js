@@ -289,6 +289,28 @@
         align-items: flex-start;
       }
 
+      /*
+       * Soft keyboard open: hide the HQ map so Floor Line can use the full
+       * visual viewport. Typing with a cover-filled map left ~0px for history.
+       */
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #game-frame {
+        visibility: hidden !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #denizen-floor-strip {
+        display: none !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #denizen-bottom-dock {
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+
       #${CONTROLS_ID} {
         position: fixed;
         left: 0;
@@ -895,10 +917,15 @@
   function syncVisualViewport() {
     const vv = window.visualViewport;
     const h = vv && vv.height > 80 ? vv.height : window.innerHeight;
-    document.documentElement.style.setProperty('--denizen-vv-h', `${Math.round(h)}px`);
+    const root = document.documentElement;
+    root.style.setProperty('--denizen-vv-h', `${Math.round(h)}px`);
     if (vv) {
-      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      document.documentElement.style.setProperty('--denizen-keyboard-offset', `${Math.round(offset)}px`);
+      const offsetTop = Math.max(0, vv.offsetTop || 0);
+      const offset = Math.max(0, window.innerHeight - vv.height - offsetTop);
+      root.style.setProperty('--denizen-vv-offset-top', `${Math.round(offsetTop)}px`);
+      root.style.setProperty('--denizen-keyboard-offset', `${Math.round(offset)}px`);
+      // Same threshold as visitor-session — Floor Line expands when keyboard is up.
+      root.classList.toggle('denizen-keyboard-open', offset > 80);
     }
   }
 

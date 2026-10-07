@@ -3136,6 +3136,45 @@ class PlayerChat {
         max-height: none !important;
         z-index: 2147483630 !important;
       }
+      /*
+       * Soft keyboard open: fill the visual viewport above the keys so message
+       * history stays readable. Do not pin under the game frame or clamp to
+       * a tiny dvh card — that was crushing past conversations.
+       */
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
+        top: calc(
+          var(--denizen-vv-offset-top, 0px) + max(6px, env(safe-area-inset-top, 0px))
+        ) !important;
+        bottom: calc(var(--denizen-keyboard-offset, 0px) + 6px) !important;
+        left: max(6px, env(safe-area-inset-left, 0px)) !important;
+        right: max(6px, env(safe-area-inset-right, 0px)) !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        transform: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        z-index: 2147483640 !important;
+        overflow: hidden !important;
+        pointer-events: auto !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) #player-chat-log {
+        flex: 1 1 auto !important;
+        min-height: 140px !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) #player-chat-composer,
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) .pc-composer-shell {
+        flex: 0 0 auto !important;
+      }
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) #player-chat-header {
+        flex: 0 0 auto !important;
+      }
       html.denizen-touch.denizen-tablet.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
         top: max(8px, env(safe-area-inset-top, 0px)) !important;
         bottom: calc(var(--denizen-dock-height, 44px) + 12px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;

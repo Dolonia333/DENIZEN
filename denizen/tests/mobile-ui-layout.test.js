@@ -99,7 +99,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapFill3/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill4/);
   });
 
   it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
@@ -165,8 +165,28 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=mapSpace5/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill3/);
+    assert.match(html, /player-chat\.js\?v=kbdFill1/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill4/);
+  });
+
+  it('Floor Line expands to the visual viewport when the soft keyboard opens', () => {
+    const chat = read('src/player-chat.js');
+    const mobile = read('src/mobile-controls.js');
+    assert.match(chat, /Soft keyboard open: fill the visual viewport/);
+    assert.match(
+      chat,
+      /denizen-keyboard-open\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?--denizen-vv-offset-top/
+    );
+    assert.match(
+      chat,
+      /denizen-keyboard-open\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\) #player-chat-log \{[\s\S]*?min-height:\s*140px/
+    );
+    assert.match(mobile, /classList\.toggle\('denizen-keyboard-open'/);
+    assert.match(mobile, /--denizen-vv-offset-top/);
+    assert.match(
+      mobile,
+      /denizen-keyboard-open\.denizen-chat-open #game-frame \{[\s\S]*?visibility:\s*hidden/
+    );
   });
 
   it('phones reclaim map real estate; floor caption is a thin one-line strip under the map', () => {
@@ -231,6 +251,6 @@ describe('mobile UI layout fixes', () => {
     assert.match(scene, /isCompactPhone \? 2\.35 : 2\.2/);
     assert.match(html, /device-profile\.js\?v=mapFill3/);
     assert.match(html, /office-scene\.js\?v=mapFill3/);
-    assert.match(html, /mobile-controls\.js\?v=mapFill3/);
+    assert.match(html, /mobile-controls\.js\?v=mapFill4/);
   });
 });
