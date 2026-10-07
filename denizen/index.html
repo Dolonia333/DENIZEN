@@ -466,21 +466,22 @@
         width: 14px;
         height: 14px;
       }
+      /* Flush to map edges so the arrows mark the canvas corners */
       html.denizen-touch #game-frame::before {
-        top: 4px;
-        left: 4px;
+        top: 2px;
+        left: 2px;
       }
       html.denizen-touch #game-frame::after {
-        top: 4px;
-        right: 4px;
+        top: 2px;
+        right: 2px;
       }
       html.denizen-touch #game-frame .dz-frame-corners::before {
-        bottom: 4px;
-        left: 4px;
+        bottom: 2px;
+        left: 2px;
       }
       html.denizen-touch #game-frame .dz-frame-corners::after {
-        bottom: 4px;
-        right: 4px;
+        bottom: 2px;
+        right: 2px;
       }
       html.denizen-touch #game-frame .dz-frame-label {
         position: static;
