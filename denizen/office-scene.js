@@ -307,7 +307,7 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const catalogV = 'cat27breakroom';
+    const catalogV = 'cat28deskPapers';
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
     this.load.json('office_blueprint', `./data/office_blueprint.json?v=${catalogV}`);
@@ -317,6 +317,33 @@ class OfficeScene extends Phaser.Scene {
     this.load.image(
       'mo_black_shadow_32',
       'assets/Modern_Office_Black_Shadow_32x32.png?v=2'
+    );
+    // Held props for living-office waterPlant / goToCoffee (LimeZu garden can + steaming mug)
+    this.load.image(
+      'vfx_watering_can',
+      'assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png'
+    );
+    this.load.image(
+      'vfx_watering_can_empty',
+      'assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Empty.png'
+    );
+    this.load.spritesheet(
+      'vfx_coffee_mug',
+      'assets/limezu/animated/coffee.png',
+      { frameWidth: 16, frameHeight: 32 }
+    );
+    this.load.image(
+      'vfx_coffee_cup',
+      'assets/limezu/animated/coffee_cup_only.png'
+    );
+    this.load.image(
+      'vfx_whiteboard_drawn',
+      'assets/modern_office/named/whiteboard_line_chart.png'
+    );
+    // Desk workload clutter — paper stack; the desk mug reuses vfx_coffee_mug.
+    this.load.image(
+      'vfx_desk_papers',
+      'assets/modern_office/named/papers_stack_small.png'
     );
     // Unused sheets removed to prevent loader stall (were loading 90+ files)
 

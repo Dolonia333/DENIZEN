@@ -3140,7 +3140,7 @@ class PlayerChat {
         width: min(420px, calc(100dvw - 120px)) !important;
         min-width: 0 !important;
         max-width: min(420px, calc(100dvw - 120px)) !important;
-        height: auto !important;
+        height: min(58dvh, 320px) !important;
         max-height: none !important;
         display: flex !important;
         flex-direction: column !important;

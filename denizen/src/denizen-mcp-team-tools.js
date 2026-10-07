@@ -35,7 +35,10 @@ const TEAM_TOOL_DEFINITIONS = [
   },
   {
     name: 'send_handoff',
-    description: 'Send a message/handoff to a teammate, or escalate to the CEO office (Lucy bridge).',
+    description:
+      'Send a message/handoff to a teammate, or escalate to the CEO office (Lucy bridge). '
+      + 'Optional document attaches a research brief (title/summary/citations) for same-org sharing '
+      + 'from ChatGPT/Claude/Cursor MCP — the office shows a folder-carry delivery.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -44,6 +47,20 @@ const TEAM_TOOL_DEFINITIONS = [
         to_display_name: { type: 'string', description: 'Target by display name (partial match)' },
         to_ceo: { type: 'boolean', description: 'Escalate to CEO / Lucy bridge' },
         to_npc: { type: 'string', description: 'Optional target NPC key for routing metadata' },
+        document: {
+          type: 'object',
+          description: 'Optional research handoff document shared inside the same Denizen org',
+          properties: {
+            title: { type: 'string', description: 'Brief title' },
+            summary: { type: 'string', description: 'Short summary of findings' },
+            citations: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Source URLs or citation strings',
+            },
+            brief_id: { type: 'string', description: 'Optional research brief id / path' },
+          },
+        },
       },
       required: ['message'],
     },
@@ -537,16 +554,35 @@ async function toolSendHandoff(scope, args) {
   }
 
   const fromNpc = scope.npc_key || 'assistant';
+  const toNpc = args?.to_npc || args?.toNpc || (target.is_ceo_bridge ? 'lucy' : 'assistant');
+  const rawDoc = args?.document && typeof args.document === 'object' ? args.document : null;
+  const document = rawDoc ? {
+    title: String(rawDoc.title || '').trim().slice(0, 200) || null,
+    summary: String(rawDoc.summary || '').trim().slice(0, 2000) || null,
+    citations: Array.isArray(rawDoc.citations)
+      ? rawDoc.citations.map((c) => String(c).slice(0, 500)).filter(Boolean).slice(0, 20)
+      : [],
+    brief_id: String(rawDoc.brief_id || rawDoc.briefId || '').trim().slice(0, 240) || null,
+  } : null;
+  if (document && !document.title && !document.summary && !document.brief_id) {
+    // Ignore empty document objects.
+    document.title = null;
+  }
+  const hasDocument = !!(document && (document.title || document.summary || document.brief_id || document.citations.length));
+
   const handoff = await visitor.sendHandoff({
     fromSessionId: scope.session_id,
     toSessionId: target.session_id,
     fromNpc,
-    toNpc: args?.to_npc || args?.toNpc || (target.is_ceo_bridge ? 'lucy' : 'assistant'),
+    toNpc,
     message,
     metadata: {
       source: 'mcp',
       member_id: scope.member_id || null,
       poll_hint: 'Recipient AI should call list_pending_handoffs then acknowledge_handoff',
+      document: hasDocument ? document : null,
+      from_npc: fromNpc,
+      to_npc: toNpc,
     },
   });
 
@@ -555,8 +591,25 @@ async function toolSendHandoff(scope, args) {
       ...handoff,
       from_display_name: displayNameForKey(fromNpc),
       message,
+      document: hasDocument ? document : null,
     };
     _deps.notifyCeoHandoff(enriched);
+  }
+
+  // Office theater: folder-carry when a research document is attached.
+  if (hasDocument && typeof _deps.broadcast === 'function') {
+    try {
+      _deps.broadcast({
+        type: 'assistant_handoff',
+        handoff,
+        document,
+        from_npc: fromNpc,
+        to_npc: toNpc,
+        from_display_name: displayNameForKey(fromNpc),
+        message,
+        ts: Date.now(),
+      });
+    } catch (_) { /* non-fatal */ }
   }
 
   return {
@@ -564,6 +617,7 @@ async function toolSendHandoff(scope, args) {
     handoff_id: handoff?.id || null,
     target,
     from_npc: fromNpc,
+    document: hasDocument ? document : null,
     next_step: 'Their ChatGPT/Cursor should poll list_pending_handoffs',
   };
 }

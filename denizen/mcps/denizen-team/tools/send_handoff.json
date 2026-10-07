@@ -1,6 +1,6 @@
 {
   "name": "send_handoff",
-  "description": "Send a message/handoff to a teammate, or escalate to the CEO office (Lucy bridge).",
+  "description": "Send a message/handoff to a teammate, or escalate to the CEO office (Lucy bridge). Optional document attaches a research brief for same-org sharing from ChatGPT/Claude/Cursor MCP — the office shows a folder-carry delivery.",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -23,6 +23,31 @@
       "to_npc": {
         "type": "string",
         "description": "Optional target NPC key for routing metadata"
+      },
+      "document": {
+        "type": "object",
+        "description": "Optional research handoff document shared inside the same Denizen org",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Brief title"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Short summary of findings"
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Source URLs or citation strings"
+          },
+          "brief_id": {
+            "type": "string",
+            "description": "Optional research brief id / path"
+          }
+        }
       }
     },
     "required": [

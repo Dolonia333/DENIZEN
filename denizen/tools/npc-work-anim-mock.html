@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NPC Work Anim Mock — Denizen</title>
+<style>
+  :root {
+    --bg: #1a2332;
+    --panel: #243044;
+    --line: #3d4f66;
+    --text: #e8eef6;
+    --muted: #8fa3b8;
+    --accent: #5bb8a0;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px "IBM Plex Sans", "Segoe UI", sans-serif;
+  }
+  body { display: flex; flex-direction: column; }
+  header {
+    display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
+    padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  header h1 { margin: 0; font-size: 16px; color: var(--accent); letter-spacing: .02em; }
+  header .caption {
+    flex: 1; min-width: 220px; color: var(--muted); font-size: 13px;
+  }
+  header .caption strong { color: var(--text); font-weight: 600; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    appearance: none; border: 1px solid var(--line); background: #152033;
+    color: var(--text); border-radius: 8px; padding: 7px 12px; font: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.active { background: var(--accent); border-color: var(--accent); color: #082018; }
+  #stage-wrap {
+    flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+    padding: 16px; background:
+      radial-gradient(ellipse at 50% 30%, #2a3a52 0%, transparent 55%),
+      var(--bg);
+  }
+  #game-host {
+    border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0,0,0,.35);
+    background: #2d3f2f;
+  }
+  footer {
+    padding: 10px 16px; border-top: 1px solid var(--line); background: var(--panel);
+    color: var(--muted); font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>NPC work anim mock</h1>
+  <div class="caption" id="caption"><strong>Booting…</strong></div>
+  <div class="btns">
+    <button type="button" data-scene="desk" class="active">1 · Desk</button>
+    <button type="button" data-scene="skill">2 · Skill</button>
+    <button type="button" data-scene="board">3 · Board</button>
+    <button type="button" data-scene="ship">4 · Done</button>
+    <button type="button" data-scene="water">5 · Pour</button>
+    <button type="button" data-scene="coffee">6 · Coffee</button>
+    <button type="button" data-scene="loop">▶ Auto loop</button>
+  </div>
+</header>
+<div id="stage-wrap"><div id="game-host"></div></div>
+<footer>
+  Same modern-office + LimeZu sprites as the office. Quiet bubbles only — no HUD chrome.
+</footer>
+
+<script src="/vendor/phaser/phaser.min.js"></script>
+<script>
+(() => {
+  const W = 720, H = 420;
+  const CAPTIONS = {
+    desk: '<strong>Desk</strong> — sit at a real monitor setup; typing dots like the live office.',
+    skill: '<strong>Skill</strong> — research then coding as quiet thought lines, still at the desk.',
+    board: '<strong>Board</strong> — walk up to the chart whiteboard; quiet thought, no HUD lines.',
+    ship: '<strong>Done</strong> — task finished as a small office bubble + check emote.',
+    water: '<strong>Pour</strong> — LimeZu can tip + stream into the plant.',
+    coffee: '<strong>Coffee</strong> — LimeZu coffee machine, then sip with cup on her mouth.',
+    loop: '<strong>Auto loop</strong> — desk → skill → board → done → pour → coffee.',
+  };
+
+  let api = null;
+
+  function setCaption(key) {
+    document.getElementById('caption').innerHTML = CAPTIONS[key] || '';
+    document.querySelectorAll('button[data-scene]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.scene === key);
+    });
+  }
+
+  /** Match live office speech/thought bubbles (agent-actions.js). */
+  function makeBubble(scene, text, x, y, thought = false) {
+    const t = scene.add.text(x, y, thought ? `…${text}` : text, {
+      fontSize: thought ? '8px' : '9px',
+      fontFamily: 'monospace',
+      color: thought ? '#0c4a6e' : '#0f172a',
+      backgroundColor: thought ? '#e0f2fede' : '#f8fafcee',
+      padding: { x: 4, y: 3 },
+      wordWrap: { width: thought ? 110 : 130 },
+      align: 'center',
+    });
+    t.setOrigin(0.5, 1);
+    t.setDepth(50);
+    t.setAlpha(0.96);
+    return t;
+  }
+
+  function makeEmote(scene, symbol, x, y) {
+    return makeBubble(scene, symbol, x, y, true);
+  }
+
+  class MockScene extends Phaser.Scene {
+    constructor() {
+      super('mock');
+      this._cleanup = [];
+      this._npc = null;
+      this._plant = null;
+      this._machine = null;
+      this._deskSetup = null;
+      this._board = null;
+      this._can = null;
+      this._mug = null;
+      this._mugCup = null;
+      this._playing = null;
+      this._holdFollow = null;
+      this._sceneGen = 0;
+      this._deskFxTimer = null;
+    }
+
+    preload() {
+      this.load.spritesheet('abby', '/assets/Abby.png', { frameWidth: 32, frameHeight: 48 });
+      this.load.image('plant', '/assets/modern_office/named/plant_floor_leafy.png');
+      this.load.image('can_full', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Full.png');
+      this.load.image('can_empty', '/assets/limezu/ext/singles/17_garden/ME_Singles_Garden_16x16_Green_Watering_Can_Left_Empty.png');
+      // LimeZu coffee machine (modern_office coffee_machine_desk / coffee_station are phones/desks)
+      this.load.image(
+        'coffee_machine',
+        '/assets/limezu/ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Coffee_Machine_Front.png'
+      );
+      this.load.spritesheet('mug', '/assets/limezu/animated/coffee.png', { frameWidth: 16, frameHeight: 32 });
+      this.load.image('mug_cup', '/assets/limezu/animated/coffee_cup_only.png');
+      this.load.image('desk_setup', '/assets/modern_office/named/desk_setup_monitors_pc.png');
+      this.load.image('board_blank', '/assets/modern_office/named/whiteboard_medium.png');
+      this.load.image('board_drawn', '/assets/modern_office/named/whiteboard_line_chart.png');
+    }
+
+    create() {
+      const g = this.add.graphics();
+      g.fillStyle(0x3a4d3a, 1);
+      g.fillRect(0, 0, W, H);
+      g.lineStyle(1, 0x2a382a, 0.5);
+      for (let x = 0; x < W; x += 32) g.lineBetween(x, 0, x, H);
+      for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
+
+      // Tight office corner — real pack sprites, one composition
+      this._machine = null; // created below after anims
+
+      // Desk station — packed modern-office sprite (monitor + keyboard)
+      this._deskSetup = this.add.image(500, 268, 'desk_setup').setOrigin(0.5, 1).setDepth(4).setScale(1.55);
+
+      // Whiteboard — chart asset (blank medium reads as an empty purple slab)
+      this._board = this.add.image(360, 230, 'board_drawn').setOrigin(0.5, 1).setDepth(4).setScale(1.3);
+
+      this._plant = this.add.image(250, 240, 'plant').setOrigin(0.5, 1).setDepth(5).setScale(1.3);
+
+      this.anims.create({
+        key: 'walk_down',
+        frames: this.anims.generateFrameNumbers('abby', { start: 0, end: 3 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'walk_left',
+        frames: this.anims.generateFrameNumbers('abby', { start: 4, end: 7 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'walk_right',
+        frames: this.anims.generateFrameNumbers('abby', { start: 8, end: 11 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'walk_up',
+        frames: this.anims.generateFrameNumbers('abby', { start: 12, end: 15 }),
+        frameRate: 10, repeat: -1,
+      });
+      this.anims.create({
+        key: 'mug_steam',
+        frames: this.anims.generateFrameNumbers('mug', { start: 0, end: 5 }),
+        frameRate: 6, repeat: -1,
+      });
+
+      this._machine = this.add.image(160, 300, 'coffee_machine').setOrigin(0.5, 1).setDepth(6).setScale(1.85);
+
+      this._mug = this.add.sprite(160, 272, 'mug', 0).setOrigin(0.5, 1).setDepth(8).setScale(1.3).setVisible(false);
+      this._mugCup = this.add.image(0, 0, 'mug_cup').setOrigin(0.5, 0).setDepth(21).setScale(1.35).setVisible(false);
+
+      this._npc = this.add.sprite(400, 290, 'abby', 0).setOrigin(0.5, 1).setDepth(10).setScale(1.5);
+      this._can = this.add.image(0, 0, 'can_full').setOrigin(0.78, 0.62).setDepth(12).setScale(1.35).setVisible(false);
+
+      this.add.text(16, 12, 'DENIZEN · work visibility', {
+        fontSize: '11px', fontFamily: 'monospace', color: '#9eb0a0',
+      }).setDepth(100);
+
+      api = { play: (name) => this.playScene(name) };
+      window.__npcAnimMock = api;
+      window.__game = this.game;
+      setCaption('desk');
+      setTimeout(() => { if (this._sceneGen === 0) this.playScene('desk'); }, 400);
+    }
+
+    clearFx() {
+      for (const o of this._cleanup) {
+        try { o.destroy(); } catch (_) {}
+      }
+      this._cleanup = [];
+      try { this.tweens.killAll(); } catch (_) {}
+      this.stopFollow();
+      this.stopDeskFx();
+      this._can.setVisible(false);
+      this._can.setAngle(0);
+      this._can.setTexture('can_full');
+      this._mug.setVisible(false);
+      this._mug.anims.stop();
+      try { this._mug.setCrop(); } catch (_) {}
+      this._mug.setOrigin(0.5, 1);
+      this._mug.setFrame(0);
+      this._mug.setAngle(0);
+      this._mug.setScale(1.3);
+      this._mug.setPosition(160, 272);
+      this._mug.setAlpha(1);
+      if (this._mugCup) {
+        this._mugCup.setVisible(false);
+        this._mugCup.setAngle(0);
+      }
+      if (this._board) {
+        this._board.setTexture('board_drawn');
+        this._board.setScale(1.3);
+        this._board.setAlpha(1);
+      }
+      if (this._machine) this._machine.setScale(1.85);
+      if (this._deskSetup) {
+        this._deskSetup.setAlpha(1);
+        this._deskSetup.y = 268;
+      }
+      this._npc.anims.stop();
+      this._npc.setPosition(400, 290);
+      this._npc.setFrame(0);
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.clearTint();
+      this._npc.setVisible(true);
+      this._npc.setAlpha(1);
+      this._npc.setDepth(10);
+    }
+
+    track(obj) {
+      this._cleanup.push(obj);
+      return obj;
+    }
+
+    wait(ms) {
+      const gen = this._sceneGen;
+      return new Promise((r) => setTimeout(() => r(this._sceneGen === gen), ms));
+    }
+
+    alive(gen) {
+      return this._sceneGen === gen && this._playing != null;
+    }
+
+    walkTo(x, y, anim, ms = 1400) {
+      return this._walkSpriteTo(this._npc, x, y, anim, ms);
+    }
+
+    _walkSpriteTo(sprite, x, y, anim, ms) {
+      const gen = this._sceneGen;
+      const x0 = sprite.x;
+      const y0 = sprite.y;
+      try { sprite.anims.play(anim, true); } catch (_) {}
+      return new Promise((resolve) => {
+        let done = false;
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          try { sprite.anims.stop(); } catch (_) {}
+          if (ok) { sprite.x = x; sprite.y = y; }
+          resolve(ok);
+        };
+        const steps = Math.max(8, Math.round(ms / 32));
+        let i = 0;
+        const step = () => {
+          if (this._sceneGen !== gen) { finish(false); return; }
+          i += 1;
+          const t = Math.min(1, i / steps);
+          sprite.x = x0 + (x - x0) * t;
+          sprite.y = y0 + (y - y0) * t;
+          if (t >= 1) finish(true);
+          else setTimeout(step, ms / steps);
+        };
+        setTimeout(() => finish(this._sceneGen === gen), ms + 500);
+        setTimeout(step, 0);
+      });
+    }
+
+    npcFrameIndex() {
+      const fr = this._npc?.frame;
+      if (!fr) return 0;
+      const n = Number(fr.name);
+      if (Number.isFinite(n)) return n;
+      if (typeof fr.index === 'number') return fr.index;
+      return 0;
+    }
+
+    mugMouthOffset() {
+      const f = this.npcFrameIndex();
+      const y = -22;
+      if (f >= 4 && f <= 7) return { x: -8, y };
+      if (f >= 8 && f <= 11) return { x: 8, y };
+      if (f >= 12) return { x: 0, y: -23 };
+      return { x: 0, y };
+    }
+
+    holdMugAtMouth() {
+      this._mug.anims.stop();
+      this._mug.setVisible(false);
+      this._mugCup.setVisible(true);
+      this._mugCup.setDepth(21);
+      this._mugCup.setOrigin(0.5, 0);
+      this._mugCup.setScale(1.35);
+      this._mugCup.setAngle(-18);
+      this.stopFollow();
+      const tick = () => {
+        if (!this._mugCup?.active || !this._npc?.active) return;
+        const o = this.mugMouthOffset();
+        const f = this.npcFrameIndex();
+        this._mugCup.x = this._npc.x + o.x;
+        this._mugCup.y = this._npc.y + o.y;
+        if (f >= 4 && f <= 7) this._mugCup.setAngle(-18);
+        else if (f >= 8 && f <= 11) this._mugCup.setAngle(18);
+        else this._mugCup.setAngle(0);
+      };
+      tick();
+      this._holdFollow = setInterval(tick, 16);
+    }
+
+    followHand(prop, ox, oy, also = null) {
+      this.stopFollow();
+      const tick = () => {
+        if (!prop || !prop.active || !this._npc || !this._npc.active) return;
+        prop.x = this._npc.x + ox;
+        prop.y = this._npc.y + oy;
+        if (also) also(prop, this._npc);
+      };
+      tick();
+      this._holdFollow = setInterval(tick, 16);
+      return this._holdFollow;
+    }
+
+    stopFollow() {
+      if (this._holdFollow) {
+        try { clearInterval(this._holdFollow); } catch (_) {}
+        this._holdFollow = null;
+      }
+    }
+
+    stopDeskFx() {
+      if (this._deskFxTimer) {
+        try { clearInterval(this._deskFxTimer); } catch (_) {}
+        this._deskFxTimer = null;
+      }
+    }
+
+    /** Subtle sit-work: typing dots + tiny keyboard bob on the desk sprite. */
+    startDeskWork(label = 'Working…') {
+      this.stopDeskFx();
+      this._npc.anims.stop();
+      this._npc.setPosition(500, 272);
+      this._npc.setFrame(0);
+      this._npc.setCrop(0, 0, 32, 34);
+      this._npc.setDepth(8);
+
+      const dots = this.track(makeBubble(this, '…', 500, this._npc.y - 36, true));
+      let n = 0;
+      const gen = this._sceneGen;
+      const baseY = this._deskSetup.y;
+      this._deskFxTimer = setInterval(() => {
+        if (this._sceneGen !== gen) { this.stopDeskFx(); return; }
+        n = (n + 1) % 4;
+        dots.setText('.'.repeat(n || 1));
+        // 1px keyboard/desk bob — reads as typing without HUD
+        this._deskSetup.y = baseY + (n % 2);
+      }, 380);
+      this.track({ destroy: () => this.stopDeskFx() });
+
+      if (label) {
+        this.track(makeBubble(this, label, 500, this._npc.y - 52, true));
+      }
+    }
+
+    tweenProp(targets, props, duration) {
+      return new Promise((resolve) => {
+        const start = {};
+        for (const k of Object.keys(props)) start[k] = targets[k];
+        const t0 = performance.now();
+        const step = (now) => {
+          const t = Math.min(1, (now - t0) / duration);
+          for (const k of Object.keys(props)) {
+            targets[k] = start[k] + (props[k] - start[k]) * t;
+          }
+          if (t < 1) requestAnimationFrame(step);
+          else resolve();
+        };
+        requestAnimationFrame(step);
+      });
+    }
+
+    canSpoutWorld() {
+      const ang = Phaser.Math.DegToRad(this._can.angle);
+      const lx = -20;
+      const ly = -3;
+      const cos = Math.cos(ang);
+      const sin = Math.sin(ang);
+      return {
+        x: this._can.x + lx * cos - ly * sin,
+        y: this._can.y + lx * sin + ly * cos,
+      };
+    }
+
+    emitPourStream(targetX, targetY, bursts = 10) {
+      for (let i = 0; i < bursts; i++) {
+        setTimeout(() => {
+          if (!this._can || !this._can.visible) return;
+          const spout = this.canSpoutWorld();
+          const drop = this.track(this.add.circle(
+            spout.x + Phaser.Math.Between(-1, 1),
+            spout.y,
+            2.2 + Math.random() * 1.2,
+            0x7ec8e3,
+          ).setDepth(16).setAlpha(0.98));
+          const x1 = drop.x;
+          const y1 = drop.y;
+          const x2 = targetX + Phaser.Math.Between(-6, 6);
+          const y2 = targetY + Phaser.Math.Between(-2, 4);
+          const dur = 360 + Math.random() * 100;
+          const t0 = performance.now();
+          const step = (now) => {
+            if (!drop.active) return;
+            const t = Math.min(1, (now - t0) / dur);
+            drop.x = x1 + (x2 - x1) * t;
+            drop.y = y1 + (y2 - y1) * t;
+            drop.setAlpha(0.98 * (1 - t * 0.8));
+            if (t < 1) requestAnimationFrame(step);
+            else {
+              try { drop.destroy(); } catch (_) {}
+            }
+          };
+          requestAnimationFrame(step);
+        }, i * 70);
+      }
+    }
+
+    async pourOntoPlant(plantX, plantY, gen) {
+      if (!this.alive(gen)) return false;
+      this._can.setTexture('can_full');
+      this._can.setVisible(true);
+      this._can.setDepth(20);
+      this._can.setAngle(0);
+      this._can.setScale(1.5);
+      this.followHand(this._can, 0, -16);
+      if (!(await this.wait(350))) return false;
+      await this.tweenProp(this._can, { angle: -28, scale: 1.6 }, 650);
+      if (!this.alive(gen)) return false;
+      this.emitPourStream(plantX, plantY - 8, 16);
+      if (!(await this.wait(1400))) return false;
+      this._can.setTexture('can_empty');
+      if (!(await this.wait(500))) return false;
+      await this.tweenProp(this._can, { angle: 0, scale: 1.5 }, 420);
+      if (!(await this.wait(400))) return false;
+      return true;
+    }
+
+    async playScene(name) {
+      const gen = (this._sceneGen = (this._sceneGen || 0) + 1);
+      this._playing = name;
+      if (name !== 'loop') setCaption(name === 'work' ? 'desk' : name);
+      this.clearFx();
+      if (name === 'desk' || name === 'work') await this.sceneDesk(gen);
+      else if (name === 'skill') await this.sceneSkill(gen);
+      else if (name === 'board') await this.sceneBoard(gen);
+      else if (name === 'ship') await this.sceneShip(gen);
+      else if (name === 'water') await this.sceneWater(gen);
+      else if (name === 'coffee') await this.sceneCoffee(gen);
+      else if (name === 'loop') await this.sceneLoop(gen);
+    }
+
+    async sceneDesk(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.setPosition(400, 290);
+      this._npc.setFrame(8);
+      if (!(await this.walkTo(500, 286, 'walk_right', 800))) return;
+      if (!this.alive(gen)) return;
+      this.startDeskWork('Writing code');
+      if (!(await this.wait(1800))) return;
+      this.clearFx();
+      this.startDeskWork();
+      this.track(makeBubble(this, 'Hmm.', 500, this._npc.y - 52, true));
+      if (!(await this.wait(1000))) return;
+      this.clearFx();
+      this.startDeskWork('Back at it');
+      if (!(await this.wait(1600))) return;
+    }
+
+    async sceneSkill(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.setPosition(400, 290);
+      if (!(await this.walkTo(500, 286, 'walk_right', 700))) return;
+      if (!this.alive(gen)) return;
+      this.startDeskWork();
+      this.track(makeBubble(this, 'Looking that up…', 500, this._npc.y - 52, true));
+      if (!(await this.wait(2000))) return;
+      if (!this.alive(gen)) return;
+      this.clearFx();
+      this.startDeskWork();
+      this.track(makeBubble(this, 'Drafting a fix…', 500, this._npc.y - 52, true));
+      if (!(await this.wait(2200))) return;
+      this.track(makeBubble(this, 'Got it.', 500, this._npc.y - 68, false));
+      if (!(await this.wait(1000))) return;
+    }
+
+    async sceneBoard(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.setPosition(460, 290);
+      if (!(await this.walkTo(360, 258, 'walk_left', 800))) return;
+      if (!this.alive(gen)) return;
+      this._npc.anims.stop();
+      this._npc.setFrame(12);
+      this.track(makeBubble(this, 'Sketching this out…', 360, this._npc.y - 48, true));
+      // Soft pulse on the board — pack art already has the chart
+      this.tweens.add({
+        targets: this._board,
+        scale: 1.36,
+        duration: 220,
+        yoyo: true,
+        repeat: 1,
+      });
+      if (!(await this.wait(900))) return;
+      this.track(makeBubble(this, 'Okay — plan’s up.', 360, this._npc.y - 48, false));
+      if (!(await this.wait(1600))) return;
+    }
+
+    async sceneShip(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this.startDeskWork();
+      if (!(await this.wait(900))) return;
+      if (!this.alive(gen)) return;
+      this.clearFx();
+      this._npc.setPosition(500, 272);
+      this._npc.setFrame(0);
+      this._npc.setCrop(0, 0, 32, 34);
+      this._npc.setDepth(8);
+      this.track(makeEmote(this, '✓', 512, this._npc.y - 40));
+      this.track(makeBubble(this, 'Done.', 500, this._npc.y - 56, false));
+      if (!(await this.wait(2000))) return;
+    }
+
+    async sceneWater(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.clearTint();
+      this._npc.setPosition(280, 240);
+      this._npc.setFrame(4);
+      if (!(await this.walkTo(218, 228, 'walk_left', 500))) return;
+      if (!this.alive(gen)) return;
+      this._npc.setPosition(218, 228);
+      this._npc.setFrame(12);
+      this._can.setTexture('can_full');
+      this._can.setVisible(true);
+      this._can.setDepth(20);
+      this._can.setScale(1.55);
+      this._can.setAngle(0);
+      this._can.setPosition(this._npc.x, this._npc.y - 16);
+      await this.pourOntoPlant(this._plant.x, this._plant.y - 18, gen);
+      if (!this.alive(gen)) return;
+      this.track(makeBubble(this, 'Looking healthy.', this._npc.x, this._npc.y - 56, false));
+      if (!(await this.wait(1400))) return;
+      this.stopFollow();
+      this._can.setVisible(false);
+      if (!(await this.walkTo(400, 290, 'walk_right', 900))) return;
+      this._npc.setFrame(0);
+    }
+
+    async sceneCoffee(gen) {
+      try { this._npc.setCrop(); } catch (_) {}
+      this._npc.setScale(1.5);
+      this._npc.setPosition(360, 300);
+      this._mug.setVisible(false);
+      try { this._mug.setCrop(); } catch (_) {}
+      this._mug.setOrigin(0.5, 1);
+      if (!(await this.walkTo(188, 308, 'walk_left', 1000))) return;
+      if (!this.alive(gen)) return;
+      this._npc.setFrame(4);
+
+      this.track(makeBubble(this, 'One sec…', this._npc.x, this._npc.y - 52, true));
+      await new Promise((resolve) => {
+        this.tweens.add({
+          targets: this._machine,
+          scale: 1.95,
+          duration: 160,
+          yoyo: true,
+          repeat: 2,
+          onComplete: resolve,
+        });
+      });
+      if (!this.alive(gen)) return;
+
+      // Mug appears at the machine, then she takes it to her mouth
+      this._mug.setCrop();
+      this._mug.setOrigin(0.5, 1);
+      this._mug.setPosition(this._machine.x + 2, this._machine.y - 22);
+      this._mug.setVisible(true);
+      this._mug.setScale(1.2);
+      this._mug.setDepth(20);
+      this._mug.anims.play('mug_steam', true);
+      if (!(await this.wait(700))) return;
+
+      try { this._npc.anims.stop(); } catch (_) {}
+      this._npc.setFrame(4);
+      this.holdMugAtMouth();
+      this.track(makeBubble(this, 'Coffee.', this._npc.x, this._npc.y - 56, false));
+      if (!(await this.wait(2800))) return;
+
+      if (!(await this.walkTo(400, 290, 'walk_right', 1200))) return;
+      this._npc.setFrame(0);
+      if (!(await this.wait(800))) return;
+    }
+
+    async sceneLoop(gen) {
+      const order = ['desk', 'skill', 'board', 'ship', 'water', 'coffee'];
+      for (const key of order) {
+        if (!this.alive(gen) || this._playing !== 'loop') return;
+        setCaption('loop');
+        document.getElementById('caption').innerHTML =
+          CAPTIONS.loop + ' · now: <strong>' + key + '</strong>';
+        this.clearFx();
+        if (key === 'desk') await this.sceneDesk(gen);
+        else if (key === 'skill') await this.sceneSkill(gen);
+        else if (key === 'board') await this.sceneBoard(gen);
+        else if (key === 'ship') await this.sceneShip(gen);
+        else if (key === 'water') await this.sceneWater(gen);
+        else if (key === 'coffee') await this.sceneCoffee(gen);
+        if (!this.alive(gen) || this._playing !== 'loop') return;
+        if (!(await this.wait(700))) return;
+      }
+      if (this.alive(gen) && this._playing === 'loop') this.playScene('loop');
+    }
+  }
+
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    width: W,
+    height: H,
+    parent: 'game-host',
+    backgroundColor: '#2d3f2f',
+    scene: [MockScene],
+    pixelArt: true,
+    antialias: false,
+    roundPixels: true,
+  });
+  window.__game = game;
+
+  document.querySelectorAll('button[data-scene]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (!api) return;
+      api.play(btn.dataset.scene);
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -7,6 +7,54 @@
 /** No heavy NPC bursts (think, tour, visitor, Grok pulse) during this window. */
 const PLAY_WARMUP_MS = 90 * 1000;
 
+/** Status gem palette — one meaning per color across the whole office. */
+const STATUS_GEM_COLORS = {
+  working: 0x4ade80,  // green
+  talking: 0x60a5fa,  // blue
+  break: 0xfacc15,    // yellow
+  meeting: 0xa855f7,  // purple
+  blocked: 0xf59e0b,  // amber (pulses)
+  error: 0xef4444,    // red
+  idle: 0x94a3b8,     // gray
+};
+
+/** agent.status → gem meaning. Unlisted statuses read as idle. */
+const STATUS_GEM_KIND = {
+  working: 'working',
+  task_override: 'working',
+  reading: 'working',
+  whiteboard: 'working',
+  checking: 'working',
+  patrolling: 'working',
+  receptionist_patrol: 'working',
+  securing: 'working',
+  honeypot: 'working',
+  talking: 'talking',
+  collaborating: 'talking',
+  visiting: 'talking',
+  reporting: 'talking',
+  engaging: 'talking',
+  ceo_conversation: 'talking',
+  tour_guide: 'talking',
+  visitor_arrival: 'talking',
+  break: 'break',
+  coffee_run: 'break',
+  delivering_coffee: 'break',
+  tending: 'break',
+  meeting: 'meeting',
+  blocked: 'blocked',
+  waiting: 'blocked',
+  waiting_on_skill: 'blocked',
+  error: 'error',
+  idle: 'idle',
+  wandering: 'idle',
+};
+
+/** A skill start with no result after this long is treated as lost, not pending. */
+const SKILL_PENDING_STALE_MS = 5 * 60 * 1000;
+/** Desk reads as "medium" workload for this long after a skill run. */
+const RECENT_SKILL_MS = 3 * 60 * 1000;
+
 class AgentOfficeManager {
   /**
    * @param {Phaser.Scene} scene - The office scene
@@ -386,11 +434,15 @@ class AgentOfficeManager {
     // Everyone begins the day correctly seated at their assigned workstation.
     // Ambient routines release them gradually after the office has visibly
     // settled, which makes every later walk read as intentional.
+    // Seed a light spread of desk workload so gems + clutter read immediately
+    // (medium paper/mug, heavy both, one blocked pulse) without HUD chrome.
+    const seatedKeys = [];
     this.agents.forEach((agent, npcKey) => {
       if (agent.role === 'cofounder' && agent.assignedDesk) {
         // CTO anchors the private office
         this.actions.teleportToDesk(npcKey, agent.assignedDesk);
         agent.status = 'working';
+        seatedKeys.push(npcKey);
         this.scene.time.delayedCall(5000, () => {
           this.actions.speak(npcKey, 'Good morning team!');
         });
@@ -399,6 +451,7 @@ class AgentOfficeManager {
       if (agent.assignedDesk) {
         this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
         agent.status = 'working';
+        seatedKeys.push(npcKey);
       } else {
         // A roster entry without a usable chair must not remain frozen in the
         // boot hold forever; release only that NPC onto normal floor movement.
@@ -416,6 +469,14 @@ class AgentOfficeManager {
         agent.status = 'wandering';
       }
     });
+
+    this._seedDeskWorkloadShowcase(seatedKeys);
+    // Demo / capture: coffee + research + MCP handoff theater on a short timeline.
+    this.scene.time.delayedCall(2500, () => this._seedWorkTheaterShowcase(seatedKeys));
+    try {
+      window.__DenizenAgentManager = this;
+      window.__DenizenRunWorkTheaterDemo = () => this.runWorkTheaterDemo();
+    } catch (_) {}
 
     // Grok home welcome (desk placement handled above via teleportToDesk)
     const grok = this.agents.get('xp_grok');
@@ -1042,13 +1103,34 @@ class AgentOfficeManager {
     const pick = (lines) => lines[Math.floor(Math.random() * lines.length)];
 
     this.actions.speak(requester.npcKey, pick(requestLines));
+    try {
+      window.DenizenFloorStrip?.push?.({
+        npcKey: requester.npcKey,
+        name: requester.agent.name,
+        kind: 'status',
+        text: `Asked ${runner.agent.name} for a coffee run`,
+      });
+    } catch (_) {}
     this.scene.time.delayedCall(1800, () => {
       this.actions.speak(runner.npcKey, pick(acceptLines));
       this.actions.standUp(runner.npcKey);
       runner.agent.status = 'coffee_run';
       const sprite = this.actions._getNpc?.(runner.npcKey);
       if (sprite) sprite._purposefulWalkUntil = Date.now() + 50000;
-      this.actions.goToCoffee?.(runner.npcKey) || this.actions.goToBreakroom?.(runner.npcKey);
+      // Hold the mug through the walk back (cleared on delivery).
+      if (typeof this.actions.goToCoffee === 'function') {
+        this.actions.goToCoffee(runner.npcKey, { holdMs: null, carry: true });
+      } else {
+        this.actions.goToBreakroom?.(runner.npcKey);
+      }
+      try {
+        window.DenizenFloorStrip?.push?.({
+          npcKey: runner.npcKey,
+          name: runner.agent.name,
+          kind: 'work',
+          text: `Coffee run for ${requester.agent.name}`,
+        });
+      } catch (_) {}
     });
 
     this.scene.time.delayedCall(11500, () => {
@@ -1058,22 +1140,49 @@ class AgentOfficeManager {
     });
     this.scene.time.delayedCall(16500, () => {
       this.actions.speak(runner.npcKey, pick(deliveryLines));
+      // Drop the carried mug onto the requester's desk once they're seated.
+      const handoff = () => {
+        try {
+          this.actions.deliverCoffeeMug?.(runner.npcKey, requester.npcKey);
+        } catch (_) {
+          this.actions._clearCoffeeMug?.(runner.npcKey);
+        }
+      };
+      if (this._isAtAssignedDesk(requester.npcKey, requester.agent)) {
+        handoff();
+      } else {
+        // Seat requester first so desk clutter has a home, then place mug.
+        try {
+          this.actions.useComputer(requester.npcKey, requester.agent.assignedDesk, { instant: false });
+        } catch (_) {}
+        this.scene.time.delayedCall(900, handoff);
+      }
     });
     this.scene.time.delayedCall(18500, () => {
       this.actions.speak(requester.npcKey, pick(thanksLines));
     });
     this.scene.time.delayedCall(22000, () => {
       try {
+        this.actions._clearCoffeeMug?.(runner.npcKey);
         this.actions.useComputer(runner.npcKey, runner.agent.assignedDesk, { instant: false });
         runner.agent.status = 'working';
         this.actions.useComputer(requester.npcKey, requester.agent.assignedDesk, { instant: false });
         requester.agent.status = 'working';
+        // After they sit, make sure the delivered mug is on the desk.
+        this.scene.time.delayedCall(1200, () => {
+          try {
+            if (!this.actions._deskClutter?.get?.(requester.npcKey)?.kinds?.includes('mug')) {
+              this.actions.deliverCoffeeMug?.(runner.npcKey, requester.npcKey);
+            }
+          } catch (_) {}
+        });
       } finally {
         this._ambientCoffeeFavorActive = false;
       }
     });
     // Safety release if navigation is interrupted by another office event.
     this.scene.time.delayedCall(45000, () => {
+      try { this.actions._clearCoffeeMug?.(runner.npcKey); } catch (_) {}
       this._ambientCoffeeFavorActive = false;
     });
   }
@@ -2133,36 +2242,35 @@ class AgentOfficeManager {
   }
 
   /**
-   * Update visual status indicators (colored dots + task labels) above each NPC
+   * Update visual status indicators above each NPC: the status gem, plus
+   * workload clutter on the desk of anyone seated at one.
    */
   _updateStatusIndicators() {
+    const now = Date.now();
     this.agents.forEach((agent, npcKey) => {
       const npc = this.actions._getNpc(npcKey);
       if (!npc) return;
 
-      // Status dot color based on agent status
-      const colors = {
-        working: 0x4ade80,    // green
-        talking: 0x60a5fa,    // blue
-        collaborating: 0x60a5fa,
-        break: 0xfbbf24,      // yellow
-        meeting: 0xa855f7,    // purple
-        error: 0xef4444,      // red
-        idle: 0x94a3b8,       // gray
-        checking: 0x06b6d4,   // cyan
-        reporting: 0xf97316,  // orange
-      };
-      const color = colors[agent.status] || colors.idle;
-
-      // Create or update dot
+      const gem = this._statusGemFor(agent, now);
+      const seated = !!this.actions._sittingNpcs?.has?.(npcKey);
       let dot = this._statusDots.get(npcKey);
       if (!dot) {
-        dot = this.scene.add.circle(0, 0, 3, color);
-        dot.setDepth(9999);
+        // Radius 5 reads at office zoom; 3px gems disappeared into the pixel noise.
+        dot = this.scene.add.circle(0, 0, 5, gem.color);
+        try { dot.setStrokeStyle?.(1.5, 0x0f172a, 0.85); } catch (_) {}
+        // Under speech/thought chips (9998) and typing (9997); above nameplates (9994).
+        dot.setDepth(9995);
         this._statusDots.set(npcKey, dot);
       }
-      dot.setFillStyle(color);
-      dot.setVisible(true);
+      dot.setFillStyle(gem.color);
+      // Seated: float beside the crown (not into the monitor band).
+      const gemY = this.actions.npcFloatY?.(npc, seated ? 5 : 10) ?? (npc.y - 40);
+      const gemX = npc.x + (seated ? -12 : 0);
+      dot.setPosition(gemX, gemY);
+      dot.setVisible(npc.visible !== false);
+      this._setStatusGemPulse(dot, gem.pulse);
+
+      this.actions.setDeskClutter?.(npcKey, this._deskLoadFor(agent, npcKey, now, gem));
 
       // Task scraps were tiny gray floaters that looked like random noise
       // over desks. Thoughts/speech bubbles already carry status — hide these.
@@ -2172,6 +2280,293 @@ class AgentOfficeManager {
         this._taskLabels.delete(npcKey);
       }
     });
+  }
+
+  /** Waiting on something outside their control: approval, explicit block, or an in-flight skill. */
+  _isAgentBlocked(agent, now = Date.now()) {
+    if (!agent) return false;
+    if (STATUS_GEM_KIND[agent.status] === 'blocked') return true;
+    if ((agent._awaitingApprovalUntil || 0) > now) return true;
+    const since = agent._skillPendingSince || 0;
+    return since > 0 && now - since < SKILL_PENDING_STALE_MS;
+  }
+
+  /** Gem meaning for an agent → { kind, color, pulse }. */
+  _statusGemFor(agent, now = Date.now()) {
+    let kind;
+    if (agent?.status === 'error' || (agent?._gemErrorUntil || 0) > now) kind = 'error';
+    else if (this._isAgentBlocked(agent, now) || (agent?._skillCastUntil || 0) > now) kind = 'blocked';
+    else kind = STATUS_GEM_KIND[agent?.status] || 'idle';
+    return { kind, color: STATUS_GEM_COLORS[kind], pulse: kind === 'blocked' };
+  }
+
+  _setStatusGemPulse(dot, on) {
+    if (on && !dot._gemPulse && this.scene.tweens?.add) {
+      dot._gemPulse = this.scene.tweens.add({
+        targets: dot,
+        alpha: 0.3,
+        duration: 420,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    } else if (!on && dot._gemPulse) {
+      try { dot._gemPulse.stop(); } catch (_) {}
+      dot._gemPulse = null;
+      dot.setAlpha(1);
+    }
+  }
+
+  /**
+   * First-paint desk readability: a few seated agents get real workload markers
+   * so paper/mug clutter + gem meanings show without inventing HUD chrome.
+   * The blocked gem is an in-flight skill (`_skillPendingSince`), so it pulses
+   * now and drops back to working when SKILL_PENDING_STALE_MS elapses.
+   * Task labels stay until the think loop replaces them.
+   */
+  _seedDeskWorkloadShowcase(seatedKeys = []) {
+    const now = Date.now();
+    const keys = (seatedKeys || []).filter((k) => this.agents.get(k)?.assignedDesk);
+    if (keys.length < 2) return;
+    const mediumCount = Math.min(5, keys.length);
+    for (let i = 0; i < mediumCount; i++) {
+      const agent = this.agents.get(keys[i]);
+      if (!agent) continue;
+      if (!agent.currentTask) agent.currentTask = 'Desk work';
+      agent._lastSkillAt = now;
+      if (agent.status === 'idle' || agent.status === 'wandering' || !agent.status) {
+        agent.status = 'working';
+      }
+    }
+    const heavy = this.agents.get(keys[1]);
+    if (heavy) {
+      heavy.currentTask = 'Review mesh jobs';
+      heavy._taskLabel = 'queue';
+      heavy._lastSkillAt = now;
+      heavy.status = 'working';
+    }
+    if (keys.length >= 3) {
+      const blocked = this.agents.get(keys[2]);
+      if (blocked) {
+        // Stay `working` so the pending window can expire. Status
+        // `waiting_on_skill` would keep the amber pulse on forever.
+        blocked.status = 'working';
+        blocked._skillPendingSince = now;
+        blocked.currentTask = 'Await skill result';
+        blocked._lastSkillAt = now;
+      }
+    }
+    if (keys.length >= 4) {
+      const talking = this.agents.get(keys[3]);
+      if (talking && this.actions._sittingNpcs?.has?.(keys[3])) {
+        talking.status = 'talking';
+        if (!talking.currentTask) talking.currentTask = 'Sync';
+        talking._lastSkillAt = now;
+      }
+    }
+  }
+
+  /**
+   * Timed floor theater: researching → coffee run → research handoff carry.
+   * Safe to call from capture scripts via window.__DenizenRunWorkTheaterDemo().
+   */
+  _seedWorkTheaterShowcase(seatedKeys = []) {
+    const keys = (seatedKeys || []).filter((k) => this.agents.get(k)?.assignedDesk);
+    if (keys.length < 2) return;
+    // Prefer named seats; keep coffee-run and research-handoff on different pairs.
+    const prefer = (name) => keys.find((k) => this.NPC_NAMES?.[k] === name) || null;
+    const pick = (...names) => {
+      for (const n of names) {
+        const k = prefer(n);
+        if (k) return k;
+      }
+      return null;
+    };
+    const researcher = pick('Bob', 'Alex') || keys[0];
+    const handoffTo = pick('Jenny', 'Sarah', 'Lucy')
+      || keys.find((k) => k !== researcher)
+      || keys[1];
+    const coffeeAsker = pick('Jenny', 'Sarah') || handoffTo;
+    const coffeeRunner = pick('Alex', 'Marcus', 'Ryan')
+      || keys.find((k) => k !== coffeeAsker && k !== researcher)
+      || keys.find((k) => k !== coffeeAsker)
+      || keys[0];
+    this._playResearchingTheater(researcher, 'OMES partners / GovCon leads');
+    this.scene.time.delayedCall(3000, () => {
+      try { this._forceCoffeeFavor(coffeeRunner, coffeeAsker); } catch (_) {}
+    });
+    // After coffee delivery settles, carry the research brief across the floor.
+    this.scene.time.delayedCall(16000, () => {
+      try {
+        this._playResearchHandoffTheater(researcher, handoffTo, {
+          title: 'OMES partners brief',
+          summary: 'Shared research from MCP / ChatGPT connector',
+        });
+      } catch (_) {}
+    });
+  }
+
+  /** Public entry for demos / Playwright capture. */
+  runWorkTheaterDemo() {
+    const seated = [];
+    this.agents.forEach((agent, key) => {
+      if (agent?.assignedDesk && this.actions._sittingNpcs?.has?.(key)) seated.push(key);
+      else if (agent?.assignedDesk) seated.push(key);
+    });
+    this._seedWorkTheaterShowcase(seated);
+    return { ok: true, seated: seated.length };
+  }
+
+  _playResearchingTheater(npcKey, topic = 'Research') {
+    const agent = this.agents.get(npcKey);
+    const npc = this.actions._getNpc?.(npcKey);
+    if (!agent || !npc) return;
+    agent.status = 'working';
+    agent.currentTask = `Researching ${topic}`;
+    agent._taskLabel = 'research';
+    agent._lastSkillAt = Date.now();
+    agent._skillPendingSince = Date.now();
+    try {
+      if (agent.assignedDesk) this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
+    } catch (_) {}
+    try { this.actions.setDeskStatus?.(npcKey, 'Researching'); } catch (_) {}
+    try { this.actions.setDeskClutter?.(npcKey, 'heavy'); } catch (_) {}
+    try { this.actions._flashSkillCast?.(npc, npcKey, 'research', 4200); } catch (_) {}
+    try {
+      window.DenizenFloorStrip?.push?.({
+        npcKey,
+        name: agent.name,
+        kind: 'work',
+        text: `Researching · ${String(topic).slice(0, 40)}`,
+      });
+    } catch (_) {}
+  }
+
+  _playResearchHandoffTheater(fromKey, toKey, doc = {}) {
+    const from = this.agents.get(fromKey);
+    const to = this.agents.get(toKey);
+    if (!from || !to) return;
+    const title = doc.title || doc.summary || 'Research brief';
+    from.status = 'delivering';
+    to.status = 'talking';
+    const sprite = this.actions._getNpc?.(fromKey);
+    if (sprite) sprite._purposefulWalkUntil = Date.now() + 40000;
+    try {
+      this.actions.runResearchHandoff?.(fromKey, toKey, title);
+    } catch (_) {}
+    this.scene.time.delayedCall(12000, () => {
+      try {
+        if (from.assignedDesk) {
+          this.actions.useComputer(fromKey, from.assignedDesk, { instant: false });
+          from.status = 'working';
+        }
+        if (to.assignedDesk) {
+          this.actions.useComputer(toKey, to.assignedDesk, { instant: false });
+          to.status = 'working';
+          this.actions.setDeskClutter?.(toKey, 'heavy');
+        }
+      } catch (_) {}
+    });
+  }
+
+  /** Force a coffee favor between two specific seated agents (for demos). */
+  _forceCoffeeFavor(runnerKey, requesterKey) {
+    if (this._ambientCoffeeFavorActive) return;
+    const runner = this.agents.get(runnerKey);
+    const requester = this.agents.get(requesterKey);
+    if (!runner?.assignedDesk || !requester?.assignedDesk) return;
+    // Swap roles: requester asks, runner fetches — match ambient semantics.
+    const asker = { npcKey: requesterKey, agent: requester };
+    const fetcher = { npcKey: runnerKey, agent: runner };
+    // Prefer a third walker as runner if asker===fetcher key collision.
+    if (asker.npcKey === fetcher.npcKey) return;
+    this._ambientCoffeeFavorActive = true;
+    asker.agent.status = 'talking';
+    fetcher.agent.status = 'talking';
+    this.actions.speak(asker.npcKey, `Hey ${fetcher.agent.name}, grab me a coffee?`);
+    try {
+      window.DenizenFloorStrip?.push?.({
+        npcKey: asker.npcKey,
+        name: asker.agent.name,
+        kind: 'status',
+        text: `Asked ${fetcher.agent.name} for a coffee run`,
+      });
+    } catch (_) {}
+    this.scene.time.delayedCall(1600, () => {
+      this.actions.speak(fetcher.npcKey, 'On it.');
+      this.actions.standUp(fetcher.npcKey);
+      fetcher.agent.status = 'coffee_run';
+      const sprite = this.actions._getNpc?.(fetcher.npcKey);
+      if (sprite) sprite._purposefulWalkUntil = Date.now() + 50000;
+      this.actions.goToCoffee?.(fetcher.npcKey, { holdMs: null, carry: true });
+      try {
+        window.DenizenFloorStrip?.push?.({
+          npcKey: fetcher.npcKey,
+          name: fetcher.agent.name,
+          kind: 'work',
+          text: `Coffee run for ${asker.agent.name}`,
+        });
+      } catch (_) {}
+    });
+    this.scene.time.delayedCall(10000, () => {
+      fetcher.agent.status = 'delivering_coffee';
+      this.actions.visit?.(fetcher.npcKey, asker.npcKey);
+    });
+    this.scene.time.delayedCall(14500, () => {
+      this.actions.speak(fetcher.npcKey, 'Here you go.');
+      try {
+        if (this._isAtAssignedDesk(asker.npcKey, asker.agent)) {
+          this.actions.deliverCoffeeMug?.(fetcher.npcKey, asker.npcKey);
+        } else {
+          this.actions.useComputer(asker.npcKey, asker.agent.assignedDesk, { instant: false });
+          this.scene.time.delayedCall(800, () => {
+            this.actions.deliverCoffeeMug?.(fetcher.npcKey, asker.npcKey);
+          });
+        }
+      } catch (_) {
+        this.actions._clearCoffeeMug?.(fetcher.npcKey);
+      }
+    });
+    this.scene.time.delayedCall(16500, () => {
+      this.actions.speak(asker.npcKey, 'Thanks!');
+    });
+    this.scene.time.delayedCall(20000, () => {
+      try {
+        this.actions._clearCoffeeMug?.(fetcher.npcKey);
+        this.actions.useComputer(fetcher.npcKey, fetcher.agent.assignedDesk, { instant: false });
+        fetcher.agent.status = 'working';
+        this.actions.useComputer(asker.npcKey, asker.agent.assignedDesk, { instant: false });
+        asker.agent.status = 'working';
+      } finally {
+        this._ambientCoffeeFavorActive = false;
+      }
+    });
+    this.scene.time.delayedCall(45000, () => {
+      try { this.actions._clearCoffeeMug?.(fetcher.npcKey); } catch (_) {}
+      this._ambientCoffeeFavorActive = false;
+    });
+  }
+
+  /**
+   * Desk clutter level from agent state: idle/break → clear; blocked, error,
+   * or juggling 2+ tasks → heavy; a task label or a recent skill → medium.
+   */
+  _deskLoadFor(agent, npcKey, now = Date.now(), gem = null) {
+    if (!agent) return 'clear';
+    const kind = (gem || this._statusGemFor(agent, now)).kind;
+    if (kind === 'idle' || kind === 'break') return 'clear';
+    const queued = (this.tasks || []).filter((t) => t.agent === npcKey).length;
+    const taskCount = Math.max(queued, agent.currentTask ? 1 : 0) + (agent._taskLabel ? 1 : 0);
+    if (kind === 'error' || this._isAgentBlocked(agent, now) || taskCount >= 2) return 'heavy';
+    const recentSkill = (agent._lastSkillAt || 0) > now - RECENT_SKILL_MS;
+    if (agent._taskLabel || agent.currentTask || (agent.status === 'working' && recentSkill)) return 'medium';
+    return 'light';
+  }
+
+  _npcKeyForName(name) {
+    const want = String(name || '').toLowerCase();
+    if (!want) return null;
+    return Object.entries(this.NPC_NAMES).find(([, v]) => String(v).toLowerCase() === want)?.[0] || null;
   }
 
   /**
@@ -2446,6 +2841,12 @@ class AgentOfficeManager {
       agent._taskLabel = message.slice(0, 30);
     } else if (decision.taskPhase === 'finished') {
       agent._taskLabel = null;
+      try {
+        const shipNpc = this.actions._getNpc?.(npcKey);
+        if (shipNpc && typeof this.actions._flashShipBeat === 'function') {
+          this.actions._flashShipBeat(shipNpc, npcKey, 2800);
+        }
+      } catch (_) { /* visual only */ }
     } else if (action === 'work' && message && message !== 'Working...') {
       agent._taskLabel = message.slice(0, 30);
     }
@@ -2998,9 +3399,18 @@ class AgentOfficeManager {
         // NPC is running an OpenClaw skill — treat visually like "work" (sit at desk)
         // The skill runs server-side; the NPC picks up the result in their next think cycle.
         agent.status = 'working';
+        agent._skillCastUntil = Date.now() + 3600;
+        agent._lastSkillAt = Date.now();
         if (agent.assignedDesk) {
           this.actions.useComputer(npcKey, agent.assignedDesk);
         }
+        try {
+          const castNpc = this.actions._getNpc?.(npcKey);
+          const skillName = String(decision.skill || '');
+          if (castNpc && typeof this.actions._flashSkillCast === 'function') {
+            this.actions._flashSkillCast(castNpc, npcKey, skillName, 3600);
+          }
+        } catch (_) { /* visual only */ }
         if (message) {
           this.scene.time.delayedCall(1200, () => {
             this.actions.speak(npcKey, message);
@@ -3930,6 +4340,11 @@ class AgentOfficeManager {
         window.DenizenBrowserMirror?.onFrame?.(msg);
         break;
       case 'npc_skill_start': {
+        const pendingAgent = this.agents.get(this._npcKeyForName(msg.npcName));
+        if (pendingAgent) {
+          pendingAgent._skillPendingSince = Date.now();
+          pendingAgent._lastSkillAt = Date.now();
+        }
         // Desk skills animate at the desk; web-search keeps Lucy with the CEO.
         if (msg.skill === 'web-search') {
           window.DenizenBrowserMirror?.ingest?.({
@@ -3972,6 +4387,22 @@ class AgentOfficeManager {
           if (skillAgent?.assignedDesk) {
             try { this.actions.useComputer(skillNpcKey, skillAgent.assignedDesk); } catch (_) {}
           }
+          const topic = msg.skillParams?.query || msg.skillParams?.topic || msg.skill || 'work';
+          if (/research|search|web|brief/i.test(msg.skill || '')) {
+            this._playResearchingTheater(skillNpcKey, topic);
+          } else {
+            const spr = this.actions._getNpc?.(skillNpcKey);
+            try { this.actions._flashSkillCast?.(spr, skillNpcKey, msg.skill || 'work', 3600); } catch (_) {}
+            try { this.actions.setDeskStatus?.(skillNpcKey, 'Working'); } catch (_) {}
+            try {
+              window.DenizenFloorStrip?.push?.({
+                npcKey: skillNpcKey,
+                name: skillAgent?.name || msg.npcName,
+                kind: 'work',
+                text: `${msg.skill || 'Skill'} · running`,
+              });
+            } catch (_) {}
+          }
         }
         break;
       }
@@ -3982,6 +4413,12 @@ class AgentOfficeManager {
         const skillResultKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
+        const resultAgent = this.agents.get(skillResultKey);
+        if (resultAgent) {
+          resultAgent._skillPendingSince = 0;
+          resultAgent._lastSkillAt = Date.now();
+          if (msg.ok === false) resultAgent._gemErrorUntil = Date.now() + 8000;
+        }
         if (skillResultKey) {
           try {
             this.actions.emote(skillResultKey, msg.ok ? '✓' : '!');
@@ -3990,13 +4427,21 @@ class AgentOfficeManager {
               msg.ok ? '' : `Couldn’t finish ${msg.skill || 'that'}`,
             );
           } catch (_) {}
-          globalThis.DenizenFloorStrip?.push?.({
-            from: msg.npcName,
-            text: msg.ok ? `Finished ${msg.skill || 'the task'}` : `Couldn’t finish ${msg.skill || 'the task'}`,
-            npcKey: skillResultKey,
-            npcName: msg.npcName,
-            kind: 'work',
-          });
+          const spr = this.actions._getNpc?.(skillResultKey);
+          if (msg.ok !== false) {
+            try { this.actions._flashShipBeat?.(spr, skillResultKey, 2200); } catch (_) {}
+          }
+          try {
+            globalThis.DenizenFloorStrip?.push?.({
+              from: resultAgent?.name || msg.npcName,
+              text: msg.ok === false
+                ? `${msg.skill || 'Skill'} failed`
+                : `Finished · ${msg.skill || 'task'}`,
+              npcKey: skillResultKey,
+              npcName: resultAgent?.name || msg.npcName,
+              kind: msg.ok === false ? 'status' : 'work',
+            });
+          } catch (_) {}
         }
         // web-search/research post full replies in chat — skip robot status lines.
         if (this.scene._playerChat?.notifySkillResult) {
@@ -4078,11 +4523,29 @@ class AgentOfficeManager {
         break;
       }
       case 'research_brief_done': {
+        const who = msg.npcName || 'Bob';
+        const topic = msg.topic ? `"${msg.topic}"` : 'topic';
+        const detail = msg.path || msg.summary || msg.text || 'brief ready';
         if (this.scene._playerChat) {
-          const who = msg.npcName || 'Bob';
-          const topic = msg.topic ? `"${msg.topic}"` : 'topic';
-          const detail = msg.path || msg.summary || msg.text || 'brief ready';
           this.scene._playerChat._addToLog(who, `[research brief] ${topic}: ${detail}`);
+        }
+        const fromKey = this._npcKeyForName(who) || 'xp_bob';
+        const fromAgent = this.agents.get(fromKey);
+        try {
+          window.DenizenFloorStrip?.push?.({
+            npcKey: fromKey,
+            name: fromAgent?.name || who,
+            kind: 'work',
+            text: `Brief ready · ${String(msg.topic || 'research').slice(0, 36)}`,
+          });
+        } catch (_) {}
+        // Visible handoff: carry the brief to Lucy (CEO bridge) when no explicit target.
+        const toKey = this._npcKeyForName(msg.toNpc || msg.deliverTo) || 'xp_lucy';
+        if (fromKey && toKey && fromKey !== toKey && this.agents.get(toKey)) {
+          this._playResearchHandoffTheater(fromKey, toKey, {
+            title: msg.topic || 'Research brief',
+            summary: detail,
+          });
         }
         break;
       }
@@ -4152,6 +4615,8 @@ class AgentOfficeManager {
         const reqKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
+        const waitingAgent = this.agents.get(this._npcKeyForName(msg.onBehalfOf || msg.npcName));
+        if (waitingAgent) waitingAgent._awaitingApprovalUntil = Date.now() + 120000;
         if (reqKey) {
           try {
             // Walk toward the player (use visit action so they actually approach)
@@ -4178,6 +4643,10 @@ class AgentOfficeManager {
 
       case 'npc_permission_granted': {
         // A permission was granted — confirm it in the chat log.
+        [msg.npcName, msg.onBehalfOf].forEach((name) => {
+          const a = this.agents.get(this._npcKeyForName(name));
+          if (a) a._awaitingApprovalUntil = 0;
+        });
         if (this.scene._playerChat) {
           this.scene._playerChat._addToLog(
             'System',
@@ -4261,9 +4730,27 @@ class AgentOfficeManager {
         break;
       }
 
-      case 'assistant_handoff':
+      case 'assistant_handoff': {
         globalThis.DenizenVisitorHandoffUI?.showIncoming?.(msg);
+        const doc = msg.document || msg.handoff?.metadata?.document || msg.metadata?.document;
+        const fromNpc = msg.from_npc || msg.handoff?.from_npc || msg.metadata?.from_npc;
+        const toNpc = msg.to_npc || msg.handoff?.to_npc || msg.metadata?.to_npc;
+        const fromKey = this._npcKeyForName(fromNpc) || fromNpc;
+        const toKey = this._npcKeyForName(toNpc) || toNpc;
+        if (doc && this.agents.get(fromKey) && this.agents.get(toKey)) {
+          this._playResearchHandoffTheater(fromKey, toKey, doc);
+        } else if (doc) {
+          try {
+            window.DenizenFloorStrip?.push?.({
+              npcKey: fromKey || 'xp_lucy',
+              name: msg.from_display_name || 'Teammate',
+              kind: 'work',
+              text: `MCP handoff · ${String(doc.title || doc.summary || 'research').slice(0, 40)}`,
+            });
+          } catch (_) {}
+        }
         break;
+      }
 
       case 'skill_gap_progress':
       case 'skill_gap_complete':

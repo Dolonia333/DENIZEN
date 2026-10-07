@@ -29,6 +29,26 @@ class AgentActions {
     this.FOLLOW_STOP_DIST = 84;       // close enough — stop walking + face player
     this.FOLLOW_RETARGET_MS = 250;    // min gap between re-paths (avoid thrash)
 
+    // Seated desk work: keyboard bob + "Hmm." beats, and workload clutter props.
+    this._deskWork = new Map();       // npcKey -> loop state
+    this._deskClutter = new Map();    // npcKey -> { deskSprite, kinds, props }
+    this._deskSlotCache = new WeakMap(); // deskSprite -> { x, y, candidates }
+    this.DESK_KEY_TICK_MS = 120;
+    this.DESK_BEAT_MS = 2200;
+    this.DESK_KEY_BOB_PX = 3; // readable keyboard bob (was 1px — invisible at office zoom)
+    // Prop base offsets (bottom-center) from a desk's bottom-center anchor,
+    // measured on the pack art so props rest on the surface, not the lip/legs.
+    this.DESK_CLUTTER_GEOMETRY = {
+      cubicle_desk_front: { xs: [-34, -26, 19, 27], ys: [-14, -24] },
+      cubicle_desk_back: { xs: [-34, -26, 19, 27], ys: [-5] },
+      cubicle_desk: { xs: [-34, -26, 19, 27], ys: [-19, -32] },
+      box_desk: { xs: [-36, -26, 26, 36], ys: [-26, -45] },
+    };
+    this.DESK_PROP_FOOTPRINT = {
+      paper: { halfW: 8, h: 18 },
+      mug: { halfW: 4, h: 9 },
+    };
+
     // Room definitions — agents understand the office layout
     this.ROOMS = {
       open_office: { name: 'Open Office', xMin: 100, xMax: 800, yMin: 80, yMax: 420, purpose: 'Main workspace with cubicle desks and computers' },
@@ -416,6 +436,7 @@ class AgentActions {
     npc.ai.mode = 'agent_task';
     npc.ai.taskTarget = null;
     this._showTypingIndicator(npc, npcKey);
+    this._startDeskWorkLoop(npc, npcKey, desk);
     return true;
   }
 
@@ -426,6 +447,14 @@ class AgentActions {
     return this.queueAction(npcKey, () => {
       return new Promise((resolve) => {
         if (this.isSeatedAtDesk(npcKey, deskId)) {
+          // Already in the chair. Restart the work loop only if it died
+          // (a later useComputer used to return and leave the desk static).
+          const seated = this._getNpc(npcKey);
+          const deskNow = this._getFurniture(deskId);
+          if (seated && deskNow && !this._deskWork.has(npcKey)) {
+            this._showTypingIndicator(seated, npcKey);
+            this._startDeskWorkLoop(seated, npcKey, deskNow);
+          }
           resolve();
           return;
         }
@@ -534,6 +563,11 @@ class AgentActions {
     const sit = this._getChairSitPos(chair, desk);
     if (!sit) return;
     this._applySitPose(npc, npcKey, chair, sit, desk);
+    if (desk?.sprite) {
+      this._deskSlotCache.delete(desk.sprite);
+      this._clearDeskClutter(npcKey);
+      if (this._deskWork.has(npcKey)) this._startDeskWorkLoop(npc, npcKey, desk);
+    }
   }
 
   /**
@@ -565,6 +599,7 @@ class AgentActions {
     this._sittingNpcs.set(npcKey, {
       chairSprite: chair.sprite,
       deskSprite: desk?.sprite || null,
+      deskId: desk?.id || null,
       origDepth,
       origScaleX,
       origScaleY,
@@ -623,6 +658,8 @@ class AgentActions {
       }
     }
 
+    this._stopDeskWorkLoop(npcKey);
+    this._clearDeskClutter(npcKey);
     this._hideTypingIndicator(npcKey);
     this._hideReadingIndicator(npcKey);
     this._sittingNpcs.delete(npcKey);
@@ -994,16 +1031,36 @@ class AgentActions {
   }
 
   /**
-   * goToCoffee(npcKey) - Walk to coffee-like furniture in the breakroom.
+   * goToCoffee(npcKey, opts?) - Walk to coffee-like furniture in the breakroom,
+   * sip briefly, then carry a LimeZu mug (when preloaded).
+   * opts.holdMs — how long to keep the mug after pickup (null = until cleared).
+   * opts.carry — after a short mouth sip, pin the mug to the hand for walking.
    * Falls back to a generic breakroom spot if no match is found.
    */
-  goToCoffee(npcKey) {
+  goToCoffee(npcKey, opts = {}) {
     if (this._sittingNpcs.has(npcKey)) {
       this._standUpNpc(npcKey);
     }
+    const holdMs = Object.prototype.hasOwnProperty.call(opts, 'holdMs') ? opts.holdMs : 4200;
+    const carry = opts.carry !== false;
     const item = (this.scene._interactables || []).find(it => {
       return it.sprite && it.id && /coffee|espresso|kettle|vending|snack|fridge|microwave/i.test(it.id);
     });
+    const afterArrive = () => {
+      const npc = this._getNpc(npcKey);
+      if (!npc) return;
+      // Sip at the machine, then switch to a hand carry for the walk back.
+      this._holdCoffeeMug(npc, npcKey, { ms: holdMs, mode: 'sip' });
+      this._showEmote?.(npc, npcKey, '☕');
+      if (carry) {
+        this.scene.time.delayedCall(1400, () => {
+          if (!this._coffeeMugs?.has?.(npcKey)) return;
+          const again = this._getNpc(npcKey);
+          if (!again) return;
+          this._holdCoffeeMug(again, npcKey, { ms: holdMs, mode: 'carry' });
+        });
+      }
+    };
     if (item && item.sprite) {
       let x = item.sprite.x + Phaser.Math.Between(-12, 12);
       let y = item.sprite.y + 18 + Phaser.Math.Between(-4, 4);  // stand slightly in front
@@ -1012,9 +1069,148 @@ class AgentActions {
         const s = pf.findWalkableNear(x, y, 32);
         if (s) { x = s.x; y = s.y; }
       }
-      return this.walkTo(npcKey, x, y);
+      return this.walkTo(npcKey, x, y).then(afterArrive);
     }
-    return this.goToBreakroom(npcKey);
+    return this.goToBreakroom(npcKey).then(afterArrive);
+  }
+
+  /**
+   * Hand off a carried mug onto the recipient's desk clutter (or clear it).
+   * Returns true when a desk mug was placed.
+   */
+  deliverCoffeeMug(fromKey, toKey) {
+    this._clearCoffeeMug(fromKey);
+    return this._ensureDeskProp(toKey, 'mug');
+  }
+
+  /**
+   * Carry a research brief (paper stack) to a teammate and leave it on their desk.
+   * Used for MCP / ChatGPT research handoffs between same-org members.
+   */
+  runResearchHandoff(fromKey, toKey, topic = 'Research brief') {
+    const fromNpc = this._getNpc(fromKey);
+    if (!fromNpc || !toKey) return Promise.resolve(false);
+    if (this._sittingNpcs.has(fromKey)) this._standUpNpc(fromKey);
+    this._holdBriefFolder(fromNpc, fromKey, { ms: null });
+    try {
+      window.DenizenFloorStrip?.push?.({
+        npcKey: fromKey,
+        name: this.scene?._agentManager?.agents?.get?.(fromKey)?.name || fromKey,
+        kind: 'work',
+        text: `Handoff · ${String(topic).slice(0, 42)}`,
+      });
+    } catch (_) {}
+    const label = String(topic).slice(0, 36);
+    try { this.speak?.(fromKey, `Brief for you — ${label}`); } catch (_) {}
+    return Promise.resolve(this.visit?.(fromKey, toKey)).then(() => {
+      this.deliverHandoffBrief(fromKey, toKey);
+      try {
+        this.speak?.(fromKey, 'Research handoff delivered.');
+        this.emote?.(toKey, '📋');
+      } catch (_) {}
+      try {
+        window.DenizenFloorStrip?.push?.({
+          npcKey: toKey,
+          name: this.scene?._agentManager?.agents?.get?.(toKey)?.name || toKey,
+          kind: 'status',
+          text: `Got research handoff · ${label}`,
+        });
+      } catch (_) {}
+      return true;
+    }).catch(() => {
+      this._clearBriefFolder(fromKey);
+      return false;
+    });
+  }
+
+  deliverHandoffBrief(fromKey, toKey) {
+    this._clearBriefFolder(fromKey);
+    return this._ensureDeskProp(toKey, 'paper');
+  }
+
+  /** Ensure a desk has mug or paper clutter (forces the kind if missing). */
+  _ensureDeskProp(npcKey, kind) {
+    if (!npcKey || (kind !== 'mug' && kind !== 'paper')) return false;
+    try {
+      const sit = this._sittingNpcs.get(npcKey);
+      if (!sit?.deskSprite) return false;
+      const texOk = kind === 'mug'
+        ? !!this.scene?.textures?.exists?.('vfx_coffee_mug')
+        : !!this.scene?.textures?.exists?.('vfx_desk_papers');
+      if (!texOk) return false;
+      this.setDeskClutter(npcKey, 'medium');
+      const row = this._deskClutter.get(npcKey);
+      if (row?.kinds?.includes(kind)) return true;
+      if (!row) {
+        this.setDeskClutter(npcKey, 'heavy');
+        return !!this._deskClutter.get(npcKey)?.kinds?.includes(kind);
+      }
+      const slot = this._pickDeskClutterSlot(npcKey, sit, kind, row.slots);
+      if (!slot) return false;
+      row.kinds.push(kind);
+      row.slots.push(slot);
+      row.props.push(this._spawnDeskProp(kind, slot, sit.deskSprite, sit));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /**
+   * Hold a paper-stack "brief folder" beside the NPC until cleared.
+   */
+  _holdBriefFolder(npc, npcKey, { ms = null } = {}) {
+    if (!npc || !this.scene?.add) return null;
+    if (!this.scene.textures?.exists?.('vfx_desk_papers')) return null;
+    try {
+      this._clearBriefFolder?.(npcKey);
+      const folder = this.scene.add.image(npc.x + 10, npc.y - 4, 'vfx_desk_papers');
+      folder.setOrigin(0.5, 0.7);
+      folder.setScale(1.35);
+      folder.setDepth((npc.depth || 10) + 2);
+      const frameOf = (spr) => {
+        const fr = spr?.frame;
+        if (!fr) return 0;
+        const n = Number(fr.name);
+        if (Number.isFinite(n)) return n;
+        if (typeof fr.index === 'number') return fr.index;
+        return 0;
+      };
+      const follow = this.scene.time.addEvent({
+        delay: 40,
+        loop: true,
+        callback: () => {
+          if (!folder.active || !npc.active) return;
+          const f = frameOf(npc);
+          let ox = 10;
+          let oy = -4;
+          if (f >= 4 && f <= 7) { ox = -11; }
+          else if (f >= 8 && f <= 11) { ox = 11; }
+          else if (f >= 12) { ox = 0; oy = -8; }
+          folder.x = npc.x + ox;
+          folder.y = npc.y + oy;
+          folder.setDepth((npc.depth || 10) + 2);
+        },
+      });
+      let timer = null;
+      if (ms != null && ms > 0) {
+        timer = this.scene.time.delayedCall(ms, () => this._clearBriefFolder(npcKey));
+      }
+      if (!this._briefFolders) this._briefFolders = new Map();
+      this._briefFolders.set(npcKey, { folder, follow, timer });
+      return folder;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _clearBriefFolder(npcKey) {
+    const row = this._briefFolders?.get?.(npcKey);
+    if (!row) return;
+    try { row.follow?.remove?.(); } catch (_) {}
+    try { row.timer?.remove?.(); } catch (_) {}
+    try { row.folder?.destroy?.(); } catch (_) {}
+    this._briefFolders.delete(npcKey);
   }
 
   /**
@@ -1374,6 +1570,42 @@ class AgentActions {
 
   // ---- Visual Helpers ----
 
+  /**
+   * World Y of the top of an NPC sprite (accounts for sit-crop / scale).
+   * Fixed offsets like `npc.y - 56` land gems on monitor desks for sitters.
+   */
+  npcHeadTopY(npc) {
+    if (!npc) return 0;
+    const h = Math.max(16, npc.displayHeight || npc.height || 48);
+    const oy = (npc.originY != null) ? npc.originY : 1;
+    return npc.y - h * oy;
+  }
+
+  /** True when this sprite is in a desk/chair sit pose (cropped torso). */
+  _isSeatedSprite(npc) {
+    if (!npc) return false;
+    if (npc.ai?.taskState === 'sitting') return true;
+    for (const [key] of this._sittingNpcs) {
+      if (this._getNpc(key) === npc) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Chip / gem Y above the head. Larger `above` → higher on screen.
+   * Seated desk workers keep floats tight to the crown so gems/chips don't
+   * climb into the monitor band above a back-facing sitter.
+   */
+  npcFloatY(npc, aboveHead = 8) {
+    let above = aboveHead;
+    if (this._isSeatedSprite(npc)) {
+      // ~40% of the standing offset, never more than 12px into the desk.
+      above = Math.max(2, Math.min(12, Math.round(aboveHead * 0.4)));
+    }
+    return this.npcHeadTopY(npc) - above;
+  }
+
+
   _displayName(npcKey) {
     if (!npcKey) return '';
     if (npcKey === 'you') return 'you';
@@ -1669,6 +1901,7 @@ class AgentActions {
       align: 'center',
     });
     label.setOrigin(0.5, 0.5);
+    label.setDepth(9994);
     label.setData?.('npcKey', npcKey);
     label.setData?.('displayName', who);
     if (role && typeof label.setData === 'function') label.setData('role', String(role).trim());
@@ -1919,20 +2152,243 @@ class AgentActions {
   }
 
   /**
-   * waterPlant(npcKey) - Walk to a potted plant and "water" it.
+   * Attach a LimeZu watering-can prop, tip it, and stream droplets toward a target.
+   * No-op if the texture isn't loaded yet.
+   * @param {{x:number,y:number}|null} pourTarget world point to pour toward (plant soil)
+   */
+  _flashWateringCan(npc, npcKey, ms = 2800, pourTarget = null) {
+    if (!npc || !this.scene?.add) return null;
+    const key = 'vfx_watering_can';
+    if (!this.scene.textures?.exists?.(key)) return null;
+    try {
+      this._clearWateringCan?.(npcKey);
+      const can = this.scene.add.image(npc.x + 0, npc.y - 16, key);
+      can.setOrigin(0.78, 0.62);
+      can.setDepth((npc.depth || 10) + 2);
+      can.setScale(1.1);
+      const ox = 0;
+      const oy = -16;
+      const follow = this.scene.time.addEvent({
+        delay: 30,
+        loop: true,
+        callback: () => {
+          if (!can.active || !npc.active) return;
+          can.x = npc.x + ox;
+          can.y = npc.y + oy;
+        },
+      });
+
+      // Tip spout (left-facing can → negative angle) then pour
+      try {
+        this.scene.tweens.add({
+          targets: can,
+          angle: -28,
+          scale: 1.25,
+          duration: 650,
+          ease: 'Sine.easeInOut',
+          onComplete: () => {
+            if (!can.active) return;
+            const target = pourTarget || { x: npc.x - 12, y: npc.y - 6 };
+            for (let i = 0; i < 14; i++) {
+              this.scene.time.delayedCall(i * 80, () => {
+                if (!can.active) return;
+                const ang = Phaser.Math.DegToRad(can.angle || 0);
+                // Spout relative to handle-grip origin
+                const spoutX = can.x + (-20) * Math.cos(ang) - (-3) * Math.sin(ang);
+                const spoutY = can.y + (-20) * Math.sin(ang) + (-3) * Math.cos(ang);
+                const drop = this.scene.add.circle(
+                  spoutX,
+                  spoutY,
+                  2,
+                  0x7ec8e3,
+                  0.95,
+                );
+                drop.setDepth((npc.depth || 10) + 3);
+                this.scene.tweens.add({
+                  targets: drop,
+                  x: target.x + Phaser.Math.Between(-5, 5),
+                  y: target.y + Phaser.Math.Between(-2, 3),
+                  alpha: 0.1,
+                  duration: 340,
+                  ease: 'Quad.easeIn',
+                  onComplete: () => { try { drop.destroy(); } catch (_) {} },
+                });
+              });
+            }
+            // Swap to empty can after stream finishes
+            this.scene.time.delayedCall(1300, () => {
+              if (!can.active) return;
+              if (this.scene.textures?.exists?.('vfx_watering_can_empty')) {
+                try { can.setTexture('vfx_watering_can_empty'); } catch (_) {}
+              }
+              try {
+                this.scene.tweens.add({
+                  targets: can,
+                  angle: 0,
+                  scale: 1.1,
+                  duration: 420,
+                  ease: 'Sine.easeOut',
+                });
+              } catch (_) {}
+            });
+          },
+        });
+      } catch (_) {}
+
+      const timer = this.scene.time.delayedCall(ms, () => {
+        try { follow.remove(); } catch (_) {}
+        try { can.destroy(); } catch (_) {}
+        this._wateringCans?.delete?.(npcKey);
+      });
+      if (!this._wateringCans) this._wateringCans = new Map();
+      this._wateringCans.set(npcKey, { can, follow, timer });
+      return can;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _clearWateringCan(npcKey) {
+    const row = this._wateringCans?.get?.(npcKey);
+    if (!row) return;
+    try { row.follow?.remove?.(); } catch (_) {}
+    try { row.timer?.remove?.(); } catch (_) {}
+    try { row.can?.destroy?.(); } catch (_) {}
+    this._wateringCans.delete(npcKey);
+  }
+
+  /**
+   * Brief sip beat at the machine (legacy name kept for mock/tests).
+   */
+  _flashCoffeeMug(npc, npcKey, ms = 4200) {
+    return this._holdCoffeeMug(npc, npcKey, { ms, mode: 'sip' });
+  }
+
+  /**
+   * Hold a LimeZu coffee mug on the NPC.
+   * mode 'sip' pins to the mouth; 'carry' follows the walking hand.
+   * ms null/<=0 keeps the prop until _clearCoffeeMug.
+   */
+  _holdCoffeeMug(npc, npcKey, { ms = 4200, mode = 'sip' } = {}) {
+    if (!npc || !this.scene?.add) return null;
+    // Prefer the tight cup-only texture so it can sit on the mouth
+    const cupKey = this.scene.textures?.exists?.('vfx_coffee_cup') ? 'vfx_coffee_cup' : null;
+    const sheetKey = this.scene.textures?.exists?.('vfx_coffee_mug') ? 'vfx_coffee_mug' : null;
+    if (!cupKey && !sheetKey) return null;
+    try {
+      this._clearCoffeeMug?.(npcKey);
+      let mug;
+      // Abby face: eyes ~row 30–31 (oy≈-26), mouth pink ~32–33 (oy≈-22)
+      const mouthY = 22;
+      const handY = 6;
+      const baseY = mode === 'carry' ? handY : mouthY;
+      if (cupKey) {
+        mug = this.scene.add.image(npc.x, npc.y - baseY, cupKey);
+        // Texture top = rim on mouth (originY 0 — see mock holdMugAtMouth)
+        mug.setOrigin(0.5, mode === 'carry' ? 0.55 : 0);
+        mug.setScale(mode === 'carry' ? 1.15 : 1.3);
+        mug.setAngle(mode === 'carry' ? -8 : -15);
+      } else {
+        mug = this.scene.add.sprite(npc.x, npc.y - baseY, sheetKey, 0);
+        mug.setOrigin(0.5, mode === 'carry' ? 0.55 : 0);
+        mug.setScale(mode === 'carry' ? 1.05 : 1.15);
+        mug.setAngle(mode === 'carry' ? -8 : -15);
+        try { mug.setCrop(0, 15, 16, 17); } catch (_) {}
+      }
+      mug.setDepth((npc.depth || 10) + 2);
+
+      if (mode === 'sip') {
+        try {
+          mug.y = npc.y - 12;
+          this.scene.tweens.add({
+            targets: mug,
+            y: npc.y - mouthY,
+            duration: 280,
+            ease: 'Back.easeOut',
+          });
+        } catch (_) {}
+      }
+
+      const frameOf = (spr) => {
+        const fr = spr?.frame;
+        if (!fr) return 0;
+        const n = Number(fr.name);
+        if (Number.isFinite(n)) return n;
+        if (typeof fr.index === 'number') return fr.index;
+        return 0;
+      };
+
+      const follow = this.scene.time.addEvent({
+        delay: 40,
+        loop: true,
+        callback: () => {
+          if (!mug.active || !npc.active) return;
+          const f = frameOf(npc);
+          let ox = 0;
+          let oy = mode === 'carry' ? -handY : -mouthY;
+          if (mode === 'carry') {
+            // Hand carry: sit beside the torso while walking.
+            if (f >= 4 && f <= 7) { ox = -10; mug.setAngle(-12); }
+            else if (f >= 8 && f <= 11) { ox = 10; mug.setAngle(12); }
+            else if (f >= 12) { ox = 0; oy = -10; mug.setAngle(0); }
+            else { ox = 9; mug.setAngle(-6); }
+          } else {
+            if (f >= 4 && f <= 7) { ox = -8; mug.setAngle(-15); }
+            else if (f >= 8 && f <= 11) { ox = 8; mug.setAngle(15); }
+            else if (f >= 12) { oy = -23; mug.setAngle(0); }
+            else mug.setAngle(0);
+          }
+          mug.x = npc.x + ox;
+          mug.y = npc.y + oy;
+          mug.setDepth((npc.depth || 10) + 2);
+        },
+      });
+      let timer = null;
+      if (ms != null && ms > 0) {
+        timer = this.scene.time.delayedCall(ms, () => {
+          try { follow.remove(); } catch (_) {}
+          try { mug.destroy(); } catch (_) {}
+          this._coffeeMugs?.delete?.(npcKey);
+        });
+      }
+      if (!this._coffeeMugs) this._coffeeMugs = new Map();
+      this._coffeeMugs.set(npcKey, { mug, follow, timer, mode });
+      return mug;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _clearCoffeeMug(npcKey) {
+    const row = this._coffeeMugs?.get?.(npcKey);
+    if (!row) return;
+    try { row.follow?.remove?.(); } catch (_) {}
+    try { row.timer?.remove?.(); } catch (_) {}
+    try { row.mug?.destroy?.(); } catch (_) {}
+    this._coffeeMugs.delete(npcKey);
+  }
+
+  /**
+   * waterPlant(npcKey) - Walk to a potted plant and pour into it.
+   * Visual: tip LimeZu can + droplet stream (when preloaded) + 💦 emote.
    */
   waterPlant(npcKey) {
     const plant = this._findFurnitureByKind(/plant|flora|pot|fern|bush/i);
     if (!plant) {
       // No plant placed — still look purposeful: short breakroom stretch.
-      return this.goToBreakroom(npcKey).then(() => this.emote(npcKey, '💧'));
+      return this.goToBreakroom(npcKey).then(() => this.emote(npcKey, '💦'));
     }
     return this._approachFurniture(npcKey, plant, {
       offsetY: 22,
-      dwellMs: 3200,
+      dwellMs: 3600,
       face: 'up',
       onArrive: () => {
-        this._showEmote?.(this._getNpc(npcKey), npcKey, '💧');
+        const npc = this._getNpc(npcKey);
+        const soil = plant.sprite
+          ? { x: plant.sprite.x, y: plant.sprite.y - 8 }
+          : null;
+        this._flashWateringCan(npc, npcKey, 3200, soil);
+        this._showEmote?.(npc, npcKey, '💦');
       },
     }).then(() => {
       const npc = this._getNpc(npcKey);
@@ -1955,9 +2411,470 @@ class AgentActions {
       dwellMs: 4500,
       face: 'up',
       onArrive: () => {
-        this._showEmote?.(this._getNpc(npcKey), npcKey, '✎');
+        const npc = this._getNpc(npcKey);
+        this._showEmote?.(npc, npcKey, '✎');
+        this._flashBoardReveal(board.sprite || board, 3600);
       },
     }).then(() => this.think(npcKey, note || 'Jotting this down…'));
+  }
+
+  /**
+   * Soft reveal on a whiteboard — prefer swapping to a drawn board texture
+   * from the pack; fall back to a brief thought only (no freehand HUD lines).
+   */
+  _flashBoardReveal(boardSprite, ms = 3600) {
+    if (!boardSprite || !this.scene?.textures) return null;
+    try {
+      const drawnKey = this.scene.textures.exists('vfx_whiteboard_drawn')
+        ? 'vfx_whiteboard_drawn'
+        : (this.scene.textures.exists('whiteboard_line_chart') ? 'whiteboard_line_chart' : null);
+      if (!drawnKey || !boardSprite.setTexture) {
+        return null;
+      }
+      const prevKey = boardSprite.texture?.key;
+      const prevFrame = boardSprite.frame?.name;
+      boardSprite.setTexture(drawnKey);
+      this.scene.time.delayedCall(ms, () => {
+        try {
+          if (prevKey) boardSprite.setTexture(prevKey, prevFrame);
+        } catch (_) {}
+      });
+      return boardSprite;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /**
+   * Quiet run_skill tell — one thought line matching office bubble style.
+   */
+  _flashSkillCast(npc, npcKey, skill = '', ms = 3600) {
+    if (!npc) return null;
+    try {
+      const kind = /cod|github|desktop|build/i.test(skill) ? 'coding'
+        : /research|search|web|browser/i.test(skill) ? 'research'
+          : 'work';
+      const line = kind === 'research' ? 'Looking that up…'
+        : kind === 'coding' ? 'Drafting a fix…'
+          : 'Working…';
+      this.think(npcKey, line);
+      // Seated NPCs already own their typing dots via the desk work loop.
+      if (!this._deskWork.has(npcKey)) {
+        this._showTypingIndicator?.(npc, npcKey);
+        this.scene?.time?.delayedCall?.(ms, () => {
+          if (!this._deskWork.has(npcKey)) this._hideTypingIndicator?.(npcKey);
+        });
+      }
+      return true;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /**
+   * taskPhase finished — small check emote + short speech (no confetti HUD).
+   */
+  _flashShipBeat(npc, npcKey, ms = 2200) {
+    if (!npc) return null;
+    try {
+      this._showEmote?.(npc, npcKey, '✓');
+      this._showSpeechBubble?.(npc, npcKey, 'Done.', 'speech', ms);
+      return true;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ---- Seated desk work loop ----
+
+  _deskNow() {
+    return this.scene?.time?.now ?? Date.now();
+  }
+
+  /** The computer / laptop setup standing on a desk (parented child first). */
+  _findDeskSetupSprite(desk) {
+    const deskSprite = desk?.sprite;
+    if (!deskSprite) return null;
+    const halfW = (deskSprite.displayWidth || 96) / 2;
+    const h = deskSprite.displayHeight || 32;
+    let best = null;
+    let bestScore = Infinity;
+    for (const it of this.scene?._interactables || []) {
+      if (!it?.sprite || it.sprite === deskSprite) continue;
+      const id = String(it.id || '');
+      if (!/desk_setup|monitor|laptop|computer|keyboard/i.test(id) || /floor/i.test(id)) continue;
+      const parented = !!desk.instanceId && it.parentInstanceId === desk.instanceId;
+      const dx = Math.abs(it.sprite.x - deskSprite.x);
+      const dy = it.sprite.y - deskSprite.y;
+      if (!parented && (dx > halfW || dy < -h || dy > 8)) continue;
+      const score = parented ? -1 : dx + Math.abs(dy);
+      if (score < bestScore) {
+        best = it.sprite;
+        bestScore = score;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * While seated: bursty 1px keyboard bob on the desk setup, and every so often
+   * a "Hmm." beat — typing dots pause for a short stare, then typing resumes.
+   */
+  _startDeskWorkLoop(npc, npcKey, desk) {
+    this._stopDeskWorkLoop(npcKey);
+    if (!npc || !this.scene?.time?.addEvent) return null;
+    const st = {
+      npc,
+      setup: this._findDeskSetupSprite(desk),
+      pressed: false,
+      burstLeft: 0,
+      restUntil: 0,
+      beatUntil: 0,
+      nextBeatAt: this._deskNow() + this._deskBeatGap(true),
+      timer: null,
+    };
+    st.timer = this.scene.time.addEvent({
+      delay: this.DESK_KEY_TICK_MS,
+      loop: true,
+      callback: () => this._tickDeskWork(npcKey),
+    });
+    this._deskWork.set(npcKey, st);
+    return st;
+  }
+
+  _stopDeskWorkLoop(npcKey) {
+    const st = this._deskWork.get(npcKey);
+    if (!st) return;
+    try { st.timer?.remove?.(); } catch (_) {}
+    this._setDeskSetupPressed(st, false);
+    this._deskWork.delete(npcKey);
+  }
+
+  /** ms until the next "Hmm." beat — the first one lands soon so the floor reads. */
+  _deskBeatGap(first = false) {
+    return first ? 3500 + Math.random() * 2500 : 12000 + Math.random() * 16000;
+  }
+
+  _tickDeskWork(npcKey) {
+    const st = this._deskWork.get(npcKey);
+    if (!st) return;
+    if (!st.npc?.active || !this._sittingNpcs.has(npcKey)) {
+      this._stopDeskWorkLoop(npcKey);
+      return;
+    }
+    const now = this._deskNow();
+    if (st.beatUntil) {
+      if (now < st.beatUntil) return;
+      st.beatUntil = 0;
+      st.nextBeatAt = now + this._deskBeatGap();
+      this._showTypingIndicator(st.npc, npcKey);
+      return;
+    }
+    if (now >= st.nextBeatAt) {
+      if (this._speechBubbles.has(npcKey)) {
+        st.nextBeatAt = now + 4000;
+      } else {
+        this._setDeskSetupPressed(st, false);
+        this._hideTypingIndicator(npcKey);
+        this._showSpeechBubble(st.npc, npcKey, 'Hmm.', 'thought', this.DESK_BEAT_MS - 200);
+        st.beatUntil = now + this.DESK_BEAT_MS;
+        return;
+      }
+    }
+    if (now < st.restUntil) return;
+    if (st.burstLeft <= 0) st.burstLeft = 3 + Math.floor(Math.random() * 4);
+    const press = !st.pressed;
+    this._setDeskSetupPressed(st, press);
+    if (!press) {
+      st.burstLeft -= 1;
+      if (st.burstLeft <= 0) st.restUntil = now + 500 + Math.random() * 1100;
+    }
+  }
+
+  _setDeskSetupPressed(st, pressed) {
+    const s = st?.setup;
+    if (!s || typeof s.setOrigin !== 'function' || st.pressed === pressed) return;
+    st.pressed = pressed;
+    if (!s.active) return;
+    if (s._deskBobOriginY == null) s._deskBobOriginY = s.originY ?? 1;
+    const h = s.displayHeight || s.height || 0;
+    const bob = this.DESK_KEY_BOB_PX || 3;
+    // Nudge the render origin, never .y — layout saves persist sprite.x/y.
+    const oy = pressed && h ? s._deskBobOriginY - bob / h : s._deskBobOriginY;
+    s.setOrigin(s.originX ?? 0.5, oy);
+  }
+
+  // ---- Desk workload clutter ----
+
+  /**
+   * Pack props on the NPC's current desk that read as workload:
+   * light/clear → nothing, medium → paper stack or mug, heavy → both.
+   */
+  setDeskClutter(npcKey, load) {
+    const sit = this._sittingNpcs.get(npcKey);
+    const deskSprite = sit?.deskSprite || null;
+    const kinds = deskSprite ? this._deskClutterKinds(npcKey, load) : [];
+    let row = this._deskClutter.get(npcKey);
+    if (row && row.deskSprite !== deskSprite) {
+      this._clearDeskClutter(npcKey);
+      row = null;
+    }
+    if (!kinds.length) {
+      this._clearDeskClutter(npcKey);
+      return [];
+    }
+    if (!row) {
+      row = { deskSprite, kinds: [], slots: [], props: [] };
+      this._deskClutter.set(npcKey, row);
+    }
+    let keep = 0;
+    while (keep < row.kinds.length && keep < kinds.length && row.kinds[keep] === kinds[keep]) {
+      const kept = row.props[keep];
+      // A missed slot (occluders not ready, texture not loaded) must retry
+      // on the next indicator tick instead of sticking as a hole.
+      if (!kept || kept.active === false) break;
+      keep += 1;
+    }
+    row.props.splice(keep).forEach((p) => { try { p?.destroy?.(); } catch (_) {} });
+    row.slots.length = keep;
+    row.kinds.length = keep;
+    for (let i = keep; i < kinds.length; i++) {
+      const slot = this._pickDeskClutterSlot(npcKey, sit, kinds[i], row.slots);
+      row.kinds.push(kinds[i]);
+      row.slots.push(slot);
+      row.props.push(slot ? this._spawnDeskProp(kinds[i], slot, deskSprite, sit) : null);
+    }
+    return row.props.filter(Boolean);
+  }
+
+  _clearDeskClutter(npcKey) {
+    const row = this._deskClutter.get(npcKey);
+    if (!row) return;
+    row.props.forEach((p) => { try { p?.destroy?.(); } catch (_) {} });
+    this._deskClutter.delete(npcKey);
+  }
+
+  _deskClutterKinds(npcKey, load) {
+    if (load !== 'medium' && load !== 'heavy') return [];
+    const tex = this.scene?.textures;
+    const has = {
+      paper: !!tex?.exists?.('vfx_desk_papers'),
+      mug: !!tex?.exists?.('vfx_coffee_mug'),
+    };
+    // Stable per-NPC order so medium → heavy only adds the second prop.
+    let h = 0;
+    for (const ch of String(npcKey)) h = (h * 31 + ch.charCodeAt(0)) | 0;
+    const order = (h & 1) ? ['mug', 'paper'] : ['paper', 'mug'];
+    return order.filter((k) => has[k]).slice(0, load === 'heavy' ? 2 : 1);
+  }
+
+  _pickDeskClutterSlot(npcKey, sit, kind, taken = []) {
+    const desk = sit?.deskSprite;
+    if (!desk) return null;
+    const candidates = this._deskClutterCandidates(sit, this._getNpc(npcKey));
+    const used = taken.filter(Boolean);
+    const side = used.length ? Math.sign(used[0].dx) : 0;
+    const free = candidates.filter((c) => c.blocked[kind] <= 0.12
+      && used.every((u) => Math.abs(u.x - c.x) >= 18 || Math.abs(u.y - c.y) >= 14));
+    free.sort((a, b) => {
+      const sideA = side && Math.sign(a.dx) === side ? 1 : 0;
+      const sideB = side && Math.sign(b.dx) === side ? 1 : 0;
+      // Prefer outer desk edges (clear of dual monitors) so props read.
+      return (sideA - sideB)
+        || (a.blocked[kind] - b.blocked[kind])
+        || (Math.abs(b.dx) - Math.abs(a.dx))
+        || (a.row - b.row);
+    });
+    return free[0] || null;
+  }
+
+  /** Candidate prop bases on a desk, scored against whatever already covers it. */
+  _deskClutterCandidates(sit, npc) {
+    const desk = sit.deskSprite;
+    const cached = this._deskSlotCache.get(desk);
+    if (cached && cached.x === desk.x && cached.y === desk.y) return cached.candidates;
+    const w = desk.displayWidth || 96;
+    const h = desk.displayHeight || 32;
+    const known = this.DESK_CLUTTER_GEOMETRY[sit.deskId];
+    const sx = (desk.flipX ? -1 : 1) * Math.abs(desk.scaleX || 1);
+    const sy = Math.abs(desk.scaleY || 1);
+    const geo = known
+      ? { xs: known.xs.map((dx) => dx * sx), ys: known.ys.map((dy) => dy * sy) }
+      : {
+        xs: [-0.34, -0.26, 0.2, 0.28].map((f) => f * w),
+        ys: [-0.38, -0.62].map((f) => f * h),
+      };
+    const occluders = this._deskOccluders(desk, sit, npc);
+    const candidates = [];
+    geo.ys.forEach((dy, row) => {
+      geo.xs.forEach((dx) => {
+        const x = Math.round(desk.x + dx);
+        const y = Math.round(desk.y + dy);
+        if (!this._deskSurfaceUnder(desk, x, y)) return;
+        candidates.push({
+          x,
+          y,
+          dx: Math.round(dx),
+          row,
+          blocked: {
+            paper: this._deskFootprintBlocked(occluders, x, y, this.DESK_PROP_FOOTPRINT.paper),
+            mug: this._deskFootprintBlocked(occluders, x, y, this.DESK_PROP_FOOTPRINT.mug),
+          },
+        });
+      });
+    });
+    this._deskSlotCache.set(desk, { x: desk.x, y: desk.y, candidates });
+    return candidates;
+  }
+
+  _deskOccluders(desk, sit, npc) {
+    const halfW = (desk.displayWidth || 96) / 2;
+    const top = desk.y - (desk.displayHeight || 32);
+    const deskEntry = (this.scene?._interactables || []).find((it) => it?.sprite === desk) || null;
+    const out = [];
+    for (const it of this.scene?._interactables || []) {
+      const s = it?.sprite;
+      if (!s || s === desk || s.visible === false) continue;
+      if (it.def?.type === 'surface' || it.def?.type === 'floor') continue;
+      if (it.def?.wall_mount || it.def?._placement?.wallMount) continue;
+      // Cubicle walls sit behind the desktop. Props are meant to draw in
+      // front of them; treating the divider as solid left every monitor
+      // desk with zero legal slots.
+      const iid = String(it.id || '');
+      if (it.def?.type === 'partition' || /divider|partition/i.test(iid)) continue;
+      if (this._isOwnDeskSetup(it, desk, deskEntry?.instanceId)) continue;
+      if (Math.abs(s.x - desk.x) > halfW + (s.displayWidth || 0) / 2) continue;
+      const sTop = s.y - (s.displayHeight || 0) * (s.originY ?? 1);
+      const sBottom = sTop + (s.displayHeight || 0);
+      if (sBottom < top || sTop > desk.y) continue;
+      out.push({ sprite: s });
+    }
+    if (sit.chairSprite && !out.some((o) => o.sprite === sit.chairSprite)) {
+      out.push({ sprite: sit.chairSprite });
+    }
+    // Front-facing sitters render over the counter; keep props out of their lap.
+    if (npc && sit.chairInfo && !sit.chairInfo.backFacing) {
+      out.push({ rect: { x0: npc.x - 14, x1: npc.x + 14, y0: npc.y - 36, y1: npc.y } });
+    }
+    return out;
+  }
+
+  _deskSurfaceUnder(desk, x, y) {
+    return [-3, 0, 3].every((ox) => {
+      const a = this._spriteAlphaAt(desk, x + ox, y - 2);
+      return a == null || a > 24;
+    });
+  }
+
+  _deskFootprintBlocked(occluders, x, y, fp) {
+    if (!occluders.length) return 0;
+    let hits = 0;
+    let total = 0;
+    for (let oy = 1; oy <= fp.h; oy += 3) {
+      for (let ox = -fp.halfW; ox <= fp.halfW; ox += 3) {
+        total += 1;
+        const px = x + ox;
+        const py = y - oy;
+        const hit = occluders.some((o) => (o.rect
+          ? px >= o.rect.x0 && px <= o.rect.x1 && py >= o.rect.y0 && py <= o.rect.y1
+          : (this._spriteAlphaAt(o.sprite, px, py) || 0) > 24));
+        if (hit) hits += 1;
+      }
+    }
+    return total ? hits / total : 0;
+  }
+
+  /**
+   * The monitor/laptop rig that belongs on this desk. Clutter is supposed to
+   * sit on that same surface (and draws just in front of it). Counting the
+   * rig as an occluder rejected every corner of a stock workstation.
+   * A neighbor's setup, still centered on the next desk, keeps blocking.
+   */
+  _isOwnDeskSetup(it, deskSprite, deskInstanceId) {
+    const id = String(it?.id || '');
+    if (!/desk_setup|monitor|laptop|keyboard/i.test(id) || /floor/i.test(id)) return false;
+    if (deskInstanceId && it.parentInstanceId === deskInstanceId) return true;
+    const reach = (deskSprite?.displayWidth || 96) * 0.35;
+    return Math.abs((it.sprite?.x ?? 0) - (deskSprite?.x ?? 0)) <= reach;
+  }
+
+  /** Texture alpha under a world point (null when the renderer can't say). */
+  _spriteAlphaAt(sprite, wx, wy) {
+    const tex = this.scene?.textures;
+    if (!sprite?.frame || typeof tex?.getPixelAlpha !== 'function') return null;
+    try {
+      if (sprite.rotation) {
+        const b = sprite.getBounds?.();
+        return b?.contains?.(wx, wy) ? 255 : 0;
+      }
+      const w = sprite.width || sprite.frame.realWidth || 0;
+      const h = sprite.height || sprite.frame.realHeight || 0;
+      let lx = (wx - sprite.x) / (sprite.scaleX || 1) + (sprite.originX ?? 0.5) * w;
+      let ly = (wy - sprite.y) / (sprite.scaleY || 1) + (sprite.originY ?? 0.5) * h;
+      if (sprite.flipX) lx = w - lx;
+      if (sprite.flipY) ly = h - ly;
+      if (lx < 0 || ly < 0 || lx >= w || ly >= h) return 0;
+      const px = Math.min(w - 1, Math.floor(lx));
+      const py = Math.min(h - 1, Math.floor(ly));
+      return tex.getPixelAlpha(px, py, sprite.texture?.key, sprite.frame.name) || 0;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _spawnDeskProp(kind, slot, deskSprite, sit = null) {
+    const add = this.scene?.add;
+    if (!add) return null;
+    try {
+      let prop;
+      if (kind === 'mug') {
+        prop = add.sprite(slot.x, slot.y, 'vfx_coffee_mug', 0);
+        // Mug body ends on row 25 of the 16x32 frame; steam rises above it.
+        prop.setOrigin(0.5, 26 / 32);
+        prop.setScale(1.75);
+        if (this._ensureDeskMugSteam()) {
+          prop.play?.({ key: 'vfx_desk_mug_steam', startFrame: Math.floor(Math.random() * 7) });
+        }
+      } else {
+        prop = add.image(slot.x, slot.y, 'vfx_desk_papers');
+        prop.setOrigin(0.5, 1);
+        prop.setScale(1.55);
+      }
+      // Draw above the monitor/laptop rig on this desk — otherwise props vanish
+      // under dual screens and look like "nothing was added."
+      const deskEntry = (this.scene?._interactables || []).find((it) => it?.sprite === deskSprite) || null;
+      const deskObj = {
+        sprite: deskSprite,
+        instanceId: sit?.deskId || deskEntry?.instanceId || null,
+      };
+      const setup = this._findDeskSetupSprite(deskObj);
+      const ownDepths = (this.scene?._interactables || [])
+        .filter((it) => it?.sprite && this._isOwnDeskSetup(it, deskSprite, deskObj.instanceId))
+        .map((it) => it.sprite.depth || 0);
+      const baseDepth = Math.max(deskSprite?.depth || 2, setup?.depth || 0, ...ownDepths, 0);
+      prop.setDepth(baseDepth + 2.5);
+      return prop;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _ensureDeskMugSteam() {
+    const anims = this.scene?.anims;
+    if (!anims?.create) return false;
+    if (anims.exists?.('vfx_desk_mug_steam')) return true;
+    try {
+      anims.create({
+        key: 'vfx_desk_mug_steam',
+        frames: anims.generateFrameNumbers('vfx_coffee_mug', { frames: [0, 1, 2, 3, 4, 5, 0] }),
+        frameRate: 7,
+        repeat: -1,
+        repeatDelay: 400,
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /**
