@@ -87,12 +87,14 @@ describe('npc-mcp-gateway', () => {
   });
 
   it('exports core MCP action tools', () => {
-    assert.equal(gateway.TOOL_DEFINITIONS.length, 9);
+    assert.equal(gateway.TOOL_DEFINITIONS.length, 14);
     const names = gateway.TOOL_DEFINITIONS.map((t) => t.name);
     assert.ok(names.includes('run_skill'));
     assert.ok(names.includes('get_skill_job'));
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('assign_task'));
+    assert.ok(names.includes('browser_begin'));
+    assert.ok(names.includes('browser_step'));
   });
 
   it('toolsForScope includes team tools for all NPCs', () => {
@@ -234,7 +236,7 @@ describe('npc-mcp-gateway', () => {
   it('buildOpenApiSpec documents REST sync paths', () => {
     const spec = gateway.buildOpenApiSpec('http://localhost:8080');
     assert.equal(spec.openapi, '3.1.0');
-    assert.equal(spec.info.version, '2.1.0');
+    assert.equal(spec.info.version, '2.3.0');
     assert.ok(spec.paths['/api/npc-sync/status']);
     assert.ok(spec.paths['/api/npc-sync/list-skills']);
     assert.ok(spec.paths['/api/npc-sync/skill-job']);
@@ -244,10 +246,14 @@ describe('npc-mcp-gateway', () => {
     assert.ok(spec.paths['/api/npc-sync/team-standup']);
     assert.ok(spec.paths['/api/npc-sync/handoffs']);
     assert.ok(spec.paths['/api/npc-sync/ack-handoff']);
+    assert.ok(spec.paths['/api/npc-sync/browser-begin']);
+    assert.ok(spec.paths['/api/npc-sync/browser-step']);
     assert.equal(spec.paths['/api/npc-sync/list-skills'].get.operationId, 'listNpcSkills');
     assert.equal(spec.paths['/api/npc-sync/skill-job'].get.operationId, 'getSkillJob');
     assert.equal(spec.paths['/api/npc-sync/run-skill'].post.operationId, 'runNpcSkill');
     assert.equal(spec.paths['/api/npc-sync/team-standup'].get.operationId, 'getTeamStandup');
+    assert.equal(spec.paths['/api/npc-sync/browser-begin'].post.operationId, 'browserBegin');
+    assert.equal(spec.paths['/api/npc-sync/browser-step'].post.operationId, 'browserStep');
   });
 
   it('onboarding tells ChatGPT to run skills itself (not assign local NPC)', () => {
@@ -262,7 +268,11 @@ describe('npc-mcp-gateway', () => {
     assert.match(payload.chatgpt.gpt_instructions, /listNpcSkills/i);
     assert.match(payload.chatgpt.gpt_instructions, /getTeamStandup/i);
     assert.match(payload.chatgpt.gpt_instructions, /listHandoffs/i);
+    assert.match(payload.chatgpt.gpt_instructions, /browserBegin/);
+    assert.match(payload.chatgpt.gpt_instructions, /browserStep/);
     assert.ok(payload.rest_sync.team_standup_url);
+    assert.ok(payload.rest_sync.browser_begin_url);
+    assert.ok(payload.rest_sync.browser_step_url);
   });
 
   it('REST GET /list-skills returns allowed skills', async () => {

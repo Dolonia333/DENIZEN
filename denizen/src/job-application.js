@@ -376,6 +376,8 @@ async function applyByWebForm(job, { broadcast, provider } = {}) {
     broadcast,
     provider: provider || job.provider || null,
     browserMode: process.env.LUCY_BROWSER_MODE || 'auto',
+    taskMode: 'job-apply',
+    mirror: true,
   }).then(result => {
     _appendLog({
       kind: result.ok ? 'computer-use-done' : 'computer-use-failed',

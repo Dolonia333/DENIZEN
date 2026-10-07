@@ -182,6 +182,7 @@ const BY_NAME = {
     intro: "I handle your email, job applications, and your whole PC — just tell me what to open or where to go.",
     canDo: [
       'Control your PC (desktop-agent): open apps, click, type, fill forms',
+      'Computer-use in my live Playwright browser (Muse/Grok-style multi-step web tasks)',
       'Search the web in my visible Playwright browser',
       'Apply to jobs (draft email or fill forms — you click Send)',
       'Triage website intakes and leads from Supabase (intake-triage, lead-monitor)',
@@ -190,8 +191,8 @@ const BY_NAME = {
       'Triage inbox, draft replies, and run office tours',
       'Introduce any teammate and chain research with Bob',
     ],
-    askMe: ['Search remote AI jobs', 'Open my browser', 'Apply to Acme for engineer role', 'Check my email'],
-    skills: ['desktop-agent', 'web-search', 'browserclaw', 'job-scraper', 'job-applier', 'screen-observe', 'intake-triage', 'lead-monitor', 'client-lookup', 'prediction-brief', 'intake-to-client', 'visitor-claim', 'assistant-handoff', 'rfp-status'],
+    askMe: ['Search remote AI jobs', 'Open my browser', 'Fill this form in your browser', 'Apply to Acme for engineer role', 'Check my email'],
+    skills: ['desktop-agent', 'computer-use', 'web-search', 'browserclaw', 'job-scraper', 'job-applier', 'screen-observe', 'intake-triage', 'lead-monitor', 'client-lookup', 'prediction-brief', 'intake-to-client', 'visitor-claim', 'assistant-handoff', 'rfp-status'],
   },
   Bouncer: {
     role: 'Security Guard',

@@ -63,6 +63,7 @@ describe('Jelly skill-registry', () => {
     assert.ok(names.includes('supabase'));
     assert.ok(names.includes('github'));
     assert.ok(names.includes('job-pipeline'));
+    assert.ok(names.includes('computer-use'));
     assert.ok(names.includes('consult-grok'));
     assert.ok(names.includes('consult-mentors'));
   });
@@ -72,6 +73,7 @@ describe('Jelly skill-registry', () => {
     assert.ok(registry.has('supabase-bridge'));
     assert.ok(registry.has('get-quote'));
     assert.ok(registry.has('nmap'));
+    assert.ok(registry.has('computer-use-agent'));
   });
 });
 

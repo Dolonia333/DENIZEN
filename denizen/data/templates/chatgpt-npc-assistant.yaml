@@ -38,6 +38,17 @@ gpt_instructions: |
   4. Summarize output for the user
   5. Optionally logNpcActivity
 
+  Browser eyes (DEFAULT for web — no API keys; YOU are the referee):
+  1. browserBegin { url or query } — opens Lucy's browser and returns the first real screenshot
+  2. Describe ONLY what that screenshot shows (URL, title, visible buttons/text). Never invent UI.
+  3. browserStep { type, x, y | text | key } — ONE action + fresh AFTER screenshot
+  4. Describe the AFTER screenshot. If wrong, browserStep to correct. If done, summarize verified facts.
+  5. Never say a click/type succeeded without describing the AFTER frame from browserStep.
+  6. Prefer browserBegin + browserStep over browserOpen / browserAct alone.
+  7. Do NOT use runNpcSkill computer-use for web work when browserBegin/browserStep work.
+  8. Local LM Studio vision is optional backup only; ChatGPT Plus remains the referee.
+  9. Human can watch the same feed in Denizen 🌐 (Watch / Drive / Point).
+
   Memory / status:
   - NPC-only status: getNpcStatus
   - Lasting context: updateNpcMemory (under 200 words, factual)
@@ -61,6 +72,11 @@ actions:
   - updateNpcMemory
   - logNpcActivity
   - runNpcSkill
+  - browserBegin
+  - browserStep
+  - browserOpen
+  - browserScreenshot
+  - browserAct
 
 example_run_skill_payload:
   skill: studio-board-working-set
@@ -71,6 +87,15 @@ example_business_studio_payload:
   skill: business-studio-brief
   wait: false
   params: {}
+
+example_browser_begin_payload:
+  url: "https://example.com/jobs"
+  wait_ms: 2500
+
+example_browser_step_payload:
+  type: click
+  x: 640
+  y: 420
 
 example_poll_payload:
   job_id: "skj_…"

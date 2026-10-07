@@ -176,7 +176,7 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=mapSpace1/);
+    assert.match(html, /player-chat\.js\?v=computerUse1/);
     assert.match(html, /mobile-controls\.js\?v=mapSpace1/);
   });
 

@@ -222,6 +222,7 @@ function isLucyStaffIntent(text) {
     || extractJobBoardSearchIntent(raw)
     || extractResearchBriefIntent(raw)
     || extractResearchQueueIntent(raw)
+    || extractComputerUseIntent(raw) || extractComputerUseIntent(norm)
   );
 }
 
@@ -248,6 +249,7 @@ function isDenizenNativeIntent(text) {
     || extractJobBoardSearchIntent(raw)
     || extractScreenObserveIntent(raw)
     || extractScreenControlIntent(raw)
+    || extractComputerUseIntent(raw)
     || extractResearchQueueIntent(raw)
     || extractResearchBriefIntent(raw)
   );
@@ -520,6 +522,61 @@ function extractBareSearchTopic(text) {
 }
 
 /**
+ * Pull a URL from player text for computer-use start navigation.
+ * @param {string} text
+ * @returns {string|null}
+ */
+function _extractUrlFromText(text) {
+  const m = String(text || '').match(/https?:\/\/[^\s<>"']+/i);
+  if (!m) return null;
+  return m[0].replace(/[),.]+$/, '');
+}
+
+/**
+ * CEO wants Lucy to drive her Playwright browser (computer-use), not the
+ * CEO's whole desktop. Muse/Grok-style: arbitrary multi-step browser tasks.
+ * @param {string} text
+ * @returns {{ instruction: string, url: string|null }|null}
+ */
+function extractComputerUseIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+  if (extractOpenBraveIntent(raw)) return null;
+  // Whole-desktop / "my screen" stays on desktop-agent.
+  if (/\b(?:on my (?:screen|pc|computer|machine|desktop)|use my (?:pc|computer|screen)|take over (?:my )?(?:screen|computer|pc)|control my (?:screen|computer|mouse|keyboard|desktop)|cowork|co-work)\b/i.test(raw)) {
+    return null;
+  }
+
+  const url = _extractUrlFromText(raw);
+  const actionVerb = /\b(?:fill|click|type|open|go to|navigate|browse|find|search|check|read|complete|apply|do|visit|scroll|submit|use|look|review|extract|download)\b/i.test(raw);
+
+  if (/\b(?:computer[- ]use|use (?:your|the) (?:playwright )?browser|in your browser|lucy'?s browser|like (?:muse|grok)|as (?:muse|grok) (?:would|does)|computer use (?:bot|agent))\b/i.test(raw)
+    && actionVerb) {
+    return { instruction: raw, url };
+  }
+
+  if (url && actionVerb && /\b(?:page|site|form|application|tab|browser|link)\b/i.test(raw)) {
+    return { instruction: raw, url };
+  }
+
+  // Form fill without "my screen" → Lucy's browser computer-use.
+  if (/\b(?:fill\s+(?:out|in)|complete (?:this |the )?(?:form|application)|help me (?:fill|apply|complete))\b/i.test(raw)
+    && !/\b(?:on my (?:screen|pc|computer|machine)|use my (?:pc|computer|screen))\b/i.test(raw)) {
+    return { instruction: raw, url };
+  }
+
+  // "Browse to X and …" / "Go to example.com and …"
+  if (/\b(?:browse to|go to|navigate to|open)\s+\S+/i.test(raw)
+    && actionVerb
+    && /\b(?:and|then|fill|click|type|find|check|read|complete)\b/i.test(raw)
+    && !/\b(?:brave|my (?:browser|pc|computer|screen))\b/i.test(raw)) {
+    return { instruction: raw, url };
+  }
+
+  return null;
+}
+
+/**
  * CEO wants an NPC to control their real screen (click, type, fill forms).
  * Only when explicitly asked — not for read-only observe.
  * @param {string} text
@@ -528,6 +585,7 @@ function extractBareSearchTopic(text) {
 function extractScreenControlIntent(text) {
   const raw = String(text || '').trim();
   if (!raw) return false;
+  if (extractComputerUseIntent(raw)) return false;
   if (/\b(crm|meridian)\b/i.test(raw) && /\b(enter|add|log|create|save|put|type|insert)\b/i.test(raw)) {
     return false;
   }
@@ -804,6 +862,7 @@ var __OpenClawDispatchApi = {
   cleanSearchQuery,
   extractScreenObserveIntent,
   extractScreenControlIntent,
+  extractComputerUseIntent,
   extractJobBoardSearchIntent,
   extractBrowserStatusIntent,
   extractOpenBrowserIntent,
@@ -1012,6 +1071,7 @@ if (typeof window !== 'undefined') {
   cleanSearchQuery,
     extractScreenObserveIntent,
     extractScreenControlIntent,
+    extractComputerUseIntent,
     extractJobBoardSearchIntent,
     extractBrowserStatusIntent,
     extractOpenBrowserIntent,

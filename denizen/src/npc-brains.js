@@ -2967,7 +2967,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     ]);
     let openClawContext = null;
     if (OPENCLAW_SKILL_ROLES.has(brain.role)) {
-      const browserSupabase = 'web-search (visible browser lookup), research (background web lookup), browserclaw (multi-step browser tasks), screen-observe (read-only: "look at my screen"), desktop-agent (CEO asks to fill forms on their real screen — "fill this out for me on my screen"), supabase-bridge (low-level DB), denizen-data skills (intake-triage, lead-monitor, rfp-status, prediction-brief, outcome-standup, work-history, cost-dashboard, entity-link, etc.). CEO Brave: "open my brave browser".';
+      const browserSupabase = 'web-search (visible browser lookup), research (background web lookup), browserclaw (multi-step browser tasks), computer-use / computer-use-agent (Muse/Grok-style: Lucy drives her live Playwright browser — watch the browser mirror), screen-observe (read-only: "look at my screen"), desktop-agent (CEO asks to fill forms on their real screen — "fill this out for me on my screen"), supabase-bridge (low-level DB), denizen-data skills (intake-triage, lead-monitor, rfp-status, prediction-brief, outcome-standup, work-history, cost-dashboard, entity-link, etc.). CEO Brave: "open my brave browser".';
       let crmPersonas = null;
       try { crmPersonas = require('./denizen-crm-npc-personas'); } catch (_) {}
       const npcFolder = this._nameToFolder?.[npcName] || String(npcName || '').toLowerCase();
@@ -3019,10 +3019,10 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     const pcAccessContext = `## PC Access (How to Use the CEO's Computer)
 When the CEO says any of these phrases — "use my pc", "use my computer", "on my desktop", "on my screen", "open X on my computer", "run this on my pc", "do it on my machine", "in the background" — they are giving you permission to drive the CEO's actual computer to perform a task. You can do this via:
 
-- **desktop-agent** — vision + mouse/keyboard automation (open apps, click buttons, type, scroll). Best for GUI tasks.
-- **computer-use-agent** — same idea, smarter for multi-step workflows.
+- **desktop-agent** — vision + mouse/keyboard on the CEO's REAL desktop (nut-js). Use when they say "on my screen" / "my PC".
+- **computer-use** / **computer-use-agent** — Muse/Grok-style browser agent: Lucy's headed Playwright browser + vision loop. Prefer for web forms, multi-step browsing, and anything the CEO should watch in the browser mirror.
 - **coding-agent** — for code changes in this repository (isolated worktree + diff proposal).
-- **browserclaw** — for anything that lives in a web browser.
+- **browserclaw** — alternate browser sidecar when computer-use is unavailable.
 
 You have two execution modes:
 - **background** (default): the work runs off-screen. The CEO can keep doing other things; you report when done.

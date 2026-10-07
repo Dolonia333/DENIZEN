@@ -16,6 +16,7 @@ const {
   extractBareSearchTopic,
   extractScreenObserveIntent,
   extractScreenControlIntent,
+  extractComputerUseIntent,
   extractJobBoardSearchIntent,
   extractBrowserStatusIntent,
   extractOpenBrowserIntent,
@@ -239,11 +240,33 @@ describe('extractBareSearchTopic', () => {
   });
 });
 
+describe('extractComputerUseIntent', () => {
+  it('routes browser form fills to Lucy computer-use', () => {
+    const r = extractComputerUseIntent('help me complete this application');
+    assert.ok(r);
+    assert.match(r.instruction, /complete this application/i);
+  });
+  it('detects explicit computer-use / muse phrasing', () => {
+    const r = extractComputerUseIntent('lucy use your browser and fill the form like muse would');
+    assert.ok(r);
+  });
+  it('captures URL for start navigation', () => {
+    const r = extractComputerUseIntent('go to https://example.com/apply and fill the form');
+    assert.ok(r);
+    assert.equal(r.url, 'https://example.com/apply');
+  });
+  it('does not steal CEO desktop / my-screen requests', () => {
+    assert.equal(extractComputerUseIntent('lucy fill out this form on my screen'), null);
+    assert.equal(extractComputerUseIntent('take over my computer and click submit'), null);
+  });
+});
+
 describe('extractScreenControlIntent', () => {
   it('detects fill-out-on-screen requests', () => {
     assert.equal(extractScreenControlIntent('lucy fill out this form on my screen'), true);
     assert.equal(extractScreenControlIntent('bob type this for me on my computer'), true);
-    assert.equal(extractScreenControlIntent('help me complete this application'), true);
+    // Bare form-fill without "my screen" goes to computer-use, not desktop-agent.
+    assert.equal(extractScreenControlIntent('help me complete this application'), false);
   });
   it('does not steal read-only observe', () => {
     assert.equal(extractScreenControlIntent('do you see it'), false);

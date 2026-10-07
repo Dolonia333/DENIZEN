@@ -158,6 +158,20 @@ export async function executeBrowserInput(page, cmd) {
       return { ok: true };
     }
 
+    if (cmd.type === "type") {
+      const text = String(cmd.text || "");
+      if (!text) return { ok: false, error: "type requires text" };
+      await page.keyboard.type(text, { delay: 25 });
+      return { ok: true };
+    }
+
+    if (cmd.type === "key") {
+      const key = String(cmd.key || cmd.text || "").trim();
+      if (!key) return { ok: false, error: "key requires key name" };
+      await page.keyboard.press(key);
+      return { ok: true };
+    }
+
     return { ok: false, error: `unknown input type: ${cmd.type}` };
   } catch (err) {
     return { ok: false, error: String(err?.message || err) };
@@ -205,14 +219,18 @@ async function drainBrowserInput(page) {
   const cmd = readBrowserInputCommand();
   clearBrowserInputCommandFlag();
   if (!cmd?.id || !cmd?.type) return;
-  if (cmd.type !== "scroll" && cmd.type !== "click") return;
+  if (!["scroll", "click", "type", "key"].includes(cmd.type)) return;
   const r = await executeBrowserInput(page, cmd);
   if (!r?.ok) return;
-  appendMirrorActivity(
-    cmd.type === "click"
-      ? `CEO tap ${Math.round(cmd.x)},${Math.round(cmd.y)}`
-      : "CEO scrolled page",
-  );
+  if (cmd.type === "click") {
+    appendMirrorActivity(`CEO tap ${Math.round(cmd.x)},${Math.round(cmd.y)}`);
+  } else if (cmd.type === "scroll") {
+    appendMirrorActivity("CEO scrolled page");
+  } else if (cmd.type === "type") {
+    appendMirrorActivity(`CEO typed ${String(cmd.text || "").slice(0, 40)}`);
+  } else if (cmd.type === "key") {
+    appendMirrorActivity(`CEO key ${String(cmd.key || cmd.text || "")}`);
+  }
 }
 
 /**

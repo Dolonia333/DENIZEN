@@ -47,6 +47,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Meridian CRM (Deal Weaver) | [../crm/USER_GUIDE.md](../crm/USER_GUIDE.md) | new/local | Full UI guide — every tab and button |
 | Meridian CRM (technical) | [../crm/ARCHITECTURE.md](../crm/ARCHITECTURE.md) | new/local | API, sync, real vs UI-only features |
 | Integrations | [NPC_MCP_GATEWAY.md](NPC_MCP_GATEWAY.md) | new/local | Per-NPC MCP gateway, bearer tokens, memory sync (v1.3) |
+| Integrations | [BROWSER_EYES_WORKFLOW.md](BROWSER_EYES_WORKFLOW.md) | new/local | ChatGPT-as-eyes browserBegin/browserStep verify loop (no API keys) |
 | Integrations | [GROK_DENIZEN_AUTONOMY.md](GROK_DENIZEN_AUTONOMY.md) | new/local | xAI Responses API → Grok NPC MCP autonomy loop |
 | Integrations | [GROK_BUILD.md](GROK_BUILD.md) | new/local | Grok Build terminal agent + Denizen MCP |
 | Integrations | [NPC_COMPANION.md](NPC_COMPANION.md) | new/local | Browser extension companion — provider-agnostic sync (v1.6) |
