@@ -197,10 +197,10 @@ function playfieldZoomForProfile(profile) {
   const dp = globalThis.DenizenDeviceProfile;
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
   if (profile?.isPhone || profile?.tier === 'phone-compact') {
-    if (profile?.isLandscape) return 1.7;
-    return profile?.isCompactPhone ? 1.95 : 1.85;
+    if (profile?.isLandscape) return 1.85;
+    return profile?.isCompactPhone ? 2.35 : 2.2;
   }
-  if (profile?.isTablet) return profile?.isLandscape ? 2.55 : 2.15;
+  if (profile?.isTablet) return profile?.isLandscape ? 2.55 : 2.35;
   return 2.75;
 }
 
@@ -4098,10 +4098,9 @@ function bootOfficeGame() {
     backgroundColor: '#020617',
     pixelArt: true,
     scale: {
-      // Fixed 1280x720 on every device. Touch used to switch to Scale.RESIZE to
-      // fill the screen, but the desktop framing — a fixed-aspect game box in
-      // the night-city skyline — was preferred on mobile too, so CSS letterboxes
-      // this buffer to 16:9 in both orientations (see mobile-controls.js).
+      // Fixed 1280x720 on every device. Touch cover-scales this buffer into the
+      // HQ play rect (object-fit:cover) so the office fills the box with no
+      // letterbox/pillarbox gutters (see coverTouchCanvas in mobile-controls.js).
       pauseOnBlur: false,
     },
     // Snap every draw to whole pixels. Without this, NPCs at fractional

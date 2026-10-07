@@ -155,8 +155,11 @@
         --denizen-vv-h: 100dvh;
         --denizen-play-top: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 2px;
-        /* Slim chrome: pad + HQ label row + thin floor caption under the map */
-        --denizen-frame-chrome: 48px;
+        /*
+         * Frame chrome overlays the map (see index.html) — budget is only the
+         * thin floor caption under the canvas.
+         */
+        --denizen-frame-chrome: 18px;
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
           var(--denizen-vv-h) - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
@@ -164,19 +167,16 @@
                    - var(--denizen-play-gap)
                    - var(--denizen-frame-chrome)
         );
-        --denizen-phone-portrait-game-height: min(
-          var(--denizen-available-play-h),
-          calc(100dvw * 9 / 16)
-        );
+        /* Cover-fill play rect (not 16:9 letterbox) — chat pins under this height */
+        --denizen-phone-portrait-game-height: var(--denizen-available-play-h);
       }
 
       /* Phones: spend almost all width on the map; city is atmosphere only */
       html.denizen-touch.denizen-phone {
-        --denizen-frame-chrome: 32px;
+        --denizen-frame-chrome: 18px;
       }
 
-      /* Landscape: notch is on the sides — reclaim vertical space hard.
-       * Frame chrome overlays the map (see index.html) so chrome budget is tiny. */
+      /* Landscape: notch is on the sides — reclaim vertical space hard. */
       html.denizen-touch.denizen-landscape {
         --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
@@ -208,28 +208,39 @@
           max(6px, env(safe-area-inset-left, 0px));
       }
 
+      /*
+       * Touch (portrait + landscape): fill the HQ play rect edge-to-edge —
+       * not a 16:9 letterbox with side gutters. Canvas is cover-scaled in
+       * coverTouchCanvas() (object-fit:cover math on the 1280×720 buffer).
+       */
       html.denizen-touch #game-container {
         --denizen-play-w: calc(
           100dvw - max(var(--denizen-play-gap), env(safe-area-inset-left, 0px))
                   - max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
-                  - 12px
+                  - 8px
         );
         --denizen-play-h: var(--denizen-available-play-h);
-        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
-        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
-        max-width: none;
-        max-height: none;
+        width: var(--denizen-play-w) !important;
+        height: var(--denizen-play-h) !important;
+        max-width: none !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        margin: 0 auto;
+        flex: 0 0 auto;
+        overflow: hidden;
+        position: relative;
         border-radius: 4px;
         border-width: 0;
         box-shadow: none;
       }
+      html.denizen-touch #game-container canvas {
+        /* Cover math applied in JS (inline !important); don't force 100% stretch */
+        width: auto !important;
+        height: auto !important;
+      }
 
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
-        /*
-         * Fill the HQ play rect edge-to-edge (not a 16:9 letterbox inside a
-         * taller middle). Canvas is cover-scaled in coverLandscapeCanvas().
-         */
         --denizen-play-w: calc(
           100dvw
           - max(4px, env(safe-area-inset-left, 0px))
@@ -244,28 +255,6 @@
           - var(--denizen-frame-chrome)
           - 2px
         );
-        width: var(--denizen-play-w) !important;
-        height: var(--denizen-play-h) !important;
-        max-width: none !important;
-        max-height: none !important;
-        aspect-ratio: auto !important;
-        margin: 0 auto;
-        flex: 0 0 auto;
-        overflow: hidden;
-        position: relative;
-      }
-      html.denizen-touch.denizen-landscape #game-container canvas {
-        /* Cover math applied in JS (inline !important); don't force 100% stretch */
-        width: auto !important;
-        height: auto !important;
-      }
-
-      /* Portrait phones: 16:9 map floats mid-screen over the city (centered). */
-      html.denizen-touch.denizen-phone.denizen-portrait #game-container {
-        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
-        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
-        flex: 0 0 auto;
-        margin: 0 auto;
       }
 
       /* Portrait hint — non-blocking toast, shown once per session */
@@ -933,17 +922,17 @@
   }
 
   /**
-   * Landscape: scale the 1280×720 canvas with object-fit:cover so the office
-   * fills the HQ box (no dark letterbox bands inside the frame).
+   * Touch (portrait + landscape): scale the 1280×720 canvas with
+   * object-fit:cover so the office fills the HQ box (no letterbox /
+   * pillarbox bands inside the frame).
    */
-  function coverLandscapeCanvas() {
+  function coverTouchCanvas() {
     const root = document.documentElement;
     const box = document.getElementById('game-container');
     const canvas = box?.querySelector?.('canvas');
     if (!box || !canvas) return;
-    const landscape = root.classList.contains('denizen-touch')
-      && root.classList.contains('denizen-landscape');
-    if (!landscape) {
+    const touch = root.classList.contains('denizen-touch');
+    if (!touch) {
       canvas.style.removeProperty('width');
       canvas.style.removeProperty('height');
       canvas.style.removeProperty('left');
@@ -963,10 +952,15 @@
     canvas.style.setProperty('top', `${Math.round((bh - ch) / 2)}px`, 'important');
   }
 
+  /** @deprecated alias — cover applies to all touch orientations now */
+  function coverLandscapeCanvas() {
+    return coverTouchCanvas();
+  }
+
   function syncPlayfieldLayout() {
     syncVisualViewport();
     syncGameFrameBottom();
-    coverLandscapeCanvas();
+    coverTouchCanvas();
   }
 
   function boot() {
@@ -1013,6 +1007,7 @@
   window.DenizenMobilePlay = {
     syncLayout: syncLayoutClasses,
     syncGameFrameBottom,
+    coverTouchCanvas,
     coverLandscapeCanvas,
     syncPlayfieldLayout,
     isTouch: () => true,

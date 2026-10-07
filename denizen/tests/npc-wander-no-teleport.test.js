@@ -48,7 +48,7 @@ describe('NPC wander must not teleport', () => {
   it('cache busters bumped for the walk-home / map-awareness fixes', () => {
     const html = read('index.html');
     assert.match(html, /agent-office-manager\.js\?v=headTrack1/);
-    assert.match(html, /office-scene\.js\?v=mapFill2/);
+    assert.match(html, /office-scene\.js\?v=mapFill3/);
     assert.match(html, /pathfinding\.js\?v=aislePad1/);
   });
 });

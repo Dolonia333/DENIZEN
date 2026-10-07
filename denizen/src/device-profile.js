@@ -223,12 +223,12 @@
     } catch (_) {}
     const prof = p || profile;
     if (prof.isPhone || prof.tier === 'phone-compact') {
-      // Landscape still shows a room around you; portrait is tighter.
-      if (prof.isLandscape) return 1.7;
-      return prof.isCompactPhone ? 1.95 : 1.85;
+      // Cover-fill crops the 1280×720 buffer; keep desks readable in both orients.
+      if (prof.isLandscape) return 1.85;
+      return prof.isCompactPhone ? 2.35 : 2.2;
     }
-    /* iPad landscape: tight framing so desks fill the cover-scaled HQ box. */
-    if (prof.isTablet) return prof.isLandscape ? 2.55 : 2.15;
+    /* iPad: tight framing so desks fill the cover-scaled HQ box. */
+    if (prof.isTablet) return prof.isLandscape ? 2.55 : 2.35;
     // Desktop: Pokémon-style close framing (2.15 still felt map-like).
     return 2.75;
   }
