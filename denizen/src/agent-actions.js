@@ -1557,7 +1557,9 @@ class AgentActions {
     const above = isThought ? 20 : 26;
     bubbleText.y = this.npcFloatY(npc, above);
 
-    // Nudge up off other bubbles and this NPC's nameplate.
+    // Nudge up when another live bubble sits on roughly the same spot so
+    // desk neighbors don't stack chips on top of each other. Also clear
+    // this NPC's nameplate so speech never covers the name chip.
     try {
       const bw = bubbleText.width || 80;
       const bh = bubbleText.height || 16;
