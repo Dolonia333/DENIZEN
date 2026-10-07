@@ -224,10 +224,11 @@
     const prof = p || profile;
     if (prof.isPhone || prof.tier === 'phone-compact') {
       // Landscape still shows a room around you; portrait is tighter.
-      if (prof.isLandscape) return 1.55;
+      if (prof.isLandscape) return 1.7;
       return prof.isCompactPhone ? 1.95 : 1.85;
     }
-    if (prof.isTablet) return prof.isLandscape ? 1.85 : 2.15;
+    /* iPad landscape: closer so the office fills the HQ box (not a distant map). */
+    if (prof.isTablet) return prof.isLandscape ? 2.2 : 2.15;
     // Desktop: Pokémon-style close framing (2.15 still felt map-like).
     return 2.75;
   }

@@ -3158,82 +3158,114 @@ class PlayerChat {
         flex: 0 0 44px !important;
       }
       /*
-       * Landscape Floor Line: compact LEFT rail.
-       * Buzz phone FAB owns bottom-right — do not park chat there.
-       * Sized for readable message text while leaving Buzz clear (~120px).
+       * Landscape Floor Line: compact floating card on the LEFT.
+       * Right side stays clear for Buzz and corner NPCs.
        */
       html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
-        /* Bottom-anchored short rail — never top:0 with a tall height (covered the map). */
         top: auto !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
-        right: auto !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
-        width: min(340px, calc(100dvw - 100px)) !important;
+        right: auto !important;
+        width: min(300px, calc(100dvw - 24px)) !important;
         min-width: 0 !important;
-        max-width: min(340px, calc(100dvw - 100px)) !important;
-        height: min(34dvh, 200px) !important;
-        max-height: min(34dvh, 200px) !important;
+        max-width: min(300px, calc(100dvw - 24px)) !important;
+        height: min(48dvh, 168px) !important;
+        max-height: min(48dvh, 168px) !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;
         z-index: 2147483630 !important;
         overflow: hidden !important;
         pointer-events: auto !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(148, 163, 184, 0.28) !important;
+        box-shadow:
+          0 0 0 1px rgba(2, 6, 23, 0.55),
+          0 14px 32px rgba(0, 0, 0, 0.5) !important;
+        background: rgba(15, 23, 42, 0.96) !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header {
         position: relative !important;
-        padding: 6px 56px 6px 8px !important;
+        padding: 6px 44px 4px 8px !important;
         flex: 0 0 auto !important;
-        grid-template-columns: 32px minmax(0, 1fr) auto !important;
+        grid-template-columns: 28px minmax(0, 1fr) auto !important;
         grid-template-areas: "avatar main actions" !important;
         grid-auto-flow: column !important;
         overflow: visible !important;
+        border-bottom: 1px solid rgba(51, 65, 85, 0.85) !important;
+        background: transparent !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header .pc-header-avatar {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 12px !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header > *:not(.pc-header-avatar):not(.chat-header-main):not(#player-chat-header-actions) {
         display: none !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header .pc-floor-kicker {
+        font-size: 8px !important;
+        letter-spacing: 0.1em !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-header .target {
+        font-size: 14px !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header .pc-header-status {
         display: none !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header .hint { display: none; }
+      /* Declutter: Projects / Briefing / Connect belong in portrait or Buzz */
+      html.denizen-touch.denizen-landscape #denizen-visitor-projects-btn,
+      html.denizen-touch.denizen-landscape #denizen-visitor-briefing-btn,
+      html.denizen-touch.denizen-landscape #denizen-visitor-mcp-connect-btn,
+      html.denizen-touch.denizen-landscape #denizen-visitor-team-mcp-btn,
+      html.denizen-touch.denizen-landscape #denizen-visitor-handoff-btn {
+        display: none !important;
+      }
       html.denizen-touch.denizen-landscape #player-chat-log {
         min-height: 0 !important;
         flex: 1 1 auto !important;
-        padding: 8px 10px;
-        font-size: 14px;
-        line-height: 1.45;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+        line-height: 1.35 !important;
         overflow-y: auto !important;
+        gap: 4px !important;
       }
+      html.denizen-touch.denizen-landscape #player-chat-log:empty::before {
+        content: "Tap an NPC on the floor" !important;
+        font-size: 12px !important;
+        margin: auto !important;
+        color: #64748b !important;
+      }
+      html.denizen-touch.denizen-landscape #player-chat-log:empty::after { display: none !important; }
       html.denizen-touch.denizen-landscape #player-chat-composer {
         flex: 0 0 auto !important;
         margin: 0 !important;
       }
-      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 6px 8px 8px; flex-shrink: 0; }
-      html.denizen-touch.denizen-landscape .pc-composer-bar { gap: 6px; }
+      html.denizen-touch.denizen-landscape .pc-composer-shell { padding: 4px 6px 6px; flex-shrink: 0; }
+      html.denizen-touch.denizen-landscape .pc-composer-bar { gap: 4px; }
       html.denizen-touch.denizen-landscape #player-chat-input {
-        min-height: 36px;
-        font-size: 16px;
+        min-height: 32px;
+        font-size: 15px;
       }
       html.denizen-touch.denizen-landscape #player-chat-send,
       html.denizen-touch.denizen-landscape #player-chat-speak {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        min-height: 32px;
         padding: 0;
         flex-shrink: 0;
       }
       /*
-       * iPad landscape: PROJECTS + Briefing used to squeeze the ✕ past the
-       * 140px actions cap; overflow:hidden then clipped the hit target.
-       * Pin a fat close control to the header corner — always tappable.
+       * Landscape close: always tappable, sits in the card corner.
        */
       html.denizen-touch.denizen-landscape #player-chat-header-actions {
         max-width: none !important;
         width: auto !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         justify-content: flex-end !important;
-        gap: 4px !important;
+        gap: 0 !important;
         padding-right: 0 !important;
         overflow: visible !important;
       }
@@ -3245,28 +3277,27 @@ class PlayerChat {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
-        max-width: 48px !important;
-        flex: 0 0 48px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        max-width: 36px !important;
+        flex: 0 0 36px !important;
         margin: 0 !important;
         padding: 0 !important;
-        border-radius: 6px !important;
-        border: 2px solid var(--pc-amber, #f59e0b) !important;
-        background: rgba(2, 6, 23, 0.92) !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(148, 163, 184, 0.35) !important;
+        background: rgba(2, 6, 23, 0.75) !important;
         color: #f8fafc !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
         line-height: 1 !important;
         pointer-events: auto !important;
         touch-action: manipulation !important;
-        -webkit-tap-highlight-color: rgba(245, 158, 11, 0.35);
-        box-shadow: 2px 2px 0 #020617 !important;
+        box-shadow: none !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header-actions #player-chat-close-btn svg {
-        width: 20px !important;
-        height: 20px !important;
+        width: 16px !important;
+        height: 16px !important;
       }
       /* Claim proximity pill must not peek under Floor Line */
       html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-visitor-claim-btn {
@@ -3397,15 +3428,12 @@ class PlayerChat {
         visibility: hidden !important;
         pointer-events: none !important;
       }
-      /* Landscape: keep Buzz reachable — Floor Line sits on the left rail */
-      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-phone-fab {
-        display: flex !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-        z-index: 2147483640 !important;
-      }
+      /* Landscape bottom-sheet chat covers the dock — keep Buzz/Speak hidden until closed */
+      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-phone-fab,
       html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-speak-fab {
         display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
       }
     `;
     this._chatStyleInjected = true;

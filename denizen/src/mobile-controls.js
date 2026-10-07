@@ -155,8 +155,8 @@
         --denizen-vv-h: 100dvh;
         --denizen-play-top: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 2px;
-        /* Slim chrome: pad + HQ label row + one floor-strip line */
-        --denizen-frame-chrome: 64px;
+        /* Slim chrome: pad + HQ label row + thin floor caption under the map */
+        --denizen-frame-chrome: 48px;
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
           var(--denizen-vv-h) - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
@@ -172,18 +172,18 @@
 
       /* Phones: spend almost all width on the map; city is atmosphere only */
       html.denizen-touch.denizen-phone {
-        --denizen-frame-chrome: 52px;
+        --denizen-frame-chrome: 32px;
       }
 
       /* Landscape: notch is on the sides — reclaim vertical space hard */
       html.denizen-touch.denizen-landscape {
         --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
-        --denizen-frame-chrome: 36px;
+        --denizen-frame-chrome: 20px;
       }
 
       html.denizen-touch body {
-        align-items: flex-start;
+        align-items: center;
         justify-content: center;
         box-sizing: border-box;
         height: var(--denizen-vv-h);
@@ -197,8 +197,9 @@
       }
 
       html.denizen-touch.denizen-landscape body {
-        /* Don't double-pad: size math below already subtracts safe-area + dock */
+        /* Center HQ in the short viewport; chat overlays as a bottom sheet */
         align-items: center;
+        justify-content: center;
         padding:
           var(--denizen-play-top)
           max(6px, env(safe-area-inset-right, 0px))
@@ -213,7 +214,6 @@
                   - 12px
         );
         --denizen-play-h: var(--denizen-available-play-h);
-        /* Fill the available play box at 16:9 — no giant chrome gutters */
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
         height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
         max-width: none;
@@ -225,11 +225,12 @@
 
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
+        /* Fill the HQ box — spend nearly all of the short viewport on the map */
         --denizen-play-w: calc(
           100dvw
-          - max(6px, env(safe-area-inset-left, 0px))
-          - max(6px, env(safe-area-inset-right, 0px))
-          - 8px
+          - max(4px, env(safe-area-inset-left, 0px))
+          - max(4px, env(safe-area-inset-right, 0px))
+          - 4px
         );
         --denizen-play-h: calc(
           var(--denizen-vv-h)
@@ -245,19 +246,12 @@
         flex: 0 0 auto;
       }
 
-      /* Portrait phones: pin HQ to the top, maximize 16:9 width, trim skyline waste */
+      /* Portrait phones: 16:9 map floats mid-screen over the city (centered). */
       html.denizen-touch.denizen-phone.denizen-portrait #game-container {
         width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
         height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
         flex: 0 0 auto;
         margin: 0 auto;
-      }
-      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city {
-        opacity: 0.28 !important;
-      }
-      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city .dz-skyline,
-      html.denizen-touch.denizen-phone.denizen-portrait #denizen-night-city .dz-windows {
-        height: min(32vh, 220px) !important;
       }
 
       /* Portrait hint — non-blocking toast, shown once per session */
@@ -284,9 +278,9 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: pin HQ to the top — mid-screen float wasted the map under skyline. */
+      /* Portrait: HQ centered over the skyline. Pin to top only while Floor Line is open. */
       html.denizen-touch.denizen-portrait body {
-        align-items: flex-start;
+        align-items: center;
       }
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: flex-start;
@@ -432,29 +426,37 @@
         ) !important;
         max-height: min(38dvh, 280px) !important;
       }
-      /* Landscape Floor Line: short LEFT rail — must leave the HQ map visible */
+      /*
+       * Landscape Floor Line: compact floating card on the LEFT.
+       * Keeps Buzz / corner NPCs on the right uncovered.
+       */
       html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
-        right: auto !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        right: auto !important;
         bottom: calc(
           var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;
-        width: min(340px, calc(100dvw - 100px)) !important;
-        max-width: min(340px, calc(100dvw - 100px)) !important;
+        width: min(300px, calc(100dvw - 24px)) !important;
+        max-width: min(300px, calc(100dvw - 24px)) !important;
         min-width: 0 !important;
-        height: min(34dvh, 200px) !important;
-        max-height: min(34dvh, 200px) !important;
+        height: min(48dvh, 168px) !important;
+        max-height: min(48dvh, 168px) !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;
         overflow: hidden !important;
         pointer-events: auto !important;
+        border-radius: 12px !important;
+        border-width: 1px !important;
+        box-shadow:
+          0 0 0 1px rgba(148, 163, 184, 0.2),
+          0 12px 28px rgba(0, 0, 0, 0.45) !important;
       }
-      /* Fat corner ✕ — must stay tappable when PROJECTS/Briefing fill the actions row */
+      /* Landscape close — corner hit target on the floating card */
       html.denizen-touch.denizen-landscape #player-chat-header {
         position: relative !important;
-        padding-right: 56px !important;
+        padding-right: 44px !important;
         overflow: visible !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header-actions {
@@ -466,10 +468,10 @@
         top: 4px !important;
         right: 4px !important;
         z-index: 6 !important;
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
         pointer-events: auto !important;
         touch-action: manipulation !important;
       }

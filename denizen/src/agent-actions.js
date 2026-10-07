@@ -1618,10 +1618,10 @@ class AgentActions {
     this._clearBubble(npcKey, this._speechBubbles);
 
     const isThought = style === 'thought';
-    // Single-line chips only — wrapping made tall opaque slabs that ate the
-    // playfield. Match nameplate scale (5–6px) so talk stays a thin strip.
+    // Compact chips — name + line so you can see who is talking over their head.
+    // Keep short enough not to bury the floor; slightly larger than nameplates.
     const body = String(text || '').replace(/\s+/g, ' ').trim();
-    const maxChars = isThought ? 22 : 24;
+    const maxChars = isThought ? 28 : 34;
     const truncated = body.length > maxChars ? body.slice(0, maxChars - 1) + '…' : body;
     const who = this._displayName(npcKey);
     const toName = extra?.toName || (extra?.toKey ? this._displayName(extra.toKey) : '');
@@ -1661,37 +1661,37 @@ class AgentActions {
       }
     }
 
-    // Compact readable chip — same UI face as nameplates, one line, soft edge.
+    // Name lives in the bubble — hide the white nameplate so it isn't said twice.
+    this._setNameplateVisible(npcKey, false);
+
+    // Hi-res chip: draw large + high resolution, then scale down so camera zoom
+    // doesn't smear glyphs (tiny fontSize + res=1 looked blurry on iPad).
     const bgColor = isThought ? '#e0f2fef2' : '#fffffff2';
     const textColor = isThought ? '#0c4a6e' : '#0f172a';
     const prefix = isThought ? '…' : '';
     const label = `${whoLine}\n${prefix}${truncated}`;
 
     const bubbleText = this.scene.add.text(0, 0, label, {
-      fontSize: isThought ? '5px' : '6px',
+      fontSize: isThought ? '12px' : '14px',
       fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
       fontStyle: 'bold',
       color: textColor,
       backgroundColor: bgColor,
-      padding: { x: 3, y: 1 },
+      padding: { x: 8, y: 4 },
       align: 'center',
+      resolution: 3,
     });
-    let res = 2;
-    try {
-      const light = globalThis.DenizenDeviceProfile?.lightPerf?.()?.light
-        || globalThis.DenizenDeviceProfile?.wantsLightPerf?.();
-      if (light) res = 1;
-    } catch (_) {}
-    if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(res);
+    if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(3);
     bubbleText.setOrigin(0.5, 1);
     bubbleText.setDepth(9998);
-    // Scale under 1 keeps chips petite at office camera zoom (often 2×+).
-    try { bubbleText.setScale(0.82); } catch (_) {}
+    // 0.5 × 14px ≈ prior on-screen size, but the glyph atlas stays sharp.
+    try { bubbleText.setScale(0.5); } catch (_) {}
+    try { bubbleText.setRoundPixels?.(true); } catch (_) {}
     bubbleText.setAlpha(0);
-    const yOff = isThought ? 40 : 44;
+    const yOff = isThought ? 42 : 48;
     let xOff = 0;
-    bubbleText.x = npc.x;
-    bubbleText.y = npc.y - yOff;
+    bubbleText.x = Math.round(npc.x);
+    bubbleText.y = Math.round(npc.y - yOff);
 
     // Soft fade-in so chips don't pop as hard as opaque blocks.
     try {
@@ -1780,9 +1780,7 @@ class AgentActions {
     // duration=0 means persist forever (no auto-clear), undefined defaults to 5s
     const dur = duration !== undefined ? duration : (isThought ? 2800 : 4200);
     const timer = dur > 0 ? this.scene.time.delayedCall(dur, () => {
-      this._clearBubble(npcKey, this._speechBubbles);
-      const plate = this._roleLabels.get(npcKey);
-      if (plate?.statusTemporary) this.setDeskStatus(npcKey, '');
+      this._clearSpeechBubble(npcKey);
     }) : null;
 
     this._speechBubbles.set(npcKey, {
@@ -1793,6 +1791,30 @@ class AgentActions {
       yOff,
       xOff,
     });
+  }
+
+  /** Hide white name tag while a speech/thought bubble carries the name. */
+  _setNameplateVisible(npcKey, visible) {
+    const plate = this._roleLabels.get(npcKey);
+    if (!plate) return;
+    plate.hiddenForBubble = !visible;
+    try { plate.container?.setVisible?.(visible); } catch (_) {}
+    try { plate.text?.setVisible?.(visible); } catch (_) {}
+    try { plate.bg?.setVisible?.(visible); } catch (_) {}
+    if (!visible) {
+      try { plate.statusText?.setVisible?.(false); } catch (_) {}
+      try { plate.statusBg?.clear?.(); } catch (_) {}
+    } else if (plate.status && plate.statusText?.scene) {
+      try { plate.statusText.setVisible(true); } catch (_) {}
+      try { this._layoutNameplate(plate); } catch (_) {}
+    }
+  }
+
+  _clearSpeechBubble(npcKey) {
+    this._clearBubble(npcKey, this._speechBubbles);
+    this._setNameplateVisible(npcKey, true);
+    const plate = this._roleLabels.get(npcKey);
+    if (plate?.statusTemporary) this.setDeskStatus(npcKey, '');
   }
 
   _showEmote(npc, npcKey, symbol) {
@@ -2072,6 +2094,10 @@ class AgentActions {
       if (existing.text) existing.text.destroy();
       if (existing.timer) existing.timer.remove();
       map.delete(npcKey);
+    }
+    // Speech map: restore nameplate when the last say/thought chip is gone.
+    if (map === this._speechBubbles) {
+      this._setNameplateVisible(npcKey, true);
     }
   }
 
@@ -3042,6 +3068,10 @@ class AgentActions {
       const head = this._spriteAnchor(entry.npc);
       entry.container.x = head.x;
       entry.container.y = head.top - 8;
+      // Keep hidden while a bubble owns the name
+      if (entry.hiddenForBubble) {
+        try { entry.container.setVisible(false); } catch (_) {}
+      }
       const dot = dots?.get(npcKey);
       if (dot?.scene) dot.setPosition(head.x, head.top - 4);
     });
@@ -3054,18 +3084,19 @@ class AgentActions {
     });
     try { globalThis.DenizenVisitorAssistantLabels?.placeAll?.(); } catch (_) {}
 
-    // Speech, thoughts, and emotes sit above the name so the message
-    // never paints over it.
+    // Speech sits over the head; nameplate is hidden while the bubble is live.
     const placeAboveName = (entry, npcKey) => {
       if (!entry.npc || !entry.text?.scene) return;
       const npc = entry.npc;
-      entry.text.x = npc.x;
+      entry.text.x = Math.round(npc.x + (entry.xOff || 0));
       let top = this._spriteAnchor(npc).top - 8;
       const plate = this._roleLabels.get(npcKey);
-      if (plate?.container?.scene) top = plate.container.y - (plate.plateH || 0);
+      if (plate?.container?.scene && !plate.hiddenForBubble) {
+        top = plate.container.y - (plate.plateH || 0);
+      }
       const asst = globalThis.DenizenVisitorAssistantLabels?.topFor?.(npcKey);
       if (typeof asst === 'number') top = Math.min(top, asst);
-      entry.text.y = top - 4;
+      entry.text.y = Math.round(top - 4);
     };
     this._speechBubbles.forEach(placeAboveName);
     this._emoteBubbles.forEach((entry, npcKey) => {

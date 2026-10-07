@@ -86,11 +86,11 @@ describe('mobile UI layout fixes', () => {
     assert.match(html, /#game-container canvas \{[^}]*display:\s*block;/s);
   });
 
-  it('portrait phones pin HQ to the top so the map is not mid-skyline', () => {
+  it('portrait phones center HQ mid-screen; pin top only when chat opens', () => {
     const mobile = read('src/mobile-controls.js');
     assert.match(
       mobile,
-      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?align-items:\s*flex-start/
+      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?align-items:\s*center/
     );
     assert.match(
       mobile,
@@ -99,18 +99,15 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapSpace1/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace5/);
   });
 
-  it('landscape Floor Line is a short left rail so the HQ map stays visible', () => {
+  it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
-    const phone = read('src/denizen-phone-ui.js');
-    assert.match(chat, /Landscape Floor Line: compact LEFT rail/);
-    assert.match(chat, /Buzz phone FAB owns bottom-right/);
-    assert.match(chat, /height:\s*min\(34dvh,\s*200px\)/);
-    assert.match(chat, /width:\s*min\(340px/);
-    assert.match(chat, /100dvw - 100px/);
+    assert.match(chat, /Landscape Floor Line: compact floating card on the LEFT/);
+    assert.match(chat, /height:\s*min\(48dvh,\s*168px\)/);
+    assert.match(chat, /width:\s*min\(300px/);
     assert.match(
       chat,
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?top:\s*auto !important/
@@ -121,18 +118,10 @@ describe('mobile UI layout fixes', () => {
     );
     assert.match(
       chat,
-      /denizen-landscape\.denizen-chat-open #denizen-phone-fab\s*\{[\s\S]*?display:\s*flex !important/
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?right:\s*auto !important/
     );
-    assert.match(mobile, /short LEFT rail — must leave the HQ map visible/);
-    assert.match(
-      mobile,
-      /denizen-landscape #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
-    );
-    assert.match(mobile, /--denizen-frame-chrome:\s*36px/);
-    assert.match(
-      phone,
-      /Landscape Floor Line uses the left rail[\s\S]*?display:\s*flex !important/
-    );
+    assert.match(mobile, /Landscape Floor Line: compact floating card on the LEFT/);
+    assert.match(mobile, /html\.denizen-touch\.denizen-landscape \{[\s\S]*?--denizen-frame-chrome:\s*20px/);
     assert.match(
       chat,
       /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
@@ -147,17 +136,17 @@ describe('mobile UI layout fixes', () => {
     assert.match(chat, /#player-chat-header > #player-chat-close-btn/);
   });
 
-  it('iPad landscape pins a fat tappable close button outside the actions squeeze', () => {
+  it('landscape Floor Line keeps a tappable close on the floating card', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
-    assert.match(chat, /Pin a fat close control to the header corner/);
+    assert.match(chat, /Landscape close: always tappable/);
     assert.match(
       chat,
       /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?position:\s*absolute !important/
     );
     assert.match(
       chat,
-      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?width:\s*48px !important/
+      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?width:\s*36px !important/
     );
     assert.match(
       chat,
@@ -167,26 +156,31 @@ describe('mobile UI layout fixes', () => {
       chat,
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?pointer-events:\s*auto !important/
     );
-    assert.match(mobile, /Fat corner ✕/);
+    assert.match(mobile, /Landscape close/);
     assert.match(
       mobile,
-      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?48px/
+      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?36px/
     );
   });
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=computerUse1/);
-    assert.match(html, /mobile-controls\.js\?v=mapSpace1/);
+    assert.match(html, /player-chat\.js\?v=mapSpace5/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace5/);
   });
 
-  it('phones reclaim map real estate from chrome and floor strip', () => {
+  it('phones reclaim map real estate; floor caption is a thin one-line strip under the map', () => {
     const mobile = read('src/mobile-controls.js');
     const strip = read('src/floor-strip.js');
     const html = read('index.html');
-    assert.match(mobile, /html\.denizen-touch\.denizen-phone \{[\s\S]*?--denizen-frame-chrome:\s*52px/);
-    assert.match(strip, /denizen-phone #\$\{STRIP_ID\} \.dz-floor-line:nth-child\(n\+2\)/);
-    assert.match(strip, /denizen-landscape #\$\{STRIP_ID\} \{ display: none !important/);
+    assert.match(mobile, /html\.denizen-touch\.denizen-phone \{[\s\S]*?--denizen-frame-chrome:\s*32px/);
+    assert.match(html, /--dz-floor-strip-h:\s*28px/);
+    assert.match(strip, /map\.insertAdjacentElement\('afterend'/);
+    assert.match(strip, /html\.denizen-touch #\$\{STRIP_ID\} \.dz-floor-line:nth-child\(n\+2\)/);
+    assert.match(strip, /:not\(\.has-lines\) \{ display: none !important/);
+    assert.match(strip, /kind-quiet \{ display: none !important/);
+    assert.match(strip, /speech bubbles .* are separate/i);
+    assert.match(strip, /raw\.from \|\| raw\.name/);
     assert.match(html, /denizen-touch\.denizen-phone #game-frame \.dz-frame-label/);
   });
 
@@ -213,5 +207,17 @@ describe('mobile UI layout fixes', () => {
   it('speech bubbles nudge away from neighbors', () => {
     const actions = read('src/agent-actions.js');
     assert.match(actions, /Nudge up when another live bubble/);
+  });
+
+  it('landscape HQ frame hugs the map; tablet zoom fills the box', () => {
+    const html = read('index.html');
+    const profile = read('src/device-profile.js');
+    const scene = read('office-scene.js');
+    assert.match(html, /frame hugs the map/);
+    assert.match(html, /dz-frame-chrome \{[\s\S]*?width:\s*0;/);
+    assert.match(profile, /isLandscape \? 2\.2/);
+    assert.match(scene, /isLandscape \? 2\.2/);
+    assert.match(html, /device-profile\.js\?v=mapFill1/);
+    assert.match(html, /office-scene\.js\?v=mapFill1/);
   });
 });

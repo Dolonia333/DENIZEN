@@ -1,6 +1,9 @@
 /**
  * Floor strip — the last few things said on the office, kept after bubbles fade.
  * Click a line to open that person's Floor Line thread. The room stays up.
+ *
+ * In-world NPC speech bubbles (Phaser chips above sprites) are separate —
+ * this strip is only the under-map caption log.
  */
 (function () {
   'use strict';
@@ -73,12 +76,47 @@
         cursor: default;
         color: #94a3b8;
       }
-      html.denizen-touch #${STRIP_ID} { margin-top: 2px; gap: 2px; }
-      html.denizen-touch #${STRIP_ID} .dz-floor-line { font-size: 11px; padding: 3px 6px; }
-      /* Phones: one line under the map — two lines stole HQ height */
-      html.denizen-touch.denizen-phone #${STRIP_ID} .dz-floor-line:nth-child(n+2) { display: none; }
-      html.denizen-touch:not(.denizen-phone) #${STRIP_ID} .dz-floor-line:nth-child(n+3) { display: none; }
-      html.denizen-touch.denizen-landscape #${STRIP_ID} { display: none !important; }
+      /*
+       * Touch: one thin caption under the map canvas (still inside #game-frame
+       * so body row-flex does not park it beside the HQ). NPC speech bubbles
+       * over sprites are unchanged (agent-actions).
+       */
+      html.denizen-touch #${STRIP_ID} {
+        width: 0;
+        min-width: 100%;
+        max-width: 100%;
+        margin: 2px 0 0;
+        gap: 0;
+        flex: 0 0 auto;
+      }
+      html.denizen-touch #${STRIP_ID} .dz-floor-line {
+        font-size: 10px;
+        line-height: 1.25;
+        padding: 2px 0;
+        gap: 6px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        color: rgba(226, 232, 240, 0.82);
+        box-shadow: none;
+      }
+      html.denizen-touch #${STRIP_ID} .dz-floor-line .who {
+        color: #7dd3fc;
+        font-size: 10px;
+        max-width: 38%;
+      }
+      html.denizen-touch #${STRIP_ID} .dz-floor-line .what {
+        color: rgba(203, 213, 225, 0.88);
+      }
+      html.denizen-touch #${STRIP_ID} .dz-floor-line.kind-status .who { color: #fecaca; }
+      /* Hide empty quiet filler — it stole map height for nothing */
+      html.denizen-touch #${STRIP_ID}:not(.has-lines) { display: none !important; }
+      html.denizen-touch #${STRIP_ID} .dz-floor-line.kind-quiet { display: none !important; }
+      /* One caption line under the map on all touch sizes */
+      html.denizen-touch #${STRIP_ID} .dz-floor-line:nth-child(n+2) { display: none; }
+      html.denizen-touch.denizen-landscape #${STRIP_ID} {
+        margin-top: 1px;
+      }
     `;
     document.head.appendChild(s);
   }
@@ -86,14 +124,23 @@
   function ensureStrip() {
     injectStyles();
     let el = document.getElementById(STRIP_ID);
-    if (el) return el;
     const frame = document.getElementById('game-frame');
+    const map = document.getElementById('game-container');
+    if (el) {
+      // Keep under the map canvas inside the HQ frame (body is row-flex).
+      if (frame && el.parentElement !== frame) {
+        if (map && map.parentElement === frame) map.insertAdjacentElement('afterend', el);
+        else frame.appendChild(el);
+      } else if (frame && map && map.parentElement === frame && el.previousElementSibling !== map) {
+        map.insertAdjacentElement('afterend', el);
+      }
+      return el;
+    }
     if (!frame) return null;
     el = document.createElement('div');
     el.id = STRIP_ID;
     el.setAttribute('role', 'log');
     el.setAttribute('aria-label', 'Floor conversation');
-    const map = document.getElementById('game-container');
     if (map && map.parentElement === frame) map.insertAdjacentElement('afterend', el);
     else frame.appendChild(el);
     return el;
@@ -102,12 +149,13 @@
   function normalize(raw) {
     const text = String(raw?.text || '').replace(/\s+/g, ' ').trim();
     if (!text) return null;
+    const from = String(raw.from || raw.name || 'Someone').trim() || 'Someone';
     return {
-      from: String(raw.from || 'Someone').trim() || 'Someone',
+      from,
       to: String(raw.to || '').trim(),
       text: text.slice(0, 180),
       npcKey: raw.npcKey || '',
-      npcName: raw.npcName || raw.from || '',
+      npcName: raw.npcName || raw.name || raw.from || '',
       kind: raw.kind || 'say',
       at: Date.now(),
     };
@@ -128,9 +176,10 @@
   function render() {
     const el = ensureStrip();
     if (!el) return;
-    const rows = visibleLines();
+    const rows = visibleLines().filter((r) => r && r.kind !== 'quiet');
+    el.classList.toggle('has-lines', rows.length > 0);
     if (!rows.length) {
-      el.innerHTML = '<p class="dz-floor-line kind-quiet"><span class="what">The floor is quiet. Walk up to someone.</span></p>';
+      el.innerHTML = '';
       return;
     }
     el.innerHTML = rows.map((line, i) => (
