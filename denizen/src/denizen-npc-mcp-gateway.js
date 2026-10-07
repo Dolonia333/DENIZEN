@@ -990,13 +990,14 @@ function buildOpenApiSpec(baseUrl) {
       description:
         'REST bridge for ChatGPT Custom GPT Actions. YOU execute work via runNpcSkill. '
         + 'Long work: runNpcSkill with wait=false → poll getSkillJob. '
+        + 'Browser eyes: browserOpen → browserScreenshot → browserAct (YOU see Lucy\'s page). '
         + 'Collaborate via getTeamStandup + listHandoffs + ackHandoff. '
         + 'Operating surfaces: Meridian CRM (crm-*), Studio Board (studio-board-*), '
         + 'Business Studio / Founder OS (business-studio-*). '
         + 'Prefer *-working-set / *-brief before writes. '
         + 'assignNpcTask is blocked (queues slow local NPC). '
         + 'Mint a Standard/Full Connect AI token.',
-      version: '2.1.0',
+      version: '2.2.0',
     },
     servers: [{ url: base }],
     components: {
