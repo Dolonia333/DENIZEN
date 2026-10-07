@@ -3145,14 +3145,12 @@ class PlayerChat {
         transform: none !important;
       }
       /*
-       * Soft keyboard open: fill the visual viewport above the keys so message
-       * history stays readable. Do not pin under the game frame or clamp to
-       * a tiny dvh card — that was crushing past conversations.
+       * Soft keyboard open: keep typing above the keys while a compact HQ stays
+       * visible at the top (see mobile-controls). Do not cover the whole
+       * viewport — the office must remain on screen.
        */
       html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
-        top: calc(
-          var(--denizen-vv-offset-top, 0px) + max(6px, env(safe-area-inset-top, 0px))
-        ) !important;
+        top: auto !important;
         bottom: calc(var(--denizen-keyboard-offset, 0px) + 6px) !important;
         left: max(6px, env(safe-area-inset-left, 0px)) !important;
         right: max(6px, env(safe-area-inset-right, 0px)) !important;
@@ -3160,8 +3158,11 @@ class PlayerChat {
         min-width: 0 !important;
         max-width: none !important;
         height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
+        min-height: 150px !important;
+        max-height: min(
+          42dvh,
+          calc(var(--denizen-vv-h, 50dvh) - 8px)
+        ) !important;
         transform: none !important;
         display: flex !important;
         flex-direction: column !important;
@@ -3169,9 +3170,22 @@ class PlayerChat {
         overflow: hidden !important;
         pointer-events: auto !important;
       }
+      /* Portrait: sit under the compact HQ, above the keyboard */
+      html.denizen-touch.denizen-keyboard-open.denizen-chat-open.denizen-portrait #player-chat-panel:not([data-phone-chat="1"]) {
+        top: calc(
+          var(--denizen-vv-offset-top, 0px)
+          + max(4px, env(safe-area-inset-top, 0px))
+          + min(calc((100dvw - 16px) * 9 / 16), 203px)
+          + 10px
+        ) !important;
+        bottom: calc(var(--denizen-keyboard-offset, 0px) + 6px) !important;
+        max-height: none !important;
+        min-height: 140px !important;
+        height: auto !important;
+      }
       html.denizen-touch.denizen-keyboard-open.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) #player-chat-log {
         flex: 1 1 auto !important;
-        min-height: 140px !important;
+        min-height: 48px !important;
         max-height: none !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
