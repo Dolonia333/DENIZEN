@@ -99,13 +99,13 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapSpace4/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace5/);
   });
 
-  it('landscape Floor Line is a compact right floating card so the HQ map stays large', () => {
+  it('landscape Floor Line is a compact left floating card so Buzz stays visible', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
-    assert.match(chat, /Landscape Floor Line: compact floating card/);
+    assert.match(chat, /Landscape Floor Line: compact floating card on the LEFT/);
     assert.match(chat, /height:\s*min\(48dvh,\s*168px\)/);
     assert.match(chat, /width:\s*min\(300px/);
     assert.match(
@@ -114,14 +114,14 @@ describe('mobile UI layout fixes', () => {
     );
     assert.match(
       chat,
-      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*auto !important/
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
     );
     assert.match(
       chat,
-      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?right:\s*max\(8px/
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?right:\s*auto !important/
     );
-    assert.match(mobile, /Landscape Floor Line: compact floating card/);
-    assert.match(mobile, /html\.denizen-touch\.denizen-landscape \{[\s\S]*?--denizen-frame-chrome:\s*28px/);
+    assert.match(mobile, /Landscape Floor Line: compact floating card on the LEFT/);
+    assert.match(mobile, /html\.denizen-touch\.denizen-landscape \{[\s\S]*?--denizen-frame-chrome:\s*20px/);
     assert.match(
       chat,
       /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
@@ -165,8 +165,8 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=mapSpace4/);
-    assert.match(html, /mobile-controls\.js\?v=mapSpace4/);
+    assert.match(html, /player-chat\.js\?v=mapSpace5/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace5/);
   });
 
   it('phones reclaim map real estate; floor caption is a thin one-line strip under the map', () => {
@@ -207,5 +207,17 @@ describe('mobile UI layout fixes', () => {
   it('speech bubbles nudge away from neighbors', () => {
     const actions = read('src/agent-actions.js');
     assert.match(actions, /Nudge up when another live bubble/);
+  });
+
+  it('landscape HQ frame hugs the map; tablet zoom fills the box', () => {
+    const html = read('index.html');
+    const profile = read('src/device-profile.js');
+    const scene = read('office-scene.js');
+    assert.match(html, /frame hugs the map/);
+    assert.match(html, /dz-frame-chrome \{[\s\S]*?width:\s*0;/);
+    assert.match(profile, /isLandscape \? 2\.2/);
+    assert.match(scene, /isLandscape \? 2\.2/);
+    assert.match(html, /device-profile\.js\?v=mapFill1/);
+    assert.match(html, /office-scene\.js\?v=mapFill1/);
   });
 });

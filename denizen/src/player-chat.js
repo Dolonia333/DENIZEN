@@ -3158,14 +3158,14 @@ class PlayerChat {
         flex: 0 0 44px !important;
       }
       /*
-       * Landscape Floor Line: compact floating card on the right.
-       * Full-width bottom sheets looked like a second app chrome.
+       * Landscape Floor Line: compact floating card on the LEFT.
+       * Right side stays clear for Buzz and corner NPCs.
        */
       html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
-        right: max(8px, env(safe-area-inset-right, 0px)) !important;
-        left: auto !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        right: auto !important;
         width: min(300px, calc(100dvw - 24px)) !important;
         min-width: 0 !important;
         max-width: min(300px, calc(100dvw - 24px)) !important;

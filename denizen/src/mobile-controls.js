@@ -179,7 +179,7 @@
       html.denizen-touch.denizen-landscape {
         --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
-        --denizen-frame-chrome: 28px;
+        --denizen-frame-chrome: 20px;
       }
 
       html.denizen-touch body {
@@ -225,12 +225,12 @@
 
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
-        /* Use nearly the full short side — leave a little for frame chrome only */
+        /* Fill the HQ box — spend nearly all of the short viewport on the map */
         --denizen-play-w: calc(
           100dvw
-          - max(6px, env(safe-area-inset-left, 0px))
-          - max(6px, env(safe-area-inset-right, 0px))
-          - 8px
+          - max(4px, env(safe-area-inset-left, 0px))
+          - max(4px, env(safe-area-inset-right, 0px))
+          - 4px
         );
         --denizen-play-h: calc(
           var(--denizen-vv-h)
@@ -427,13 +427,13 @@
         max-height: min(38dvh, 280px) !important;
       }
       /*
-       * Landscape Floor Line: compact floating card (right), not a full-width slab.
-       * Map stays large and centered; chat is a slim Messages-style panel.
+       * Landscape Floor Line: compact floating card on the LEFT.
+       * Keeps Buzz / corner NPCs on the right uncovered.
        */
       html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
-        right: max(8px, env(safe-area-inset-right, 0px)) !important;
-        left: auto !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        right: auto !important;
         bottom: calc(
           var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;

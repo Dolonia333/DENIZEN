@@ -1618,10 +1618,10 @@ class AgentActions {
     this._clearBubble(npcKey, this._speechBubbles);
 
     const isThought = style === 'thought';
-    // Single-line chips only — wrapping made tall opaque slabs that ate the
-    // playfield. Match nameplate scale (5–6px) so talk stays a thin strip.
+    // Compact chips — name + line so you can see who is talking over their head.
+    // Keep short enough not to bury the floor; slightly larger than nameplates.
     const body = String(text || '').replace(/\s+/g, ' ').trim();
-    const maxChars = isThought ? 22 : 24;
+    const maxChars = isThought ? 28 : 34;
     const truncated = body.length > maxChars ? body.slice(0, maxChars - 1) + '…' : body;
     const who = this._displayName(npcKey);
     const toName = extra?.toName || (extra?.toKey ? this._displayName(extra.toKey) : '');
@@ -1668,12 +1668,12 @@ class AgentActions {
     const label = `${whoLine}\n${prefix}${truncated}`;
 
     const bubbleText = this.scene.add.text(0, 0, label, {
-      fontSize: isThought ? '5px' : '6px',
+      fontSize: isThought ? '6px' : '7px',
       fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
       fontStyle: 'bold',
       color: textColor,
       backgroundColor: bgColor,
-      padding: { x: 3, y: 1 },
+      padding: { x: 4, y: 2 },
       align: 'center',
     });
     let res = 2;
@@ -1685,10 +1685,10 @@ class AgentActions {
     if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(res);
     bubbleText.setOrigin(0.5, 1);
     bubbleText.setDepth(9998);
-    // Scale under 1 keeps chips petite at office camera zoom (often 2×+).
-    try { bubbleText.setScale(0.82); } catch (_) {}
+    // Near 1.0 so chips stay readable over heads at office camera zoom.
+    try { bubbleText.setScale(0.95); } catch (_) {}
     bubbleText.setAlpha(0);
-    const yOff = isThought ? 40 : 44;
+    const yOff = isThought ? 42 : 48;
     let xOff = 0;
     bubbleText.x = npc.x;
     bubbleText.y = npc.y - yOff;

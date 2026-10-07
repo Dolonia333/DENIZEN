@@ -197,10 +197,10 @@ function playfieldZoomForProfile(profile) {
   const dp = globalThis.DenizenDeviceProfile;
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
   if (profile?.isPhone || profile?.tier === 'phone-compact') {
-    if (profile?.isLandscape) return 1.55;
+    if (profile?.isLandscape) return 1.7;
     return profile?.isCompactPhone ? 1.95 : 1.85;
   }
-  if (profile?.isTablet) return profile?.isLandscape ? 1.85 : 2.15;
+  if (profile?.isTablet) return profile?.isLandscape ? 2.2 : 2.15;
   return 2.75;
 }
 

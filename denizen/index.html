@@ -434,17 +434,26 @@
           0 0 40px var(--frame-glow, rgba(56, 189, 248, 0.12)),
           0 16px 40px rgba(0, 0, 0, 0.55);
       }
-      /* Landscape: compact frame so the office fills the short side cleanly */
+      /* Landscape: frame hugs the map — chrome must not widen past #game-container */
       html.denizen-touch.denizen-landscape #game-frame {
-        padding: 3px;
+        padding: 2px;
         margin: 0 auto;
-        max-width: 100%;
+        width: fit-content;
+        max-width: calc(100dvw - 8px);
         border-radius: 4px;
+        align-items: stretch;
         box-shadow:
           0 0 0 1px rgba(148, 163, 184, 0.22),
           0 0 0 2px rgba(2, 6, 23, 0.85),
           0 0 24px var(--frame-glow, rgba(56, 189, 248, 0.1)),
           0 8px 24px rgba(0, 0, 0, 0.45);
+      }
+      html.denizen-touch.denizen-landscape #game-frame .dz-frame-chrome {
+        /* Shrink-wrap to the map width (body/frame row tricks otherwise leave side gutters) */
+        width: 0;
+        min-width: 100%;
+        max-width: 100%;
+        overflow: hidden;
       }
       html.denizen-touch #game-frame::before,
       html.denizen-touch #game-frame::after,
@@ -721,8 +730,8 @@
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=dedupe1" defer></script>
     <!-- Agent Office System -->
-    <script src="./src/floor-strip.js?v=mapSpace4" defer></script>
-    <script src="./src/agent-actions.js?v=bubbleChip4" defer></script>
+    <script src="./src/floor-strip.js?v=mapSpace5" defer></script>
+    <script src="./src/agent-actions.js?v=bubbleChip5" defer></script>
     <script src="./src/agent-office-manager.js?v=headTrack1" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
     <!-- OpenClaw → WorldState bridge (translator must load BEFORE the bridge runner) -->
@@ -733,9 +742,9 @@
     <!-- Mobile haptics (tap / impact / notify vibration patterns) -->
     <script src="./src/mobile-haptics.js?v=mobplay2" defer></script>
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
-    <script src="./src/device-profile.js?v=smooth1" defer></script>
+    <script src="./src/device-profile.js?v=mapFill1" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=mapSpace4" defer></script>
+    <script src="./src/mobile-controls.js?v=mapSpace5" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
     <script src="./src/visitor-session.js?v=hqPassKbd1" defer></script>
@@ -752,7 +761,7 @@
     <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
     <script src="./src/visitor-market-panel.js?v=rokiRhLive1" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=mapSpace4" defer></script>
+    <script src="./src/player-chat.js?v=mapSpace5" defer></script>
     <script src="./src/denizen-phone-chat-ui.js?v=phchatNoSpin1" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/tabler-icons.js?v=ti6" defer></script>
@@ -778,7 +787,7 @@
     <script src="./src/city-tod.js?v=tod5frame" defer></script>
     <script src="./src/map-editor-pro.js?v=pro6tiles" defer></script>
     <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
-    <script src="./office-scene.js?v=deskLife1" defer></script>
+    <script src="./office-scene.js?v=mapFill1" defer></script>
   </head>
   <body>
     <div id="denizen-night-city" aria-hidden="true" data-tod="day">
