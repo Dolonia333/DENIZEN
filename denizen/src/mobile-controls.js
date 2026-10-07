@@ -312,7 +312,7 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: keep HQ in the middle of the screen (even when Floor Line is open). */
+      /* Portrait: HQ stays in the middle of the screen (chat is a bottom sheet). */
       html.denizen-touch.denizen-portrait body,
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
         align-items: center;

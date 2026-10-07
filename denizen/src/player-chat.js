@@ -3123,8 +3123,9 @@ class PlayerChat {
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
         right: max(8px, env(safe-area-inset-right, 0px)) !important;
         width: auto !important;
-        height: min(42dvh, 320px) !important;
-        max-height: min(42dvh, 320px) !important;
+        /* Shorter sheet so the mid-screen HQ card stays fully visible above it */
+        height: min(34dvh, 260px) !important;
+        max-height: min(34dvh, 260px) !important;
         z-index: 2147483630 !important;
       }
       /*

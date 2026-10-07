@@ -86,15 +86,11 @@ describe('mobile UI layout fixes', () => {
     assert.match(html, /#game-container canvas \{[^}]*display:\s*block;/s);
   });
 
-  it('portrait phones center HQ mid-screen; pin top only when chat opens', () => {
+  it('portrait phones keep HQ centered mid-screen even when chat is open', () => {
     const mobile = read('src/mobile-controls.js');
     assert.match(
       mobile,
-      /html\.denizen-touch\.denizen-portrait body,\s*[\s\S]*?align-items:\s*center/
-    );
-    assert.match(
-      mobile,
-      /denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*center/
+      /denizen-portrait body,\s*\n\s*html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*center/
     );
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
@@ -267,7 +263,7 @@ describe('mobile UI layout fixes', () => {
     );
     assert.match(
       chat,
-      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?height:\s*min\(42dvh,\s*320px\)/
+      /denizen-phone-mode\.denizen-chat-open\.denizen-portrait #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?height:\s*min\(34dvh,\s*260px\)/
     );
   });
 });
