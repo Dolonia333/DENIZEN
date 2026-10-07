@@ -16,7 +16,7 @@ describe('Coffee run carry-through delivery', () => {
     assert.match(actions, /_holdCoffeeMug/);
     assert.match(actions, /mode:\s*'carry'/);
     assert.match(actions, /deliverCoffeeMug\(/);
-    assert.match(actions, /setDeskClutter\(toKey/);
+    assert.match(actions, /_ensureDeskProp\(/);
   });
 
   it('ambient coffee favor carries mug until delivery and logs the floor strip', () => {
@@ -30,7 +30,7 @@ describe('Coffee run carry-through delivery', () => {
 
   it('cache busters bumped for coffee carry', () => {
     const html = read('index.html');
-    assert.match(html, /agent-actions\.js\?v=coffeeCarry1/);
-    assert.match(html, /agent-office-manager\.js\?v=coffeeCarry1/);
+    assert.match(html, /agent-actions\.js\?v=workTheater1/);
+    assert.match(html, /agent-office-manager\.js\?v=workTheater1/);
   });
 });

@@ -471,6 +471,12 @@ class AgentOfficeManager {
     });
 
     this._seedDeskWorkloadShowcase(seatedKeys);
+    // Demo / capture: coffee + research + MCP handoff theater on a short timeline.
+    this.scene.time.delayedCall(2500, () => this._seedWorkTheaterShowcase(seatedKeys));
+    try {
+      window.__DenizenAgentManager = this;
+      window.__DenizenRunWorkTheaterDemo = () => this.runWorkTheaterDemo();
+    } catch (_) {}
 
     // Grok home welcome (desk placement handled above via teleportToDesk)
     const grok = this.agents.get('xp_grok');
@@ -2361,6 +2367,187 @@ class AgentOfficeManager {
   }
 
   /**
+   * Timed floor theater: researching → coffee run → research handoff carry.
+   * Safe to call from capture scripts via window.__DenizenRunWorkTheaterDemo().
+   */
+  _seedWorkTheaterShowcase(seatedKeys = []) {
+    const keys = (seatedKeys || []).filter((k) => this.agents.get(k)?.assignedDesk);
+    if (keys.length < 2) return;
+    // Prefer named seats; keep coffee-run and research-handoff on different pairs.
+    const prefer = (name) => keys.find((k) => this.NPC_NAMES?.[k] === name) || null;
+    const pick = (...names) => {
+      for (const n of names) {
+        const k = prefer(n);
+        if (k) return k;
+      }
+      return null;
+    };
+    const researcher = pick('Bob', 'Alex') || keys[0];
+    const handoffTo = pick('Jenny', 'Sarah', 'Lucy')
+      || keys.find((k) => k !== researcher)
+      || keys[1];
+    const coffeeAsker = pick('Jenny', 'Sarah') || handoffTo;
+    const coffeeRunner = pick('Alex', 'Marcus', 'Ryan')
+      || keys.find((k) => k !== coffeeAsker && k !== researcher)
+      || keys.find((k) => k !== coffeeAsker)
+      || keys[0];
+    this._playResearchingTheater(researcher, 'OMES partners / GovCon leads');
+    this.scene.time.delayedCall(3000, () => {
+      try { this._forceCoffeeFavor(coffeeRunner, coffeeAsker); } catch (_) {}
+    });
+    // After coffee delivery settles, carry the research brief across the floor.
+    this.scene.time.delayedCall(16000, () => {
+      try {
+        this._playResearchHandoffTheater(researcher, handoffTo, {
+          title: 'OMES partners brief',
+          summary: 'Shared research from MCP / ChatGPT connector',
+        });
+      } catch (_) {}
+    });
+  }
+
+  /** Public entry for demos / Playwright capture. */
+  runWorkTheaterDemo() {
+    const seated = [];
+    this.agents.forEach((agent, key) => {
+      if (agent?.assignedDesk && this.actions._sittingNpcs?.has?.(key)) seated.push(key);
+      else if (agent?.assignedDesk) seated.push(key);
+    });
+    this._seedWorkTheaterShowcase(seated);
+    return { ok: true, seated: seated.length };
+  }
+
+  _playResearchingTheater(npcKey, topic = 'Research') {
+    const agent = this.agents.get(npcKey);
+    const npc = this.actions._getNpc?.(npcKey);
+    if (!agent || !npc) return;
+    agent.status = 'working';
+    agent.currentTask = `Researching ${topic}`;
+    agent._taskLabel = 'research';
+    agent._lastSkillAt = Date.now();
+    agent._skillPendingSince = Date.now();
+    try {
+      if (agent.assignedDesk) this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
+    } catch (_) {}
+    try { this.actions.setDeskStatus?.(npcKey, 'Researching'); } catch (_) {}
+    try { this.actions.setDeskClutter?.(npcKey, 'heavy'); } catch (_) {}
+    try { this.actions._flashSkillCast?.(npc, npcKey, 'research', 4200); } catch (_) {}
+    try {
+      window.DenizenFloorStrip?.push?.({
+        npcKey,
+        name: agent.name,
+        kind: 'work',
+        text: `Researching · ${String(topic).slice(0, 40)}`,
+      });
+    } catch (_) {}
+  }
+
+  _playResearchHandoffTheater(fromKey, toKey, doc = {}) {
+    const from = this.agents.get(fromKey);
+    const to = this.agents.get(toKey);
+    if (!from || !to) return;
+    const title = doc.title || doc.summary || 'Research brief';
+    from.status = 'delivering';
+    to.status = 'talking';
+    const sprite = this.actions._getNpc?.(fromKey);
+    if (sprite) sprite._purposefulWalkUntil = Date.now() + 40000;
+    try {
+      this.actions.runResearchHandoff?.(fromKey, toKey, title);
+    } catch (_) {}
+    this.scene.time.delayedCall(12000, () => {
+      try {
+        if (from.assignedDesk) {
+          this.actions.useComputer(fromKey, from.assignedDesk, { instant: false });
+          from.status = 'working';
+        }
+        if (to.assignedDesk) {
+          this.actions.useComputer(toKey, to.assignedDesk, { instant: false });
+          to.status = 'working';
+          this.actions.setDeskClutter?.(toKey, 'heavy');
+        }
+      } catch (_) {}
+    });
+  }
+
+  /** Force a coffee favor between two specific seated agents (for demos). */
+  _forceCoffeeFavor(runnerKey, requesterKey) {
+    if (this._ambientCoffeeFavorActive) return;
+    const runner = this.agents.get(runnerKey);
+    const requester = this.agents.get(requesterKey);
+    if (!runner?.assignedDesk || !requester?.assignedDesk) return;
+    // Swap roles: requester asks, runner fetches — match ambient semantics.
+    const asker = { npcKey: requesterKey, agent: requester };
+    const fetcher = { npcKey: runnerKey, agent: runner };
+    // Prefer a third walker as runner if asker===fetcher key collision.
+    if (asker.npcKey === fetcher.npcKey) return;
+    this._ambientCoffeeFavorActive = true;
+    asker.agent.status = 'talking';
+    fetcher.agent.status = 'talking';
+    this.actions.speak(asker.npcKey, `Hey ${fetcher.agent.name}, grab me a coffee?`);
+    try {
+      window.DenizenFloorStrip?.push?.({
+        npcKey: asker.npcKey,
+        name: asker.agent.name,
+        kind: 'status',
+        text: `Asked ${fetcher.agent.name} for a coffee run`,
+      });
+    } catch (_) {}
+    this.scene.time.delayedCall(1600, () => {
+      this.actions.speak(fetcher.npcKey, 'On it.');
+      this.actions.standUp(fetcher.npcKey);
+      fetcher.agent.status = 'coffee_run';
+      const sprite = this.actions._getNpc?.(fetcher.npcKey);
+      if (sprite) sprite._purposefulWalkUntil = Date.now() + 50000;
+      this.actions.goToCoffee?.(fetcher.npcKey, { holdMs: null, carry: true });
+      try {
+        window.DenizenFloorStrip?.push?.({
+          npcKey: fetcher.npcKey,
+          name: fetcher.agent.name,
+          kind: 'work',
+          text: `Coffee run for ${asker.agent.name}`,
+        });
+      } catch (_) {}
+    });
+    this.scene.time.delayedCall(10000, () => {
+      fetcher.agent.status = 'delivering_coffee';
+      this.actions.visit?.(fetcher.npcKey, asker.npcKey);
+    });
+    this.scene.time.delayedCall(14500, () => {
+      this.actions.speak(fetcher.npcKey, 'Here you go.');
+      try {
+        if (this._isAtAssignedDesk(asker.npcKey, asker.agent)) {
+          this.actions.deliverCoffeeMug?.(fetcher.npcKey, asker.npcKey);
+        } else {
+          this.actions.useComputer(asker.npcKey, asker.agent.assignedDesk, { instant: false });
+          this.scene.time.delayedCall(800, () => {
+            this.actions.deliverCoffeeMug?.(fetcher.npcKey, asker.npcKey);
+          });
+        }
+      } catch (_) {
+        this.actions._clearCoffeeMug?.(fetcher.npcKey);
+      }
+    });
+    this.scene.time.delayedCall(16500, () => {
+      this.actions.speak(asker.npcKey, 'Thanks!');
+    });
+    this.scene.time.delayedCall(20000, () => {
+      try {
+        this.actions._clearCoffeeMug?.(fetcher.npcKey);
+        this.actions.useComputer(fetcher.npcKey, fetcher.agent.assignedDesk, { instant: false });
+        fetcher.agent.status = 'working';
+        this.actions.useComputer(asker.npcKey, asker.agent.assignedDesk, { instant: false });
+        asker.agent.status = 'working';
+      } finally {
+        this._ambientCoffeeFavorActive = false;
+      }
+    });
+    this.scene.time.delayedCall(45000, () => {
+      try { this.actions._clearCoffeeMug?.(fetcher.npcKey); } catch (_) {}
+      this._ambientCoffeeFavorActive = false;
+    });
+  }
+
+  /**
    * Desk clutter level from agent state: idle/break → clear; blocked, error,
    * or juggling 2+ tasks → heavy; a task label or a recent skill → medium.
    */
@@ -4179,6 +4366,22 @@ class AgentOfficeManager {
           if (skillAgent?.assignedDesk) {
             try { this.actions.useComputer(skillNpcKey, skillAgent.assignedDesk); } catch (_) {}
           }
+          const topic = msg.skillParams?.query || msg.skillParams?.topic || msg.skill || 'work';
+          if (/research|search|web|brief/i.test(msg.skill || '')) {
+            this._playResearchingTheater(skillNpcKey, topic);
+          } else {
+            const spr = this.actions._getNpc?.(skillNpcKey);
+            try { this.actions._flashSkillCast?.(spr, skillNpcKey, msg.skill || 'work', 3600); } catch (_) {}
+            try { this.actions.setDeskStatus?.(skillNpcKey, 'Working'); } catch (_) {}
+            try {
+              window.DenizenFloorStrip?.push?.({
+                npcKey: skillNpcKey,
+                name: skillAgent?.name || msg.npcName,
+                kind: 'work',
+                text: `${msg.skill || 'Skill'} · running`,
+              });
+            } catch (_) {}
+          }
         }
         break;
       }
@@ -4198,6 +4401,20 @@ class AgentOfficeManager {
         if (skillResultKey) {
           try {
             this.actions.emote(skillResultKey, msg.ok ? '✓' : '!');
+          } catch (_) {}
+          const spr = this.actions._getNpc?.(skillResultKey);
+          if (msg.ok !== false) {
+            try { this.actions._flashShipBeat?.(spr, skillResultKey, 2200); } catch (_) {}
+          }
+          try {
+            window.DenizenFloorStrip?.push?.({
+              npcKey: skillResultKey,
+              name: resultAgent?.name || msg.npcName,
+              kind: msg.ok === false ? 'status' : 'work',
+              text: msg.ok === false
+                ? `${msg.skill || 'Skill'} failed`
+                : `Finished · ${msg.skill || 'task'}`,
+            });
           } catch (_) {}
         }
         // web-search/research post full replies in chat — skip robot status lines.
@@ -4280,11 +4497,29 @@ class AgentOfficeManager {
         break;
       }
       case 'research_brief_done': {
+        const who = msg.npcName || 'Bob';
+        const topic = msg.topic ? `"${msg.topic}"` : 'topic';
+        const detail = msg.path || msg.summary || msg.text || 'brief ready';
         if (this.scene._playerChat) {
-          const who = msg.npcName || 'Bob';
-          const topic = msg.topic ? `"${msg.topic}"` : 'topic';
-          const detail = msg.path || msg.summary || msg.text || 'brief ready';
           this.scene._playerChat._addToLog(who, `[research brief] ${topic}: ${detail}`);
+        }
+        const fromKey = this._npcKeyForName(who) || 'xp_bob';
+        const fromAgent = this.agents.get(fromKey);
+        try {
+          window.DenizenFloorStrip?.push?.({
+            npcKey: fromKey,
+            name: fromAgent?.name || who,
+            kind: 'work',
+            text: `Brief ready · ${String(msg.topic || 'research').slice(0, 36)}`,
+          });
+        } catch (_) {}
+        // Visible handoff: carry the brief to Lucy (CEO bridge) when no explicit target.
+        const toKey = this._npcKeyForName(msg.toNpc || msg.deliverTo) || 'xp_lucy';
+        if (fromKey && toKey && fromKey !== toKey && this.agents.get(toKey)) {
+          this._playResearchHandoffTheater(fromKey, toKey, {
+            title: msg.topic || 'Research brief',
+            summary: detail,
+          });
         }
         break;
       }
@@ -4469,9 +4704,27 @@ class AgentOfficeManager {
         break;
       }
 
-      case 'assistant_handoff':
+      case 'assistant_handoff': {
         globalThis.DenizenVisitorHandoffUI?.showIncoming?.(msg);
+        const doc = msg.document || msg.handoff?.metadata?.document || msg.metadata?.document;
+        const fromNpc = msg.from_npc || msg.handoff?.from_npc || msg.metadata?.from_npc;
+        const toNpc = msg.to_npc || msg.handoff?.to_npc || msg.metadata?.to_npc;
+        const fromKey = this._npcKeyForName(fromNpc) || fromNpc;
+        const toKey = this._npcKeyForName(toNpc) || toNpc;
+        if (doc && this.agents.get(fromKey) && this.agents.get(toKey)) {
+          this._playResearchHandoffTheater(fromKey, toKey, doc);
+        } else if (doc) {
+          try {
+            window.DenizenFloorStrip?.push?.({
+              npcKey: fromKey || 'xp_lucy',
+              name: msg.from_display_name || 'Teammate',
+              kind: 'work',
+              text: `MCP handoff · ${String(doc.title || doc.summary || 'research').slice(0, 40)}`,
+            });
+          } catch (_) {}
+        }
         break;
+      }
 
       case 'skill_gap_progress':
       case 'skill_gap_complete':

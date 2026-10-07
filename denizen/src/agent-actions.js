@@ -1080,36 +1080,137 @@ class AgentActions {
    */
   deliverCoffeeMug(fromKey, toKey) {
     this._clearCoffeeMug(fromKey);
-    if (!toKey || typeof this.setDeskClutter !== 'function') return false;
+    return this._ensureDeskProp(toKey, 'mug');
+  }
+
+  /**
+   * Carry a research brief (paper stack) to a teammate and leave it on their desk.
+   * Used for MCP / ChatGPT research handoffs between same-org members.
+   */
+  runResearchHandoff(fromKey, toKey, topic = 'Research brief') {
+    const fromNpc = this._getNpc(fromKey);
+    if (!fromNpc || !toKey) return Promise.resolve(false);
+    if (this._sittingNpcs.has(fromKey)) this._standUpNpc(fromKey);
+    this._holdBriefFolder(fromNpc, fromKey, { ms: null });
     try {
-      // Ensure the recipient has at least a mug on their desk after delivery.
-      const sit = this._sittingNpcs.get(toKey);
-      if (!sit?.deskSprite) {
-        // They may still be seated via useComputer — try seating them first.
-        return false;
-      }
-      this.setDeskClutter(toKey, 'medium');
-      const row = this._deskClutter.get(toKey);
-      if (row?.kinds?.includes('mug')) return true;
-      // Force a mug prop even if medium rolled papers-only for this NPC.
-      if (!this.scene?.textures?.exists?.('vfx_coffee_mug')) return false;
+      window.DenizenFloorStrip?.push?.({
+        npcKey: fromKey,
+        name: this.scene?._agentManager?.agents?.get?.(fromKey)?.name || fromKey,
+        kind: 'work',
+        text: `Handoff · ${String(topic).slice(0, 42)}`,
+      });
+    } catch (_) {}
+    const label = String(topic).slice(0, 36);
+    try { this.speak?.(fromKey, `Brief for you — ${label}`); } catch (_) {}
+    return Promise.resolve(this.visit?.(fromKey, toKey)).then(() => {
+      this.deliverHandoffBrief(fromKey, toKey);
+      try {
+        this.speak?.(fromKey, 'Research handoff delivered.');
+        this.emote?.(toKey, '📋');
+      } catch (_) {}
+      try {
+        window.DenizenFloorStrip?.push?.({
+          npcKey: toKey,
+          name: this.scene?._agentManager?.agents?.get?.(toKey)?.name || toKey,
+          kind: 'status',
+          text: `Got research handoff · ${label}`,
+        });
+      } catch (_) {}
+      return true;
+    }).catch(() => {
+      this._clearBriefFolder(fromKey);
+      return false;
+    });
+  }
+
+  deliverHandoffBrief(fromKey, toKey) {
+    this._clearBriefFolder(fromKey);
+    return this._ensureDeskProp(toKey, 'paper');
+  }
+
+  /** Ensure a desk has mug or paper clutter (forces the kind if missing). */
+  _ensureDeskProp(npcKey, kind) {
+    if (!npcKey || (kind !== 'mug' && kind !== 'paper')) return false;
+    try {
+      const sit = this._sittingNpcs.get(npcKey);
+      if (!sit?.deskSprite) return false;
+      const texOk = kind === 'mug'
+        ? !!this.scene?.textures?.exists?.('vfx_coffee_mug')
+        : !!this.scene?.textures?.exists?.('vfx_desk_papers');
+      if (!texOk) return false;
+      this.setDeskClutter(npcKey, 'medium');
+      const row = this._deskClutter.get(npcKey);
+      if (row?.kinds?.includes(kind)) return true;
       if (!row) {
-        this.setDeskClutter(toKey, 'heavy');
-        return !!this._deskClutter.get(toKey)?.kinds?.includes('mug');
+        this.setDeskClutter(npcKey, 'heavy');
+        return !!this._deskClutter.get(npcKey)?.kinds?.includes(kind);
       }
-      if (!row.kinds.includes('mug')) {
-        const slot = this._pickDeskClutterSlot(toKey, sit, 'mug', row.slots);
-        if (slot) {
-          row.kinds.push('mug');
-          row.slots.push(slot);
-          row.props.push(this._spawnDeskProp('mug', slot, sit.deskSprite, sit));
-          return true;
-        }
-      }
-      return !!row.kinds.includes('mug');
+      const slot = this._pickDeskClutterSlot(npcKey, sit, kind, row.slots);
+      if (!slot) return false;
+      row.kinds.push(kind);
+      row.slots.push(slot);
+      row.props.push(this._spawnDeskProp(kind, slot, sit.deskSprite, sit));
+      return true;
     } catch (_) {
       return false;
     }
+  }
+
+  /**
+   * Hold a paper-stack "brief folder" beside the NPC until cleared.
+   */
+  _holdBriefFolder(npc, npcKey, { ms = null } = {}) {
+    if (!npc || !this.scene?.add) return null;
+    if (!this.scene.textures?.exists?.('vfx_desk_papers')) return null;
+    try {
+      this._clearBriefFolder?.(npcKey);
+      const folder = this.scene.add.image(npc.x + 10, npc.y - 4, 'vfx_desk_papers');
+      folder.setOrigin(0.5, 0.7);
+      folder.setScale(1.35);
+      folder.setDepth((npc.depth || 10) + 2);
+      const frameOf = (spr) => {
+        const fr = spr?.frame;
+        if (!fr) return 0;
+        const n = Number(fr.name);
+        if (Number.isFinite(n)) return n;
+        if (typeof fr.index === 'number') return fr.index;
+        return 0;
+      };
+      const follow = this.scene.time.addEvent({
+        delay: 40,
+        loop: true,
+        callback: () => {
+          if (!folder.active || !npc.active) return;
+          const f = frameOf(npc);
+          let ox = 10;
+          let oy = -4;
+          if (f >= 4 && f <= 7) { ox = -11; }
+          else if (f >= 8 && f <= 11) { ox = 11; }
+          else if (f >= 12) { ox = 0; oy = -8; }
+          folder.x = npc.x + ox;
+          folder.y = npc.y + oy;
+          folder.setDepth((npc.depth || 10) + 2);
+        },
+      });
+      let timer = null;
+      if (ms != null && ms > 0) {
+        timer = this.scene.time.delayedCall(ms, () => this._clearBriefFolder(npcKey));
+      }
+      if (!this._briefFolders) this._briefFolders = new Map();
+      this._briefFolders.set(npcKey, { folder, follow, timer });
+      return folder;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  _clearBriefFolder(npcKey) {
+    const row = this._briefFolders?.get?.(npcKey);
+    if (!row) return;
+    try { row.follow?.remove?.(); } catch (_) {}
+    try { row.timer?.remove?.(); } catch (_) {}
+    try { row.folder?.destroy?.(); } catch (_) {}
+    this._briefFolders.delete(npcKey);
   }
 
   /**
@@ -1625,6 +1726,26 @@ class AgentActions {
     });
 
     this._emoteBubbles.set(npcKey, { text: emoteText, timer, npc, aboveHead: 28 });
+  }
+
+  /**
+   * Quiet desk status chip — drives the desk work loop / floor strip without HUD chrome.
+   */
+  setDeskStatus(npcKey, label) {
+    const text = String(label || '').trim().slice(0, 28);
+    if (!text) return;
+    const agent = this.scene?._agentManager?.agents?.get?.(npcKey);
+    if (agent) {
+      agent.currentTask = text;
+      agent._taskLabel = text.toLowerCase().includes('research') ? 'research' : 'work';
+      agent._lastSkillAt = Date.now();
+      if (agent.status === 'idle' || agent.status === 'wandering') agent.status = 'working';
+    }
+    const npc = this._getNpc(npcKey);
+    if (npc) {
+      try { this.think(npcKey, text); } catch (_) {}
+      try { this._showTypingIndicator(npc, npcKey); } catch (_) {}
+    }
   }
 
   _showTypingIndicator(npc, npcKey) {
