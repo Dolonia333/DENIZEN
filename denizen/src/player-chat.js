@@ -3133,15 +3133,16 @@ class PlayerChat {
        * Sized for readable message text while leaving Buzz clear (~120px).
        */
       html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
-        top: max(8px, env(safe-area-inset-top, 0px)) !important;
+        /* Bottom-anchored short rail — never top:0 with a tall height (covered the map). */
+        top: auto !important;
         bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         right: auto !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
-        width: min(420px, calc(100dvw - 120px)) !important;
+        width: min(340px, calc(100dvw - 100px)) !important;
         min-width: 0 !important;
-        max-width: min(420px, calc(100dvw - 120px)) !important;
-        height: min(58dvh, 320px) !important;
-        max-height: none !important;
+        max-width: min(340px, calc(100dvw - 100px)) !important;
+        height: min(34dvh, 200px) !important;
+        max-height: min(34dvh, 200px) !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;

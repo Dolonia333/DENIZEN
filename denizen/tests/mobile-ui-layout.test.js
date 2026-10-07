@@ -86,29 +86,35 @@ describe('mobile UI layout fixes', () => {
     assert.match(html, /#game-container canvas \{[^}]*display:\s*block;/s);
   });
 
-  it('portrait phones center the HQ map box, then pin top when chat opens', () => {
+  it('portrait phones pin HQ to the top so the map is not mid-skyline', () => {
     const mobile = read('src/mobile-controls.js');
     assert.match(
       mobile,
-      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?align-items:\s*center/
+      /html\.denizen-touch\.denizen-portrait body \{[\s\S]*?align-items:\s*flex-start/
     );
     assert.match(
       mobile,
       /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
     );
+    assert.match(mobile, /--denizen-vv-h/);
+    assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=ipadClose1/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace1/);
   });
 
-  it('landscape Floor Line is a compact left rail so Buzz stays bottom-right', () => {
+  it('landscape Floor Line is a short left rail so the HQ map stays visible', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
     const phone = read('src/denizen-phone-ui.js');
     assert.match(chat, /Landscape Floor Line: compact LEFT rail/);
     assert.match(chat, /Buzz phone FAB owns bottom-right/);
-    assert.match(chat, /height:\s*min\(58dvh,\s*320px\)/);
-    assert.match(chat, /width:\s*min\(420px/);
-    assert.match(chat, /100dvw - 120px/);
+    assert.match(chat, /height:\s*min\(34dvh,\s*200px\)/);
+    assert.match(chat, /width:\s*min\(340px/);
+    assert.match(chat, /100dvw - 100px/);
+    assert.match(
+      chat,
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?top:\s*auto !important/
+    );
     assert.match(
       chat,
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
@@ -117,11 +123,12 @@ describe('mobile UI layout fixes', () => {
       chat,
       /denizen-landscape\.denizen-chat-open #denizen-phone-fab\s*\{[\s\S]*?display:\s*flex !important/
     );
-    assert.match(mobile, /LEFT rail — Buzz phone FAB stays bottom-right/);
+    assert.match(mobile, /short LEFT rail — must leave the HQ map visible/);
     assert.match(
       mobile,
       /denizen-landscape #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
     );
+    assert.match(mobile, /--denizen-frame-chrome:\s*36px/);
     assert.match(
       phone,
       /Landscape Floor Line uses the left rail[\s\S]*?display:\s*flex !important/
@@ -169,8 +176,18 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=ipadClose1/);
-    assert.match(html, /mobile-controls\.js\?v=ipadClose1/);
+    assert.match(html, /player-chat\.js\?v=mapSpace1/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace1/);
+  });
+
+  it('phones reclaim map real estate from chrome and floor strip', () => {
+    const mobile = read('src/mobile-controls.js');
+    const strip = read('src/floor-strip.js');
+    const html = read('index.html');
+    assert.match(mobile, /html\.denizen-touch\.denizen-phone \{[\s\S]*?--denizen-frame-chrome:\s*52px/);
+    assert.match(strip, /denizen-phone #\$\{STRIP_ID\} \.dz-floor-line:nth-child\(n\+2\)/);
+    assert.match(strip, /denizen-landscape #\$\{STRIP_ID\} \{ display: none !important/);
+    assert.match(html, /denizen-touch\.denizen-phone #game-frame \.dz-frame-label/);
   });
 
   it('HQ frame keeps its badge, clock, and level chip in a chrome row', () => {

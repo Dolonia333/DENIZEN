@@ -73,9 +73,12 @@
         cursor: default;
         color: #94a3b8;
       }
-      html.denizen-touch #${STRIP_ID} { margin-top: 4px; }
-      html.denizen-touch #${STRIP_ID} .dz-floor-line { font-size: 11px; padding: 4px 6px; }
-      html.denizen-touch #${STRIP_ID} .dz-floor-line:nth-child(n+3) { display: none; }
+      html.denizen-touch #${STRIP_ID} { margin-top: 2px; gap: 2px; }
+      html.denizen-touch #${STRIP_ID} .dz-floor-line { font-size: 11px; padding: 3px 6px; }
+      /* Phones: one line under the map — two lines stole HQ height */
+      html.denizen-touch.denizen-phone #${STRIP_ID} .dz-floor-line:nth-child(n+2) { display: none; }
+      html.denizen-touch:not(.denizen-phone) #${STRIP_ID} .dz-floor-line:nth-child(n+3) { display: none; }
+      html.denizen-touch.denizen-landscape #${STRIP_ID} { display: none !important; }
     `;
     document.head.appendChild(s);
   }

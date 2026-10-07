@@ -15,7 +15,10 @@
   }
 
   const DISMISS_KEY = 'denizen_public_demo_banner_dismissed';
-  const SHOW_MS = 5500;
+  /* Short on phones — the bar steals map height before it auto-hides */
+  const SHOW_MS = (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches)
+    ? 2200
+    : 5500;
   const defaultFolders = [
     'abby', 'alex', 'lucy', 'bouncer',
     'conference_man', 'josh', 'jenny', 'roki',
