@@ -99,28 +99,29 @@ describe('mobile UI layout fixes', () => {
     assert.match(mobile, /--denizen-vv-h/);
     assert.match(mobile, /syncVisualViewport/);
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=mapSpace2/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace3/);
   });
 
-  it('landscape Floor Line is a bottom sheet so the HQ map stays centered', () => {
+  it('landscape Floor Line is a compact right floating card so the HQ map stays large', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
-    assert.match(chat, /Landscape Floor Line: bottom sheet/);
-    assert.match(chat, /height:\s*min\(42dvh,\s*220px\)/);
+    assert.match(chat, /Landscape Floor Line: compact floating card/);
+    assert.match(chat, /height:\s*min\(48dvh,\s*168px\)/);
+    assert.match(chat, /width:\s*min\(300px/);
     assert.match(
       chat,
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?top:\s*auto !important/
     );
     assert.match(
       chat,
-      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*max\(8px/
+      /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?left:\s*auto !important/
     );
     assert.match(
       chat,
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?right:\s*max\(8px/
     );
-    assert.match(mobile, /Landscape Floor Line: bottom sheet/);
-    assert.match(mobile, /--denizen-frame-chrome:\s*36px/);
+    assert.match(mobile, /Landscape Floor Line: compact floating card/);
+    assert.match(mobile, /--denizen-frame-chrome:\s*28px/);
     assert.match(
       chat,
       /denizen-chat-open:not\(\.denizen-phone-mode\):not\(\.denizen-landscape\)/
@@ -135,17 +136,17 @@ describe('mobile UI layout fixes', () => {
     assert.match(chat, /#player-chat-header > #player-chat-close-btn/);
   });
 
-  it('iPad landscape pins a fat tappable close button outside the actions squeeze', () => {
+  it('landscape Floor Line keeps a tappable close on the floating card', () => {
     const chat = read('src/player-chat.js');
     const mobile = read('src/mobile-controls.js');
-    assert.match(chat, /Pin a fat close control to the header corner/);
+    assert.match(chat, /Landscape close: always tappable/);
     assert.match(
       chat,
       /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?position:\s*absolute !important/
     );
     assert.match(
       chat,
-      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?width:\s*48px !important/
+      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?width:\s*36px !important/
     );
     assert.match(
       chat,
@@ -155,25 +156,30 @@ describe('mobile UI layout fixes', () => {
       chat,
       /denizen-landscape\.denizen-chat-open #player-chat-panel:not\(\[data-phone-chat="1"\]\)\s*\{[\s\S]*?pointer-events:\s*auto !important/
     );
-    assert.match(mobile, /Fat corner ✕/);
+    assert.match(mobile, /Landscape close/);
     assert.match(
       mobile,
-      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?48px/
+      /denizen-landscape #player-chat-header-actions #player-chat-close-btn \{[\s\S]*?36px/
     );
   });
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=mapSpace2/);
-    assert.match(html, /mobile-controls\.js\?v=mapSpace2/);
+    assert.match(html, /player-chat\.js\?v=mapSpace3/);
+    assert.match(html, /mobile-controls\.js\?v=mapSpace3/);
   });
 
-  it('phones reclaim map real estate from chrome and floor strip', () => {
+  it('phones reclaim map real estate; floor caption is a thin one-line strip under the frame', () => {
     const mobile = read('src/mobile-controls.js');
     const strip = read('src/floor-strip.js');
     const html = read('index.html');
-    assert.match(mobile, /html\.denizen-touch\.denizen-phone \{[\s\S]*?--denizen-frame-chrome:\s*52px/);
-    assert.match(strip, /denizen-phone #\$\{STRIP_ID\} \.dz-floor-line:nth-child\(n\+2\)/);
+    assert.match(mobile, /html\.denizen-touch\.denizen-phone \{[\s\S]*?--denizen-frame-chrome:\s*32px/);
+    assert.match(html, /--dz-floor-strip-h:\s*28px/);
+    assert.match(strip, /insertAdjacentElement\('afterend'/);
+    assert.match(strip, /html\.denizen-touch #\$\{STRIP_ID\} \.dz-floor-line:nth-child\(n\+2\)/);
+    assert.match(strip, /:not\(\.has-lines\) \{ display: none !important/);
+    assert.match(strip, /kind-quiet \{ display: none !important/);
+    assert.match(strip, /NPC speech bubbles over sprites are unchanged/);
     assert.match(html, /denizen-touch\.denizen-phone #game-frame \.dz-frame-label/);
   });
 

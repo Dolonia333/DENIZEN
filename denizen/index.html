@@ -44,8 +44,8 @@
         /* Room for the Workbench tab, which hangs off the frame's right edge. */
         --dz-workbench-gutter: 44px;
         --dz-frame-chrome-h: 34px;
-        /* Three-line floor strip under the map. */
-        --dz-floor-strip-h: 78px;
+        /* Floor caption under the map (desktop keeps a bit more room). */
+        --dz-floor-strip-h: 28px;
       }
       html.denizen-public-demo-banner-open {
         --dz-banner-h: 34px;
@@ -721,7 +721,7 @@
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=dedupe1" defer></script>
     <!-- Agent Office System -->
-    <script src="./src/floor-strip.js?v=mapSpace2" defer></script>
+    <script src="./src/floor-strip.js?v=mapSpace3" defer></script>
     <script src="./src/agent-actions.js?v=bubbleChip4" defer></script>
     <script src="./src/agent-office-manager.js?v=headTrack1" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
@@ -735,7 +735,7 @@
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
     <script src="./src/device-profile.js?v=smooth1" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=mapSpace2" defer></script>
+    <script src="./src/mobile-controls.js?v=mapSpace3" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
     <script src="./src/visitor-session.js?v=hqPassKbd1" defer></script>
@@ -752,7 +752,7 @@
     <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
     <script src="./src/visitor-market-panel.js?v=rokiRhLive1" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=mapSpace2" defer></script>
+    <script src="./src/player-chat.js?v=mapSpace3" defer></script>
     <script src="./src/denizen-phone-chat-ui.js?v=phchatNoSpin1" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/tabler-icons.js?v=ti6" defer></script>
@@ -763,9 +763,9 @@
     <!-- Lazy loader — must run before phone UI -->
     <script src="./src/denizen-lazy-scripts.js?v=icons3" defer></script>
     <!-- In-game smartphone HUD -->
-    <script src="./src/denizen-phone-ui.js?v=mapSpace2" defer></script>
+    <script src="./src/denizen-phone-ui.js?v=mapSpace3" defer></script>
     <script src="./src/buzz-capture.js?v=buzz14" defer></script>
-    <script src="./src/work-rail.js?v=mapSpace2" defer></script>
+    <script src="./src/work-rail.js?v=mapSpace3" defer></script>
     <script src="./src/corner-hud-autohide.js?v=corner14note" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=measured1" defer></script>

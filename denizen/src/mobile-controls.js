@@ -155,8 +155,8 @@
         --denizen-vv-h: 100dvh;
         --denizen-play-top: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 2px;
-        /* Slim chrome: pad + HQ label row + one floor-strip line */
-        --denizen-frame-chrome: 64px;
+        /* Slim chrome: pad + HQ label row (floor caption sits outside the frame) */
+        --denizen-frame-chrome: 40px;
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
           var(--denizen-vv-h) - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
@@ -172,14 +172,14 @@
 
       /* Phones: spend almost all width on the map; city is atmosphere only */
       html.denizen-touch.denizen-phone {
-        --denizen-frame-chrome: 52px;
+        --denizen-frame-chrome: 32px;
       }
 
       /* Landscape: notch is on the sides — reclaim vertical space hard */
       html.denizen-touch.denizen-landscape {
         --denizen-play-top: calc(max(2px, env(safe-area-inset-top, 0px)) + var(--dz-banner-h, 0px));
         --denizen-play-gap: 0px;
-        --denizen-frame-chrome: 36px;
+        --denizen-frame-chrome: 28px;
       }
 
       html.denizen-touch body {
@@ -427,31 +427,36 @@
         max-height: min(38dvh, 280px) !important;
       }
       /*
-       * Landscape Floor Line: bottom sheet across the short side.
-       * Left-rail + tall panel buried the HQ map under Safari's chrome.
+       * Landscape Floor Line: compact floating card (right), not a full-width slab.
+       * Map stays large and centered; chat is a slim Messages-style panel.
        */
       html.denizen-touch.denizen-landscape #player-chat-panel:not([data-phone-chat="1"]) {
         top: auto !important;
         right: max(8px, env(safe-area-inset-right, 0px)) !important;
-        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        left: auto !important;
         bottom: calc(
-          var(--denizen-dock-height, 40px) + 6px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
+          var(--denizen-dock-height, 40px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;
-        width: auto !important;
-        max-width: none !important;
+        width: min(300px, calc(100dvw - 24px)) !important;
+        max-width: min(300px, calc(100dvw - 24px)) !important;
         min-width: 0 !important;
-        height: min(42dvh, 220px) !important;
-        max-height: min(42dvh, 220px) !important;
+        height: min(48dvh, 168px) !important;
+        max-height: min(48dvh, 168px) !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;
         overflow: hidden !important;
         pointer-events: auto !important;
+        border-radius: 12px !important;
+        border-width: 1px !important;
+        box-shadow:
+          0 0 0 1px rgba(148, 163, 184, 0.2),
+          0 12px 28px rgba(0, 0, 0, 0.45) !important;
       }
-      /* Fat corner ✕ — must stay tappable when PROJECTS/Briefing fill the actions row */
+      /* Landscape close — corner hit target on the floating card */
       html.denizen-touch.denizen-landscape #player-chat-header {
         position: relative !important;
-        padding-right: 56px !important;
+        padding-right: 44px !important;
         overflow: visible !important;
       }
       html.denizen-touch.denizen-landscape #player-chat-header-actions {
@@ -463,10 +468,10 @@
         top: 4px !important;
         right: 4px !important;
         z-index: 6 !important;
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px !important;
-        min-height: 48px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
         pointer-events: auto !important;
         touch-action: manipulation !important;
       }
