@@ -73,12 +73,13 @@
         cursor: default;
         color: #94a3b8;
       }
-      html.denizen-touch #${STRIP_ID} { margin-top: 2px; gap: 2px; }
-      html.denizen-touch #${STRIP_ID} .dz-floor-line { font-size: 11px; padding: 3px 6px; }
-      /* Phones: one line under the map — two lines stole HQ height */
+      html.denizen-touch #${STRIP_ID} { margin-top: 4px; gap: 3px; }
+      html.denizen-touch #${STRIP_ID} .dz-floor-line { font-size: 11px; padding: 4px 6px; }
+      /* Phones: one line under the map; tablets keep two */
       html.denizen-touch.denizen-phone #${STRIP_ID} .dz-floor-line:nth-child(n+2) { display: none; }
       html.denizen-touch:not(.denizen-phone) #${STRIP_ID} .dz-floor-line:nth-child(n+3) { display: none; }
-      html.denizen-touch.denizen-landscape #${STRIP_ID} { display: none !important; }
+      /* Landscape: keep a single quiet line — hiding the strip entirely looked broken */
+      html.denizen-touch.denizen-landscape #${STRIP_ID} .dz-floor-line:nth-child(n+2) { display: none; }
     `;
     document.head.appendChild(s);
   }

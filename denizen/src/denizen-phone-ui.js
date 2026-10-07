@@ -1984,12 +1984,7 @@
         visibility: hidden !important;
         pointer-events: none !important;
       }
-      /* Landscape Floor Line uses the left rail — keep Buzz on the right */
-      html.denizen-touch.denizen-landscape.denizen-chat-open:not(.denizen-phone-open) #${FAB_ID} {
-        display: flex !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-      }
+      /* Landscape Floor Line is a bottom sheet — Buzz stays hidden while chat is open */
       ${M} #player-chat-fab,
       ${M} #denizen-bottom-dock #player-chat-fab,
       ${M} #denizen-proposals-chip {

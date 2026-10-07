@@ -3158,21 +3158,19 @@ class PlayerChat {
         flex: 0 0 44px !important;
       }
       /*
-       * Landscape Floor Line: compact LEFT rail.
-       * Buzz phone FAB owns bottom-right — do not park chat there.
-       * Sized for readable message text while leaving Buzz clear (~120px).
+       * Landscape Floor Line: bottom sheet (full short-side width).
+       * Left-rail layouts fought Safari chrome and buried the HQ map.
        */
       html.denizen-touch.denizen-landscape.denizen-chat-open #player-chat-panel:not([data-phone-chat="1"]) {
-        /* Bottom-anchored short rail — never top:0 with a tall height (covered the map). */
         top: auto !important;
-        bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
-        right: auto !important;
+        bottom: calc(var(--denizen-dock-height, 38px) + 6px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
-        width: min(340px, calc(100dvw - 100px)) !important;
+        width: auto !important;
         min-width: 0 !important;
-        max-width: min(340px, calc(100dvw - 100px)) !important;
-        height: min(34dvh, 200px) !important;
-        max-height: min(34dvh, 200px) !important;
+        max-width: none !important;
+        height: min(42dvh, 220px) !important;
+        max-height: min(42dvh, 220px) !important;
         display: flex !important;
         flex-direction: column !important;
         transform: none !important;
@@ -3397,15 +3395,12 @@ class PlayerChat {
         visibility: hidden !important;
         pointer-events: none !important;
       }
-      /* Landscape: keep Buzz reachable — Floor Line sits on the left rail */
-      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-phone-fab {
-        display: flex !important;
-        visibility: visible !important;
-        pointer-events: auto !important;
-        z-index: 2147483640 !important;
-      }
+      /* Landscape bottom-sheet chat covers the dock — keep Buzz/Speak hidden until closed */
+      html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-phone-fab,
       html.denizen-touch.denizen-landscape.denizen-chat-open #denizen-speak-fab {
         display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
       }
     `;
     this._chatStyleInjected = true;
