@@ -1378,8 +1378,9 @@ class AgentActions {
     this._clearBubble(npcKey, this._speechBubbles);
 
     const isThought = style === 'thought';
-    // Compact — thoughts shorter than spoken lines so the head isn't buried.
-    const maxChars = isThought ? 42 : 52;
+    // Compact chips: prefer 1 short line (2 max) so speech stays readable
+    // without climbing into half the viewport.
+    const maxChars = isThought ? 28 : 36;
     const truncated = text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
 
     // Voice — route speech (not thought) through DenizenSpeak. The voice
@@ -1403,58 +1404,119 @@ class AgentActions {
       }
     }
 
-    // Pokémon-style: light glass chip + dark readable text (no stroke halo).
-    const bgColor = isThought ? '#e0f2fede' : '#f8fafcee';
+    // Compact readable chip — same UI face as nameplates, higher contrast,
+    // narrow wrap so tall multi-line blocks don't eat the playfield.
+    const bgColor = isThought ? '#e0f2fef5' : '#fffffff5';
     const textColor = isThought ? '#0c4a6e' : '#0f172a';
     const prefix = isThought ? '…' : '';
     const label = prefix ? `${prefix}${truncated}` : truncated;
+    const wrapW = isThought ? 86 : 98;
 
     const bubbleText = this.scene.add.text(0, 0, label, {
-      fontSize: isThought ? '8px' : '9px',
-      fontFamily: 'monospace',
+      fontSize: isThought ? '7px' : '8px',
+      fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
+      fontStyle: isThought ? '500' : '600',
       color: textColor,
       backgroundColor: bgColor,
-      padding: { x: 4, y: 3 },
-      wordWrap: { width: isThought ? 110 : 130 },
+      padding: { x: 3, y: 2 },
+      wordWrap: { width: wrapW },
       align: 'center',
+      maxLines: 2,
     });
-    if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(1);
+    let res = 2;
+    try {
+      const light = globalThis.DenizenDeviceProfile?.lightPerf?.()?.light
+        || globalThis.DenizenDeviceProfile?.wantsLightPerf?.();
+      if (light) res = 1;
+    } catch (_) {}
+    if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(res);
     bubbleText.setOrigin(0.5, 1);
     bubbleText.setDepth(9998);
-    bubbleText.setAlpha(0.96);
+    try { bubbleText.setShadow(0, 1, 'rgba(15,23,42,0.22)', 2, false, true); } catch (_) {}
+    bubbleText.setAlpha(0);
+    const yOff = isThought ? 40 : 44;
+    let xOff = 0;
     bubbleText.x = npc.x;
-    bubbleText.y = npc.y - (isThought ? 44 : 48);
+    bubbleText.y = npc.y - yOff;
 
+    // Soft fade-in so chips don't pop as hard as opaque blocks.
+    try {
+      this.scene.tweens?.add?.({
+        targets: bubbleText,
+        alpha: 0.97,
+        duration: 140,
+        ease: 'Sine.easeOut',
+      });
+    } catch (_) {
+      bubbleText.setAlpha(0.97);
+    }
+
+    // Prefer a side slide when another live bubble sits on roughly the same
+    // spot; only then nudge up. Keeps the skyline clear while still avoiding
+    // stacked unreadable chips on desk clusters.
     // Nudge up when another live bubble sits on roughly the same spot so
     // clustered NPCs don't stack unreadable chips on top of each other.
     try {
-      const bw = bubbleText.width || 80;
-      const bh = bubbleText.height || 16;
-      let guard = 0;
-      while (guard < 6) {
-        let hit = false;
+      const overlaps = (x, y) => {
+        const bw = bubbleText.width || 72;
+        const bh = Math.min(bubbleText.height || 14, 22);
         for (const [otherKey, other] of this._speechBubbles) {
           if (otherKey === npcKey || !other?.text) continue;
-          const dx = Math.abs(other.text.x - bubbleText.x);
-          const dy = Math.abs(other.text.y - bubbleText.y);
-          if (dx < (bw + (other.text.width || 80)) * 0.55 && dy < Math.max(bh, other.text.height || 16) + 4) {
-            hit = true;
+          const dx = Math.abs(other.text.x - x);
+          const dy = Math.abs(other.text.y - y);
+          if (dx < (bw + (other.text.width || 72)) * 0.52
+            && dy < Math.max(bh, Math.min(other.text.height || 14, 22)) + 3) {
+            return true;
+          }
+        }
+        const name = this._roleLabels?.get?.(npcKey)?.text;
+        if (name) {
+          const dx = Math.abs(name.x - x);
+          const dy = Math.abs(name.y - y);
+          if (dx < (bw + (name.width || 36)) * 0.5
+            && dy < Math.max(bh, name.height || 10) + 2) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (overlaps(bubbleText.x, bubbleText.y)) {
+        const sideCandidates = [14, -14, 22, -22];
+        let placed = false;
+        for (const sx of sideCandidates) {
+          if (!overlaps(npc.x + sx, bubbleText.y)) {
+            xOff = sx;
+            bubbleText.x = npc.x + xOff;
+            placed = true;
             break;
           }
         }
-        if (!hit) break;
-        bubbleText.y -= (bh + 6);
-        guard += 1;
+        if (!placed) {
+          const bh = Math.min(bubbleText.height || 14, 22);
+          let guard = 0;
+          while (guard < 3 && overlaps(bubbleText.x, bubbleText.y)) {
+            bubbleText.y -= (bh + 3);
+            guard += 1;
+          }
+        }
       }
     } catch (_) { /* layout nudge is best-effort */ }
 
     // duration=0 means persist forever (no auto-clear), undefined defaults to 5s
-    const dur = duration !== undefined ? duration : (isThought ? 3500 : 5000);
+    const dur = duration !== undefined ? duration : (isThought ? 2800 : 4200);
     const timer = dur > 0 ? this.scene.time.delayedCall(dur, () => {
       this._clearBubble(npcKey, this._speechBubbles);
     }) : null;
 
-    this._speechBubbles.set(npcKey, { text: bubbleText, timer, npc, isThought });
+    this._speechBubbles.set(npcKey, {
+      text: bubbleText,
+      timer,
+      npc,
+      isThought,
+      yOff,
+      xOff,
+    });
   }
 
   _showEmote(npc, npcKey, symbol) {
@@ -1900,15 +1962,17 @@ class AgentActions {
       map.forEach((entry) => {
         if (entry.npc && entry.text && !entry.text.scene) return;
         if (entry.npc && entry.text) {
-          entry.text.x = entry.npc.x;
-          const off = entry.isThought ? 44 : (entry.yOff != null ? entry.yOff : yOffset);
+          entry.text.x = entry.npc.x + (entry.xOff || 0);
+          const off = entry.isThought
+            ? (entry.yOff != null ? entry.yOff : 40)
+            : (entry.yOff != null ? entry.yOff : yOffset);
           entry.text.y = entry.npc.y - off;
         }
       });
     };
 
-    updateMap(this._speechBubbles, 48);
-    updateMap(this._emoteBubbles, 56);
+    updateMap(this._speechBubbles, 44);
+    updateMap(this._emoteBubbles, 52);
     updateMap(this._roleLabels, 34);
 
     this._typingIndicators.forEach((entry) => {
