@@ -92,9 +92,48 @@ const TOOL_DEFINITIONS = [
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'browser_begin',
+    description:
+      'DEFAULT web start: open Lucy\'s browser and return the first real screenshot. Describe ONLY what you see, then call browser_step. Prefer over browser_open alone.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Optional URL to open' },
+        query: { type: 'string', description: 'Optional search query if no URL' },
+        wait_ms: { type: 'number', description: 'Wait for first frame (default 2500, max 8000)' },
+        include_base64: { type: 'boolean', description: 'Include JPEG base64 when small (default true)' },
+      },
+    },
+  },
+  {
+    name: 'browser_step',
+    description:
+      'DEFAULT web action: perform ONE click/type/key/scroll/navigate then return an AFTER screenshot. Always describe the AFTER frame before claiming success. Prefer over bare browser_act.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          enum: ['click', 'type', 'key', 'scroll', 'navigate'],
+          description: 'Action type',
+        },
+        x: { type: 'number', description: 'X for click/scroll (viewport pixels)' },
+        y: { type: 'number', description: 'Y for click/scroll (viewport pixels)' },
+        text: { type: 'string', description: 'Text to type, or navigate URL' },
+        key: { type: 'string', description: 'Key name for type=key (Enter, Tab, …)' },
+        deltaX: { type: 'number' },
+        deltaY: { type: 'number' },
+        url: { type: 'string', description: 'URL when type=navigate' },
+        wait_ms: { type: 'number', description: 'Wait before AFTER screenshot (default 900)' },
+        include_base64: { type: 'boolean', description: 'Include JPEG base64 on AFTER shot (default true)' },
+      },
+      required: ['type'],
+    },
+  },
+  {
     name: 'browser_open',
     description:
-      'Open or focus this NPC\'s live Playwright browser (Lucy). Use before browser_screenshot / browser_act when YOU are the eyes.',
+      'Open or focus this NPC\'s live Playwright browser without a screenshot. Prefer browser_begin for the verified eyes loop.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -106,7 +145,7 @@ const TOOL_DEFINITIONS = [
   {
     name: 'browser_screenshot',
     description:
-      'YOU are the eyes: capture the live browser frame (image + url/title). Then decide the next browser_act. Prefer this over computer-use when you can see screenshots.',
+      'Capture the live browser frame only. Prefer browser_begin (start) and browser_step (act+verify). Use this to re-check without acting.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -120,7 +159,7 @@ const TOOL_DEFINITIONS = [
   {
     name: 'browser_act',
     description:
-      'Perform one action on the live browser: click, type, key, scroll, or navigate. Coordinates are viewport pixels from the last browser_screenshot.',
+      'Perform one action without a verify screenshot. Prefer browser_step (act + AFTER shot). Coordinates are viewport pixels.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -435,6 +474,22 @@ async function callToolImpl(scope, name, args) {
     case 'run_skill': return mcpActions.toolRunSkill(scope, args);
     case 'get_skill_job': return mcpActions.toolGetSkillJob(scope, args);
     case 'browser_open': return browserEyes.browserOpen(scope.npc_key, args || {});
+    case 'browser_begin': {
+      const begun = await browserEyes.browserBegin(scope.npc_key, {
+        ...(args || {}),
+        baseUrl: getPublicBaseUrl(),
+      });
+      if (begun?.screenshot?.ok) begun.screenshot._mcp_image = true;
+      return begun;
+    }
+    case 'browser_step': {
+      const stepped = await browserEyes.browserStep(scope.npc_key, {
+        ...(args || {}),
+        baseUrl: getPublicBaseUrl(),
+      });
+      if (stepped?.after?.ok) stepped.after._mcp_image = true;
+      return stepped;
+    }
     case 'browser_screenshot': {
       const shot = browserEyes.browserScreenshot(scope.npc_key, {
         includeBase64: args?.include_base64 !== false,
@@ -938,6 +993,8 @@ async function handleRestSync(req, res, action) {
     || action === 'ack-handoff'
     || action === 'browser-act'
     || action === 'browser-open'
+    || action === 'browser-begin'
+    || action === 'browser-step'
   ) {
     if (req.method !== 'POST') {
       return sendJson(res, 405, { ok: false, error: 'POST only' });
@@ -951,6 +1008,14 @@ async function handleRestSync(req, res, action) {
     const payload = { ...(body || {}) };
     if (action === 'ack-handoff') {
       const result = await callTool(scope, 'acknowledge_handoff', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'browser-begin') {
+      const result = await callTool(scope, 'browser_begin', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'browser-step') {
+      const result = await callTool(scope, 'browser_step', payload);
       return sendJson(res, result?.ok ? 200 : 400, result);
     }
     if (action === 'browser-open') {
@@ -990,14 +1055,14 @@ function buildOpenApiSpec(baseUrl) {
       description:
         'REST bridge for ChatGPT Custom GPT Actions. YOU execute work via runNpcSkill. '
         + 'Long work: runNpcSkill with wait=false → poll getSkillJob. '
-        + 'Browser eyes: browserOpen → browserScreenshot → browserAct (YOU see Lucy\'s page). '
+        + 'Browser eyes (default): browserBegin → describe → browserStep → verify AFTER screenshot. '
         + 'Collaborate via getTeamStandup + listHandoffs + ackHandoff. '
         + 'Operating surfaces: Meridian CRM (crm-*), Studio Board (studio-board-*), '
         + 'Business Studio / Founder OS (business-studio-*). '
         + 'Prefer *-working-set / *-brief before writes. '
         + 'assignNpcTask is blocked (queues slow local NPC). '
         + 'Mint a Standard/Full Connect AI token.',
-      version: '2.2.0',
+      version: '2.3.0',
     },
     servers: [{ url: base }],
     components: {
@@ -1097,10 +1162,66 @@ function buildOpenApiSpec(baseUrl) {
           responses: { 200: { description: 'Activity logged' } },
         },
       },
+      '/api/npc-sync/browser-begin': {
+        post: {
+          operationId: 'browserBegin',
+          summary: 'DEFAULT: open Lucy\'s browser and return the first real screenshot (YOU are the eyes)',
+          requestBody: {
+            required: false,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    url: { type: 'string' },
+                    query: { type: 'string' },
+                    wait_ms: { type: 'number' },
+                    include_base64: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Open result + first screenshot + workflow' } },
+        },
+      },
+      '/api/npc-sync/browser-step': {
+        post: {
+          operationId: 'browserStep',
+          summary: 'DEFAULT: one action + AFTER screenshot (anti-hallucination verify loop)',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['type'],
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['click', 'type', 'key', 'scroll', 'navigate'],
+                    },
+                    x: { type: 'number' },
+                    y: { type: 'number' },
+                    text: { type: 'string' },
+                    key: { type: 'string' },
+                    deltaX: { type: 'number' },
+                    deltaY: { type: 'number' },
+                    url: { type: 'string' },
+                    wait_ms: { type: 'number' },
+                    include_base64: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Action result + AFTER screenshot to describe' } },
+        },
+      },
       '/api/npc-sync/browser-open': {
         post: {
           operationId: 'browserOpen',
-          summary: 'Open Lucy\'s live Playwright browser (start of YOU-are-the-eyes loop)',
+          summary: 'Open Lucy\'s browser without a screenshot (prefer browserBegin)',
           requestBody: {
             required: false,
             content: {
@@ -1121,7 +1242,7 @@ function buildOpenApiSpec(baseUrl) {
       '/api/npc-sync/browser-screenshot': {
         get: {
           operationId: 'browserScreenshot',
-          summary: 'YOU are the eyes — capture the live browser frame, then call browserAct',
+          summary: 'Capture live frame only (prefer browserBegin / browserStep for the verify loop)',
           parameters: [{
             name: 'include_base64',
             in: 'query',
@@ -1149,7 +1270,7 @@ function buildOpenApiSpec(baseUrl) {
       '/api/npc-sync/browser-act': {
         post: {
           operationId: 'browserAct',
-          summary: 'Click / type / key / scroll / navigate on the live browser (after browserScreenshot)',
+          summary: 'One action without verify shot (prefer browserStep)',
           requestBody: {
             required: true,
             content: {
@@ -1335,6 +1456,8 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
       activity_url: `${base}/api/npc-sync/activity`,
       run_skill_url: `${base}/api/npc-sync/run-skill`,
       skill_job_url: `${base}/api/npc-sync/skill-job`,
+      browser_begin_url: `${base}/api/npc-sync/browser-begin`,
+      browser_step_url: `${base}/api/npc-sync/browser-step`,
       browser_open_url: `${base}/api/npc-sync/browser-open`,
       browser_screenshot_url: `${base}/api/npc-sync/browser-screenshot`,
       browser_act_url: `${base}/api/npc-sync/browser-act`,
@@ -1352,7 +1475,7 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
         'Actions → Import from URL → paste the OpenAPI URL (re-import after Denizen updates)',
         'Authentication → API Key → Auth Type: Bearer → paste your token (standard or full scope)',
         'Paste the gpt_instructions below — YOU run skills async; never assignNpcTask; poll team standup',
-        'Re-import OpenAPI after updates so browserOpen / browserScreenshot / browserAct appear',
+        'Re-import OpenAPI after updates so browserBegin / browserStep appear',
       ],
       gpt_instructions: [
         mcpProductMap.chatgptProductInstructions({
@@ -1361,7 +1484,8 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
         'Never use assignNpcTask — it is blocked and only queues the slow local office AI.',
         'Start collaborative sessions with getTeamStandup (includes CRM + Studio Board + Business Studio briefs). Follow action_items. Poll listHandoffs; after you act, call ackHandoff.',
         'Do work with runNpcSkill (default wait=false). If you get a job_id / status=running, poll getSkillJob until status is done or failed, then summarize output.',
-        'Browser eyes (YOU see the page): For web tasks, call browserOpen → browserScreenshot → decide → browserAct → browserScreenshot until done. Use screenshot_markdown / screenshot_jpeg_base64 / screenshot_url as your vision of Lucy\'s browser. Prefer this over runNpcSkill computer-use when you can see frames. The human can also watch/Drive/Point in the Denizen 🌐 mirror.',
+        browserEyes.chatgptEyesInstructions(),
+        'Use screenshot_markdown / screenshot_jpeg_base64 / screenshot_url as your vision. The human can watch/Drive/Point in the Denizen 🌐 mirror.',
         'Operating surfaces via runNpcSkill: Meridian CRM (crm-*), Studio Board /studio-board/ (studio-board-*), Business Studio Founder OS /business-studio/ (business-studio-*).',
         'Before creating Studio Board tasks: studio-board-working-set then studio-board-brief. Updates: studio-board-upsert-task, studio-board-advance-task, studio-board-assign-task, studio-board-add-comment.',
         'Before changing Founder OS: business-studio-catalog / business-studio-section (name the app) then business-studio-working-set / business-studio-brief. Evidence is gated — use business-studio-add-evidence / business-studio-explain; check business-studio-funding-readiness. Lean Canvas / PAVE / Moat / Capital / Data Room have get+upsert skills.',

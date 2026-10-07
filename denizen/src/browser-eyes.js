@@ -163,8 +163,8 @@ function browserScreenshot(npcKey, { includeBase64 = true, baseUrl = null } = {}
     frame_age_ms: Math.round(Date.now() - frame.mtimeMs),
     mime: packed.mime,
     hint: live
-      ? 'YOU are the eyes. Look at screenshot_markdown / screenshot_jpeg_base64, then call browserAct. Repeat until done.'
-      : 'Frame may be stale — call browserOpen or ask Lucy to search again for a live session.',
+      ? 'YOU are the eyes. Prefer browserStep (act+verify). Look at screenshot_markdown / screenshot_jpeg_base64 before the next step.'
+      : 'Frame may be stale — call browserBegin or ask Lucy to search again for a live session.',
   };
   if (includeBase64 && packed.buf.length <= MAX_JPEG_BYTES) {
     out.screenshot_jpeg_base64 = packed.buf.toString('base64');
@@ -240,6 +240,10 @@ async function browserAct(npcKey, action = {}) {
   };
 }
 
+function _sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function browserOpen(npcKey, opts = {}) {
   const key = normalizeNpcKey(npcKey || 'lucy');
   if (typeof _deps.openBrowser !== 'function') {
@@ -258,8 +262,98 @@ async function browserOpen(npcKey, opts = {}) {
     url: url || null,
     query: query || null,
     summary: opened?.summary || opened?.error || null,
-    next: 'Call browserScreenshot, then browserAct. YOU are the eyes — do not call computer-use unless you want Denizen\'s model to take over.',
+    next: 'Call browserBegin (open+first shot) or browserScreenshot, then browserStep for each action+verify. Do not claim done without a fresh screenshot.',
   };
+}
+
+/**
+ * Start a verified eyes session: open browser, wait for a frame, return first screenshot.
+ */
+async function browserBegin(npcKey, opts = {}) {
+  const opened = await browserOpen(npcKey, opts);
+  if (!opened.ok) return opened;
+  const waitMs = Math.min(Math.max(Number(opts.wait_ms) || 2500, 500), 8000);
+  await _sleep(waitMs);
+  const shot = browserScreenshot(npcKey, {
+    includeBase64: opts.include_base64 !== false,
+    baseUrl: opts.baseUrl || _deps.getPublicBaseUrl?.(),
+  });
+  return {
+    ok: !!shot.ok,
+    phase: 'begin',
+    open: opened,
+    screenshot: shot,
+    workflow: EFFECTIVE_WORKFLOW,
+    next: shot.ok
+      ? 'Describe ONLY what you see in screenshot. Then browserStep for the next click/type. Never invent UI.'
+      : 'Browser opened but no frame yet — wait 2s and call browserScreenshot.',
+  };
+}
+
+/**
+ * Atomic anti-hallucination step: act → wait → screenshot (verify).
+ * ChatGPT should prefer this over bare browserAct.
+ */
+async function browserStep(npcKey, action = {}) {
+  const key = normalizeNpcKey(npcKey || 'lucy');
+  const before = browserScreenshot(key, {
+    includeBase64: false,
+    baseUrl: action.baseUrl || _deps.getPublicBaseUrl?.(),
+  });
+  const act = await browserAct(key, action);
+  if (!act.ok) {
+    return {
+      ok: false,
+      phase: 'step',
+      action: act,
+      before,
+      error: act.error,
+      hint: act.hint || 'Fix the action and retry browserStep.',
+    };
+  }
+  const waitMs = Math.min(Math.max(Number(action.wait_ms) || 900, 300), 5000);
+  await _sleep(waitMs);
+  const after = browserScreenshot(key, {
+    includeBase64: action.include_base64 !== false,
+    baseUrl: action.baseUrl || _deps.getPublicBaseUrl?.(),
+  });
+  return {
+    ok: !!after.ok,
+    phase: 'step',
+    action: act,
+    before: {
+      url: before.url,
+      title: before.title,
+      last_activity: before.last_activity,
+      frame_age_ms: before.frame_age_ms,
+    },
+    after,
+    verify: {
+      must_describe_after: true,
+      rule: 'Describe the AFTER screenshot. If the expected change is missing, correct with another browserStep — do not claim success.',
+    },
+    next: 'From the AFTER frame only: either browserStep again or stop and summarize what you verified.',
+  };
+}
+
+/** Canonical no-API-key workflow for ChatGPT Plus + Denizen Connect AI. */
+const EFFECTIVE_WORKFLOW = [
+  '1. browserBegin { url or query } — opens Lucy\'s browser and returns the first real screenshot.',
+  '2. Describe ONLY what that screenshot shows (URL, title, visible buttons/text). Never invent UI.',
+  '3. browserStep { type, x, y | text | key } — performs ONE action and returns a fresh AFTER screenshot.',
+  '4. Describe the AFTER screenshot. If wrong, browserStep to correct. If done, summarize verified facts.',
+  '5. Human can watch the same feed in Denizen 🌐 (Watch / Drive / Point).',
+  '6. Do NOT use runNpcSkill computer-use for web work when browserBegin/browserStep work — that path can hallucinate without your eyes.',
+  '7. Local LM Studio vision is optional backup only; ChatGPT Plus remains the referee.',
+].join(' ');
+
+function chatgptEyesInstructions() {
+  return [
+    'WEB WORK (default — no API keys): YOU are the eyes and referee.',
+    EFFECTIVE_WORKFLOW,
+    'Prefer browserBegin + browserStep over browserAct alone (Step includes verify screenshot).',
+    'Never say a click/type succeeded without describing the AFTER screenshot from browserStep.',
+  ].join(' ');
 }
 
 function readFrameBytesForToken(token) {
@@ -280,6 +374,10 @@ module.exports = {
   browserScreenshot,
   browserAct,
   browserOpen,
+  browserBegin,
+  browserStep,
+  EFFECTIVE_WORKFLOW,
+  chatgptEyesInstructions,
   mintFrameToken,
   resolveFrameToken,
   readFrameBytesForToken,

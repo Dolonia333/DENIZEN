@@ -82,6 +82,45 @@ describe('browser-eyes', () => {
   it('browserOpen calls openBrowser', async () => {
     const r = await browserEyes.browserOpen('lucy', { url: 'https://example.com/jobs' });
     assert.equal(r.ok, true);
-    assert.match(r.next, /browserScreenshot/);
+    assert.match(r.next, /browserBegin|browserScreenshot/);
+  });
+
+  it('browserBegin opens then returns first screenshot + workflow', async () => {
+    const r = await browserEyes.browserBegin('lucy', {
+      url: 'https://example.com/jobs',
+      wait_ms: 500,
+      include_base64: true,
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.phase, 'begin');
+    assert.equal(r.open.ok, true);
+    assert.equal(r.screenshot.ok, true);
+    assert.match(r.workflow, /browserBegin/);
+    assert.match(r.next, /Describe ONLY/i);
+  });
+
+  it('browserStep acts then returns AFTER screenshot', async () => {
+    inputs.length = 0;
+    const r = await browserEyes.browserStep('lucy', {
+      type: 'click',
+      x: 120,
+      y: 240,
+      wait_ms: 300,
+      include_base64: true,
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.phase, 'step');
+    assert.equal(r.action.ok, true);
+    assert.equal(inputs.length, 1);
+    assert.equal(r.after.ok, true);
+    assert.equal(r.verify.must_describe_after, true);
+    assert.match(r.next, /AFTER/i);
+  });
+
+  it('chatgptEyesInstructions prefers begin+step', () => {
+    const text = browserEyes.chatgptEyesInstructions();
+    assert.match(text, /browserBegin/);
+    assert.match(text, /browserStep/);
+    assert.match(text, /referee/i);
   });
 });

@@ -81,6 +81,8 @@ const TOOL_SCOPE = Object.freeze({
   browser_screenshot: 'skills',
   browser_act: 'skills',
   browser_open: 'skills',
+  browser_begin: 'skills',
+  browser_step: 'skills',
   crm_draft_email: 'crm_write',
   send_draft: 'crm_write',
   mail_policy_status: 'read',
