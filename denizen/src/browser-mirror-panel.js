@@ -7,7 +7,7 @@
 
   const CHIP_ID = 'denizen-browser-mirror-chip';
   const PANEL_ID = 'denizen-browser-mirror-panel';
-  const STYLE_ID = 'denizen-browser-mirror-styles';
+  const STYLE_ID = 'denizen-browser-mirror-styles-v8';
   const POLL_OPEN_MS = 1500;
   const POLL_IDLE_MS = 6000;
   const FRAME_POLL_ACTIVE_MS = 220;
@@ -39,6 +39,28 @@
   const frameBlobUrls = [null, null];
   let state = { open: false, status: 'idle', streaming: false, staleFrame: false };
   let boundNpcKey = 'lucy';
+  let interactMode = 'watch'; // watch | drive | point
+  let pointPin = null; // { x, y, clientX?, clientY? }
+  let agentStatus = null; // { status, message, step, at }
+  const MODE_KEY = 'denizen-bm-interact-mode';
+
+  function interactApi() {
+    return globalThis.DenizenBrowserMirrorInteract || null;
+  }
+
+  function setInteractMode(mode) {
+    const api = interactApi();
+    interactMode = api?.normalizeInteractMode?.(mode) || (['watch', 'drive', 'point'].includes(mode) ? mode : 'watch');
+    try { localStorage.setItem(MODE_KEY, interactMode); } catch (_) {}
+    syncInteractUi();
+  }
+
+  function loadInteractMode() {
+    try {
+      const saved = localStorage.getItem(MODE_KEY);
+      if (saved) setInteractMode(saved);
+    } catch (_) {}
+  }
 
   function resolveBoundNpcKey() {
     const asst = globalThis.DenizenVisitorSession?.getAssistant?.();
@@ -367,9 +389,63 @@
       }
       #${PANEL_ID} .bm-meta { margin-top: 10px; font-family: system-ui, sans-serif; font-size: 11px; color: #94a3b8; }
       #${PANEL_ID} .bm-meta strong { color: #e2e8f0; }
+      #${PANEL_ID} .bm-research {
+        margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+        background: rgba(30, 58, 138, 0.35); border: 1px solid rgba(96, 165, 250, 0.35);
+        font: 12px/1.4 system-ui, sans-serif; color: #bfdbfe;
+      }
+      #${PANEL_ID} .bm-research strong { color: #f8fafc; }
+      #${PANEL_ID} .bm-research .bm-agent-line { margin-top: 4px; color: #fde68a; font-size: 11px; }
+      #${PANEL_ID} .bm-research:empty { display: none; }
+      #${PANEL_ID} .bm-modes {
+        display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 0;
+        font-family: system-ui, sans-serif;
+      }
+      #${PANEL_ID} .bm-mode-btn {
+        flex: 1 1 auto; min-height: 36px; min-width: 72px;
+        border-radius: 8px; border: 1px solid #475569; background: #0f172a;
+        color: #cbd5e1; font: 600 11px/1 system-ui, sans-serif; cursor: pointer;
+        touch-action: manipulation; padding: 8px 10px;
+      }
+      #${PANEL_ID} .bm-mode-btn.on {
+        background: rgba(37, 99, 235, 0.35); border-color: #60a5fa; color: #dbeafe;
+      }
+      #${PANEL_ID} .bm-mode-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      #${PANEL_ID} .bm-compose {
+        display: flex; gap: 6px; margin-top: 8px; align-items: stretch;
+        font-family: system-ui, sans-serif;
+      }
+      #${PANEL_ID} .bm-compose input {
+        flex: 1; min-width: 0; min-height: 40px; border-radius: 8px;
+        border: 1px solid #475569; background: #020617; color: #e2e8f0;
+        padding: 8px 10px; font-size: 13px;
+      }
+      #${PANEL_ID} .bm-compose input:focus {
+        outline: none; border-color: #60a5fa; box-shadow: 0 0 0 2px rgba(96,165,250,0.25);
+      }
+      #${PANEL_ID} .bm-compose button {
+        min-height: 40px; min-width: 72px; border-radius: 8px;
+        border: 1px solid #3b82f6; background: #1d4ed8; color: #eff6ff;
+        font: 600 12px/1 system-ui, sans-serif; cursor: pointer;
+        touch-action: manipulation; padding: 0 12px;
+      }
+      #${PANEL_ID} .bm-compose button:disabled {
+        opacity: 0.45; cursor: not-allowed; border-color: #475569; background: #1e293b;
+      }
+      #${PANEL_ID} .bm-pin {
+        position: absolute; z-index: 4; width: 22px; height: 22px;
+        margin: -11px 0 0 -11px; border-radius: 50%;
+        border: 2px solid #fbbf24; background: rgba(251, 191, 36, 0.35);
+        box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.2);
+        pointer-events: none; display: none;
+      }
+      #${PANEL_ID} .bm-pin.on { display: block; }
+      #${PANEL_ID} .bm-viewport.mode-watch { cursor: default; }
+      #${PANEL_ID} .bm-viewport.mode-drive { cursor: crosshair; }
+      #${PANEL_ID} .bm-viewport.mode-point { cursor: cell; }
       #${PANEL_ID} .bm-feed {
         margin-top: 10px; border: 1px solid #334155; border-radius: 8px;
-        background: rgba(15, 23, 42, 0.65); max-height: 100px; overflow-y: auto;
+        background: rgba(15, 23, 42, 0.65); max-height: 120px; overflow-y: auto;
         font-family: ui-monospace, monospace; font-size: 10px;
       }
       #${PANEL_ID} .bm-feed-line { padding: 5px 8px; border-bottom: 1px solid rgba(51, 65, 85, 0.5); color: #bae6fd; }
@@ -413,6 +489,10 @@
   }
 
   function statusLabel() {
+    if (agentStatus?.status === 'acting' || agentStatus?.status === 'thinking') {
+      return agentStatus.status === 'thinking' ? '● Thinking' : '● Acting';
+    }
+    if (state.status === 'computer-use' && (frameLive || state.streaming)) return '● Computer-use';
     if (frameLive && shouldRunLivePoll()) return '● Live feed';
     if (state.streaming) return '● Connecting…';
     if (state.searching || state.status === 'searching') return 'Starting…';
@@ -421,6 +501,9 @@
   }
 
   function statusClass() {
+    if (agentStatus?.status === 'acting' || agentStatus?.status === 'thinking' || state.status === 'computer-use') {
+      return 'searching';
+    }
     if ((frameLive && shouldRunLivePoll()) || state.streaming) return 'live';
     if (state.searching || state.status === 'searching') return 'searching';
     return '';
@@ -583,15 +666,27 @@
             <div class="bm-dots"><span></span><span></span><span></span></div>
             <div class="bm-url" data-bm="url">about:blank</div>
           </div>
-          <div class="bm-viewport">
+          <div class="bm-viewport mode-watch" data-bm="viewport">
             <img class="bm-live" data-bm-live="0" data-bm="live" alt="Lucy browser live feed">
             <img class="bm-live" data-bm-live="1" alt="" aria-hidden="true">
+            <div class="bm-pin" data-bm="pin" aria-hidden="true"></div>
             <div class="bm-control-banner" data-bm="control-banner"></div>
             <div class="bm-idle" data-bm="idle">
               ${idleBrowserHint(boundNpcKey)}
             </div>
           </div>
         </div>
+        <div class="bm-modes" data-bm="modes" role="group" aria-label="Browser interaction mode">
+          <button type="button" class="bm-mode-btn on" data-bm-mode="watch">Watch</button>
+          <button type="button" class="bm-mode-btn" data-bm-mode="drive">Drive</button>
+          <button type="button" class="bm-mode-btn" data-bm-mode="point">Point</button>
+        </div>
+        <div class="bm-compose" data-bm="compose">
+          <input type="text" data-bm="compose-input" autocomplete="off" spellcheck="true"
+            placeholder="Watch mode — switch to Drive to type, or Point to ask Lucy" />
+          <button type="button" data-bm="compose-send" disabled>Send</button>
+        </div>
+        <div class="bm-research" data-bm="research"></div>
         <div class="bm-meta">
           <div data-bm="title"><strong>${npcDisplayName(boundNpcKey)}'s browser</strong></div>
           <div data-bm="query"></div>
@@ -618,6 +713,9 @@
     }
     wirePanelScroll();
     wireRemoteControl();
+    wireInteractUi();
+    loadInteractMode();
+    syncInteractUi();
     shellReady = true;
   }
 
@@ -625,6 +723,192 @@
     if (state.open) return true;
     if (state.streaming && !state.staleFrame && (frameLive || !!state.streamUrl)) return true;
     return false;
+  }
+
+  function canDriveBrowser() {
+    return canControlBrowser() && interactMode === 'drive';
+  }
+
+  function canPointBrowser() {
+    return canControlBrowser() && interactMode === 'point';
+  }
+
+  function clearPointPin() {
+    pointPin = null;
+    const pin = $('[data-bm="pin"]');
+    if (pin) pin.classList.remove('on');
+  }
+
+  function placePointPin(clientX, clientY, pageX, pageY) {
+    const viewport = $('[data-bm="viewport"]') || panelEl?.querySelector('.bm-viewport');
+    const pin = $('[data-bm="pin"]');
+    if (!viewport || !pin) return;
+    const rect = viewport.getBoundingClientRect();
+    const left = clientX - rect.left;
+    const top = clientY - rect.top;
+    pin.style.left = `${left}px`;
+    pin.style.top = `${top}px`;
+    pin.classList.add('on');
+    pointPin = { x: pageX, y: pageY, left, top };
+  }
+
+  function syncInteractUi() {
+    if (!panelEl) return;
+    panelEl.querySelectorAll('[data-bm-mode]').forEach((btn) => {
+      btn.classList.toggle('on', btn.getAttribute('data-bm-mode') === interactMode);
+    });
+    const viewport = $('[data-bm="viewport"]') || panelEl.querySelector('.bm-viewport');
+    if (viewport) {
+      viewport.classList.remove('mode-watch', 'mode-drive', 'mode-point');
+      viewport.classList.add(`mode-${interactMode}`);
+      viewport.classList.toggle('control-off', interactMode !== 'watch' && !canControlBrowser());
+    }
+    const input = $('[data-bm="compose-input"]');
+    const send = $('[data-bm="compose-send"]');
+    if (input) {
+      if (interactMode === 'drive') {
+        input.placeholder = canControlBrowser()
+          ? `Type into ${npcDisplayName(boundNpcKey)}'s browser…`
+          : 'Browser not live yet — ask them to search first';
+        input.disabled = !canControlBrowser();
+      } else if (interactMode === 'point') {
+        input.placeholder = pointPin
+          ? 'What should Lucy do at the pin? (click / read / fill…)'
+          : 'Tap something on the screen first, then describe what Lucy should do';
+        input.disabled = !canControlBrowser();
+      } else {
+        input.placeholder = 'Watch mode — switch to Drive to type, or Point to ask Lucy';
+        input.disabled = true;
+      }
+    }
+    if (send) {
+      send.disabled = interactMode === 'watch' || !canControlBrowser();
+      send.textContent = interactMode === 'point' ? 'Ask Lucy' : 'Type';
+    }
+    if (interactMode !== 'point') clearPointPin();
+    updateControlBanner();
+  }
+
+  function wireInteractUi() {
+    if (!panelEl || panelEl.dataset.bmInteract === '1') return;
+    panelEl.dataset.bmInteract = '1';
+    panelEl.querySelectorAll('[data-bm-mode]').forEach((btn) => {
+      const mode = btn.getAttribute('data-bm-mode');
+      const go = () => setInteractMode(mode);
+      if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(btn, go);
+      else btn.addEventListener('click', go);
+    });
+    const input = $('[data-bm="compose-input"]');
+    const send = $('[data-bm="compose-send"]');
+    const submit = () => {
+      if (interactMode === 'drive') submitTypeText();
+      else if (interactMode === 'point') submitPointInstruct();
+    };
+    if (send) {
+      if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(send, submit);
+      else send.addEventListener('click', submit);
+    }
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submit();
+        }
+      });
+    }
+  }
+
+  async function submitTypeText() {
+    const input = $('[data-bm="compose-input"]');
+    const text = String(input?.value || '');
+    if (!text || !canDriveBrowser()) return;
+    await sendBrowserInput({ type: 'type', text });
+    if (input) input.value = '';
+    updateControlBanner(`Typed into ${npcDisplayName(boundNpcKey)}'s browser`);
+    pushLocalActivity(`You typed: ${text.slice(0, 80)}`);
+  }
+
+  async function submitPointInstruct() {
+    const input = $('[data-bm="compose-input"]');
+    const text = String(input?.value || '').trim();
+    if (!text || !pointPin || !canPointBrowser()) {
+      updateControlBanner(pointPin ? 'Describe what Lucy should do' : 'Tap something on the screen first');
+      return;
+    }
+    const api = interactApi();
+    const instruction = api?.buildPointInstruction?.({
+      x: pointPin.x,
+      y: pointPin.y,
+      text,
+      url: state.url,
+      title: state.title,
+      query: state.query,
+    }) || `At (${pointPin.x}, ${pointPin.y}): ${text}`;
+    updateControlBanner('Asking Lucy to look at the pin…');
+    pushLocalActivity(`You pointed (${pointPin.x},${pointPin.y}): ${text.slice(0, 80)}`);
+    try {
+      const res = await fetch('/api/computer-use', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          npcName: npcDisplayName(boundNpcKey),
+          instruction,
+          url: state.url || null,
+          taskMode: 'general',
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || j.ok === false) {
+        updateControlBanner(j.error || `Ask failed (${res.status})`);
+        return;
+      }
+      if (input) input.value = '';
+      updateControlBanner('Lucy is on it — watch the feed');
+      agentStatus = { status: 'starting', message: 'Looking at your pin…', at: Date.now() };
+      updateResearchStrip();
+    } catch (err) {
+      updateControlBanner(`Ask failed: ${err?.message || err}`);
+    }
+  }
+
+  function pushLocalActivity(line) {
+    const log = Array.isArray(state.activityLog) ? state.activityLog.slice(-19) : [];
+    log.push({ line: String(line || '').slice(0, 200), at: Date.now() });
+    state = { ...state, lastActivity: String(line || '').slice(0, 200), activityLog: log };
+    lastFeedKey = '';
+    const feed = $('[data-bm="feed"]');
+    if (feed) renderActivityFeed(feed);
+  }
+
+  function onAgentStatus(msg) {
+    if (!msg) return;
+    agentStatus = {
+      status: msg.status || '',
+      message: msg.message || '',
+      step: msg.step || null,
+      at: Date.now(),
+    };
+    if (msg.message) pushLocalActivity(msg.message);
+    updateResearchStrip();
+    updateStatusPill();
+  }
+
+  function updateResearchStrip() {
+    const el = $('[data-bm="research"]');
+    if (!el) return;
+    const bits = [];
+    if (state.query) {
+      bits.push(`Researching: <strong>${esc(state.query)}</strong>`);
+    } else if (state.title || state.url) {
+      bits.push(`Looking at: <strong>${esc(state.title || state.url)}</strong>`);
+    }
+    if (agentStatus?.message) {
+      const step = agentStatus.step != null ? ` · step ${esc(agentStatus.step)}` : '';
+      bits.push(`<div class="bm-agent-line">${esc(agentStatus.status || 'working')}${step}: ${esc(agentStatus.message)}</div>`);
+    } else if (state.lastActivity && !state.query) {
+      bits.push(`<div class="bm-agent-line">${esc(state.lastActivity)}</div>`);
+    }
+    el.innerHTML = bits.join('');
   }
 
   function liveImg() {
@@ -661,20 +945,30 @@
     if (msg) {
       banner.textContent = msg;
       banner.classList.add('on');
-      banner.classList.toggle('ok', /connected|tap|scroll/i.test(msg));
+      banner.classList.toggle('ok', /connected|tap|scroll|typed|drive|point|watch|on it|feed/i.test(msg));
       return;
     }
     const showing = live?.classList.contains('on');
+    const api = interactApi();
+    const hint = api?.interactModeHint?.(interactMode)
+      || (interactMode === 'drive'
+        ? 'Drive — tap to click · drag/wheel to scroll · type below'
+        : interactMode === 'point'
+          ? 'Point — tap something, then tell Lucy what to do'
+          : 'Watch — live research feed');
     if (showing && canControlBrowser()) {
-      banner.textContent = 'Tap to click · drag to scroll';
+      banner.textContent = hint;
       banner.classList.add('on', 'ok');
     } else if (showing && (state.staleFrame || !state.open)) {
       banner.textContent = `Snapshot only — ask ${npcDisplayName(boundNpcKey)} to search again for live control`;
       banner.classList.add('on');
       banner.classList.remove('ok');
-    } else {
+    } else if (!showing) {
       banner.classList.remove('on', 'ok');
       banner.textContent = '';
+    } else {
+      banner.textContent = hint;
+      banner.classList.add('on', 'ok');
     }
   }
 
@@ -721,13 +1015,12 @@
     let lastScrollAt = 0;
 
     viewport._bmSyncControl = () => {
-      viewport.classList.toggle('control-off', !canControlBrowser());
-      updateControlBanner();
+      syncInteractUi();
     };
     viewport._bmSyncControl();
 
     viewport.addEventListener('wheel', (e) => {
-      if (!canControlBrowser()) return;
+      if (!canDriveBrowser()) return;
       const live = liveImg();
       if (!live) return;
       e.preventDefault();
@@ -743,7 +1036,9 @@
     }, { passive: false, capture: true });
 
     viewport.addEventListener('pointerdown', (e) => {
-      if (!canControlBrowser() || e.button !== 0) return;
+      if (e.button !== 0) return;
+      if (interactMode === 'watch') return;
+      if (!canControlBrowser()) return;
       pointer = { id: e.pointerId, x: e.clientX, y: e.clientY };
       didScroll = false;
       try { viewport.setPointerCapture(e.pointerId); } catch (_) {}
@@ -752,7 +1047,8 @@
     }, { capture: true });
 
     viewport.addEventListener('pointermove', (e) => {
-      if (!pointer || pointer.id !== e.pointerId || !canControlBrowser()) return;
+      if (!pointer || pointer.id !== e.pointerId) return;
+      if (!canDriveBrowser()) return;
       const live = liveImg();
       if (!live) return;
       const dx = pointer.x - e.clientX;
@@ -776,10 +1072,21 @@
 
     const endPointer = (e) => {
       if (!pointer || pointer.id !== e.pointerId) return;
-      if (!didScroll && canControlBrowser()) {
-        const live = liveImg();
-        if (live) {
-          const { x, y } = mapBrowserCoords(live, e.clientX, e.clientY);
+      const live = liveImg();
+      if (!didScroll && live && canControlBrowser()) {
+        const { x, y } = mapBrowserCoords(live, e.clientX, e.clientY);
+        if (interactMode === 'point') {
+          placePointPin(e.clientX, e.clientY, x, y);
+          const input = $('[data-bm="compose-input"]');
+          if (input) {
+            input.disabled = false;
+            input.focus();
+            input.placeholder = 'What should Lucy do at the pin?';
+          }
+          const send = $('[data-bm="compose-send"]');
+          if (send) send.disabled = false;
+          updateControlBanner(`Pinned (${x}, ${y}) — describe what Lucy should do`);
+        } else if (interactMode === 'drive') {
           sendBrowserInput({ type: 'click', x, y });
         }
       }
@@ -789,10 +1096,10 @@
     viewport.addEventListener('pointerup', endPointer, { capture: true });
     viewport.addEventListener('pointercancel', endPointer, { capture: true });
 
-    // Keyboard: when the viewport is focused, forward keys into Lucy's browser.
+    // Keyboard: when the viewport is focused in Drive mode, forward keys.
     if (!viewport.hasAttribute('tabindex')) viewport.setAttribute('tabindex', '0');
     viewport.addEventListener('keydown', (e) => {
-      if (!canControlBrowser()) return;
+      if (!canDriveBrowser()) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       e.preventDefault();
       e.stopPropagation();
@@ -1012,6 +1319,7 @@
 
   function syncViewportControl() {
     panelEl?.querySelector('.bm-viewport')?._bmSyncControl?.();
+    syncInteractUi();
   }
 
   function $(sel) { return panelEl ? panelEl.querySelector(sel) : null; }
@@ -1222,7 +1530,12 @@
       titleEl.innerHTML = `<strong>${esc(state.title || `${npcDisplayName(boundNpcKey)}'s browser`)}</strong>${esc(label)}`;
     }
     const queryEl = $('[data-bm="query"]');
-    if (queryEl) queryEl.innerHTML = state.query ? `Query: <strong>${esc(state.query)}</strong>` : '';
+    if (queryEl) {
+      queryEl.innerHTML = state.query
+        ? `Query: <strong>${esc(state.query)}</strong>`
+        : (state.status === 'computer-use' ? 'Mode: <strong>computer-use</strong> (Lucy driving)' : '');
+    }
+    updateResearchStrip();
     const idle = $('[data-bm="idle"]');
     if (idle && !frameLive && !snapshotShown) {
       if (state.searching || state.status === 'searching') {
@@ -1235,11 +1548,12 @@
       } else if (state.busyWithOtherNpc && state.activeNpcKey) {
         idle.innerHTML = `Browser is in use by <strong>${esc(npcDisplayName(state.activeNpcKey))}</strong> right now. Ask your assistant to search when it is free.`;
       } else {
-        idle.innerHTML = `Tell ${npcDisplayName(boundNpcKey)} to <strong>search</strong> something. Their Playwright browser opens on this PC — the live picture appears here within a few seconds.`;
+        idle.innerHTML = `Tell ${npcDisplayName(boundNpcKey)} to <strong>search</strong> something. Then use <strong>Watch</strong> / <strong>Drive</strong> / <strong>Point</strong> below to follow along or help.`;
       }
     }
     const feed = $('[data-bm="feed"]');
     if (feed) renderActivityFeed(feed);
+    syncInteractUi();
     updateControlBanner();
     syncFramePoll();
   }
@@ -1355,6 +1669,9 @@
       refresh,
       ingest,
       onFrame,
+      onAgentStatus,
+      setInteractMode,
+      interactMode: () => interactMode,
       setNpcKey(key) {
         boundNpcKey = String(key || 'lucy').toLowerCase();
         shellReady = false;
@@ -1362,7 +1679,7 @@
         if (panelOpen) { ensureShell(); updatePanel(); refresh(); }
       },
       npcKey: () => boundNpcKey,
-      state: () => ({ ...state }),
+      state: () => ({ ...state, interactMode, pointPin, agentStatus }),
     };
     console.log('[BrowserMirror] live feed ready (WS primary + buffered frame poll)');
     try {

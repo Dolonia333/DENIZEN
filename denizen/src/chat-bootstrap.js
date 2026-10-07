@@ -290,6 +290,9 @@
               window.DenizenBrowserMirror?.ingest?.(msg);
             } else if (msg.type === 'lucy_browser_frame' || msg.type === 'npc_browser_frame') {
               window.DenizenBrowserMirror?.onFrame?.(msg);
+            } else if (msg.type === 'computer_use_status') {
+              window.DenizenBrowserMirror?.onAgentStatus?.(msg);
+              window.DenizenBrowserMirror?.show?.();
             } else if (msg.type === 'npc_report_to_ceo' && playerChat
               && !(window.__DenizenAgentManager?.connected && window.__DenizenAgentManager?.ws === mgr.ws)) {
               if (playerChat._lucySearchActive) playerChat._lucySearchActive = null;
@@ -415,6 +418,9 @@
             window.DenizenBrowserMirror?.ingest?.(msg);
           } else if (msg.type === 'lucy_browser_frame' || msg.type === 'npc_browser_frame') {
             window.DenizenBrowserMirror?.onFrame?.(msg);
+          } else if (msg.type === 'computer_use_status') {
+            window.DenizenBrowserMirror?.onAgentStatus?.(msg);
+            window.DenizenBrowserMirror?.show?.();
           } else if (msg.type === 'npc_report_to_ceo') {
 
             if (pc._lucySearchActive) pc._lucySearchActive = null;
