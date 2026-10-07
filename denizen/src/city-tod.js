@@ -108,7 +108,8 @@
     el = document.createElement('div');
     el.id = 'denizen-tod-hud';
     el.setAttribute('aria-live', 'polite');
-    frame.appendChild(el);
+    const slot = document.getElementById('denizen-frame-clock-slot');
+    (slot || frame).appendChild(el);
     return el;
   }
 

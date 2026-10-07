@@ -97,7 +97,7 @@ describe('mobile UI layout fixes', () => {
       /html\.denizen-touch\.denizen-portrait\.denizen-chat-open body \{[\s\S]*?align-items:\s*flex-start/
     );
     const html = read('index.html');
-    assert.match(html, /mobile-controls\.js\?v=hqLand4/);
+    assert.match(html, /mobile-controls\.js\?v=floorStrip2/);
   });
 
   it('landscape Floor Line is a compact left rail so Buzz stays bottom-right', () => {
@@ -142,8 +142,28 @@ describe('mobile UI layout fixes', () => {
 
   it('cache-busts Floor Line landscape fix scripts', () => {
     const html = read('index.html');
-    assert.match(html, /player-chat\.js\?v=floorChat8/);
-    assert.match(html, /mobile-controls\.js\?v=hqLand4/);
+    assert.match(html, /player-chat\.js\?v=floorStrip2/);
+    assert.match(html, /mobile-controls\.js\?v=floorStrip2/);
+  });
+
+  it('HQ frame keeps its badge, clock, and level chip in a chrome row', () => {
+    const html = read('index.html');
+    assert.match(html, /id="denizen-frame-clock-slot"/);
+    assert.match(html, /id="denizen-frame-level-slot"/);
+    assert.match(html, /class="dz-frame-chrome"/);
+    assert.match(html, /--dz-workbench-gutter:\s*44px/);
+    assert.match(html, /--dz-banner-h:\s*0px/);
+    assert.match(html, /#game-frame \.dz-frame-label \{[^}]*position:\s*static/s);
+    assert.doesNotMatch(html, /dz-frame-label \{[^}]*top:\s*-1\dpx/s);
+    assert.match(html, /DenizenFitOfficeFrame/);
+    const chip = read('src/office-hq/office-level-chip.js');
+    assert.match(chip, /denizen-frame-level-slot/);
+    assert.match(chip, /position:\s*relative/);
+    const rail = read('src/work-rail.js');
+    assert.match(rail, /translate\(calc\(100% \+ 8px\), -50%\)/);
+    assert.match(rail, /getElementById\('game-frame'\)/);
+    const tod = read('src/city-tod.js');
+    assert.match(tod, /denizen-frame-clock-slot/);
   });
 
   it('speech bubbles nudge away from neighbors', () => {

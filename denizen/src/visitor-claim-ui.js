@@ -209,9 +209,8 @@
       return;
     }
     const rect = gc.getBoundingClientRect();
-    const bodyPad = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
-    const minTop = Math.max(safeTop + bodyPad, 12);
-    claimBtn.style.top = `${Math.max(minTop, rect.top - 48)}px`;
+    /* Sit just inside the playfield. The chrome row owns the space above the map. */
+    claimBtn.style.top = `${Math.round(rect.top + 10)}px`;
   }
 
   function ensureClaimBtn() {
