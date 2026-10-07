@@ -223,9 +223,9 @@
     } catch (_) {}
     const prof = p || profile;
     if (prof.isPhone || prof.tier === 'phone-compact') {
-      // Landscape still shows a room around you; portrait is tighter.
+      // Portrait: closer zoom so desks fill the compact HQ box more.
       if (prof.isLandscape) return 1.85;
-      return prof.isCompactPhone ? 1.95 : 1.85;
+      return prof.isCompactPhone ? 2.45 : 2.3;
     }
     /* iPad landscape: tight framing so desks fill the cover-scaled HQ box. */
     if (prof.isTablet) return prof.isLandscape ? 2.55 : 2.15;

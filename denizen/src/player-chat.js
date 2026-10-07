@@ -3112,28 +3112,19 @@ class PlayerChat {
         max-height: none !important;
         z-index: 2147483630 !important;
       }
-      html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel {
-        /* Prefer live game-frame bottom (set by mobile-controls); fall back to 16:9 estimate */
-        top: calc(
-          var(--denizen-game-frame-bottom,
-            calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
-          ) + 8px
-        ) !important;
-      }
-      /* Phone-mode class can be on while FLOOR LINE is still a floor overlay (T key),
-         not docked inside the phone Chat app — close the gap under the game frame. */
+      /*
+       * Portrait Floor Line: bottom sheet under the mid-screen HQ card.
+       * Cap height so the centered map stays visible above the chat.
+       */
+      html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel,
       html.denizen-touch.denizen-phone-mode.denizen-chat-open.denizen-portrait #player-chat-panel:not([data-phone-chat="1"]) {
-        top: calc(
-          var(--denizen-game-frame-bottom,
-            calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + var(--denizen-frame-chrome, 20px))
-          ) + 8px
-        ) !important;
+        top: auto !important;
         bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
         right: max(8px, env(safe-area-inset-right, 0px)) !important;
         width: auto !important;
-        height: auto !important;
-        max-height: none !important;
+        height: min(42dvh, 320px) !important;
+        max-height: min(42dvh, 320px) !important;
         z-index: 2147483630 !important;
       }
       /*

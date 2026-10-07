@@ -198,7 +198,7 @@ function playfieldZoomForProfile(profile) {
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
   if (profile?.isPhone || profile?.tier === 'phone-compact') {
     if (profile?.isLandscape) return 1.85;
-    return profile?.isCompactPhone ? 1.95 : 1.85;
+    return profile?.isCompactPhone ? 2.45 : 2.3;
   }
   if (profile?.isTablet) return profile?.isLandscape ? 2.55 : 2.15;
   return 2.75;

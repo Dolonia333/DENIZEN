@@ -173,7 +173,8 @@
 
       /* Phones: spend almost all width on the map; city is atmosphere only */
       html.denizen-touch.denizen-phone {
-        --denizen-frame-chrome: 32px;
+        --denizen-frame-chrome: 28px;
+        --denizen-play-gap: 2px;
       }
 
       /* Landscape: notch is on the sides — reclaim vertical space hard.
@@ -209,12 +210,12 @@
           max(6px, env(safe-area-inset-left, 0px));
       }
 
-      /* Portrait / default touch: compact 16:9 HQ box (chat sits under it). */
+      /* Portrait / default touch: compact 16:9 HQ box, centered mid-screen. */
       html.denizen-touch #game-container {
         --denizen-play-w: calc(
           100dvw - max(var(--denizen-play-gap), env(safe-area-inset-left, 0px))
                   - max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
-                  - 12px
+                  - 8px
         );
         --denizen-play-h: var(--denizen-available-play-h);
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
@@ -237,8 +238,14 @@
         top: 0 !important;
       }
 
-      /* Portrait phones: keep the 16:9 map as a mid-screen HQ card over the city. */
+      /* Portrait phones: wider 16:9 HQ card, centered over the city. */
       html.denizen-touch.denizen-phone.denizen-portrait #game-container {
+        --denizen-play-w: calc(
+          100dvw
+          - max(4px, env(safe-area-inset-left, 0px))
+          - max(4px, env(safe-area-inset-right, 0px))
+          - 4px
+        );
         width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
         height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
         flex: 0 0 auto;
@@ -305,12 +312,11 @@
       #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
       #${ROTATE_ID} .icon { font-size: 16px; }
 
-      /* Portrait: HQ centered over the skyline. Pin to top only while Floor Line is open. */
-      html.denizen-touch.denizen-portrait body {
-        align-items: center;
-      }
+      /* Portrait: keep HQ in the middle of the screen (even when Floor Line is open). */
+      html.denizen-touch.denizen-portrait body,
       html.denizen-touch.denizen-portrait.denizen-chat-open body {
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
       }
 
       /*
