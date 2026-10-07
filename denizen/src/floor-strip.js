@@ -89,6 +89,27 @@
         gap: 0;
         flex: 0 0 auto;
       }
+      /*
+       * Portrait: overlay the caption on the bottom of the map so the canvas
+       * can expand to the blue corner brackets (no layout strip stealing height).
+       */
+      html.denizen-touch.denizen-portrait #${STRIP_ID} {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 5;
+        margin: 0;
+        padding: 10px 10px 6px;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        background: linear-gradient(0deg, rgba(2, 6, 23, 0.72), transparent);
+        pointer-events: none;
+      }
+      html.denizen-touch.denizen-portrait #${STRIP_ID} .dz-floor-line {
+        pointer-events: auto;
+      }
       html.denizen-touch #${STRIP_ID} .dz-floor-line {
         font-size: 10px;
         line-height: 1.25;

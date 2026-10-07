@@ -171,9 +171,12 @@
         );
       }
 
-      /* Phones: spend almost all width on the map; city is atmosphere only */
+      /*
+       * Phones: chrome + Abby strip overlay the map (see index.html / floor-strip),
+       * so the canvas can reach the blue corner brackets. Budget is tiny.
+       */
       html.denizen-touch.denizen-phone {
-        --denizen-frame-chrome: 28px;
+        --denizen-frame-chrome: 0px;
         --denizen-play-gap: 2px;
       }
 
