@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Robinhood MCP Client — read-only market data for Roki's stock watcher.
+ * Robinhood MCP Client — market data + optional live equity orders.
  *
  * Endpoint:   https://agent.robinhood.com/mcp/trading
  * Protocol:   MCP Streamable HTTP (POST JSON-RPC + GET SSE, Mcp-Session-Id)
@@ -10,7 +10,7 @@
  * ── First-time setup (one-time, 30 seconds) ────────────────────────────────
  *   1. Visit http://localhost:8080/api/market/auth/connect  in your browser
  *   2. Log in to Robinhood and tap "Allow"
- *   3. You're redirected back — Roki activates automatically
+ *   3. You're redirected back — Roki / Grok market tools activate
  *
  * ── Auth internals ─────────────────────────────────────────────────────────
  *   Registration: POST https://agent.robinhood.com/oauth/trading/register
@@ -19,9 +19,10 @@
  *   Token exchange: POST https://api.robinhood.com/oauth2/token/
  *
  * ── DESIGN RULE ────────────────────────────────────────────────────────────
- *   This module NEVER places orders. placeTrade() does not exist.
- *   createSuggestion() records a human-readable idea to trade-suggestions.json.
- *   The user acts on suggestions in the Robinhood app themselves.
+ *   Default: read-only. createSuggestion() records ideas; paper fills stay
+ *   on Roki's fake ledger. Live place_equity_order is OFF unless
+ *   ROBINHOOD_LIVE_TRADING=1 (or true/yes/on) and Denizen MCP exposes the
+ *   place tool to market NPCs (Roki / Grok).
  */
 
 const https  = require('node:https');
@@ -79,6 +80,12 @@ function getRefresh()  { return loadOAuth().refresh_token  || null; }
 function getClientId() { return loadOAuth().client_id      || null; }
 
 function isAuthenticated() { return !!getToken(); }
+
+/** Opt-in live order placement via Robinhood MCP place_equity_order. */
+function isLiveTradingEnabled() {
+  const v = String(process.env.ROBINHOOD_LIVE_TRADING || '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes' || v === 'on';
+}
 
 function getAuthConnectUrl(baseUrl = DEFAULT_DENIZEN_BASE_URL) {
   const normalizedBase = String(baseUrl || DEFAULT_DENIZEN_BASE_URL).replace(/\/$/, '');
@@ -584,6 +591,71 @@ async function getOrderHistory(limit = 20) {
 }
 
 /**
+ * Normalize Denizen / MCP args into Robinhood place_equity_order / review_equity_order payload.
+ * Accepts quantity or notional (amount / notional_usd).
+ */
+async function buildEquityOrderArgs(params = {}) {
+  const symbol = String(params.symbol || '').trim().toUpperCase();
+  const side = String(params.side || params.action || '').trim().toLowerCase();
+  if (!symbol) throw new Error('symbol required');
+  if (side !== 'buy' && side !== 'sell') throw new Error('side must be buy|sell');
+
+  const orderType = String(params.order_type || params.orderType || 'market').trim().toLowerCase() || 'market';
+  const args = { symbol, side, order_type: orderType };
+
+  const qty = Number(params.quantity ?? params.qty);
+  if (Number.isFinite(qty) && qty > 0) args.quantity = qty;
+
+  const amount = Number(params.amount ?? params.notional ?? params.notional_usd ?? params.notionalUsd);
+  if (Number.isFinite(amount) && amount > 0) args.amount = amount;
+
+  if (args.quantity == null && args.amount == null) {
+    throw new Error('quantity or amount (notional USD) required');
+  }
+
+  const limitPrice = Number(params.limit_price ?? params.limitPrice);
+  if (Number.isFinite(limitPrice) && limitPrice > 0) args.limit_price = limitPrice;
+
+  const tif = String(params.time_in_force || params.timeInForce || '').trim().toLowerCase();
+  if (tif) args.time_in_force = tif;
+
+  const accountNumber = params.account_number || params.accountNumber || await getDefaultAccountNumber();
+  if (accountNumber) args.account_number = accountNumber;
+
+  return args;
+}
+
+/**
+ * Simulate an equity order (Robinhood review_equity_order) — no fill.
+ */
+async function reviewEquityOrder(params = {}) {
+  if (!isAuthenticated()) {
+    throw new Error('Robinhood: not authenticated. Visit /api/market/auth/connect to log in.');
+  }
+  await initialize();
+  const args = await buildEquityOrderArgs(params);
+  return unwrapToolResult(await callTool('review_equity_order', args));
+}
+
+/**
+ * Place a live equity order via Robinhood MCP place_equity_order.
+ * Requires ROBINHOOD_LIVE_TRADING=1. Moves real money in the Agentic account.
+ */
+async function placeEquityOrder(params = {}) {
+  if (!isLiveTradingEnabled()) {
+    throw new Error(
+      'Live Robinhood trading is disabled. Set ROBINHOOD_LIVE_TRADING=1 to allow place_equity_order.',
+    );
+  }
+  if (!isAuthenticated()) {
+    throw new Error('Robinhood: not authenticated. Visit /api/market/auth/connect to log in.');
+  }
+  await initialize();
+  const args = await buildEquityOrderArgs(params);
+  return unwrapToolResult(await callTool('place_equity_order', args));
+}
+
+/**
  * Full market observation cycle for Roki's think loop.
  * Returns { watchlist, quotes, portfolio, movers, at, error? }
  */
@@ -727,20 +799,25 @@ function createSuggestion(params) {
     currentPrice: params.currentPrice || null,
     targetPrice:  params.targetPrice  || null,
     status:       'suggested',
-    _note:        'SUGGESTION ONLY. Denizen never executes trades.',
+    _note:        isLiveTradingEnabled()
+      ? 'Suggestion recorded. Live orders require place_equity_order + ROBINHOOD_LIVE_TRADING=1.'
+      : 'SUGGESTION ONLY unless ROBINHOOD_LIVE_TRADING=1 and place_equity_order is used.',
   };
   suggestions.unshift(entry);
   if (suggestions.length > 200) suggestions.splice(200);
   fs.mkdirSync(path.dirname(SUGGESTIONS_FILE), { recursive: true });
   fs.writeFileSync(SUGGESTIONS_FILE, JSON.stringify(suggestions, null, 2));
   try {
+    const npcKey = String(params.npc_key || params.npc || 'roki')
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '') || 'roki';
     denizenDb.upsertTradeSuggestion({
       symbol: entry.symbol,
       action: entry.action,
       rationale: entry.rationale,
       status: 'pending',
       createdAt: entry.at,
-      npc_key: 'roki',
+      npc_key: npcKey,
     });
   } catch (_) {
     /* non-fatal */
@@ -776,6 +853,7 @@ function dismissSuggestion(id) {
 module.exports = {
   // Auth flow
   isAuthenticated,
+  isLiveTradingEnabled,
   getAuthConnectUrl,
   buildAuthUrl,
   handleCallback,
@@ -787,13 +865,17 @@ module.exports = {
   loadWatchlist, saveWatchlist, addToWatchlist, removeFromWatchlist,
   seedDefaultWatchlistInDbIfEmpty,
   DEFAULT_WATCHLIST,
-  // Suggestions (no execution)
+  // Suggestions (paper / ideas; live needs placeEquityOrder)
   loadSuggestions, createSuggestion, dismissSuggestion,
   // Market data
   initialize, listTools,
   getQuote, getPortfolio, getPositions, getOrderHistory,
   getChart,
   runMarketObservation,
+  // Live trading (gated)
+  buildEquityOrderArgs,
+  reviewEquityOrder,
+  placeEquityOrder,
   // Low-level
   callTool,
 };

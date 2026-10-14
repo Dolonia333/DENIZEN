@@ -1,7 +1,7 @@
 'use strict';
 /**
  * Roki paper broker — fake cash + positions marked to live quotes.
- * Never touches Robinhood place_equity_order.
+ * Paper only — live fills go through robinhood-mcp.placeEquityOrder when enabled.
  */
 
 const fs = require('node:fs');
