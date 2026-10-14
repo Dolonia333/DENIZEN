@@ -1,30 +1,61 @@
-# Robinhood Live OAuth (Denizen / Roki)
+# Robinhood Live OAuth (Denizen / Roki / Grok)
 
-This runbook enables live Robinhood MCP market connectivity for Roki in read-only mode.
+This runbook enables Robinhood MCP market connectivity for **Roki** and **Grok**.
 
-## Design Rule (Read-Only)
+## Modes
 
-Denizen never executes trades through Robinhood.
+| Mode | How | What happens |
+|------|-----|----------------|
+| **Read-only (default)** | OAuth connected, `ROBINHOOD_LIVE_TRADING` unset/false | Quotes, portfolio, positions, order history, suggestions |
+| **Paper** | `trade-suggest` buy/sell without live flag | Fills on Roki's fake ledger (`roki-paper-broker.js`) |
+| **Live** | `ROBINHOOD_LIVE_TRADING=1` + MCP `place_equity_order` with `confirm=true` | Real Agentic-account equity orders via Robinhood `place_equity_order` |
 
-- No order placement API is exposed by Denizen.
-- Trade intent is stored as suggestion data only.
-- User executes any real trade manually in Robinhood.
+Implementation: `src/robinhood-mcp.js`, `src/denizen-mcp-market-tools.js`.
 
-Implementation source: `src/robinhood-mcp.js`.
+## Live trading opt-in
+
+Live orders are **off by default**. To allow Grok (or Roki) to trade through Denizen MCP:
+
+1. Complete OAuth (below) so Denizen holds a Robinhood token.
+2. On the Denizen host: `ROBINHOOD_LIVE_TRADING=1` (also accepts `true` / `yes` / `on`).
+3. Mint an MCP token for **grok** with **Full** scope (includes `trade`), or explicitly grant `trade`.
+4. From Grok MCP (`/mcp/npc/grok`):
+   - Prefer `review_equity_order` first
+   - Then `place_equity_order` with `symbol`, `side`, `quantity` or `amount`, and **`confirm: true`**
+
+Example MCP args:
+
+```json
+{
+  "symbol": "AAPL",
+  "side": "buy",
+  "amount": 25,
+  "order_type": "market",
+  "confirm": true
+}
+```
+
+Without the env flag, `place_equity_order` returns an error and `trade-suggest` with `execute`/`liveTrade` stays blocked.
+
+Robinhood may also require **Trade approvals** off in the Agentic account Agent settings for unattended fills — see [Trading with your agent](https://robinhood.com/us/en/support/articles/trading-with-your-agent/).
+
+## Grok Integration
+
+Grok is a market NPC alongside Roki:
+
+- Market tools on `/mcp/npc/grok` (same set as Roki)
+- Skills: `market-watch`, `get-quote`, `trade-suggest`
+- Live path: Denizen MCP → `robinhood-mcp.placeEquityOrder` → Robinhood MCP `place_equity_order`
+
+See [GROK_DENIZEN_AUTONOMY.md](GROK_DENIZEN_AUTONOMY.md).
 
 ## Roki Integration
 
-Roki is the default NPC owner for market telemetry:
+Roki remains the default office market watcher:
 
 - watchlist persistence defaults to `npc_key = roki`
-- trade suggestion persistence defaults to `npc_key = roki`
-- market observation loop seeds and tracks a Roki watchlist
-
-The flow is:
-
-1. Roki observes market + watchlist
-2. Denizen records suggestion text/rationale
-3. Human user decides whether to act externally
+- paper ledger for suggested buy/sell when live is off
+- same MCP market tools when using `/mcp/npc/roki`
 
 ## Schema Surfaces
 
@@ -46,19 +77,6 @@ v1.2 keeps local JSON as first-write + SQL sync:
   - `syncWatchlistSymbol(...)` to `denizen_watchlist_symbols`
   - `upsertTradeSuggestion(...)` to `denizen_trade_suggestions`
 
-Why this exists:
-
-- Local resilience when DB is unavailable
-- Backward compatibility with existing tooling
-- Fast local bootstrap defaults
-
-When to retire JSON dual-write:
-
-- DB is guaranteed available in all target environments
-- all reads are migrated to SQL-backed APIs
-- legacy scripts depending on JSON files are removed
-- migration validation confirms no state divergence
-
 ## API Reference
 
 | Surface | Method + Path | Purpose | Auth requirement |
@@ -72,12 +90,25 @@ When to retire JSON dual-write:
 | Trade suggestions list | `GET /api/trade-suggestions` | Read suggestion queue | None |
 | Trade suggestion dismiss | `POST /api/trade-suggestions/:id/dismiss` | Mark suggestion dismissed | None |
 
+## MCP market tools (Roki + Grok)
+
+| Tool | Scope | Notes |
+|------|-------|-------|
+| `get_market_quote` | `read` | Robinhood or free feed |
+| `get_market_portfolio` | `read` | Requires OAuth |
+| `get_market_positions` | `read` | Requires OAuth |
+| `get_equity_orders` | `read` | Requires OAuth |
+| `market_watch` | `read` | Watchlist observation |
+| `list_trade_suggestions` | `read` | Local suggestion queue |
+| `get_watchlist` | `read` | Symbols |
+| `review_equity_order` | `read` | Simulate / pre-trade warnings |
+| `place_equity_order` | `trade` | Live; needs `ROBINHOOD_LIVE_TRADING=1` + `confirm=true` |
+
 ## OAuth Preconditions
 
 - `src/robinhood-mcp.js` configured for OAuth PKCE.
 - `data/robinhood-oauth.json` has a `client_id` (token may be empty before first auth).
 - Denizen server is running and reachable.
-- This flow grants market-read access for Denizen's market observer.
 
 ## One-Time OAuth (Localhost)
 
@@ -99,14 +130,13 @@ When to retire JSON dual-write:
 ## Notes
 
 - `ROBINHOOD_API_TOKEN` can override stored OAuth token for non-interactive runs.
+- `ROBINHOOD_LIVE_TRADING` must be set on the **server** process — not in the Grok client alone.
 - If unauthenticated, smoke script exits `0` and prints reconnect instructions.
 - Quote fetching can fall back to free market data when Robinhood MCP access is unavailable.
 
 ## Related Integration Docs
 
+- [Grok Denizen Autonomy](GROK_DENIZEN_AUTONOMY.md)
+- [NPC MCP Gateway](NPC_MCP_GATEWAY.md)
 - [MiroFish Prediction](MIROFISH_PREDICTION.md)
-- [Federal Pipeline](FEDERAL_PIPELINE.md)
-- [Job CRM](JOB_CRM.md)
 - [Jelly Integration](JELLY_INTEGRATION.md)
-- [Architecture](ARCHITECTURE.md)
-- [Session Log 2026-06-05](SESSION_2026-06-05.md)

@@ -103,12 +103,32 @@ Good for chat demos; **Grok Build + MCP** is better for coding + office in one t
 | `assign_task` / `delegate_task` | Think loop wakes target NPC |
 | `log_activity` | Activity log + work feed |
 | `update_memory` | Persists to DB + MEMORY.md path |
+| `get_market_quote` / `market_watch` | Market data (shared with Roki) |
+| `place_equity_order` | Live Robinhood fill when host enables trading |
+
+## Robinhood trading via Denizen MCP
+
+Grok is a **market NPC**: `/mcp/npc/grok` lists the same market tools as Roki (`denizen-mcp-market-tools.js`).
+
+1. Connect Robinhood OAuth on the Denizen host ([ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)).
+2. Set `ROBINHOOD_LIVE_TRADING=1` on the server (off by default).
+3. Mint a Grok token with **Full** scope (includes `trade`) or add `trade` explicitly.
+4. Call `review_equity_order`, then `place_equity_order` with `confirm: true`.
+
+Without the env flag, place stays disabled; Grok can still quote, watch, and paper-suggest via `trade-suggest`.
+
+Autonomy goal example:
+
+```bash
+py infra/run-grok-autonomy.py "Get a quote for AAPL, review a $25 market buy, place only if live trading is enabled and confirm=true, announce the result"
+```
 
 ## Security
 
 - `.mcp-token.local.json` is gitignored — never commit tokens.
 - Rotate: mint new token, revoke old via `/api/mcp/tokens/revoke` or Connect AI.
 - Token is scoped to **grok** only — cannot call Abby/Lucy privileged tools.
+- Live trades need host `ROBINHOOD_LIVE_TRADING=1` **and** MCP `trade` scope **and** `confirm=true`.
 
 ## Code map
 

@@ -27,6 +27,8 @@ describe('denizen-mcp-scopes', () => {
     assert.equal(mcpScopes.requiredScope('schedule_job'), 'delegate');
     assert.equal(mcpScopes.requiredScope('send_handoff'), 'handoff');
     assert.equal(mcpScopes.requiredScope('delegate_task'), 'delegate');
+    assert.equal(mcpScopes.requiredScope('place_equity_order'), 'trade');
+    assert.equal(mcpScopes.requiredScope('review_equity_order'), 'read');
   });
 
   it('filters tools by granted scopes', () => {

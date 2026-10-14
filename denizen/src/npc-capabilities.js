@@ -98,17 +98,17 @@ const BY_NAME = {
   },
   Roki: {
     role: 'Intern',
-    teaser: 'Learning tasks, market watch, read-only GitHub, trade suggestions only.',
+    teaser: 'Learning tasks, market watch, GitHub, paper trades; live only if host enables it.',
     intro: "I'm Roki, intern — still learning, but I can help.",
     canDo: [
       'Take smaller tasks and ask Alex for guidance',
-      'Watch markets and suggest trades (suggestions only — you decide)',
+      'Watch markets and suggest trades (paper by default; live if ROBINHOOD_LIVE_TRADING=1)',
       'Read GitHub issues and summarize',
       COMMON_WEB,
     ],
     askMe: ['Summarize open issues', 'What\'s moving in the market today?', 'Help me understand this module'],
     skills: ['market-watch', 'get-quote', 'trade-suggest', 'github', 'research'],
-    // trade-suggest papers buy/sell on Roki's fake ledger; never live Robinhood orders.
+    // trade-suggest papers buy/sell on Roki's fake ledger; live needs ROBINHOOD_LIVE_TRADING=1.
   },
   Molly: {
     role: 'QA Engineer',
@@ -238,12 +238,14 @@ const BY_NAME = {
   },
   Grok: {
     role: 'xAI Researcher & Engineer',
-    teaser: 'Research, rapid prototyping, coding-agent, GitHub, and visible office actions via MCP.',
-    intro: "I'm Grok — xAI agent wired into this office for research and engineering.",
+    teaser: 'Research, coding-agent, GitHub, and Robinhood market tools via Denizen MCP.',
+    intro: "I'm Grok — xAI agent wired into this office for research, engineering, and markets.",
     canDo: [
       'Run coding-agent for real repo changes in isolated worktrees',
       'Deep research and browserclaw investigations',
       'GitHub, Supabase bridge, and canvas/PDF artifacts',
+      'Quote, portfolio, and watchlist via Denizen MCP market tools',
+      'Place live Robinhood equity orders when ROBINHOOD_LIVE_TRADING=1 (MCP place_equity_order)',
       'Announce progress and delegate to teammates',
       COMMON_WEB,
     ],
@@ -251,6 +253,8 @@ const BY_NAME = {
       'Research this topic and summarize',
       'Prototype a small utility in denizen/scripts',
       'Announce status and run a visible skill in the office',
+      'Check my Robinhood portfolio and quote NVDA',
+      'Review then place a small equity order (live trading enabled)',
     ],
     skills: [
       'coding-agent',
@@ -265,6 +269,9 @@ const BY_NAME = {
       'pdf-dossier',
       'work-history',
       'health-check',
+      'market-watch',
+      'get-quote',
+      'trade-suggest',
     ],
   },
   Claude: {

@@ -95,7 +95,11 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 15. **`crm_list_tasks`** — open CRM tasks
 16. **`crm_draft_email`** — draft email (does not send)
 
-**Market** (Roki only) — see `denizen-mcp-market-tools.js`
+**Market** (Roki + Grok) — see `denizen-mcp-market-tools.js`
+
+- Read tools: quotes, portfolio, positions, orders, watchlist, suggestions, `review_equity_order`
+- Live: `place_equity_order` (scope `trade`, requires `ROBINHOOD_LIVE_TRADING=1` + `confirm=true`)
+- Details: [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)
 
 ### Team operator (`/mcp/team`)
 
@@ -116,13 +120,14 @@ Tokens may carry scopes in `metadata.scopes`. Missing scopes = full access (back
 
 | Scope | Tools |
 |-------|--------|
-| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, `team_standup`, `list_pending_handoffs`, CRM read, market read |
+| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, `team_standup`, `list_pending_handoffs`, CRM read, market read / `review_equity_order` |
 | `skills` | `run_skill`, `run_as_npc` |
 | `crm_write` | `crm_draft_email` |
 | `handoff` | `send_handoff`, `acknowledge_handoff` |
 | `delegate` | `assign_task`, `delegate_task`, `announce_in_office`, `broadcast_task` |
+| `trade` | `place_equity_order` (also needs host `ROBINHOOD_LIVE_TRADING=1`) |
 
-**Presets** (Settings / Connect AI): `read`, `standard` (read+skills+handoff), `full`.
+**Presets** (Settings / Connect AI): `read`, `standard` (read+skills+handoff), `full` (includes `trade`).
 
 Every `tools/call` is logged to `denizen_mcp_audit`. Revoke tokens in **Settings → AI Connections**.
 

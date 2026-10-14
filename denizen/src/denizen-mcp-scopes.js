@@ -3,15 +3,16 @@
 /**
  * MCP token scopes — tool access governance (Phase 4).
  *
- * Scopes: read, skills, crm_write, handoff, delegate
+ * Scopes: read, skills, crm_write, handoff, delegate, compute, trade
  * Missing scopes on a token = full access (backward compatible).
  */
 
-const ALL_SCOPES = Object.freeze(['read', 'skills', 'crm_write', 'handoff', 'delegate', 'compute']);
+const ALL_SCOPES = Object.freeze(['read', 'skills', 'crm_write', 'handoff', 'delegate', 'compute', 'trade']);
 
 const SCOPE_PRESETS = Object.freeze({
   read: ['read'],
   standard: ['read', 'skills', 'handoff'],
+  // full includes trade — mint a narrower token if you want market-read without live orders
   full: [...ALL_SCOPES],
 });
 
@@ -70,9 +71,13 @@ const TOOL_SCOPE = Object.freeze({
   business_studio_get_settings: 'read',
   get_market_quote: 'read',
   get_market_portfolio: 'read',
+  get_market_positions: 'read',
+  get_equity_orders: 'read',
   market_watch: 'read',
   list_trade_suggestions: 'read',
   get_watchlist: 'read',
+  review_equity_order: 'read',
+  place_equity_order: 'trade',
   team_status: 'read',
   list_directives: 'read',
   list_jobs: 'read',
