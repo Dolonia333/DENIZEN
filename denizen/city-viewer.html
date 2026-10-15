@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Denizen — City Viewer</title>
+<!--
+  No-auth inspector for the exterior world (data/city-plan.json + src/full-world.js).
+
+  /office?world=full sits behind the visitor gate and an email-capture modal, so
+  looking at the city meant signing in every time — and there was no way to aim
+  the camera at a known world coordinate. This page boots the SAME buildFullWorld()
+  the game uses, with nothing else attached, and lets you address a location
+  directly. That makes "render, look, adjust the JSON, re-render" repeatable, and
+  screenshots comparable between passes.
+
+    city-viewer.html?x=512&y=1568&zoom=2      aim at a world coord
+    city-viewer.html?x=512&y=1568&free=1      detach camera from the player
+    city-viewer.html?atlas=0                  bypass the packed atlas
+    city-viewer.html?grid=1                   overlay a 64px grid + block labels
+    city-viewer.html?canvas=1                 force Canvas2D (compare vs WebGL)
+
+  Drag to pan (free mode), wheel to zoom, WASD to walk. The HUD reports the
+  cursor's world coordinate, so you can read a spot off the map and re-aim.
+-->
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #0b1220; color: #e2e8f0;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #game-container { width: 100vw; height: 100vh; overflow: hidden; }
+  #game-container canvas { display: block; image-rendering: pixelated; }
+  #hud { position: fixed; top: 8px; left: 8px; z-index: 10; padding: 7px 10px;
+    background: rgba(2, 6, 23, .82); border: 1px solid #1e293b; border-radius: 6px;
+    white-space: pre; pointer-events: none; }
+  #hud b { color: #7dd3fc; font-weight: 600; }
+  #err { position: fixed; inset: 12px; z-index: 20; display: none; padding: 14px;
+    overflow: auto; background: rgba(69, 10, 10, .95); border: 1px solid #b91c1c;
+    border-radius: 6px; color: #fecaca; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="game-container"></div>
+<div id="hud">booting…</div>
+<pre id="err"></pre>
+
+<script src="/vendor/phaser/phaser.min.js?v=380c"></script>
+<script type="module">
+import { buildFullWorld } from './src/full-world.js';
+
+const q = new URLSearchParams(location.search);
+const num = (k, d) => (q.has(k) ? Number(q.get(k)) : d);
+const AIM = { x: num('x', NaN), y: num('y', NaN) };
+const ZOOM = num('zoom', 2);
+const FREE = q.get('free') === '1' || Number.isFinite(AIM.x);
+const GRID = q.get('grid') === '1';
+
+const hud = document.getElementById('hud');
+const errBox = document.getElementById('err');
+const fail = (e) => {
+  errBox.style.display = 'block';
+  errBox.textContent = `city-viewer failed:\n${e?.stack || e}`;
+  console.error('[city-viewer]', e);
+};
+window.addEventListener('error', (e) => fail(e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => fail(e.reason));
+
+class ViewerScene extends Phaser.Scene {
+  constructor() { super('viewer'); }
+
+  create() {
+    buildFullWorld(this);
+    // buildFullWorld starts its own loader and builds on 'complete'; everything
+    // below only needs to run once the world state is populated.
+    this.load.once('complete', () => this.time.delayedCall(50, () => this.onWorldReady()));
+  }
+
+  onWorldReady() {
+    const fw = window.DenizenFullWorld;
+    const st = fw?.state;
+    if (!st) return fail(new Error('DenizenFullWorld.state missing after load'));
+    this.st = st;
+    const cam = this.cameras.main;
+    cam.setZoom(ZOOM);
+
+    if (FREE) {
+      cam.stopFollow();
+      const cx = Number.isFinite(AIM.x) ? AIM.x : st.worldW / 2;
+      const cy = Number.isFinite(AIM.y) ? AIM.y : st.worldH / 2;
+      cam.setScroll(cx - cam.width / 2, cy - cam.height / 2);
+      // Drag-to-pan. Phaser's own scroll is in world units, so divide by zoom.
+      this.input.on('pointermove', (p) => {
+        if (!p.isDown) return;
+        cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
+        cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
+      });
+    } else if (st.player) {
+      cam.startFollow(st.player, true, 0.12, 0.12);
+    }
+
+    this.input.on('wheel', (_p, _o, _dx, dy) => {
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.85 : 1.18), 0.15, 8));
+    });
+
+    if (GRID) this.drawGrid();
+    this.ready = true;
+  }
+
+  /** 64px lattice + world-coordinate labels every 512px, for aiming edits. */
+  drawGrid() {
+    const { worldW: W, worldH: H } = this.st;
+    const g = this.add.graphics().setDepth(99998);
+    g.lineStyle(1, 0x38bdf8, 0.18);
+    for (let x = 0; x <= W; x += 64) g.lineBetween(x, 0, x, H);
+    for (let y = 0; y <= H; y += 64) g.lineBetween(0, y, W, y);
+    g.lineStyle(1, 0xf472b6, 0.5);
+    for (let x = 0; x <= W; x += 512) g.lineBetween(x, 0, x, H);
+    for (let y = 0; y <= H; y += 512) g.lineBetween(0, y, W, y);
+    for (let x = 0; x <= W; x += 512)
+      for (let y = 0; y <= H; y += 512)
+        this.add.text(x + 3, y + 2, `${x},${y}`,
+          { fontSize: '9px', color: '#f472b6' }).setDepth(99999);
+  }
+
+  update() {
+    if (!this.ready) return;
+    const cam = this.cameras.main;
+    const p = this.input.activePointer;
+    const st = this.st;
+    hud.innerHTML =
+      `<b>cam</b>  ${Math.round(cam.scrollX + cam.width / 2 / cam.zoom)},`
+      + `${Math.round(cam.scrollY + cam.height / 2 / cam.zoom)}  zoom ${cam.zoom.toFixed(2)}\n`
+      + `<b>mouse</b> ${Math.round(p.worldX)},${Math.round(p.worldY)}\n`
+      + `<b>world</b> ${st.worldW}x${st.worldH}  solids ${st.solids?.length ?? 0}\n`
+      + `<b>atlas</b> ${st._atlasEnabled ? `on (${st._atlasFrameCount} frames)` : 'OFF'}`
+      + `  <b>fps</b> ${Math.round(this.game.loop.actualFps)}\n`
+      + `<b>gpu</b>   ${this.game.renderer.type === Phaser.WEBGL ? 'WEBGL' : 'CANVAS'}`;
+  }
+}
+
+const game = new Phaser.Game({
+  // Match what players get: office-scene.js preferCanvasRenderer() forces
+  // CANVAS for the office (WebGL uploads OOM'd some browsers) but returns
+  // WebGL for ?world=full, because the city draws ~11.7k objects from one
+  // atlas page and Canvas2D cannot batch — measured 3.7-5.3x slower.
+  // ?canvas=1 here forces 2D so the two can be compared side by side.
+  type: q.get('canvas') === '1' ? Phaser.CANVAS : Phaser.WEBGL,
+  // Fixed 1280x720 — the exact viewport the game runs at, so a shot here frames
+  // the same thing a player sees. Sizing from window.innerWidth would also read
+  // 0 whenever the page boots in a hidden/unpainted pane, which silently gives
+  // the camera zero size and renders an empty canvas.
+  width: num('w', 1280),
+  height: num('h', 720),
+  parent: 'game-container',
+  backgroundColor: '#0b1220',
+  pixelArt: true,
+  roundPixels: true,
+  scale: { pauseOnBlur: false },
+  loader: { maxParallelDownloads: 8, maxRetries: 2, timeout: 20000 },
+  scene: [ViewerScene],
+});
+
+// Exposed so screenshots can be scripted: aim the camera, render, capture.
+//   await __cityViewer.shot(512, 1568, 2)
+//
+// `pump` exists because Phaser drives BOTH its render and its asset loader off
+// requestAnimationFrame. In a hidden or unpainted pane rAF never fires, so the
+// loader deadlocks partway through (files stuck PENDING, nothing in flight) and
+// the world never builds — it looks exactly like a hung load. Stepping the loop
+// by hand gets a headless screenshot without needing the pane on screen.
+window.__cityViewer = {
+  game,
+  get scene() { return game.scene.scenes[0]; },
+  get ready() { return !!game.scene.scenes[0]?.ready; },
+  get loading() {
+    const l = game.scene.scenes[0]?.load;
+    return { progress: l?.progress, done: l?.totalComplete, total: l?.totalToLoad, failed: l?.totalFailed };
+  },
+
+  async pump(frames = 60) {
+    for (let i = 0; i < frames; i++) {
+      game.loop.step(performance.now());
+      if (i % 15 === 0) await new Promise((r) => setTimeout(r, 8));
+    }
+    return game.loop.frame;
+  },
+
+  /** Step until the world is built (or `tries` batches elapse). */
+  async waitReady(tries = 40) {
+    for (let i = 0; i < tries && !this.ready; i++) await this.pump(50);
+    return { ready: this.ready, ...this.loading };
+  },
+
+  aim(x, y, zoom) {
+    const cam = game.scene.scenes[0].cameras.main;
+    cam.stopFollow();
+    if (zoom) cam.setZoom(zoom);
+    // scrollX is offset by HALF THE CAMERA WIDTH, not half the visible world
+    // width. Phaser applies zoom about the camera midpoint, so
+    //   worldView.x = scrollX + width/2 - width/(2*zoom)
+    // and substituting scrollX = X - width/2 gives worldView.x = X - (width/zoom)/2,
+    // i.e. X really is the centre. Dividing by zoom here instead put the target
+    // in the view's top-left CORNER at zoom 2, which silently mis-framed every
+    // screenshot by half a viewport. This matches Camera.centerOn().
+    cam.setScroll(x - cam.width / 2, y - cam.height / 2);
+    return { x, y, zoom: cam.zoom, view: [cam.width / cam.zoom, cam.height / cam.zoom] };
+  },
+
+  /** Aim and render — the one call a screenshot needs. */
+  async shot(x, y, zoom = 2, frames = 40) {
+    await this.waitReady();
+    const a = this.aim(x, y, zoom);
+    await this.pump(frames);
+    const cam = game.scene.scenes[0].cameras.main;
+    return { ...a, camSize: [cam.width, cam.height], fps: Math.round(game.loop.actualFps) };
+  },
+};
+</script>
+</body>
+</html>

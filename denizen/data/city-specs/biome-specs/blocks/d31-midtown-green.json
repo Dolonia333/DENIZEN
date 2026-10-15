@@ -1,0 +1,93 @@
+{
+  "_doc": "Street-grid block fill: grid block r3c3, measured at 27% sprite coverage in the real renderer — a full viewport of grid-textured concrete with a single tree. The big park grass patches already begin at world y3200, i.e. this block's own south edge, so turning it green extends that park north instead of stranding it behind a wall of shops. This is the second of the two public-space blocks in the mixed-density brief. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/blocks/d31-midtown-green.json --qa -v. See d29-midtown-retail.json's _layout_doc for the 16px-lattice and 16px-halo rules.",
+  "schema": "exterior-district-spec/1",
+  "id": "d31-midtown-green",
+  "district": "D31 Midtown Green",
+  "biome": "park",
+  "palette": "verdant",
+  "palette_secondary": "warm_autumn",
+
+  "compiler": {
+    "version": 1,
+    "rules": "data/limezu-visual-catalog/placement-rules.json",
+    "seed": 31337,
+    "coords": "local",
+    "out": "data/city-specs/generated/d31-midtown-green.json",
+    "_doc": "coords 'local'. Grid block r3c3 sits between arterials x1728/x2560 and y2560/y3248."
+  },
+
+  "bbox": { "x": 1792, "y": 2624, "w": 768, "h": 624 },
+  "label": "MIDTOWN GREEN",
+  "label_at": { "x": 384, "y": 16 },
+
+  "surfaces": [
+    { "surface": "sidewalk", "x": 0, "y": 0, "w": 768, "h": 624, "depth": 0.87,
+      "_doc": "keep the outer 32px as pavement so the d00 perimeter trees/lamps still stand on a kerb" },
+    { "surface": "grass", "name": "park_lawn", "x": 32, "y": 32, "w": 704, "h": 528, "depth": 0.9,
+      "_doc": "the lawn itself. renderGround() lays Grass_2 overhang tiles along every grass/concrete boundary, so this gets a tufted edge rather than a hard rectangle." },
+    { "surface": "sidewalk", "name": "path_ns", "x": 368, "y": 32, "w": 32, "h": 528, "depth": 0.93,
+      "_doc": "depth above the lawn's 0.9 so the walk paints ON the grass, not under it" },
+    { "surface": "sidewalk", "name": "path_ew", "x": 32, "y": 272, "w": 704, "h": 32, "depth": 0.93 }
+  ],
+
+  "landmarks": [
+    { "me": "me.school.playground_fort_large_b", "at": { "x": 96, "y": 448 }, "anchor": "bl", "pin": true, "interact": "play",
+      "_doc": "playground cluster in the south-west quadrant, 80x80" },
+    { "me": "me.school.playground_slide_single", "at": { "x": 208, "y": 448 }, "anchor": "bl", "pin": true, "interact": "play" },
+    { "me": "me.school.playground_swing_set", "at": { "x": 288, "y": 448 }, "anchor": "bl", "pin": true, "interact": "play" },
+    { "me": "me.villa.tire_swing", "at": { "x": 96, "y": 528 }, "anchor": "bl", "pin": true, "interact": "play" },
+    { "me": "me.garden.pergola_structure", "at": { "x": 496, "y": 448 }, "anchor": "bl", "pin": true, "interact": "sit",
+      "_doc": "shade structure in the south-east quadrant; canopy role stays walkable" },
+    { "me": "me.garden.statue_light_brown", "at": { "x": 592, "y": 224 }, "anchor": "bl", "pin": true, "interact": "read",
+      "_doc": "48x96 focal point at the north-east lawn" }
+  ],
+
+  "slots": [
+    { "slot": "interior_fill", "name": "lawn_nw", "x": 48, "y": 48, "w": 304, "h": 208,
+      "density": { "vegetation": "dense", "decor_small": "light", "furniture_ext": "light" } },
+    { "slot": "interior_fill", "name": "lawn_ne", "x": 416, "y": 48, "w": 304, "h": 208,
+      "density": { "vegetation": "dense", "decor_small": "light" } },
+    { "slot": "interior_fill", "name": "lawn_sw", "x": 48, "y": 320, "w": 304, "h": 208,
+      "density": { "vegetation": "medium", "play_sport": "light", "decor_small": "light" },
+      "_doc": "vegetation only medium here: the playground needs open ground around it" },
+    { "slot": "interior_fill", "name": "lawn_se", "x": 416, "y": 320, "w": 304, "h": 208,
+      "density": { "vegetation": "dense", "furniture_ext": "medium", "decor_small": "light" } },
+    { "slot": "path_edge", "name": "walk_north_side", "x": 48, "y": 256, "w": 672, "h": 16,
+      "density": { "street_furn": "medium", "signage": "light" },
+      "_doc": "benches and bins sit BESIDE the crossing walk, never on it — the walk rects are keep_clear" },
+    { "slot": "path_edge", "name": "walk_south_side", "x": 48, "y": 304, "w": 672, "h": 16,
+      "density": { "street_furn": "medium", "vegetation": "light" } }
+  ],
+
+  "interactions": {
+    "sit": "auto",
+    "play": "auto",
+    "read": "auto"
+  },
+
+  "constraints": {
+    "keep_clear": [
+      { "x": 368, "y": 32, "w": 32, "h": 528, "why": "north-south park walk stays walkable" },
+      { "x": 32, "y": 272, "w": 704, "h": 32, "why": "east-west park walk stays walkable" },
+      { "x": 0, "y": 0, "w": 768, "h": 32, "why": "north kerb band: d00 traffic light + planters stand here" },
+      { "x": 0, "y": 528, "w": 768, "h": 96,
+        "why": "south edge. The park district to the south already stands here: bleachers, flowers, a bush and me.camping.tree_orange_bushy_large at world y3230-3247, and its grass patches start at world y3200. The band was y560+ at first, which still let a flowered grass-wall land at local y545 and overlap that camping tree 100% — the one OVERLAP the merge QA caught. 528 clears the tree's canopy." }
+    ],
+    "max_stamps": 150,
+    "coverage_target_singles": 35,
+    "max_solid_cell_ratio": 0.22,
+    "min_free_cell_ratio": 0.5,
+    "_doc": "48x39 tiles = 1872 cells. A park is mostly walkable lawn, so the solid budget is the tightest of the three block fills."
+  },
+
+  "passes": {
+    "A_ground": { "enabled": true },
+    "B_skeleton": { "enabled": true },
+    "C_landmarks": { "enabled": true },
+    "D_groups": { "enabled": true },
+    "E_props": { "enabled": true },
+    "F_canopy": { "enabled": true },
+    "G_detail": { "enabled": true },
+    "H_life": { "enabled": true }
+  }
+}
