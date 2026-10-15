@@ -428,8 +428,11 @@ class AgentActions {
     const sit = this._getChairSitPos(chair, desk);
     if (!sit) return false;
     if (npc.body) {
-      npc.body.setSize(10, 8);
-      npc.body.setOffset(3, 16);
+      if (window.DenizenMapEngine?.applyFootBody) window.DenizenMapEngine.applyFootBody(npc);
+      else {
+        npc.body.setSize(12, 8);
+        npc.body.setOffset(10, 40);
+      }
       npc.body.setVelocity(0, 0);
     }
     this._applySitPose(npc, npcKey, chair, sit, desk);
@@ -494,8 +497,7 @@ class AgentActions {
         npc.ai.taskTarget = { x: approachX, y: approachY };
         npc.ai._sitSnap = sit;
         npc.ai.taskState = 'walking';
-        npc.body?.setSize(6, 4);
-        npc.body?.setOffset(5, 20);
+        if (window.DenizenMapEngine?.applyFootBody) window.DenizenMapEngine.applyFootBody(npc);
         // Kick pathfinder immediately so they don't idle for a frame then snap.
         try {
           if (npc._pathFollower?.navigateTo) {
@@ -620,6 +622,7 @@ class AgentActions {
       // Restore original depth (Y-sort will take over)
       npc.setDepth(sitData.origDepth);
       if (typeof npc.setCrop === 'function') npc.setCrop();
+      if (window.DenizenMapEngine?.applyFootBody) window.DenizenMapEngine.applyFootBody(npc);
       if (typeof npc.setScale === 'function') {
         npc.setScale(sitData.origScaleX, sitData.origScaleY);
       }

@@ -223,14 +223,15 @@
     } catch (_) {}
     const prof = p || profile;
     if (prof.isPhone || prof.tier === 'phone-compact') {
-      // Portrait: closer zoom so desks fill the compact HQ box to the brackets.
-      if (prof.isLandscape) return 1.85;
-      return prof.isCompactPhone ? 2.65 : 2.5;
+      // Whole-number zoom. 2.5 / 2.65 made nearest-neighbor sprites
+      // sample the next walk frame while a character moved.
+      if (prof.isLandscape) return 2;
+      return 3;
     }
     /* iPad landscape: tight framing so desks fill the cover-scaled HQ box. */
-    if (prof.isTablet) return prof.isLandscape ? 2.55 : 2.15;
-    // Desktop: Pokémon-style close framing (2.15 still felt map-like).
-    return 2.75;
+    if (prof.isTablet) return prof.isLandscape ? 3 : 2;
+    // Desktop: close framing, on a whole pixel so walk sheets stay crisp.
+    return 3;
   }
 
   /**

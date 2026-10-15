@@ -2964,6 +2964,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       'Developer', 'Frontend Developer', 'Backend Developer',
       'Researcher', 'Data Engineer', 'Intern',
       'QA Engineer', 'UI/UX Designer', 'Project Manager', 'Product Manager',
+      'xAI Researcher & Engineer',
     ]);
     let openClawContext = null;
     if (OPENCLAW_SKILL_ROLES.has(brain.role)) {
@@ -2991,6 +2992,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         'Project Manager': `${browserSupabase}; pdf-generator; outcome-standup, rfp-status, prediction-brief — artifacts in reports/pm-reports/. CRM: ${crmLine}`,
         'Product Manager': `${browserSupabase}; pdf-generator; proposal-outline, rfp-requirement-review, outcome-standup — pitch gatekeeper in content pipeline. CRM: ${crmLine}`,
         'Intern': `${browserSupabase}; market-watch, get-quote, trade-suggest (SUGGESTION ONLY), github (read issues). CRM read: ${crmLine}`,
+        'xAI Researcher & Engineer': `${browserSupabase}; trade-live (LIVE Robinhood order on the agentic account: skillParams symbol, side buy|sell, quantity or amount). MCP tool place_equity_order. CRM: ${crmLine}`,
       };
       const skillLine = skillsByRole[brain.role] || `${browserSupabase} — use run_skill and write a report when done`;
       if (skillLine) {

@@ -73,6 +73,7 @@ const TOOL_SCOPE = Object.freeze({
   market_watch: 'read',
   list_trade_suggestions: 'read',
   get_watchlist: 'read',
+  place_equity_order: 'skills',
   team_status: 'read',
   list_directives: 'read',
   list_jobs: 'read',

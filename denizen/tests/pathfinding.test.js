@@ -96,6 +96,21 @@ describe('OfficePathfinder', () => {
     assert.deepEqual(path, []);
   });
 
+  it('blocks the obstacle cells and leaves the next tile open', () => {
+    pf._blockRect(16, 16, 16, 16);
+    assert.equal(pf.isWalkable(1, 1), false);
+    assert.equal(pf.isWalkable(2, 1), true);
+    assert.equal(pf.isWalkable(1, 2), true);
+    assert.equal(pf.isWalkable(0, 1), true);
+  });
+
+  it('soft cost stops one cell off a wall', () => {
+    pf.grid[5 * pf.cols + 5] = 1;
+    pf._computeSoftCost();
+    assert.ok(pf.softCost[5 * pf.cols + 6] > 0);
+    assert.equal(pf.softCost[5 * pf.cols + 8], 0);
+  });
+
   it('findPath returns null when destination is completely blocked', () => {
     pf.grid.fill(1);
     const path = pf.findPath(24, 24, 200, 200);
@@ -142,6 +157,31 @@ describe('NpcPathFollower', () => {
     assert.equal(found, true);
     assert.notEqual(follower.waypoints, null);
     assert.ok(follower.waypoints.length > 0);
+  });
+
+  it('squares onto the lane before cutting a corner', () => {
+    const npc = makeNpc(48, 70);
+    const follower = new NpcPathFollower(npc, pf);
+    follower.waypoints = [{ x: 160, y: 48 }];
+    follower.waypointIndex = 0;
+    const vel = follower.update(100, 16);
+    assert.equal(vel.vx, 0);
+    assert.ok(vel.vy < 0);
+  });
+
+  it('postpones a route search when the frame budget is spent', () => {
+    const npc = makeNpc(48, 48);
+    const follower = new NpcPathFollower(npc, pf);
+    pf.armSearchBudget(0);
+    const found = follower.navigateTo(200, 200);
+    assert.equal(found, 'deferred');
+    assert.equal(follower.waypoints, null);
+    assert.deepEqual(follower._pendingNav, { x: 200, y: 200 });
+    pf.armSearchBudget(1);
+    const flushed = follower.flushPendingNav();
+    assert.equal(flushed, true);
+    assert.ok(follower.waypoints.length > 0);
+    assert.equal(follower._pendingNav, null);
   });
 
   it('navigateTo returns false when all cells are blocked', () => {

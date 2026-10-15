@@ -28,6 +28,6 @@ describe('Compact readable speech bubbles', () => {
 
   it('cache-busts the bubble chip pass', () => {
     const html = read('index.html');
-    assert.match(html, /agent-actions\.js\?v=bubbleChip6/);
+    assert.match(html, /agent-actions\.js\?v=floorBounds1/);
   });
 });

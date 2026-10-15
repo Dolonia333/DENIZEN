@@ -2,13 +2,18 @@
 
 This runbook enables live Robinhood MCP market connectivity for Roki in read-only mode.
 
-## Design Rule (Read-Only)
+## Orders
 
-Denizen never executes trades through Robinhood.
+Roki still only records suggestions and paper fills.
 
-- No order placement API is exposed by Denizen.
-- Trade intent is stored as suggestion data only.
-- User executes any real trade manually in Robinhood.
+Grok can place a live equity order on the connected **agentic** Robinhood account (the AI trading account):
+
+- MCP tool `place_equity_order` on the Grok NPC connection
+- Skill `trade-live` (`symbol`, `side` of `buy` or `sell`, and `quantity` or `amount`)
+- The order tool name and fields come from that session's `tools/list`
+- Accounts with `agentic_allowed !== true` are refused
+
+Denizen must be logged in at `/api/market/auth/connect`. A Robinhood MCP session in Cursor is a separate login.
 
 Implementation source: `src/robinhood-mcp.js`.
 

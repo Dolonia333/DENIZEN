@@ -73,10 +73,11 @@ class OfficePathfinder {
 
     const cs = this.cellSize;
 
-    // Block world edges (2-cell border)
+    // One cell at the map edge. Interior walls already stop people; a second
+    // inset read as an invisible fence in front of the wall art.
     for (let x = 0; x < this.cols; x++) {
       for (let y = 0; y < this.rows; y++) {
-        if (x < 2 || x >= this.cols - 2 || y < 2 || y >= this.rows - 2) {
+        if (x < 1 || x >= this.cols - 1 || y < 1 || y >= this.rows - 1) {
           this.grid[y * this.cols + x] = 1;
         }
       }
@@ -105,14 +106,16 @@ class OfficePathfinder {
         const isSeatLike = type === 'seat' || type === 'decor' ||
           /couch|sofa|bench|seat/i.test(id);
         if (isSeatLike) return;
+        // The physics obstacle is already blocked above. A second, taller
+        // rect around the same desk was the invisible margin in the aisle.
+        if (item.obstacle) return;
 
         const s = item.sprite;
         const w = s.displayWidth;
-        // Smaller footprint for surfaces in crowded areas (breakroom, reception)
-        const h = Math.min(s.displayHeight * 0.35, 18);
+        const h = 12;
         const x = s.x - w / 2;
-        const y = s.y - h; // bottom-anchored
-        if (w > 20) {
+        const y = s.y - h; // bottom-anchored lip, same line as the physics body
+        if (w > 16) {
           this._blockRect(x, y, w, h);
         }
       });
@@ -211,14 +214,15 @@ class OfficePathfinder {
 
   /**
    * Compute per-cell soft-cost penalty based on distance to nearest blocked cell.
-   * Cells one step from a wall get +0.6, two steps +0.25, three steps +0.1.
-   * A* adds these to the movement cost, producing smoother routes through open space.
+   * One step off a wall gets a light penalty so routes prefer an open aisle
+   * when one exists. A 3-cell halo kept people a full body-length off every
+   * wall even when the destination was the wall itself.
    */
   _computeSoftCost() {
     if (!this.softCost) return;
     this.softCost.fill(0);
     const cols = this.cols, rows = this.rows;
-    const weights = [0.6, 0.25, 0.1]; // for ring-distance 1, 2, 3
+    const weights = [0.15];
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         if (this.grid[y * cols + x] !== 1) continue;
@@ -446,13 +450,13 @@ class OfficePathfinder {
    */
   _blockRect(px, py, pw, ph) {
     const cs = this.cellSize;
-    // Light shoulder so A* stays off furniture without sealing narrow aisles.
-    // Doorways are carved again after buildFromScene.
-    const pad = 4;
-    const x0 = Math.max(0, Math.floor((px - pad) / cs));
-    const y0 = Math.max(0, Math.floor((py - pad) / cs));
-    const x1 = Math.min(this.cols - 1, Math.floor((px + pw + pad) / cs));
-    const y1 = Math.min(this.rows - 1, Math.floor((py + ph + pad) / cs));
+    // Block the cells the rectangle actually covers. An extra pad, plus
+    // floor() on the far edge, used to seal the next open tile — people
+    // stopped short of the wall they could see.
+    const x0 = Math.max(0, Math.floor(px / cs));
+    const y0 = Math.max(0, Math.floor(py / cs));
+    const x1 = Math.min(this.cols - 1, Math.ceil((px + pw) / cs) - 1);
+    const y1 = Math.min(this.rows - 1, Math.ceil((py + ph) / cs) - 1);
 
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
@@ -495,6 +499,21 @@ class OfficePathfinder {
   isWalkable(gx, gy) {
     if (gx < 0 || gx >= this.cols || gy < 0 || gy >= this.rows) return false;
     return this.grid[gy * this.cols + gx] === 0;
+  }
+
+  /**
+   * Cap how many A* searches run this frame. null means uncapped
+   * (tests and any caller that never armed a budget).
+   */
+  armSearchBudget(n) {
+    this._searchBudget = n;
+  }
+
+  tryBeginSearch() {
+    if (this._searchBudget == null) return true;
+    if (this._searchBudget <= 0) return false;
+    this._searchBudget -= 1;
+    return true;
   }
 
   /**
@@ -723,7 +742,14 @@ class NpcPathFollower {
    * @param {number} targetY - Destination pixel Y
    * @returns {boolean} True if a path was found
    */
-  navigateTo(targetX, targetY) {
+  navigateTo(targetX, targetY, opts) {
+    const priority = opts?.priority === true;
+    if (!priority && typeof this.pathfinder.tryBeginSearch === 'function' && !this.pathfinder.tryBeginSearch()) {
+      this._pendingNav = { x: targetX, y: targetY };
+      // Truthy so callers keep the destination. The scene flushes it next frame.
+      return this.isNavigating() ? true : 'deferred';
+    }
+    this._pendingNav = null;
     const reserved = this.pathfinder.reserveWalkableNear?.(
       this._reservationOwner, targetX, targetY, 48,
     );
@@ -750,6 +776,14 @@ class NpcPathFollower {
     this.waypoints = null;
     this.waypointIndex = 0;
     return false;
+  }
+
+  /** Run a route search that was postponed so the player's frame could stay smooth. */
+  flushPendingNav() {
+    if (!this._pendingNav) return false;
+    const pending = this._pendingNav;
+    this._pendingNav = null;
+    return this.navigateTo(pending.x, pending.y);
   }
 
   /**
@@ -827,11 +861,15 @@ class NpcPathFollower {
             return null;
           }
 
-          // Tiny nudge only — large jumps looked like glitching
-          const nudgeAmt = 4 + Math.random() * 4;
-          const nudgeAngle = Math.random() * Math.PI * 2;
-          this.npc.x += Math.cos(nudgeAngle) * nudgeAmt;
-          this.npc.y += Math.sin(nudgeAngle) * nudgeAmt;
+          // Step back along the way they were pushing. A random nudge
+          // dropped them deeper into the desk they were already against.
+          const backX = this.npc.body?.velocity?.x || 0;
+          const backY = this.npc.body?.velocity?.y || 0;
+          const backLen = Math.hypot(backX, backY);
+          if (backLen > 1) {
+            this.npc.x -= (backX / backLen) * 8;
+            this.npc.y -= (backY / backLen) * 8;
+          }
 
           const finalTarget = this.waypoints[this.waypoints.length - 1];
 
@@ -842,27 +880,34 @@ class NpcPathFollower {
             return this.update(speed, delta);
           }
 
-          // Snap final target to nearest walkable (handles desks/chairs that drifted slightly)
-          let goalX = finalTarget.x, goalY = finalTarget.y;
-          const snapped = this.pathfinder.findWalkableNear(finalTarget.x, finalTarget.y, 56);
-          if (snapped) { goalX = snapped.x; goalY = snapped.y; }
-
-          // Last resort: reroute from current (nudged) position to (possibly snapped) goal
-          const rerouted = this.pathfinder.findPathSmart
-            ? this.pathfinder.findPathSmart(this.npc.x, this.npc.y, goalX, goalY)
-            : this.pathfinder.findPath(this.npc.x, this.npc.y, goalX, goalY);
-          if (!rerouted || rerouted.length === 0) {
-            this.waypoints = null;
-            this._totalStuckTime = 0;
-            try {
-              _reportPathFriction(this.npc, 'UNROUTABLE', 'no path after reroute');
-            } catch (_) {}
-            return null;
+          // Last resort: reroute from current (nudged) position to (possibly snapped) goal.
+          // If this frame already spent its search budget, keep walking and try next frame.
+          const canSearch = typeof this.pathfinder.tryBeginSearch !== 'function'
+            || this.pathfinder.tryBeginSearch();
+          if (!canSearch) {
+            this._stuckTimer = 0;
+            this._rerouteCount = Math.max(0, this._rerouteCount - 1);
+          } else {
+            // Snap final target to nearest walkable (handles desks/chairs that drifted slightly)
+            let goalX = finalTarget.x, goalY = finalTarget.y;
+            const snapped = this.pathfinder.findWalkableNear(finalTarget.x, finalTarget.y, 56);
+            if (snapped) { goalX = snapped.x; goalY = snapped.y; }
+            const rerouted = this.pathfinder.findPathSmart
+              ? this.pathfinder.findPathSmart(this.npc.x, this.npc.y, goalX, goalY)
+              : this.pathfinder.findPath(this.npc.x, this.npc.y, goalX, goalY);
+            if (!rerouted || rerouted.length === 0) {
+              this.waypoints = null;
+              this._totalStuckTime = 0;
+              try {
+                _reportPathFriction(this.npc, 'UNROUTABLE', 'no path after reroute');
+              } catch (_) {}
+              return null;
+            }
+            this.waypoints = rerouted;
+            this.waypointIndex = 0;
+            this._stuckTimer = 0;
+            return this.update(speed, delta);
           }
-          this.waypoints = rerouted;
-          this.waypointIndex = 0;
-          this._stuckTimer = 0;
-          return this.update(speed, delta);
         }
       } else {
         this._stuckCount = 0;
@@ -878,10 +923,16 @@ class NpcPathFollower {
       effSpeed = speed * slowFactor;
     }
 
-    // Move toward current waypoint
-    const vx = (dx / dist) * effSpeed;
-    const vy = (dy / dist) * effSpeed;
-    return { vx, vy };
+    // Square onto the lane, then walk the leg. Diagonal steering cut
+    // corners and put feet on the desk the path had already gone around.
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+    if (ax >= ay) {
+      if (ay > 5) return { vx: 0, vy: Math.sign(dy) * effSpeed };
+      return { vx: Math.sign(dx || 1) * effSpeed, vy: 0 };
+    }
+    if (ax > 5) return { vx: Math.sign(dx) * effSpeed, vy: 0 };
+    return { vx: 0, vy: Math.sign(dy || 1) * effSpeed };
   }
 
   /**

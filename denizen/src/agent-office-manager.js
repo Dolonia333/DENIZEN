@@ -3712,6 +3712,9 @@ class AgentOfficeManager {
       case 'agent_command':
         this._executeAgentCommand(msg);
         break;
+      case 'mcp_office_act':
+        this._actOutMcp(msg);
+        break;
       case 'spawn_agent':
         this._spawnAgent(msg);
         break;
@@ -4812,6 +4815,110 @@ class AgentOfficeManager {
       default:
         console.log('[AgentManager] Unknown message type:', msg.type);
     }
+  }
+
+  /**
+   * Connected MCP client (ChatGPT plugin, Cursor, or a seated NPC) acts
+   * the tool out on the floor. The sim host walks; every other screen,
+   * including the phone, follows the pose stream and still hears the line.
+   */
+  _actOutMcp(msg) {
+    const npcKey = String(msg?.npcKey || '').trim();
+    if (!npcKey || !this.actions || !this.scene) return;
+    const name = String(msg.displayName || 'ChatGPT').slice(0, 24);
+    if (msg.guest) this._ensurePluginNpc(npcKey, name, msg.donorTexture);
+    if (!this.actions._getNpc(npcKey)) return;
+
+    this.NPC_NAMES[npcKey] = name;
+    const agent = this.agents.get(npcKey);
+    if (agent) {
+      agent.status = 'task_override';
+      agent._taskLabel = String(msg.line || 'Working').slice(0, 30);
+      this.scene.time.delayedCall(12000, () => {
+        if (agent.status === 'task_override') agent.status = 'idle';
+      });
+    }
+
+    const line = String(msg.line || '').trim();
+    if (line) {
+      try { this.actions.speak(npcKey, line); } catch (_) {}
+    }
+
+    const hostOwnsWalk = this._simHostKnown && !this._isSimHost;
+    if (hostOwnsWalk) return;
+
+    const room = String(msg.room || 'open_office');
+    try { this.actions.standUp(npcKey); } catch (_) {}
+    try {
+      if (room === 'desk' && agent?.assignedDesk) {
+        this.actions.useComputer(npcKey, agent.assignedDesk);
+      } else if (room === 'desk') {
+        this.actions.goToRoom(npcKey, 'open_office');
+      } else {
+        this.actions.goToRoom(npcKey, room);
+      }
+    } catch (_) {}
+  }
+
+  _ensurePluginNpc(npcKey, name, donorTexture) {
+    if (this.actions._getNpc(npcKey)) return;
+    const scene = this.scene;
+    const donor = [donorTexture, 'xp_josh', 'xp_lucy', 'xp_claude'].find((k) => k && scene.textures?.exists?.(k));
+    if (!donor) return;
+    if (!scene.textures.exists(npcKey)) {
+      try {
+        const img = scene.textures.get(donor).getSourceImage();
+        scene.textures.addSpriteSheet(npcKey, img, { frameWidth: 32, frameHeight: 48 });
+      } catch (_) {
+        return;
+      }
+    }
+    const makeKey = (k) => `${npcKey}:${k}`;
+    if (!scene.anims.exists(makeKey('walk_down'))) {
+      const defs = {
+        walk_down: { frames: [0, 1, 2, 3] },
+        walk_left: { frames: [4, 5, 6, 7] },
+        walk_right: { frames: [8, 9, 10, 11] },
+        walk_up: { frames: [12, 13, 14, 15] },
+        idle_down: { frames: [0] },
+        idle_left: { frames: [4] },
+        idle_right: { frames: [8] },
+        idle_up: { frames: [12] },
+      };
+      Object.entries(defs).forEach(([anim, def]) => {
+        scene.anims.create({
+          key: makeKey(anim),
+          frames: scene.anims.generateFrameNumbers(npcKey, { frames: def.frames }),
+          frameRate: anim.startsWith('walk') ? 13 : 1,
+          repeat: -1,
+        });
+      });
+    }
+    const npc = scene.physics.add.sprite(520, 340, npcKey, 0);
+    npc.setOrigin(0.5, 1);
+    npc.setScale(1);
+    npc.setCollideWorldBounds(true);
+    npc.setDrag(700, 700);
+    npc.body.setMaxVelocity(320, 320);
+    if (window.DenizenMapEngine?.applyFootBody) window.DenizenMapEngine.applyFootBody(npc);
+    else {
+      npc.body.setSize(12, 8);
+      npc.body.setOffset(10, 40);
+    }
+    npc._animKey = makeKey;
+    npc.ai = {
+      mode: 'agent_task',
+      facing: 'down',
+      taskState: 'idle',
+      taskTarget: { x: 520, y: 340 },
+      nextWanderAt: Number.POSITIVE_INFINITY,
+      wanderTarget: { x: 520, y: 340 },
+    };
+    scene.npcs = scene.npcs || [];
+    scene.npcs.push(npc);
+    this.NPC_NAMES[npcKey] = name;
+    if (!this.agents.has(npcKey)) this.registerAgent(npcKey, 'desk_worker');
+    try { this.actions.showRoleLabel(npcKey, name, 'Plugin'); } catch (_) {}
   }
 
   /**

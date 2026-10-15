@@ -589,11 +589,14 @@
         "id": "desk_setup_monitors_alt",
         "instanceId": "editor_desk_setup_monitors_alt_29",
         "x": 168,
-        "y": 200,
+        "y": 176,
         "rotation": 0,
         "scale": 1,
         "flipX": false,
-        "flipY": false
+        "flipY": false,
+        "parentInstanceId": "editor_cubicle_desk_front_6",
+        "parent_offset_x": 0,
+        "parent_offset_y": -20
       },
       {
         "id": "desk_setup_monitors",

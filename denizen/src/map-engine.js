@@ -207,14 +207,45 @@
       const offsetY = custom.offsetY != null ? Number(custom.offsetY) : (h - height);
       return { width, height, offsetX, offsetY };
     }
-    const height = Math.max(8, Math.round(h / 3));
-    const width = Math.min(w, 64);
+    // A shallow lip across the full width. The old third-height box, capped
+    // at 64px wide, left the ends of a desk open (people walked across them)
+    // and pushed the stop line out into the aisle.
+    const height = Math.min(12, h);
+    const width = Math.max(8, w);
     return {
       width,
       height,
       offsetX: (w - width) / 2,
       offsetY: h - height,
     };
+  }
+
+  /**
+   * Foot hitbox for a bottom-origin character frame.
+   * XP sheets are 32×48. A box at (3, 16) sits in the chest, so the sprite
+   * keeps moving after the body has "hit" and the head is all that clears a desk.
+   */
+  function footBodyForFrame(frameW, frameH) {
+    const w = Math.max(8, Number(frameW) || 32);
+    const h = Math.max(8, Number(frameH) || 48);
+    const width = Math.max(8, Math.round(w * 0.38));
+    const height = Math.max(6, Math.round(Math.min(10, h * 0.18)));
+    return {
+      width,
+      height,
+      offsetX: Math.round((w - width) / 2),
+      offsetY: h - height,
+    };
+  }
+
+  function applyFootBody(sprite) {
+    if (!sprite?.body || typeof sprite.body.setSize !== 'function') return null;
+    const frameW = sprite.frame?.realWidth || sprite.frame?.width || 32;
+    const frameH = sprite.frame?.realHeight || sprite.frame?.height || 48;
+    const spec = footBodyForFrame(frameW, frameH);
+    sprite.body.setSize(spec.width, spec.height);
+    sprite.body.setOffset(spec.offsetX, spec.offsetY);
+    return spec;
   }
 
   function shouldCollide(def, placement) {
@@ -256,6 +287,8 @@
     footY,
     sortByFootY,
     resolveCollisionBounds,
+    footBodyForFrame,
+    applyFootBody,
     shouldCollide,
     footprintWorldRect,
     isWallMount,

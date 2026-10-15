@@ -18,10 +18,11 @@
  *   Authorization: https://robinhood.com/oauth  (PKCE S256)
  *   Token exchange: POST https://api.robinhood.com/oauth2/token/
  *
- * ── DESIGN RULE ────────────────────────────────────────────────────────────
- *   This module NEVER places orders. placeTrade() does not exist.
- *   createSuggestion() records a human-readable idea to trade-suggestions.json.
- *   The user acts on suggestions in the Robinhood app themselves.
+ * ── ORDERS ─────────────────────────────────────────────────────────────────
+ *   Quotes, portfolio, and suggestions stay available to Roki.
+ *   Live equity orders go only to an account with agentic_allowed === true,
+ *   and only when Grok calls placeEquityOrder / the place_equity_order MCP tool.
+ *   The tool name and arguments come from this connection's tools/list.
  */
 
 const https  = require('node:https');
@@ -210,7 +211,15 @@ async function refreshToken() {
     client_id:     clientId,
   }).toString();
 
-  const data = await httpsPostForm('api.robinhood.com', '/oauth2/token/', body);
+  let data;
+  try {
+    data = await httpsPostForm('api.robinhood.com', '/oauth2/token/', body);
+  } catch (err) {
+    if (/invalid_grant|HTTP 401/.test(err?.message || '')) {
+      throw new Error('Robinhood login expired. Open /api/market/auth/connect and allow the AI trading account again.');
+    }
+    throw err;
+  }
   saveOAuth({
     access_token:  data.access_token,
     refresh_token: data.refresh_token || refreshTok,
@@ -583,6 +592,192 @@ async function getOrderHistory(limit = 20) {
   return unwrapToolResult(await callTool('get_equity_orders', { account_number: accountNumber, limit }));
 }
 
+function accountsFromPayload(payload) {
+  if (Array.isArray(payload?.data?.accounts)) return payload.data.accounts;
+  if (Array.isArray(payload?.accounts)) return payload.accounts;
+  return [];
+}
+
+function selectAgenticAccount(accounts, accountNumber) {
+  const agentic = (Array.isArray(accounts) ? accounts : [])
+    .filter((a) => a && a.agentic_allowed === true && a.account_number);
+  if (!agentic.length) {
+    const err = new Error('No agentic Robinhood account on this connection. The AI trading account has to be the one this MCP session is allowed to use.');
+    err.code = 'no_agentic_account';
+    throw err;
+  }
+  if (accountNumber) {
+    const hit = agentic.find((a) => String(a.account_number) === String(accountNumber));
+    if (!hit) {
+      const err = new Error('That account is not the agentic trading account.');
+      err.code = 'account_not_agentic';
+      throw err;
+    }
+    return hit;
+  }
+  return agentic.find((a) => a.is_default) || agentic[0];
+}
+
+function orderArgsFromSchema(schema, input) {
+  const props = schema?.properties && typeof schema.properties === 'object' ? schema.properties : {};
+  const keys = Object.keys(props);
+  const loose = !keys.length || schema?.additionalProperties !== false;
+  const out = {};
+  const set = (candidates, value) => {
+    if (value == null || value === '') return;
+    const key = candidates.find((k) => keys.includes(k));
+    if (key) out[key] = value;
+    else if (loose) out[candidates[0]] = value;
+  };
+  set(['symbol', 'ticker'], input.symbol);
+  set(['side', 'action'], input.side);
+  set(['order_type', 'type'], input.orderType);
+  set(['quantity', 'qty', 'shares'], input.quantity);
+  set(['amount', 'notional_usd', 'dollar_amount', 'notional'], input.amount);
+  set(['limit_price', 'price'], input.limitPrice);
+  set(['time_in_force', 'tif'], input.timeInForce);
+  set(['account_number', 'account'], input.accountNumber);
+  const required = Array.isArray(schema?.required) ? schema.required : [];
+  if (required.includes('order_type') && out.order_type == null && out.type == null) {
+    if (!keys.length || keys.includes('order_type')) out.order_type = input.orderType || 'market';
+  }
+  return out;
+}
+
+function reviewBlockReason(review) {
+  if (!review || typeof review !== 'object') return null;
+  if (review.ok === false) return review.error || 'Robinhood review rejected the order';
+  const data = review.data && typeof review.data === 'object' ? review.data : review;
+  if (data.ok === false) return data.error || data.reason || 'Robinhood review rejected the order';
+  if (data.can_place === false || data.allowed === false || data.blocked === true) {
+    return data.reason || data.message || 'Robinhood review blocked the order';
+  }
+  return null;
+}
+
+function copyReviewId(schema, review, args) {
+  const data = review?.data && typeof review.data === 'object' ? review.data : (review || {});
+  const id = data.order_id || data.review_id || data.id || data.ref_id || null;
+  if (!id) return args;
+  const props = schema?.properties && typeof schema.properties === 'object' ? schema.properties : {};
+  const keys = Object.keys(props);
+  const slot = ['review_id', 'order_id', 'ref_id'].find((k) => !keys.length || keys.includes(k));
+  if (slot && args[slot] == null) args[slot] = id;
+  return args;
+}
+
+function findPlaceTool(tools) {
+  const list = Array.isArray(tools) ? tools : [];
+  return list.find((t) => t?.name === 'place_equity_order')
+    || list.find((t) => /place/i.test(t?.name || '') && /order/i.test(t.name) && !/cancel|review/i.test(t.name))
+    || null;
+}
+
+/**
+ * Place an equity order on the connected agentic (AI trading) account.
+ * Discovers place/review tools from this session's tools/list.
+ * @param {object} input symbol, side, quantity|amount, optional orderType, limitPrice, timeInForce, accountNumber
+ * @param {object} [hooks] test seams: callTool, tools
+ */
+async function placeEquityOrder(input = {}, hooks = {}) {
+  const invoke = hooks.callTool || callTool;
+  if (!hooks.callTool) {
+    if (!isAuthenticated()) {
+      throw new Error('Robinhood: not authenticated. Visit /api/market/auth/connect to log in.');
+    }
+    await initialize();
+  }
+
+  const symbol = String(input.symbol || '').trim().toUpperCase();
+  const side = String(input.side || input.action || '').trim().toLowerCase();
+  if (!symbol) throw new Error('symbol required');
+  if (side !== 'buy' && side !== 'sell') throw new Error('side must be buy or sell');
+  const quantity = input.quantity != null && input.quantity !== '' ? Number(input.quantity) : null;
+  const amountRaw = input.amount != null && input.amount !== ''
+    ? input.amount
+    : input.notional_usd;
+  const amount = amountRaw != null && amountRaw !== '' ? Number(amountRaw) : null;
+  if (!(quantity > 0) && !(amount > 0)) throw new Error('quantity or amount (dollars) required');
+  const orderType = String(input.orderType || input.order_type || 'market').toLowerCase();
+  const limitPrice = input.limitPrice != null ? Number(input.limitPrice)
+    : (input.limit_price != null ? Number(input.limit_price) : null);
+
+  const listed = hooks.tools
+    ? { tools: hooks.tools }
+    : await (hooks.listTools || listTools)();
+  const tools = listed?.tools || [];
+  const place = findPlaceTool(tools);
+  if (!place) {
+    const err = new Error('This Robinhood connection has no equity order tool. Enable the AI trading account on this MCP session.');
+    err.code = 'no_order_tool';
+    throw err;
+  }
+
+  const accountsPayload = unwrapToolResult(await invoke('get_accounts', {}));
+  const account = selectAgenticAccount(accountsFromPayload(accountsPayload), input.accountNumber || input.account_number);
+  const shaped = {
+    symbol,
+    side,
+    orderType,
+    quantity: quantity > 0 ? quantity : null,
+    amount: amount > 0 ? amount : null,
+    limitPrice: Number.isFinite(limitPrice) ? limitPrice : null,
+    timeInForce: input.timeInForce || input.time_in_force || null,
+    accountNumber: account.account_number,
+  };
+
+  const reviewTool = tools.find((t) => t?.name === 'review_equity_order');
+  let review = null;
+  if (reviewTool) {
+    review = unwrapToolResult(await invoke(
+      reviewTool.name,
+      orderArgsFromSchema(reviewTool.inputSchema, shaped),
+    ));
+    const block = reviewBlockReason(review);
+    if (block) {
+      const err = new Error(block);
+      err.code = 'review_blocked';
+      err.review = review;
+      throw err;
+    }
+  }
+
+  const placeArgs = orderArgsFromSchema(place.inputSchema, shaped);
+  copyReviewId(place.inputSchema, review, placeArgs);
+  const order = unwrapToolResult(await invoke(place.name, placeArgs));
+  const record = {
+    at: new Date().toISOString(),
+    symbol,
+    side,
+    quantity: shaped.quantity,
+    amount: shaped.amount,
+    orderType,
+    accountLast4: String(account.account_number).slice(-4),
+    tool: place.name,
+  };
+  if (!hooks.callTool) {
+    try {
+      const ledgerPath = path.join(ROOT, 'data', 'grok-live-orders.json');
+      const prev = fs.existsSync(ledgerPath)
+        ? JSON.parse(fs.readFileSync(ledgerPath, 'utf8'))
+        : [];
+      const rows = Array.isArray(prev) ? prev : [];
+      rows.unshift(record);
+      fs.writeFileSync(ledgerPath, JSON.stringify(rows.slice(0, 100), null, 2));
+    } catch (_) { /* ledger must not undo a filled order */ }
+  }
+
+  return {
+    ok: true,
+    symbol,
+    side,
+    accountLast4: record.accountLast4,
+    tool: place.name,
+    review,
+    order,
+  };
+}
+
 /**
  * Full market observation cycle for Roki's think loop.
  * Returns { watchlist, quotes, portfolio, movers, at, error? }
@@ -792,6 +987,10 @@ module.exports = {
   // Market data
   initialize, listTools,
   getQuote, getPortfolio, getPositions, getOrderHistory,
+  placeEquityOrder,
+  selectAgenticAccount,
+  orderArgsFromSchema,
+  accountsFromPayload,
   getChart,
   runMarketObservation,
   // Low-level

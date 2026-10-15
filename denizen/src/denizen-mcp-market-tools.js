@@ -1,11 +1,13 @@
 'use strict';
 
 /**
- * Market MCP tools for Roki — quotes, portfolio, watchlist, suggestions.
- * Read-only; never places orders (see robinhood-mcp.js).
+ * Market MCP tools.
+ * Roki: quotes, portfolio, watchlist, suggestions.
+ * Grok: those reads plus place_equity_order on the agentic Robinhood account.
  */
 
-const MARKET_NPC_KEYS = new Set(['roki']);
+const READ_NPC_KEYS = new Set(['roki', 'grok']);
+const TRADE_NPC_KEYS = new Set(['grok']);
 
 const MARKET_TOOL_DEFINITIONS = [
   {
@@ -50,6 +52,24 @@ const MARKET_TOOL_DEFINITIONS = [
   },
 ];
 
+const PLACE_EQUITY_ORDER = {
+  name: 'place_equity_order',
+  description: 'Place a live equity order on the connected Robinhood AI trading account. Grok only. Requires symbol, side (buy or sell), and quantity or dollar amount.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      symbol: { type: 'string', description: 'Ticker, e.g. NVDA' },
+      side: { type: 'string', enum: ['buy', 'sell'] },
+      quantity: { type: 'number', description: 'Share count. Use this or amount.' },
+      amount: { type: 'number', description: 'Dollar notional. Use this or quantity.' },
+      order_type: { type: 'string', description: 'market (default) or limit' },
+      limit_price: { type: 'number' },
+      time_in_force: { type: 'string' },
+    },
+    required: ['symbol', 'side'],
+  },
+};
+
 let _robinhoodMcp = null;
 
 function configure(deps = {}) {
@@ -62,16 +82,24 @@ function rh() {
 }
 
 function isMarketNpc(npcKey) {
-  return MARKET_NPC_KEYS.has(String(npcKey || '').toLowerCase());
+  return READ_NPC_KEYS.has(String(npcKey || '').toLowerCase());
 }
 
 function toolsForNpc(npcKey) {
-  return isMarketNpc(npcKey) ? [...MARKET_TOOL_DEFINITIONS] : [];
+  const key = String(npcKey || '').toLowerCase();
+  if (!READ_NPC_KEYS.has(key)) return [];
+  const tools = [...MARKET_TOOL_DEFINITIONS];
+  if (TRADE_NPC_KEYS.has(key)) tools.push(PLACE_EQUITY_ORDER);
+  return tools;
 }
 
 async function callTool(npcKey, name, args) {
-  if (!isMarketNpc(npcKey)) {
-    return { ok: false, error: 'market tools only available for Roki' };
+  const key = String(npcKey || '').toLowerCase();
+  if (!READ_NPC_KEYS.has(key)) {
+    return { ok: false, error: 'market tools only available for Roki and Grok' };
+  }
+  if (name === 'place_equity_order' && !TRADE_NPC_KEYS.has(key)) {
+    return { ok: false, error: 'live Robinhood orders are only available to Grok' };
   }
   const m = rh();
   switch (name) {
@@ -100,6 +128,26 @@ async function callTool(npcKey, name, args) {
     }
     case 'get_watchlist':
       return { ok: true, symbols: m.loadWatchlist() };
+    case 'place_equity_order': {
+      if (!m.isAuthenticated()) {
+        return { ok: false, error: 'Robinhood not connected', robinhoodConnected: false };
+      }
+      try {
+        const placed = await m.placeEquityOrder({
+          symbol: args?.symbol,
+          side: args?.side,
+          quantity: args?.quantity,
+          amount: args?.amount,
+          orderType: args?.order_type || args?.orderType,
+          limitPrice: args?.limit_price ?? args?.limitPrice,
+          timeInForce: args?.time_in_force || args?.timeInForce,
+          accountNumber: args?.account_number || args?.accountNumber,
+        });
+        return { ok: true, ...placed, robinhoodConnected: true };
+      } catch (err) {
+        return { ok: false, error: err.message, code: err.code || null, robinhoodConnected: true };
+      }
+    }
     default:
       return { ok: false, error: `unknown market tool: ${name}` };
   }

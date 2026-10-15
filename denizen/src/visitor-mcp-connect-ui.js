@@ -322,7 +322,7 @@
     {
       id: 'robinhood',
       title: 'Robinhood (trading only)',
-      subtitle: 'Optional second MCP in Cursor — live quotes & portfolio. CRM, coding, and research stay on your Denizen URL via run_skill.',
+      subtitle: 'Optional second MCP in Cursor — quotes and portfolio. Grok places live orders through Denizen on the agentic account after /api/market/auth/connect.',
       url: 'https://agent.robinhood.com/mcp/trading',
     },
   ];

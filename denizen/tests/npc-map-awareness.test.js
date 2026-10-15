@@ -42,15 +42,16 @@ describe('NPC map awareness / unstuck', () => {
     assert.doesNotMatch(scene, /scene\.pathfinder\?\.rebuildFromScene/);
   });
 
-  it('walkability pad is narrow enough for aisles', () => {
+  it('walkability matches the obstacle edge', () => {
     const pf = read('src/pathfinding.js');
-    assert.match(pf, /const pad = 4;/);
+    assert.match(pf, /Math\.ceil\(\(px \+ pw\) \/ cs\) - 1/);
+    assert.doesNotMatch(pf, /const pad = 4;/);
     assert.match(pf, /rebuildFromScene\(scene\)/);
   });
 
   it('cache busters bumped', () => {
     const html = read('index.html');
-    assert.match(html, /pathfinding\.js\?v=aislePad1/);
-    assert.match(html, /office-scene\.js\?v=mapFill10/);
+    assert.match(html, /pathfinding\.js\?v=playSmooth1/);
+    assert.match(html, /office-scene\.js\?v=playSmooth1/);
   });
 });

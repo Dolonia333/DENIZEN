@@ -215,13 +215,19 @@ class OfficeScene extends Phaser.Scene {
     if (!cam) return;
     // Scripted cutscenes (?demo=investor|tour) own the camera — don't fight them.
     if (this._agentManager?._demoMode) return;
-    cam.setZoom(playfieldZoomForProfile(getPlayfieldDeviceProfile()));
-    // Soft follow — hard-lock (1,1) + roundPixels made walking read as judder.
+    const zoom = playfieldZoomForProfile(getPlayfieldDeviceProfile());
+    const zoomChanged = Math.abs((cam.zoom || 1) - zoom) > 0.01;
+    cam.setZoom(zoom);
+    // Locked to the player. A soft lerp let the floor slide, then catch
+    // up in a lurch after any frame hitch. Whole-pixel scroll keeps a
+    // walk sheet from sampling the next cell.
     if (this.player) {
-      cam.startFollow(this.player, true, 0.16, 0.16);
-      try { cam.setRoundPixels(false); } catch (_) {}
+      cam.startFollow(this.player, true, 1, 1);
+      try { cam.setRoundPixels(true); } catch (_) {}
     }
-    try { this.scale?.refresh?.(); } catch (_) {}
+    if (zoomChanged) {
+      try { this.scale?.refresh?.(); } catch (_) {}
+    }
   }
 
   /** Walk sprite is 32×64 at scale 1; sit sprite is 16×32 at scale 2 — always reset on stand. */
@@ -1379,9 +1385,13 @@ class OfficeScene extends Phaser.Scene {
       npc.setDrag(700, 700);
       // Cap must sit above wander/follow speed + separation so NPCs aren't soft-clamped.
       npc.body.setMaxVelocity(320, 320);
-      // Shrink physics body to small foot hitbox so NPCs navigate between desks
-      npc.body.setSize(10, 8);
-      npc.body.setOffset(3, 16);
+      // Feet, not the chest. A high box stops short of the wall and lets the
+      // sprite draw across the desktop.
+      if (window.DenizenMapEngine?.applyFootBody) window.DenizenMapEngine.applyFootBody(npc);
+      else {
+        npc.body.setSize(12, 8);
+        npc.body.setOffset(10, 40);
+      }
       npc.ai = {
         // Hold still during boot. AgentOfficeManager assigns the real desk and
         // seated pose once furniture anchors are ready; starting in wander
@@ -2431,7 +2441,7 @@ class OfficeScene extends Phaser.Scene {
     let destX = tx;
     let destY = ty;
     if (follower?.navigateTo) {
-      let ok = !!follower.navigateTo(destX, destY);
+      let ok = !!follower.navigateTo(destX, destY, { priority: true });
       if (!ok && pf?._nearestWalkable && pf?.toGrid && pf?.toPixel) {
         try {
           const g = pf.toGrid(destX, destY);
@@ -2440,7 +2450,7 @@ class OfficeScene extends Phaser.Scene {
             const w = pf.toPixel(near.x, near.y);
             destX = w.x;
             destY = w.y;
-            ok = !!follower.navigateTo(destX, destY);
+            ok = !!follower.navigateTo(destX, destY, { priority: true });
           }
         } catch (_) {}
       }
@@ -2731,13 +2741,20 @@ class OfficeScene extends Phaser.Scene {
     const body = this.player?.body;
     if (!body) return;
 
-    try {
-      window.__DenizenGameInputBlocked = false;
-      if (this.input) this.input.enabled = true;
-      this.input?.keyboard?.enableGlobalCapture?.();
-      this.game?.loop?.resume?.();
-      this.game?.canvas?.focus?.({ preventScroll: true });
-    } catch (_) {}
+    // Focusing the canvas every held-key frame makes the browser hitch.
+    // Only recover input when something actually paused or blocked it.
+    const inputBlocked = window.__DenizenGameInputBlocked
+      || this.input?.enabled === false
+      || this.game?.loop?.isPaused;
+    if (inputBlocked) {
+      try {
+        window.__DenizenGameInputBlocked = false;
+        if (this.input) this.input.enabled = true;
+        this.input?.keyboard?.enableGlobalCapture?.();
+        this.game?.loop?.resume?.();
+        this.game?.canvas?.focus?.({ preventScroll: true });
+      } catch (_) {}
+    }
 
     this.playerLocked = false;
     this.playerState = 'walk';
@@ -2870,7 +2887,40 @@ class OfficeScene extends Phaser.Scene {
     return { pos, dwellMs: Phaser.Math.Between(1800, 5200) };
   }
 
+  /**
+   * Seated crop + a chest hitbox are for the chair only. If either survives
+   * into a walk, the desk covers the body and only the head shows.
+   */
+  _restoreWalkingSprite(npc) {
+    if (!npc) return;
+    const ai = npc.ai;
+    const seated = ai && (ai.taskState === 'sitting' || ai.taskState === 'reading');
+    const moving = !!(npc._pathFollower?.isNavigating?.()
+      || Math.hypot(npc.body?.velocity?.x || 0, npc.body?.velocity?.y || 0) > 6);
+    if (seated && !moving) {
+      // The chair sits against the desk lip. Leave the body off so the
+      // desk doesn't shove a seated person back into the aisle.
+      if (npc.body) npc.body.enable = false;
+      return;
+    }
+    if (npc.body && npc.body.enable === false) npc.body.enable = true;
+    if (npc.isCropped && typeof npc.setCrop === 'function') npc.setCrop();
+    const key = npc.texture?.key;
+    const sitting = this._agentActions?._sittingNpcs;
+    if (moving && sitting && key && sitting.has(key)) {
+      try { this._agentActions._standUpNpc(key); } catch (_) {}
+    }
+    const frameH = npc.frame?.height || 48;
+    const offY = npc.body?.offset?.y ?? 0;
+    if (npc.body && offY < frameH * 0.55 && window.DenizenMapEngine?.applyFootBody) {
+      window.DenizenMapEngine.applyFootBody(npc);
+    }
+  }
+
   update(time, delta) {
+    // Two route searches per frame. A burst of stuck NPCs used to run
+    // every A* on the same frame as the player's step.
+    if (this._pathfinder?.armSearchBudget) this._pathfinder.armSearchBudget(2);
     const modalOpen = document.documentElement.dataset.denizenModal === 'open';
     if (!modalOpen && this.input && this.input.enabled === false) {
       window.__DenizenGameInputBlocked = false;
@@ -3115,6 +3165,7 @@ class OfficeScene extends Phaser.Scene {
       const down = downKey;
       const manualMove = left || right || up || down;
       const pathFollower = this._playerPathFollower;
+      pathFollower?.flushPendingNav?.();
 
       if (manualMove) {
         this._tapSeekTarget = null;
@@ -3143,10 +3194,14 @@ class OfficeScene extends Phaser.Scene {
         if (vel) {
           body.setVelocity(vel.vx, vel.vy);
           moving = true;
-          if (Math.abs(vel.vx) > Math.abs(vel.vy)) {
-            this.facing = vel.vx < 0 ? 'left' : 'right';
-          } else {
-            this.facing = vel.vy < 0 ? 'up' : 'down';
+          const picked = globalThis.DenizenWalkFacing?.chooseFacing(this.facing, vel.vx, vel.vy, {
+            wasMoving: true,
+            holdUntil: this._facingHoldUntil,
+            now: this.time.now,
+          });
+          if (picked) {
+            this.facing = picked.facing;
+            this._facingHoldUntil = picked.holdUntil;
           }
         }
       } else if (this._tapSeekTarget && this.time.now < this._tapSeekTarget.until) {
@@ -3161,8 +3216,15 @@ class OfficeScene extends Phaser.Scene {
         } else {
           body.setVelocity((dx / dist) * speed, (dy / dist) * speed);
           moving = true;
-          if (Math.abs(dx) > Math.abs(dy)) this.facing = dx < 0 ? 'left' : 'right';
-          else this.facing = dy < 0 ? 'up' : 'down';
+          const picked = globalThis.DenizenWalkFacing?.chooseFacing(this.facing, dx, dy, {
+            wasMoving: true,
+            holdUntil: this._facingHoldUntil,
+            now: this.time.now,
+          });
+          if (picked) {
+            this.facing = picked.facing;
+            this._facingHoldUntil = picked.holdUntil;
+          }
         }
       } else if (this._tapSeekTarget) {
         this._tapSeekTarget = null;
@@ -3347,15 +3409,22 @@ class OfficeScene extends Phaser.Scene {
           if (d < 18 && closing && myKey > otherKey) speedScale = Math.min(speedScale, 0.22);
         }
         this._sepCache.set(npc, { sx, sy });
-        return { vx: vx * speedScale + sx, vy: vy * speedScale + sy };
+        // Sidestep only. Pushing along the walk shoved people into the desk
+        // the path had already routed around.
+        const along = Math.hypot(vx, vy) || 1;
+        const px = -vy / along;
+        const py = vx / along;
+        const lateral = Math.max(-16, Math.min(16, sx * px + sy * py));
+        return { vx: vx * speedScale + px * lateral, vy: vy * speedScale + py * lateral };
       };
       // Soft-blend velocity so path turns don't hard-snap every frame.
       const _setSmoothVel = (npc, vx, vy) => {
         if (!npc?.body) return;
         const curVx = npc.body.velocity.x || 0;
         const curVy = npc.body.velocity.y || 0;
-        // Higher blend = snappier; 0.28 keeps corners smooth with 18 walkers.
-        const blend = 0.28;
+        // Commit to the lane quickly. A slow blend kept the old diagonal
+        // and walked the feet into the corner of a desk.
+        const blend = 0.62;
         npc.body.setVelocity(
           curVx + (vx - curVx) * blend,
           curVy + (vy - curVy) * blend,
@@ -3365,6 +3434,7 @@ class OfficeScene extends Phaser.Scene {
       this.npcs.forEach((npc, idx) => {
         const ai = npc.ai;
         if (!ai) return;
+        this._restoreWalkingSprite(npc);
         // Multiplayer mirror — walk smoothly toward host targets (don't zero velocity).
         if (npc._mpMirrorUntil && this.time.now < npc._mpMirrorUntil) {
           this._driveMirroredNpc(npc);
@@ -3380,6 +3450,7 @@ class OfficeScene extends Phaser.Scene {
 
         // Helper: use pathfinding if available, otherwise straight-line
         const pf = npc._pathFollower;
+        if (pf?._pendingNav) pf.flushPendingNav();
         const usePathfinding = !!pf;
 
         // --- Physics-aware unstick: if body is blocked, nudge perpendicular ---
@@ -3717,17 +3788,22 @@ class OfficeScene extends Phaser.Scene {
           }
         }
 
-        // Animations based on velocity — only change when facing changes (less anim thrash).
+        // Animations based on velocity. A small shove used to flip the
+        // sheet row and restart the step cycle, which read as a glitch.
         const vx = npc.body.velocity.x;
         const vy = npc.body.velocity.y;
-        const npcMoving = Math.abs(vx) > 4 || Math.abs(vy) > 4;
+        const picked = globalThis.DenizenWalkFacing?.chooseFacing(ai.facing, vx, vy, {
+          wasMoving: ai._spriteMoving,
+          holdUntil: ai._facingHoldUntil,
+          now,
+        });
+        const npcMoving = picked ? picked.moving : (Math.abs(vx) > 4 || Math.abs(vy) > 4);
+        const nextFacing = picked ? picked.facing : ai.facing;
+        if (picked) {
+          ai._spriteMoving = picked.moving;
+          ai._facingHoldUntil = picked.holdUntil;
+        }
         if (npcMoving) {
-          let nextFacing = ai.facing;
-          if (Math.abs(vx) > Math.abs(vy)) {
-            nextFacing = vx < 0 ? 'left' : 'right';
-          } else {
-            nextFacing = vy < 0 ? 'up' : 'down';
-          }
           if (nextFacing !== ai.facing || !npc.anims?.isPlaying) {
             ai.facing = nextFacing;
             if (ai.facing === 'up') npc.anims.play(npc._animKey('walk_up'), true);
@@ -4008,8 +4084,19 @@ class OfficeScene extends Phaser.Scene {
     const vy = (dy / dist) * speed;
     npc.body.setVelocity(vx, vy);
     if (!ai || !npc._animKey) return;
-    if (Math.abs(vx) > Math.abs(vy)) ai.facing = vx < 0 ? 'left' : 'right';
-    else ai.facing = vy < 0 ? 'up' : 'down';
+    const picked = globalThis.DenizenWalkFacing?.chooseFacing(ai.facing, vx, vy, {
+      wasMoving: true,
+      holdUntil: ai._facingHoldUntil,
+      now: this.time?.now || 0,
+    });
+    if (picked) {
+      ai.facing = picked.facing;
+      ai._facingHoldUntil = picked.holdUntil;
+    } else if (Math.abs(vx) > Math.abs(vy)) {
+      ai.facing = vx < 0 ? 'left' : 'right';
+    } else {
+      ai.facing = vy < 0 ? 'up' : 'down';
+    }
     try {
       if (ai.facing === 'up') npc.anims.play(npc._animKey('walk_up'), true);
       else if (ai.facing === 'down') npc.anims.play(npc._animKey('walk_down'), true);

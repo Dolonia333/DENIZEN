@@ -26,6 +26,7 @@ const mcpResources = require('./denizen-mcp-resources.js');
 const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const mcpActor = require('./denizen-mcp-actor.js');
+const mcpOfficeAct = require('./denizen-mcp-office-act.js');
 const browserEyes = require('./browser-eyes.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
@@ -526,10 +527,12 @@ async function callTool(scope, name, args) {
   }
   const result = await callToolImpl(enriched, toolName, args);
   logMcpAudit(enriched, toolName, result);
+  try { mcpOfficeAct.noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
   return result;
 }
 
 function configure(deps = {}) {
+  mcpOfficeAct.configure(deps);
   mcpActions.configure(deps);
   mcpMarketTools.configure(deps);
   mcpTeamTools.configure(deps);

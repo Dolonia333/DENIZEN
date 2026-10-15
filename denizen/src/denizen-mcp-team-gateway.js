@@ -501,6 +501,7 @@ async function callTool(scope, name, args) {
   }
   const result = await callToolImpl(enriched, toolName, args);
   logTeamAudit(enriched, toolName, result);
+  try { require('./denizen-mcp-office-act').noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
   return result;
 }
 

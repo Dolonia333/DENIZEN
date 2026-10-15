@@ -238,11 +238,12 @@ const BY_NAME = {
   },
   Grok: {
     role: 'xAI Researcher & Engineer',
-    teaser: 'Research, rapid prototyping, coding-agent, GitHub, and visible office actions via MCP.',
-    intro: "I'm Grok — xAI agent wired into this office for research and engineering.",
+    teaser: 'Research, rapid prototyping, coding-agent, GitHub, and live Robinhood orders on the AI trading account.',
+    intro: "I'm Grok — xAI agent wired into this office for research, engineering, and the agentic brokerage account.",
     canDo: [
       'Run coding-agent for real repo changes in isolated worktrees',
       'Deep research and browserclaw investigations',
+      'Place live equity orders on the connected Robinhood AI trading account',
       'GitHub, Supabase bridge, and canvas/PDF artifacts',
       'Announce progress and delegate to teammates',
       COMMON_WEB,
@@ -265,6 +266,7 @@ const BY_NAME = {
       'pdf-dossier',
       'work-history',
       'health-check',
+      'trade-live',
     ],
   },
   Claude: {

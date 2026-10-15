@@ -157,6 +157,10 @@ function classifyImpact(skill, params = {}) {
     }
   }
 
+  if (name === 'trade-live') {
+    return { level: 'high', reason: 'live_robinhood_order' };
+  }
+
   // trade-suggest: execute / placeOrder already covered; paper buy/sell is medium
   if (name === 'trade-suggest') {
     if (_truthy(p.execute) || _truthy(p.placeOrder) || _truthy(p.place_order) || _truthy(p.liveTrade)) {
@@ -343,9 +347,16 @@ function resolveApproval(id, decision = {}) {
  * Gate helper for executors: if approval required and not pre-approved, create pending + deny.
  * @returns {null | { ok: false, error: 'approval_required', approvalId: string, reason: string, level: string, output: string }}
  */
+function isGrokLiveTrade(npc, skill) {
+  const who = String(npc || '').toLowerCase();
+  return _normalizeSkill(skill) === 'trade-live' && (who === 'grok' || who === 'xp_grok');
+}
+
 function gateSkillRun(npc, skill, params = {}, policy = null) {
   const p = params && typeof params === 'object' ? params : {};
   if (p.approved === true || p._approvedByHuman === true) return null;
+  // The connected agentic Robinhood account is the authorization for Grok.
+  if (isGrokLiveTrade(npc, skill)) return null;
   if (!requiresApproval(skill, p, policy)) return null;
 
   const impact = classifyImpact(skill, p);

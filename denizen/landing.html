@@ -57,7 +57,7 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: auto; overflow-x: clip; }
     body {
       margin: 0;
       font-family: var(--sans);
@@ -65,7 +65,6 @@
         radial-gradient(ellipse 100% 60% at 50% -8%, #101c36 0%, transparent 52%),
         linear-gradient(180deg, #050a14 0%, var(--ink) 35%, #040810 100%);
       color: var(--text);
-      overflow-x: hidden;
       line-height: 1.55;
       font-size: clamp(15px, 0.35vw + 14px, 17px);
       padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
@@ -97,7 +96,6 @@
       opacity: 0.035;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size: 180px 180px;
-      mix-blend-mode: overlay;
     }
     @keyframes room-ink-breathe {
       0%, 100% { opacity: 0.35; }
@@ -407,12 +405,9 @@
       justify-content: space-between;
       gap: 12px;
       padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
-      background: linear-gradient(180deg, rgba(4, 10, 20, 0.94), rgba(6, 12, 24, 0.82));
+      background: rgba(4, 10, 20, 0.96);
       border-bottom: 1px solid rgba(40, 70, 120, 0.2);
       box-shadow: 0 1px 0 rgba(20, 40, 80, 0.15);
-      backdrop-filter: blur(16px) saturate(1.1);
-      -webkit-backdrop-filter: blur(16px) saturate(1.1);
-      transition: box-shadow 0.2s, background 0.2s, border-color 0.2s;
     }
     .hud-top.is-scrolled {
       box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
@@ -812,12 +807,12 @@
     .why-strip,
     .share-card,
     .cta-final {
-      content-visibility: auto;
-      contain-intrinsic-size: auto 320px;
+      content-visibility: visible;
     }
 
-    @media (max-width: 960px) {
-      .tour-bar { display: none; } /* rail overlaps How cards below this width */
+    /* Fixed rail needs a clear left margin beside the 1080px hero. Below that it covers the headline. */
+    @media (max-width: 1399px) and (min-width: 641px) {
+      .tour-bar { display: none; }
     }
     @media (max-width: 640px) {
       .tour-bar {
@@ -941,8 +936,8 @@
     }
     .hero-city {
       position: absolute;
-      left: -4%;
-      right: -4%;
+      left: 0;
+      right: 0;
       bottom: 0;
       height: min(38vh, 320px);
       z-index: 1;
@@ -1834,74 +1829,7 @@
       pointer-events: none;
       border-radius: 6px;
     }
-    .office-walkers {
-      position: absolute;
-      inset: 0;
-      z-index: 5;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .walker {
-      --scale: 1.65;
-      --fw: 32;
-      --fh: 48;
-      --row: 2; /* right-facing walk row on XP sheets */
-      position: absolute;
-      bottom: 16%;
-      width: calc(var(--fw) * 1px * var(--scale));
-      height: calc(var(--fh) * 1px * var(--scale));
-      overflow: visible;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      filter: drop-shadow(0 2px 0 rgba(0,0,0,0.35));
-      animation: walker-patrol var(--dur, 14s) linear infinite;
-      animation-delay: var(--delay, 0s);
-    }
-    .walker-sprite {
-      display: block;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-    }
-    .walker.is-flip {
-      --row: 1; /* left-facing */
-      transform: scaleX(1);
-    }
-    .walker-sprite > img {
-      position: absolute;
-      left: 0;
-      top: calc(var(--row) * var(--fh) * -1px * var(--scale));
-      width: calc(var(--fw) * 4 * 1px * var(--scale));
-      height: calc(var(--fh) * 4 * 1px * var(--scale));
-      max-width: none;
-      image-rendering: pixelated;
-      animation: walker-frames 0.55s steps(4) infinite;
-    }
-    @keyframes walker-frames {
-      from { transform: translateX(0); }
-      to { transform: translateX(calc(var(--fw) * -4 * 1px * var(--scale))); }
-    }
-    @keyframes walker-patrol {
-      0% { left: -6%; transform: scaleX(1); }
-      49% { left: 90%; transform: scaleX(1); }
-      50% { left: 90%; transform: scaleX(-1); }
-      99% { left: -6%; transform: scaleX(-1); }
-      100% { left: -6%; transform: scaleX(1); }
-    }
-    .walker-a { bottom: 14%; --dur: 13s; --delay: 0s; }
-    .walker-b { bottom: 22%; --dur: 17s; --delay: -5s; opacity: 0.95; }
-    .walker-c { bottom: 18%; --dur: 15s; --delay: -9s; opacity: 0.9; }
-    /* Pause CSS animations when compare is off-screen (toggled via JS) */
-    .office-walkers.is-paused .walker,
-    .office-walkers.is-paused .walker-sprite > img {
-      animation-play-state: paused;
-    }
-    @media (max-width: 640px) {
-      .walker { --scale: 1.25; }
-      .walker-c { display: none; } /* one less sprite on phones */
-    }
     @media (prefers-reduced-motion: reduce) {
-      .office-walkers { display: none !important; }
       .hero-city-layer { transition: none; }
       .log-line.is-typing { animation: none; white-space: normal; overflow: visible; }
       .machine-packet { animation: none; opacity: 0; }
@@ -1991,7 +1919,7 @@
       clip-path: inset(0 0 0 50%);
       overflow: hidden;
     }
-    .split-office img {
+    .split-office > img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -2660,10 +2588,9 @@
 
     .reveal {
       opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      transition: opacity 0.28s ease;
     }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal.visible { opacity: 1; }
     /* Crew must never depend on scroll-reveal (users couldn’t find it) */
     #crew.reveal,
     .crew-section.reveal,
@@ -4381,7 +4308,6 @@
     <p class="compare-caption">
       <strong>Same agents. Two views.</strong>
       Left: how you debug today. Right: Denizen — who’s on the floor, what they’re doing, and what needs you.
-      <span class="compare-note">Walkers on the preview are decorative — full agents run in the live demo.</span>
     </p>
 
     <div class="split-stage" id="split">
@@ -4392,17 +4318,6 @@
       </div>
       <div class="split-pane split-office" id="split-office">
         <img src="./assets/ref_Hu4Gzs.png" alt="Denizen pixel office preview" loading="lazy" decoding="async" />
-        <div class="office-walkers" id="office-walkers" aria-hidden="true">
-          <div class="walker walker-a" style="--dur:13s;--delay:0s">
-            <span class="walker-sprite"><img src="./assets/Abby.png" alt="" loading="lazy" decoding="async" /></span>
-          </div>
-          <div class="walker walker-b" style="--dur:17s;--delay:-4s">
-            <span class="walker-sprite"><img src="./assets/Lucy.png" alt="" loading="lazy" decoding="async" /></span>
-          </div>
-          <div class="walker walker-c" style="--dur:15s;--delay:-8s">
-            <span class="walker-sprite"><img src="./assets/Bouncer.png" alt="" loading="lazy" decoding="async" /></span>
-          </div>
-        </div>
         <span class="office-preview-badge">Preview · live in demo</span>
       </div>
       <div class="split-handle" id="split-handle" role="slider" aria-label="Compare logs and office" aria-valuemin="8" aria-valuemax="92" aria-valuenow="50" tabindex="0"></div>
@@ -5070,6 +4985,20 @@
       }
     }
     let globeRaf = null;
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest?.('a[href^="#"]');
+      if (!a) return;
+      const id = a.getAttribute('href');
+      if (!id || id === '#') return;
+      const el = document.querySelector(id);
+      if (!el) return;
+      e.preventDefault();
+      el.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+
     const reduceMotion = (() => {
       try {
         return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5215,6 +5144,7 @@
         if (!scrolling) {
           scrolling = true;
           document.body.classList.add('is-scrolling');
+          if (raf) { cancelAnimationFrame(raf); raf = 0; }
         }
         clearTimeout(scrollIdleTimer);
         scrollIdleTimer = setTimeout(() => {
@@ -5224,8 +5154,6 @@
         }, 140);
       };
       window.addEventListener('scroll', onScroll, { passive: true });
-      // Capture scroll on overflow containers too
-      document.addEventListener('scroll', onScroll, { passive: true, capture: true });
 
       const moveTo = (clientX, clientY) => {
         if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return;
@@ -5656,8 +5584,6 @@
     const office = document.getElementById('split-office');
     const handle = document.getElementById('split-handle');
     let pct = 50;
-    let teaseTimer = null;
-    let userTookOver = false;
 
     function setSplit(p) {
       pct = Math.max(8, Math.min(92, p));
@@ -5679,13 +5605,8 @@
       if (x == null) return pct;
       return ((x - r.left) / r.width) * 100;
     }
-    function stopTease() {
-      if (teaseTimer) { clearInterval(teaseTimer); teaseTimer = null; }
-    }
     function followPointer(e) {
       if (!stage) return;
-      userTookOver = true;
-      stopTease();
       setSplit(pointerX(e));
     }
 
@@ -5700,36 +5621,9 @@
     }, { passive: false });
 
     handle?.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); stopTease(); userTookOver = true; setSplit(pct - 4); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); stopTease(); userTookOver = true; setSplit(pct + 4); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); setSplit(pct - 4); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); setSplit(pct + 4); }
     });
-
-    // Split tease only after compare is visible (cheaper first paint)
-    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches && stage) {
-      const startTease = () => {
-        if (userTookOver || teaseTimer) return;
-        let t = 0;
-        teaseTimer = setInterval(() => {
-          if (userTookOver) { stopTease(); return; }
-          t += 0.02;
-          setSplit(50 + Math.sin(t) * 18);
-          if (t > Math.PI * 2) { stopTease(); setSplit(58); }
-        }, 40);
-      };
-      if ('IntersectionObserver' in window) {
-        const teaseIo = new IntersectionObserver((entries) => {
-          entries.forEach((e) => {
-            if (e.isIntersecting) {
-              startTease();
-              teaseIo.disconnect();
-            }
-          });
-        }, { threshold: 0.25 });
-        teaseIo.observe(stage);
-      } else {
-        startTease();
-      }
-    }
 
     // ── fake log stream ──
     const LOG_TEMPLATES = [
@@ -6078,11 +5972,28 @@
     window.addEventListener('resize', () => {
       if (window.matchMedia('(min-width: 861px)').matches) setHudMenuOpen(false);
     }, { passive: true });
+    const tourBarEl = document.getElementById('tour-bar');
+    const tourRailVisible = window.matchMedia('(max-width: 640px), (min-width: 1400px)');
+    let hudScrollRaf = 0;
+    let hudWasScrolled = window.scrollY > 12;
     const onScrollHud = () => {
-      if (!hud) return;
-      hud.classList.toggle('is-scrolled', window.scrollY > 12);
-      const bar = document.getElementById('tour-bar');
-      if (bar) bar.classList.toggle('is-fading', tourShouldFade());
+      if (hudScrollRaf) return;
+      hudScrollRaf = requestAnimationFrame(() => {
+        hudScrollRaf = 0;
+        if (hud) {
+          const next = window.scrollY > 12;
+          if (next !== hudWasScrolled) {
+            hudWasScrolled = next;
+            hud.classList.toggle('is-scrolled', next);
+          }
+        }
+        if (tourBarEl && tourRailVisible.matches) {
+          const fade = tourShouldFade();
+          if (tourBarEl.classList.contains('is-fading') !== fade) {
+            tourBarEl.classList.toggle('is-fading', fade);
+          }
+        }
+      });
     };
     window.addEventListener('scroll', onScrollHud, { passive: true });
     onScrollHud();
@@ -6139,27 +6050,6 @@
       statusTimer = setTimeout(() => {
         heroStatus.classList.remove('is-on');
       }, ms);
-    }
-
-    // ── office walkers: hide if reduced motion; pause when off-screen ──
-    const walkersEl = document.getElementById('office-walkers');
-    if (reduceMotion) {
-      walkersEl?.remove();
-    } else if (walkersEl && stage && 'IntersectionObserver' in window) {
-      // On very small screens drop to a single walker
-      let narrow = false;
-      try { narrow = window.matchMedia('(max-width: 640px)').matches; } catch (_) { /* older browsers */ }
-      if (narrow) {
-        walkersEl.querySelectorAll('.walker-b, .walker-c').forEach((n) => n.remove());
-      }
-      const walkIo = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          walkersEl.classList.toggle('is-paused', !e.isIntersecting);
-        });
-      }, { threshold: 0.12 });
-      walkIo.observe(stage);
-      // Start paused until first intersect callback
-      walkersEl.classList.add('is-paused');
     }
 
     // ── Buzz ring, then enter demo ──

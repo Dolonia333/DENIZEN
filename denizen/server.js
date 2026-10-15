@@ -11875,20 +11875,33 @@ agentWss.on('connection', (ws) => {
 
   // Keepalive — Cloudflare / reverse proxies often kill idle sockets (browser 1006).
   ws.isAlive = true;
-  ws.on('pong', () => { ws.isAlive = true; });
+  ws._missedPongs = 0;
+  ws.on('pong', () => {
+    ws.isAlive = true;
+    ws._missedPongs = 0;
+  });
 
   if (!agentWss._denizenHeartbeat) {
+    // Ping often enough that Cloudflare does not treat the socket as idle.
+    // One missed pong is not a dead client: a brain-think stall lets the
+    // timer run before the buffered pong is read, and killing the socket
+    // there is what looks like the office crashing and reloading.
     agentWss._denizenHeartbeat = setInterval(() => {
       for (const client of agentWss.clients) {
         if (client.readyState !== 1) continue;
         if (client.isAlive === false) {
-          try { client.terminate(); } catch (_) {}
-          continue;
+          client._missedPongs = (client._missedPongs || 0) + 1;
+          if (client._missedPongs >= 3) {
+            try { client.terminate(); } catch (_) {}
+            continue;
+          }
+        } else {
+          client._missedPongs = 0;
         }
         client.isAlive = false;
         try { client.ping(); } catch (_) {}
       }
-    }, 25000);
+    }, 20000);
     agentWss._denizenHeartbeat.unref?.();
   }
 
