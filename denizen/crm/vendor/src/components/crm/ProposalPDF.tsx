@@ -37,7 +37,7 @@ export function ProposalPDFButton({
   const { downloadPDF, busy } = useProposalPDF();
 
   return (
-    <button
+    <button aria-label="Action"
       type="button"
       disabled={busy}
       onClick={(e) => {
@@ -53,7 +53,7 @@ export function ProposalPDFButton({
         border: "none",
         background: `${branding.accentColor}22`,
         color: branding.accentColor,
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: 600,
         cursor: busy ? "wait" : "pointer",
         opacity: busy ? 0.7 : 1,

@@ -76,19 +76,19 @@ export function NotificationsPanel({ isOpen, onClose, deals, tasks }: Props) {
         <div style={{ padding: "18px 20px", borderBottom: `1px solid ${T.bg4}`, display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>Notifications</div>
-            <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>{unreadCount} unread</div>
+            <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{unreadCount} unread</div>
           </div>
-          <button onClick={markAllRead} style={{ background: "none", border: "none", color: T.accent, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>Mark all read</button>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: T.text3, fontSize: 18, cursor: "pointer", padding: 0 }}>✕</button>
+          <button aria-label="Action" onClick={markAllRead} style={{ background: "none", border: "none", color: T.accent, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>Mark all read</button>
+          <button aria-label="Close" onClick={onClose} style={{ background: "none", border: "none", color: T.text3, fontSize: 18, cursor: "pointer", padding: 0 }}>✕</button>
         </div>
 
         <div style={{ display: "flex", gap: 4, padding: "10px 20px" }}>
           {(["all", "unread"] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)} style={{
+            <button aria-label="Action" key={f} onClick={() => setFilter(f)} style={{
               background: filter === f ? T.accent : T.bg3,
               color: filter === f ? "#080d18" : T.text2,
               border: `1px solid ${filter === f ? T.accent : T.bg4}`,
-              borderRadius: T.radius.sm, padding: "4px 12px", fontSize: 11, cursor: "pointer", fontWeight: filter === f ? 700 : 400,
+              borderRadius: T.radius.sm, padding: "4px 12px", fontSize: 14, cursor: "pointer", fontWeight: filter === f ? 700 : 400,
               textTransform: "capitalize",
             }}>{f}{f === "unread" && unreadCount > 0 ? ` (${unreadCount})` : ""}</button>
           ))}
@@ -98,7 +98,7 @@ export function NotificationsPanel({ isOpen, onClose, deals, tasks }: Props) {
           {filtered.length === 0 && (
             <div style={{ padding: "40px 0", textAlign: "center" }}>
               <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.3 }}>🔔</div>
-              <div style={{ fontSize: 12, color: T.text3 }}>All caught up!</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>All caught up!</div>
             </div>
           )}
           {filtered.map(n => (
@@ -111,9 +111,9 @@ export function NotificationsPanel({ isOpen, onClose, deals, tasks }: Props) {
             }}>
               <span style={{ fontSize: 16, flexShrink: 0 }}>{n.icon}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: !n.read ? 600 : 400, color: !n.read ? T.text0 : T.text2 }}>{n.title}</div>
-                <div style={{ fontSize: 12, color: T.text3, marginTop: 2 }}>{n.message}</div>
-                <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>{n.time}</div>
+                <div style={{ fontSize: 14, fontWeight: !n.read ? 600 : 400, color: !n.read ? T.text0 : T.text2 }}>{n.title}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{n.message}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>{n.time}</div>
               </div>
               {!n.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: n.color, flexShrink: 0, marginTop: 4 }} />}
             </div>
@@ -127,7 +127,7 @@ export function NotificationsPanel({ isOpen, onClose, deals, tasks }: Props) {
 export function NotificationBell({ deals, tasks, onClick }: { deals: Deal[]; tasks: Task[]; onClick: () => void }) {
   const unreadCount = generateNotifications(deals, tasks).filter(n => !n.read).length;
   return (
-    <button onClick={onClick} style={{
+    <button aria-label="Action" onClick={onClick} style={{
       position: "relative", background: "none", border: "none",
       color: T.text2, cursor: "pointer", fontSize: 16, padding: "4px 6px",
     }}>
@@ -136,7 +136,7 @@ export function NotificationBell({ deals, tasks, onClick }: { deals: Deal[]; tas
         <span style={{
           position: "absolute", top: 0, right: 0, width: 16, height: 16,
           borderRadius: "50%", background: T.red, color: "#fff",
-          fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
           animation: "pulse-ring 2s ease-out infinite alternate",
         }}>{unreadCount}</span>
       )}

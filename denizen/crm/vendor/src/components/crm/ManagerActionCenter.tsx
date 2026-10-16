@@ -163,7 +163,7 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
             <h3 style={{ fontSize: 16, fontWeight: 800, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>
               Action Center
             </h3>
-            <div style={{ fontSize: 11, color: T.text3, marginTop: 2, display: "flex", gap: 12 }}>
+            <div style={{ fontSize: 14, color: T.text3, marginTop: 2, display: "flex", gap: 12 }}>
               {criticalCount > 0 && (
                 <span style={{ color: "#f85b5b", fontWeight: 700 }}>● {criticalCount} critical</span>
               )}
@@ -175,8 +175,8 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
           </div>
         </div>
         {dismissed.size > 0 && (
-          <button onClick={() => setDismissed(new Set())}
-            style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11, padding: "5px 12px" }}>
+          <button aria-label="Action" onClick={() => setDismissed(new Set())}
+            style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "5px 12px" }}>
             ↩ Restore {dismissed.size}
           </button>
         )}
@@ -192,7 +192,7 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
           const count = counts[cat];
           const isActive = filterCat === cat;
           return (
-            <button key={cat} onClick={() => setFilterCat(filterCat === cat ? "all" : cat)} style={{
+            <button aria-label="Action" key={cat} onClick={() => setFilterCat(filterCat === cat ? "all" : cat)} style={{
               padding: "14px 16px", border: "none", cursor: "pointer",
               background: isActive ? `${meta.color}0d` : T.bg2,
               borderBottom: isActive ? `2px solid ${meta.color}` : `1px solid ${T.bg4}`,
@@ -208,7 +208,7 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
                 }}>{count}</span>
               </div>
               <span style={{
-                fontSize: 10, fontWeight: 700, color: isActive ? meta.color : T.text3,
+                fontSize: 14, fontWeight: 700, color: isActive ? meta.color : T.text3,
                 textTransform: "uppercase", letterSpacing: "0.05em",
               }}>{meta.label}</span>
             </button>
@@ -224,7 +224,7 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
         overflow: "hidden",
       }}>
         {visible.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "32px 20px", color: T.text3, fontSize: 12 }}>
+          <div style={{ textAlign: "center", padding: "32px 20px", color: T.text3, fontSize: 14 }}>
             {dismissed.size > 0 ? "All items dismissed — click Restore to bring them back" : "No action items in this category"}
           </div>
         ) : (
@@ -254,7 +254,7 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
                         width: 30, height: 30, borderRadius: T.radius.full, flexShrink: 0,
                         background: `linear-gradient(135deg, ${T.purple}, ${T.blue})`,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 10, fontWeight: 800, color: "#fff",
+                        fontSize: 14, fontWeight: 800, color: "#fff",
                       }}>{member.avatar}</div>
                     ) : (
                       <div style={{
@@ -269,14 +269,14 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
                   {/* Content */}
                   <div style={{ minWidth: 0 }}>
                     <div style={{
-                      fontSize: 13, fontWeight: 700, color: T.text0,
+                      fontSize: 14, fontWeight: 700, color: T.text0,
                       display: "flex", alignItems: "center", gap: 8,
                     }}>
                       <span style={{
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                       }}>{item.title}</span>
                       <span style={{
-                        fontSize: 9, fontWeight: 800, padding: "1px 6px",
+                        fontSize: 14, fontWeight: 800, padding: "1px 6px",
                         borderRadius: T.radius.full,
                         background: sev.bg, color: sev.color,
                         border: `1px solid ${sev.border}`,
@@ -284,7 +284,7 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
                       }}>{sev.label}</span>
                     </div>
                     <div style={{
-                      fontSize: 11, color: T.text2, marginTop: 3,
+                      fontSize: 14, color: T.text2, marginTop: 3,
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>{item.description}</div>
                   </div>
@@ -292,9 +292,9 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
                   {/* Action button */}
                   <div>
                     {item.actionLabel && item.onAction && (
-                      <button onClick={item.onAction} style={{
+                      <button aria-label="Action" onClick={item.onAction} style={{
                         padding: "6px 16px", borderRadius: T.radius.md,
-                        fontSize: 11, fontWeight: 700,
+                        fontSize: 14, fontWeight: 700,
                         background: `${sev.color}18`, color: sev.color,
                         border: `1px solid ${sev.color}33`, cursor: "pointer",
                         transition: "all 0.15s",
@@ -303,10 +303,10 @@ export function ManagerActionCenter({ quotas, deals, proposals, onScrollToPropos
                   </div>
 
                   {/* Dismiss */}
-                  <button onClick={() => setDismissed(prev => new Set([...prev, item.id]))} style={{
+                  <button aria-label="Action" onClick={() => setDismissed(prev => new Set([...prev, item.id]))} style={{
                     width: 24, height: 24, borderRadius: T.radius.full,
                     background: "transparent", color: T.text3, border: "none",
-                    cursor: "pointer", fontSize: 12, display: "flex",
+                    cursor: "pointer", fontSize: 14, display: "flex",
                     alignItems: "center", justifyContent: "center",
                     transition: "all 0.15s",
                   }} title="Dismiss"

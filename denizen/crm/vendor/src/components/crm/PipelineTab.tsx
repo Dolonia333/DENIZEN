@@ -219,20 +219,20 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
         <div style={{ padding: "24px 24px 0", position: "sticky", top: 0, background: T.bg1, zIndex: 1, paddingBottom: 16, borderBottom: `1px solid ${T.bg4}44` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color, marginBottom: 6 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color, marginBottom: 6 }}>
                 {deal.stage}
               </div>
               <h2 style={{ fontSize: 22, fontWeight: 800, color: T.text0, margin: 0, letterSpacing: "-0.03em" }}>{deal.title}</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
                 {(() => { const co = contacts.find(c => c.name === deal.contact); return (
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: co?.avatar ? "none" : `linear-gradient(135deg,${color},${T.bg4})`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: co?.avatar ? "none" : `linear-gradient(135deg,${color},${T.bg4})`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                     {co?.avatar ? <img src={co.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : deal.contact?.[0] || "?"}
                   </div>
                 ); })()}
-                <span style={{ fontSize: 13, color: T.text2 }}>{deal.contact}</span>
+                <span style={{ fontSize: 14, color: T.text2 }}>{deal.contact}</span>
               </div>
             </div>
-            <button onClick={onClose} style={{
+            <button aria-label="Close" onClick={onClose} style={{
               background: T.bg4, border: "none", color: T.text2, cursor: "pointer",
               width: 32, height: 32, borderRadius: T.radius.sm, fontSize: 16,
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -243,17 +243,17 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
           <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
             <div style={{ ...glass, padding: "12px 16px", flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: T.text0, fontFamily: "'Inter', sans-serif" }}>{fmt(deal.value)}</div>
-              <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>Value</div>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>Value</div>
             </div>
             <div style={{ ...glass, padding: "12px 16px", flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 20, fontWeight: 800, color, fontFamily: "'Inter', sans-serif" }}>{deal.probability}%</div>
-              <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>Probability</div>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>Probability</div>
             </div>
             <div style={{ ...glass, padding: "12px 16px", flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: isAtRisk ? T.orange : T.green, fontFamily: "'Inter', sans-serif" }}>
                 {deal.daysInStage}d
               </div>
-              <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>In Stage</div>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>In Stage</div>
             </div>
           </div>
         </div>
@@ -261,7 +261,7 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
         <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
           {/* Stage Progress */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
               Stage Progress
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -278,7 +278,7 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
                       transition: "all 0.3s",
                     }} />
                     <span style={{
-                      fontSize: 8, fontWeight: 600, color: isCurrent ? sc : (isActive ? T.text2 : T.text3),
+                      fontSize: 14, fontWeight: 600, color: isCurrent ? sc : (isActive ? T.text2 : T.text3),
                       textAlign: "center", lineHeight: 1.2,
                     }}>{s}</span>
                   </div>
@@ -295,18 +295,18 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
                 background: isAtRisk ? T.orange : T.green,
                 boxShadow: `0 0 8px ${isAtRisk ? T.orange : T.green}55`,
               }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: isAtRisk ? T.orange : T.green }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: isAtRisk ? T.orange : T.green }}>
                 {isAtRisk ? "At Risk" : "Healthy"}
               </span>
             </div>
-            <div style={{ fontSize: 12, color: T.text2 }}>
+            <div style={{ fontSize: 14, color: T.text2 }}>
               Close: <span style={{ fontWeight: 600, color: T.text1 }}>{deal.closeDate}</span>
             </div>
           </div>
 
           {/* Activity Timeline */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
               Activity Timeline
             </div>
             <div style={{ position: "relative", paddingLeft: 24 }}>
@@ -318,11 +318,11 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
                     width: 14, height: 14, borderRadius: "50%",
                     background: T.bg2, border: `2px solid ${item.color}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 8,
+                    fontSize: 14,
                   }}>{item.icon}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, color: T.text1, fontWeight: 500 }}>{item.label}</div>
-                    <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{item.time}</div>
+                    <div style={{ fontSize: 14, color: T.text1, fontWeight: 500 }}>{item.label}</div>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{item.time}</div>
                   </div>
                 </div>
               ))}
@@ -332,13 +332,13 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
           {/* Email engagement */}
           {contactEmails.length > 0 && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
                 Email engagement
               </div>
               {contactEmails.slice(0, 6).map((e) => (
                 <div key={e.id} style={{ ...glass, padding: 12, marginBottom: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text1 }}>{e.subject}</div>
-                  <div style={{ fontSize: 11, color: T.text3, marginTop: 4 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{e.subject}</div>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
                     Sent {formatTimelineTime(e.sentAt)}
                     {(e.opens?.length || 0) > 0 && ` · ${e.opens!.length} open${e.opens!.length > 1 ? "s" : ""}`}
                     {(e.clicks || 0) > 0 && ` · ${e.clicks} click${e.clicks! > 1 ? "s" : ""}`}
@@ -350,18 +350,18 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
 
           {/* Deal comments */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
               Team comments
             </div>
             {onAddDealComment && (
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                 <input
                   value={commentDraft}
-                  onChange={(ev) => setCommentDraft(ev.target.value)}
+                  onChange={(ev) = aria-label="input"> setCommentDraft(ev.target.value)}
                   placeholder="Add a comment…"
-                  style={{ flex: 1, background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, color: T.text1, padding: "8px 12px", fontSize: 12 }}
+                  style={{ flex: 1, background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, color: T.text1, padding: "8px 12px", fontSize: 14 }}
                 />
-                <button
+                <button aria-label="Action"
                   onClick={() => {
                     const text = commentDraft.trim();
                     if (!text) return;
@@ -374,18 +374,18 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
                     });
                     setCommentDraft("");
                   }}
-                  style={{ background: T.accent, color: T.bg0, border: "none", borderRadius: T.radius.md, padding: "8px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+                  style={{ background: T.accent, color: T.bg0, border: "none", borderRadius: T.radius.md, padding: "8px 14px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
                 >
                   Post
                 </button>
               </div>
             )}
             {threadComments.length === 0 ? (
-              <div style={{ ...glass, padding: 14, fontSize: 12, color: T.text3 }}>No team comments yet.</div>
+              <div style={{ ...glass, padding: 14, fontSize: 14, color: T.text3 }}>No team comments yet.</div>
             ) : threadComments.map((c) => (
               <div key={c.id} style={{ ...glass, padding: 14, marginBottom: 8 }}>
-                <div style={{ fontSize: 12, color: T.text1, lineHeight: 1.5 }}>{c.text}</div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 10, color: T.text3 }}>
+                <div style={{ fontSize: 14, color: T.text1, lineHeight: 1.5 }}>{c.text}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 14, color: T.text3 }}>
                   <span>{c.user}</span>
                   <span>{formatTimelineTime(c.at)}</span>
                 </div>
@@ -398,15 +398,15 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
 
           {/* Notes */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
               Notes
             </div>
             {dealNotes.length === 0 ? (
-              <div style={{ ...glass, padding: 14, fontSize: 12, color: T.text3 }}>No notes for {deal.contact} yet.</div>
+              <div style={{ ...glass, padding: 14, fontSize: 14, color: T.text3 }}>No notes for {deal.contact} yet.</div>
             ) : dealNotes.map((note, i) => (
               <div key={i} style={{ ...glass, padding: 14, marginBottom: 8 }}>
-                <div style={{ fontSize: 12, color: T.text1, lineHeight: 1.5 }}>{note.text}</div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 10, color: T.text3 }}>
+                <div style={{ fontSize: 14, color: T.text1, lineHeight: 1.5 }}>{note.text}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 14, color: T.text3 }}>
                   <span>{note.author}</span>
                   <span>{note.date}</span>
                 </div>
@@ -417,14 +417,14 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
           {/* Related Deals */}
           {similarDeals.length > 0 && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3, marginBottom: 12 }}>
                 Other Deals — {deal.contact}
               </div>
               {similarDeals.map(d => (
                 <div key={d.id} style={{ ...glass, padding: 12, marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.text1 }}>{d.title}</div>
-                    <div style={{ fontSize: 10, color: T.text3 }}>{d.stage}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{d.title}</div>
+                    <div style={{ fontSize: 14, color: T.text3 }}>{d.stage}</div>
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{fmt(d.value)}</div>
                 </div>
@@ -434,14 +434,14 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
 
           {/* Actions */}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { onEdit(deal); onClose(); }} style={{
-              flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 700,
+            <button aria-label="Action" onClick={() => { onEdit(deal); onClose(); }} style={{
+              flex: 1, padding: "10px 0", fontSize: 14, fontWeight: 700,
               background: `${T.accent}15`, border: `1px solid ${T.accent}33`,
               borderRadius: T.radius.md, color: T.accent, cursor: "pointer",
             }}>Edit Deal</button>
             {!["Closed Won", "Closed Lost"].includes(deal.stage) && (
-              <button onClick={() => { onStageChange(deal.id, STAGES[stageIndex + 1]); onClose(); }} style={{
-                flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 700,
+              <button aria-label="Action" onClick={() => { onStageChange(deal.id, STAGES[stageIndex + 1]); onClose(); }} style={{
+                flex: 1, padding: "10px 0", fontSize: 14, fontWeight: 700,
                 background: T.accent, border: "none",
                 borderRadius: T.radius.md, color: T.bg0, cursor: "pointer",
               }}>Advance →</button>
@@ -492,7 +492,7 @@ function VelocityMetrics({ deals, stages }: { deals: Deal[]; stages: string[] })
           Pipeline Velocity
         </h3>
         <span style={{
-          fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
+          fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
           background: `${T.blue}15`, color: T.blue, fontWeight: 600, border: `1px solid ${T.blue}33`,
         }}>
           {totalVelocity}d avg cycle
@@ -509,10 +509,10 @@ function VelocityMetrics({ deals, stages }: { deals: Deal[]; stages: string[] })
           }}>
             <span style={{ fontSize: 16 }}>⚠️</span>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: T.orange }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: T.orange }}>
                 Bottleneck detected: {bottleneck.stage}
               </div>
-              <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                 Deals spend an average of {bottleneck.avg} days here — consider reviewing stalled deals
               </div>
             </div>
@@ -526,8 +526,8 @@ function VelocityMetrics({ deals, stages }: { deals: Deal[]; stages: string[] })
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: m.color }} />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: T.text1 }}>{m.stage}</span>
-                  <span style={{ fontSize: 10, color: T.text3 }}>({m.count} deals)</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{m.stage}</span>
+                  <span style={{ fontSize: 14, color: T.text3 }}>({m.count} deals)</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{
@@ -535,7 +535,7 @@ function VelocityMetrics({ deals, stages }: { deals: Deal[]; stages: string[] })
                     fontFamily: "'Inter', sans-serif",
                   }}>{m.avg}d</span>
                   {bottleneck?.stage === m.stage && m.avg > 5 && (
-                    <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: T.radius.full, background: `${T.orange}20`, color: T.orange, fontWeight: 700 }}>
+                    <span style={{ fontSize: 14, padding: "2px 6px", borderRadius: T.radius.full, background: `${T.orange}20`, color: T.orange, fontWeight: 700 }}>
                       SLOW
                     </span>
                   )}
@@ -566,7 +566,7 @@ function VelocityMetrics({ deals, stages }: { deals: Deal[]; stages: string[] })
           ].map(item => (
             <div key={item.label} style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: item.color, fontFamily: "'Inter', sans-serif" }}>{item.value}</div>
-              <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{item.label}</div>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{item.label}</div>
             </div>
           ))}
         </div>
@@ -655,9 +655,9 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
   const StatCard = ({ label, value, sub, color, icon }: { label: string; value: string; sub?: string; color: string; icon: string }) => (
     <div style={{ ...glassSubtle, padding: "18px 20px", flex: 1, minWidth: 140, position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: -8, right: -8, fontSize: 48, opacity: 0.04, color }}>{icon}</div>
-      <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: "-0.03em", lineHeight: 1, fontFamily: "'Inter', -apple-system, sans-serif" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: T.text3, marginTop: 6 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>{sub}</div>}
     </div>
   );
 
@@ -692,9 +692,9 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
         {/* Top row: title + actions */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: T.text0, lineHeight: 1.3, marginBottom: 2 }}>{deal.title}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.text3 }}>
-              <div style={{ width: 18, height: 18, borderRadius: "50%", background: contactObj?.avatar ? "none" : `linear-gradient(135deg,${color},${T.bg4})`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, lineHeight: 1.3, marginBottom: 2 }}>{deal.title}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: T.text3 }}>
+              <div style={{ width: 18, height: 18, borderRadius: "50%", background: contactObj?.avatar ? "none" : `linear-gradient(135deg,${color},${T.bg4})`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                 {contactObj?.avatar ? <img src={contactObj.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : deal.contact?.[0] || "?"}
               </div>
               {deal.contact}
@@ -705,21 +705,21 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
             opacity: isHovered ? 1 : 0,
             transition: "opacity 0.2s",
           }}>
-            <button onClick={(e) => { e.stopPropagation(); onEditDeal(deal); }} style={{
+            <button aria-label="Action" onClick={(e) => { e.stopPropagation(); onEditDeal(deal); }} style={{
               background: T.bg4, border: "none", color: T.text2, cursor: "pointer",
-              fontSize: 11, padding: "4px 8px", borderRadius: T.radius.sm,
+              fontSize: 14, padding: "4px 8px", borderRadius: T.radius.sm,
               transition: "background 0.15s",
             }} onMouseOver={(e) => (e.currentTarget.style.background = T.bg5)}
                onMouseOut={(e) => (e.currentTarget.style.background = T.bg4)}>
               Edit
             </button>
-            <button onClick={(e) => { e.stopPropagation(); shareToGlobalChat({
+            <button aria-label="Action" onClick={(e) => { e.stopPropagation(); shareToGlobalChat({
               title: deal.title, type: "deal", color: color,
               snapshot: { "Value": fmt(deal.value), "Stage": deal.stage, "Contact": deal.contact, "Probability": `${deal.probability}%`, "Close Date": deal.closeDate, "Days in Stage": `${deal.daysInStage}d` },
               status: deal.health === "at-risk" ? "Needs Review" : "In Progress",
             }); }} style={{
               background: `${T.purple}18`, border: "none", color: T.purple, cursor: "pointer",
-              fontSize: 11, padding: "4px 8px", borderRadius: T.radius.sm,
+              fontSize: 14, padding: "4px 8px", borderRadius: T.radius.sm,
               transition: "background 0.15s",
             }} onMouseOver={(e) => (e.currentTarget.style.background = `${T.purple}33`)}
                onMouseOut={(e) => (e.currentTarget.style.background = `${T.purple}18`)}
@@ -727,14 +727,14 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
               💬
             </button>
             {confirmDelete === deal.id ? (
-              <button onClick={(e) => { e.stopPropagation(); onDeleteDeal(deal.id); setConfirmDelete(null); }} style={{
+              <button aria-label="Action" onClick={(e) => { e.stopPropagation(); onDeleteDeal(deal.id); setConfirmDelete(null); }} style={{
                 background: `${T.red}22`, border: `1px solid ${T.red}44`, color: T.red,
-                cursor: "pointer", fontSize: 11, padding: "4px 8px", borderRadius: T.radius.sm,
+                cursor: "pointer", fontSize: 14, padding: "4px 8px", borderRadius: T.radius.sm,
               }}>Confirm</button>
             ) : (
-              <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(deal.id); }} style={{
+              <button aria-label="Action" onClick={(e) => { e.stopPropagation(); setConfirmDelete(deal.id); }} style={{
                 background: T.bg4, border: "none", color: T.text3, cursor: "pointer",
-                fontSize: 11, padding: "4px 8px", borderRadius: T.radius.sm,
+                fontSize: 14, padding: "4px 8px", borderRadius: T.radius.sm,
               }}>×</button>
             )}
           </div>
@@ -764,8 +764,8 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
             }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-            <span style={{ fontSize: 10, color: T.text3, fontWeight: 500 }}>{deal.probability}% probability</span>
-            <span style={{ fontSize: 10, color: T.text3, fontWeight: 500 }}>{deal.daysInStage}d</span>
+            <span style={{ fontSize: 14, color: T.text3, fontWeight: 500 }}>{deal.probability}% probability</span>
+            <span style={{ fontSize: 14, color: T.text3, fontWeight: 500 }}>{deal.daysInStage}d</span>
           </div>
         </div>
 
@@ -773,7 +773,7 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 5,
-            fontSize: 10, fontWeight: 600, letterSpacing: "0.02em",
+            fontSize: 14, fontWeight: 600, letterSpacing: "0.02em",
             color: isAtRisk ? T.orange : T.green,
           }}>
             <div style={{
@@ -783,7 +783,7 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
             }} />
             {isAtRisk ? "At Risk" : "Healthy"}
           </div>
-          <span style={{ fontSize: 10, color: T.text3, fontWeight: 500 }}>
+          <span style={{ fontSize: 14, color: T.text3, fontWeight: 500 }}>
             {deal.closeDate}
           </span>
         </div>
@@ -792,7 +792,7 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
         {isMobile && (
           <div style={{ marginTop: 10 }}>
             <span style={{
-              fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
+              fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
               background: `${color}15`, color, fontWeight: 600,
               border: `1px solid ${color}33`,
             }}>{stage}</span>
@@ -803,8 +803,8 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
         {!["Closed Won", "Closed Lost"].includes(stage) && (
           <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
             {STAGES.indexOf(stage) > 0 && (
-              <button onClick={(e) => { e.stopPropagation(); onDealStageChange(deal.id, STAGES[STAGES.indexOf(stage) - 1]); }} style={{
-                flex: 1, fontSize: 11, padding: "7px 0",
+              <button aria-label="Action" onClick={(e) => { e.stopPropagation(); onDealStageChange(deal.id, STAGES[STAGES.indexOf(stage) - 1]); }} style={{
+                flex: 1, fontSize: 14, padding: "7px 0",
                 background: T.bg4, border: "none", borderRadius: T.radius.sm,
                 color: T.text2, cursor: "pointer", fontWeight: 500,
                 transition: "background 0.15s",
@@ -814,8 +814,8 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                 ← Back
               </button>
             )}
-            <button onClick={(e) => { e.stopPropagation(); onDealStageChange(deal.id, STAGES[STAGES.indexOf(stage) + 1]); }} style={{
-              flex: 1, fontSize: 11, padding: "7px 0",
+            <button aria-label="Action" onClick={(e) => { e.stopPropagation(); onDealStageChange(deal.id, STAGES[STAGES.indexOf(stage) + 1]); }} style={{
+              flex: 1, fontSize: 14, padding: "7px 0",
               background: `${color}18`, border: `1px solid ${color}33`,
               borderRadius: T.radius.sm, color, cursor: "pointer", fontWeight: 600,
               transition: "all 0.15s",
@@ -861,14 +861,14 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                 letterSpacing: "-0.04em", fontFamily: "'Inter', -apple-system, sans-serif",
               }}>Pipeline</h1>
               <div style={{
-                fontSize: 11, padding: "3px 10px", borderRadius: T.radius.full,
+                fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
                 background: `${T.accent}15`, color: T.accent, fontWeight: 600,
                 border: `1px solid ${T.accent}33`,
               }}>
                 {openDeals.length} active
               </div>
             </div>
-            <p style={{ fontSize: 13, color: T.text3, margin: 0, fontWeight: 400 }}>
+            <p style={{ fontSize: 14, color: T.text3, margin: 0, fontWeight: 400 }}>
               Revenue command center · Real-time deal intelligence
             </p>
           </div>
@@ -880,8 +880,8 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
               background: T.bg3, border: `1px solid ${T.bg4}66`,
             }}>
               {(["kanban", "list"] as const).map(mode => (
-                <button key={mode} onClick={() => setViewMode(mode)} style={{
-                  padding: "6px 14px", fontSize: 12, fontWeight: 600,
+                <button aria-label="Action" key={mode} onClick={() => setViewMode(mode)} style={{
+                  padding: "6px 14px", fontSize: 14, fontWeight: 600,
                   borderRadius: T.radius.sm, border: "none", cursor: "pointer",
                   background: viewMode === mode ? T.bg5 : "transparent",
                   color: viewMode === mode ? T.text0 : T.text3,
@@ -911,8 +911,8 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
               <div style={{ fontSize: 28, fontWeight: 800, color: T.text0, letterSpacing: "-0.03em", lineHeight: 1 }}>
                 {fmt(totalPipeline)}
               </div>
-              <div style={{ fontSize: 11, color: T.text3, marginTop: 4, fontWeight: 500 }}>Total pipeline value</div>
-              <div style={{ fontSize: 11, color: T.accent, marginTop: 2, fontWeight: 600 }}>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 4, fontWeight: 500 }}>Total pipeline value</div>
+              <div style={{ fontSize: 14, color: T.accent, marginTop: 2, fontWeight: 600 }}>
                 {fmt(weightedPipeline)} weighted
               </div>
             </div>
@@ -944,9 +944,9 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                     boxShadow: count > 0 ? `0 0 8px ${color}55` : "none",
                     transition: "box-shadow 0.3s",
                   }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: count > 0 ? T.text1 : T.text3 }}>{stage}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: count > 0 ? T.text1 : T.text3 }}>{stage}</span>
                   <span style={{
-                    fontSize: 10, fontWeight: 700, color,
+                    fontSize: 14, fontWeight: 700, color,
                     background: `${color}15`, padding: "1px 7px",
                     borderRadius: T.radius.full, minWidth: 20, textAlign: "center",
                   }}>{count}</span>
@@ -975,8 +975,8 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
               const color = stage === "All" ? T.accent : (getStageColor(stage) || T.bg4);
               const count = stage === "All" ? deals.length : deals.filter(d => d.stage === stage).length;
               return (
-                <button key={stage} onClick={() => setActiveStage(stage)} style={{
-                  padding: "7px 16px", borderRadius: T.radius.full, fontSize: 12, fontWeight: 600,
+                <button aria-label="Action" key={stage} onClick={() => setActiveStage(stage)} style={{
+                  padding: "7px 16px", borderRadius: T.radius.full, fontSize: 14, fontWeight: 600,
                   whiteSpace: "nowrap", cursor: "pointer", transition: "all 0.2s",
                   background: isActive ? `${color}18` : T.bg3,
                   color: isActive ? color : T.text3,
@@ -1008,7 +1008,7 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
           <div style={{
             display: "grid", gridTemplateColumns: "2fr 1.2fr 1fr 1fr 0.8fr 0.7fr 80px",
             padding: "12px 20px", borderBottom: `1px solid ${T.bg4}66`,
-            fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+            fontSize: 14, fontWeight: 700, textTransform: "uppercase",
             letterSpacing: "0.08em", color: T.text3,
           }}>
             <span>Deal</span><span>Contact</span><span>Value</span>
@@ -1028,12 +1028,12 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
               onMouseOver={(e) => (e.currentTarget.style.background = `${T.bg4}22`)}
               onMouseOut={(e) => (e.currentTarget.style.background = "transparent")}
               onClick={() => setSelectedDeal(deal)}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{deal.title}</span>
-                <span style={{ fontSize: 12, color: T.text2 }}>{deal.contact}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{deal.title}</span>
+                <span style={{ fontSize: 14, color: T.text2 }}>{deal.contact}</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: T.text0, fontFamily: "'Inter', -apple-system, sans-serif" }}>{fmt(deal.value)}</span>
                 <span>
                   <span style={{
-                    fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
+                    fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
                     background: `${color}15`, color, fontWeight: 600,
                     border: `1px solid ${color}33`,
                   }}>{deal.stage}</span>
@@ -1043,18 +1043,18 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                     <div style={{ flex: 1, height: 3, borderRadius: 2, background: T.bg4 }}>
                       <div style={{ height: "100%", borderRadius: 2, background: color, width: `${deal.probability}%` }} />
                     </div>
-                    <span style={{ fontSize: 11, color: T.text3, fontWeight: 600, minWidth: 30 }}>{deal.probability}%</span>
+                    <span style={{ fontSize: 14, color: T.text3, fontWeight: 600, minWidth: 30 }}>{deal.probability}%</span>
                   </div>
                 </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: isAtRisk ? T.orange : T.green, fontWeight: 600 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 14, color: isAtRisk ? T.orange : T.green, fontWeight: 600 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: isAtRisk ? T.orange : T.green, boxShadow: `0 0 6px ${isAtRisk ? T.orange : T.green}44` }} />
                   {isAtRisk ? "Risk" : "Good"}
                 </span>
                 <span style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
                   {!["Closed Won", "Closed Lost"].includes(deal.stage) && (
-                    <button onClick={(e) => { e.stopPropagation(); onDealStageChange(deal.id, STAGES[STAGES.indexOf(deal.stage) + 1]); }} style={{
+                    <button aria-label="Action" onClick={(e) => { e.stopPropagation(); onDealStageChange(deal.id, STAGES[STAGES.indexOf(deal.stage) + 1]); }} style={{
                       background: `${color}15`, border: `1px solid ${color}33`, borderRadius: T.radius.sm,
-                      color, cursor: "pointer", fontSize: 10, padding: "4px 10px", fontWeight: 600,
+                      color, cursor: "pointer", fontSize: 14, padding: "4px 10px", fontWeight: 600,
                     }}>→</button>
                   )}
                 </span>
@@ -1099,11 +1099,11 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                       background: color,
                       boxShadow: `0 0 8px ${color}55`,
                     }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.text1, letterSpacing: "-0.01em" }}>{stage}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: T.text1, letterSpacing: "-0.01em" }}>{stage}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{
-                      fontSize: 10, fontWeight: 700, color,
+                      fontSize: 14, fontWeight: 700, color,
                       background: `${color}12`, padding: "2px 8px",
                       borderRadius: T.radius.full,
                     }}>{stageDeals.length}</span>
@@ -1112,7 +1112,7 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
 
                 {/* Stage value */}
                 <div style={{
-                  fontSize: 12, color: T.text3, marginBottom: 8, padding: "0 6px",
+                  fontSize: 14, color: T.text3, marginBottom: 8, padding: "0 6px",
                   fontWeight: 600,
                   fontFamily: "'Inter', -apple-system, sans-serif",
                 }}>
@@ -1128,7 +1128,7 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                     <div className="crm-panel-enter" style={{
                       padding: "28px 12px", textAlign: "center",
                       color: isDropping ? color : T.text3,
-                      fontSize: 11, fontWeight: 500,
+                      fontSize: 14, fontWeight: 500,
                       border: `1.5px dashed ${isDropping ? `${color}66` : T.bg4}`,
                       borderRadius: T.radius.lg,
                       transition: "all 0.2s",

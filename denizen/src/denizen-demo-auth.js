@@ -5,29 +5,24 @@ const denizenVisitor = require('./denizen-visitor.js');
 const promptTuning = require('./prompt-tuning.js');
 const visitorAccess = require('./visitor-access.js');
 const userIdentity = require('./denizen-user-identity.js');
-const { createAccessGrant } = require('./visitor-session-auth.js');
+const authBase = require('./denizen-auth-base.js');
+const { createAccessGrant } = authBase;
 const { hashPassword, verifyPassword, assertPasswordMinLength } = require('./denizen-team-password.js');
 
-class DemoAuthError extends Error {
+class DemoAuthError extends authBase.AuthError {
   constructor(message, code) {
-    super(message);
+    super(message, code, authBase.authErrorStatus({ code }, 500));
     this.name = 'DemoAuthError';
-    this.code = code;
   }
 }
 
 function demoAuthErrorStatus(err) {
-  if (!(err instanceof DemoAuthError)) return 500;
-  switch (err.code) {
-    case 'BAD_INPUT': return 400;
-    case 'NOT_FOUND': return 404;
-    case 'DENIED': return 403;
-    default: return 500;
-  }
+  if (err instanceof DemoAuthError) return authBase.authErrorStatus(err, 500);
+  return authBase.authErrorStatus(err, 500);
 }
 
 function normalizeUsername(value) {
-  return String(value || '').trim().toLowerCase();
+  return authBase.normalizeUsername(value);
 }
 
 async function resolveDemoOrg() {
@@ -37,12 +32,7 @@ async function resolveDemoOrg() {
 }
 
 async function findIdentityByUsername(username) {
-  const normalized = normalizeUsername(username);
-  if (!normalized) return null;
-  const rows = await denizenDb._get(
-    `denizen_user_identities?select=*&username=eq.${encodeURIComponent(normalized)}&limit=1`,
-  ).catch(() => []);
-  return rows?.[0] || null;
+  return authBase.getIdentityByUsername(username);
 }
 
 async function registerDemoAccount({

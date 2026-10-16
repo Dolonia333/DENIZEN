@@ -360,7 +360,7 @@
     }
     const isLast = stepIndex >= STEPS.length - 1;
     const tooltip = overlayEl.querySelector('.su-tooltip');
-    tooltip.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(tooltip, `
       <p class="su-step">Power tour · ${stepIndex + 1} of ${STEPS.length}</p>
       <p class="su-title">${escapeHtml(step.title)}</p>
       <ul class="su-tips">
@@ -370,7 +370,7 @@
         <button type="button" class="su-skip">Skip</button>
         <button type="button" class="su-next">${isLast ? 'Return to the city' : 'Continue'}</button>
       </div>
-    `;
+    `);
     wireButtons(
       tooltip.querySelector('.su-skip'),
       tooltip.querySelector('.su-next'),
@@ -393,10 +393,10 @@
     document.documentElement.dataset.denizenSuperuserOnboarding = 'open';
     overlayEl = document.createElement('div');
     overlayEl.id = OVERLAY_ID;
-    overlayEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(overlayEl, `
       <div class="su-backdrop" aria-hidden="true"></div>
       <div class="su-tooltip" role="dialog" aria-label="City Power onboarding"></div>
-    `;
+    `);
     document.body.appendChild(overlayEl);
     stepIndex = 0;
     renderStep();

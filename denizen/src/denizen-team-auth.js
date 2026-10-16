@@ -3,27 +3,22 @@
 const denizenDb = require('./denizen-db.js');
 const denizenVisitor = require('./denizen-visitor.js');
 const promptTuning = require('./prompt-tuning.js');
-const { createAccessGrant, createCeoGrant } = require('./visitor-session-auth.js');
+const authBase = require('./denizen-auth-base.js');
+const { createAccessGrant } = authBase;
+const { createCeoGrant } = require('./visitor-session-auth.js');
 const { verifyAccessCode } = require('./visitor-access.js');
 const userIdentity = require('./denizen-user-identity.js');
 const { hashPassword, verifyPassword, assertPasswordMinLength } = require('./denizen-team-password.js');
 
-class TeamAuthError extends Error {
+class TeamAuthError extends authBase.AuthError {
   constructor(message, code) {
-    super(message);
+    super(message, code, authBase.authErrorStatus({ code }, 500));
     this.name = 'TeamAuthError';
-    this.code = code;
   }
 }
 
 function teamAuthErrorStatus(err) {
-  if (!(err instanceof TeamAuthError)) return 500;
-  switch (err.code) {
-    case 'BAD_INPUT': return 400;
-    case 'NOT_FOUND': return 404;
-    case 'DENIED': return 403;
-    default: return 500;
-  }
+  return authBase.authErrorStatus(err, 500);
 }
 
 function generateTeamCode() {

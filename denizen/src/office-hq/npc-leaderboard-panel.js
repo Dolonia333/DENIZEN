@@ -91,10 +91,10 @@
   function createDOM() {
     const panel = document.createElement('div');
     panel.id = PANEL_ID;
-    panel.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panel, `
       <div class="lb-header">leaderboard · this week</div>
       <div class="lb-list"></div>
-    `;
+    `);
     document.body.appendChild(panel);
     panelEl = panel;
     listEl = panel.querySelector('.lb-list');
@@ -103,7 +103,7 @@
     const btn = document.createElement('button');
     btn.id = TOGGLE_ID;
     btn.type = 'button';
-    btn.innerHTML = `${ti('trophy', { size: 14 })} Board`;
+    globalThis.DenizenSafeDom.setSafeHtml(btn, `${ti('trophy', { size: 14 })} Board`);
     btn.dataset.active = 'false';
     btn.title = 'NPC leaderboard ΓÇö who shipped the most this week';
     btn.addEventListener('click', toggle);
@@ -114,10 +114,10 @@
   function renderRows(rows) {
     if (!listEl) return;
     if (!rows.length) {
-      listEl.innerHTML = '<div class="lb-empty">No shipped work yet</div>';
+      globalThis.DenizenSafeDom.setSafeHtml(listEl, '<div class="lb-empty">No shipped work yet</div>');
       return;
     }
-    listEl.innerHTML = rows.slice(0, 5).map((r, i) => {
+    globalThis.DenizenSafeDom.setSafeHtml(listEl, rows.slice(0, 5).map((r, i) => {
       const streak = r.streakDays > 0
         ? `<span class="lb-streak">${ti('flame', { size: 11, tone: 'gold' })}${r.streakDays}d</span>`
         : '';
@@ -126,7 +126,7 @@
         <span class="lb-name">${_esc(r.npcName)}</span>
         <span class="lb-shipped">${r.shipped}</span>${streak}
       </div>`;
-    }).join('');
+    }).join(''));
   }
 
   function _esc(s) {

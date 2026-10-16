@@ -10,7 +10,8 @@ async function renderHtmlToCanvas(html: string): Promise<HTMLCanvasElement> {
   host.style.top = "0";
   host.style.width = "794px";
   host.style.background = "#ffffff";
-  host.innerHTML = html;
+  const parsed = new DOMParser().parseFromString(html, "text/html");
+  while (parsed.body.firstChild) host.appendChild(parsed.body.firstChild);
   document.body.appendChild(host);
 
   try {

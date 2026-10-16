@@ -480,14 +480,14 @@
       }
       if (compact) {
         if (!el.dataset.fullLabel) el.dataset.fullLabel = chipMarkup(entry, false);
-        el.innerHTML = chipMarkup(entry, true);
+        globalThis.DenizenSafeDom.setSafeHtml(el, chipMarkup(entry, true));
         el.title = entry.label || el.dataset.fullLabel;
         el.dataset.compact = '1';
       } else if (el.dataset.compact === '1') {
-        el.innerHTML = el.dataset.fullLabel || chipMarkup(entry, false);
+        globalThis.DenizenSafeDom.setSafeHtml(el, el.dataset.fullLabel || chipMarkup(entry, false));
         delete el.dataset.compact;
       } else if (!el.dataset.fullLabel) {
-        el.innerHTML = chipMarkup(entry, false);
+        globalThis.DenizenSafeDom.setSafeHtml(el, chipMarkup(entry, false));
         el.dataset.fullLabel = el.textContent || entry.label;
       }
     }

@@ -374,7 +374,7 @@
     railEl = document.createElement('aside');
     railEl.id = RAIL_ID;
     railEl.setAttribute('aria-label', 'Workbench');
-    railEl.innerHTML = railMarkup({ closeable: true });
+    globalThis.DenizenSafeDom.setSafeHtml(railEl, railMarkup({ closeable: true }));
     wireRailClicks(railEl, {
       onClose: closeRail,
       setTabId: (id) => setTab(id, railEl, 'desktop'),
@@ -396,7 +396,7 @@
     phoneRailEl = document.createElement('aside');
     phoneRailEl.id = PHONE_RAIL_ID;
     phoneRailEl.setAttribute('aria-label', 'Workbench');
-    phoneRailEl.innerHTML = railMarkup({ closeable: false });
+    globalThis.DenizenSafeDom.setSafeHtml(phoneRailEl, railMarkup({ closeable: false }));
     wireRailClicks(phoneRailEl, {
       onClose: null,
       setTabId: (id) => setTab(id, phoneRailEl, 'phone'),
@@ -429,7 +429,7 @@
     if (tab === 'orchestrator') {
       const dirs = snapshot.directives || [];
       const leash = snapshot.leash;
-      body.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(body, `
         ${demoGateHtml()}
         <p class="wr-empty">Abby runs the floor. Send a line — or drop a Buzz screenshot.</p>
         <p class="wr-empty">${esc(leash?.note || snapshot.escalate || 'Spend, destructive ops, and scope changes wait for you.')}</p>
@@ -444,14 +444,14 @@
               <small>from ${esc(d.from || '—')}</small>
             </div>`).join('') : '<p class="wr-empty">No open directives yet.</p>'}
         </div>
-      `;
+      `);
       return;
     }
     if (tab === 'crew') {
       const crew = snapshot.crew?.length
         ? snapshot.crew
         : (globalThis.DenizenNpcRoster?.displayNames || []).map((n) => ({ name: n, seated: false, status: 'empty' }));
-      body.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(body, `
         <p class="wr-empty">Seated desks have a live AI. Empty desks are named staff waiting for a subscription.</p>
         <p><button type="button" class="wr-send" data-wr="seat">Seat an AI</button></p>
         <div class="wr-crew" style="margin-top:10px">
@@ -462,14 +462,14 @@
             return `<button type="button" data-crew="${esc(name)}"><b>${esc(name)}</b><br><small>${seated ? 'Seated' : 'Empty'} · ${esc(status)}</small></button>`;
           }).join('')}
         </div>
-      `;
+      `);
       return;
     }
     if (tab === 'inbox') {
       const drops = snapshot.drops || [];
       const handoffs = snapshot.handoffs || [];
       const approvals = snapshot.approvals || [];
-      body.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(body, `
         ${demoGateHtml()}
         <p class="wr-empty">Approvals, handoffs, and Buzz drops land here.</p>
         ${handoffs.map((h) => `
@@ -488,7 +488,7 @@
             <div>${esc(d.note || '(no note)')}</div>
           </div>`).join('') || (!handoffs.length && !approvals.length ? '<p class="wr-empty">No Buzz drops yet. Click Buzz to capture.</p>' : '')}
         <p class="wr-empty" style="margin-top:12px"><button type="button" class="wr-send" data-wr="crm">Open Meridian CRM</button></p>
-      `;
+      `);
       try { globalThis.DenizenProposals?.show?.(); } catch (_) {}
       return;
     }
@@ -498,7 +498,7 @@
         const who = line.to ? `${line.from} → ${line.to}` : line.from;
         return `<div class="wr-card"><b>${esc(who)}</b><div>${esc(line.text)}</div></div>`;
       }).join('');
-      body.innerHTML = cards || '<p class="wr-empty">Lines from the floor show up here as people talk.</p>';
+      globalThis.DenizenSafeDom.setSafeHtml(body, cards || '<p class="wr-empty">Lines from the floor show up here as people talk.</p>');
       if (el === railEl) {
         const feed = document.getElementById('denizen-work-feed');
         if (feed) {
@@ -511,7 +511,7 @@
     if (tab === 'memory') {
       const assistant = globalThis.DenizenVisitorSession?.getAssistant?.();
       const rows = snapshot.memory || [];
-      body.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(body, `
         <p class="wr-empty">Markdown memory from souls on disk. Search the palace, then open a desk.</p>
         <input type="text" data-wr-memory-q placeholder="Search memory" />
         <button type="button" class="wr-send" data-wr="memory-search">Search</button>
@@ -521,7 +521,7 @@
             <b>${esc(m.npc)}</b>
             ${(m.lines || []).map((line) => `<div><small>${esc(line)}</small></div>`).join('')}
           </div>`).join('') : '<p class="wr-empty">No memory lines yet. Claim an assistant or run the floor.</p>'}
-      `;
+      `);
     }
   }
 
@@ -621,7 +621,7 @@
       document.documentElement.classList.remove('denizen-work-rail-open');
     }
     const phone = buildPhoneChrome();
-    host.innerHTML = '';
+    host.replaceChildren();
     host.appendChild(phone);
     setTab(phoneTab, phone, 'phone');
     void refresh();

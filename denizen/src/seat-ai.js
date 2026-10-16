@@ -124,7 +124,7 @@
     const providers = status?.providers || [];
     const highlight = String(opts.highlight || '').toLowerCase();
     const foundAny = providers.some((p) => p.detected && !p.seated);
-    overlay.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(overlay, `
       <div class="seat-card">
         <button type="button" class="seat-close" data-seat="close">Close</button>
         <h3>Seat the AIs you already pay for</h3>
@@ -156,7 +156,7 @@
           }).join('')}
         </div>
       </div>
-    `;
+    `);
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay || e.target.closest('[data-seat="close"]')) {
         close();

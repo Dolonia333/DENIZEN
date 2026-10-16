@@ -198,7 +198,7 @@ function renderGrid() {
     state.page + 1
   }/${Math.max(1, Math.ceil(state.filtered.length / ps))}) — ${cfg.label}`;
 
-  els.grid.innerHTML = '';
+  els.grid.replaceChildren();
 
   pageItems.forEach((obj) => {
     const tile = document.createElement('div');
@@ -336,9 +336,9 @@ async function copySelected() {
   const txt = els.snippet.textContent || '';
   try {
     await navigator.clipboard.writeText(txt);
-    els.copyStatus.innerHTML = `<span class=\"ok\">Copied.</span>`;
+    globalThis.DenizenSafeDom.setSafeHtml(els.copyStatus, `<span class=\"ok\">Copied.</span>`);
   } catch (e) {
-    els.copyStatus.innerHTML = `<span class=\"warn\">Copy failed.</span> Select the text and copy manually.`;
+    globalThis.DenizenSafeDom.setSafeHtml(els.copyStatus, `<span class=\"warn\">Copy failed.</span> Select the text and copy manually.`);
   }
 }
 

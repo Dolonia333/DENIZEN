@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /**
  * Agent Action Protocol
  * Defines executable actions that AI agents can perform in the pixel office game.

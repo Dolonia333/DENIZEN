@@ -52,37 +52,37 @@ function ItemRow({
         flexShrink: 0,
       }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.text0 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>
           {isSuggested ? "Suggested · " : ""}{item.title}
           {item.overdue ? <span style={{ color: "#f85b5b", marginLeft: 6, fontWeight: 600 }}>overdue</span> : null}
           {item.due && !item.overdue ? <span style={{ color: T.text3, marginLeft: 6, fontWeight: 500 }}>due {item.due}</span> : null}
         </div>
         {item.text ? (
-          <div style={{ fontSize: 11, color: T.text2, marginTop: 3, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 14, color: T.text2, marginTop: 3, lineHeight: 1.45 }}>
             {item.text}
           </div>
         ) : null}
-        <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>
+        <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
           {item.kind}{item.author ? ` · ${item.author}` : ""}{item.at ? ` · ${String(item.at).slice(0, 10)}` : ""}
         </div>
         {isSuggested && (onAccept || onDismiss) ? (
           <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
             {onAccept ? (
-              <button
+              <button aria-label="Action"
                 type="button"
                 disabled={busy}
                 onClick={onAccept}
-                style={{ ...S.btn, padding: "5px 10px", fontSize: 11, opacity: busy ? 0.6 : 1 } as React.CSSProperties}
+                style={{ ...S.btn, padding: "5px 10px", fontSize: 14, opacity: busy ? 0.6 : 1 } as React.CSSProperties}
               >
                 Accept task
               </button>
             ) : null}
             {onDismiss ? (
-              <button
+              <button aria-label="Action"
                 type="button"
                 disabled={busy}
                 onClick={onDismiss}
-                style={{ ...S.btnGhost, padding: "5px 10px", fontSize: 11 } as React.CSSProperties}
+                style={{ ...S.btnGhost, padding: "5px 10px", fontSize: 14 } as React.CSSProperties}
               >
                 Dismiss
               </button>
@@ -149,22 +149,22 @@ export function MyDayPanel({ onNavigate }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: T.text0 }}>My Day</div>
-          <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
             Your captures, email follow-ups, and CRM activity
           </div>
         </div>
-        <button
+        <button aria-label="Action"
           type="button"
           onClick={() => onNavigate?.("ai")}
-          style={{ ...S.btnGhost, fontSize: 11, padding: "6px 10px" } as React.CSSProperties}
+          style={{ ...S.btnGhost, fontSize: 14, padding: "6px 10px" } as React.CSSProperties}
         >
           Tell AI
         </button>
       </div>
 
-      {loading && <div style={{ fontSize: 12, color: T.text3 }}>Loading…</div>}
+      {loading && <div style={{ fontSize: 14, color: T.text3 }}>Loading…</div>}
       {!loading && data && !data.ok && (
-        <div style={{ fontSize: 12, color: T.text3 }}>{data.error || "Could not load My Day."}</div>
+        <div style={{ fontSize: 14, color: T.text3 }}>{data.error || "Could not load My Day."}</div>
       )}
 
       {!loading && data?.ok && (
@@ -182,7 +182,7 @@ export function MyDayPanel({ onNavigate }: Props) {
                 borderRadius: 999,
                 background: T.bg2,
                 border: `1px solid ${T.bg4}`,
-                fontSize: 11,
+                fontSize: 14,
                 color: T.text2,
               }}>
                 <strong style={{ color: T.text0 }}>{chip.value}</strong> {chip.label}
@@ -192,7 +192,7 @@ export function MyDayPanel({ onNavigate }: Props) {
 
           {suggested.length > 0 && (
             <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: T.text0, marginBottom: 8 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, marginBottom: 8 }}>
                 From email — confirm follow-ups
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, maxHeight: 260, overflowY: "auto" }}>
@@ -209,19 +209,19 @@ export function MyDayPanel({ onNavigate }: Props) {
             </>
           )}
 
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.text0, marginBottom: 8 }}>Due soon</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, marginBottom: 8 }}>Due soon</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, maxHeight: 220, overflowY: "auto" }}>
             {due.filter((t) => t.kind !== "suggested_task").length === 0 ? (
-              <div style={{ fontSize: 12, color: T.text3 }}>No open follow-ups. Tell the AI what you did today.</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>No open follow-ups. Tell the AI what you did today.</div>
             ) : due.filter((t) => t.kind !== "suggested_task").map((t) => (
               <ItemRow key={`due-${t.id}-${t.title}`} item={t} />
             ))}
           </div>
 
-          <div style={{ fontSize: 12, fontWeight: 700, color: T.text0, marginBottom: 8 }}>Recent activity</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, marginBottom: 8 }}>Recent activity</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 280, overflowY: "auto" }}>
             {items.length === 0 ? (
-              <div style={{ fontSize: 12, color: T.text3 }}>Nothing logged yet this week.</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>Nothing logged yet this week.</div>
             ) : items.slice(0, 12).map((item, i) => (
               <ItemRow key={`item-${item.kind}-${item.id}-${i}`} item={item} />
             ))}

@@ -115,7 +115,7 @@
     injectStyles();
     chipEl = document.createElement('div');
     chipEl.id = CHIP_ID;
-    chipEl.innerHTML = '<span class="label">Level 1</span><div class="bar"><div class="bar-fill" style="width:0%"></div></div>';
+    globalThis.DenizenSafeDom.setSafeHtml(chipEl, '<span class="label">Level 1</span><div class="bar"><div class="bar-fill" style="width:0%"></div></div>');
     const slot = document.getElementById('denizen-frame-level-slot');
     (slot || document.body).appendChild(chipEl);
     return chipEl;
@@ -140,9 +140,8 @@
     const nextLabel = progress.xpForNextLevel != null
       ? `${progress.xpIntoLevel}/${progress.xpForNextLevel} XP`
       : 'max level';
-    el.innerHTML =
-      `<span class="label">Level ${progress.level} · ${nextLabel}</span>` +
-      `<div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>`;
+    globalThis.DenizenSafeDom.setSafeHtml(el, `<span class="label">Level ${progress.level} · ${nextLabel}</span>` +
+      `<div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>`);
   }
 
   function showToast(text) {
@@ -155,7 +154,7 @@
 
   function showToastHtml(html) {
     const el = ensureToast();
-    el.innerHTML = html;
+    globalThis.DenizenSafeDom.setSafeHtml(el, html);
     el.style.display = 'block';
     if (toastHideTimer) clearTimeout(toastHideTimer);
     toastHideTimer = setTimeout(() => { el.style.display = 'none'; }, 8000);

@@ -282,13 +282,13 @@ class WorkFeedPanel {
     const panel = document.createElement('div');
     panel.id = 'denizen-work-feed';
 
-    panel.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panel, `
       <div id="denizen-work-feed-header">
         <span class="wf-title">work feed</span>
         <span class="wf-hint">Tab · click report to open</span>
       </div>
       <div id="denizen-work-feed-list"></div>
-    `;
+    `);
     document.body.appendChild(panel);
 
     this._panel = panel;
@@ -305,9 +305,9 @@ class WorkFeedPanel {
     btn.id = 'denizen-work-feed-toggle';
     btn.type = 'button';
     const ti = globalThis.DenizenTablerIcons?.icon;
-    btn.innerHTML = ti
+    globalThis.DenizenSafeDom.setSafeHtml(btn, ti
       ? `${ti('clipboard-list', { size: 14 })} Feed`
-      : 'Feed';
+      : 'Feed');
     btn.dataset.active = 'false';
     btn.title = 'Work output feed — what your agents produced (Tab)';
     btn.addEventListener('click', () => this.toggle());
@@ -337,7 +337,7 @@ class WorkFeedPanel {
    */
   _renderList() {
     if (!this._list) return;
-    this._list.innerHTML = '';
+    this._list.replaceChildren();
 
     const visible = this._entries.slice(0, this._maxVisible);
     if (visible.length === 0) {
@@ -390,11 +390,10 @@ class WorkFeedPanel {
     const noteEsc = this._esc(entry.note);
     const nameEsc = this._esc(entry.npcName);
 
-    el.innerHTML =
-      `<span class="wf-emoji">${this._esc(entry.phaseEmoji)}</span>` +
+    globalThis.DenizenSafeDom.setSafeHtml(el, `<span class="wf-emoji">${this._esc(entry.phaseEmoji)}</span>` +
       `<span class="wf-name" style="color:${nameColor}">${nameEsc}</span>` +
       `<span class="wf-note">${noteEsc}</span>` +
-      `<span class="wf-ts">${tsStr}</span>`;
+      `<span class="wf-ts">${tsStr}</span>`);
 
     const reportHref = this._reportHref(entry.artifactPath);
     if (reportHref) {

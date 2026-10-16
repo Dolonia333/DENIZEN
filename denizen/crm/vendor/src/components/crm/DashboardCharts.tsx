@@ -16,7 +16,7 @@ const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: 
   const count = typeof row.count === "number" ? row.count : null;
   const healthShare = typeof row.value === "number" && payload[0]?.name !== "Value" ? null : null;
   return (
-    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 11, minWidth: 140 }}>
+    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 14, minWidth: 140 }}>
       <div style={{ color: T.text3, marginBottom: 4, fontWeight: 600 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color, fontWeight: 600, marginBottom: 2 }}>
@@ -62,7 +62,7 @@ export function DashboardCharts({
         <div style={cardStyle}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Revenue Trend</div>
-            <button
+            <button aria-label="Action"
               onClick={() => shareToGlobalChat({
                 title: "Revenue Trend", type: "chart", color: T.accent,
                 snapshot: {
@@ -73,7 +73,7 @@ export function DashboardCharts({
                 },
                 status: "In Progress",
               })}
-              style={{ fontSize: 11, color: T.purple, background: `${T.purple}12`, border: `1px solid ${T.purple}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
+              style={{ fontSize: 14, color: T.purple, background: `${T.purple}12`, border: `1px solid ${T.purple}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
             >
               💬 Share
             </button>
@@ -91,8 +91,8 @@ export function DashboardCharts({
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} />
-              <XAxis dataKey="month" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <XAxis dataKey="month" tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} />
               <Area type="monotone" dataKey="revenue" name="Revenue" stroke={T.accent} fill="url(#gradRevenue)" strokeWidth={2} />
               <Area type="monotone" dataKey="pipeline" name="Pipeline" stroke={T.purple} fill="url(#gradPipeline)" strokeWidth={2} />
@@ -100,7 +100,7 @@ export function DashboardCharts({
           </ResponsiveContainer>
           <div style={{ display: "flex", gap: 16, marginTop: 8, justifyContent: "center" }}>
             {[["Revenue", T.accent], ["Pipeline", T.purple]].map(([label, color]) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.text3 }}>
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: T.text3 }}>
                 <div style={{ width: 8, height: 3, borderRadius: 2, background: color as string }} />{label}
               </div>
             ))}
@@ -112,28 +112,28 @@ export function DashboardCharts({
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Pipeline by Stage</div>
-                <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                   {stageData.reduce((s, r) => s + (r.count || 0), 0)} open deals · hover for value + count
                 </div>
               </div>
-              <button
+              <button aria-label="Action"
                 onClick={() => shareToGlobalChat({
                   title: "Pipeline by Stage", type: "chart", color: T.purple,
                   snapshot: Object.fromEntries(stageData.map((s) => [s.name, fmt(s.value)])),
                   status: "In Progress",
                 })}
-                style={{ fontSize: 11, color: T.purple, background: `${T.purple}12`, border: `1px solid ${T.purple}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
+                style={{ fontSize: 14, color: T.purple, background: `${T.purple}12`, border: `1px solid ${T.purple}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
               >
                 💬 Share
               </button>
             </div>
-            <button onClick={() => onNavigate("sales")} style={{ fontSize: 11, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>View board →</button>
+            <button aria-label="Action" onClick={() => onNavigate("sales")} style={{ fontSize: 14, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>View board →</button>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={stageData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 9, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <XAxis dataKey="name" tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
                 {stageData.map((s, i) => <Cell key={i} fill={s.fill} />)}
@@ -155,7 +155,7 @@ export function DashboardCharts({
           </ResponsiveContainer>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {healthData.map((d) => (
-              <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+              <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: d.fill }} />
                 <span style={{ color: T.text2 }}>{d.name}</span>
                 <span style={{ color: T.text0, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>{d.value}</span>

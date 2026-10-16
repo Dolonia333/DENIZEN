@@ -530,7 +530,7 @@
     }
     panel = document.createElement('div');
     panel.id = 'denizen-llm-tel-panel';
-    panel.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panel, `
       <header>
         <div class="tel-grab" aria-hidden="true"></div>
         <div class="tel-toolbar">
@@ -578,7 +578,7 @@
         <button type="button" data-action="export">⬇ CSV</button>
       </div>
       <div class="body" data-section="body">loading…</div>
-    `;
+    `);
     document.body.appendChild(panel);
 
     // Wire filters
@@ -670,7 +670,7 @@
   function buildWindowButtons(panel) {
     const row = panel.querySelector('#tel-win-row');
     if (!row) return;
-    row.innerHTML = '';
+    row.replaceChildren();
     WINDOWS.forEach(w => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -799,19 +799,19 @@
         const r = await fetch(callsUrl(qs.toString()), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) });
         const j = await r.json();
         state.calls = j.calls || [];
-        body.innerHTML = state.calls.length === 0
+        globalThis.DenizenSafeDom.setSafeHtml(body, state.calls.length === 0
           ? `<div style="padding:12px; color:#94a3b8">No calls in the last ${winLabel()}.</div>`
-          : state.calls.map(renderCallRow).join('');
+          : state.calls.map(renderCallRow).join(''));
       } else if (state.tab === 'stats') {
         await loadStatsBundle();
-        body.innerHTML = renderStats(state.stats);
+        globalThis.DenizenSafeDom.setSafeHtml(body, renderStats(state.stats));
       } else if (state.tab === 'errors') {
         const r = await fetch(errorsUrl(), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) });
         const j = await r.json();
         state.errors = j.errors || [];
-        body.innerHTML = state.errors.length === 0
+        globalThis.DenizenSafeDom.setSafeHtml(body, state.errors.length === 0
           ? '<div style="padding:12px; color:#94a3b8">No errors. 🎉</div>'
-          : state.errors.map(renderErrorRow).join('');
+          : state.errors.map(renderErrorRow).join(''));
       } else if (state.tab === 'openclaw') {
         const w = state.windowMs || 7 * 24 * 60 * 60 * 1000;
         const [eventsRes, statsRes] = await Promise.all([
@@ -819,7 +819,7 @@
           fetch(openclawStatsUrl(w), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) }).then(r => r.json()),
         ]);
         const events = eventsRes.events || [];
-        body.innerHTML = renderOpenClaw(events, statsRes);
+        globalThis.DenizenSafeDom.setSafeHtml(body, renderOpenClaw(events, statsRes));
       }
     } catch (err) {
       body.textContent = 'failed to load: ' + (err?.message || err);
@@ -1346,7 +1346,7 @@
       if (r.ok) state.stats = await r.json();
       paintChip();
       if (state.open && state.tab === 'stats') {
-        document.querySelector('#denizen-llm-tel-panel .body').innerHTML = renderStats(state.stats);
+        document.querySelector('#denizen-llm-tel-panel .body'globalThis.DenizenSafeDom.setSafeHtml(), renderStats(state.stats));
       }
     } catch (_) { /* server may be restarting */ }
   }

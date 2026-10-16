@@ -204,7 +204,7 @@ export function MobileBottomTabBar({ activeTab, onNavigate }: Props) {
           // Roving tabindex: only the active (or last focused) button is in tab order
           const isTabStop = focusedIdx === -1 ? active : focusedIdx === idx;
           return (
-            <button
+            <button aria-label="Action"
               key={t.id}
               ref={el => buttonRefs.current[idx] = el}
               role="tab"
@@ -238,7 +238,7 @@ export function MobileBottomTabBar({ activeTab, onNavigate }: Props) {
                 transition: reducedMotion ? "none" : "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}>{t.icon}</span>
               <span style={{
-                fontSize: 9, fontWeight: active ? 700 : 500,
+                fontSize: 14, fontWeight: active ? 700 : 500,
                 letterSpacing: "0.04em",
                 transition: reducedMotion ? "color 0.15s ease" : "font-weight 0.2s ease, color 0.25s ease",
               }}>{t.label}</span>

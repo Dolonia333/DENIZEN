@@ -123,7 +123,7 @@
       : phase === 'day' ? 'day'
       : 'night';
     el.dataset.phase = phase;
-    el.innerHTML = `<span class="tod-time">${hh}:${mm}</span><span class="tod-phase">${label}</span>`;
+    globalThis.DenizenSafeDom.setSafeHtml(el, `<span class="tod-time">${hh}:${mm}</span><span class="tod-phase">${label}</span>`);
   }
 
   const WIN_TILE_W = 920; // must match .dz-skyline background-size width
@@ -134,11 +134,11 @@
     const n = Math.max(1, Math.ceil(w / WIN_TILE_W) + 1);
     host.classList.add('dz-windows-tiled');
     host.style.backgroundImage = 'none';
-    host.innerHTML = '';
+    host.replaceChildren();
     for (let i = 0; i < n; i++) {
       const tile = document.createElement('div');
       tile.className = 'dz-win-tile';
-      tile.innerHTML = svgText;
+      globalThis.DenizenSafeDom.setSafeHtml(tile, svgText);
       const root = tile.querySelector('svg');
       if (root) {
         // Same stretch as CSS background-size: 920px 100%

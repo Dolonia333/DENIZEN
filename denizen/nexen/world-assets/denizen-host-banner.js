@@ -20,7 +20,7 @@
     'justify-content:space-between',
     'flex-wrap:wrap',
   ].join(';');
-  bar.innerHTML = '<span><strong>Preview</strong> — layout only on Denizen. Tasks &amp; requests that save live on <a href="/nexen/" style="color:#c8f0ff">Today</a>.</span>'
-    + '<a href="/nexen/" style="color:#0b2a49;background:linear-gradient(140deg,#c8f0ff,#62a9ef);padding:6px 10px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700">Open working hub</a>';
+  globalThis.DenizenSafeDom.setSafeHtml(bar, '<span><strong>Preview</strong> — layout only on Denizen. Tasks &amp; requests that save live on <a href="/nexen/" style="color:#c8f0ff">Today</a>.</span>'
+    + '<a href="/nexen/" style="color:#0b2a49;background:linear-gradient(140deg,#c8f0ff,#62a9ef);padding:6px 10px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:700">Open working hub</a>');
   document.documentElement.prepend(bar);
 })();

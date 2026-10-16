@@ -1,0 +1,32 @@
+{
+  "name": "enqueue_compute_job",
+  "description": "Enqueue a City Power mesh job (embedding_index, inference_rpc, sim_tick, npc_think_batch, web_search, bouncer_patrol). Returns job id for polling.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "job_type": {
+        "type": "string",
+        "description": "Job type, e.g. inference_rpc, embedding_index"
+      },
+      "payload": {
+        "type": "object",
+        "description": "Job payload (target_node_id, model, messages, etc.)"
+      },
+      "priority": {
+        "type": "number",
+        "description": "0–100 (default 50)"
+      },
+      "wait": {
+        "type": "boolean",
+        "description": "If true, block until done/failed (default false)"
+      },
+      "timeout_ms": {
+        "type": "number",
+        "description": "Max wait when wait=true (default 120000)"
+      }
+    },
+    "required": [
+      "job_type"
+    ]
+  }
+}

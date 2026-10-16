@@ -217,34 +217,34 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, letterSpacing: "-0.02em", margin: 0 }}>Dashboard</h1>
-          <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+          <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>
             Your {t("pipeline").toLowerCase()} overview at a glance
           </p>
         </div>
         {/* REFACTORED: Persistent status bar with semantic colors and linked filters */}
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-          <button onClick={() => onNavigate("schedule")} style={{
+          <button aria-label="Action" onClick={() => onNavigate("schedule")} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "6px 12px",
             borderRadius: T.radius.md, background: `${T.text3}11`, border: `1px solid ${T.text3}22`,
-            fontSize: 11, color: T.text2, fontWeight: 600, cursor: "pointer",
+            fontSize: 14, color: T.text2, fontWeight: 600, cursor: "pointer",
           }}>
             📅 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 800 }}>{todayMeetings.length}</span> Meetings
           </button>
-          <button onClick={() => onNavigate("tasks")} style={{
+          <button aria-label="Action" onClick={() => onNavigate("tasks")} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "6px 12px",
             borderRadius: T.radius.md,
             background: overdueTasks.length > 0 ? `${T.orange || T.text3}18` : `${T.green}11`,
             border: `1px solid ${overdueTasks.length > 0 ? `${T.orange || T.text3}33` : `${T.green}22`}`,
-            fontSize: 11, color: overdueTasks.length > 0 ? (T.orange || T.text3) : T.green, fontWeight: 600, cursor: "pointer",
+            fontSize: 14, color: overdueTasks.length > 0 ? (T.orange || T.text3) : T.green, fontWeight: 600, cursor: "pointer",
           }}>
             📋 <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 800 }}>{overdueTasks.length}</span> Overdue
           </button>
-          <button onClick={() => onNavigate("sales")} style={{
+          <button aria-label="Action" onClick={() => onNavigate("sales")} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "6px 12px",
             borderRadius: T.radius.md,
             background: atRisk.length > 0 ? `${T.red}18` : `${T.green}11`,
             border: `1px solid ${atRisk.length > 0 ? `${T.red}33` : `${T.green}22`}`,
-            fontSize: 11, color: atRisk.length > 0 ? T.red : T.green, fontWeight: 600, cursor: "pointer",
+            fontSize: 14, color: atRisk.length > 0 ? T.red : T.green, fontWeight: 600, cursor: "pointer",
           }}>
             ⚠️ <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 800 }}>{atRisk.length}</span> At Risk
           </button>
@@ -261,13 +261,13 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
           const isPrimary = a.style === "primary";
           const isSecondary = a.style === "secondary";
           return (
-            <button key={a.id} type="button" onClick={() => onNavigate(a.tab)} style={{
+            <button aria-label="Action" key={a.id} type="button" onClick={() => onNavigate(a.tab)} style={{
               display: "flex", alignItems: "center", gap: 7, padding: "0 16px",
               height: 36, borderRadius: 999,
               background: isPrimary ? `linear-gradient(135deg,${T.accent},#d97706)` : "transparent",
               border: isPrimary ? "none" : isSecondary ? `1px solid ${T.accent}66` : `0.5px solid ${T.bg4}`,
               color: isPrimary ? "#080d18" : isSecondary ? T.accent : T.text2,
-              fontSize: 12, fontWeight: isPrimary ? 700 : 500, cursor: "pointer",
+              fontSize: 14, fontWeight: isPrimary ? 700 : 500, cursor: "pointer",
               transition: "all 0.15s", whiteSpace: "nowrap", flexShrink: 0,
             }}
             onMouseEnter={e => {
@@ -300,7 +300,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
               background: s.accentColor,
             }} />
             <div style={{
-              fontSize: 11, color: T.text3, fontWeight: 600, textTransform: "uppercase",
+              fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase",
               letterSpacing: "0.08em", marginBottom: 8,
             }}>{s.label}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
@@ -309,14 +309,14 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                 letterSpacing: "-0.02em", lineHeight: 1,
               }}>{s.value}</div>
               <span style={{
-                fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
+                fontSize: 14, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
                 background: s.trendDir === "up" ? `${T.green}18` : s.trendDir === "down" ? `${T.red}18` : `${T.text3}14`,
                 color: s.trendDir === "up" ? T.green : s.trendDir === "down" ? T.red : T.text3,
               }}>
                 {s.trendDir === "up" ? "↑" : s.trendDir === "down" ? "↓" : "—"} {s.trend !== "—" ? s.trend : ""}
               </span>
             </div>
-            <div style={{ fontSize: 12, color: T.text3, marginTop: 6 }}>{s.sub}</div>
+            <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>{s.sub}</div>
           </div>
         ))}
       </div>
@@ -329,12 +329,12 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
               <span style={{ fontSize: 16 }}>🔔</span>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Follow-Up Reminders</div>
               {followUpReminders.length > 0 && (
-                <span style={{ fontSize: 11, color: T.bg1, background: T.orange || T.accent, borderRadius: 10, padding: "2px 8px", fontWeight: 700 }}>
+                <span style={{ fontSize: 14, color: T.bg1, background: T.orange || T.accent, borderRadius: 10, padding: "2px 8px", fontWeight: 700 }}>
                   {followUpReminders.length}
                 </span>
               )}
             </div>
-            <span style={{ fontSize: 11, color: T.text3 }}>Not touched in 7+ days</span>
+            <span style={{ fontSize: 14, color: T.text3 }}>Not touched in 7+ days</span>
           </div>
 
           {followUpReminders.length === 0 ? (
@@ -375,8 +375,8 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                       {contact.name.split(" ").map(n => n[0]).join("")}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{contact.name}</div>
-                      <div style={{ fontSize: 11, color: T.text2, marginTop: 2 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{contact.name}</div>
+                      <div style={{ fontSize: 14, color: T.text2, marginTop: 2 }}>
                         {deal.title} · {deal.stage} · {fmt(deal.value)}
                       </div>
                     </div>
@@ -384,7 +384,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                       <div style={{ fontSize: 18, fontWeight: 800, color: urgencyColor, fontFamily: "'JetBrains Mono', monospace" }}>
                         {daysSince}d
                       </div>
-                      <div style={{ fontSize: 9, color: urgencyColor, textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.06em" }}>ago</div>
+                      <div style={{ fontSize: 14, color: urgencyColor, textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.06em" }}>ago</div>
                     </div>
                     {isHovered ? (
                       <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
@@ -395,7 +395,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                         ].map(btn => (
                           <button key={btn.label} type="button" onClick={btn.action} title={btn.label} style={{
                             background: T.bg3, border: `1px solid ${T.bg5}`, borderRadius: T.radius.sm,
-                            padding: "4px 8px", fontSize: 11, color: T.text1, cursor: "pointer",
+                            padding: "4px 8px", fontSize: 14, color: T.text1, cursor: "pointer",
                             whiteSpace: "nowrap", fontWeight: 600,
                           }}>
                             {btn.icon} {btn.label}
@@ -415,30 +415,30 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
               background: T.bg1, border: `1px solid ${T.accent}33`,
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.accent }}>✉ Draft to {draftingFor}</div>
-                <button onClick={() => setDraftingFor(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16 }}>×</button>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.accent }}>✉ Draft to {draftingFor}</div>
+                <button aria-label="Action" onClick={() => setDraftingFor(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16 }}>×</button>
               </div>
               <textarea
                 value={draftText}
-                onChange={e => setDraftText(e.target.value)}
+                onChange={e = aria-label="textarea"> setDraftText(e.target.value)}
                 style={{
                   width: "100%", minHeight: 120, background: T.bg2, color: T.text1,
                   border: `1px solid ${T.bg4}`, borderRadius: T.radius.md,
-                  padding: 12, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+                  padding: 12, fontSize: 14, fontFamily: "inherit", resize: "vertical",
                 }}
               />
               <div style={{ display: "flex", gap: 8, marginTop: 10, justifyContent: "flex-end" }}>
-                <button onClick={() => setDraftingFor(null)} style={{
+                <button aria-label="Action" onClick={() => setDraftingFor(null)} style={{
                   background: T.bg3, color: T.text2, border: `1px solid ${T.bg4}`,
-                  borderRadius: T.radius.md, padding: "6px 16px", fontSize: 12, cursor: "pointer",
+                  borderRadius: T.radius.md, padding: "6px 16px", fontSize: 14, cursor: "pointer",
                 }}>Cancel</button>
-                <button onClick={() => {
+                <button aria-label="Action" onClick={() => {
                   const c = contacts.find((x) => x.name === draftingFor);
                   onCompose?.({ contactId: c?.id, subject: `Following up`, body: draftText });
                   setDraftingFor(null);
                 }} style={{
                   background: T.accent, color: "#fff", border: "none",
-                  borderRadius: T.radius.md, padding: "6px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  borderRadius: T.radius.md, padding: "6px 16px", fontSize: 14, fontWeight: 600, cursor: "pointer",
                 }}>Send Follow-Up Email</button>
               </div>
             </div>
@@ -452,10 +452,10 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
         <div style={{ ...cardStyle, flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Tasks Due ({dueTasks.length})</div>
-            <button onClick={() => setTaskSlideOver(true)} style={{ fontSize: 11, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>All tasks →</button>
+            <button aria-label="Action" onClick={() => setTaskSlideOver(true)} style={{ fontSize: 14, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>All tasks →</button>
           </div>
           {dueTasks.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "24px 12px", color: T.text3, fontSize: 13, lineHeight: 1.5 }}>
+            <div style={{ textAlign: "center", padding: "24px 12px", color: T.text3, fontSize: 14, lineHeight: 1.5 }}>
               🎉 All caught up! Create a new task to keep your momentum going.
             </div>
           ) : (
@@ -469,9 +469,9 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                     <div style={{ width: 8, height: 8, borderRadius: T.radius.full, background: dotColor, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 13, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{task.title}</span>
+                        <span style={{ fontSize: 14, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{task.title}</span>
                         <span style={{
-                          fontSize: 10, padding: "2px 6px", borderRadius: 4,
+                          fontSize: 14, padding: "2px 6px", borderRadius: 4,
                           background: `${dotColor}18`, color: dotColor, fontWeight: 600,
                           whiteSpace: "nowrap", flexShrink: 0,
                         }}>
@@ -484,12 +484,12 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                             width: 20, height: 20, borderRadius: T.radius.full,
                             background: `linear-gradient(135deg,${T.purple}44,${T.bg4})`,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 8, fontWeight: 700, color: T.text1, flexShrink: 0,
+                            fontSize: 14, fontWeight: 700, color: T.text1, flexShrink: 0,
                           }}>
                             {task.assignee.split(" ").map(n => n[0]).join("")}
                           </div>
                         )}
-                        <span style={{ fontSize: 11, color: T.text2 }}>{task.assignee || task.contact}</span>
+                        <span style={{ fontSize: 14, color: T.text2 }}>{task.assignee || task.contact}</span>
                       </div>
                     </div>
                   </div>
@@ -502,7 +502,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
         <div style={{ ...cardStyle, flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Top Scored {t("contacts")}</div>
-            <button onClick={() => onNavigate("sales")} style={{ fontSize: 11, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>Lead scoring →</button>
+            <button aria-label="Action" onClick={() => onNavigate("sales")} style={{ fontSize: 14, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>Lead scoring →</button>
           </div>
           {topScoredLeads.length === 0 ? (
             <DashboardEmptyState
@@ -519,10 +519,10 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                     display: "flex", alignItems: "center", gap: 10, padding: "10px 0",
                     borderBottom: `1px solid ${T.bg3}`,
                   }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.text3, width: 22, fontFamily: "'JetBrains Mono', monospace" }}>#{i + 1}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: T.text3, width: 22, fontFamily: "'JetBrains Mono', monospace" }}>#{i + 1}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{contact.name}</div>
-                      <div style={{ fontSize: 11, color: T.text2 }}>{contact.company}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{contact.name}</div>
+                      <div style={{ fontSize: 14, color: T.text2 }}>{contact.company}</div>
                       <div style={{ marginTop: 6, height: 5, background: T.bg4, borderRadius: 3, overflow: "hidden" }}>
                         <div style={{ height: "100%", width: `${score}%`, background: barColor, borderRadius: 3, transition: "width 0.4s ease" }} />
                       </div>
@@ -540,7 +540,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
           {/* REFACTORED: At Risk panel with risk reason tags and action dropdown */}
           {atRisk.length > 0 ? (
             <div style={{ background: `linear-gradient(145deg,${T.redDim},${T.bg2})`, border: `1px solid ${T.red}33`, borderRadius: T.radius.lg, padding: "16px 20px" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: T.red, marginBottom: 10 }}>⚠ At Risk ({atRisk.length})</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: T.red, marginBottom: 10 }}>⚠ At Risk ({atRisk.length})</div>
               {atRisk.map(d => (
                 <AtRiskDeal key={d.id} deal={d} contacts={contacts} onNavigate={onNavigate} onCompose={onCompose} onAddNote={onAddNote} />
               ))}
@@ -549,8 +549,8 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
             <div style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 10, justifyContent: "center", padding: "20px" }}>
               <span style={{ fontSize: 20, color: T.green }}>✓</span>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.green }}>All deals healthy</div>
-                <div style={{ fontSize: 11, color: T.text3 }}>No at-risk deals right now</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.green }}>All deals healthy</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>No at-risk deals right now</div>
               </div>
             </div>
           )}
@@ -559,32 +559,32 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
           <div style={cardStyle}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Recent Notes</div>
-              <button onClick={() => setQuickNoteOpen(p => !p)} style={{
+              <button aria-label="Action" onClick={() => setQuickNoteOpen(p => !p)} style={{
                 background: T.bg3, border: `1px solid ${T.bg5}`, borderRadius: T.radius.sm,
-                padding: "3px 8px", fontSize: 12, color: T.accent, cursor: "pointer", fontWeight: 600,
+                padding: "3px 8px", fontSize: 14, color: T.accent, cursor: "pointer", fontWeight: 600,
               }}>+ Note</button>
             </div>
             {quickNoteOpen && (
               <div style={{ marginBottom: 10 }}>
                 <textarea
                   value={quickNoteText}
-                  onChange={e => setQuickNoteText(e.target.value)}
+                  onChange={e = aria-label="textarea"> setQuickNoteText(e.target.value)}
                   placeholder="Quick note..."
                   style={{
                     width: "100%", minHeight: 60, background: T.bg3, color: T.text1,
                     border: `1px solid ${T.bg5}`, borderRadius: T.radius.md,
-                    padding: 10, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+                    padding: 10, fontSize: 14, fontFamily: "inherit", resize: "vertical",
                   }}
                 />
                 <div style={{ display: "flex", gap: 6, marginTop: 6, justifyContent: "flex-end" }}>
-                  <button onClick={() => { setQuickNoteOpen(false); setQuickNoteText(""); }} style={{ ...S.btnGhost, fontSize: 11, padding: "4px 10px" }}>Cancel</button>
-                  <button onClick={() => {
+                  <button aria-label="Action" onClick={() => { setQuickNoteOpen(false); setQuickNoteText(""); }} style={{ ...S.btnGhost, fontSize: 14, padding: "4px 10px" }}>Cancel</button>
+                  <button aria-label="Action" onClick={() => {
                     if (quickNoteText.trim()) {
                       onAddNote?.({ contact: contacts[0]?.name || "", text: quickNoteText.trim(), date: new Date().toISOString().slice(0, 10), type: "Note" });
                     }
                     setQuickNoteOpen(false);
                     setQuickNoteText("");
-                  }} style={{ ...S.btn, fontSize: 11, padding: "4px 10px" }}>Log Interaction</button>
+                  }} style={{ ...S.btn, fontSize: 14, padding: "4px 10px" }}>Log Interaction</button>
                 </div>
               </div>
             )}
@@ -598,13 +598,13 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                     width: 20, height: 20, borderRadius: T.radius.full,
                     background: `linear-gradient(135deg,${T.accent}44,${T.bg4})`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 8, fontWeight: 700, color: T.text1, flexShrink: 0,
+                    fontSize: 14, fontWeight: 700, color: T.text1, flexShrink: 0,
                   }}>JD</div>
-                  <span style={{ fontSize: 11, color: T.blue, fontWeight: 500 }}>{n.contact}</span>
-                  <span style={{ fontSize: 10, color: T.text3, marginLeft: "auto" }}>{relativeTime(n.date)}</span>
+                  <span style={{ fontSize: 14, color: T.blue, fontWeight: 500 }}>{n.contact}</span>
+                  <span style={{ fontSize: 14, color: T.text3, marginLeft: "auto" }}>{relativeTime(n.date)}</span>
                 </div>
                 <div style={{
-                  fontSize: 12, color: T.text2,
+                  fontSize: 14, color: T.text2,
                   overflow: expandedNote === n.id ? "visible" : "hidden",
                   textOverflow: expandedNote === n.id ? "unset" : "ellipsis",
                   whiteSpace: expandedNote === n.id ? "normal" : "nowrap",
@@ -616,7 +616,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
             {notes.length === 0 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 0", justifyContent: "center" }}>
                 <span style={{ fontSize: 20, opacity: 0.4 }}>📝</span>
-                <div style={{ fontSize: 12, color: T.text3 }}>No notes yet</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>No notes yet</div>
               </div>
             )}
           </div>
@@ -624,7 +624,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
       </div>
 
       <Suspense fallback={
-        <div style={{ ...cardStyle, marginBottom: 14, color: T.text3, fontSize: 12, textAlign: "center" }}>
+        <div style={{ ...cardStyle, marginBottom: 14, color: T.text3, fontSize: 14, textAlign: "center" }}>
           Loading charts…
         </div>
       }>
@@ -648,7 +648,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <span style={{ fontSize: 16 }}>🎯</span>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Meeting Prep</div>
-              <span style={{ fontSize: 11, color: T.bg1, background: T.purple, borderRadius: 10, padding: "2px 8px", fontWeight: 700 }}>
+              <span style={{ fontSize: 14, color: T.bg1, background: T.purple, borderRadius: 10, padding: "2px 8px", fontWeight: 700 }}>
                 Starting soon
               </span>
             </div>
@@ -660,38 +660,38 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{prep.meeting.title}</div>
-                    <div style={{ fontSize: 11, color: T.text2, marginTop: 2 }}>
+                    <div style={{ fontSize: 14, color: T.text2, marginTop: 2 }}>
                       {prep.meeting.time} · {prep.meeting.duration}min · {prep.meeting.type}
                     </div>
                   </div>
-                  <span style={{ fontSize: 10, background: `${T.orange}22`, color: T.orange, padding: "2px 8px", borderRadius: T.radius.xs, fontWeight: 600 }}>
+                  <span style={{ fontSize: 14, background: `${T.orange}22`, color: T.orange, padding: "2px 8px", borderRadius: T.radius.xs, fontWeight: 600 }}>
                     Starting soon
                   </span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                   {prep.contact && (
                     <div style={{ padding: "8px 10px", background: T.bg3, borderRadius: T.radius.sm }}>
-                      <div style={{ fontSize: 9, color: T.text3, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>Contact</div>
-                      <div style={{ fontSize: 12, color: T.text1, fontWeight: 600 }}>{prep.contact.name}</div>
-                      <div style={{ fontSize: 10, color: T.text3 }}>{prep.contact.company}</div>
+                      <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>Contact</div>
+                      <div style={{ fontSize: 14, color: T.text1, fontWeight: 600 }}>{prep.contact.name}</div>
+                      <div style={{ fontSize: 14, color: T.text3 }}>{prep.contact.company}</div>
                     </div>
                   )}
                   {prep.deal && (
                     <div style={{ padding: "8px 10px", background: T.bg3, borderRadius: T.radius.sm }}>
-                      <div style={{ fontSize: 9, color: T.text3, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>Open Deal</div>
-                      <div style={{ fontSize: 12, color: T.accent, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(prep.deal.value)}</div>
-                      <div style={{ fontSize: 10, color: T.text3 }}>{prep.deal.stage}</div>
+                      <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>Open Deal</div>
+                      <div style={{ fontSize: 14, color: T.accent, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(prep.deal.value)}</div>
+                      <div style={{ fontSize: 14, color: T.text3 }}>{prep.deal.stage}</div>
                     </div>
                   )}
                   {prep.lastNote && (
                     <div style={{ padding: "8px 10px", background: T.bg3, borderRadius: T.radius.sm, gridColumn: prep.contact && prep.deal ? "1 / -1" : undefined }}>
-                      <div style={{ fontSize: 9, color: T.text3, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>Last Interaction</div>
-                      <div style={{ fontSize: 11, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prep.lastNote.text}</div>
+                      <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>Last Interaction</div>
+                      <div style={{ fontSize: 14, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prep.lastNote.text}</div>
                     </div>
                   )}
                 </div>
-                <button onClick={() => generatePrepDraft(prep)} style={{
-                  ...S.btnPurple, fontSize: 11, padding: "6px 14px", width: "100%",
+                <button aria-label="Action" onClick={() => generatePrepDraft(prep)} style={{
+                  ...S.btnPurple, fontSize: 14, padding: "6px 14px", width: "100%",
                 }}>✨ Draft Opening Message</button>
               </div>
             ))}
@@ -699,16 +699,16 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
             {prepDraft && (
               <div style={{ marginTop: 10, padding: 14, background: T.bg1, border: `1px solid ${T.purple}33`, borderRadius: T.radius.md }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.purple }}>✨ Opening for {prepDraft}</div>
-                  <button onClick={() => setPrepDraft(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16 }}>×</button>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.purple }}>✨ Opening for {prepDraft}</div>
+                  <button aria-label="Action" onClick={() => setPrepDraft(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16 }}>×</button>
                 </div>
-                <textarea value={prepDraftText} onChange={e => setPrepDraftText(e.target.value)} style={{
+                <textarea value={prepDraftText} onChange={e = aria-label="textarea"> setPrepDraftText(e.target.value)} style={{
                   width: "100%", minHeight: 100, background: T.bg2, color: T.text1,
-                  border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: 10, fontSize: 12, fontFamily: "inherit", resize: "vertical",
+                  border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: 10, fontSize: 14, fontFamily: "inherit", resize: "vertical",
                 }} />
                 <div style={{ display: "flex", gap: 8, marginTop: 8, justifyContent: "flex-end" }}>
-                  <button onClick={() => setPrepDraft(null)} style={{ ...S.btnGhost, fontSize: 11, padding: "5px 12px" }}>Dismiss</button>
-                  <button onClick={() => { navigator.clipboard.writeText(prepDraftText); setPrepDraft(null); }} style={{ ...S.btn, fontSize: 11, padding: "5px 12px" }}>📋 Copy & Close</button>
+                  <button aria-label="Action" onClick={() => setPrepDraft(null)} style={{ ...S.btnGhost, fontSize: 14, padding: "5px 12px" }}>Dismiss</button>
+                  <button aria-label="Action" onClick={() => { navigator.clipboard.writeText(prepDraftText); setPrepDraft(null); }} style={{ ...S.btn, fontSize: 14, padding: "5px 12px" }}>📋 Copy & Close</button>
                 </div>
               </div>
             )}
@@ -727,17 +727,17 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: 0 }}>All Tasks</h2>
-              <button onClick={() => setTaskSlideOver(false)} style={{ background: "none", border: "none", color: T.text3, fontSize: 20, cursor: "pointer" }}>✕</button>
+              <button aria-label="Action" onClick={() => setTaskSlideOver(false)} style={{ background: "none", border: "none", color: T.text3, fontSize: 20, cursor: "pointer" }}>✕</button>
             </div>
             {tasks.filter(t => !t.done).map(t => (
               <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.bg3}` }}>
                 <div style={{ width: 8, height: 8, borderRadius: T.radius.full, background: getTaskDotColor(t), flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: T.text1 }}>{t.title}</div>
-                  <div style={{ fontSize: 11, color: T.text3 }}>{t.contact} · Due {t.due}</div>
+                  <div style={{ fontSize: 14, color: T.text1 }}>{t.title}</div>
+                  <div style={{ fontSize: 14, color: T.text3 }}>{t.contact} · Due {t.due}</div>
                 </div>
                 <span style={{
-                  fontSize: 10, padding: "2px 6px", borderRadius: 4,
+                  fontSize: 14, padding: "2px 6px", borderRadius: 4,
                   background: `${getTaskDotColor(t)}18`, color: getTaskDotColor(t), fontWeight: 600,
                 }}>
                   {new Date(t.due).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
@@ -745,7 +745,7 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
               </div>
             ))}
             {tasks.filter(t => !t.done).length === 0 && (
-              <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 13 }}>No open tasks</div>
+              <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 14 }}>No open tasks</div>
             )}
           </div>
         </div>
@@ -768,21 +768,21 @@ function AtRiskDeal({ deal, contacts, onNavigate, onCompose, onAddNote }: {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${T.red}15` }}>
       <div>
-        <div style={{ fontSize: 13, color: T.text1 }}>{deal.title}</div>
+        <div style={{ fontSize: 14, color: T.text1 }}>{deal.title}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
-          <span style={{ fontSize: 11, color: T.text3 }}>{deal.daysInStage}d in {deal.stage}</span>
+          <span style={{ fontSize: 14, color: T.text3 }}>{deal.daysInStage}d in {deal.stage}</span>
           <span style={{
-            fontSize: 9, padding: "1px 6px", borderRadius: 3,
+            fontSize: 14, padding: "1px 6px", borderRadius: 3,
             background: `${T.red}18`, color: T.red, fontWeight: 600,
           }}>{riskReason}</span>
         </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(deal.value)}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(deal.value)}</div>
         <div style={{ position: "relative" }}>
-          <button onClick={() => setActionOpen(p => !p)} style={{
+          <button aria-label="Action" onClick={() => setActionOpen(p => !p)} style={{
             background: T.bg3, border: `1px solid ${T.bg5}`, borderRadius: T.radius.sm,
-            padding: "4px 8px", fontSize: 10, color: T.text1, cursor: "pointer", fontWeight: 600,
+            padding: "4px 8px", fontSize: 14, color: T.text1, cursor: "pointer", fontWeight: 600,
           }}>Take action ▾</button>
           {actionOpen && (
             <div style={{
@@ -796,10 +796,10 @@ function AtRiskDeal({ deal, contacts, onNavigate, onCompose, onAddNote }: {
                 { label: "Schedule Meeting", action: () => onNavigate("schedule") },
                 { label: "Update Stage", action: () => onNavigate("sales") },
               ].map(({ label: action, action: fn }) => (
-                <button key={action} onClick={() => { fn(); setActionOpen(false); }} style={{
+                <button aria-label="Action" key={action} onClick={() => { fn(); setActionOpen(false); }} style={{
                   display: "block", width: "100%", textAlign: "left",
                   background: "none", border: "none", padding: "6px 10px",
-                  fontSize: 11, color: T.text1, cursor: "pointer", borderRadius: T.radius.sm,
+                  fontSize: 14, color: T.text1, cursor: "pointer", borderRadius: T.radius.sm,
                 }}
                 onMouseEnter={e => e.currentTarget.style.background = T.bg3}
                 onMouseLeave={e => e.currentTarget.style.background = "none"}

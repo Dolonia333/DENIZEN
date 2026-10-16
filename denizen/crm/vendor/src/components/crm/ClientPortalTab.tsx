@@ -151,9 +151,9 @@ export function ClientPortalTab({ quotes, packages }: Props) {
               background: isActive ? T.accent : T.bg4,
               color: isActive ? "#080d18" : T.text3,
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 11, fontWeight: 700, transition: "all 0.3s",
+              fontSize: 14, fontWeight: 700, transition: "all 0.3s",
             }}>{i + 1}</div>
-            <span style={{ fontSize: 11, color: isActive ? T.text1 : T.text3, fontWeight: isActive ? 600 : 400 }}>
+            <span style={{ fontSize: 14, color: isActive ? T.text1 : T.text3, fontWeight: isActive ? 600 : 400 }}>
               {s === "review" ? "Review" : s === "customize" ? "Add-ons" : s === "sign" ? "Sign" : "Pay"}
             </span>
             {i < 3 && <div style={{ width: 24, height: 2, background: isActive ? T.accent : T.bg4, borderRadius: 1, transition: "all 0.3s" }} />}
@@ -169,14 +169,14 @@ export function ClientPortalTab({ quotes, packages }: Props) {
       <div>
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>🔗 Client Portal</h1>
-          <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Shareable quote review, e-sign & payment</p>
+          <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Shareable quote review, e-sign & payment</p>
         </div>
 
         {quotes.length === 0 ? (
           <div style={{ ...cardStyle, textAlign: "center", padding: "60px 20px" }}>
             <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.3 }}>📋</div>
             <div style={{ fontSize: 15, color: T.text2, marginBottom: 6 }}>No quotes yet</div>
-            <div style={{ fontSize: 12, color: T.text3 }}>Generate quotes from the Intake tab first</div>
+            <div style={{ fontSize: 14, color: T.text3 }}>Generate quotes from the Intake tab first</div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -190,20 +190,20 @@ export function ClientPortalTab({ quotes, packages }: Props) {
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ fontSize: 15, fontWeight: 600, color: T.text0 }}>{q.clientName}</div>
                       {sigs.length > 0 && (
-                        <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
+                        <span style={{ fontSize: 14, padding: "2px 8px", borderRadius: 10, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
                           ✓ SIGNED · {sigs.length} 🔒
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 12, color: T.text3, marginTop: 2 }}>{q.company} · {q.recommendedPackage} plan</div>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{q.company} · {q.recommendedPackage} plan</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(q.monthlyTotal)}<span style={{ fontSize: 11, fontWeight: 400 }}>/mo</span></div>
-                      <div style={{ fontSize: 11, color: T.text3 }}>Valid until {q.validUntil}</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(q.monthlyTotal)}<span style={{ fontSize: 14, fontWeight: 400 }}>/mo</span></div>
+                      <div style={{ fontSize: 14, color: T.text3 }}>Valid until {q.validUntil}</div>
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
-                      <button
+                      <button aria-label="Action"
                         onClick={(e) => {
                           e.stopPropagation();
                           const url = buildPortalUrl(q.portalToken);
@@ -211,16 +211,16 @@ export function ClientPortalTab({ quotes, packages }: Props) {
                             appendAudit(q.portalToken, { event: "link_copied", at: new Date().toISOString(), detail: "Rep copied portal link from list" });
                           }).catch(() => window.prompt("Portal link:", url));
                         }}
-                        style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.bg5}`, background: T.bg3, color: T.text2, cursor: "pointer" }}
+                        style={{ fontSize: 14, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.bg5}`, background: T.bg3, color: T.text2, cursor: "pointer" }}
                       >
                         🔗 Copy link
                       </button>
-                      <a
+                      <a aria-label="Link"
                         href={`#/portal/${q.portalToken}`}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        style={{ fontSize: 11, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.bg5}`, background: T.bg3, color: T.text2, cursor: "pointer", textDecoration: "none" }}
+                        style={{ fontSize: 14, padding: "5px 10px", borderRadius: 6, border: `1px solid ${T.bg5}`, background: T.bg3, color: T.text2, cursor: "pointer", textDecoration: "none" }}
                       >
                         ↗ Open
                       </a>
@@ -235,8 +235,8 @@ export function ClientPortalTab({ quotes, packages }: Props) {
 
         {quotes.length > 0 && (
           <div style={{ marginTop: 32 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.text0, marginBottom: 4 }}>📊 Global Portal Activity</div>
-            <div style={{ fontSize: 12, color: T.text3, marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, marginBottom: 4 }}>📊 Global Portal Activity</div>
+            <div style={{ fontSize: 14, color: T.text3, marginBottom: 12 }}>
               All portal events across every quote. Filter by quote, signer, or event type.
             </div>
             <GlobalAuditViewer
@@ -252,27 +252,27 @@ export function ClientPortalTab({ quotes, packages }: Props) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <button onClick={() => { setSelectedQuote(null); setStep("review"); setAddOns(new Set()); setSigned(false); setSignatureName(""); }}
-            style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 12, marginBottom: 6 }}>← Back to quotes</button>
+          <button aria-label="Action" onClick={() => { setSelectedQuote(null); setStep("review"); setAddOns(new Set()); setSigned(false); setSignatureName(""); }}
+            style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14, marginBottom: 6 }}>← Back to quotes</button>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>
             Quote for {selectedQuote.clientName}
           </h1>
-          <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>{selectedQuote.company} · {selectedQuote.recommendedPackage}</p>
+          <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>{selectedQuote.company} · {selectedQuote.recommendedPackage}</p>
         </div>
       </div>
 
       {/* Portal audit trail — visible in all steps */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: T.text3, fontWeight: 700 }}>
+          <div style={{ fontSize: 14, textTransform: "uppercase", letterSpacing: "0.08em", color: T.text3, fontWeight: 700 }}>
             📋 Portal Audit Trail
           </div>
           {isTokenExpired(selectedQuote.validUntil) ? (
-            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: `${T.red}18`, color: T.red, fontWeight: 700 }}>
+            <span style={{ fontSize: 14, padding: "2px 8px", borderRadius: 10, background: `${T.red}18`, color: T.red, fontWeight: 700 }}>
               ⏰ LINK EXPIRED
             </span>
           ) : (
-            <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
+            <span style={{ fontSize: 14, padding: "2px 8px", borderRadius: 10, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
               ● ACTIVE
             </span>
           )}
@@ -289,43 +289,43 @@ export function ClientPortalTab({ quotes, packages }: Props) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>📄 Proposal Summary</div>
               <div style={{
-                fontSize: 11, padding: "4px 10px", borderRadius: T.radius.sm,
+                fontSize: 14, padding: "4px 10px", borderRadius: T.radius.sm,
                 background: `${T.green}18`, color: T.green, fontWeight: 600,
               }}>{selectedQuote.status}</div>
             </div>
 
             <div style={{ background: `${T.accent}08`, border: `1px solid ${T.accent}22`, borderRadius: T.radius.md, padding: "14px 16px", marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: T.accent, fontWeight: 600, marginBottom: 6 }}>💡 AI Recommendation</div>
-              <div style={{ fontSize: 13, color: T.text2, lineHeight: 1.6 }}>{selectedQuote.aiReasoning}</div>
+              <div style={{ fontSize: 14, color: T.accent, fontWeight: 600, marginBottom: 6 }}>💡 AI Recommendation</div>
+              <div style={{ fontSize: 14, color: T.text2, lineHeight: 1.6 }}>{selectedQuote.aiReasoning}</div>
             </div>
 
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Line Items</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Line Items</div>
             {selectedQuote.lineItems.map(item => (
               <div key={item.id} style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
                 padding: "10px 0", borderBottom: `1px solid ${T.bg4}`,
               }}>
-                <span style={{ fontSize: 13, color: T.text1 }}>{item.name}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>
-                  {fmt(item.price)}{item.unit && <span style={{ fontSize: 10, fontWeight: 400, color: T.text3 }}>{item.unit}</span>}
+                <span style={{ fontSize: 14, color: T.text1 }}>{item.name}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {fmt(item.price)}{item.unit && <span style={{ fontSize: 14, fontWeight: 400, color: T.text3 }}>{item.unit}</span>}
                 </span>
               </div>
             ))}
 
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, padding: "12px 0", borderTop: `2px solid ${T.bg5}` }}>
               <div>
-                <div style={{ fontSize: 12, color: T.text3 }}>Monthly</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>Monthly</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(selectedQuote.monthlyTotal)}</div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 12, color: T.text3 }}>One-time</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>One-time</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: T.purple, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(selectedQuote.onetimeTotal)}</div>
               </div>
             </div>
           </div>
 
           <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-end" }}>
-            <button onClick={() => setStep("customize")} style={S.btn as React.CSSProperties}>Continue to Add-ons →</button>
+            <button aria-label="Action" onClick={() => setStep("customize")} style={S.btn as React.CSSProperties}>Continue to Add-ons →</button>
           </div>
         </div>
       )}
@@ -336,13 +336,13 @@ export function ClientPortalTab({ quotes, packages }: Props) {
           <div style={cardStyle}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text0, marginBottom: 16 }}>🎛 Optional Add-ons</div>
             {pkg.addOns.length === 0 ? (
-              <div style={{ padding: 20, textAlign: "center", color: T.text3, fontSize: 13 }}>No add-ons available for this plan</div>
+              <div style={{ padding: 20, textAlign: "center", color: T.text3, fontSize: 14 }}>No add-ons available for this plan</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {pkg.addOns.map(a => {
                   const selected = addOns.has(a.name);
                   return (
-                    <button key={a.id} onClick={() => toggleAddOn(a.name)} style={{
+                    <button aria-label="Action" key={a.id} onClick={() => toggleAddOn(a.name)} style={{
                       display: "flex", justifyContent: "space-between", alignItems: "center",
                       padding: "14px 16px", background: selected ? `${T.accent}12` : T.bg3,
                       border: `1px solid ${selected ? T.accent : T.bg4}`, borderRadius: T.radius.md,
@@ -354,12 +354,12 @@ export function ClientPortalTab({ quotes, packages }: Props) {
                           border: `2px solid ${selected ? T.accent : T.bg5}`,
                           background: selected ? T.accent : "transparent",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          color: "#080d18", fontSize: 12, fontWeight: 700, transition: "all 0.15s",
+                          color: "#080d18", fontSize: 14, fontWeight: 700, transition: "all 0.15s",
                         }}>{selected ? "✓" : ""}</div>
-                        <span style={{ fontSize: 13, color: T.text1, fontWeight: 500 }}>{a.name}</span>
+                        <span style={{ fontSize: 14, color: T.text1, fontWeight: 500 }}>{a.name}</span>
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>
-                        +{fmt(a.price)}{a.unit && <span style={{ fontSize: 10, fontWeight: 400, color: T.text3 }}>{a.unit}</span>}
+                      <span style={{ fontSize: 14, fontWeight: 700, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>
+                        +{fmt(a.price)}{a.unit && <span style={{ fontSize: 14, fontWeight: 400, color: T.text3 }}>{a.unit}</span>}
                       </span>
                     </button>
                   );
@@ -369,15 +369,15 @@ export function ClientPortalTab({ quotes, packages }: Props) {
 
             {addOns.size > 0 && (
               <div style={{ marginTop: 16, padding: "12px 16px", background: `${T.accent}08`, borderRadius: T.radius.md, display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 13, color: T.text2 }}>New monthly total</span>
+                <span style={{ fontSize: 14, color: T.text2 }}>New monthly total</span>
                 <span style={{ fontSize: 16, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(grandMonthly)}/mo</span>
               </div>
             )}
           </div>
 
           <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "space-between" }}>
-            <button onClick={() => setStep("review")} style={S.btnGhost as React.CSSProperties}>← Back</button>
-            <button onClick={() => setStep("sign")} style={S.btn as React.CSSProperties}>Continue to Sign →</button>
+            <button aria-label="Action" onClick={() => setStep("review")} style={S.btnGhost as React.CSSProperties}>← Back</button>
+            <button aria-label="Action" onClick={() => setStep("sign")} style={S.btn as React.CSSProperties}>Continue to Sign →</button>
           </div>
         </div>
       )}
@@ -388,7 +388,7 @@ export function ClientPortalTab({ quotes, packages }: Props) {
           <div style={cardStyle}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text0, marginBottom: 16 }}>✍️ Electronic Signature</div>
 
-            <div style={{ background: T.bg3, borderRadius: T.radius.md, padding: "16px 20px", marginBottom: 16, fontSize: 12, color: T.text2, lineHeight: 1.7 }}>
+            <div style={{ background: T.bg3, borderRadius: T.radius.md, padding: "16px 20px", marginBottom: 16, fontSize: 14, color: T.text2, lineHeight: 1.7 }}>
               By signing below, I <strong style={{ color: T.text0 }}>{selectedQuote.clientName}</strong> of <strong style={{ color: T.text0 }}>{selectedQuote.company}</strong> agree
               to the {selectedQuote.recommendedPackage} plan at <strong style={{ color: T.accent }}>{fmt(grandMonthly)}/mo</strong> plus one-time fees
               of <strong style={{ color: T.purple }}>{fmt(selectedQuote.onetimeTotal)}</strong>. This agreement is valid until {selectedQuote.validUntil}.
@@ -409,7 +409,7 @@ export function ClientPortalTab({ quotes, packages }: Props) {
                   <span style={{ fontSize: 20 }}>✅</span>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: T.green }}>Signed successfully</div>
-                    <div style={{ fontSize: 12, color: T.text3 }}>
+                    <div style={{ fontSize: 14, color: T.text3 }}>
                       {savedSig ? `${new Date(savedSig.signedAt).toLocaleString()} · ${savedSig.method} signature` : "Redirecting to payment…"}
                     </div>
                   </div>
@@ -421,7 +421,7 @@ export function ClientPortalTab({ quotes, packages }: Props) {
                     ) : (
                       <div style={{ fontFamily: "'Caveat', cursive", fontSize: 32, color: T.accent }}>{savedSig.value}</div>
                     )}
-                    <div style={{ marginTop: 8, fontSize: 12, color: T.text2 }}>
+                    <div style={{ marginTop: 8, fontSize: 14, color: T.text2 }}>
                       <strong style={{ color: T.text0 }}>{savedSig.signerName}</strong>
                       {savedSig.signerEmail ? <span> · {savedSig.signerEmail}</span> : null}
                     </div>
@@ -434,7 +434,7 @@ export function ClientPortalTab({ quotes, packages }: Props) {
 
           {!signed && (
             <div style={{ marginTop: 16 }}>
-              <button onClick={() => setStep("customize")} style={S.btnGhost as React.CSSProperties}>← Back</button>
+              <button aria-label="Action" onClick={() => setStep("customize")} style={S.btnGhost as React.CSSProperties}>← Back</button>
             </div>
           )}
         </div>
@@ -448,13 +448,13 @@ export function ClientPortalTab({ quotes, packages }: Props) {
 
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               {(["card", "invoice"] as const).map(m => (
-                <button key={m} onClick={() => setPayMethod(m)} style={{
+                <button aria-label="Action" key={m} onClick={() => setPayMethod(m)} style={{
                   flex: 1, padding: "14px 16px", background: payMethod === m ? `${T.accent}12` : T.bg3,
                   border: `1px solid ${payMethod === m ? T.accent : T.bg4}`, borderRadius: T.radius.md,
                   cursor: "pointer", textAlign: "center", transition: "all 0.15s",
                 }}>
                   <div style={{ fontSize: 18, marginBottom: 4 }}>{m === "card" ? "💳" : "📄"}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: payMethod === m ? T.accent : T.text2 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: payMethod === m ? T.accent : T.text2 }}>
                     {m === "card" ? "Credit Card" : "Invoice"}
                   </div>
                 </button>
@@ -465,16 +465,16 @@ export function ClientPortalTab({ quotes, packages }: Props) {
               <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
                 <div>
                   <label style={S.label as React.CSSProperties}>Card Number</label>
-                  <input placeholder="4242 4242 4242 4242" style={S.input as React.CSSProperties} />
+                  <input placeholder="4242 4242 4242 4242" style={S.input as React.CSSProperties} / aria-label="4242 4242 4242 4242" />
                 </div>
                 <div style={{ display: "flex", gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <label style={S.label as React.CSSProperties}>Expiry</label>
-                    <input placeholder="MM/YY" style={S.input as React.CSSProperties} />
+                    <input placeholder="MM/YY" style={S.input as React.CSSProperties} / aria-label="MM/YY" />
                   </div>
                   <div style={{ flex: 1 }}>
                     <label style={S.label as React.CSSProperties}>CVC</label>
-                    <input placeholder="123" style={S.input as React.CSSProperties} />
+                    <input placeholder="123" style={S.input as React.CSSProperties} / aria-label="123" />
                   </div>
                 </div>
               </div>
@@ -482,7 +482,7 @@ export function ClientPortalTab({ quotes, packages }: Props) {
 
             {payMethod === "invoice" && (
               <div style={{ padding: "16px 20px", background: `${T.blue}08`, borderRadius: T.radius.md, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, color: T.text2, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 14, color: T.text2, lineHeight: 1.6 }}>
                   An invoice for <strong style={{ color: T.accent }}>{fmt(selectedQuote.onetimeTotal + grandMonthly)}</strong> will be sent to <strong style={{ color: T.blue }}>{selectedQuote.clientName}</strong> at their registered email. Payment is due within 30 days.
                 </div>
               </div>
@@ -490,20 +490,20 @@ export function ClientPortalTab({ quotes, packages }: Props) {
 
             <div style={{ padding: "14px 16px", background: T.bg3, borderRadius: T.radius.md, marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: T.text3 }}>First month</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(grandMonthly)}</span>
+                <span style={{ fontSize: 14, color: T.text3 }}>First month</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(grandMonthly)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 12, color: T.text3 }}>One-time setup</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(selectedQuote.onetimeTotal)}</span>
+                <span style={{ fontSize: 14, color: T.text3 }}>One-time setup</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(selectedQuote.onetimeTotal)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: `1px solid ${T.bg4}` }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>Total due today</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>Total due today</span>
                 <span style={{ fontSize: 16, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(grandMonthly + selectedQuote.onetimeTotal)}</span>
               </div>
             </div>
 
-            <button onClick={handlePay} disabled={processing} style={{
+            <button aria-label="Action" onClick={handlePay} disabled={processing} style={{
               ...S.btn as React.CSSProperties, width: "100%", padding: "14px 20px", fontSize: 15,
               opacity: processing ? 0.7 : 1, cursor: processing ? "not-allowed" : "pointer",
             }}>
@@ -513,7 +513,7 @@ export function ClientPortalTab({ quotes, packages }: Props) {
 
           {!processing && (
             <div style={{ marginTop: 16 }}>
-              <button onClick={() => setStep("sign")} style={S.btnGhost as React.CSSProperties}>← Back</button>
+              <button aria-label="Action" onClick={() => setStep("sign")} style={S.btnGhost as React.CSSProperties}>← Back</button>
             </div>
           )}
         </div>
@@ -528,12 +528,12 @@ export function ClientPortalTab({ quotes, packages }: Props) {
             Payment confirmed for {selectedQuote.company}. Your {selectedQuote.recommendedPackage} plan is now active.
           </div>
           <div style={{ display: "inline-flex", flexDirection: "column", gap: 8, padding: "16px 24px", background: T.bg3, borderRadius: T.radius.md }}>
-            <div style={{ fontSize: 12, color: T.text3 }}>Receipt</div>
+            <div style={{ fontSize: 14, color: T.text3 }}>Receipt</div>
             <div style={{ fontSize: 20, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(grandMonthly + selectedQuote.onetimeTotal)}</div>
-            <div style={{ fontSize: 11, color: T.text3 }}>Ref: INV-{Date.now().toString(36).toUpperCase()}</div>
+            <div style={{ fontSize: 14, color: T.text3 }}>Ref: INV-{Date.now().toString(36).toUpperCase()}</div>
           </div>
           <div style={{ marginTop: 24 }}>
-            <button onClick={() => { setSelectedQuote(null); setStep("review"); setAddOns(new Set()); setSigned(false); setSignatureName(""); }}
+            <button aria-label="Action" onClick={() => { setSelectedQuote(null); setStep("review"); setAddOns(new Set()); setSigned(false); setSignatureName(""); }}
               style={S.btnGhost as React.CSSProperties}>← Back to quotes</button>
           </div>
         </div>

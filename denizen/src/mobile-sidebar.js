@@ -697,7 +697,7 @@
       drawerEl = document.createElement('aside');
       drawerEl.id = DRAWER_ID;
       drawerEl.setAttribute('aria-label', 'Citizen ID and City Power menu');
-      drawerEl.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(drawerEl, `
         <div class="drawer-head">
           <div class="drawer-grab" aria-hidden="true"></div>
           <div class="drawer-title">Me</div>
@@ -718,7 +718,7 @@
             <div class="fb-hint">Scroll for office credits and station settings.</div>
           </div>
         </div>
-      `;
+      `);
       drawerEl.dataset.tab = activeTab;
       bindDrawerPress(drawerEl.querySelector('.drawer-close'), () => closeDrawer());
       wireDrawerTabs();

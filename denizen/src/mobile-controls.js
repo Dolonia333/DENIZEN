@@ -759,9 +759,9 @@
     if (document.getElementById(ROTATE_ID)) return;
     const el = document.createElement('div');
     el.id = ROTATE_ID;
-    el.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(el, `
       <span class="icon">📱↻</span>
-      <span>Rotate for a wider view</span>`;
+      <span>Rotate for a wider view</span>`);
     document.body.appendChild(el);
   }
 
@@ -771,11 +771,11 @@
     const wrap = document.createElement('div');
     wrap.id = CONTROLS_ID;
     wrap.setAttribute('aria-hidden', 'true');
-    wrap.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(wrap, `
       <div class="mc-joy-base" data-joy>
         <div class="mc-joy-stick" data-stick></div>
       </div>
-      <button type="button" class="mc-action" data-action aria-label="Interact">E</button>`;
+      <button type="button" class="mc-action" data-action aria-label="Interact">E</button>`);
     document.body.appendChild(wrap);
 
     const base = wrap.querySelector('[data-joy]');

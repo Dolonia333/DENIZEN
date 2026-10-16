@@ -86,7 +86,7 @@ export function AIProspector({ onImportLead }: Props) {
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>
           🔍 AI Lead Prospector
         </h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+        <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>
           Describe your ideal {t("contact").toLowerCase()} in plain English — we simulate a web scan and surface importable opportunities.
         </p>
       </div>
@@ -97,7 +97,7 @@ export function AIProspector({ onImportLead }: Props) {
         </label>
         <textarea
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) = aria-label="textarea"> setQuery(e.target.value)}
           placeholder={`e.g. "Healthcare SaaS companies in Texas with 50–200 employees looking for CRM"`}
           style={{
             width: "100%",
@@ -107,13 +107,13 @@ export function AIProspector({ onImportLead }: Props) {
             border: `1px solid ${T.bg4}`,
             borderRadius: T.radius.md,
             padding: 12,
-            fontSize: 13,
+            fontSize: 14,
             fontFamily: "inherit",
             resize: "vertical",
             marginBottom: 12,
           }}
         />
-        <button
+        <button aria-label="Action"
           type="submit"
           disabled={scanning || !query.trim()}
           style={{
@@ -143,13 +143,13 @@ export function AIProspector({ onImportLead }: Props) {
             animation: "spin 0.9s linear infinite",
           }} />
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Scanning Web…</div>
-          <div style={{ fontSize: 12, color: T.text3, marginTop: 6 }}>Matching signals across public sources</div>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>Matching signals across public sources</div>
         </div>
       )}
 
       {results.length > 0 && !scanning && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: T.text2 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: T.text2 }}>
             {results.length} prospects matched — import to launch your outreach loop
           </div>
           {results.map((lead) => {
@@ -159,19 +159,19 @@ export function AIProspector({ onImportLead }: Props) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>{lead.name}</div>
-                    <div style={{ fontSize: 12, color: T.text2, marginTop: 2 }}>{lead.company} · {lead.email}</div>
-                    <div style={{ fontSize: 11, color: T.text3, marginTop: 6 }}>{lead.signal}</div>
-                    <div style={{ fontSize: 11, color: T.purple, marginTop: 4 }}>Source: {lead.source}</div>
+                    <div style={{ fontSize: 14, color: T.text2, marginTop: 2 }}>{lead.company} · {lead.email}</div>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>{lead.signal}</div>
+                    <div style={{ fontSize: 14, color: T.purple, marginTop: 4 }}>Source: {lead.source}</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: 16, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>
                       ${lead.value.toLocaleString()}
                     </div>
-                    <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>Est. {t("deal")}</div>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>Est. {t("deal")}</div>
                   </div>
                 </div>
                 <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
-                  <button
+                  <button aria-label="Action"
                     type="button"
                     disabled={imported}
                     onClick={() => handleImport(lead)}
@@ -179,7 +179,7 @@ export function AIProspector({ onImportLead }: Props) {
                       ...(S.btnPurple as React.CSSProperties),
                       opacity: imported ? 0.55 : 1,
                       cursor: imported ? "default" : "pointer",
-                      fontSize: 12,
+                      fontSize: 14,
                       padding: "8px 16px",
                     }}
                   >

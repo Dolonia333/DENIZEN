@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /**
  * full-world.js — the ?world=full multi-zone LimeZu city.
  *

@@ -653,7 +653,7 @@
     if (!shell) {
       shell = document.createElement('div');
       shell.id = 'player-chat-phone-shell';
-      shell.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(shell, `
       <nav id="phc-nav">
         <button type="button" class="phc-back" id="phc-back-btn" data-action="back" aria-label="Back">‹</button>
         <div class="phc-title" id="phc-nav-title">Messages</div>
@@ -666,7 +666,7 @@
         <button type="button" data-action="tab" data-tab="threads" class="active">Messages</button>
         <button type="button" data-action="tab" data-tab="contacts">Contacts</button>
       </div>
-    `;
+    `);
       const log = panel.querySelector('#player-chat-log');
       const inputRow = panel.querySelector('#player-chat-input-row');
       if (log) panel.insertBefore(shell, log);
@@ -697,9 +697,9 @@
     const footer = document.getElementById('phc-group-footer');
     if (!footer) return;
     const pickCount = groupPick.size;
-    footer.innerHTML = `<button type="button" class="phc-action phc-primary${pickCount < 2 ? ' phc-dim' : ''}" data-action="create-group" id="phc-create-group-btn">
+    globalThis.DenizenSafeDom.setSafeHtml(footer, `<button type="button" class="phc-action phc-primary${pickCount < 2 ? ' phc-dim' : ''}" data-action="create-group" id="phc-create-group-btn">
       ${creatingGroup ? 'Creating…' : `Create group (${pickCount} selected)`}
-    </button>`;
+    </button>`);
   }
 
   function setView(next) {
@@ -740,9 +740,9 @@
   function paintSpeakGlyph(el, listening) {
     if (!el) return;
     const T = globalThis.DenizenTablerIcons;
-    el.innerHTML = T?.speakGlyph
+    globalThis.DenizenSafeDom.setSafeHtml(el, T?.speakGlyph
       ? T.speakGlyph(!!listening, { size: 16, className: 'phc-ti' })
-      : (listening ? '⏹' : '🎤');
+      : (listening ? '⏹' : '🎤'));
   }
 
   function updateNav() {
@@ -927,7 +927,7 @@
   function setListHtml(wrap, html) {
     if (wrap._phcLastHtml === html) return;
     const prevScroll = wrap.scrollTop;
-    wrap.innerHTML = html;
+    globalThis.DenizenSafeDom.setSafeHtml(wrap, html);
     wrap._phcLastHtml = html;
     wrap.scrollTop = prevScroll;
   }
@@ -1016,9 +1016,9 @@
         const vi = window.DenizenVoiceInput;
         const on = !!(vi?.isListening?.());
         const T = globalThis.DenizenTablerIcons;
-        glyph.innerHTML = T?.speakGlyph
+        globalThis.DenizenSafeDom.setSafeHtml(glyph, T?.speakGlyph
           ? T.speakGlyph(on, { size: 18, className: 'pc-ti' })
-          : (on ? '⏹' : '🎤');
+          : (on ? '⏹' : '🎤'));
         speak.classList.toggle('listening', on);
       }
     }

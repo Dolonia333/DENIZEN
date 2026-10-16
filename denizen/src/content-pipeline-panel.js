@@ -215,7 +215,7 @@
     const explainer = summary.explainer
       || 'NPC newsroom demo: research, pitch, draft, edit, design, publish — runs in the background.';
 
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       <h3>📰 Newsroom</h3>
       <p class="cp-explainer">${esc(explainer)}</p>
       <div class="cp-row">Running: <b>${summary.active || 0}</b> · Blocked: <span class="cp-err">${summary.blocked || 0}</span> · Finished: ${summary.complete || 0}${summary.cancelled ? ` · Stopped: ${summary.cancelled}` : ''}</div>
@@ -227,7 +227,7 @@
       ` : '<div class="cp-muted" style="margin-top:8px">A pipeline is already running. Stop it before starting another.</div>'}
       <div style="margin-top:10px;font-size:10px;color:#94a3b8">History</div>
       ${renderRecent(summary.recent)}
-    `;
+    `);
     wireButtons(summary);
   }
 
@@ -245,7 +245,7 @@
       }
     } catch (_) {
       if (panelEl) {
-        panelEl.innerHTML = '<h3>📰 Newsroom</h3><div class="cp-muted">Could not load status — is the server running?</div>';
+        globalThis.DenizenSafeDom.setSafeHtml(panelEl, '<h3>📰 Newsroom</h3><div class="cp-muted">Could not load status — is the server running?</div>');
       }
     }
   }

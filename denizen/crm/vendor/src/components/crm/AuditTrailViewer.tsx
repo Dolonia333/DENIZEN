@@ -95,7 +95,7 @@ export function AuditTrailViewer({ token, showUserAgent = true, enableFilters = 
       )}
       <div style={{ background: T.bg3, borderRadius: T.radius.md, padding: "4px 0", border: `1px solid ${T.bg4}` }}>
         {pageItems.length === 0 ? (
-          <div style={{ padding: "20px 14px", fontSize: 12, color: T.text3, textAlign: "center" }}>
+          <div style={{ padding: "20px 14px", fontSize: 14, color: T.text3, textAlign: "center" }}>
             No events match the current filters.
           </div>
         ) : pageItems.map((e, i) => <EventRow key={`${e.event}-${e.at}-${i}`} e={e} first={i === 0} showUserAgent={showUserAgent} />)}
@@ -169,18 +169,18 @@ export function GlobalAuditViewer({ tokenLabels }: GlobalProps) {
           options={[{ value: "all", label: "All events" }, ...ALL_EVENTS.map(ev => ({ value: ev, label: ev.replace(/_/g, " ") }))]} />
         <input
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setPage(0); }}
+          onChange={(e) = aria-label="input"> { setQuery(e.target.value); setPage(0); }}
           placeholder="Search detail, signer…"
-          style={{ ...(S.input as React.CSSProperties), flex: "1 1 180px", minWidth: 160, padding: "6px 10px", fontSize: 12 }}
+          style={{ ...(S.input as React.CSSProperties), flex: "1 1 180px", minWidth: 160, padding: "6px 10px", fontSize: 14 }}
         />
-        <span style={{ fontSize: 11, color: T.text3, alignSelf: "center" }}>
+        <span style={{ fontSize: 14, color: T.text3, alignSelf: "center" }}>
           {filtered.length} of {events.length}
         </span>
       </div>
 
       <div style={{ background: T.bg3, borderRadius: T.radius.md, padding: "4px 0", border: `1px solid ${T.bg4}` }}>
         {pageItems.length === 0 ? (
-          <div style={{ padding: "20px 14px", fontSize: 12, color: T.text3, textAlign: "center" }}>No events match.</div>
+          <div style={{ padding: "20px 14px", fontSize: 14, color: T.text3, textAlign: "center" }}>No events match.</div>
         ) : pageItems.map((e, i) => (
           <EventRow
             key={`${e.token}-${e.event}-${e.at}-${i}`}
@@ -213,11 +213,11 @@ function FilterBar({ signers, signerFilter, setSignerFilter, eventFilter, setEve
         options={[{ value: "all", label: "All events" }, ...ALL_EVENTS.map(ev => ({ value: ev, label: ev.replace(/_/g, " ") }))]} />
       <input
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) = aria-label="input"> setQuery(e.target.value)}
         placeholder="Search…"
-        style={{ ...(S.input as React.CSSProperties), flex: "1 1 160px", minWidth: 140, padding: "6px 10px", fontSize: 12 }}
+        style={{ ...(S.input as React.CSSProperties), flex: "1 1 160px", minWidth: 140, padding: "6px 10px", fontSize: 14 }}
       />
-      <span style={{ fontSize: 11, color: T.text3, alignSelf: "center" }}>
+      <span style={{ fontSize: 14, color: T.text3, alignSelf: "center" }}>
         {counts.filtered} of {counts.total}
       </span>
     </div>
@@ -229,14 +229,14 @@ function Select({ label, value, onChange, options }: {
   options: { value: string; label: string }[];
 }) {
   return (
-    <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: T.text3 }}>
+    <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: T.text3 }}>
       <span>{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
           background: T.bg3, color: T.text1, border: `1px solid ${T.bg4}`,
-          borderRadius: 6, padding: "5px 8px", fontSize: 12, cursor: "pointer",
+          borderRadius: 6, padding: "5px 8px", fontSize: 14, cursor: "pointer",
         }}
       >
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -257,28 +257,28 @@ function EventRow({ e, first, showUserAgent, tokenLabel }: { e: SignatureAuditEv
     }}>
       <div style={{
         width: 28, height: 28, borderRadius: "50%",
-        background: `${color}18`, color, fontSize: 13,
+        background: `${color}18`, color, fontSize: 14,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>{ICONS[e.event] ?? "•"}</div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.text0, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, textTransform: "uppercase", letterSpacing: "0.04em" }}>
           {e.event.replace(/_/g, " ")}
           {e.signerName && <span style={{ marginLeft: 8, color: T.text2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· {e.signerName}</span>}
-          {tokenLabel && <span style={{ marginLeft: 8, color: T.text3, fontWeight: 500, textTransform: "none", letterSpacing: 0, fontSize: 11 }}>· {tokenLabel}</span>}
+          {tokenLabel && <span style={{ marginLeft: 8, color: T.text3, fontWeight: 500, textTransform: "none", letterSpacing: 0, fontSize: 14 }}>· {tokenLabel}</span>}
         </div>
-        {e.detail && <div style={{ fontSize: 12, color: T.text2, marginTop: 2, lineHeight: 1.5 }}>{e.detail}</div>}
+        {e.detail && <div style={{ fontSize: 14, color: T.text2, marginTop: 2, lineHeight: 1.5 }}>{e.detail}</div>}
         {showUserAgent && e.userAgent && (
           <div style={{
-            fontSize: 10, color: T.text3, marginTop: 4,
+            fontSize: 14, color: T.text3, marginTop: 4,
             fontFamily: "'JetBrains Mono', monospace",
             whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             maxWidth: "100%",
           }} title={e.userAgent}>{summarizeUserAgent(e.userAgent)}</div>
         )}
       </div>
-      <div style={{ fontSize: 11, color: T.text3, whiteSpace: "nowrap", textAlign: "right" }}>
+      <div style={{ fontSize: 14, color: T.text3, whiteSpace: "nowrap", textAlign: "right" }}>
         {formatRelative(e.at)}
-        <div style={{ fontSize: 10, opacity: 0.7 }}>{new Date(e.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+        <div style={{ fontSize: 14, opacity: 0.7 }}>{new Date(e.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
       </div>
     </div>
   );
@@ -287,13 +287,13 @@ function EventRow({ e, first, showUserAgent, tokenLabel }: { e: SignatureAuditEv
 function Pager({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
   const btn: React.CSSProperties = {
     background: T.bg3, border: `1px solid ${T.bg4}`, color: T.text2,
-    borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer",
+    borderRadius: 6, padding: "4px 10px", fontSize: 14, cursor: "pointer",
   };
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, fontSize: 11, color: T.text3 }}>
-      <button onClick={() => onChange(Math.max(0, page - 1))} disabled={page === 0} style={{ ...btn, opacity: page === 0 ? 0.4 : 1 }}>← Prev</button>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, fontSize: 14, color: T.text3 }}>
+      <button aria-label="Action" onClick={() => onChange(Math.max(0, page - 1))} disabled={page === 0} style={{ ...btn, opacity: page === 0 ? 0.4 : 1 }}>← Prev</button>
       <span>Page {page + 1} of {totalPages}</span>
-      <button onClick={() => onChange(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} style={{ ...btn, opacity: page >= totalPages - 1 ? 0.4 : 1 }}>Next →</button>
+      <button aria-label="Action" onClick={() => onChange(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} style={{ ...btn, opacity: page >= totalPages - 1 ? 0.4 : 1 }}>Next →</button>
     </div>
   );
 }
@@ -303,7 +303,7 @@ const emptyStyle: React.CSSProperties = {
   background: T.bg3,
   border: `1px dashed ${T.bg4}`,
   borderRadius: T.radius.md,
-  fontSize: 12,
+  fontSize: 14,
   color: T.text3,
   textAlign: "center",
 };

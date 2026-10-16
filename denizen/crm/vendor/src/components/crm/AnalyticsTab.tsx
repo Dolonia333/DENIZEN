@@ -13,7 +13,7 @@ interface Props {
 const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name?: string; value?: number; color?: string; fill?: string }[]; label?: string }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 11 }}>
+    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 14 }}>
       <div style={{ color: T.text3, marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color || p.fill, fontWeight: 600 }}>{p.name}: {typeof p.value === "number" && p.value > 100 ? fmt(p.value) : p.value}</div>
@@ -102,7 +102,7 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
     <div>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>Analytics</h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+        <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>
           Sales performance metrics{trendData.length ? ` · ${trendData.length} daily snapshots` : ""}
         </p>
       </div>
@@ -119,14 +119,14 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
           return (
             <div key={m.label} style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 12, minHeight: 88 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{m.label}</div>
+                <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{m.label}</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: m.color, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.1 }}>{m.value}</div>
-                <div style={{ fontSize: 10, color: T.text3, marginTop: 6 }}>{hints[idx]}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>{hints[idx]}</div>
               </div>
               {ringVal != null && (
                 <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
                   <MiniRing segments={[{ value: Math.max(ringVal, 1), color: m.color, label: m.label }, { value: Math.max(100 - ringVal, 0), color: T.bg4, label: "rest" }]} size={52} stroke={5} />
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: m.color, fontFamily: "'JetBrains Mono', monospace" }}>{ringVal}%</div>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: m.color, fontFamily: "'JetBrains Mono', monospace" }}>{ringVal}%</div>
                 </div>
               )}
             </div>
@@ -140,8 +140,8 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} width={40} />
+              <XAxis dataKey="date" tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} width={40} />
               <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="pipeline" name="Pipeline" stroke={T.accent} strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="won" name="Won" stroke={T.green} strokeWidth={2} dot={false} />
@@ -158,8 +158,8 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={stageData} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+              <XAxis dataKey="name" tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
                 {stageData.map((s, i) => <Cell key={i} fill={s.fill} />)}
@@ -186,8 +186,8 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
               {statusPie.map(d => (
                 <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 10, height: 10, borderRadius: "50%", background: d.fill, flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: T.text2 }}>{d.name}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace", marginLeft: "auto" }}>{d.value}</span>
+                  <span style={{ fontSize: 14, color: T.text2 }}>{d.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace", marginLeft: "auto" }}>{d.value}</span>
                 </div>
               ))}
             </div>
@@ -199,21 +199,21 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
       <div style={{ ...cardStyle, marginBottom: 14 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Conversion Funnel</div>
-          <div style={{ fontSize: 11, color: T.text3 }}>Cumulative reach + step conversion</div>
+          <div style={{ fontSize: 14, color: T.text3 }}>Cumulative reach + step conversion</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
           {funnelData.map((f, i) => (
             <div key={f.stage}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12, color: T.text1, fontWeight: 600 }}>
+                <span style={{ fontSize: 14, color: T.text1, fontWeight: 600 }}>
                   {f.stage}
                   {i > 0 && (
-                    <span style={{ marginLeft: 8, fontSize: 10, color: f.stepRate >= 50 ? T.green : T.orange, fontWeight: 700 }}>
+                    <span style={{ marginLeft: 8, fontSize: 14, color: f.stepRate >= 50 ? T.green : T.orange, fontWeight: 700 }}>
                       {f.stepRate}% from prior
                     </span>
                   )}
                 </span>
-                <span style={{ fontSize: 11, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>
+                <span style={{ fontSize: 14, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>
                   {f.count} deals · {fmt(f.value)} · {f.rate}% of top
                   {f.dropOff > 0 ? ` · −${f.dropOff} drop` : ""}
                 </span>
@@ -230,7 +230,7 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
           ))}
         </div>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
               <tr>
                 {["Stage", "Deals", "Pipeline $", "vs Top", "Step conv.", "Drop-off"].map(h => (

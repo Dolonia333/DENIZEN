@@ -108,13 +108,13 @@ export function DealAssignmentRecommender({ deals, quotas }: Props) {
           <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>🎯 Deal Assignment AI</h3>
           {topRec && (
             <span style={{
-              fontSize: 10, padding: "2px 10px", borderRadius: T.radius.full,
+              fontSize: 14, padding: "2px 10px", borderRadius: T.radius.full,
               background: "#22d3a018", color: "#22d3a0", fontWeight: 600,
             }}>Best: {topRec.name} ({topRec.score}%)</span>
           )}
         </div>
-        <button onClick={() => setExpanded(e => !e)} style={{
-          ...S.btnGhost as React.CSSProperties, fontSize: 10, padding: "4px 10px",
+        <button aria-label="Action" onClick={() => setExpanded(e => !e)} style={{
+          ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "4px 10px",
         }}>{expanded ? "▲ Collapse" : "▼ Expand"}</button>
       </div>
 
@@ -126,10 +126,10 @@ export function DealAssignmentRecommender({ deals, quotas }: Props) {
             padding: "12px 16px", borderRadius: T.radius.md,
             background: T.bg3, border: `1px solid ${T.bg4}`,
           }}>
-            <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, whiteSpace: "nowrap" }}>DEAL SIZE:</div>
+            <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, whiteSpace: "nowrap" }}>DEAL SIZE:</div>
             <input
               type="range" min={5000} max={500000} step={5000} value={dealValue}
-              onChange={e => setDealValue(Number(e.target.value))}
+              onChange={e = aria-label="range"> setDealValue(Number(e.target.value))}
               style={{ flex: 1, accentColor: T.accent }}
             />
             <div style={{
@@ -141,8 +141,8 @@ export function DealAssignmentRecommender({ deals, quotas }: Props) {
           {/* Presets */}
           <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
             {presets.map(p => (
-              <button key={p.label} onClick={() => setDealValue(p.value)} style={{
-                padding: "4px 12px", borderRadius: T.radius.full, fontSize: 10, fontWeight: 600,
+              <button aria-label="Action" key={p.label} onClick={() => setDealValue(p.value)} style={{
+                padding: "4px 12px", borderRadius: T.radius.full, fontSize: 14, fontWeight: 600,
                 background: dealValue === p.value ? `${T.accent}22` : T.bg3,
                 color: dealValue === p.value ? T.accent : T.text3,
                 border: `1px solid ${dealValue === p.value ? `${T.accent}66` : T.bg4}`,
@@ -169,13 +169,13 @@ export function DealAssignmentRecommender({ deals, quotas }: Props) {
                         width: 28, height: 28, borderRadius: T.radius.full,
                         background: `linear-gradient(135deg, ${T.purple}, ${T.blue})`,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 10, fontWeight: 700, color: "#fff",
+                        fontSize: 14, fontWeight: 700, color: "#fff",
                       }}>{rec.avatar}</div>
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>
-                          {rec.name} {isTop && <span style={{ fontSize: 10, color: T.green, fontWeight: 600 }}>— Recommended</span>}
+                        <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>
+                          {rec.name} {isTop && <span style={{ fontSize: 14, color: T.green, fontWeight: 600 }}>— Recommended</span>}
                         </div>
-                        <div style={{ fontSize: 11, color: T.text3 }}>
+                        <div style={{ fontSize: 14, color: T.text3 }}>
                           {rec.reasoning.slice(0, 2).join(" · ")}
                         </div>
                       </div>
@@ -187,7 +187,7 @@ export function DealAssignmentRecommender({ deals, quotas }: Props) {
                   </div>
 
                   {/* Score Breakdown */}
-                  <div style={{ display: "flex", gap: 12, fontSize: 10, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: 12, fontSize: 14, flexWrap: "wrap" }}>
                     {[
                       { label: "Capacity", value: rec.capacityScore, detail: `${rec.activeDeals}/${rec.capacity}` },
                       { label: "Quota Need", value: rec.quotaScore, detail: `${rec.quotaProgress}% attained` },

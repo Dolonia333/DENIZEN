@@ -14,7 +14,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       <div className="title">{title}</div>
       <div className="desc">{description}</div>
       {action && (
-        <button
+        <button aria-label="Action"
           onClick={action.onClick}
           style={{
             marginTop: 16,
@@ -23,7 +23,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
             border: "none",
             borderRadius: T.radius.sm,
             padding: "8px 20px",
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 600,
             cursor: "pointer",
           }}

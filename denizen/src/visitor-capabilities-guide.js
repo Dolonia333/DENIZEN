@@ -457,9 +457,9 @@
     const body = modalEl.querySelector('.cg-body');
     const tabBar = modalEl.querySelector('.cg-tabs');
     if (tabBar) {
-      tabBar.innerHTML = tabs.map((t) => `
+      globalThis.DenizenSafeDom.setSafeHtml(tabBar, tabs.map((t) => `
         <button type="button" class="cg-tab${t.id === activeTab ? ' active' : ''}" data-tab="${t.id}">${escapeHtml(t.label)}</button>
-      `).join('');
+      `).join(''));
       tabBar.querySelectorAll('.cg-tab').forEach((btn) => {
         btn.addEventListener('click', () => {
           activeTab = btn.getAttribute('data-tab');
@@ -467,7 +467,7 @@
         });
       });
     }
-    if (body) body.innerHTML = renderTab(activeTab);
+    if (body) globalThis.DenizenSafeDom.setSafeHtml(body, renderTab(activeTab));
 
     const tourBtn = modalEl.querySelector('.cg-super-tour');
     if (tourBtn) {
@@ -485,7 +485,7 @@
     activeTab = opts.tab || 'overview';
     modalEl = document.createElement('div');
     modalEl.id = MODAL_ID;
-    modalEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
       <div class="cg-card" role="dialog" aria-label="Denizen capabilities guide">
         <div class="cg-head">
           <h2>Office Guide</h2>
@@ -500,7 +500,7 @@
           <button type="button" class="cg-btn secondary cg-close2">Done</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(modalEl);
     modalEl.querySelector('.cg-close')?.addEventListener('click', close);
     modalEl.querySelector('.cg-close2')?.addEventListener('click', close);

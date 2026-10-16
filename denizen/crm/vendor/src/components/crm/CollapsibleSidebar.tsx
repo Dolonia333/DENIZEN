@@ -64,12 +64,12 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
             )}
 
             {/* Group header — collapsible toggle */}
-            <button
+            <button aria-label="Action"
               onClick={() => toggleGroup(group.group)}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 width: "100%", background: "none", border: "none",
-                fontSize: 9, fontWeight: 700, color: T.text3, textTransform: "uppercase",
+                fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase",
                 letterSpacing: "0.1em", padding: "10px 12px 4px",
                 cursor: "pointer", opacity: 0.6,
                 transition: "opacity 0.15s",
@@ -80,7 +80,7 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
               <span>{isFirst ? "" : group.group}</span>
               {!isFirst && (
                 <span style={{
-                  fontSize: 10, transition: "transform 0.2s ease",
+                  fontSize: 14, transition: "transform 0.2s ease",
                   transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
                   display: "inline-block",
                 }}>▾</span>
@@ -106,7 +106,7 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
                 const count = getCount(item.id);
 
                 return (
-                  <button
+                  <button aria-label="Action"
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
                     data-tooltip={termLabel}
@@ -116,7 +116,7 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
                       background: active ? `${T.accent}14` : "transparent",
                       border: "none", borderRadius: 8, padding: "9px 12px",
                       cursor: "pointer", color: active ? T.accent : T.text2,
-                      fontSize: 13, fontWeight: active ? 600 : 400,
+                      fontSize: 14, fontWeight: active ? 600 : 400,
                       textAlign: "left", position: "relative",
                     }}
                   >
@@ -132,7 +132,7 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
                     {/* Count badge */}
                     {count !== null && count > 0 && (
                       <span style={{
-                        fontSize: 10, fontWeight: 700, color: T.text3,
+                        fontSize: 14, fontWeight: 700, color: T.text3,
                         background: T.bg3, padding: "1px 6px", borderRadius: 8,
                         fontFamily: "'JetBrains Mono', monospace",
                         minWidth: 20, textAlign: "center",
@@ -141,7 +141,7 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
                     {/* Keyboard shortcut (desktop only) */}
                     {shortcutKey && !isMobile && !count && (
                       <span style={{
-                        fontSize: 9, fontWeight: 600, color: T.text3, opacity: 0.5,
+                        fontSize: 14, fontWeight: 600, color: T.text3, opacity: 0.5,
                         background: T.bg3, padding: "1px 5px", borderRadius: 3,
                         fontFamily: "'JetBrains Mono', monospace",
                       }}>{shortcutKey}</span>

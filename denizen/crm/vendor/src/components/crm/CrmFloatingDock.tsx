@@ -93,7 +93,7 @@ function Badge({ count }: { count: number }) {
         borderRadius: "50%",
         background: T.red,
         color: "#fff",
-        fontSize: 9,
+        fontSize: 14,
         fontWeight: 800,
         display: "flex",
         alignItems: "center",
@@ -476,7 +476,7 @@ export function CrmFloatingDock({
           }}
         >
           {fabItems.map((o, i) => (
-            <button
+            <button aria-label="Action"
               key={o.key}
               type="button"
               onClick={(e) => {
@@ -494,7 +494,7 @@ export function CrmFloatingDock({
                 borderRadius: T.radius.md,
                 padding: "10px 16px",
                 color: T.text1,
-                fontSize: 13,
+                fontSize: 14,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.4)",

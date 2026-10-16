@@ -274,7 +274,7 @@
       el.id = TOAST_ID;
       document.body.appendChild(el);
     }
-    el.innerHTML = '';
+    el.replaceChildren();
     const msg = document.createElement('div');
     msg.textContent = text;
     el.appendChild(msg);
@@ -331,7 +331,7 @@
 
   async function buildRecipientOptions(selectEl, connectionData = null) {
     const sess = globalThis.DenizenVisitorSession;
-    selectEl.innerHTML = '';
+    selectEl.replaceChildren();
     const defaults = [
       { value: 'lucy', label: "Lucy (CEO's personal assistant)" },
       ...(globalThis.DenizenVisitorCapabilities?.canHandoffToCeo?.()
@@ -479,7 +479,7 @@
     if (!panelEl) return;
     const listEl = panelEl.querySelector('.denizen-connection-list');
     if (!listEl) return;
-    listEl.innerHTML = '';
+    listEl.replaceChildren();
     if (data?.error) {
       const row = document.createElement('div');
       row.className = 'denizen-connection-row';
@@ -551,7 +551,7 @@
     injectStyles();
     modalEl = document.createElement('div');
     modalEl.id = MODAL_ID;
-    modalEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
       <div class="vis-card">
         <h3>${prefill.replyTo ? 'Reply to handoff' : 'Hand off to someone'}</h3>
         <p>${prefill.replyTo
@@ -578,7 +578,7 @@
           <button type="button" id="denizen-handoff-send">${prefill.replyTo ? 'Send reply' : 'Send handoff'}</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(modalEl);
 
     const selectEl = modalEl.querySelector('#denizen-handoff-recipient');

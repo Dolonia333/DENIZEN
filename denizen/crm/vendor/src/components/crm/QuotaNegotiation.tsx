@@ -94,19 +94,19 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
           <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>🤝 Quota Proposals</h3>
           {pendingCount > 0 && (
             <span style={{
-              fontSize: 10, padding: "2px 8px", borderRadius: T.radius.full,
+              fontSize: 14, padding: "2px 8px", borderRadius: T.radius.full,
               background: "#fbbf2422", color: "#fbbf24", fontWeight: 700,
             }}>{pendingCount} pending</span>
           )}
         </div>
         {isManager && (
-          <button onClick={() => { setForm({ assigneeId: TEAM_MEMBERS[0].id, type: DEFAULT_QUOTA_TYPES[0], period: "monthly" }); setShowPropose(true); }}
-            style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11 }}>+ Propose Quota</button>
+          <button aria-label="Action" onClick={() => { setForm({ assigneeId: TEAM_MEMBERS[0].id, type: DEFAULT_QUOTA_TYPES[0], period: "monthly" }); setShowPropose(true); }}
+            style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14 }}>+ Propose Quota</button>
         )}
       </div>
 
       {myProposals.length === 0 && (
-        <div style={{ textAlign: "center", padding: 24, color: T.text3, fontSize: 13 }}>
+        <div style={{ textAlign: "center", padding: 24, color: T.text3, fontSize: 14 }}>
           No quota proposals yet.{isManager ? " Click 'Propose Quota' to start a negotiation." : ""}
         </div>
       )}
@@ -124,28 +124,28 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{p.type}</span>
-                    <span style={{ fontSize: 11, color: T.text3 }}>→ {p.assigneeName}</span>
+                    <span style={{ fontSize: 14, color: T.text3 }}>→ {p.assigneeName}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                     {PERIOD_LABELS[p.period]} · Proposed {p.proposedAt}
                   </div>
                 </div>
                 <span style={{
-                  fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
+                  fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
                   background: sMeta.bg, color: sMeta.color, fontWeight: 600,
                 }}>{sMeta.icon} {sMeta.label}</span>
               </div>
 
-              <div style={{ display: "flex", gap: 20, fontSize: 13, marginBottom: 8 }}>
+              <div style={{ display: "flex", gap: 20, fontSize: 14, marginBottom: 8 }}>
                 <div>
-                  <span style={{ color: T.text3, fontSize: 10 }}>TARGET </span>
+                  <span style={{ color: T.text3, fontSize: 14 }}>TARGET </span>
                   <span style={{ fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>
                     {p.type === "Revenue" ? fmt(p.targetValue) : p.targetValue}
                   </span>
                 </div>
                 {p.stretchGoal && (
                   <div>
-                    <span style={{ color: T.text3, fontSize: 10 }}>STRETCH </span>
+                    <span style={{ color: T.text3, fontSize: 14 }}>STRETCH </span>
                     <span style={{ fontWeight: 600, color: T.text2, fontFamily: "'JetBrains Mono', monospace" }}>
                       {p.type === "Revenue" ? fmt(p.stretchGoal) : p.stretchGoal}
                     </span>
@@ -153,7 +153,7 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
                 )}
                 {p.counterValue && (
                   <div>
-                    <span style={{ color: "#4d9ef7", fontSize: 10 }}>COUNTER </span>
+                    <span style={{ color: "#4d9ef7", fontSize: 14 }}>COUNTER </span>
                     <span style={{ fontWeight: 700, color: "#4d9ef7", fontFamily: "'JetBrains Mono', monospace" }}>
                       {p.type === "Revenue" ? fmt(p.counterValue) : p.counterValue}
                     </span>
@@ -162,12 +162,12 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
               </div>
 
               {p.managerNote && (
-                <div style={{ fontSize: 11, color: T.text2, marginBottom: 8, fontStyle: "italic" }}>
+                <div style={{ fontSize: 14, color: T.text2, marginBottom: 8, fontStyle: "italic" }}>
                   📝 "{p.managerNote}"
                 </div>
               )}
               {p.counterNote && (
-                <div style={{ fontSize: 11, color: "#4d9ef7", marginBottom: 8, fontStyle: "italic" }}>
+                <div style={{ fontSize: 14, color: "#4d9ef7", marginBottom: 8, fontStyle: "italic" }}>
                   💬 "{p.counterNote}"
                 </div>
               )}
@@ -175,27 +175,27 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
               {/* Actions */}
               {p.proposalStatus === "pending" && !isManager && (
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  <button onClick={() => handleAccept(p.id)} style={{
-                    ...S.btn as React.CSSProperties, fontSize: 11, padding: "5px 14px",
+                  <button aria-label="Action" onClick={() => handleAccept(p.id)} style={{
+                    ...S.btn as React.CSSProperties, fontSize: 14, padding: "5px 14px",
                     background: "#22d3a0",
                   }}>Accept</button>
-                  <button onClick={() => { setCounterModal(p); setCounterValue(String(p.targetValue)); }}
-                    style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11, padding: "5px 14px", color: "#4d9ef7" }}>
+                  <button aria-label="Action" onClick={() => { setCounterModal(p); setCounterValue(String(p.targetValue)); }}
+                    style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "5px 14px", color: "#4d9ef7" }}>
                     Counter Propose
                   </button>
-                  <button onClick={() => handleReject(p.id)} style={{
-                    ...S.btnGhost as React.CSSProperties, fontSize: 11, padding: "5px 14px", color: "#f85b5b",
+                  <button aria-label="Action" onClick={() => handleReject(p.id)} style={{
+                    ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "5px 14px", color: "#f85b5b",
                   }}>Decline</button>
                 </div>
               )}
               {p.proposalStatus === "counter" && isManager && (
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  <button onClick={() => handleAcceptCounter(p.id)} style={{
-                    ...S.btn as React.CSSProperties, fontSize: 11, padding: "5px 14px",
+                  <button aria-label="Action" onClick={() => handleAcceptCounter(p.id)} style={{
+                    ...S.btn as React.CSSProperties, fontSize: 14, padding: "5px 14px",
                     background: "#22d3a0",
                   }}>Accept Counter ({p.type === "Revenue" ? fmt(p.counterValue!) : p.counterValue})</button>
-                  <button onClick={() => handleReject(p.id)} style={{
-                    ...S.btnGhost as React.CSSProperties, fontSize: 11, padding: "5px 14px", color: "#f85b5b",
+                  <button aria-label="Action" onClick={() => handleReject(p.id)} style={{
+                    ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "5px 14px", color: "#f85b5b",
                   }}>Reject</button>
                 </div>
               )}
@@ -241,13 +241,13 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
               <div>
                 <label style={S.label as React.CSSProperties}>Target Value</label>
                 <input type="number" value={form.targetValue || ""} placeholder="e.g. 50000"
-                  onChange={e => setForm(p => ({ ...p, targetValue: e.target.value }))}
+                  onChange={e = aria-label="e.g. 50000"> setForm(p => ({ ...p, targetValue: e.target.value }))}
                   style={S.input as React.CSSProperties} />
               </div>
               <div>
                 <label style={S.label as React.CSSProperties}>Stretch Goal (opt)</label>
                 <input type="number" value={form.stretchGoal || ""} placeholder="e.g. 65000"
-                  onChange={e => setForm(p => ({ ...p, stretchGoal: e.target.value }))}
+                  onChange={e = aria-label="e.g. 65000"> setForm(p => ({ ...p, stretchGoal: e.target.value }))}
                   style={S.input as React.CSSProperties} />
               </div>
             </div>
@@ -255,13 +255,13 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
             <div style={{ marginBottom: 20 }}>
               <label style={S.label as React.CSSProperties}>Note to team member</label>
               <textarea value={form.note || ""} placeholder="Context for this quota..."
-                onChange={e => setForm(p => ({ ...p, note: e.target.value }))}
+                onChange={e = aria-label="Context for this quota..."> setForm(p => ({ ...p, note: e.target.value }))}
                 style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical" }} />
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button onClick={() => setShowPropose(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-              <button onClick={handlePropose} style={S.btn as React.CSSProperties}>Send Proposal</button>
+              <button aria-label="Action" onClick={() => setShowPropose(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+              <button aria-label="Action" onClick={handlePropose} style={S.btn as React.CSSProperties}>Send Proposal</button>
             </div>
           </div>
         </div>
@@ -272,7 +272,7 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
         <div style={S.modalBg as React.CSSProperties} onClick={() => setCounterModal(null)}>
           <div style={S.modalBox as React.CSSProperties} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text0, marginBottom: 6 }}>Counter Propose</h3>
-            <p style={{ fontSize: 12, color: T.text3, marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: T.text3, marginBottom: 20 }}>
               Original target: <strong style={{ color: T.text0 }}>
                 {counterModal.type === "Revenue" ? fmt(counterModal.targetValue) : counterModal.targetValue}
               </strong> ({counterModal.type}, {PERIOD_LABELS[counterModal.period]})
@@ -281,20 +281,20 @@ export function QuotaNegotiation({ proposals, onUpdateProposals, isManager, curr
             <div style={{ marginBottom: 12 }}>
               <label style={S.label as React.CSSProperties}>Your Proposed Value</label>
               <input type="number" value={counterValue}
-                onChange={e => setCounterValue(e.target.value)}
+                onChange={e = aria-label="number"> setCounterValue(e.target.value)}
                 style={S.input as React.CSSProperties} />
             </div>
 
             <div style={{ marginBottom: 20 }}>
               <label style={S.label as React.CSSProperties}>Reason (optional)</label>
               <textarea value={counterNote} placeholder="Explain why you're proposing a different target..."
-                onChange={e => setCounterNote(e.target.value)}
+                onChange={e = aria-label="Explain why you"> setCounterNote(e.target.value)}
                 style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical" }} />
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button onClick={() => setCounterModal(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-              <button onClick={handleCounter} style={{ ...S.btn as React.CSSProperties, background: "#4d9ef7" }}>Submit Counter</button>
+              <button aria-label="Action" onClick={() => setCounterModal(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+              <button aria-label="Action" onClick={handleCounter} style={{ ...S.btn as React.CSSProperties, background: "#4d9ef7" }}>Submit Counter</button>
             </div>
           </div>
         </div>

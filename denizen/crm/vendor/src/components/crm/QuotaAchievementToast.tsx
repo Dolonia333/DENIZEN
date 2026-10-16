@@ -86,10 +86,10 @@ export function QuotaAchievementToast({ quotas }: Props) {
           }}>🎉</div>
 
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.text0, marginBottom: 2 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, marginBottom: 2 }}>
               Quota Achieved!
             </div>
-            <div style={{ fontSize: 12, color: T.text2 }}>
+            <div style={{ fontSize: 14, color: T.text2 }}>
               <span style={{ fontWeight: 600, color: "#4d9ef7" }}>{a.name}</span> hit their {a.type} target
             </div>
           </div>
@@ -99,7 +99,7 @@ export function QuotaAchievementToast({ quotas }: Props) {
             width: 36, height: 36, borderRadius: T.radius.full,
             background: "linear-gradient(135deg, #4d9ef7, #22d3a0)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 12, fontWeight: 700, color: "#fff",
+            fontSize: 14, fontWeight: 700, color: "#fff",
             boxShadow: "0 0 16px rgba(77,158,247,0.4)",
           }}>{a.avatar}</div>
         </div>

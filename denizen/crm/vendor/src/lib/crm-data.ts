@@ -257,17 +257,17 @@ export const T = {
 };
 
 export const S: Record<string, any> = {
-  input: { background:T.bg3, border:"1px solid "+T.bg4, borderRadius:T.radius.md, color:T.text1, padding:"9px 12px", width:"100%", fontSize:13, outline:"none", boxSizing:"border-box", transition:"border-color 0.15s" },
+  input: { background:T.bg3, border:"1px solid "+T.bg4, borderRadius:T.radius.md, color:T.text1, padding:"9px 12px", width:"100%", fontSize: 14, outline:"none", boxSizing:"border-box", transition:"border-color 0.15s" },
   card: { background:"linear-gradient(145deg,"+T.bg2+","+T.bg3+"88)", border:"1px solid "+T.bg4, borderRadius:T.radius.lg, padding:"20px 22px" },
-  btn: { background:T.accent, color:"#080d18", border:"none", borderRadius:T.radius.md, padding:"8px 16px", fontWeight:700, fontSize:13, cursor:"pointer", letterSpacing:"0.01em" },
-  btnGhost: { background:T.bg3, color:T.text2, border:"1px solid "+T.bg4, borderRadius:T.radius.md, padding:"8px 16px", fontSize:13, cursor:"pointer" },
-  btnPurple: { background:"linear-gradient(135deg,#7c3aed,#6366f1)", color:"#fff", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize:13, cursor:"pointer" },
-  btnGreen: { background:"linear-gradient(135deg,#059669,#10b981)", color:"#fff", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize:13, cursor:"pointer" },
-  badge: (color: string, bg: string) => ({ fontSize:11, padding:"2px 8px", borderRadius:T.radius.sm, background:bg, color, fontWeight:600, letterSpacing:"0.02em" }),
-  label: { fontSize:11, color:T.text2, display:"block", marginBottom:5, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em" },
+  btn: { background:T.accent, color:"#080d18", border:"none", borderRadius:T.radius.md, padding:"8px 16px", fontWeight:700, fontSize: 14, cursor:"pointer", letterSpacing:"0.01em" },
+  btnGhost: { background:T.bg3, color:T.text2, border:"1px solid "+T.bg4, borderRadius:T.radius.md, padding:"8px 16px", fontSize: 14, cursor:"pointer" },
+  btnPurple: { background:"linear-gradient(135deg,#7c3aed,#6366f1)", color:"#fff", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize: 14, cursor:"pointer" },
+  btnGreen: { background:"linear-gradient(135deg,#059669,#10b981)", color:"#fff", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize: 14, cursor:"pointer" },
+  badge: (color: string, bg: string) => ({ fontSize: 14, padding:"2px 8px", borderRadius:T.radius.sm, background:bg, color, fontWeight:600, letterSpacing:"0.02em" }),
+  label: { fontSize: 14, color:T.text2, display:"block", marginBottom:5, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em" },
   modalBg: { position:"fixed" as const, inset:0, background:"rgba(0,0,0,0.88)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(4px)" },
   modalBox: { background:T.bg2, border:"1px solid "+T.bg4, borderRadius:T.radius.xl, padding:28, width:560, maxWidth:"94vw", maxHeight:"92vh", overflowY:"auto" },
-  sectionLabel: { fontSize:10, color:T.text3, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", padding:"0 12px", marginBottom:4, marginTop:16 },
+  sectionLabel: { fontSize: 14, color:T.text3, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", padding:"0 12px", marginBottom:4, marginTop:16 },
 };
 
 export const fmt = (n: number) => "$" + Number(n).toLocaleString();
