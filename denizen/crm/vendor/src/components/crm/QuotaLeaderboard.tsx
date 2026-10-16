@@ -45,7 +45,7 @@ export function QuotaLeaderboard({ quotas }: Props) {
     <div style={{ ...S.card as React.CSSProperties, padding: "20px 24px", marginBottom: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>🏆 Quota Leaderboard</h3>
-        <span style={{ fontSize: 11, color: T.text3 }}>Avg. attainment across all quotas</span>
+        <span style={{ fontSize: 14, color: T.text3 }}>Avg. attainment across all quotas</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {rankings.map((r, i) => {
@@ -61,7 +61,7 @@ export function QuotaLeaderboard({ quotas }: Props) {
             }}>
               {/* Rank */}
               <div style={{ fontSize: 18, minWidth: 28, textAlign: "center" }}>
-                {i < 3 ? RANK_MEDALS[i] : <span style={{ fontSize: 13, fontWeight: 700, color: T.text3 }}>#{i + 1}</span>}
+                {i < 3 ? RANK_MEDALS[i] : <span style={{ fontSize: 14, fontWeight: 700, color: T.text3 }}>#{i + 1}</span>}
               </div>
 
               {/* Avatar */}
@@ -69,20 +69,20 @@ export function QuotaLeaderboard({ quotas }: Props) {
                 width: 32, height: 32, borderRadius: T.radius.full,
                 background: `linear-gradient(135deg, ${T.purple}, ${T.blue})`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0,
+                fontSize: 14, fontWeight: 700, color: "#fff", flexShrink: 0,
               }}>{r.avatar}</div>
 
               {/* Name & stats */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{r.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{r.name}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {r.achieved > 0 && (
-                      <span style={{ fontSize: 10, color: "#4d9ef7", fontWeight: 600 }}>
+                      <span style={{ fontSize: 14, color: "#4d9ef7", fontWeight: 600 }}>
                         {r.achieved} achieved
                       </span>
                     )}
-                    <span style={{ fontSize: 13, fontWeight: 800, color: barColor, fontFamily: "'JetBrains Mono', monospace" }}>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: barColor, fontFamily: "'JetBrains Mono', monospace" }}>
                       {r.avgPct}%
                     </span>
                   </div>

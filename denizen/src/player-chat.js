@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /**
  * Player Chat System
  * Lets the player (CEO) communicate directly with individual NPCs.
@@ -3476,7 +3477,7 @@ class PlayerChat {
     if (!panel) {
       panel = document.createElement('div');
       panel.id = 'player-chat-panel';
-      panel.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(panel, `
         <div id="player-chat-header">
           <div class="pc-header-avatar" id="player-chat-avatar" role="button" tabindex="-1" title="Click an NPC, then tap their letter to open MCP"></div>
           <div class="chat-header-main">
@@ -3490,7 +3491,7 @@ class PlayerChat {
         </div>
         <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
         ${PlayerChat._composerHtml()}
-      `;
+      `);
       document.body.appendChild(panel);
     } else {
       this._upgradeComposerDom(panel);
@@ -3704,7 +3705,7 @@ class PlayerChat {
         || document.documentElement.classList.contains('denizen-touch');
       const landscape = document.documentElement.classList.contains('denizen-landscape');
       const size = touch && landscape ? 20 : touch ? 16 : 14;
-      closeBtn.innerHTML = T?.x ? T.x({ size }) : '✕';
+      globalThis.DenizenSafeDom.setSafeHtml(closeBtn, T?.x ? T.x({ size }) : '✕');
     };
     if (closeBtn) {
       paintClose();
@@ -3730,9 +3731,9 @@ class PlayerChat {
       const label = speakBtn.querySelector('.pc-speak-label');
       if (glyph) {
         const T = globalThis.DenizenTablerIcons;
-        glyph.innerHTML = T?.speakGlyph
+        globalThis.DenizenSafeDom.setSafeHtml(glyph, T?.speakGlyph
           ? T.speakGlyph(on, { size: 18, className: 'pc-ti' })
-          : (on ? '⏹' : '🎤');
+          : (on ? '⏹' : '🎤'));
       }
       if (label) {
         label.textContent = on ? 'Stop' : 'Speak';
@@ -3847,7 +3848,7 @@ class PlayerChat {
     const who = onBehalfOf ? `${esc(npcName)} (for ${esc(onBehalfOf)})` : esc(npcName);
     const waiting = waitingFor ? ` (was waiting on ${esc(waitingFor)})` : '';
 
-    card.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(card, `
       <div style="color:#7eb8f7;font-weight:bold;margin-bottom:4px">🙋 Approval Request</div>
       <div style="color:#ccc;font-size:12px;margin-bottom:6px">
         <b>${who}</b>${waiting}:<br>${esc(task)}
@@ -3864,7 +3865,7 @@ class PlayerChat {
           Deny
         </button>
       </div>
-    `;
+    `);
 
     const grantBtn = card.querySelector('.approve-btn');
     const denyBtn  = card.querySelector('.deny-btn');
@@ -4107,7 +4108,7 @@ class PlayerChat {
     const el = this._attachChipsEl;
     if (!el) return;
     const items = this._pendingAttachments || [];
-    el.innerHTML = '';
+    el.replaceChildren();
     el.classList.toggle('has-items', items.length > 0);
     items.forEach((att, i) => {
       const chip = document.createElement('span');
@@ -4169,7 +4170,7 @@ class PlayerChat {
       overlay.id = 'denizen-pdf-preview';
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-modal', 'true');
-      overlay.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(overlay, `
         <div class="pc-pdf-sheet">
           <header class="pc-pdf-head">
             <span class="pc-pdf-stamp">DENIZEN · PDF</span>
@@ -4180,7 +4181,7 @@ class PlayerChat {
             </div>
           </header>
           <iframe class="pc-pdf-frame" title="PDF preview"></iframe>
-        </div>`;
+        </div>`);
       document.body.appendChild(overlay);
       const close = () => this._closePdfPreview();
       overlay.addEventListener('click', (e) => {
@@ -4336,7 +4337,7 @@ class PlayerChat {
       html += `<div class="msg npc typing" aria-label="${esc(this._displayNpcName(this._typingNpc))} is typing"><span class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></span></div>`;
     }
 
-    log.innerHTML = html;
+    globalThis.DenizenSafeDom.setSafeHtml(log, html);
     // Stick to bottom only if the user was already there or just sent a
     // message — never yank them away from reading older messages.
     const lastMsg = recent[recent.length - 1];
@@ -4440,7 +4441,7 @@ class PlayerChat {
         avatar.removeAttribute('aria-hidden');
       } else {
         const T = globalThis.DenizenTablerIcons;
-        avatar.innerHTML = T?.icon ? T.icon('messages', { size: 16, className: 'pc-ti' }) : '💬';
+        globalThis.DenizenSafeDom.setSafeHtml(avatar, T?.icon ? T.icon('messages', { size: 16, className: 'pc-ti' }) : '💬');
         avatar.classList.remove('pc-avatar-mcp');
         avatar.setAttribute('tabindex', '-1');
         avatar.setAttribute('role', 'presentation');

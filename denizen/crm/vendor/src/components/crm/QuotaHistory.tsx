@@ -69,7 +69,7 @@ export function QuotaHistory({ quotas }: Props) {
     <div style={{ ...S.card as React.CSSProperties, padding: "20px 24px", marginBottom: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>📊 Historical Comparison</h3>
-        <span style={{ fontSize: 11, color: T.text3 }}>Attainment % across periods</span>
+        <span style={{ fontSize: 14, color: T.text3 }}>Attainment % across periods</span>
       </div>
 
       {/* Chart */}
@@ -77,14 +77,14 @@ export function QuotaHistory({ quotas }: Props) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} />
-            <XAxis dataKey="period" tick={{ fill: T.text3, fontSize: 11 }} axisLine={{ stroke: T.bg4 }} />
-            <YAxis tick={{ fill: T.text3, fontSize: 11 }} axisLine={{ stroke: T.bg4 }} tickFormatter={v => `${v}%`} />
+            <XAxis dataKey="period" tick={{ fill: T.text3, fontSize: 14 }} axisLine={{ stroke: T.bg4 }} />
+            <YAxis tick={{ fill: T.text3, fontSize: 14 }} axisLine={{ stroke: T.bg4 }} tickFormatter={v => `${v}%`} />
             <Tooltip
-              contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, fontSize: 12 }}
+              contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, fontSize: 14 }}
               labelStyle={{ color: T.text0, fontWeight: 700 }}
               formatter={(value: number) => [`${value}%`, undefined]}
             />
-            <Legend wrapperStyle={{ fontSize: 11, color: T.text2 }} />
+            <Legend wrapperStyle={{ fontSize: 14, color: T.text2 }} />
             {history.map((h, i) => (
               <Bar key={h.memberId} dataKey={h.name} fill={COLORS[i % COLORS.length]} radius={[4, 4, 0, 0]} />
             ))}
@@ -111,18 +111,18 @@ export function QuotaHistory({ quotas }: Props) {
                   width: 24, height: 24, borderRadius: T.radius.full,
                   background: `linear-gradient(135deg, ${T.purple}, ${T.blue})`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 9, fontWeight: 700, color: "#fff",
+                  fontSize: 14, fontWeight: 700, color: "#fff",
                 }}>{h.avatar}</div>
-                <span style={{ fontSize: 12, fontWeight: 600, color: T.text0 }}>{h.name}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{h.name}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <div>
-                  <span style={{ fontSize: 10, color: T.text3 }}>AVG </span>
+                  <span style={{ fontSize: 14, color: T.text3 }}>AVG </span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{h.avg}%</span>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <span style={{ fontSize: 16 }}>{trendIcon}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: trendColor, marginLeft: 4 }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: trendColor, marginLeft: 4 }}>
                     {delta > 0 ? "+" : ""}{delta}%
                   </span>
                 </div>

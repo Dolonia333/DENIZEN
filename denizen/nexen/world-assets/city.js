@@ -241,7 +241,7 @@ function closeDrawer(){taskSceneDispose?.();taskSceneDispose=null;clearDirectedS
 function panel(title,content){
   taskSceneDispose?.();taskSceneDispose=null;clearDirectedScene();
   window.dispatchEvent(new CustomEvent('nexen:station-open'));taskActivity=null;$('drawer').classList.remove('task-work-drawer');
-  keys.clear();drawerOpen=true;$('drawer').innerHTML='<button class="close" aria-label="Close panel">×</button><h2>'+escapeHTML(title)+'</h2>'+content;$('drawer').style.display='block';$('drawer').querySelector('.close').onclick=closeDrawer;
+  keys.clear();drawerOpen=true;$('drawer'globalThis.DenizenSafeDom.setSafeHtml(), '<button class="close" aria-label="Close panel">×</button><h2>'+escapeHTML(title)+'</h2>'+content);$('drawer').style.display='block';$('drawer').querySelector('.close').onclick=closeDrawer;
 }
 function openParent(view){
   if(embedded){window.parent.postMessage({type:'nexen:open',view},location.origin);keys.clear();return true;}
@@ -256,7 +256,7 @@ function directory(options={}){
     const query=$('station-filter').value.toLocaleLowerCase(),businessOnly=$('business-only').checked;
     const found=stations.filter(s=>(!businessOnly||s.moneyBuilding)&&s.name.toLocaleLowerCase().includes(query));
     $('station-count').textContent=found.length+' stops · '+Math.min(shown,found.length)+' shown'+(moneyDistrict?.getState().stale?' · business connection unavailable':'');
-    $('station-results').innerHTML=found.slice(0,shown).map(s=>'<button data-travel="'+escapeHTML(s.id)+'">'+escapeHTML(s.name)+'<small>'+escapeHTML(s.moneyBuilding?s.detail:'Fast travel to station')+'</small></button>').join('');
+    $('station-results'globalThis.DenizenSafeDom.setSafeHtml(), found.slice(0,shown).map(s=>'<button data-travel="'+escapeHTML(s.id)+'">'+escapeHTML(s.name)+'<small>'+escapeHTML(s.moneyBuilding?s.detail:'Fast travel to station')+'</small></button>').join(''));
     $('station-more').hidden=shown>=found.length;
     $('station-results').querySelectorAll('[data-travel]').forEach(b=>b.onclick=()=>{const s=stations.find(s=>s.id===b.dataset.travel);if(!s)return;if(activeCar){activeCar.speed=0;activeCar=null;avatar.visible=true;}player.set(s.x+2.2,0,s.z+3);cameraYaw=0;cameraTarget.copy(player);closeDrawer();toast(s.name+' · walk onto the terminal and press E');});
   }
@@ -265,12 +265,12 @@ function directory(options={}){
 async function memory(){
   if(openParent('memory'))return;
   panel('NEXEN memory','<p>Search conversations already indexed. Original messages remain source material.</p><form id="memory-form" class="row"><input id="memory-query" placeholder="NEXEN, music, Lumipaw…" aria-label="Search memory"><button class="toolbutton">Search</button></form><div id="memory-results"></div>'+mainLink('memory','Open full memory GUI'));
-  $('memory-form').onsubmit=async e=>{e.preventDefault();const output=$('memory-results');output.textContent='Searching local memory…';try{const r=await fetch('/api/memory?q='+encodeURIComponent($('memory-query').value));if(!r.ok)throw Error('Memory service returned '+r.status);const data=await r.json();output.innerHTML=(data.results||[]).map(h=>'<article class="hit"><strong>'+escapeHTML(h.title)+'</strong><small>'+escapeHTML(h.ts)+' · '+escapeHTML(h.role)+'</small><pre>'+escapeHTML(h.text)+'</pre></article>').join('')||'<p>No matching indexed conversations.</p>';}catch(err){output.textContent=err.message;}};
+  $('memory-form').onsubmit=async e=>{e.preventDefault();const output=$('memory-results');output.textContent='Searching local memory…';try{const r=await fetch('/api/memory?q='+encodeURIComponent($('memory-query').value));if(!r.ok)throw Error('Memory service returned '+r.status);const data=await r.json();globalThis.DenizenSafeDom.setSafeHtml(output, (data.results||[]).map(h=>'<article class="hit"><strong>'+escapeHTML(h.title)+'</strong><small>'+escapeHTML(h.ts)+' · '+escapeHTML(h.role)+'</small><pre>'+escapeHTML(h.text)+'</pre></article>').join('')||'<p>No matching indexed conversations.</p>');}catch(err){output.textContent=err.message;}};
 }
 async function factory(){
   if(openParent('requests'))return;
   panel('NEXEN factory','<p>This terminal reads the real job queue. The city animation does not execute AI tasks.</p><div id="factory-live">Reading queue…</div>'+mainLink('requests','Open requests & task controls'));
-  try{const r=await fetch('/api/hub');if(!r.ok)throw Error('Status service returned '+r.status);const {status:s={}}=await r.json();const live=$('factory-live');if(live)live.innerHTML='<div class="hit"><strong>'+escapeHTML(s.running_jobs??0)+' running · '+escapeHTML(s.queued_jobs??0)+' queued</strong><p>'+escapeHTML(s.failed_jobs??0)+' failed jobs · '+escapeHTML(s.awaiting_approval??0)+' awaiting approval</p><small>'+escapeHTML(s.compiled_workflows??0)+' compiled workflows · compilation does not mean executed</small></div>';}catch(err){const live=$('factory-live');if(live)live.textContent=err.message;}
+  try{const r=await fetch('/api/hub');if(!r.ok)throw Error('Status service returned '+r.status);const {status:s={}}=await r.json();const live=$('factory-live');if(globalThis.DenizenSafeDom.setSafeHtml(live)live, '<div class="hit"><strong>'+escapeHTML(s.running_jobs??0)+' running · '+escapeHTML(s.queued_jobs??0)+' queued</strong><p>'+escapeHTML(s.failed_jobs??0)+' failed jobs · '+escapeHTML(s.awaiting_approval??0)+' awaiting approval</p><small>'+escapeHTML(s.compiled_workflows??0)+' compiled workflows · compilation does not mean executed</small></div>');}catch(err){const live=$('factory-live');if(live)live.textContent=err.message;}
 }
 async function nextTasks(refreshOnly=false){
   if(!refreshOnly)panel('Next Task building','<p>These are saved NEXEN tasks. Choose one to prepare both work intents and open its real guide.</p><div id="next-building-tasks">Reading the shared task records…</div><p id="next-building-checked" class="hint">Checks every 30 seconds while this menu is open.</p><a class="route-link" href="/nexen/next" target="_blank" rel="noopener">Full task workspace ↗</a>');
@@ -329,7 +329,7 @@ async function music(){
   try{
     const r=await fetch('/api/music');if(!r.ok)throw Error('Music library is unavailable ('+r.status+').');const data=await r.json();const holder=$('tracks');if(!holder)return;
     const tracks=Array.isArray(data.tracks)?data.tracks:[];
-    holder.innerHTML=tracks.length?tracks.map((t,i)=>'<button class="track" data-track="'+i+'" aria-pressed="'+(String(t.id)===selectedTrack)+'">'+escapeHTML(t.title)+'<small>'+escapeHTML(t.collection||'Local library')+'</small></button>').join(''):'<p>No playable local tracks are indexed yet.</p>';
+    globalThis.DenizenSafeDom.setSafeHtml(holder, tracks.length?tracks.map((t,i)=>'<button class="track" data-track="'+i+'" aria-pressed="'+(String(t.id)===selectedTrack)+'">'+escapeHTML(t.title)+'<small>'+escapeHTML(t.collection||'Local library')+'</small></button>').join(''):'<p>No playable local tracks are indexed yet.</p>');
     holder.querySelectorAll('[data-track]').forEach(b=>b.onclick=async()=>{const track=tracks[Number(b.dataset.track)];try{const url=new URL(track.url,location.origin);if(url.origin!==location.origin||!['http:','https:'].includes(url.protocol))throw Error('Only local library audio is accepted.');audio.src=url.href;selectedTrack=String(track.id);$('musicdock').style.display='block';$('musicdock').querySelector('span').textContent=track.title;holder.querySelectorAll('[data-track]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));await audio.play();}catch(err){toast('Could not play this track: '+err.message);}});
   }catch(err){const holder=$('tracks');if(holder)holder.textContent=err.message;}
 }
@@ -361,7 +361,7 @@ function updateNearby(){
   if(activeCar){prompt.querySelector('strong').textContent='V · Exit WDR Mini Rover';prompt.querySelector('small').textContent=Math.abs(activeCar.speed)>1?'Space to brake before exiting':'Parked · exit and explore';}
   else if(nearby){prompt.querySelector('strong').textContent=nearby.car?'E · Drive WDR Mini Rover':'E · '+nearby.name;prompt.querySelector('small').textContent=nearby.car?'Your ride through WDR City':'Open this NEXEN station';}
   $('movement').textContent=activeCar?'ARCADE DRIVING · WDR MINI ROVER':(keys.has('shift')?'SPRINTING · SHIFT':'ON FOOT · HOLD SHIFT TO SPRINT');$('speed').hidden=!activeCar;
-  if(activeCar)$('speed').innerHTML=Math.round(Math.abs(activeCar.speed)*3.6)+'<i>KM/H</i>';
+  if(activeCar)$('speed'globalThis.DenizenSafeDom.setSafeHtml(), Math.round(Math.abs(activeCar.speed)*3.6)+'<i>KM/H</i>');
   $('district').textContent=p.z>120?'Da Money · your business district':p.z<-55?'WDR Creative District':p.z>45?'Supply & Commerce':p.x>15?'NEXEN Factory District':p.x<-15?'WDR Knowledge Quarter':'WDR Central';
 }
 function updateMap(){
@@ -458,7 +458,7 @@ function boot(){
     // Read-only state makes the running simulation inspectable without giving it PC command authority.
     window.WDRWorld=Object.freeze({getState:()=>({mode:activeCar?'driving':'walking',position:{x:player.x,z:player.z},stations:stations.map(({id,name,x,z})=>({id,name,x,z})),explorationXP:visits.size*25,taskActivity:taskActivity?{...taskActivity}:null,money:moneyDistrict?.getState(),nearby:nearby?.id||(nearby?.car?'car':null)})});
   }catch(err){
-    $('loader')?.remove();const failure=document.createElement('div');failure.className='error';failure.innerHTML='<div><div class="eyebrow">WDR CITY</div><h1>The 3D renderer could not start.</h1><p>This world needs WebGL 2 and browser graphics acceleration.</p><p>'+escapeHTML(err.message)+'</p><a href="/nexen/">Open the NEXEN main GUI ↗</a></div>';document.body.append(failure);console.error(err);
+    $('loader')?.remove();const failure=document.createElement('div');failure.className='error';globalThis.DenizenSafeDom.setSafeHtml(failure, '<div><div class="eyebrow">WDR CITY</div><h1>The 3D renderer could not start.</h1><p>This world needs WebGL 2 and browser graphics acceleration.</p><p>'+escapeHTML(err.message)+'</p><a href="/nexen/">Open the NEXEN main GUI ↗</a></div>');document.body.append(failure);console.error(err);
   }
 }
 boot();

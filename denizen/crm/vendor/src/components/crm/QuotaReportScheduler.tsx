@@ -65,13 +65,13 @@ export function QuotaReportScheduler({ schedules, onUpdateSchedules }: Props) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>📧 Scheduled Reports</h3>
-          <span style={{ fontSize: 11, color: T.text3 }}>{schedules.filter(s => s.enabled).length} active</span>
+          <span style={{ fontSize: 14, color: T.text3 }}>{schedules.filter(s => s.enabled).length} active</span>
         </div>
-        <button onClick={() => setShowAdd(true)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11 }}>+ Add Schedule</button>
+        <button aria-label="Action" onClick={() => setShowAdd(true)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14 }}>+ Add Schedule</button>
       </div>
 
       {schedules.length === 0 && (
-        <div style={{ textAlign: "center", padding: 24, color: T.text3, fontSize: 13 }}>
+        <div style={{ textAlign: "center", padding: 24, color: T.text3, fontSize: 14 }}>
           No report schedules. Set up automatic quota reports for your team.
         </div>
       )}
@@ -93,7 +93,7 @@ export function QuotaReportScheduler({ schedules, onUpdateSchedules }: Props) {
               opacity: s.enabled ? 1 : 0.5,
             }}>
               {/* Toggle */}
-              <button onClick={() => toggleEnabled(s.id)} style={{
+              <button aria-label="Action" onClick={() => toggleEnabled(s.id)} style={{
                 width: 36, height: 20, borderRadius: 10, border: "none", cursor: "pointer",
                 background: s.enabled ? "#22d3a0" : T.bg4, position: "relative", flexShrink: 0,
                 transition: "background 0.2s",
@@ -106,29 +106,29 @@ export function QuotaReportScheduler({ schedules, onUpdateSchedules }: Props) {
               </button>
 
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{scheduleText}</div>
-                <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{scheduleText}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                   To: {recipients} · {s.frequency === "weekly" ? "Weekly" : "Monthly"} report
                   {s.lastSent && <span> · Last sent: {s.lastSent}</span>}
                 </div>
                 {s.enabled && (
-                  <div style={{ fontSize: 10, color: T.blue, marginTop: 2 }}>
+                  <div style={{ fontSize: 14, color: T.blue, marginTop: 2 }}>
                     📬 Next send: {getNextSendDate(s)}
                   </div>
                 )}
               </div>
 
-              <button onClick={(e) => {
+              <button aria-label="Action" onClick={(e) => {
                 e.stopPropagation();
                 const recipientNames = s.recipientIds.map(id => TEAM_MEMBERS.find(m => m.id === id)?.name || id).join(", ");
                 onUpdateSchedules(schedules.map(sc => sc.id === s.id ? { ...sc, lastSent: new Date().toISOString().slice(0, 10) } : sc));
                 toast.success(`📧 Report sent to ${recipientNames}`);
               }} style={{
-                ...S.btnGhost as React.CSSProperties, padding: "4px 10px", fontSize: 10, color: T.green, flexShrink: 0,
+                ...S.btnGhost as React.CSSProperties, padding: "4px 10px", fontSize: 14, color: T.green, flexShrink: 0,
               }}>Send Now</button>
 
-              <button onClick={() => handleDelete(s.id)} style={{
-                ...S.btnGhost as React.CSSProperties, padding: "4px 8px", fontSize: 11, color: T.red, flexShrink: 0,
+              <button aria-label="Action" onClick={() => handleDelete(s.id)} style={{
+                ...S.btnGhost as React.CSSProperties, padding: "4px 8px", fontSize: 14, color: T.red, flexShrink: 0,
               }}>✕</button>
             </div>
           );
@@ -145,8 +145,8 @@ export function QuotaReportScheduler({ schedules, onUpdateSchedules }: Props) {
               <label style={S.label as React.CSSProperties}>Frequency</label>
               <div style={{ display: "flex", gap: 8 }}>
                 {(["weekly", "monthly"] as const).map(f => (
-                  <button key={f} onClick={() => setForm(p => ({ ...p, frequency: f }))} style={{
-                    flex: 1, padding: "10px 14px", borderRadius: T.radius.md, fontSize: 12, fontWeight: 600,
+                  <button aria-label="Action" key={f} onClick={() => setForm(p => ({ ...p, frequency: f }))} style={{
+                    flex: 1, padding: "10px 14px", borderRadius: T.radius.md, fontSize: 14, fontWeight: 600,
                     background: form.frequency === f ? `${T.accent}22` : T.bg3,
                     color: form.frequency === f ? T.accent : T.text3,
                     border: `1px solid ${form.frequency === f ? `${T.accent}66` : T.bg4}`,
@@ -184,8 +184,8 @@ export function QuotaReportScheduler({ schedules, onUpdateSchedules }: Props) {
                 {TEAM_MEMBERS.map(m => {
                   const selected = (form.recipientIds as string[]).includes(m.id);
                   return (
-                    <button key={m.id} onClick={() => toggleRecipient(m.id)} style={{
-                      padding: "5px 12px", borderRadius: T.radius.full, fontSize: 11, fontWeight: 600,
+                    <button aria-label="Action" key={m.id} onClick={() => toggleRecipient(m.id)} style={{
+                      padding: "5px 12px", borderRadius: T.radius.full, fontSize: 14, fontWeight: 600,
                       background: selected ? `${T.accent}22` : T.bg3,
                       color: selected ? T.accent : T.text3,
                       border: `1px solid ${selected ? `${T.accent}66` : T.bg4}`,
@@ -194,14 +194,14 @@ export function QuotaReportScheduler({ schedules, onUpdateSchedules }: Props) {
                   );
                 })}
               </div>
-              <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
                 {(form.recipientIds as string[]).length === 0 ? "Defaults to managers if none selected" : `${(form.recipientIds as string[]).length} selected`}
               </div>
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button onClick={() => setShowAdd(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-              <button onClick={handleAdd} style={S.btn as React.CSSProperties}>Create Schedule</button>
+              <button aria-label="Action" onClick={() => setShowAdd(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+              <button aria-label="Add" onClick={handleAdd} style={S.btn as React.CSSProperties}>Create Schedule</button>
             </div>
           </div>
         </div>

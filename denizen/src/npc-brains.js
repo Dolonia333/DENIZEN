@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /**
  * NPC Brain System
  * Each NPC has their own AI brain powered by a different API provider.

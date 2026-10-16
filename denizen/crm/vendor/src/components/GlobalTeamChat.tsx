@@ -419,14 +419,14 @@ export function GlobalTeamChat() {
         {!isMe && <Avatar name={msg.user} size={26} />}
         <div style={{ maxWidth: "72%", minWidth: 0 }}>
           {!isMe && (
-            <span style={{ fontSize: 10, fontWeight: 600, color: T.text3, marginBottom: 2, display: "block", paddingLeft: 6 }}>{msg.user}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: T.text3, marginBottom: 2, display: "block", paddingLeft: 6 }}>{msg.user}</span>
           )}
 
           {/* Reply context */}
           {msg.replyTo && !threadView && (() => {
             const parent = messages.find(m => m.id === msg.replyTo);
             return parent ? (
-              <div style={{ fontSize: 9, color: T.text3, padding: "2px 8px", marginBottom: 2, borderLeft: `2px solid ${T.purple}55` }}>
+              <div style={{ fontSize: 14, color: T.text3, padding: "2px 8px", marginBottom: 2, borderLeft: `2px solid ${T.purple}55` }}>
                 ↩ {parent.user}: {parent.text.slice(0, 50)}{parent.text.length > 50 ? "…" : ""}
               </div>
             ) : null;
@@ -441,38 +441,38 @@ export function GlobalTeamChat() {
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                 <div style={{ width: 4, height: 16, borderRadius: 2, background: msg.sharedCard.color }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.text0 }}>{msg.sharedCard.title}</span>
-                <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 999, background: `${msg.sharedCard.color}20`, color: msg.sharedCard.color, fontWeight: 600 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{msg.sharedCard.title}</span>
+                <span style={{ fontSize: 14, padding: "2px 7px", borderRadius: 999, background: `${msg.sharedCard.color}20`, color: msg.sharedCard.color, fontWeight: 600 }}>
                   {msg.sharedCard.type}
                 </span>
               </div>
               {/* Snapshot key-value pairs */}
-              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "2px 10px", fontSize: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "2px 10px", fontSize: 14 }}>
                 {Object.entries(msg.sharedCard.snapshot).map(([k, v]) => (
                   <div key={k} style={{ display: "contents" }}><span style={{ color: T.text3, fontWeight: 600 }}>{k}</span><span style={{ color: T.text1, fontVariantNumeric: "tabular-nums" }}>{v}</span></div>
                 ))}
               </div>
               {msg.sharedCard.notes && (
-                <div style={{ marginTop: 6, fontSize: 10, color: T.text2, fontStyle: "italic", padding: "4px 8px", background: "rgba(255,255,255,0.03)", borderRadius: 6 }}>
+                <div style={{ marginTop: 6, fontSize: 14, color: T.text2, fontStyle: "italic", padding: "4px 8px", background: "rgba(255,255,255,0.03)", borderRadius: 6 }}>
                   📝 {msg.sharedCard.notes}
                 </div>
               )}
               {msg.sharedCard.status && (
                 <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{
-                    fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
+                    fontSize: 14, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
                     background: msg.sharedCard.status === "Resolved" ? `${T.green}20` : msg.sharedCard.status === "In Progress" ? `${T.blue}20` : `${T.orange}20`,
                     color: msg.sharedCard.status === "Resolved" ? T.green : msg.sharedCard.status === "In Progress" ? T.blue : T.orange,
                   }}>{msg.sharedCard.status}</span>
                 </div>
               )}
               {/* Go to source button */}
-              <button
+              <button aria-label="Action"
                 onClick={() => navigateToCRMTab(msg.sharedCard!.type)}
                 style={{
                   marginTop: 8, width: "100%", padding: "6px 0", borderRadius: 8,
                   background: `${msg.sharedCard.color}14`, border: `1px solid ${msg.sharedCard.color}28`,
-                  color: msg.sharedCard.color, fontSize: 10, fontWeight: 700, cursor: "pointer",
+                  color: msg.sharedCard.color, fontSize: 14, fontWeight: 700, cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                   transition: "background 0.15s",
                 }}
@@ -484,16 +484,16 @@ export function GlobalTeamChat() {
               {/* Card reactions */}
               <div style={{ display: "flex", gap: 3, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
                 {cardReactions && Object.entries(cardReactions).map(([em, users]) => (
-                  <button key={em} onClick={() => toggleCardReaction(msg.id, em)} style={{
-                    padding: "1px 6px", borderRadius: 999, fontSize: 10, cursor: "pointer",
+                  <button aria-label="Action" key={em} onClick={() => toggleCardReaction(msg.id, em)} style={{
+                    padding: "1px 6px", borderRadius: 999, fontSize: 14, cursor: "pointer",
                     background: users.includes("You") ? `${msg.sharedCard!.color}22` : "rgba(255,255,255,0.05)",
                     border: `1px solid ${users.includes("You") ? `${msg.sharedCard!.color}44` : "transparent"}`,
                     color: T.text1, transition: "all 0.12s",
                   }}>{em} {users.length}</button>
                 ))}
                 {REACTIONS.slice(0, 4).map(em => (
-                  <button key={em} onClick={() => toggleCardReaction(msg.id, em)}
-                    style={{ padding: "1px 4px", fontSize: 11, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4, transition: "opacity 0.12s" }}
+                  <button aria-label="Action" key={em} onClick={() => toggleCardReaction(msg.id, em)}
+                    style={{ padding: "1px 4px", fontSize: 14, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4, transition: "opacity 0.12s" }}
                     onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
                     onMouseLeave={e => e.currentTarget.style.opacity = "0.4"}
                   >{em}</button>
@@ -503,7 +503,7 @@ export function GlobalTeamChat() {
           )}
 
           {msg.pinned && (
-            <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 9, color: T.accent, fontWeight: 600, marginBottom: 2, paddingLeft: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 14, color: T.accent, fontWeight: 600, marginBottom: 2, paddingLeft: 6 }}>
               <Pin size={8} /> Pinned
             </div>
           )}
@@ -514,7 +514,7 @@ export function GlobalTeamChat() {
             borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
             background: isMe ? `linear-gradient(135deg, ${T.accent}, #d97706)` : "rgba(255,255,255,0.06)",
             color: isMe ? "#080d18" : T.text1,
-            fontSize: 13, lineHeight: 1.5, fontWeight: isMe ? 500 : 400,
+            fontSize: 14, lineHeight: 1.5, fontWeight: isMe ? 500 : 400,
           }}>{msg.text.split(/(@[A-Za-z ]+)/g).map((part, pi) =>
             part.startsWith("@") && TEAM.some(t => part === `@${t.name}`)
               ? <span key={pi} style={{ color: T.accent, fontWeight: 700 }}>{part}</span>
@@ -524,16 +524,16 @@ export function GlobalTeamChat() {
           {/* Reactions + reply */}
           <div style={{ display: "flex", gap: 3, marginTop: 3, flexWrap: "wrap", justifyContent: isMe ? "flex-end" : "flex-start", alignItems: "center" }}>
             {msg.reactions && Object.entries(msg.reactions).map(([em, users]) => (
-              <button key={em} onClick={() => toggleReaction(msg.id, em)} style={{
-                padding: "1px 6px", borderRadius: 999, fontSize: 10, cursor: "pointer",
+              <button aria-label="Action" key={em} onClick={() => toggleReaction(msg.id, em)} style={{
+                padding: "1px 6px", borderRadius: 999, fontSize: 14, cursor: "pointer",
                 background: users.includes("You") ? `${T.accent}22` : "rgba(255,255,255,0.05)",
                 border: `1px solid ${users.includes("You") ? `${T.accent}44` : "transparent"}`,
                 color: T.text1, transition: "all 0.12s",
               }}>{em} {users.length}</button>
             ))}
             <div style={{ position: "relative" }}>
-              <button onClick={() => setShowReactionPicker(showReactionPicker === msg.id ? null : msg.id)}
-                style={{ padding: "1px 5px", borderRadius: 999, fontSize: 10, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4 }}
+              <button aria-label="Action" onClick={() => setShowReactionPicker(showReactionPicker === msg.id ? null : msg.id)}
+                style={{ padding: "1px 5px", borderRadius: 999, fontSize: 14, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4 }}
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "0.4"}>+</button>
               {showReactionPicker === msg.id && (
@@ -544,7 +544,7 @@ export function GlobalTeamChat() {
                   boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
                 }}>
                   {REACTIONS.map(em => (
-                    <button key={em} onClick={() => toggleReaction(msg.id, em)}
+                    <button aria-label="Action" key={em} onClick={() => toggleReaction(msg.id, em)}
                       style={{ padding: "3px 5px", fontSize: 15, cursor: "pointer", background: "transparent", border: "none", borderRadius: 6, transition: "background 0.1s" }}
                       onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{em}</button>
@@ -553,13 +553,13 @@ export function GlobalTeamChat() {
               )}
             </div>
             {!threadView && (
-              <button onClick={() => setReplyingTo(msg)}
-                style={{ padding: "1px 6px", borderRadius: 999, fontSize: 9, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4, fontWeight: 600, transition: "opacity 0.12s" }}
+              <button aria-label="Action" onClick={() => setReplyingTo(msg)}
+                style={{ padding: "1px 6px", borderRadius: 999, fontSize: 14, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4, fontWeight: 600, transition: "opacity 0.12s" }}
                 onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
                 onMouseLeave={e => e.currentTarget.style.opacity = "0.4"}>↩ Reply</button>
             )}
-            <button onClick={() => togglePin(msg.id)}
-              style={{ padding: "1px 6px", borderRadius: 999, fontSize: 9, cursor: "pointer", background: msg.pinned ? `${T.accent}15` : "transparent", border: "none", color: msg.pinned ? T.accent : T.text3, opacity: msg.pinned ? 0.9 : 0.4, fontWeight: 600, transition: "all 0.12s" }}
+            <button aria-label="Action" onClick={() => togglePin(msg.id)}
+              style={{ padding: "1px 6px", borderRadius: 999, fontSize: 14, cursor: "pointer", background: msg.pinned ? `${T.accent}15` : "transparent", border: "none", color: msg.pinned ? T.accent : T.text3, opacity: msg.pinned ? 0.9 : 0.4, fontWeight: 600, transition: "all 0.12s" }}
               onMouseEnter={e => e.currentTarget.style.opacity = "0.9"}
               onMouseLeave={e => { if (!msg.pinned) e.currentTarget.style.opacity = "0.4"; }}
             ><Pin size={9} style={{ display: "inline", verticalAlign: "middle", marginRight: 2 }} />{msg.pinned ? "Unpin" : "Pin"}</button>
@@ -567,15 +567,15 @@ export function GlobalTeamChat() {
 
           {/* Timestamp + read receipt */}
           <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2, justifyContent: isMe ? "flex-end" : "flex-start" }}>
-            <span style={{ fontSize: 9, color: T.text3, opacity: 0.5 }}>{timeAgo(msg.at)}</span>
-            {isMe && <span style={{ fontSize: 10, color: msg.read ? T.green : T.text3, opacity: msg.read ? 0.8 : 0.4, letterSpacing: -2 }}>✓✓</span>}
+            <span style={{ fontSize: 14, color: T.text3, opacity: 0.5 }}>{timeAgo(msg.at)}</span>
+            {isMe && <span style={{ fontSize: 14, color: msg.read ? T.green : T.text3, opacity: msg.read ? 0.8 : 0.4, letterSpacing: -2 }}>✓✓</span>}
           </div>
 
           {/* Thread count */}
           {replyCount > 0 && (
-            <button onClick={() => setThreadView(msg)} style={{
+            <button aria-label="Action" onClick={() => setThreadView(msg)} style={{
               display: "flex", alignItems: "center", gap: 4, marginTop: 4, padding: "4px 10px",
-              borderRadius: 999, fontSize: 10, fontWeight: 600, cursor: "pointer",
+              borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer",
               background: `${T.purple}11`, border: `1px solid ${T.purple}22`, color: T.purple, transition: "background 0.12s",
             }}
               onMouseEnter={e => e.currentTarget.style.background = `${T.purple}22`}
@@ -591,7 +591,7 @@ export function GlobalTeamChat() {
     <>
       {/* ═══ FLOATING BUTTON (hidden when unified dock is active) ═══ */}
       {!dockActive && (
-      <button onClick={() => setOpen(o => !o)} style={{
+      <button aria-label="Action" onClick={() => setOpen(o => !o)} style={{
         position: "fixed", bottom: isMobile ? 80 : 24, right: 24, zIndex: 9990,
         width: 54, height: 54, borderRadius: "50%",
         background: open ? T.bg3 : `linear-gradient(135deg, ${T.purple}, #6d28d9)`,
@@ -609,7 +609,7 @@ export function GlobalTeamChat() {
         {!open && unread > 0 && (
           <div style={{
             position: "absolute", top: -3, right: -3, minWidth: 20, height: 20, borderRadius: 999,
-            background: T.red, color: "#fff", fontSize: 10, fontWeight: 700,
+            background: T.red, color: "#fff", fontSize: 14, fontWeight: 700,
             display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px",
             border: "2px solid #080d18", animation: "pulse 2s infinite",
           }}>{unread > 99 ? "99+" : unread}</div>
@@ -647,10 +647,10 @@ export function GlobalTeamChat() {
               ))}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.text0, lineHeight: 1.2 }}>CRM Scratch Chat</div>
-              <div style={{ fontSize: 10, color: T.text3 }}>Local only · use Denizen for real team chat</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, lineHeight: 1.2 }}>CRM Scratch Chat</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>Local only · use Denizen for real team chat</div>
             </div>
-            <button onClick={() => setShowPinned(p => !p)} style={{
+            <button aria-label="Action" onClick={() => setShowPinned(p => !p)} style={{
               width: 28, height: 28, borderRadius: 8, background: showPinned ? `${T.accent}15` : "transparent",
               border: "none", color: showPinned ? T.accent : T.text3, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.12s",
@@ -658,22 +658,22 @@ export function GlobalTeamChat() {
             }}>
               <Pin size={14} />
               {pinnedMessages.length > 0 && (
-                <div style={{ position: "absolute", top: 1, right: 1, width: 12, height: 12, borderRadius: "50%", background: T.accent, color: "#080d18", fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ position: "absolute", top: 1, right: 1, width: 12, height: 12, borderRadius: "50%", background: T.accent, color: "#080d18", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {pinnedMessages.length}
                 </div>
               )}
             </button>
-            <button onClick={() => setShowFilters(f => !f)} style={{
+            <button aria-label="Action" onClick={() => setShowFilters(f => !f)} style={{
               width: 28, height: 28, borderRadius: 8, background: showFilters ? `${T.accent}15` : "transparent",
               border: "none", color: showFilters ? T.accent : T.text3, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.12s",
             }}><Filter size={14} /></button>
-            <button onClick={() => { setExpanded(e => !e); setPos({ x: -1, y: -1 }); }} style={{
+            <button aria-label="Action" onClick={() => { setExpanded(e => !e); setPos({ x: -1, y: -1 }); }} style={{
               width: 28, height: 28, borderRadius: 8, background: "transparent",
               border: "none", color: T.text3, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.12s",
             }}>{expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}</button>
-            <button onClick={() => setOpen(false)} style={{
+            <button aria-label="Action" onClick={() => setOpen(false)} style={{
               width: 28, height: 28, borderRadius: 8, background: "transparent",
               border: "none", color: T.text3, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.12s",
@@ -687,12 +687,12 @@ export function GlobalTeamChat() {
             padding: "10px 14px",
             borderBottom: `1px solid ${T.bg4}`,
             background: `${T.accent}10`,
-            fontSize: 11,
+            fontSize: 14,
             color: T.text2,
             lineHeight: 1.45,
           }}>
             CRM scratch pad — not synced to Denizen. For live NPC + teammate chat, open{" "}
-            <a href="/?phone=1" style={{ color: T.accent, fontWeight: 600, textDecoration: "none" }}>Denizen Phone → Chat</a>.
+            <a aria-label="Link to /?phone=1" href="/?phone=1" style={{ color: T.accent, fontWeight: 600, textDecoration: "none" }}>Denizen Phone → Chat</a>.
           </div>
 
           {/* ── FILTER BAR ── */}
@@ -700,16 +700,16 @@ export function GlobalTeamChat() {
             <div style={{ padding: "8px 14px", borderBottom: `1px solid ${T.bg4}`, background: "rgba(255,255,255,0.01)" }}>
               <div style={{ position: "relative", marginBottom: 6 }}>
                 <Search size={13} color={T.text3} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search messages…"
+                <input value={search} onChange={e = aria-label="input"> setSearch(e.target.value)} placeholder="Search messages…"
                   style={{
                     width: "100%", background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 8,
-                    color: T.text1, padding: "7px 10px 7px 30px", fontSize: 11, outline: "none", boxSizing: "border-box",
+                    color: T.text1, padding: "7px 10px 7px 30px", fontSize: 14, outline: "none", boxSizing: "border-box",
                   }} />
               </div>
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                 {["all", "messages", "lead", "deal", "chart", "note", "task"].map(f => (
-                  <button key={f} onClick={() => setFilterType(f)} style={{
-                    padding: "3px 9px", borderRadius: 999, fontSize: 9, fontWeight: 600, cursor: "pointer",
+                  <button aria-label="Action" key={f} onClick={() => setFilterType(f)} style={{
+                    padding: "3px 9px", borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer",
                     background: filterType === f ? `${T.accent}18` : T.bg3,
                     color: filterType === f ? T.accent : T.text3,
                     border: `1px solid ${filterType === f ? `${T.accent}44` : T.bg4}`,
@@ -725,11 +725,11 @@ export function GlobalTeamChat() {
             <div style={{ maxHeight: 200, overflowY: "auto", borderBottom: `1px solid ${T.bg4}`, background: `${T.accent}04` }}>
               <div style={{ padding: "8px 14px 4px", display: "flex", alignItems: "center", gap: 6 }}>
                 <Pin size={11} color={T.accent} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: T.accent }}>Pinned Messages</span>
-                <span style={{ fontSize: 9, color: T.text3 }}>({pinnedMessages.length})</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.accent }}>Pinned Messages</span>
+                <span style={{ fontSize: 14, color: T.text3 }}>({pinnedMessages.length})</span>
               </div>
               {pinnedMessages.length === 0 ? (
-                <div style={{ padding: "12px 14px 14px", fontSize: 11, color: T.text3, textAlign: "center" }}>No pinned messages yet</div>
+                <div style={{ padding: "12px 14px 14px", fontSize: 14, color: T.text3, textAlign: "center" }}>No pinned messages yet</div>
               ) : pinnedMessages.map(pm => (
                 <div key={pm.id} style={{ padding: "6px 14px", display: "flex", gap: 8, alignItems: "flex-start", transition: "background 0.1s", cursor: "default" }}
                   onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
@@ -737,14 +737,14 @@ export function GlobalTeamChat() {
                   <Avatar name={pm.user} size={20} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: T.text1 }}>{pm.user}</span>
-                      <span style={{ fontSize: 9, color: T.text3 }}>{timeAgo(pm.at)}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{pm.user}</span>
+                      <span style={{ fontSize: 14, color: T.text3 }}>{timeAgo(pm.at)}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontSize: 14, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {pm.sharedCard ? `📎 ${pm.sharedCard.title}` : pm.text}
                     </div>
                   </div>
-                  <button onClick={() => togglePin(pm.id)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 10, padding: "2px 4px", opacity: 0.5, flexShrink: 0 }}
+                  <button aria-label="Action" onClick={() => togglePin(pm.id)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14, padding: "2px 4px", opacity: 0.5, flexShrink: 0 }}
                     onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                     onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}
                     title="Unpin"><X size={10} /></button>
@@ -756,19 +756,19 @@ export function GlobalTeamChat() {
           {/* ── THREAD HEADER ── */}
           {threadView && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: `${T.purple}08`, borderBottom: `1px solid ${T.bg4}` }}>
-              <button onClick={() => setThreadView(null)} style={{ background: "none", border: "none", color: T.text2, cursor: "pointer", fontSize: 14, padding: "2px 6px" }}>←</button>
+              <button aria-label="Action" onClick={() => setThreadView(null)} style={{ background: "none", border: "none", color: T.text2, cursor: "pointer", fontSize: 14, padding: "2px 6px" }}>←</button>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.text0 }}>Thread</div>
-                <div style={{ fontSize: 10, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{threadView.text}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>Thread</div>
+                <div style={{ fontSize: 14, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{threadView.text}</div>
               </div>
-              <span style={{ fontSize: 9, color: T.purple, fontWeight: 600, flexShrink: 0 }}>{(threadView.replies?.length || 0)} replies</span>
+              <span style={{ fontSize: 14, color: T.purple, fontWeight: 600, flexShrink: 0 }}>{(threadView.replies?.length || 0)} replies</span>
             </div>
           )}
 
           {/* ── MESSAGES ── */}
           <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px 8px", display: "flex", flexDirection: "column", gap: 14 }}>
             {displayMessages.length === 0 && (
-              <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 12 }}>
+              <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 14 }}>
                 {search || filterType !== "all" ? "No matching messages" : "No messages yet — start the conversation!"}
               </div>
             )}
@@ -779,7 +779,7 @@ export function GlobalTeamChat() {
               <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                 <Avatar name={typingUsers[0]} size={26} />
                 <div>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: T.text3, display: "block", paddingLeft: 6, marginBottom: 2 }}>{typingUsers[0]}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: T.text3, display: "block", paddingLeft: 6, marginBottom: 2 }}>{typingUsers[0]}</span>
                   <div style={{
                     padding: "10px 16px", borderRadius: "18px 18px 18px 4px",
                     background: "rgba(255,255,255,0.06)", display: "flex", gap: 5, alignItems: "center",
@@ -802,10 +802,10 @@ export function GlobalTeamChat() {
             }}>
               <div style={{ width: 3, height: 20, borderRadius: 2, background: T.purple, flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: T.purple }}>↩ Replying to {replyingTo.user}</div>
-                <div style={{ fontSize: 10, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{replyingTo.text}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.purple }}>↩ Replying to {replyingTo.user}</div>
+                <div style={{ fontSize: 14, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{replyingTo.text}</div>
               </div>
-              <button onClick={() => setReplyingTo(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 12, padding: "2px 4px" }}>✕</button>
+              <button aria-label="Action" onClick={() => setReplyingTo(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14, padding: "2px 4px" }}>✕</button>
             </div>
           )}
 
@@ -822,7 +822,7 @@ export function GlobalTeamChat() {
                 background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 12,
                 boxShadow: "0 8px 32px rgba(0,0,0,0.5)", overflow: "hidden", zIndex: 50,
               }}>
-                <div style={{ padding: "6px 10px", fontSize: 9, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${T.bg4}` }}>
+                <div style={{ padding: "6px 10px", fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${T.bg4}` }}>
                   Mention a teammate
                 </div>
                 {mentionCandidates.map((t, i) => (
@@ -835,7 +835,7 @@ export function GlobalTeamChat() {
                       background: i === mentionIdx ? `${T.accent}12` : "transparent",
                     }}>
                     <Avatar name={t.name} size={24} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: i === mentionIdx ? T.text0 : T.text1 }}>{t.name}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: i === mentionIdx ? T.text0 : T.text1 }}>{t.name}</span>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.green, marginLeft: "auto", flexShrink: 0 }} />
                   </div>
                 ))}
@@ -846,9 +846,9 @@ export function GlobalTeamChat() {
               placeholder={replyingTo ? "Reply…" : threadView ? "Reply in thread…" : "Message your team… (type @ to mention)"}
               style={{
                 flex: 1, background: "rgba(255,255,255,0.06)", border: "none",
-                borderRadius: 22, color: T.text1, padding: "10px 16px", fontSize: 13, outline: "none",
-              }} />
-            <button onClick={() => send()} style={{
+                borderRadius: 22, color: T.text1, padding: "10px 16px", fontSize: 14, outline: "none",
+              }} / aria-label="input" />
+            <button aria-label="Action" onClick={() => send()} style={{
               width: 34, height: 34, borderRadius: "50%",
               background: draft.trim() ? `linear-gradient(135deg, ${T.accent}, #d97706)` : "rgba(255,255,255,0.06)",
               border: "none", color: draft.trim() ? "#080d18" : T.text3,

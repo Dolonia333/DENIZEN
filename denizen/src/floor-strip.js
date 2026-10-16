@@ -221,14 +221,14 @@
     const rows = visibleLines().filter((r) => r && r.kind !== 'quiet');
     el.classList.toggle('has-lines', rows.length > 0);
     if (!rows.length) {
-      el.innerHTML = '';
+      el.replaceChildren();
     } else {
-      el.innerHTML = rows.map((line, i) => (
+      globalThis.DenizenSafeDom.setSafeHtml(el, rows.map((line, i) => (
         `<button type="button" class="dz-floor-line kind-${esc(line.kind)}" data-i="${i}">`
         + `<span class="who">${esc(whoLabel(line))}</span>`
         + `<span class="what">${esc(line.text)}</span>`
         + `</button>`
-      )).join('');
+      )).join(''));
       const shown = rows;
       el.querySelectorAll('.dz-floor-line').forEach((btn) => {
         const line = shown[Number(btn.dataset.i)];

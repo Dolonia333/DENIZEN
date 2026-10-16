@@ -493,42 +493,42 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
           background: `${T.blue}10`, border: `1px solid ${T.blue}33`,
           display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center",
         }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: T.text1 }}>Connect Google</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.text1 }}>Connect Google</span>
           {calStatus.googleConfigured ? (
-            <button
+            <button aria-label="Action"
               type="button"
               onClick={() => {
                 if (calStatus.google.connected) void runSync("google");
                 else window.location.href = calendarConnectUrl("google");
               }}
               disabled={syncing === "google"}
-              style={{ ...S.btnGhost, fontSize: 11, padding: "6px 12px" }}
+              style={{ ...S.btnGhost, fontSize: 14, padding: "6px 12px" }}
             >
               {calStatus.google.connected
                 ? (syncing === "google" ? "Syncing Google…" : `Sync Google${calStatus.google.email ? ` (${calStatus.google.email})` : ""}`)
                 : "Connect Google"}
             </button>
           ) : (
-            <span style={{ fontSize: 11, color: T.text2 }}>
+            <span style={{ fontSize: 14, color: T.text2 }}>
               {calStatus.setup?.message || "Google sign-in is not set up on this Denizen yet."}
             </span>
           )}
           {calStatus?.microsoftConfigured && (
-            <button
+            <button aria-label="Action"
               type="button"
               onClick={() => {
                 if (calStatus.microsoft.connected) void runSync("microsoft");
                 else window.location.href = calendarConnectUrl("microsoft");
               }}
               disabled={syncing === "microsoft"}
-              style={{ ...S.btnGhost, fontSize: 11, padding: "6px 12px" }}
+              style={{ ...S.btnGhost, fontSize: 14, padding: "6px 12px" }}
             >
               {calStatus.microsoft.connected
                 ? (syncing === "microsoft" ? "Syncing Microsoft…" : `Sync Outlook${calStatus.microsoft.email ? ` (${calStatus.microsoft.email})` : ""}`)
                 : "Connect Outlook"}
             </button>
           )}
-          {calMsg && <span style={{ fontSize: 11, color: T.green }}>{calMsg}</span>}
+          {calMsg && <span style={{ fontSize: 14, color: T.green }}>{calMsg}</span>}
         </div>
       )}
 
@@ -536,7 +536,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div style={{ minWidth: 0, flex: isMobile ? "1 1 100%" : undefined }}>
           <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>Calendar</h1>
-          <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Meetings, tasks, deals & booking</p>
+          <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Meetings, tasks, deals & booking</p>
         </div>
         <div style={{
           display: "flex", gap: 6, flexWrap: "wrap",
@@ -544,7 +544,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
           alignItems: "stretch",
         }}>
           {(["month", "week", "day", "agenda", "booking"] as ViewMode[]).map(v => (
-            <button key={v} onClick={() => {
+            <button aria-label="Action" key={v} onClick={() => {
               setViewMode(v);
               if ((v === "day" || v === "week") && selectedDate) setDayViewDate(selectedDate);
             }} style={{
@@ -560,8 +560,8 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 : (v === "month" ? "📅 Month" : v === "week" ? "📆 Week" : v === "day" ? "🕐 Day" : v === "agenda" ? "📋 Agenda" : "🔗 Booking")}
             </button>
           ))}
-          <button onClick={() => openNewMeeting(selectedDate || dayViewDate || todayStr)} style={{
-            ...S.btn, fontSize: 12, padding: isMobile ? "8px 12px" : "6px 14px",
+          <button aria-label="Action" onClick={() => openNewMeeting(selectedDate || dayViewDate || todayStr)} style={{
+            ...S.btn, fontSize: 14, padding: isMobile ? "8px 12px" : "6px 14px",
             flex: isMobile ? "1 1 100%" : undefined,
           }}>+ Meeting</button>
         </div>
@@ -602,13 +602,13 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
           <div style={{ marginBottom: 14 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
               {chips.map(c => (
-                <button
+                <button aria-label="Action"
                   key={c.key}
                   type="button"
                   onClick={() => toggleLayer(c.key)}
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "5px 10px", borderRadius: 999, cursor: "pointer", fontSize: 11, fontWeight: 600,
+                    padding: "5px 10px", borderRadius: 999, cursor: "pointer", fontSize: 14, fontWeight: 600,
                     border: `1px solid ${layers[c.key] ? c.color + "66" : T.bg4}`,
                     background: layers[c.key] ? c.color + "18" : T.bg3,
                     color: layers[c.key] ? c.color : T.text3,
@@ -617,7 +617,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 >
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: c.color }} />
                   {c.label}
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10 }}>{c.count}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14 }}>{c.count}</span>
                 </button>
               ))}
             </div>
@@ -633,7 +633,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 { label: "Busy days (2+ mtgs)", value: String(conflictDays), color: conflictDays ? T.orange : T.text3 },
               ].map(s => (
                 <div key={s.label}>
-                  <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.label}</div>
+                  <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.label}</div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: s.color, fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{s.value}</div>
                 </div>
               ))}
@@ -647,8 +647,8 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
         {isMobile && (
           <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
             {(["calendar", "day"] as const).map(p => (
-              <button key={p} type="button" onClick={() => setMobilePanel(p)} style={{
-                flex: 1, padding: "10px 0", fontSize: 12, fontWeight: 600, cursor: "pointer",
+              <button aria-label="Action" key={p} type="button" onClick={() => setMobilePanel(p)} style={{
+                flex: 1, padding: "10px 0", fontSize: 14, fontWeight: 600, cursor: "pointer",
                 borderRadius: T.radius.md, border: `1px solid ${mobilePanel === p ? T.accent + "66" : T.bg4}`,
                 background: mobilePanel === p ? T.accent + "18" : T.bg3,
                 color: mobilePanel === p ? T.accent : T.text3,
@@ -660,9 +660,9 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
           {(!isMobile || mobilePanel === "calendar") && (
           <div style={{ ...S.card }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <button onClick={prev} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "6px 12px", color: T.text2, cursor: "pointer", fontSize: 13 }}>←</button>
+              <button aria-label="prev" onClick={prev} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "6px 12px", color: T.text2, cursor: "pointer", fontSize: 14 }}>←</button>
               <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>{monthName} {year}</div>
-              <button onClick={next} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "6px 12px", color: T.text2, cursor: "pointer", fontSize: 13 }}>→</button>
+              <button aria-label="next" onClick={next} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "6px 12px", color: T.text2, cursor: "pointer", fontSize: 14 }}>→</button>
             </div>
 
             <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", border: `1px solid ${T.gridLine}`, borderRadius: T.radius.md, overflow: "hidden" }}>
@@ -714,7 +714,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                             }}
                           >
                             <span style={{
-                              fontSize: 12, fontWeight: isToday ? 800 : 500,
+                              fontSize: 14, fontWeight: isToday ? 800 : 500,
                               color: isToday ? T.blue : isSelected ? T.accent : T.text1,
                             }}>{day}</span>
                             {events.length > 0 && (
@@ -737,15 +737,15 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <div style={{ display: "flex", gap: 14, marginTop: 14, flexWrap: "wrap", justifyContent: "space-between" }}>
               <div style={{ display: "flex", gap: 10 }}>
                 {[["Meeting", T.purple], ["Task", T.blue], ["Overdue", T.red], ["Deal", T.accent]].map(([l, c]) => (
-                  <div key={l as string} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: T.text3 }}>
+                  <div key={l as string} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 14, color: T.text3 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: c as string }} />{l}
                   </div>
                 ))}
               </div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <span style={{ fontSize: 9, color: T.text3 }}>Load:</span>
+                <span style={{ fontSize: 14, color: T.text3 }}>Load:</span>
                 {[["None", "transparent"], ["1-2", "#f0b42922"], ["3-4", "#f0b42955"], ["5+", "#f85b5b44"]].map(([l, c]) => (
-                  <div key={l} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 9, color: T.text3 }}>
+                  <div key={l} style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 14, color: T.text3 }}>
                     <div style={{ width: 10, height: 10, borderRadius: 2, background: c, border: `1px solid ${T.bg4}` }} />{l}
                   </div>
                 ))}
@@ -763,8 +763,8 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               </div>
               {selectedDate && (
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={() => { setDayViewDate(selectedDate); setViewMode("day"); }} style={{ fontSize: 10, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 10px", color: T.blue, cursor: "pointer" }}>🕐 Day View</button>
-                  <button onClick={() => openNewMeeting(selectedDate)} style={{ fontSize: 11, background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer" }}>+ Add</button>
+                  <button aria-label="Action" onClick={() => { setDayViewDate(selectedDate); setViewMode("day"); }} style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 10px", color: T.blue, cursor: "pointer" }}>🕐 Day View</button>
+                  <button aria-label="Action" onClick={() => openNewMeeting(selectedDate)} style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer" }}>+ Add</button>
                 </div>
               )}
             </div>
@@ -772,15 +772,15 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             {!selectedDate && (
               <div style={{ padding: "40px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.3 }}>📅</div>
-                <div style={{ fontSize: 12, color: T.text3 }}>Click a date to see events · Double-click for day view</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>Click a date to see events · Double-click for day view</div>
               </div>
             )}
 
             {selectedDate && selectedEvents.length === 0 && (
               <div style={{ padding: "30px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.3 }}>✨</div>
-                <div style={{ fontSize: 12, color: T.text3 }}>Nothing scheduled</div>
-                <button onClick={() => openNewMeeting(selectedDate)} style={{ ...S.btn, fontSize: 11, padding: "6px 14px", marginTop: 12 }}>Schedule a meeting</button>
+                <div style={{ fontSize: 14, color: T.text3 }}>Nothing scheduled</div>
+                <button aria-label="Action" onClick={() => openNewMeeting(selectedDate)} style={{ ...S.btn, fontSize: 14, padding: "6px 14px", marginTop: 12 }}>Schedule a meeting</button>
               </div>
             )}
 
@@ -793,23 +793,23 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: ev.color, flexShrink: 0, marginTop: 4 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 13, color: T.text1, fontWeight: 500 }}>{ev.label}</span>
+                    <span style={{ fontSize: 14, color: T.text1, fontWeight: 500 }}>{ev.label}</span>
                     {ev.meeting?.recurrence && ev.meeting.recurrence !== 'none' && (
-                      <span style={{ fontSize: 10, color: T.purple }}>🔁</span>
+                      <span style={{ fontSize: 14, color: T.purple }}>🔁</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                     {ev.meta
                       || (ev.type === "meeting" && ev.meeting ? `${ev.meeting.duration}min · ${ev.meeting.type} · ${ev.meeting.contact || "No contact"}` :
                      ev.type === "deal" ? "Deal closing" : ev.type === "overdue" ? "⚠ Overdue" : `${ev.priority || "Medium"} priority task`)}
                   </div>
                   {ev.meeting && (
                     <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                      <button onClick={(e) => { e.stopPropagation(); downloadICS(ev.meeting!); }}
-                        style={{ fontSize: 10, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 8px", color: T.blue, cursor: "pointer" }}>📥 .ics</button>
+                      <button aria-label="Action" onClick={(e) => { e.stopPropagation(); downloadICS(ev.meeting!); }}
+                        style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 8px", color: T.blue, cursor: "pointer" }}>📥 .ics</button>
                       {ev.meeting.meetingUrl && (
-                        <button onClick={(e) => { e.stopPropagation(); window.open(ev.meeting!.meetingUrl, "_blank"); }}
-                          style={{ fontSize: 10, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 8px", color: T.green, cursor: "pointer" }}>🔗 Join</button>
+                        <button aria-label="Action" onClick={(e) => { e.stopPropagation(); window.open(ev.meeting!.meetingUrl, "_blank"); }}
+                          style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 8px", color: T.green, cursor: "pointer" }}>🔗 Join</button>
                       )}
                     </div>
                   )}
@@ -827,15 +827,15 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
         <div style={{ ...S.card }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <button onClick={prevDay} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>←</button>
+              <button aria-label="prev" onClick={prevDay} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 14 }}>←</button>
               <span style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>
                 {new Date(dayViewDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
               </span>
-              <button onClick={nextDay} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>→</button>
+              <button aria-label="next" onClick={nextDay} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 14 }}>→</button>
             </div>
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setDayViewDate(todayStr)} style={{ fontSize: 11, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 10px", color: T.blue, cursor: "pointer" }}>Today</button>
-              <span style={{ fontSize: 12, color: T.text3 }}>{dayMeetings.length} meeting{dayMeetings.length !== 1 ? "s" : ""}</span>
+              <button aria-label="Action" onClick={() => setDayViewDate(todayStr)} style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 10px", color: T.blue, cursor: "pointer" }}>Today</button>
+              <span style={{ fontSize: 14, color: T.text3 }}>{dayMeetings.length} meeting{dayMeetings.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
 
@@ -851,7 +851,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 cursor: "pointer", position: "relative",
               }} onClick={() => openNewMeeting(dayViewDate, `${String(h).padStart(2, "0")}:00`)}>
                 <div style={{
-                  width: 56, fontSize: 10, color: T.text3, fontFamily: "'JetBrains Mono', monospace",
+                  width: 56, fontSize: 14, color: T.text3, fontFamily: "'JetBrains Mono', monospace",
                   paddingTop: 2, textAlign: "right", paddingRight: 8, flexShrink: 0,
                   borderRight: `1px solid ${T.gridLineStrong}`,
                 }}>
@@ -879,15 +879,15 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                     transition: "opacity 0.15s", zIndex: 10, overflow: "hidden",
                   }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: T.text0 }}>{m.title}</span>
-                    {m.recurrence && m.recurrence !== 'none' && <span style={{ fontSize: 9 }}>🔁</span>}
+                    <span style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{m.title}</span>
+                    {m.recurrence && m.recurrence !== 'none' && <span style={{ fontSize: 14 }}>🔁</span>}
                   </div>
-                  <div style={{ fontSize: 10, color: T.text2 }}>
+                  <div style={{ fontSize: 14, color: T.text2 }}>
                     {m.time} – {addMinutes(m.time, m.duration)} · {m.contact || "No contact"}
                   </div>
                   <div style={{ position: "absolute", top: 4, right: 6, display: "flex", gap: 4 }}>
-                    <button onClick={(e) => { e.stopPropagation(); downloadICS(m); }}
-                      style={{ fontSize: 9, background: `${T.bg1}cc`, border: "none", borderRadius: 3, padding: "2px 5px", color: T.blue, cursor: "pointer" }}>📥</button>
+                    <button aria-label="Action" onClick={(e) => { e.stopPropagation(); downloadICS(m); }}
+                      style={{ fontSize: 14, background: `${T.bg1}cc`, border: "none", borderRadius: 3, padding: "2px 5px", color: T.blue, cursor: "pointer" }}>📥</button>
                   </div>
                 </div>
               );
@@ -903,7 +903,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 borderRadius: T.radius.sm, padding: "4px 8px",
                 pointerEvents: "none", zIndex: 5,
               }}>
-                <div style={{ fontSize: 11, color: T.accent, fontWeight: 600 }}>{dragGhostTime} — {draggingMeeting.title}</div>
+                <div style={{ fontSize: 14, color: T.accent, fontWeight: 600 }}>{dragGhostTime} — {draggingMeeting.title}</div>
               </div>
             )}
 
@@ -926,15 +926,15 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
         <div style={{ ...S.card }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flex: isMobile ? "1 1 100%" : undefined, justifyContent: isMobile ? "center" : undefined }}>
-              <button onClick={prevWeek} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>←</button>
+              <button aria-label="prev" onClick={prevWeek} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 14 }}>←</button>
               <span style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: T.text0, textAlign: "center", flex: isMobile ? 1 : undefined }}>
                 {new Date(weekDates[0] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} – {new Date(weekDates[6] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: isMobile ? undefined : "numeric" })}
               </span>
-              <button onClick={nextWeek} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>→</button>
+              <button aria-label="next" onClick={nextWeek} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 14 }}>→</button>
             </div>
             <div style={{ display: "flex", gap: 6, alignItems: "center", flex: isMobile ? "1 1 100%" : undefined, justifyContent: isMobile ? "space-between" : undefined }}>
-              <button onClick={() => setDayViewDate(todayStr)} style={{ fontSize: 11, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 10px", color: T.blue, cursor: "pointer" }}>This Week</button>
-              <span style={{ fontSize: 12, color: T.text3 }}>{weekMeetings.length} meeting{weekMeetings.length !== 1 ? "s" : ""}</span>
+              <button aria-label="Action" onClick={() => setDayViewDate(todayStr)} style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 10px", color: T.blue, cursor: "pointer" }}>This Week</button>
+              <span style={{ fontSize: 14, color: T.text3 }}>{weekMeetings.length} meeting{weekMeetings.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
 
@@ -951,38 +951,38 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                     background: isToday ? `${T.blue}10` : T.bg2,
                     overflow: "hidden",
                   }}>
-                    <button type="button" onClick={() => { setDayViewDate(dateStr); setViewMode("day"); }} style={{
+                    <button aria-label="Action" type="button" onClick={() => { setDayViewDate(dateStr); setViewMode("day"); }} style={{
                       width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
                       padding: "12px 14px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
                     }}>
                       <div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: isToday ? T.blue : T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: isToday ? T.blue : T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                           {isToday ? "Today" : d.toLocaleDateString("en-US", { weekday: "long" })}
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, marginTop: 2 }}>
                           {d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </div>
                       </div>
-                      <div style={{ fontSize: 11, color: T.text3, fontWeight: 600 }}>
+                      <div style={{ fontSize: 14, color: T.text3, fontWeight: 600 }}>
                         {dayMeetings.length} meeting{dayMeetings.length === 1 ? "" : "s"} · Open →
                       </div>
                     </button>
                     {dayMeetings.length === 0 ? (
-                      <div style={{ padding: "0 14px 14px", fontSize: 12, color: T.text3 }}>No meetings</div>
+                      <div style={{ padding: "0 14px 14px", fontSize: 14, color: T.text3 }}>No meetings</div>
                     ) : (
                       <div style={{ padding: "0 10px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
                         {dayMeetings.map(m => (
-                          <button key={m.id} type="button" onClick={() => openEditMeeting(m)} style={{
+                          <button aria-label="Action" key={m.id} type="button" onClick={() => openEditMeeting(m)} style={{
                             display: "flex", gap: 10, alignItems: "flex-start", textAlign: "left",
                             padding: "10px 12px", borderRadius: T.radius.sm, cursor: "pointer",
                             border: `1px solid ${(MEETING_TYPE_COLORS[m.type] || T.purple)}33`,
                             background: `${MEETING_TYPE_COLORS[m.type] || T.purple}12`,
                             borderLeft: `3px solid ${MEETING_TYPE_COLORS[m.type] || T.purple}`,
                           }}>
-                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: T.text2, minWidth: 44 }}>{m.time}</span>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 14, fontWeight: 700, color: T.text2, minWidth: 44 }}>{m.time}</span>
                             <span style={{ flex: 1 }}>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{m.title}</div>
-                              <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>{m.duration}m · {m.contact || m.type}</div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{m.title}</div>
+                              <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{m.duration}m · {m.contact || m.type}</div>
                             </span>
                           </button>
                         ))}
@@ -1006,7 +1006,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                   borderRight: i < 6 ? `1px solid ${T.gridLine}` : "none",
                   background: isToday ? `${T.blue}10` : "transparent",
                 }}>
-                  <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase" }}>
+                  <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase" }}>
                     {d.toLocaleDateString("en-US", { weekday: "short" })}
                   </div>
                   <div style={{
@@ -1030,7 +1030,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
               {HOURS.map(h => (
                 <div key={h} style={{ display: "contents" }}>
                   <div style={{
-                    height: 60, fontSize: 10, color: T.text3,
+                    height: 60, fontSize: 14, color: T.text3,
                     fontFamily: "'JetBrains Mono', monospace", paddingTop: 2,
                     textAlign: "right", paddingRight: 8,
                     borderTop: h === 0 ? "none" : `1px solid ${T.gridLine}`,
@@ -1078,12 +1078,12 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                       transition: "opacity 0.15s", zIndex: 10, overflow: "hidden",
                       boxSizing: "border-box",
                     }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {m.title}
-                      {m.recurrence && m.recurrence !== 'none' && <span style={{ marginLeft: 3, fontSize: 8 }}>🔁</span>}
+                      {m.recurrence && m.recurrence !== 'none' && <span style={{ marginLeft: 3, fontSize: 14 }}>🔁</span>}
                     </div>
                     {m.duration >= 30 && (
-                      <div style={{ fontSize: 9, color: T.text2 }}>
+                      <div style={{ fontSize: 14, color: T.text2 }}>
                         {m.time} · {m.contact || ""}
                       </div>
                     )}
@@ -1106,7 +1106,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                   borderRadius: T.radius.sm, padding: "2px 6px",
                   pointerEvents: "none", zIndex: 5, boxSizing: "border-box",
                 }}>
-                  <div style={{ fontSize: 10, color: T.accent, fontWeight: 600 }}>{dragGhostTime}</div>
+                  <div style={{ fontSize: 14, color: T.accent, fontWeight: 600 }}>{dragGhostTime}</div>
                 </div>
               );
             })()}
@@ -1138,17 +1138,17 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
         <div style={{ ...S.card }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <button onClick={prev} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>←</button>
+              <button aria-label="prev" onClick={prev} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 14 }}>←</button>
               <span style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>{monthName} {year}</span>
-              <button onClick={next} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 12 }}>→</button>
+              <button aria-label="next" onClick={next} style={{ background: T.bg4, border: "none", borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, cursor: "pointer", fontSize: 14 }}>→</button>
             </div>
-            <div style={{ fontSize: 12, color: T.text3 }}>{agendaItems.length} events</div>
+            <div style={{ fontSize: 14, color: T.text3 }}>{agendaItems.length} events</div>
           </div>
 
           {agendaItems.length === 0 && (
             <div style={{ padding: "50px 0", textAlign: "center" }}>
               <div style={{ fontSize: 32, marginBottom: 10, opacity: 0.3 }}>📋</div>
-              <div style={{ fontSize: 13, color: T.text3 }}>No events this month</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>No events this month</div>
             </div>
           )}
 
@@ -1163,7 +1163,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 <div key={i}>
                   {showDate && (
                     <div style={{
-                      fontSize: 11, fontWeight: 700, color: item.date === todayStr ? T.blue : T.text3,
+                      fontSize: 14, fontWeight: 700, color: item.date === todayStr ? T.blue : T.text3,
                       textTransform: "uppercase", letterSpacing: "0.06em", padding: "14px 0 6px",
                       borderTop: i > 0 ? `1px solid ${T.bg4}` : "none",
                     }}>
@@ -1177,13 +1177,13 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                     cursor: item.meeting ? "pointer" : "default",
                   }} onClick={() => item.meeting && openEditMeeting(item.meeting)}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, flexShrink: 0 }} />
-                    {item.time && <span style={{ fontSize: 11, fontWeight: 700, color: T.text2, fontFamily: "'JetBrains Mono', monospace", width: 40 }}>{item.time}</span>}
-                    <span style={{ fontSize: 12, color: T.text1, flex: 1 }}>{item.label}</span>
-                    {item.meeting?.recurrence && item.meeting.recurrence !== 'none' && <span style={{ fontSize: 10 }}>🔁</span>}
-                    <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: T.radius.xs, background: `${item.color}18`, color: item.color, fontWeight: 600 }}>{item.type}</span>
+                    {item.time && <span style={{ fontSize: 14, fontWeight: 700, color: T.text2, fontFamily: "'JetBrains Mono', monospace", width: 40 }}>{item.time}</span>}
+                    <span style={{ fontSize: 14, color: T.text1, flex: 1 }}>{item.label}</span>
+                    {item.meeting?.recurrence && item.meeting.recurrence !== 'none' && <span style={{ fontSize: 14 }}>🔁</span>}
+                    <span style={{ fontSize: 14, padding: "2px 7px", borderRadius: T.radius.xs, background: `${item.color}18`, color: item.color, fontWeight: 600 }}>{item.type}</span>
                     {item.meeting && (
-                      <button onClick={(e) => { e.stopPropagation(); downloadICS(item.meeting!); }}
-                        style={{ fontSize: 10, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 7px", color: T.blue, cursor: "pointer" }}>📥</button>
+                      <button aria-label="Action" onClick={(e) => { e.stopPropagation(); downloadICS(item.meeting!); }}
+                        style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 7px", color: T.blue, cursor: "pointer" }}>📥</button>
                     )}
                   </div>
                 </div>
@@ -1200,22 +1200,22 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, marginBottom: 16 }}>🔗 Booking Page</div>
             <div style={{ ...S.label }}>Your Booking Link</div>
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-              <div style={{ flex: 1, ...S.input, fontSize: 11, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bookingLink}</div>
-              <button onClick={copyBookingLink} style={{ ...S.btn, fontSize: 11, padding: "8px 14px", whiteSpace: "nowrap" }}>📋 Copy</button>
+              <div style={{ flex: 1, ...S.input, fontSize: 14, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{bookingLink}</div>
+              <button aria-label="copy" onClick={copyBookingLink} style={{ ...S.btn, fontSize: 14, padding: "8px 14px", whiteSpace: "nowrap" }}>📋 Copy</button>
             </div>
             <div style={{ ...S.label }}>Working Hours</div>
-            <div style={{ fontSize: 13, color: T.text1, marginBottom: 6 }}>{availability.startHour}:00 – {availability.endHour}:00 ({availability.timezone})</div>
+            <div style={{ fontSize: 14, color: T.text1, marginBottom: 6 }}>{availability.startHour}:00 – {availability.endHour}:00 ({availability.timezone})</div>
             <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) => (
                 <div key={d} style={{
-                  fontSize: 10, padding: "4px 8px", borderRadius: T.radius.xs, fontWeight: 600,
+                  fontSize: 14, padding: "4px 8px", borderRadius: T.radius.xs, fontWeight: 600,
                   background: availability.workdays.includes(i) ? `${T.green}22` : T.bg4,
                   color: availability.workdays.includes(i) ? T.green : T.text3,
                   border: `1px solid ${availability.workdays.includes(i) ? T.green + "44" : T.bg5}`,
                 }}>{d}</div>
               ))}
             </div>
-            <div style={{ fontSize: 11, color: T.text3, marginBottom: 20 }}>Buffer: {availability.bufferTime} min between meetings</div>
+            <div style={{ fontSize: 14, color: T.text3, marginBottom: 20 }}>Buffer: {availability.bufferTime} min between meetings</div>
             <div style={{ ...S.label }}>Meeting Types</div>
             {availability.meetingTypes.map(mt => (
               <div key={mt.id} style={{
@@ -1224,12 +1224,12 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 borderRadius: T.radius.md, marginBottom: 6, borderLeft: `3px solid ${mt.color}`,
               }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: T.text1, fontWeight: 600 }}>{mt.name}</div>
-                  <div style={{ fontSize: 11, color: T.text3 }}>{mt.duration} min · {mt.description}</div>
+                  <div style={{ fontSize: 14, color: T.text1, fontWeight: 600 }}>{mt.name}</div>
+                  <div style={{ fontSize: 14, color: T.text3 }}>{mt.duration} min · {mt.description}</div>
                 </div>
               </div>
             ))}
-            <button onClick={() => setShowBookingPreview(true)} style={{ ...S.btnGhost, marginTop: 14, width: "100%", textAlign: "center", fontSize: 12 }}>
+            <button aria-label="Action" onClick={() => setShowBookingPreview(true)} style={{ ...S.btnGhost, marginTop: 14, width: "100%", textAlign: "center", fontSize: 14 }}>
               👁 Preview Booking Page
             </button>
           </div>
@@ -1239,7 +1239,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             {meetings.filter(m => m.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).length === 0 && (
               <div style={{ padding: "40px 0", textAlign: "center" }}>
                 <div style={{ fontSize: 28, marginBottom: 8, opacity: 0.3 }}>📅</div>
-                <div style={{ fontSize: 12, color: T.text3 }}>No upcoming meetings</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>No upcoming meetings</div>
               </div>
             )}
             {meetings.filter(m => m.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).map(m => (
@@ -1250,17 +1250,17 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 cursor: "pointer", borderLeft: `3px solid ${MEETING_TYPE_COLORS[m.type] || T.purple}`,
               }}>
                 <div style={{ minWidth: 58 }}>
-                  <div style={{ fontSize: 10, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div style={{ fontSize: 14, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>
                     {new Date(m.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{m.time}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{m.time}</div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <span style={{ fontSize: 12, color: T.text1, fontWeight: 500 }}>{m.title}</span>
-                    {m.recurrence && m.recurrence !== 'none' && <span style={{ fontSize: 9 }}>🔁</span>}
+                    <span style={{ fontSize: 14, color: T.text1, fontWeight: 500 }}>{m.title}</span>
+                    {m.recurrence && m.recurrence !== 'none' && <span style={{ fontSize: 14 }}>🔁</span>}
                   </div>
-                  <div style={{ fontSize: 10, color: T.text3 }}>
+                  <div style={{ fontSize: 14, color: T.text3 }}>
                     {m.duration}min
                     {m.contact ? ` · ${m.contact}` : ""}
                     {(m.ownerName || m.ownerId || m.organizer)
@@ -1269,9 +1269,9 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 4 }}>
-                  <button onClick={(e) => { e.stopPropagation(); downloadICS(m); }}
-                    style={{ fontSize: 10, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 7px", color: T.blue, cursor: "pointer" }}>📥</button>
-                  <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: T.radius.xs, background: m.status === "confirmed" ? `${T.green}18` : `${T.orange}18`, color: m.status === "confirmed" ? T.green : T.orange, fontWeight: 600 }}>{m.status}</span>
+                  <button aria-label="Action" onClick={(e) => { e.stopPropagation(); downloadICS(m); }}
+                    style={{ fontSize: 14, background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "3px 7px", color: T.blue, cursor: "pointer" }}>📥</button>
+                  <span style={{ fontSize: 14, padding: "2px 7px", borderRadius: T.radius.xs, background: m.status === "confirmed" ? `${T.green}18` : `${T.orange}18`, color: m.status === "confirmed" ? T.green : T.orange, fontWeight: 600 }}>{m.status}</span>
                 </div>
               </div>
             ))}
@@ -1313,7 +1313,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 maxWidth: "100%",
               }}>
                 {MEETING_TEMPLATES.map(tpl => (
-                  <button key={tpl.name} type="button" onClick={() => applyTemplate(tpl)}
+                  <button aria-label="Action" key={tpl.name} type="button" onClick={() => applyTemplate(tpl)}
                     style={{
                       fontSize: isMobile ? 11 : 9,
                       background: nmTitle === tpl.name ? `${T.accent}22` : T.bg4,
@@ -1332,7 +1332,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             )}
 
             <div style={{ ...S.label }}>Title *</div>
-            <input value={nmTitle} onChange={e => setNmTitle(e.target.value)} placeholder="e.g. Discovery Call — Acme Corp"
+            <input value={nmTitle} onChange={e = aria-label="input"> setNmTitle(e.target.value)} placeholder="e.g. Discovery Call — Acme Corp"
               style={{ ...S.input, marginBottom: 14, boxSizing: "border-box", width: "100%" }} />
 
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
@@ -1357,35 +1357,35 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
               <div>
                 <div style={{ ...S.label }}>Date *</div>
-                <input type="date" value={nmDate} onChange={e => setNmDate(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
+                <input type="date" value={nmDate} onChange={e = aria-label="date"> setNmDate(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
               </div>
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ ...S.label }}>Time *</div>
-                  <button type="button" onClick={generateSuggestions} style={{ fontSize: 9, background: "none", border: "none", color: T.purple, cursor: "pointer", fontWeight: 600 }}>✨ Suggest Times</button>
+                  <button aria-label="Action" type="button" onClick={generateSuggestions} style={{ fontSize: 14, background: "none", border: "none", color: T.purple, cursor: "pointer", fontWeight: 600 }}>✨ Suggest Times</button>
                 </div>
-                <input type="time" value={nmTime} onChange={e => setNmTime(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
+                <input type="time" value={nmTime} onChange={e = aria-label="time"> setNmTime(e.target.value)} style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
               </div>
             </div>
 
             {/* Smart scheduling suggestions */}
             {showSuggestions && suggestedSlots.length > 0 && (
               <div style={{ marginBottom: 14, padding: 12, background: `${T.purple}10`, border: `1px solid ${T.purple}22`, borderRadius: T.radius.md }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: T.purple, marginBottom: 8 }}>✨ AI Suggested Times</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.purple, marginBottom: 8 }}>✨ AI Suggested Times</div>
                 {suggestedSlots.map((slot, i) => (
-                  <button key={i} onClick={() => { setNmDate(slot.date); setNmTime(slot.time); setShowSuggestions(false); }}
+                  <button aria-label="Action" key={i} onClick={() => { setNmDate(slot.date); setNmTime(slot.time); setShowSuggestions(false); }}
                     style={{
                       display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
                       padding: "8px 10px", background: T.bg3, border: `1px solid ${T.bg4}`,
                       borderRadius: T.radius.sm, marginBottom: 4, cursor: "pointer", textAlign: "left",
                     }}>
                     <div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{slot.time}</span>
-                      <span style={{ fontSize: 11, color: T.text2, marginLeft: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{slot.time}</span>
+                      <span style={{ fontSize: 14, color: T.text2, marginLeft: 8 }}>
                         {new Date(slot.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                       </span>
                     </div>
-                    <span style={{ fontSize: 10, color: T.text3 }}>{slot.reason}</span>
+                    <span style={{ fontSize: 14, color: T.text3 }}>{slot.reason}</span>
                   </button>
                 ))}
               </div>
@@ -1411,11 +1411,11 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             </div>
 
             <div style={{ ...S.label }}>Meeting URL</div>
-            <input value={nmUrl} onChange={e => setNmUrl(e.target.value)} placeholder="https://meet.google.com/..."
+            <input value={nmUrl} onChange={e = aria-label="input"> setNmUrl(e.target.value)} placeholder="https://meet.google.com/..."
               style={{ ...S.input, marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
 
             <div style={{ ...S.label }}>Notes</div>
-            <textarea value={nmNotes} onChange={e => setNmNotes(e.target.value)} placeholder="Meeting agenda..."
+            <textarea value={nmNotes} onChange={e = aria-label="textarea"> setNmNotes(e.target.value)} placeholder="Meeting agenda..."
               style={{ ...S.input, minHeight: 60, resize: "vertical", marginBottom: 14, width: "100%", boxSizing: "border-box" }} />
 
             {/* Checklist */}
@@ -1424,10 +1424,10 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 <div style={{ ...S.label }}>Checklist / Talking Points</div>
                 {nmChecklist.map((item, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 0" }}>
-                    <span style={{ fontSize: 10, color: T.text3, fontFamily: "'JetBrains Mono', monospace", width: 16 }}>{i + 1}.</span>
-                    <span style={{ fontSize: 12, color: T.text1, flex: 1 }}>{item}</span>
-                    <button onClick={() => setNmChecklist(prev => prev.filter((_, j) => j !== i))}
-                      style={{ fontSize: 10, background: "none", border: "none", color: T.text3, cursor: "pointer" }}>×</button>
+                    <span style={{ fontSize: 14, color: T.text3, fontFamily: "'JetBrains Mono', monospace", width: 16 }}>{i + 1}.</span>
+                    <span style={{ fontSize: 14, color: T.text1, flex: 1 }}>{item}</span>
+                    <button aria-label="Action" onClick={() => setNmChecklist(prev => prev.filter((_, j) => j !== i))}
+                      style={{ fontSize: 14, background: "none", border: "none", color: T.text3, cursor: "pointer" }}>×</button>
                   </div>
                 ))}
               </div>
@@ -1435,11 +1435,11 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
 
             <div style={{ display: "flex", gap: 10, justifyContent: isMobile ? "stretch" : "flex-end", flexWrap: "wrap" }}>
               {editingMeeting && (
-                <button onClick={(e) => { e.stopPropagation(); downloadICS(editingMeeting); }}
-                  style={{ ...S.btnGhost, fontSize: 12, flex: isMobile ? "1 1 auto" : undefined }}>📥 Download .ics</button>
+                <button aria-label="Action" onClick={(e) => { e.stopPropagation(); downloadICS(editingMeeting); }}
+                  style={{ ...S.btnGhost, fontSize: 14, flex: isMobile ? "1 1 auto" : undefined }}>📥 Download .ics</button>
               )}
-              <button onClick={() => { setShowNewMeeting(false); resetForm(); }} style={{ ...S.btnGhost, fontSize: 12, flex: isMobile ? "1 1 auto" : undefined }}>Cancel</button>
-              <button onClick={saveMeeting} style={{ ...S.btn, fontSize: 12, flex: isMobile ? "1 1 100%" : undefined }}>{editingMeeting ? "Save Changes" : "Create Meeting"}</button>
+              <button aria-label="Action" onClick={() => { setShowNewMeeting(false); resetForm(); }} style={{ ...S.btnGhost, fontSize: 14, flex: isMobile ? "1 1 auto" : undefined }}>Cancel</button>
+              <button aria-label="save" onClick={saveMeeting} style={{ ...S.btn, fontSize: 14, flex: isMobile ? "1 1 100%" : undefined }}>{editingMeeting ? "Save Changes" : "Create Meeting"}</button>
             </div>
           </div>
         </div>,
@@ -1462,7 +1462,7 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
             <div style={{ textAlign: "center", marginBottom: 24 }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>📅</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: T.text0 }}>Book a Meeting</div>
-              <div style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Choose a meeting type and pick a time</div>
+              <div style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Choose a meeting type and pick a time</div>
             </div>
             {availability.meetingTypes.map(mt => (
               <div key={mt.id} style={{
@@ -1473,13 +1473,13 @@ export function CalendarTab({ tasks, deals, meetings, contacts, availability, on
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: mt.color }} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, color: T.text0, fontWeight: 600 }}>{mt.name}</div>
-                  <div style={{ fontSize: 12, color: T.text3 }}>{mt.duration} min · {mt.description}</div>
+                  <div style={{ fontSize: 14, color: T.text3 }}>{mt.duration} min · {mt.description}</div>
                 </div>
-                <div style={{ fontSize: 11, color: mt.color, fontWeight: 600 }}>Select →</div>
+                <div style={{ fontSize: 14, color: mt.color, fontWeight: 600 }}>Select →</div>
               </div>
             ))}
             <div style={{ textAlign: "center", marginTop: 20 }}>
-              <button onClick={() => setShowBookingPreview(false)} style={{ ...S.btnGhost, fontSize: 12 }}>Close Preview</button>
+              <button aria-label="Action" onClick={() => setShowBookingPreview(false)} style={{ ...S.btnGhost, fontSize: 14 }}>Close Preview</button>
             </div>
           </div>
         </div>,

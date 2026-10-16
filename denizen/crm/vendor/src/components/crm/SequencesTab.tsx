@@ -56,7 +56,7 @@ export function SequencesTab({
     <div>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0 }}>📬 Sequences</h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+        <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>
           Email & task cadences — enroll contacts; server sends steps on schedule
         </p>
       </div>
@@ -72,19 +72,19 @@ export function SequencesTab({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>{seq.name}</div>
-                <div style={{ fontSize: 12, color: T.text3, marginTop: 4 }}>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
                   {seq.steps.length} steps · {seq.enrolledCount} enrolled · {seq.completedCount} completed
                   {activeEnrollments.length > 0 ? ` · ${activeEnrollments.length} active now` : ""}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                <button type="button" onClick={() => setEnrollSeqId(seq.id)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11 }}>
+                <button aria-label="Action" type="button" onClick={() => setEnrollSeqId(seq.id)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14 }}>
                   + Enroll contact
                 </button>
-                <button type="button" onClick={() => toggle(seq.id)} style={{
+                <button aria-label="Action" type="button" onClick={() => toggle(seq.id)} style={{
                   ...S.btn,
                   padding: "6px 12px",
-                  fontSize: 11,
+                  fontSize: 14,
                   background: seq.active ? `${T.green}22` : T.bg4,
                   color: seq.active ? T.green : T.text3,
                 }}>
@@ -94,7 +94,7 @@ export function SequencesTab({
             </div>
             <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
               {seq.steps.map((step, i) => (
-                <div key={step.id} style={{ fontSize: 12, color: T.text2, display: "flex", gap: 8 }}>
+                <div key={step.id} style={{ fontSize: 14, color: T.text2, display: "flex", gap: 8 }}>
                   <span style={{ color: T.text3, width: 18 }}>{i + 1}.</span>
                   <span style={{ color: T.accent, textTransform: "capitalize" }}>{step.type}</span>
                   <span>Day {step.day} — {step.subject || step.title || "—"}</span>
@@ -102,7 +102,7 @@ export function SequencesTab({
               ))}
             </div>
             {activeEnrollments.length > 0 && (
-              <div style={{ marginTop: 12, fontSize: 11, color: T.text3 }}>
+              <div style={{ marginTop: 12, fontSize: 14, color: T.text3 }}>
                 Active: {activeEnrollments.map((e) => {
                   const c = contacts.find((x) => x.id === e.contactId);
                   return c?.name || `#${e.contactId}`;
@@ -128,8 +128,8 @@ export function SequencesTab({
               ))}
             </select>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={() => setEnrollSeqId(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-              <button type="button" disabled={busy || enrollContactId === ""} onClick={handleEnroll} style={S.btn as React.CSSProperties}>
+              <button aria-label="Action" type="button" onClick={() => setEnrollSeqId(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+              <button aria-label="Action" type="button" disabled={busy || enrollContactId === ""} onClick={handleEnroll} style={S.btn as React.CSSProperties}>
                 {busy ? "Enrolling…" : "Enroll"}
               </button>
             </div>
@@ -137,7 +137,7 @@ export function SequencesTab({
         </div>
       )}
 
-      {msg && <div style={{ fontSize: 12, color: T.green, marginTop: 8 }}>{msg}</div>}
+      {msg && <div style={{ fontSize: 14, color: T.green, marginTop: 8 }}>{msg}</div>}
     </div>
   );
 }

@@ -163,17 +163,17 @@ export function PortalPage({ token }: { token: string }) {
           <div style={{ width: 40, height: 40, borderRadius: 10, background: `linear-gradient(135deg,${branding.accentColor},#d97706)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>{branding.logoEmoji}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>{branding.companyName}</div>
-            <div style={{ fontSize: 11, color: T.text3 }}>{branding.tagline}</div>
+            <div style={{ fontSize: 14, color: T.text3 }}>{branding.tagline}</div>
           </div>
         </div>
 
         <div style={{ background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`, border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: 24, marginBottom: 16 }}>
-          <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em", color: T.text3 }}>Proposal · PROP-{String(quote.id).padStart(4, "0")}</div>
+          <div style={{ fontSize: 14, textTransform: "uppercase", letterSpacing: "0.08em", color: T.text3 }}>Proposal · PROP-{String(quote.id).padStart(4, "0")}</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: T.text0, marginTop: 4 }}>{quote.company}</div>
-          <div style={{ fontSize: 13, color: T.text2, marginTop: 2 }}>Prepared for {quote.clientName} · {quote.recommendedPackage}</div>
+          <div style={{ fontSize: 14, color: T.text2, marginTop: 2 }}>Prepared for {quote.clientName} · {quote.recommendedPackage}</div>
           <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${T.bg4}` }}>
             {quote.lineItems.map((i) => (
-              <div key={i.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 13 }}>
+              <div key={i.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 14 }}>
                 <span style={{ color: T.text1 }}>{i.name}</span>
                 <span style={{ color: T.accent, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(i.price)}{i.unit}</span>
               </div>
@@ -181,11 +181,11 @@ export function PortalPage({ token }: { token: string }) {
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTop: `2px solid ${T.bg5}` }}>
             <div>
-              <div style={{ fontSize: 11, color: T.text3 }}>Monthly</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>Monthly</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(quote.monthlyTotal)}</div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, color: T.text3 }}>One-time</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>One-time</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: T.purple, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(quote.onetimeTotal)}</div>
             </div>
           </div>
@@ -194,7 +194,7 @@ export function PortalPage({ token }: { token: string }) {
         <div style={{ background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`, border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>✍️ Signatures ({signers.length})</div>
-            {hasSigned && <span style={{ fontSize: 10, padding: "3px 9px", borderRadius: 10, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>🔒 LOCKED</span>}
+            {hasSigned && <span style={{ fontSize: 14, padding: "3px 9px", borderRadius: 10, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>🔒 LOCKED</span>}
           </div>
 
           {signers.map((sig, idx) => (
@@ -203,7 +203,7 @@ export function PortalPage({ token }: { token: string }) {
 
           {(!hasSigned || addingMore) && (
             <div style={{ marginTop: hasSigned ? 16 : 0 }}>
-              {errorMsg && <div style={{ padding: "10px 14px", background: `${T.red}12`, border: `1px solid ${T.red}44`, borderRadius: T.radius.md, marginBottom: 12, fontSize: 12, color: T.red }}>{errorMsg}</div>}
+              {errorMsg && <div style={{ padding: "10px 14px", background: `${T.red}12`, border: `1px solid ${T.red}44`, borderRadius: T.radius.md, marginBottom: 12, fontSize: 14, color: T.red }}>{errorMsg}</div>}
               <SignaturePad
                 defaultName={hasSigned ? "" : quote.clientName}
                 showRole={hasSigned}
@@ -214,7 +214,7 @@ export function PortalPage({ token }: { token: string }) {
           )}
 
           {hasSigned && !addingMore && (
-            <button onClick={() => { setAddingMore(true); setErrorMsg(null); }} style={{ ...(S.btnGhost as React.CSSProperties), width: "100%", marginTop: 14 }}>
+            <button aria-label="Action" onClick={() => { setAddingMore(true); setErrorMsg(null); }} style={{ ...(S.btnGhost as React.CSSProperties), width: "100%", marginTop: 14 }}>
               + Add another signer
             </button>
           )}
@@ -224,13 +224,13 @@ export function PortalPage({ token }: { token: string }) {
           <div style={{ background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`, border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: 24, marginTop: 16 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, marginBottom: 8 }}>💳 Payment</div>
             {isPaid ? (
-              <div style={{ fontSize: 13, color: T.green, fontWeight: 600 }}>✓ Payment received — thank you!</div>
+              <div style={{ fontSize: 14, color: T.green, fontWeight: 600 }}>✓ Payment received — thank you!</div>
             ) : (
               <>
-                <div style={{ fontSize: 12, color: T.text2, marginBottom: 14 }}>
+                <div style={{ fontSize: 14, color: T.text2, marginBottom: 14 }}>
                   Pay {fmt(quote.monthlyTotal + quote.onetimeTotal)} securely via Stripe (first invoice).
                 </div>
-                <button onClick={() => { void handlePay(); }} disabled={paying} style={{ ...(S.btn as React.CSSProperties), width: "100%", opacity: paying ? 0.7 : 1 }}>
+                <button aria-label="Action" onClick={() => { void handlePay(); }} disabled={paying} style={{ ...(S.btn as React.CSSProperties), width: "100%", opacity: paying ? 0.7 : 1 }}>
                   {paying ? "Redirecting…" : `Pay ${fmt(quote.monthlyTotal + quote.onetimeTotal)}`}
                 </button>
               </>
@@ -238,7 +238,7 @@ export function PortalPage({ token }: { token: string }) {
           </div>
         )}
 
-        <div style={{ textAlign: "center", fontSize: 11, color: T.text3, marginTop: 24 }}>
+        <div style={{ textAlign: "center", fontSize: 14, color: T.text3, marginTop: 24 }}>
           Powered by {branding.companyName} · Signatures sync to your team workspace
         </div>
       </div>
@@ -249,14 +249,14 @@ export function PortalPage({ token }: { token: string }) {
 function SignerCard({ sig, index, onDownload }: { sig: SignerView; index: number; onDownload: () => void }) {
   return (
     <div style={{ background: T.bg3, borderRadius: T.radius.md, padding: 16, marginBottom: 12, border: `1px solid ${T.bg4}` }}>
-      <div style={{ fontSize: 11, color: T.text3, fontWeight: 700, marginBottom: 8 }}>Signer #{index + 1} · {sig.signerName}</div>
+      <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, marginBottom: 8 }}>Signer #{index + 1} · {sig.signerName}</div>
       {sig.method === "drawn" ? (
         <img src={sig.value} alt="" style={{ maxWidth: "100%", maxHeight: 100, background: "#fff", borderRadius: 6 }} />
       ) : (
         <div style={{ fontFamily: "'Caveat', cursive", fontSize: 32, color: T.accent }}>{sig.value}</div>
       )}
-      <div style={{ fontSize: 11, color: T.text3, marginTop: 8 }}>{new Date(sig.signedAt).toLocaleString()}</div>
-      <button onClick={onDownload} style={{ ...(S.btn as React.CSSProperties), marginTop: 10, width: "100%" }}>📄 Download PDF</button>
+      <div style={{ fontSize: 14, color: T.text3, marginTop: 8 }}>{new Date(sig.signedAt).toLocaleString()}</div>
+      <button aria-label="Action" onClick={onDownload} style={{ ...(S.btn as React.CSSProperties), marginTop: 10, width: "100%" }}>📄 Download PDF</button>
     </div>
   );
 }
@@ -267,7 +267,7 @@ function ErrorScreen({ icon, title, body }: { icon: string; title: string; body:
       <div style={{ textAlign: "center", maxWidth: 400 }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>{icon}</div>
         <div style={{ fontSize: 18, fontWeight: 700, color: T.text0, marginBottom: 6 }}>{title}</div>
-        <div style={{ fontSize: 13, color: T.text3 }}>{body}</div>
+        <div style={{ fontSize: 14, color: T.text3 }}>{body}</div>
       </div>
     </div>
   );

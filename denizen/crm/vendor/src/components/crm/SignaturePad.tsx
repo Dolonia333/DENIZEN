@@ -107,7 +107,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
   };
 
   const tabBtn = (m: Mode, label: string, icon: string) => (
-    <button
+    <button aria-label="Action"
       key={m}
       onClick={() => setMode(m)}
       style={{
@@ -117,7 +117,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
         border: `1px solid ${mode === m ? T.accent : T.bg4}`,
         borderRadius: T.radius.md,
         cursor: "pointer",
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: 600,
         color: mode === m ? T.accent : T.text2,
         transition: "all 0.15s",
@@ -137,14 +137,14 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
       <label style={S.label as React.CSSProperties}>Full legal name</label>
       <input
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) = aria-label="input"> setName(e.target.value)}
         placeholder={defaultName}
         style={{ ...(S.input as React.CSSProperties), marginBottom: 10 }}
       />
       <label style={S.label as React.CSSProperties}>Email (optional)</label>
       <input
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e) = aria-label="input"> setEmail(e.target.value)}
         placeholder="you@company.com"
         style={{ ...(S.input as React.CSSProperties), marginBottom: showRole ? 10 : 14 }}
       />
@@ -153,7 +153,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
           <label style={S.label as React.CSSProperties}>Role / title (optional)</label>
           <input
             value={role}
-            onChange={(e) => setRole(e.target.value)}
+            onChange={(e) = aria-label="input"> setRole(e.target.value)}
             placeholder="e.g. CFO, Witness"
             style={{ ...(S.input as React.CSSProperties), marginBottom: 14 }}
           />
@@ -206,7 +206,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 13,
+                  fontSize: 14,
                   color: T.text3,
                   pointerEvents: "none",
                 }}
@@ -215,7 +215,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
               </div>
             )}
           </div>
-          <button
+          <button aria-label="clear"
             onClick={clear}
             disabled={!hasDrawing}
             style={{
@@ -235,7 +235,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
           display: "flex",
           alignItems: "flex-start",
           gap: 10,
-          fontSize: 12,
+          fontSize: 14,
           color: T.text2,
           lineHeight: 1.5,
           cursor: "pointer",
@@ -245,7 +245,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
         <input
           type="checkbox"
           checked={agreed}
-          onChange={(e) => setAgreed(e.target.checked)}
+          onChange={(e) = aria-label="checkbox"> setAgreed(e.target.checked)}
           style={{ marginTop: 3 }}
         />
         <span>
@@ -253,7 +253,7 @@ export function SignaturePad({ defaultName, consent, onSign, disabled, showRole 
         </span>
       </label>
 
-      <button
+      <button aria-label="Action"
         onClick={submit}
         disabled={!canSubmit}
         style={{

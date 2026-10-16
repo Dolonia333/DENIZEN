@@ -169,9 +169,8 @@
     const banner = document.createElement('div');
     banner.id = 'denizen-public-demo-banner';
     banner.setAttribute('role', 'status');
-    banner.innerHTML =
-      `<span class="pdb-copy"></span>` +
-      `<button type="button" class="pdb-dismiss" aria-label="Dismiss demo banner">×</button>`;
+    globalThis.DenizenSafeDom.setSafeHtml(banner, `<span class="pdb-copy"></span>` +
+      `<button type="button" class="pdb-dismiss" aria-label="Dismiss demo banner">×</button>`);
     banner.querySelector('.pdb-copy').textContent = globalThis.DenizenPublicDemo.label;
     banner.querySelector('.pdb-dismiss').addEventListener('click', () => dismissBanner({ persist: true }));
     document.body.prepend(banner);

@@ -403,7 +403,7 @@
     const on = sessionActive || listening;
     const supported = isSupported();
     speakFab.classList.toggle('listening', on);
-    speakFab.innerHTML = speakFabMarkup(on);
+    globalThis.DenizenSafeDom.setSafeHtml(speakFab, speakFabMarkup(on));
     speakFab.setAttribute('aria-label', on ? 'Stop speaking' : 'Speak to NPCs');
     speakFab.disabled = !supported;
     if (chatOpen) {
@@ -528,7 +528,7 @@
     _errorSticky = (state === 'error') && opts.sticky;
     if (statusBadge) {
       if (text) {
-        statusBadge.innerHTML = text; // allow simple formatting from explainError
+        globalThis.DenizenSafeDom.setSafeHtml(statusBadge, text); // allow simple formatting from explainError
         statusBadge.style.display = 'block';
       } else if (!_errorSticky) {
         statusBadge.style.display = 'none';

@@ -1090,7 +1090,7 @@
     if (host._cleanup) host._cleanup();
     host._cleanup = null;
     host.hidden = true;
-    host.innerHTML = '';
+    host.replaceChildren();
   }
 
   function placeCornerBuzz() {
@@ -1118,7 +1118,7 @@
       if (host._cleanup) host._cleanup();
       host._cleanup = null;
       host.hidden = true;
-      host.innerHTML = '';
+      host.replaceChildren();
       return;
     }
 
@@ -1127,7 +1127,7 @@
       if (host._cleanup) host._cleanup();
       host._cleanup = null;
       host.hidden = false;
-      host.innerHTML = buzzMascotHtml(buzzGuideLine(step), { corner: true });
+      globalThis.DenizenSafeDom.setSafeHtml(host, buzzMascotHtml(buzzGuideLine(step), { corner: true }));
 
       const openPhone = (e) => {
         e?.preventDefault?.();
@@ -1292,7 +1292,7 @@
     const phoneCorner = step.id === 'phone';
     const guide = buzzGuideLine(step);
     tooltip.style.visibility = 'hidden';
-    tooltip.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(tooltip, `
       ${phoneCorner ? '' : buzzMascotHtml(guide)}
       <div class="onb-card">
         <div class="onb-heading">
@@ -1312,7 +1312,7 @@
           <button type="button" class="onb-next">${isLast ? 'Enter the office' : 'Next stop'}</button>
         </div>
       </div>
-    `;
+    `);
 
     wireStepButtons(
       tooltip.querySelector('.onb-skip'),
@@ -1357,12 +1357,12 @@
     } catch (_) {}
     overlayEl = document.createElement('div');
     overlayEl.id = OVERLAY_ID;
-    overlayEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(overlayEl, `
       <div class="onb-backdrop" aria-hidden="true"></div>
       <div class="onb-focus" hidden aria-hidden="true"></div>
       <div class="onb-tooltip" role="dialog" aria-label="${escapeHtml(tourAriaLabel())}"></div>
       <div class="onb-corner-host" hidden aria-hidden="true"></div>
-    `;
+    `);
     document.body.appendChild(overlayEl);
 
     stepIndex = 0;

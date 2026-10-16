@@ -249,7 +249,7 @@
       if (focusModal) focusModal.remove();
       focusModal = document.createElement('div');
       focusModal.id = 'denizen-visitor-focus-modal';
-      focusModal.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(focusModal, `
         <div class="vis-card">
           <h3>Claim ${npcName} as your assistant</h3>
           <p>What should they help you with? (optional)</p>
@@ -259,7 +259,7 @@
             <button type="button" id="denizen-visitor-focus-ok">Claim</button>
           </div>
         </div>
-      `;
+      `);
       document.body.appendChild(focusModal);
       const input = focusModal.querySelector('#denizen-visitor-focus-input');
       const finish = (val) => {

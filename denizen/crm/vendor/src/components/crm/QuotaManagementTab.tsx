@@ -198,11 +198,11 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
             marginBottom: 24, padding: "24px 28px",
             borderLeft: `4px solid ${progressBarColor(primaryQuota.status)}`,
           }}>
-            <div style={{ fontSize: 13, color: T.text2, marginBottom: 4 }}>Quota Health</div>
+            <div style={{ fontSize: 14, color: T.text2, marginBottom: 4 }}>Quota Health</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: T.text0, marginBottom: 8 }}>
               You're {overallProgress}% to your {PERIOD_LABELS[primaryQuota.period].toLowerCase()} {primaryQuota.type.toLowerCase()} goal
             </div>
-            <div style={{ display: "flex", gap: 20, fontSize: 12, color: T.text2 }}>
+            <div style={{ display: "flex", gap: 20, fontSize: 14, color: T.text2 }}>
               <span>{myQuotas.filter(q => q.status === "achieved").length} achieved</span>
               <span>{myQuotas.filter(q => q.status === "on-track").length} on track</span>
               <span>{myQuotas.filter(q => q.status === "at-risk" || q.status === "behind").length} need attention</span>
@@ -221,24 +221,24 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>{q.type}</div>
-                    <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                       {PERIOD_LABELS[q.period]} · {days} day{days !== 1 ? "s" : ""} remaining
                     </div>
                   </div>
                   <span style={{
-                    fontSize: 11, padding: "3px 10px", borderRadius: T.radius.full,
+                    fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
                     background: meta.bg, color: meta.color, fontWeight: 600,
                   }}>{meta.label}</span>
                 </div>
                 {renderProgressBar(q)}
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 12, color: T.text2 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, fontSize: 14, color: T.text2 }}>
                   <span>
                     {q.type === "Revenue" ? fmt(q.currentValue) : q.currentValue} / {q.type === "Revenue" ? fmt(q.targetValue) : q.targetValue}
                   </span>
                   <span style={{ fontWeight: 700, color: meta.color }}>{pct}%</span>
                 </div>
                 {q.stretchGoal && (
-                  <div style={{ fontSize: 11, color: T.text3, marginTop: 6 }}>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>
                     Stretch goal: {q.type === "Revenue" ? fmt(q.stretchGoal) : q.stretchGoal}
                   </div>
                 )}
@@ -294,10 +294,10 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
       <span style={{ fontSize: 18 }}>{icon}</span>
       <div style={{ flex: 1 }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: T.text0, margin: 0, lineHeight: 1.2 }}>{title}</h2>
-        {subtitle && !collapsed[id] && <p style={{ fontSize: 11, color: T.text3, margin: 0, marginTop: 2 }}>{subtitle}</p>}
+        {subtitle && !collapsed[id] && <p style={{ fontSize: 14, color: T.text3, margin: 0, marginTop: 2 }}>{subtitle}</p>}
       </div>
       <span style={{
-        fontSize: 11, color: T.text3, fontWeight: 600, padding: "2px 8px",
+        fontSize: 14, color: T.text3, fontWeight: 600, padding: "2px 8px",
         borderRadius: T.radius.full, background: T.bg3, transition: "transform 0.2s",
         transform: collapsed[id] ? "rotate(-90deg)" : "rotate(0deg)",
         display: "inline-block",
@@ -319,11 +319,11 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
         marginBottom: 16,
       }}>
         {SECTIONS.map(s => (
-          <button
+          <button aria-label="Action"
             key={s.id}
             onClick={() => scrollToSection(s.id)}
             style={{
-              padding: "6px 14px", borderRadius: T.radius.full, fontSize: 12, fontWeight: 600,
+              padding: "6px 14px", borderRadius: T.radius.full, fontSize: 14, fontWeight: 600,
               background: activeNav === s.id ? `${T.accent}18` : "transparent",
               color: activeNav === s.id ? T.accent : T.text3,
               border: `1px solid ${activeNav === s.id ? `${T.accent}44` : "transparent"}`,
@@ -331,7 +331,7 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
               display: "flex", alignItems: "center", gap: 5,
             }}
           >
-            <span style={{ fontSize: 13 }}>{s.icon}</span>
+            <span style={{ fontSize: 14 }}>{s.icon}</span>
             {s.label}
           </button>
         ))}
@@ -368,7 +368,7 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
               <span style={{ fontSize: 20 }}>{s.emoji}</span>
               <div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
-                <div style={{ fontSize: 10, color: T.text3, marginTop: 2, textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: 600 }}>{s.label}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2, textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: 600 }}>{s.label}</div>
               </div>
             </div>
           ))}
@@ -420,8 +420,8 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
         }}>
           <div style={{ display: "flex", gap: 6 }}>
             {["all", "on-track", "at-risk", "behind", "achieved"].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{
-                padding: "5px 12px", borderRadius: T.radius.full, fontSize: 11, fontWeight: 600,
+              <button aria-label="Action" key={f} onClick={() => setFilter(f)} style={{
+                padding: "5px 12px", borderRadius: T.radius.full, fontSize: 14, fontWeight: 600,
                 background: filter === f ? `${(STATUS_META[f] || {}).color || T.accent}22` : T.bg3,
                 color: filter === f ? (STATUS_META[f] || {}).color || T.accent : T.text3,
                 border: `1px solid ${filter === f ? `${(STATUS_META[f] || {}).color || T.accent}66` : T.bg4}`,
@@ -430,20 +430,20 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
             ))}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            <button onClick={openAdd} style={S.btn as React.CSSProperties}>+ Assign Quota</button>
-            <button onClick={() => exportQuotasCsv(liveQuotas)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11, padding: "6px 12px" }}>📥 CSV</button>
-            <button onClick={() => exportQuotasPdf(liveQuotas)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11, padding: "6px 12px" }}>📄 PDF</button>
+            <button aria-label="Add" onClick={openAdd} style={S.btn as React.CSSProperties}>+ Assign Quota</button>
+            <button aria-label="Action" onClick={() => exportQuotasCsv(liveQuotas)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "6px 12px" }}>📥 CSV</button>
+            <button aria-label="Action" onClick={() => exportQuotasPdf(liveQuotas)} style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "6px 12px" }}>📄 PDF</button>
           </div>
         </div>
 
         {/* Table */}
         <div style={{ ...S.card as React.CSSProperties, padding: 0, overflow: "hidden", marginBottom: 20 }}>
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${T.bg4}` }}>
                   {["Team Member", "Quota Type", "Period", "Target", "Current", "Progress", "Status", "Actions"].map(h => (
-                    <th key={h} style={{ padding: "12px 14px", textAlign: "left", fontSize: 10, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                    <th key={h} style={{ padding: "12px 14px", textAlign: "left", fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -460,7 +460,7 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
                             width: 28, height: 28, borderRadius: T.radius.full,
                             background: `linear-gradient(135deg, ${T.purple}, ${T.blue})`,
                             display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 10, fontWeight: 700, color: "#fff",
+                            fontSize: 14, fontWeight: 700, color: "#fff",
                           }}>{member?.avatar || "?"}</div>
                           <span style={{ color: T.text1, fontWeight: 600 }}>{q.assigneeName}</span>
                         </div>
@@ -469,7 +469,7 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
                       <td style={{ padding: "12px 14px", color: T.text2 }}>{PERIOD_LABELS[q.period]}</td>
                       <td style={{ padding: "12px 14px", color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>
                         {q.type === "Revenue" ? fmt(q.targetValue) : q.targetValue}
-                        {q.stretchGoal && <span style={{ color: T.text3, fontSize: 10 }}> / {q.type === "Revenue" ? fmt(q.stretchGoal) : q.stretchGoal}</span>}
+                        {q.stretchGoal && <span style={{ color: T.text3, fontSize: 14 }}> / {q.type === "Revenue" ? fmt(q.stretchGoal) : q.stretchGoal}</span>}
                       </td>
                       <td style={{ padding: "12px 14px", color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>
                         {q.type === "Revenue" ? fmt(q.currentValue) : q.currentValue}
@@ -477,19 +477,19 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
                       <td style={{ padding: "12px 14px", width: 140 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <div style={{ flex: 1 }}>{renderProgressBar(q)}</div>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: meta.color, minWidth: 32 }}>{pct}%</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: meta.color, minWidth: 32 }}>{pct}%</span>
                         </div>
                       </td>
                       <td style={{ padding: "12px 14px" }}>
                         <span style={{
-                          fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
+                          fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
                           background: meta.bg, color: meta.color, fontWeight: 600,
                         }}>{meta.label}</span>
                       </td>
                       <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button onClick={(e) => { e.stopPropagation(); openEdit(q); }} style={{ ...S.btnGhost as React.CSSProperties, padding: "4px 10px", fontSize: 11 }}>Edit</button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDelete(q.id); }} style={{ ...S.btnGhost as React.CSSProperties, padding: "4px 10px", fontSize: 11, color: T.red }}>✕</button>
+                          <button aria-label="Action" onClick={(e) => { e.stopPropagation(); openEdit(q); }} style={{ ...S.btnGhost as React.CSSProperties, padding: "4px 10px", fontSize: 14 }}>Edit</button>
+                          <button aria-label="Action" onClick={(e) => { e.stopPropagation(); handleDelete(q.id); }} style={{ ...S.btnGhost as React.CSSProperties, padding: "4px 10px", fontSize: 14, color: T.red }}>✕</button>
                         </div>
                       </td>
                     </tr>
@@ -499,7 +499,7 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
             </table>
           </div>
           {displayQuotas.length === 0 && (
-            <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 13 }}>
+            <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 14 }}>
               No quotas found. Click "Assign Quota" to get started.
             </div>
           )}
@@ -529,10 +529,10 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
                   style={{ ...S.input as React.CSSProperties, flex: 1 }}>
                   {allTypes.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <button onClick={() => {
+                <button aria-label="Action" onClick={() => {
                   const name = prompt("Enter custom quota type:");
                   if (name?.trim()) { setCustomTypes(p => [...p, name.trim()]); setForm(p => ({ ...p, type: name.trim() })); }
-                }} style={{ ...S.btnGhost as React.CSSProperties, whiteSpace: "nowrap", fontSize: 11 }}>+ Custom</button>
+                }} style={{ ...S.btnGhost as React.CSSProperties, whiteSpace: "nowrap", fontSize: 14 }}>+ Custom</button>
               </div>
             </div>
 
@@ -550,13 +550,13 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
               <div>
                 <label style={S.label as React.CSSProperties}>Target Value</label>
                 <input type="number" value={form.targetValue || ""} placeholder="e.g. 50000"
-                  onChange={e => setForm(p => ({ ...p, targetValue: e.target.value }))}
+                  onChange={e = aria-label="e.g. 50000"> setForm(p => ({ ...p, targetValue: e.target.value }))}
                   style={S.input as React.CSSProperties} />
               </div>
               <div>
                 <label style={S.label as React.CSSProperties}>Stretch Goal (optional)</label>
                 <input type="number" value={form.stretchGoal || ""} placeholder="e.g. 65000"
-                  onChange={e => setForm(p => ({ ...p, stretchGoal: e.target.value }))}
+                  onChange={e = aria-label="e.g. 65000"> setForm(p => ({ ...p, stretchGoal: e.target.value }))}
                   style={S.input as React.CSSProperties} />
               </div>
             </div>
@@ -564,13 +564,13 @@ export function QuotaManagementTab({ quotas, onUpdateQuotas, isManager, currentU
             <div style={{ marginBottom: 20 }}>
               <label style={S.label as React.CSSProperties}>Current Value (manual override)</label>
               <input type="number" value={form.currentValue || "0"}
-                onChange={e => setForm(p => ({ ...p, currentValue: e.target.value }))}
+                onChange={e = aria-label="number"> setForm(p => ({ ...p, currentValue: e.target.value }))}
                 style={S.input as React.CSSProperties} />
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button onClick={() => setModal(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-              <button onClick={handleSave} style={S.btn as React.CSSProperties}>
+              <button aria-label="Action" onClick={() => setModal(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+              <button aria-label="Save" onClick={handleSave} style={S.btn as React.CSSProperties}>
                 {modal === "edit" ? "Save Changes" : "Assign Quota"}
               </button>
             </div>

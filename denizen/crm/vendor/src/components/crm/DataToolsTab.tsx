@@ -247,13 +247,13 @@ export function DataToolsTab({
     <div>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0 }}>📦 Data Tools</h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Import, export, clean up, and back up your CRM workspace</p>
+        <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Import, export, clean up, and back up your CRM workspace</p>
       </div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
         {sections.map((s) => (
-          <button key={s.id} onClick={() => setSection(s.id)} style={{
-            padding: "7px 14px", borderRadius: T.radius.full, fontSize: 12, fontWeight: 600,
+          <button aria-label="Action" key={s.id} onClick={() => setSection(s.id)} style={{
+            padding: "7px 14px", borderRadius: T.radius.full, fontSize: 14, fontWeight: 600,
             background: section === s.id ? `${T.accent}22` : T.bg3,
             color: section === s.id ? T.accent : T.text3,
             border: `1px solid ${section === s.id ? `${T.accent}66` : T.bg4}`, cursor: "pointer",
@@ -264,18 +264,18 @@ export function DataToolsTab({
       {/* IMPORT */}
       {section === "import" && (
         <div>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); if (fileRef.current) fileRef.current.value = ""; }} />
+          <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={(e) = aria-label="file"> { const f = e.target.files?.[0]; if (f) handleFile(f); if (fileRef.current) fileRef.current.value = ""; }} />
           {!effectivePreview ? (
             <div style={card} onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}>
               <div onClick={() => fileRef.current?.click()} style={{ border: `2px dashed ${dragOver ? T.accent : T.bg5}`, borderRadius: T.radius.lg, padding: "48px 24px", textAlign: "center", cursor: "pointer", background: dragOver ? `${T.accent}08` : "transparent" }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>📄</div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Drop CSV or click to browse</div>
-                <div style={{ fontSize: 12, color: T.text3, marginTop: 6 }}>Auto-detects contacts, deals, tasks, companies, or notes</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>Auto-detects contacts, deals, tasks, companies, or notes</div>
               </div>
               {onLoadDemoData && (
                 <div style={{ marginTop: 14 }}>
-                  <button onClick={onLoadDemoData} style={{ ...S.btnGhost }}>Load sample CRM data</button>
-                  <div style={{ fontSize: 11, color: T.text3, marginTop: 6 }}>
+                  <button aria-label="adD" onClick={onLoadDemoData} style={{ ...S.btnGhost }}>Load sample CRM data</button>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 6 }}>
                     Optional for demos only. New workspaces start empty and track your real contacts, deals, and tasks.
                   </div>
                 </div>
@@ -286,28 +286,28 @@ export function DataToolsTab({
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>📄 {csvFileName}</div>
-                  <div style={{ fontSize: 12, color: T.text2 }}>Type: <strong>{importKind}</strong> · {effectivePreview.length} rows · {selectedRows.size} selected</div>
+                  <div style={{ fontSize: 14, color: T.text2 }}>Type: <strong>{importKind}</strong> · {effectivePreview.length} rows · {selectedRows.size} selected</div>
                 </div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {(importKind === "contacts" || importKind === "deals") && (
-                    <button onClick={() => setShowMapping((v) => !v)} style={S.btnGhost as React.CSSProperties}>{showMapping ? "Hide mapping" : "Map columns"}</button>
+                    <button aria-label="Action" onClick={() => setShowMapping((v) => !v)} style={S.btnGhost as React.CSSProperties}>{showMapping ? "Hide mapping" : "Map columns"}</button>
                   )}
-                  <button onClick={resetImport} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-                  <button onClick={finalizeImport} disabled={!selectedRows.size} style={{ ...S.btn as React.CSSProperties, opacity: selectedRows.size ? 1 : 0.5 }}>
+                  <button aria-label="Action" onClick={resetImport} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Action" onClick={finalizeImport} disabled={!selectedRows.size} style={{ ...S.btn as React.CSSProperties, opacity: selectedRows.size ? 1 : 0.5 }}>
                     Import {selectedRows.size}
                   </button>
                 </div>
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.text3, textTransform: "uppercase", marginBottom: 8 }}>Import mode</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", marginBottom: 8 }}>Import mode</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
                   {IMPORT_MODES.map((m) => (
                     <label key={m.id} style={{ display: "flex", gap: 8, padding: 10, borderRadius: T.radius.md, border: `1px solid ${importMode === m.id ? T.accent : T.bg4}`, background: importMode === m.id ? `${T.accent}10` : T.bg3, cursor: "pointer" }}>
-                      <input type="radio" checked={importMode === m.id} onChange={() => setImportMode(m.id)} />
+                      <input type="radio" checked={importMode === m.id} onChange={() = aria-label="radio"> setImportMode(m.id)} />
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: T.text0 }}>{m.label}</div>
-                        <div style={{ fontSize: 10, color: T.text3 }}>{m.desc}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{m.label}</div>
+                        <div style={{ fontSize: 14, color: T.text3 }}>{m.desc}</div>
                       </div>
                     </label>
                   ))}
@@ -316,10 +316,10 @@ export function DataToolsTab({
 
               {showMapping && csvHeaders.length > 0 && (
                 <div style={{ marginBottom: 16, background: T.bg3, borderRadius: T.radius.md, padding: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text0, marginBottom: 8 }}>Column mapping</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 8 }}>Column mapping</div>
                   {csvHeaders.map((h) => (
                     <div key={h} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, color: T.text2, minWidth: 120 }}>{h}</span>
+                      <span style={{ fontSize: 14, color: T.text2, minWidth: 120 }}>{h}</span>
                       <span style={{ color: T.text3 }}>→</span>
                       <select value={columnMapping[h] || ""} onChange={(e) => setColumnMapping((p) => ({ ...p, [h]: e.target.value }))} style={{ ...S.input, flex: 1, padding: "6px 10px" }}>
                         <option value="">— skip —</option>
@@ -347,8 +347,8 @@ export function DataToolsTab({
           {exportItems.map((item) => (
             <div key={item.label} style={card}>
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{item.label}</div>
-              <div style={{ fontSize: 12, color: T.text3, margin: "4px 0 14px" }}>{item.desc}</div>
-              <button onClick={item.action} style={S.btn as React.CSSProperties}>⬇ Download</button>
+              <div style={{ fontSize: 14, color: T.text3, margin: "4px 0 14px" }}>{item.desc}</div>
+              <button aria-label="Action" onClick={item.action} style={S.btn as React.CSSProperties}>⬇ Download</button>
             </div>
           ))}
         </div>
@@ -359,10 +359,10 @@ export function DataToolsTab({
         <div>
           <div style={card}>
             <h3 style={{ margin: "0 0 12px", fontSize: 15, color: T.text0 }}>Duplicate contacts ({dupes.length} groups)</h3>
-            {dupes.length === 0 ? <p style={{ fontSize: 13, color: T.text2, margin: 0 }}>No duplicate contacts detected.</p> : dupes.map((g) => (
+            {dupes.length === 0 ? <p style={{ fontSize: 14, color: T.text2, margin: 0 }}>No duplicate contacts detected.</p> : dupes.map((g) => (
               <div key={g.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${T.bg4}`, gap: 8, flexWrap: "wrap" }}>
-                <div style={{ fontSize: 12, color: T.text1 }}>{g.contacts.map((c) => c.name).join(" · ")}</div>
-                <button onClick={() => handleMergeDupe(g)} style={{ ...S.btn, fontSize: 11, padding: "6px 12px" }}>Merge into first</button>
+                <div style={{ fontSize: 14, color: T.text1 }}>{g.contacts.map((c) => c.name).join(" · ")}</div>
+                <button aria-label="Action" onClick={() => handleMergeDupe(g)} style={{ ...S.btn, fontSize: 14, padding: "6px 12px" }}>Merge into first</button>
               </div>
             ))}
           </div>
@@ -374,14 +374,14 @@ export function DataToolsTab({
                 <option value="">Set status…</option>
                 {industryConfig.contactStatuses.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
-              <input placeholder="Add tag…" value={bulkTag} onChange={(e) => setBulkTag(e.target.value)} style={{ ...S.input, width: 140 }} />
-              <button onClick={handleBulkApply} disabled={!bulkSelected.size} style={S.btn as React.CSSProperties}>Apply to {bulkSelected.size || 0}</button>
-              <button onClick={handleBulkDelete} disabled={!bulkSelected.size} style={{ ...S.btnGhost, color: T.red } as React.CSSProperties}>Delete selected</button>
+              <input placeholder="Add tag…" value={bulkTag} onChange={(e) = aria-label="Add tag…"> setBulkTag(e.target.value)} style={{ ...S.input, width: 140 }} />
+              <button aria-label="Action" onClick={handleBulkApply} disabled={!bulkSelected.size} style={S.btn as React.CSSProperties}>Apply to {bulkSelected.size || 0}</button>
+              <button aria-label="Delete" onClick={handleBulkDelete} disabled={!bulkSelected.size} style={{ ...S.btnGhost, color: T.red } as React.CSSProperties}>Delete selected</button>
             </div>
             <div style={{ maxHeight: 240, overflowY: "auto", border: `1px solid ${T.bg4}`, borderRadius: T.radius.md }}>
               {contacts.slice(0, 200).map((c) => (
-                <label key={c.id} style={{ display: "flex", gap: 8, padding: "8px 12px", borderBottom: `1px solid ${T.bg3}`, fontSize: 12, cursor: "pointer" }}>
-                  <input type="checkbox" checked={bulkSelected.has(c.id)} onChange={() => setBulkSelected((p) => { const n = new Set(p); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })} />
+                <label key={c.id} style={{ display: "flex", gap: 8, padding: "8px 12px", borderBottom: `1px solid ${T.bg3}`, fontSize: 14, cursor: "pointer" }}>
+                  <input type="checkbox" checked={bulkSelected.has(c.id)} onChange={() = aria-label="checkbox"> setBulkSelected((p) => { const n = new Set(p); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })} />
                   <span style={{ color: T.text0, flex: 1 }}>{c.name}</span>
                   <span style={{ color: T.text3 }}>{c.email || "no email"}</span>
                 </label>
@@ -391,13 +391,13 @@ export function DataToolsTab({
 
           <div style={card}>
             <h3 style={{ margin: "0 0 8px", fontSize: 15, color: T.text0 }}>GDPR / contact export</h3>
-            <p style={{ fontSize: 12, color: T.text2, margin: "0 0 10px" }}>Export all stored data for one contact.</p>
+            <p style={{ fontSize: 14, color: T.text2, margin: "0 0 10px" }}>Export all stored data for one contact.</p>
             <div style={{ display: "flex", gap: 8 }}>
               <select value={gdprContactId} onChange={(e) => setGdprContactId(e.target.value)} style={{ ...S.input, flex: 1 }}>
                 <option value="">Select contact…</option>
                 {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-              <button disabled={!gdprContactId} onClick={() => {
+              <button aria-label="Action" disabled={!gdprContactId} onClick={() => {
                 const data = exportContactGdpr(contacts, Number(gdprContactId));
                 if (data) download(JSON.stringify(data, null, 2), `contact-${gdprContactId}-export.json`, "application/json");
               }} style={S.btn as React.CSSProperties}>Export</button>
@@ -414,17 +414,17 @@ export function DataToolsTab({
             <Stat label="Warnings" value={health.counts.warnings} color={T.orange} />
             <Stat label="Info" value={health.counts.info} color={T.blue} />
           </div>
-          {health.issues.length === 0 ? <p style={{ color: T.text2, fontSize: 13 }}>No data quality issues found.</p> : (
+          {health.issues.length === 0 ? <p style={{ color: T.text2, fontSize: 14 }}>No data quality issues found.</p> : (
             <div style={{ maxHeight: 400, overflowY: "auto" }}>
               {health.issues.map((issue) => (
                 <div key={issue.id} style={{ display: "flex", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.bg4}`, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: issue.severity === "error" ? T.red : issue.severity === "warn" ? T.orange : T.text3, minWidth: 48 }}>{issue.severity}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: issue.severity === "error" ? T.red : issue.severity === "warn" ? T.orange : T.text3, minWidth: 48 }}>{issue.severity}</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, color: T.text0 }}>{issue.message}</div>
-                    <div style={{ fontSize: 10, color: T.text3 }}>{issue.category}{issue.entityName ? ` · ${issue.entityName}` : ""}</div>
+                    <div style={{ fontSize: 14, color: T.text0 }}>{issue.message}</div>
+                    <div style={{ fontSize: 14, color: T.text3 }}>{issue.category}{issue.entityName ? ` · ${issue.entityName}` : ""}</div>
                   </div>
                   {issue.entityType === "contact" && onNavigate && (
-                    <button onClick={() => onNavigate("contacts")} style={{ ...S.btnGhost, fontSize: 10, padding: "4px 8px" }}>View</button>
+                    <button aria-label="Action" onClick={() => onNavigate("contacts")} style={{ ...S.btnGhost, fontSize: 14, padding: "4px 8px" }}>View</button>
                   )}
                 </div>
               ))}
@@ -438,16 +438,16 @@ export function DataToolsTab({
         <div style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
             <h3 style={{ margin: 0, fontSize: 15, color: T.text0 }}>Change history ({auditLog.length})</h3>
-            <button onClick={() => download(JSON.stringify(auditLog, null, 2), "crm-audit-log.json", "application/json")} style={S.btnGhost as React.CSSProperties}>Export log</button>
+            <button aria-label="Action" onClick={() => download(JSON.stringify(auditLog, null, 2), "crm-audit-log.json", "application/json")} style={S.btnGhost as React.CSSProperties}>Export log</button>
           </div>
-          {auditLog.length === 0 ? <p style={{ fontSize: 13, color: T.text2 }}>No audit entries yet. Imports, merges, and email sends are logged here.</p> : (
+          {auditLog.length === 0 ? <p style={{ fontSize: 14, color: T.text2 }}>No audit entries yet. Imports, merges, and email sends are logged here.</p> : (
             <div style={{ maxHeight: 420, overflowY: "auto" }}>
               {auditLog.slice(0, 100).map((e) => (
-                <div key={e.id} style={{ padding: "10px 0", borderBottom: `1px solid ${T.bg4}`, fontSize: 12 }}>
+                <div key={e.id} style={{ padding: "10px 0", borderBottom: `1px solid ${T.bg4}`, fontSize: 14 }}>
                   <span style={{ color: T.accent, fontWeight: 600 }}>{e.action}</span>
                   <span style={{ color: T.text1 }}> {e.entity} </span>
                   <span style={{ color: T.text0 }}>{e.entityName}</span>
-                  <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{e.user} · {new Date(e.at).toLocaleString()}</div>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{e.user} · {new Date(e.at).toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -460,8 +460,8 @@ export function DataToolsTab({
         <div>
           <div style={card}>
             <h3 style={{ margin: "0 0 8px", fontSize: 15, color: T.text0 }}>Restore from JSON backup</h3>
-            <p style={{ fontSize: 12, color: T.text2, margin: "0 0 12px" }}>Import a workspace JSON file exported from this CRM or another team backup.</p>
-            <input ref={jsonRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={(e) => {
+            <p style={{ fontSize: 14, color: T.text2, margin: "0 0 12px" }}>Import a workspace JSON file exported from this CRM or another team backup.</p>
+            <input ref={jsonRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={(e) = aria-label="file"> {
               const f = e.target.files?.[0];
               if (!f) return;
               setRestoreError("");
@@ -476,34 +476,34 @@ export function DataToolsTab({
               if (jsonRef.current) jsonRef.current.value = "";
             }} />
             <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-              <label style={{ fontSize: 12, color: T.text2, display: "flex", alignItems: "center", gap: 6 }}>
-                <input type="radio" checked={restoreMode === "merge"} onChange={() => setRestoreMode("merge")} /> Merge into current
+              <label style={{ fontSize: 14, color: T.text2, display: "flex", alignItems: "center", gap: 6 }}>
+                <input type="radio" checked={restoreMode === "merge"} onChange={() = aria-label="radio"> setRestoreMode("merge")} /> Merge into current
               </label>
-              <label style={{ fontSize: 12, color: T.text2, display: "flex", alignItems: "center", gap: 6 }}>
-                <input type="radio" checked={restoreMode === "replace"} onChange={() => setRestoreMode("replace")} /> Replace entire workspace
+              <label style={{ fontSize: 14, color: T.text2, display: "flex", alignItems: "center", gap: 6 }}>
+                <input type="radio" checked={restoreMode === "replace"} onChange={() = aria-label="radio"> setRestoreMode("replace")} /> Replace entire workspace
               </label>
             </div>
-            <button onClick={() => jsonRef.current?.click()} style={S.btn as React.CSSProperties}>Choose backup file…</button>
-            {restoreError && <p style={{ color: T.red, fontSize: 12, marginTop: 8 }}>{restoreError}</p>}
+            <button aria-label="Action" onClick={() => jsonRef.current?.click()} style={S.btn as React.CSSProperties}>Choose backup file…</button>
+            {restoreError && <p style={{ color: T.red, fontSize: 14, marginTop: 8 }}>{restoreError}</p>}
           </div>
 
           <div style={card}>
             <h3 style={{ margin: "0 0 8px", fontSize: 15, color: T.text0 }}>Clear data</h3>
-            <p style={{ fontSize: 12, color: T.text2, margin: "0 0 12px" }}>Permanently remove records from your workspace. Syncs to your team.</p>
+            <p style={{ fontSize: 14, color: T.text2, margin: "0 0 12px" }}>Permanently remove records from your workspace. Syncs to your team.</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8 }}>
               {CLEARABLE_ENTITIES.map((e) => (
-                <button key={e.id} onClick={() => setClearConfirm(e.id)} style={{ ...S.btnGhost, textAlign: "left", padding: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text0 }}>Clear {e.label}</div>
-                  <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>{e.warn}</div>
+                <button aria-label="Action" key={e.id} onClick={() => setClearConfirm(e.id)} style={{ ...S.btnGhost, textAlign: "left", padding: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Clear {e.label}</div>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>{e.warn}</div>
                 </button>
               ))}
             </div>
             {clearConfirm && (
               <div style={{ marginTop: 14, padding: 14, background: `${T.red}12`, border: `1px solid ${T.red}44`, borderRadius: T.radius.md }}>
-                <p style={{ fontSize: 13, color: T.text0, margin: "0 0 10px" }}>Clear all {CLEARABLE_ENTITIES.find((e) => e.id === clearConfirm)?.label}? This syncs to your team.</p>
+                <p style={{ fontSize: 14, color: T.text0, margin: "0 0 10px" }}>Clear all {CLEARABLE_ENTITIES.find((e) => e.id === clearConfirm)?.label}? This syncs to your team.</p>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { onClearEntity(clearConfirm); setClearConfirm(null); }} style={{ ...S.btn, background: T.red }}>Yes, clear</button>
-                  <button onClick={() => setClearConfirm(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Action" onClick={() => { onClearEntity(clearConfirm); setClearConfirm(null); }} style={{ ...S.btn, background: T.red }}>Yes, clear</button>
+                  <button aria-label="Action" onClick={() => setClearConfirm(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
                 </div>
               </div>
             )}
@@ -518,7 +518,7 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ fontSize: 22, fontWeight: 700, color }}>{value}</div>
-      <div style={{ fontSize: 10, color: T.text3, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase" }}>{label}</div>
     </div>
   );
 }
@@ -531,16 +531,16 @@ function PreviewTable({ kind, rows, selectedRows, onToggle, onToggleAll }: {
     return (
       <div style={{ background: T.bg3, borderRadius: T.radius.md, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "32px 1.4fr 1fr 0.8fr 0.8fr", padding: "8px 12px", borderBottom: `1px solid ${T.bg4}`, gap: 8 }}>
-          <div><input type="checkbox" checked={selectedRows.size === rows.length && rows.length > 0} onChange={onToggleAll} /></div>
-          {["Title", "Contact", "Value", "Stage"].map((h) => <div key={h} style={{ fontSize: 10, color: T.text3, fontWeight: 700 }}>{h}</div>)}
+          <div><input type="checkbox" checked={selectedRows.size === rows.length && rows.length  aria-label="checkbox"> 0} onChange={onToggleAll} /></div>
+          {["Title", "Contact", "Value", "Stage"].map((h) => <div key={h} style={{ fontSize: 14, color: T.text3, fontWeight: 700 }}>{h}</div>)}
         </div>
         {(rows as Partial<Deal>[]).map((d, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "32px 1.4fr 1fr 0.8fr 0.8fr", padding: "8px 12px", borderBottom: `1px solid ${T.bg3}`, gap: 8, alignItems: "center" }}>
-            <input type="checkbox" checked={selectedRows.has(i)} onChange={() => onToggle(i)} />
-            <div style={{ fontSize: 12, color: T.text1 }}>{d.title || "—"}</div>
-            <div style={{ fontSize: 12, color: T.text2 }}>{d.contact || "—"}</div>
-            <div style={{ fontSize: 12, color: T.text2 }}>{d.value != null ? fmt(d.value) : "—"}</div>
-            <div style={{ fontSize: 11, color: T.text2 }}>{d.stage || "Lead"}</div>
+            <input type="checkbox" checked={selectedRows.has(i)} onChange={() = aria-label="checkbox"> onToggle(i)} />
+            <div style={{ fontSize: 14, color: T.text1 }}>{d.title || "—"}</div>
+            <div style={{ fontSize: 14, color: T.text2 }}>{d.contact || "—"}</div>
+            <div style={{ fontSize: 14, color: T.text2 }}>{d.value != null ? fmt(d.value) : "—"}</div>
+            <div style={{ fontSize: 14, color: T.text2 }}>{d.stage || "Lead"}</div>
           </div>
         ))}
       </div>
@@ -550,22 +550,22 @@ function PreviewTable({ kind, rows, selectedRows, onToggle, onToggleAll }: {
     return (
       <div style={{ background: T.bg3, borderRadius: T.radius.md, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "32px 1.5fr 1.5fr 1fr", padding: "8px 12px", borderBottom: `1px solid ${T.bg4}`, gap: 8 }}>
-          <div><input type="checkbox" checked={selectedRows.size === rows.length && rows.length > 0} onChange={onToggleAll} /></div>
-          {["Name", "Email", "Company"].map((h) => <div key={h} style={{ fontSize: 10, color: T.text3, fontWeight: 700 }}>{h}</div>)}
+          <div><input type="checkbox" checked={selectedRows.size === rows.length && rows.length  aria-label="checkbox"> 0} onChange={onToggleAll} /></div>
+          {["Name", "Email", "Company"].map((h) => <div key={h} style={{ fontSize: 14, color: T.text3, fontWeight: 700 }}>{h}</div>)}
         </div>
         {(rows as Partial<Contact>[]).map((c, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "32px 1.5fr 1.5fr 1fr", padding: "8px 12px", borderBottom: `1px solid ${T.bg3}`, gap: 8, alignItems: "center" }}>
-            <input type="checkbox" checked={selectedRows.has(i)} onChange={() => onToggle(i)} />
-            <div style={{ fontSize: 12, color: T.text1 }}>{c.name || "—"}</div>
-            <div style={{ fontSize: 12, color: T.text2 }}>{c.email || "—"}</div>
-            <div style={{ fontSize: 12, color: T.text2 }}>{c.company || "—"}</div>
+            <input type="checkbox" checked={selectedRows.has(i)} onChange={() = aria-label="checkbox"> onToggle(i)} />
+            <div style={{ fontSize: 14, color: T.text1 }}>{c.name || "—"}</div>
+            <div style={{ fontSize: 14, color: T.text2 }}>{c.email || "—"}</div>
+            <div style={{ fontSize: 14, color: T.text2 }}>{c.company || "—"}</div>
           </div>
         ))}
       </div>
     );
   }
   return (
-    <div style={{ background: T.bg3, borderRadius: T.radius.md, padding: 12, fontSize: 12, color: T.text2 }}>
+    <div style={{ background: T.bg3, borderRadius: T.radius.md, padding: 12, fontSize: 14, color: T.text2 }}>
       {rows.length} {kind} rows ready to import
     </div>
   );

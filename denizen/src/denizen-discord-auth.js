@@ -25,16 +25,16 @@ const userIdentity = require('./denizen-user-identity.js');
 const sessionAuth = require('./visitor-session-auth.js');
 const visitorAccess = require('./visitor-access.js');
 const promptTuning = require('./prompt-tuning.js');
+const authBase = require('./denizen-auth-base.js');
 
 const STATE_TTL_MS = 15 * 60 * 1000;
 const OAUTH_SCOPES = 'identify email';
 const DISCORD_API = 'https://discord.com/api/v10';
 
-class DiscordAuthError extends Error {
+class DiscordAuthError extends authBase.AuthError {
   constructor(message, code = 'DISCORD_AUTH') {
-    super(message);
+    super(message, code, authBase.authErrorStatus({ code }, 400));
     this.name = 'DiscordAuthError';
-    this.code = code;
   }
 }
 
@@ -543,6 +543,7 @@ module.exports = {
   getLinkStatusForSession,
   errorHtml,
   successHtml,
+  authBase,
   // test helpers
   _verifyState: verifyState,
   _signState: signState,

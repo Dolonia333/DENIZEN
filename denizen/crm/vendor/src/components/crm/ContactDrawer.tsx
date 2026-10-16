@@ -75,17 +75,17 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
         {/* Header */}
         <div style={{ padding: "20px 20px 0" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <button onClick={onClose} style={{ background: "none", border: "none", color: T.text2, fontSize: 13, cursor: "pointer" }}>← Back</button>
+            <button aria-label="Close" onClick={onClose} style={{ background: "none", border: "none", color: T.text2, fontSize: 14, cursor: "pointer" }}>← Back</button>
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-              <button onClick={() => shareToGlobalChat({
+              <button aria-label="Action" onClick={() => shareToGlobalChat({
                 title: contact.name, type: "lead", color: scoreColor,
                 snapshot: { "Company": contact.company, "Email": contact.email, "Status": contact.status, "Score": `${contact.score}`, "Last Contact": contact.lastContact },
                 status: contact.status === "Customer" ? "Resolved" : "In Progress",
-              })} style={{ background: `${T.purple}15`, border: `1px solid ${T.purple}33`, borderRadius: T.radius.sm, padding: "4px 10px", color: T.purple, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>💬 Share</button>
+              })} style={{ background: `${T.purple}15`, border: `1px solid ${T.purple}33`, borderRadius: T.radius.sm, padding: "4px 10px", color: T.purple, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>💬 Share</button>
               {onSendEmail && contact.email && (
-                <button onClick={() => onSendEmail(contact.id)} style={{ background: `${T.blue}15`, border: `1px solid ${T.blue}33`, borderRadius: T.radius.sm, padding: "4px 10px", color: T.blue, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>✉ Email</button>
+                <button aria-label="Action" onClick={() => onSendEmail(contact.id)} style={{ background: `${T.blue}15`, border: `1px solid ${T.blue}33`, borderRadius: T.radius.sm, padding: "4px 10px", color: T.blue, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>✉ Email</button>
               )}
-              <button onClick={onEdit} style={{ background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, fontSize: 11, cursor: "pointer" }}>✎ Edit</button>
+              <button aria-label="Edit" onClick={onEdit} style={{ background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm, padding: "4px 10px", color: T.text2, fontSize: 14, cursor: "pointer" }}>✎ Edit</button>
               <span style={badgeStyle(contact.score >= 80 ? "#6ee7b7" : "#fcd34d", contact.score >= 80 ? "#064e3b" : "#451a03")}>Score {contact.score}</span>
               <span style={badgeStyle(T.text1, T.bg4)}>{contact.status}</span>
             </div>
@@ -95,14 +95,14 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
             <div style={{ width: 48, height: 48, borderRadius: T.radius.lg, background: contact.avatar ? "none" : `linear-gradient(135deg,${scoreColor},${T.bg4})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800, color: "#fff", flexShrink: 0, overflow: "hidden" }}>{contact.avatar ? <img src={contact.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : contact.name[0]}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 18, fontWeight: 700, color: T.text0 }}>{contact.name}</div>
-              <div style={{ fontSize: 13, color: T.text2 }}>{contact.company}</div>
-              <div style={{ fontSize: 11, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{contact.email}</div>
+              <div style={{ fontSize: 14, color: T.text2 }}>{contact.company}</div>
+              <div style={{ fontSize: 14, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{contact.email}</div>
             </div>
           </div>
 
           <div style={{ display: "flex", borderBottom: `1px solid ${T.bg4}` }}>
             {(["overview", "timeline", "deals", "scoring"] as const).map(t => (
-              <button key={t} onClick={() => setDt(t)} style={{ flex: 1, padding: "8px 0", background: "none", border: "none", borderBottom: `2px solid ${dt === t ? T.accent : "transparent"}`, color: dt === t ? T.accent : T.text2, fontSize: 11, fontWeight: dt === t ? 700 : 400, cursor: "pointer", textTransform: "capitalize" }}>
+              <button aria-label="Action" key={t} onClick={() => setDt(t)} style={{ flex: 1, padding: "8px 0", background: "none", border: "none", borderBottom: `2px solid ${dt === t ? T.accent : "transparent"}`, color: dt === t ? T.accent : T.text2, fontSize: 14, fontWeight: dt === t ? 700 : 400, cursor: "pointer", textTransform: "capitalize" }}>
                 {t === "scoring" ? "Score" : t}{t === "deals" && cDeals.length > 0 ? ` (${cDeals.length})` : ""}
               </button>
             ))}
@@ -116,8 +116,8 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {([["Email", contact.email], ["Phone", contact.phone], ["Company", contact.company], ["Status", contact.status], ["Follow-up", CONTACT_FREQUENCIES.find(f => f.value === contact.contactFrequency)?.label || "Not set"], ["Last Contact", contact.lastContact], ["Interactions", contact.interactions + " logged"]] as [string, string][]).map(([label, val]) => (
                   <div key={label} style={{ background: T.bg2, borderRadius: T.radius.md, padding: "10px 12px", overflow: "hidden" }}>
-                    <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>{label}</div>
-                    <div style={{ fontSize: 13, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val}</div>
+                    <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>{label}</div>
+                    <div style={{ fontSize: 14, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{val}</div>
                   </div>
                 ))}
               </div>
@@ -126,7 +126,7 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
                   <div key={label} style={{ background: T.bg2, borderRadius: T.radius.md, padding: "12px", textAlign: "center" }}>
                     <div style={{ fontSize: 16, marginBottom: 4 }}>{icon}</div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{val}</div>
-                    <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{label}</div>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{label}</div>
                   </div>
                 ))}
               </div>
@@ -143,12 +143,12 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
                 if (filledFields.length === 0) return null;
                 return (
                   <div>
-                    <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Custom Fields</div>
+                    <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Custom Fields</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                       {filledFields.map(f => (
                         <div key={f.id} style={{ background: T.bg2, borderRadius: T.radius.md, padding: "10px 12px", overflow: "hidden" }}>
-                          <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>{f.label}</div>
-                          <div style={{ fontSize: 13, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", marginBottom: 2 }}>{f.label}</div>
+                          <div style={{ fontSize: 14, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {f.type === "checkbox" ? (cfv[f.id] ? "✓ Yes" : "✗ No") : String(cfv[f.id])}
                           </div>
                         </div>
@@ -185,7 +185,7 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
                     <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{d.title}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(d.value)}</div>
                   </div>
-                  <div style={{ fontSize: 11, color: T.text3, marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 6, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <span style={badgeStyle(T.text1, T.bg3)}>{d.stage}</span>
                     <span>{d.probability}% prob</span>
                     <span>Closes {d.closeDate}</span>
@@ -203,7 +203,7 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
                   fontSize: 48, fontWeight: 900, color: scoreColor,
                   fontFamily: "'JetBrains Mono', monospace", lineHeight: 1,
                 }}>{contact.score}</div>
-                <div style={{ fontSize: 12, color: T.text3, marginTop: 4 }}>/ 100 lead score</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>/ 100 lead score</div>
                 <div style={{
                   height: 6, background: T.bg4, borderRadius: 3, marginTop: 12, maxWidth: 200, margin: "12px auto 0",
                 }}>
@@ -215,7 +215,7 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
               </div>
 
               {/* Factor breakdown */}
-              <div style={{ fontSize: 13, fontWeight: 600, color: T.text0, marginBottom: 12 }}>Score Breakdown</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 12 }}>Score Breakdown</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {scoreFactors.map((f, i) => (
                   <div key={i} style={{
@@ -223,9 +223,9 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
                     background: T.bg2, borderRadius: T.radius.md, padding: "10px 12px",
                   }}>
                     <span style={{ fontSize: 16, width: 24, textAlign: "center" }}>{f.emoji}</span>
-                    <span style={{ flex: 1, fontSize: 12, color: T.text2 }}>{f.label}</span>
+                    <span style={{ flex: 1, fontSize: 14, color: T.text2 }}>{f.label}</span>
                     <span style={{
-                      fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                      fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", fontSize: 14,
                       color: f.impact > 0 ? T.green : f.impact < 0 ? T.red : T.text3,
                     }}>
                       {f.impact > 0 ? "+" : ""}{f.impact}
@@ -233,7 +233,7 @@ export function ContactDrawer({ contact, deals, notes, tasks, emailLog, meetings
                   </div>
                 ))}
               </div>
-              <div style={{ fontSize: 10, color: T.text3, marginTop: 12, fontStyle: "italic", textAlign: "center" }}>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 12, fontStyle: "italic", textAlign: "center" }}>
                 Base score: 40 · Final = base + factors (capped 0–100)
               </div>
             </div>

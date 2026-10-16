@@ -108,7 +108,7 @@ const panel = (accent?: string): React.CSSProperties => ({
 
 const smallBtn: React.CSSProperties = {
   background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 6,
-  color: T.text2, fontSize: 10, padding: "2px 7px", cursor: "pointer",
+  color: T.text2, fontSize: 14, padding: "2px 7px", cursor: "pointer",
   transition: "all 0.1s", whiteSpace: "nowrap",
 };
 
@@ -213,50 +213,50 @@ function PopoutCardWindow({ card, onClose, onUpdateCard, newCardComment, setNewC
         style={{ padding: "14px 20px", borderBottom: `1px solid ${T.bg3}`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0, cursor: "grab", userSelect: "none" }}
       >
         <div style={{ width: 10, height: 10, borderRadius: "50%", background: accent }} />
-        <span style={{ fontSize: 10, color: T.text3, textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.08em" }}>{card.type}</span>
-        <span style={{ fontSize: 9, color: T.text3, marginLeft: 4 }}>⠿ drag to move</span>
+        <span style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.08em" }}>{card.type}</span>
+        <span style={{ fontSize: 14, color: T.text3, marginLeft: 4 }}>⠿ drag to move</span>
         <div style={{ flex: 1 }} />
-        <button onClick={onClose} style={{ background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 8, padding: "5px 14px", color: T.text2, cursor: "pointer", fontSize: 12, fontWeight: 600, transition: "all 0.15s" }}
+        <button aria-label="Close" onClick={onClose} style={{ background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 8, padding: "5px 14px", color: T.text2, cursor: "pointer", fontSize: 14, fontWeight: 600, transition: "all 0.15s" }}
           onMouseEnter={e => { e.currentTarget.style.background = T.bg3; }} onMouseLeave={e => { e.currentTarget.style.background = T.bg2; }}>✕</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
         {/* Editable title */}
         {editTitle ? (
           <div style={{ marginBottom: 16 }}>
-            <input value={titleDraft} onChange={e => setTitleDraft(e.target.value)}
+            <input value={titleDraft} onChange={e = aria-label="input"> setTitleDraft(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") saveTitle(); if (e.key === "Escape") { setEditTitle(false); setTitleDraft(card.title); } }}
               autoFocus
               style={{ width: "100%", fontSize: 20, fontWeight: 800, color: T.text0, background: T.bg2, border: `1px solid ${accent}44`, borderRadius: 10, padding: "8px 12px", outline: "none", letterSpacing: "-0.02em" }} />
             <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-              <button onClick={saveTitle} style={{ ...smallBtn, background: `${accent}15`, color: accent, border: `1px solid ${accent}44` }}>Save</button>
-              <button onClick={() => { setEditTitle(false); setTitleDraft(card.title); }} style={smallBtn}>Cancel</button>
+              <button aria-label="save" onClick={saveTitle} style={{ ...smallBtn, background: `${accent}15`, color: accent, border: `1px solid ${accent}44` }}>Save</button>
+              <button aria-label="Action" onClick={() => { setEditTitle(false); setTitleDraft(card.title); }} style={smallBtn}>Cancel</button>
             </div>
           </div>
         ) : (
           <h2 onClick={() => setEditTitle(true)} style={{ fontSize: 20, fontWeight: 800, color: T.text0, margin: "0 0 16px", letterSpacing: "-0.02em", cursor: "pointer", borderRadius: 8, padding: "4px 6px", marginLeft: -6, transition: "background 0.15s" }}
             onMouseEnter={e => e.currentTarget.style.background = T.bg2} onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-            title="Click to edit title">{card.title} <span style={{ fontSize: 11, color: T.text3, fontWeight: 400 }}>✎</span></h2>
+            title="Click to edit title">{card.title} <span style={{ fontSize: 14, color: T.text3, fontWeight: 400 }}>✎</span></h2>
         )}
 
         {/* Editable content for text cards */}
         {card.type === "text" && (
           editContent ? (
             <div style={{ marginBottom: 20 }}>
-              <textarea value={contentDraft} onChange={e => setContentDraft(e.target.value)}
+              <textarea value={contentDraft} onChange={e = aria-label="textarea"> setContentDraft(e.target.value)}
                 autoFocus rows={5}
-                style={{ width: "100%", fontSize: 13, color: T.text1, background: T.bg2, border: `1px solid ${accent}44`, borderRadius: 10, padding: "12px 14px", outline: "none", lineHeight: 1.6, resize: "vertical", fontFamily: "inherit" }} />
+                style={{ width: "100%", fontSize: 14, color: T.text1, background: T.bg2, border: `1px solid ${accent}44`, borderRadius: 10, padding: "12px 14px", outline: "none", lineHeight: 1.6, resize: "vertical", fontFamily: "inherit" }} />
               <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                <button onClick={saveContent} style={{ ...smallBtn, background: `${accent}15`, color: accent, border: `1px solid ${accent}44` }}>Save</button>
-                <button onClick={() => { setEditContent(false); setContentDraft(card.content || ""); }} style={smallBtn}>Cancel</button>
+                <button aria-label="save" onClick={saveContent} style={{ ...smallBtn, background: `${accent}15`, color: accent, border: `1px solid ${accent}44` }}>Save</button>
+                <button aria-label="Action" onClick={() => { setEditContent(false); setContentDraft(card.content || ""); }} style={smallBtn}>Cancel</button>
               </div>
             </div>
           ) : (
             <div onClick={() => setEditContent(true)}
-              style={{ fontSize: 13, color: T.text2, lineHeight: 1.6, marginBottom: 20, padding: "12px 14px", background: T.bg2, borderRadius: 10, border: `1px solid ${T.bg3}`, whiteSpace: "pre-wrap", cursor: "pointer", transition: "border-color 0.15s" }}
+              style={{ fontSize: 14, color: T.text2, lineHeight: 1.6, marginBottom: 20, padding: "12px 14px", background: T.bg2, borderRadius: 10, border: `1px solid ${T.bg3}`, whiteSpace: "pre-wrap", cursor: "pointer", transition: "border-color 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = `${accent}44`} onMouseLeave={e => e.currentTarget.style.borderColor = T.bg3}
               title="Click to edit content">
               {card.content || <span style={{ color: T.text3, fontStyle: "italic" }}>Click to add content…</span>}
-              <span style={{ fontSize: 10, color: T.text3, float: "right" }}>✎</span>
+              <span style={{ fontSize: 14, color: T.text3, float: "right" }}>✎</span>
             </div>
           )
         )}
@@ -266,67 +266,67 @@ function PopoutCardWindow({ card, onClose, onUpdateCard, newCardComment, setNewC
           <div style={{ marginBottom: 20 }}>
             {card.checkItems.map(item => (
               <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
-                <div onClick={() => toggleCheck(item.id)} style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${item.done ? T.green : T.bg4}`, background: item.done ? T.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10, flexShrink: 0, cursor: "pointer" }}>{item.done && "✓"}</div>
+                <div onClick={() => toggleCheck(item.id)} style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${item.done ? T.green : T.bg4}`, background: item.done ? T.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, flexShrink: 0, cursor: "pointer" }}>{item.done && "✓"}</div>
                 {editCheckIdx === item.id ? (
                   <div style={{ flex: 1, display: "flex", gap: 4 }}>
-                    <input value={checkDraft} onChange={e => setCheckDraft(e.target.value)}
+                    <input value={checkDraft} onChange={e = aria-label="input"> setCheckDraft(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") saveCheckEdit(item.id); if (e.key === "Escape") setEditCheckIdx(null); }}
-                      autoFocus style={{ flex: 1, fontSize: 12, color: T.text1, background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 6, padding: "4px 8px", outline: "none" }} />
-                    <button onClick={() => saveCheckEdit(item.id)} style={{ ...smallBtn, fontSize: 9 }}>✓</button>
+                      autoFocus style={{ flex: 1, fontSize: 14, color: T.text1, background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 6, padding: "4px 8px", outline: "none" }} />
+                    <button aria-label="Action" onClick={() => saveCheckEdit(item.id)} style={{ ...smallBtn, fontSize: 14 }}>✓</button>
                   </div>
                 ) : (
                   <span onClick={() => { setEditCheckIdx(item.id); setCheckDraft(item.text); }}
-                    style={{ flex: 1, fontSize: 12, color: item.done ? T.text3 : T.text1, textDecoration: item.done ? "line-through" : "none", cursor: "pointer", borderRadius: 4, padding: "2px 4px", transition: "background 0.15s" }}
+                    style={{ flex: 1, fontSize: 14, color: item.done ? T.text3 : T.text1, textDecoration: item.done ? "line-through" : "none", cursor: "pointer", borderRadius: 4, padding: "2px 4px", transition: "background 0.15s" }}
                     onMouseEnter={e => e.currentTarget.style.background = T.bg2} onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     title="Click to edit">{item.text}</span>
                 )}
-                <button onClick={() => deleteCheckItem(item.id)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 11, opacity: 0.4, transition: "opacity 0.15s", padding: "0 4px" }}
+                <button aria-label="Action" onClick={() => deleteCheckItem(item.id)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14, opacity: 0.4, transition: "opacity 0.15s", padding: "0 4px" }}
                   onMouseEnter={e => e.currentTarget.style.opacity = "1"} onMouseLeave={e => e.currentTarget.style.opacity = "0.4"}>✕</button>
               </div>
             ))}
             <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-              <input value={newCheckItem} onChange={e => setNewCheckItem(e.target.value)}
+              <input value={newCheckItem} onChange={e = aria-label="input"> setNewCheckItem(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") addNewCheckItem(); }}
-                placeholder="Add item…" style={{ flex: 1, fontSize: 11, color: T.text1, background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 6, padding: "6px 10px", outline: "none" }} />
-              <button onClick={addNewCheckItem} style={{ ...smallBtn, background: `${accent}15`, color: accent, border: `1px solid ${accent}44` }}>+ Add</button>
+                placeholder="Add item…" style={{ flex: 1, fontSize: 14, color: T.text1, background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 6, padding: "6px 10px", outline: "none" }} />
+              <button aria-label="add" onClick={addNewCheckItem} style={{ ...smallBtn, background: `${accent}15`, color: accent, border: `1px solid ${accent}44` }}>+ Add</button>
             </div>
           </div>
         )}
 
         {card.linkUrl && (
           <div style={{ marginBottom: 20, padding: "10px 14px", background: T.bg2, borderRadius: 10, border: `1px solid ${T.bg3}` }}>
-            <a href={card.linkUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#4d9ef7", textDecoration: "none" }}>
+            <a aria-label="Link" href={card.linkUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: "#4d9ef7", textDecoration: "none" }}>
               🔗 {card.linkTitle || card.linkUrl}
             </a>
           </div>
         )}
         {card.lastEditedBy && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 20, fontSize: 11, color: T.text3 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 20, fontSize: 14, color: T.text3 }}>
             <Avatar name={card.lastEditedBy} size={18} />
             Last edited by {card.lastEditedBy}
             {card.lastEditedAt && <span> · {timeAgo(card.lastEditedAt)}</span>}
           </div>
         )}
         <div>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
             Comments ({card.comments?.length || 0})
           </div>
           {(card.comments || []).filter(c => !c.resolved).map(c => (
             <div key={c.id} style={{ padding: "10px 12px", background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 10, marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <Avatar name={c.user} size={18} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: T.text1 }}>{c.user}</span>
-                <span style={{ fontSize: 9, color: T.text3, marginLeft: "auto" }}>{timeAgo(c.at)}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{c.user}</span>
+                <span style={{ fontSize: 14, color: T.text3, marginLeft: "auto" }}>{timeAgo(c.at)}</span>
               </div>
-              <p style={{ fontSize: 12, color: T.text2, margin: 0 }}>{c.text}</p>
+              <p style={{ fontSize: 14, color: T.text2, margin: 0 }}>{c.text}</p>
             </div>
           ))}
           <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-            <input value={newCardComment} onChange={e => setNewCardComment(e.target.value)}
+            <input value={newCardComment} onChange={e = aria-label="input"> setNewCardComment(e.target.value)}
               onKeyDown={e => e.key === "Enter" && addCardComment()}
-              placeholder="Add a comment…" style={{ ...(S.input as React.CSSProperties), flex: 1, padding: "8px 12px", fontSize: 12 }} />
-            <button onClick={addCardComment}
-              style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}44`, borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", color: T.accent }}>Post</button>
+              placeholder="Add a comment…" style={{ ...(S.input as React.CSSProperties), flex: 1, padding: "8px 12px", fontSize: 14 }} />
+            <button aria-label="add" onClick={addCardComment}
+              style={{ background: `${T.accent}15`, border: `1px solid ${T.accent}44`, borderRadius: 8, padding: "8px 12px", fontSize: 14, fontWeight: 700, cursor: "pointer", color: T.accent }}>Post</button>
           </div>
         </div>
       </div>
@@ -813,13 +813,13 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
     return (
       <div onMouseDown={e => e.stopPropagation()} style={{ marginTop: 4, display: "flex", flexDirection: "column", height: card.h - 60 }}>
         <div style={{ display: "flex", gap: 3, marginBottom: 6, flexWrap: "wrap", alignItems: "center" }}>
-          <button onClick={e => { e.stopPropagation(); toggleChartType(card.id); }} style={smallBtn}>⇄ {card.chartType}</button>
+          <button aria-label="Action" onClick={e => { e.stopPropagation(); toggleChartType(card.id); }} style={smallBtn}>⇄ {card.chartType}</button>
           {!isEditing ? (
-            <button onClick={e => { e.stopPropagation(); startEditChart(card.id); }} style={smallBtn}>✏️ Edit</button>
+            <button aria-label="Action" onClick={e => { e.stopPropagation(); startEditChart(card.id); }} style={smallBtn}>✏️ Edit</button>
           ) : (
             <>
-              <button onClick={e => { e.stopPropagation(); saveChart(card.id); }} style={{ ...smallBtn, background: `${T.green}22`, color: T.green }}>✓ Save</button>
-              <button onClick={e => { e.stopPropagation(); resetChart(card.id); }} style={{ ...smallBtn, background: `${T.red}22`, color: T.red }}>↺ Reset</button>
+              <button aria-label="Action" onClick={e => { e.stopPropagation(); saveChart(card.id); }} style={{ ...smallBtn, background: `${T.green}22`, color: T.green }}>✓ Save</button>
+              <button aria-label="Action" onClick={e => { e.stopPropagation(); resetChart(card.id); }} style={{ ...smallBtn, background: `${T.red}22`, color: T.red }}>↺ Reset</button>
             </>
           )}
         </div>
@@ -828,17 +828,17 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             {card.chartType === "bar" ? (
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} />
-                <XAxis dataKey="label" tick={{ fill: T.text3, fontSize: 10 }} axisLine={{ stroke: T.bg4 }} />
-                <YAxis tick={{ fill: T.text3, fontSize: 10 }} axisLine={{ stroke: T.bg4 }} width={30} />
-                <Tooltip contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, color: T.text1, fontSize: 11 }} />
+                <XAxis dataKey="label" tick={{ fill: T.text3, fontSize: 14 }} axisLine={{ stroke: T.bg4 }} />
+                <YAxis tick={{ fill: T.text3, fontSize: 14 }} axisLine={{ stroke: T.bg4 }} width={30} />
+                <Tooltip contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, color: T.text1, fontSize: 14 }} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>{data.map((d, i) => <Cell key={i} fill={d.color} />)}</Bar>
               </BarChart>
             ) : card.chartType === "line" ? (
               <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} />
-                <XAxis dataKey="label" tick={{ fill: T.text3, fontSize: 10 }} axisLine={{ stroke: T.bg4 }} />
-                <YAxis tick={{ fill: T.text3, fontSize: 10 }} axisLine={{ stroke: T.bg4 }} width={30} />
-                <Tooltip contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, color: T.text1, fontSize: 11 }} />
+                <XAxis dataKey="label" tick={{ fill: T.text3, fontSize: 14 }} axisLine={{ stroke: T.bg4 }} />
+                <YAxis tick={{ fill: T.text3, fontSize: 14 }} axisLine={{ stroke: T.bg4 }} width={30} />
+                <Tooltip contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, color: T.text1, fontSize: 14 }} />
                 <Line type="monotone" dataKey="value" stroke={data[0]?.color || CHART_COLORS[0]} strokeWidth={2} dot={{ fill: data[0]?.color || CHART_COLORS[0], r: 3 }} />
               </LineChart>
             ) : (
@@ -846,7 +846,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                 <Pie data={data} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius="30%" outerRadius="65%" paddingAngle={2} strokeWidth={0}>
                   {data.map((d, i) => <Cell key={i} fill={d.color} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, color: T.text1, fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, color: T.text1, fontSize: 14 }} />
               </PieChart>
             )}
           </ResponsiveContainer>
@@ -854,7 +854,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
         {isEditing && (
           <div style={{ marginTop: 4, maxHeight: 130, overflowY: "auto", borderTop: `1px solid ${T.bg4}`, paddingTop: 6 }}>
             {data.map((dp, idx) => (
-              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, fontSize: 10 }}>
+              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3, fontSize: 14 }}>
                 <div style={{ position: "relative" }}>
                   <div onClick={e => { e.stopPropagation(); setColorPicker(colorPicker?.cardId === card.id && colorPicker.idx === idx ? null : { cardId: card.id, idx }); }}
                     style={{ width: 14, height: 14, borderRadius: 3, background: dp.color, cursor: "pointer", border: `1px solid ${T.bg5}` }} />
@@ -868,31 +868,31 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                   )}
                 </div>
                 {editingCell?.cardId === card.id && editingCell.idx === idx && editingCell.field === "label" ? (
-                  <input autoFocus value={cellDraft} onChange={e => setCellDraft(e.target.value)}
+                  <input autoFocus value={cellDraft} onChange={e = aria-label="input"> setCellDraft(e.target.value)}
                     onBlur={() => { updateChartPoint(card.id, idx, { label: cellDraft || dp.label }); setEditingCell(null); }}
                     onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                     onClick={e => e.stopPropagation()}
-                    style={{ background: T.bg4, border: `1px solid ${T.bg5}`, borderRadius: 3, color: T.text1, fontSize: 10, padding: "1px 4px", width: 50 }} />
+                    style={{ background: T.bg4, border: `1px solid ${T.bg5}`, borderRadius: 3, color: T.text1, fontSize: 14, padding: "1px 4px", width: 50 }} />
                 ) : (
                   <span onClick={e => { e.stopPropagation(); setEditingCell({ cardId: card.id, idx, field: "label" }); setCellDraft(dp.label); }}
                     style={{ color: T.text2, cursor: "pointer", minWidth: 40 }}>{dp.label}</span>
                 )}
                 {editingCell?.cardId === card.id && editingCell.idx === idx && editingCell.field === "value" ? (
-                  <input autoFocus type="number" value={cellDraft} onChange={e => setCellDraft(e.target.value)}
+                  <input autoFocus type="number" value={cellDraft} onChange={e = aria-label="number"> setCellDraft(e.target.value)}
                     onBlur={() => { updateChartPoint(card.id, idx, { value: Number(cellDraft) || 0 }); setEditingCell(null); }}
                     onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                     onClick={e => e.stopPropagation()}
-                    style={{ background: T.bg4, border: `1px solid ${T.bg5}`, borderRadius: 3, color: T.text1, fontSize: 10, padding: "1px 4px", width: 55 }} />
+                    style={{ background: T.bg4, border: `1px solid ${T.bg5}`, borderRadius: 3, color: T.text1, fontSize: 14, padding: "1px 4px", width: 55 }} />
                 ) : (
                   <span onClick={e => { e.stopPropagation(); setEditingCell({ cardId: card.id, idx, field: "value" }); setCellDraft(String(dp.value)); }}
                     style={{ color: T.accent, cursor: "pointer", fontVariantNumeric: "tabular-nums" }}>{dp.value.toLocaleString()}</span>
                 )}
-                <button onClick={e => { e.stopPropagation(); removeChartPoint(card.id, idx); }}
-                  style={{ ...smallBtn, padding: "1px 4px", color: T.red, fontSize: 9 }}>−</button>
+                <button aria-label="Action" onClick={e => { e.stopPropagation(); removeChartPoint(card.id, idx); }}
+                  style={{ ...smallBtn, padding: "1px 4px", color: T.red, fontSize: 14 }}>−</button>
               </div>
             ))}
-            <button onClick={e => { e.stopPropagation(); addChartPoint(card.id); }}
-              style={{ ...smallBtn, marginTop: 3, color: T.green, fontSize: 9 }}>+ Add point</button>
+            <button aria-label="Action" onClick={e => { e.stopPropagation(); addChartPoint(card.id); }}
+              style={{ ...smallBtn, marginTop: 3, color: T.green, fontSize: 14 }}>+ Add point</button>
           </div>
         )}
       </div>
@@ -953,7 +953,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             display: "flex", alignItems: "center", gap: 5,
             padding: "3px 8px", borderRadius: 999,
             background: cursorUser.color, color: "#fff",
-            fontSize: 9, fontWeight: 700, whiteSpace: "nowrap",
+            fontSize: 14, fontWeight: 700, whiteSpace: "nowrap",
             boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
           }}>
             <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#fff", opacity: 0.8 }} />
@@ -972,7 +972,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               onClick={e => { e.stopPropagation(); deleteCard(card.id); }}
               style={{
                 background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 4,
-                color: T.red || "#ef4444", fontSize: 11, cursor: "pointer",
+                color: T.red || "#ef4444", fontSize: 14, cursor: "pointer",
                 opacity: 1,
                 padding: "2px 7px", flexShrink: 0, lineHeight: 1.2, fontWeight: 700,
               }}
@@ -981,15 +981,15 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             {editingCard === card.id ? (
               <input autoFocus
                 value={card.title}
-                onChange={e => updateCard(card.id, { title: e.target.value })}
+                onChange={e = aria-label="input"> updateCard(card.id, { title: e.target.value })}
                 onBlur={() => setEditingCard(null)}
                 onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
                 onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}
-                style={{ background: "transparent", border: "none", outline: "none", color: card.color || T.text3, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", flex: 1, padding: 0 }}
+                style={{ background: "transparent", border: "none", outline: "none", color: card.color || T.text3, fontSize: 14, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", flex: 1, padding: 0 }}
               />
             ) : (
               <span onDoubleClick={e => { e.stopPropagation(); setEditingCard(card.id); }}
-                style={{ fontSize: 10, fontWeight: 700, color: card.color || T.text3, letterSpacing: "0.15em", textTransform: "uppercase", flex: 1, cursor: "text" }}>{card.title}</span>
+                style={{ fontSize: 14, fontWeight: 700, color: card.color || T.text3, letterSpacing: "0.15em", textTransform: "uppercase", flex: 1, cursor: "text" }}>{card.title}</span>
             )}
           </div>
         ) : (
@@ -1004,7 +1004,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                 style={{
                   width: 18, height: 18, borderRadius: 4, flexShrink: 0,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 10, color: T.text3, cursor: "grab",
+                  fontSize: 14, color: T.text3, cursor: "grab",
                   background: T.bg3, border: `1px solid ${T.bg4}`,
                   opacity: isHovered ? 0.9 : 0.35, transition: "opacity 0.15s",
                 }}
@@ -1013,14 +1013,14 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               {editingCard === card.id || editingChartTitle === card.id ? (
                 <input autoFocus
                   value={editingChartTitle === card.id ? chartTitleDraft : card.title}
-                  onChange={e => editingChartTitle === card.id ? setChartTitleDraft(e.target.value) : updateCard(card.id, { title: e.target.value })}
+                  onChange={e = aria-label="input"> editingChartTitle === card.id ? setChartTitleDraft(e.target.value) : updateCard(card.id, { title: e.target.value })}
                   onBlur={() => {
                     if (editingChartTitle === card.id) { updateCard(card.id, { title: chartTitleDraft || card.title }); setEditingChartTitle(null); }
                     else setEditingCard(null);
                   }}
                   onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
                   onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}
-                  style={{ background: "transparent", border: "none", outline: "none", color: T.text0, fontSize: 13, fontWeight: 700, flex: 1, padding: 0 }}
+                  style={{ background: "transparent", border: "none", outline: "none", color: T.text0, fontSize: 14, fontWeight: 700, flex: 1, padding: 0 }}
                 />
               ) : (
                 <span onDoubleClick={e => {
@@ -1028,24 +1028,24 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                   if (card.type === "chart") { setEditingChartTitle(card.id); setChartTitleDraft(card.title); }
                   else setEditingCard(card.id);
                 }}
-                  style={{ fontSize: 13, fontWeight: 700, color: T.text0, flex: 1, cursor: "text" }}>{card.title}</span>
+                  style={{ fontSize: 14, fontWeight: 700, color: T.text0, flex: 1, cursor: "text" }}>{card.title}</span>
               )}
               {(card.comments?.length || 0) > 0 && (
-                <span style={{ fontSize: 10, color: card.color || T.accent, fontWeight: 700 }}>💬 {card.comments!.length}</span>
+                <span style={{ fontSize: 14, color: card.color || T.accent, fontWeight: 700 }}>💬 {card.comments!.length}</span>
               )}
-              <button onClick={e => { e.stopPropagation(); deleteCard(card.id); }}
-                style={{ background: "none", border: "none", color: T.text3, fontSize: 12, cursor: "pointer", opacity: isHovered ? 0.6 : 0, transition: "opacity 0.15s", padding: "0 2px" }}
+              <button aria-label="Action" onClick={e => { e.stopPropagation(); deleteCard(card.id); }}
+                style={{ background: "none", border: "none", color: T.text3, fontSize: 14, cursor: "pointer", opacity: isHovered ? 0.6 : 0, transition: "opacity 0.15s", padding: "0 2px" }}
                 onMouseDown={e => e.stopPropagation()}>✕</button>
             </div>
 
             <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column" }}>
             {card.type === "text" && (
               <div onMouseDown={e => e.stopPropagation()} style={{ flex: 1, minHeight: 48, display: "flex" }}>
-                <textarea value={card.content || ""} onChange={e => updateCard(card.id, { content: e.target.value })}
+                <textarea value={card.content || ""} onChange={e = aria-label="textarea"> updateCard(card.id, { content: e.target.value })}
                   placeholder="Type your note…" onClick={e => e.stopPropagation()}
                   style={{
                     width: "100%", flex: 1, background: "transparent", border: "none", outline: "none",
-                    color: T.text2, fontSize: 12, lineHeight: 1.6, resize: "none", minHeight: 48,
+                    color: T.text2, fontSize: 14, lineHeight: 1.6, resize: "none", minHeight: 48,
                     fontFamily: "inherit",
                   }} />
               </div>
@@ -1055,29 +1055,29 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               <div onMouseDown={e => e.stopPropagation()}>
                 {(card.checkItems || []).map(item => (
                   <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0" }}>
-                    <button onClick={e => { e.stopPropagation(); updateCard(card.id, { checkItems: card.checkItems!.map(i => i.id === item.id ? { ...i, done: !i.done } : i) }); }}
-                      style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${item.done ? T.green : T.bg4}`, background: item.done ? T.green : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10, flexShrink: 0 }}>
+                    <button aria-label="Action" onClick={e => { e.stopPropagation(); updateCard(card.id, { checkItems: card.checkItems!.map(i => i.id === item.id ? { ...i, done: !i.done } : i) }); }}
+                      style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${item.done ? T.green : T.bg4}`, background: item.done ? T.green : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, flexShrink: 0 }}>
                       {item.done && "✓"}
                     </button>
-                    <span style={{ fontSize: 12, color: item.done ? T.text3 : T.text1, textDecoration: item.done ? "line-through" : "none", flex: 1 }}>{item.text}</span>
+                    <span style={{ fontSize: 14, color: item.done ? T.text3 : T.text1, textDecoration: item.done ? "line-through" : "none", flex: 1 }}>{item.text}</span>
                   </div>
                 ))}
-                <button onClick={e => { e.stopPropagation(); updateCard(card.id, { checkItems: [...(card.checkItems || []), { id: Date.now(), text: "New item", done: false }] }); }}
-                  style={{ ...smallBtn, marginTop: 6, fontSize: 10 }}>+ Add item</button>
+                <button aria-label="Action" onClick={e => { e.stopPropagation(); updateCard(card.id, { checkItems: [...(card.checkItems || []), { id: Date.now(), text: "New item", done: false }] }); }}
+                  style={{ ...smallBtn, marginTop: 6, fontSize: 14 }}>+ Add item</button>
               </div>
             )}
 
             {card.type === "link" && (
               <div onMouseDown={e => e.stopPropagation()}>
                 {card.linkUrl ? (
-                  <a href={card.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                    style={{ fontSize: 11, color: "#4d9ef7", textDecoration: "none", display: "block" }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.text1, marginBottom: 2 }}>{card.linkTitle || card.linkUrl}</div>
-                    <span style={{ fontSize: 10, color: T.text3 }}>🔗 {card.linkUrl}</span>
+                  <a aria-label="Link" href={card.linkUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                    style={{ fontSize: 14, color: "#4d9ef7", textDecoration: "none", display: "block" }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text1, marginBottom: 2 }}>{card.linkTitle || card.linkUrl}</div>
+                    <span style={{ fontSize: 14, color: T.text3 }}>🔗 {card.linkUrl}</span>
                   </a>
                 ) : (
-                  <input type="text" placeholder="Paste URL…" onChange={e => updateCard(card.id, { linkUrl: e.target.value, linkTitle: e.target.value })}
-                    onClick={e => e.stopPropagation()} style={{ ...S.input as React.CSSProperties, fontSize: 11, padding: "6px 10px" }} />
+                  <input type="text" placeholder="Paste URL…" onChange={e = aria-label="Paste URL…"> updateCard(card.id, { linkUrl: e.target.value, linkTitle: e.target.value })}
+                    onClick={e => e.stopPropagation()} style={{ ...S.input as React.CSSProperties, fontSize: 14, padding: "6px 10px" }} />
                 )}
               </div>
             )}
@@ -1089,7 +1089,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               <div style={{
                 marginTop: 8, paddingTop: 8, flexShrink: 0,
                 borderTop: `1px solid ${T.bg3}`,
-                fontSize: 10, color: T.text3,
+                fontSize: 14, color: T.text3,
                 display: "flex", alignItems: "center", gap: 6, minHeight: 22,
               }}>
                 <Avatar name={card.lastEditedBy} size={16} />
@@ -1144,7 +1144,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             <div style={{ height: 2, borderRadius: 1, background: T.text3 }} />
           </div>
           <span style={{ fontSize: 14 }}>{isChat ? "💬" : "⚡"}</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: T.text0, flex: 1 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.text0, flex: 1 }}>
             {isChat ? "Team Chat" : "Activity Feed"}
           </span>
           {isChat && (
@@ -1156,7 +1156,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               ))}
             </div>
           )}
-          <button onClick={() => togglePanel(fp.type)} style={{ background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 6, padding: "3px 8px", color: T.text2, cursor: "pointer", fontSize: 11, fontWeight: 600 }}>✕</button>
+          <button aria-label="Action" onClick={() => togglePanel(fp.type)} style={{ background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 6, padding: "3px 8px", color: T.text2, cursor: "pointer", fontSize: 14, fontWeight: 600 }}>✕</button>
         </div>
 
         {/* Content */}
@@ -1169,12 +1169,12 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                   <div style={{ position: "absolute", left: 13, top: 32, width: 1, height: 14, background: T.bg3 }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, color: T.text1, lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 14, color: T.text1, lineHeight: 1.4 }}>
                     <span style={{ fontWeight: 700 }}>{a.user}</span>{" "}
                     <span style={{ color: T.text3 }}>{a.action}</span>{" "}
                     <span style={{ color: a.color, fontWeight: 600 }}>{a.target}</span>
                   </div>
-                  <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{timeAgo(a.at)}</div>
+                  <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{timeAgo(a.at)}</div>
                 </div>
               </div>
             ))}
@@ -1201,7 +1201,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                     {!isMe && <Avatar name={msg.user} size={22} />}
                     <div style={{ maxWidth: "75%", minWidth: 0 }}>
                       {!isMe && (
-                        <span style={{ fontSize: 10, fontWeight: 600, color: T.text3, marginBottom: 2, display: "block", paddingLeft: 4 }}>{msg.user}</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: T.text3, marginBottom: 2, display: "block", paddingLeft: 4 }}>{msg.user}</span>
                       )}
                       {msg.sharedCard && (
                         <div style={{
@@ -1211,11 +1211,11 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                         }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
                             <div style={{ width: 3, height: 12, borderRadius: 2, background: msg.sharedCard.color }} />
-                            <span style={{ fontSize: 11, fontWeight: 700, color: T.text0 }}>{msg.sharedCard.title}</span>
-                            <span style={{ fontSize: 8, padding: "1px 5px", borderRadius: 999, background: `${msg.sharedCard.color}22`, color: msg.sharedCard.color, fontWeight: 600 }}>{msg.sharedCard.type}</span>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{msg.sharedCard.title}</span>
+                            <span style={{ fontSize: 14, padding: "1px 5px", borderRadius: 999, background: `${msg.sharedCard.color}22`, color: msg.sharedCard.color, fontWeight: 600 }}>{msg.sharedCard.type}</span>
                           </div>
-                          {msg.sharedCard.content && <div style={{ fontSize: 10, color: T.text2, lineHeight: 1.4 }}>{msg.sharedCard.content}</div>}
-                          {msg.sharedCard.checkSummary && <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>☑ {msg.sharedCard.checkSummary}</div>}
+                          {msg.sharedCard.content && <div style={{ fontSize: 14, color: T.text2, lineHeight: 1.4 }}>{msg.sharedCard.content}</div>}
+                          {msg.sharedCard.checkSummary && <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>☑ {msg.sharedCard.checkSummary}</div>}
                         </div>
                       )}
                       <div style={{
@@ -1223,26 +1223,26 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                         borderRadius: isMe ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
                         background: isMe ? `linear-gradient(135deg, ${T.accent}, #d97706)` : T.bg2,
                         color: isMe ? "#080d18" : T.text1,
-                        fontSize: 12, lineHeight: 1.45, fontWeight: isMe ? 500 : 400,
+                        fontSize: 14, lineHeight: 1.45, fontWeight: isMe ? 500 : 400,
                       }}>{msg.text}</div>
                       <div style={{ display: "flex", gap: 3, marginTop: 2, flexWrap: "wrap", justifyContent: isMe ? "flex-end" : "flex-start", alignItems: "center" }}>
                         {msg.reactions && Object.entries(msg.reactions).map(([emoji, users]) => (
-                          <button key={emoji} onClick={() => toggleReaction(msg.id, emoji)} style={{
-                            padding: "1px 5px", borderRadius: 999, fontSize: 10, cursor: "pointer",
+                          <button aria-label="Action" key={emoji} onClick={() => toggleReaction(msg.id, emoji)} style={{
+                            padding: "1px 5px", borderRadius: 999, fontSize: 14, cursor: "pointer",
                             background: users.includes(me) ? `${T.accent}22` : T.bg3,
                             border: `1px solid ${users.includes(me) ? `${T.accent}44` : "transparent"}`, color: T.text1,
                           }}>{emoji} {users.length}</button>
                         ))}
                         {REACTION_EMOJIS.slice(0, 3).map(em => (
-                          <button key={em} onClick={() => toggleReaction(msg.id, em)}
-                            style={{ padding: "1px 3px", fontSize: 10, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4 }}
+                          <button aria-label="Action" key={em} onClick={() => toggleReaction(msg.id, em)}
+                            style={{ padding: "1px 3px", fontSize: 14, cursor: "pointer", background: "transparent", border: "none", color: T.text3, opacity: 0.4 }}
                             onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                             onMouseLeave={e => e.currentTarget.style.opacity = "0.4"}>{em}</button>
                         ))}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 3, marginTop: 1, justifyContent: isMe ? "flex-end" : "flex-start" }}>
-                        <span style={{ fontSize: 9, color: T.text3, opacity: 0.5 }}>{timeAgo(msg.at)}</span>
-                        {isMe && <span style={{ fontSize: 10, color: msg.read ? "#22d3a0" : T.text3, opacity: msg.read ? 0.9 : 0.4, letterSpacing: -2 }}>✓✓</span>}
+                        <span style={{ fontSize: 14, color: T.text3, opacity: 0.5 }}>{timeAgo(msg.at)}</span>
+                        {isMe && <span style={{ fontSize: 14, color: msg.read ? "#22d3a0" : T.text3, opacity: msg.read ? 0.9 : 0.4, letterSpacing: -2 }}>✓✓</span>}
                       </div>
                     </div>
                   </div>
@@ -1252,7 +1252,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                   <Avatar name={typingUsers[0]} size={22} />
                   <div>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: T.text3, display: "block", paddingLeft: 4 }}>{typingUsers[0]}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: T.text3, display: "block", paddingLeft: 4 }}>{typingUsers[0]}</span>
                     <div style={{ padding: "8px 14px", borderRadius: "14px 14px 14px 4px", background: T.bg2, display: "flex", gap: 4, alignItems: "center" }}>
                       <span className="typing-dot" style={{ width: 5, height: 5, borderRadius: "50%", background: T.text3, animation: "typingBounce 1.4s infinite" }} />
                       <span className="typing-dot" style={{ width: 5, height: 5, borderRadius: "50%", background: T.text3, animation: "typingBounce 1.4s infinite", animationDelay: "0.2s" }} />
@@ -1268,19 +1268,19 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               <div style={{ padding: "6px 14px", borderTop: `1px solid ${T.bg3}`, background: `${T.purple}08`, display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 3, height: 18, borderRadius: 2, background: T.purple || "#8b5cf6", flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: T.purple || "#8b5cf6" }}>↩ Replying to {replyingTo.user}</div>
-                  <div style={{ fontSize: 10, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{replyingTo.text}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.purple || "#8b5cf6" }}>↩ Replying to {replyingTo.user}</div>
+                  <div style={{ fontSize: 14, color: T.text3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{replyingTo.text}</div>
                 </div>
-                <button onClick={() => setReplyingTo(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 12 }}>✕</button>
+                <button aria-label="Action" onClick={() => setReplyingTo(null)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
               </div>
             )}
 
             <div style={{ padding: "10px 14px", borderTop: `1px solid ${T.bg3}`, display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-              <input value={newMsg} onChange={e => setNewMsg(e.target.value)}
+              <input value={newMsg} onChange={e = aria-label="input"> setNewMsg(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && sendMessage()}
                 placeholder="Message…"
-                style={{ flex: 1, background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 20, color: T.text1, padding: "8px 14px", fontSize: 12, outline: "none" }} />
-              <button onClick={() => sendMessage()} style={{
+                style={{ flex: 1, background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 20, color: T.text1, padding: "8px 14px", fontSize: 14, outline: "none" }} />
+              <button aria-label="Action" onClick={() => sendMessage()} style={{
                 width: 32, height: 32, borderRadius: "50%",
                 background: newMsg.trim() ? `linear-gradient(135deg, ${T.accent}, #d97706)` : T.bg2,
                 border: "none", color: newMsg.trim() ? "#080d18" : T.text3,
@@ -1320,18 +1320,18 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "calc(100vh - 120px)", padding: 32, textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text0, margin: "0 0 8px" }}>No boards yet</h2>
-        <p style={{ fontSize: 13, color: T.text2, maxWidth: 360, lineHeight: 1.5, marginBottom: 20 }}>
+        <p style={{ fontSize: 14, color: T.text2, maxWidth: 360, lineHeight: 1.5, marginBottom: 20 }}>
           Create your first workspace board for notes, charts, and team collaboration. Demo boards are not loaded automatically.
         </p>
-        <button type="button" onClick={() => setShowNewBoard(true)} style={{ ...S.btn as React.CSSProperties }}>Create first board</button>
+        <button aria-label="Action" type="button" onClick={() => setShowNewBoard(true)} style={{ ...S.btn as React.CSSProperties }}>Create first board</button>
         {showNewBoard && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }} onClick={() => setShowNewBoard(false)}>
             <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: 24, width: 360 }} onClick={(e) => e.stopPropagation()}>
               <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, marginBottom: 12 }}>New board</div>
-              <input value={newBoardName} onChange={(e) => setNewBoardName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addBoard()} placeholder="Board name…" style={{ ...S.input as React.CSSProperties, width: "100%", marginBottom: 12 }} />
+              <input value={newBoardName} onChange={(e) = aria-label="input"> setNewBoardName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addBoard()} placeholder="Board name…" style={{ ...S.input as React.CSSProperties, width: "100%", marginBottom: 12 }} />
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button type="button" onClick={() => setShowNewBoard(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-                <button type="button" onClick={addBoard} style={S.btn as React.CSSProperties}>Create</button>
+                <button aria-label="Action" type="button" onClick={() => setShowNewBoard(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                <button aria-label="add" type="button" onClick={addBoard} style={S.btn as React.CSSProperties}>Create</button>
               </div>
             </div>
           </div>
@@ -1353,14 +1353,14 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
         {/* Workspace header */}
         <div style={{ padding: sidebarCollapsed ? "16px 8px" : "20px 16px 16px", borderBottom: `1px solid ${T.bg3}` }}>
           {sidebarCollapsed ? (
-            <button onClick={() => setSidebarCollapsed(false)} style={{ background: "none", border: "none", color: T.text2, cursor: "pointer", fontSize: 16, width: "100%", display: "flex", justifyContent: "center" }}>☰</button>
+            <button aria-label="Action" onClick={() => setSidebarCollapsed(false)} style={{ background: "none", border: "none", color: T.text2, cursor: "pointer", fontSize: 16, width: "100%", display: "flex", justifyContent: "center" }}>☰</button>
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: T.text0, letterSpacing: "-0.03em" }}>📋 Workspace</div>
-                <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{boards.length} boards · {board.cards.length} cards</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{boards.length} boards · {board.cards.length} cards</div>
               </div>
-              <button onClick={() => setSidebarCollapsed(true)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>◀</button>
+              <button aria-label="Action" onClick={() => setSidebarCollapsed(true)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>◀</button>
             </div>
           )}
         </div>
@@ -1369,11 +1369,11 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
           <>
             {/* Boards list */}
             <div style={{ padding: "12px 12px 8px" }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, paddingLeft: 4 }}>Boards</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, paddingLeft: 4 }}>Boards</div>
               {boards.map(b => (
-                <button key={b.id} onClick={() => setActiveBoardId(b.id)} style={{
+                <button aria-label="Action" key={b.id} onClick={() => setActiveBoardId(b.id)} style={{
                   width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
-                  borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
                   background: activeBoardId === b.id ? `${b.color}15` : "transparent",
                   color: activeBoardId === b.id ? T.text0 : T.text2,
                   border: activeBoardId === b.id ? `1px solid ${b.color}33` : "1px solid transparent",
@@ -1381,12 +1381,12 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                 }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: b.color, flexShrink: 0 }} />
                   <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.name}</span>
-                  <span style={{ fontSize: 9, color: T.text3 }}>{b.cards.length}</span>
+                  <span style={{ fontSize: 14, color: T.text3 }}>{b.cards.length}</span>
                 </button>
               ))}
-              <button onClick={() => setShowNewBoard(true)} style={{
+              <button aria-label="Action" onClick={() => setShowNewBoard(true)} style={{
                 width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "8px 10px",
-                borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: "pointer",
                 background: "transparent", color: T.text3,
                 border: `1px dashed ${T.bg4}`, transition: "all 0.15s", marginTop: 4,
               }}>
@@ -1396,9 +1396,9 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
 
             {/* Board stats */}
             <div style={{ padding: "8px 12px", borderTop: `1px solid ${T.bg3}` }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, paddingLeft: 4 }}>Progress</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, paddingLeft: 4 }}>Progress</div>
               <div style={{ background: T.bg2, borderRadius: 10, padding: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: T.text2, marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: T.text2, marginBottom: 6 }}>
                   <span>Tasks</span>
                   <span style={{ color: T.text0, fontWeight: 700 }}>{boardStats.doneChecks}/{boardStats.totalChecks}</span>
                 </div>
@@ -1413,9 +1413,9 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                     { label: "Total", value: boardStats.cards, icon: "📌" },
                   ].map(s => (
                     <div key={s.label} style={{ background: T.bg3, borderRadius: 8, padding: "6px 8px", textAlign: "center" }}>
-                      <div style={{ fontSize: 11 }}>{s.icon}</div>
+                      <div style={{ fontSize: 14 }}>{s.icon}</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: T.text0 }}>{s.value}</div>
-                      <div style={{ fontSize: 8, color: T.text3, fontWeight: 600 }}>{s.label}</div>
+                      <div style={{ fontSize: 14, color: T.text3, fontWeight: 600 }}>{s.label}</div>
                     </div>
                   ))}
                 </div>
@@ -1424,7 +1424,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
 
             {/* Team presence — clickable for direct notes */}
             <div style={{ padding: "8px 12px", borderTop: `1px solid ${T.bg3}`, marginTop: "auto" }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, paddingLeft: 4 }}>Team</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8, paddingLeft: 4 }}>Team</div>
               {team.map(u => {
                 const memberNotes = directNotes.filter(n => n.to === u.name || n.from === u.name);
                 const isExpanded = showNotesForMember === u.name;
@@ -1451,20 +1451,20 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                         }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {u.name} {u.name === me && <span style={{ fontSize: 9, color: T.text3 }}>(you)</span>}
+                        <div style={{ fontSize: 14, fontWeight: 600, color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {u.name} {u.name === me && <span style={{ fontSize: 14, color: T.text3 }}>(you)</span>}
                         </div>
-                        <div style={{ fontSize: 9, color: T.text3 }}>{u.role}</div>
+                        <div style={{ fontSize: 14, color: T.text3 }}>{u.role}</div>
                       </div>
                       {u.name !== me && (
                         <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
                           {memberNotes.length > 0 && (
-                            <span style={{ fontSize: 9, background: `${u.color}22`, color: u.color, borderRadius: 999, padding: "1px 5px", fontWeight: 700 }}>{memberNotes.length}</span>
+                            <span style={{ fontSize: 14, background: `${u.color}22`, color: u.color, borderRadius: 999, padding: "1px 5px", fontWeight: 700 }}>{memberNotes.length}</span>
                           )}
-                          <button
+                          <button aria-label="Action"
                             onClick={e => { e.stopPropagation(); setDirectNoteTarget(u); }}
                             title={`Leave note for ${u.name}`}
-                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, padding: "0 2px", opacity: 0.5, transition: "opacity 0.15s" }}
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, padding: "0 2px", opacity: 0.5, transition: "opacity 0.15s" }}
                             onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                             onMouseLeave={e => e.currentTarget.style.opacity = "0.5"}
                           >✉️</button>
@@ -1476,21 +1476,21 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                     {isExpanded && (
                       <div style={{ padding: "6px 6px 8px 38px" }}>
                         {memberNotes.length === 0 ? (
-                          <div style={{ fontSize: 10, color: T.text3, padding: "4px 0" }}>No notes yet</div>
+                          <div style={{ fontSize: 14, color: T.text3, padding: "4px 0" }}>No notes yet</div>
                         ) : (
                           memberNotes.slice(0, 5).map(n => (
                             <div key={n.id} style={{ padding: "6px 8px", background: T.bg2, borderRadius: 8, marginBottom: 4, border: `1px solid ${T.bg3}` }}>
-                              <div style={{ fontSize: 10, color: T.text2, lineHeight: 1.4 }}>{n.text}</div>
-                              <div style={{ fontSize: 9, color: T.text3, marginTop: 3, display: "flex", gap: 6 }}>
+                              <div style={{ fontSize: 14, color: T.text2, lineHeight: 1.4 }}>{n.text}</div>
+                              <div style={{ fontSize: 14, color: T.text3, marginTop: 3, display: "flex", gap: 6 }}>
                                 <span>{n.from === me ? "You" : n.from} → {n.to === me ? "You" : n.to}</span>
                                 <span>· {timeAgo(n.at)}</span>
                               </div>
                             </div>
                           ))
                         )}
-                        <button
+                        <button aria-label="Action"
                           onClick={e => { e.stopPropagation(); setDirectNoteTarget(u); }}
-                          style={{ ...smallBtn, marginTop: 4, fontSize: 10, width: "100%", textAlign: "center", display: "block", padding: "4px 8px" }}
+                          style={{ ...smallBtn, marginTop: 4, fontSize: 14, width: "100%", textAlign: "center", display: "block", padding: "4px 8px" }}
                         >+ Leave a note</button>
                       </div>
                     )}
@@ -1514,7 +1514,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             <div style={{ width: 10, height: 10, borderRadius: "50%", background: board.color }} />
             <span style={{ fontSize: 16, fontWeight: 800, color: T.text0, letterSpacing: "-0.02em" }}>{board.name}</span>
             {boards.length > 1 && (
-              <button onClick={() => deleteBoard(board.id)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 10, opacity: 0.5 }}>Delete</button>
+              <button aria-label="Action" onClick={() => deleteBoard(board.id)} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14, opacity: 0.5 }}>Delete</button>
             )}
           </div>
 
@@ -1526,8 +1526,8 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               { type: "link" as const, icon: "🔗", label: "Link" },
               { type: "divider" as const, icon: "—", label: "Divider" },
             ]).map(t => (
-              <button key={t.type} onClick={() => addCard(t.type)} style={{
-                padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600,
+              <button aria-label="Action" key={t.type} onClick={() => addCard(t.type)} style={{
+                padding: "5px 10px", borderRadius: 8, fontSize: 14, fontWeight: 600,
                 cursor: "pointer", background: T.bg2,
                 border: `1px solid ${T.bg3}`, color: T.text2, transition: "all 0.15s",
               }}
@@ -1536,10 +1536,10 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               >{t.icon} {t.label}</button>
             ))}
             {selectedCard?.type === "divider" && (
-              <button
+              <button aria-label="Action"
                 onClick={() => deleteCard(selectedCard.id)}
                 style={{
-                  padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+                  padding: "5px 10px", borderRadius: 8, fontSize: 14, fontWeight: 700,
                   cursor: "pointer", background: `${T.red || "#ef4444"}18`,
                   border: `1px solid ${T.red || "#ef4444"}55`, color: T.red || "#ef4444",
                 }}
@@ -1549,8 +1549,8 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
 
           <div style={{ display: "flex", background: T.bg2, borderRadius: 8, border: `1px solid ${T.bg3}`, overflow: "hidden" }}>
             {(["canvas", "grid"] as const).map(v => (
-              <button key={v} onClick={() => setViewMode(v)} style={{
-                padding: "5px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer",
+              <button aria-label="Action" key={v} onClick={() => setViewMode(v)} style={{
+                padding: "5px 10px", fontSize: 14, fontWeight: 600, cursor: "pointer",
                 background: viewMode === v ? `${board.color}18` : "transparent",
                 color: viewMode === v ? board.color : T.text3, border: "none",
               }}>{v === "canvas" ? "🔲 Canvas" : "▦ Grid"}</button>
@@ -1558,8 +1558,8 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
           </div>
 
           <div style={{ position: "relative" }}>
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search…"
-              style={{ background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 8, color: T.text1, padding: "6px 12px", fontSize: 11, outline: "none", width: 140 }} />
+            <input value={searchQuery} onChange={e = aria-label="input"> setSearchQuery(e.target.value)} placeholder="Search…"
+              style={{ background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 8, color: T.text1, padding: "6px 12px", fontSize: 14, outline: "none", width: 140 }} />
             {searchResults.length > 0 && searchQuery && (
               <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, width: 280, ...panel(), padding: 8, zIndex: 100, maxHeight: 240, overflowY: "auto", background: T.bg1, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
                 {searchResults.map(r => (
@@ -1567,8 +1567,8 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                     style={{ padding: "8px 10px", borderRadius: 8, cursor: "pointer", marginBottom: 2, transition: "background 0.1s" }}
                     onMouseEnter={e => e.currentTarget.style.background = T.bg2}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: T.text0 }}>{r.card.title}</div>
-                    <div style={{ fontSize: 9, color: r.board.color, fontWeight: 500 }}>in {r.board.name}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{r.card.title}</div>
+                    <div style={{ fontSize: 14, color: r.board.color, fontWeight: 500 }}>in {r.board.name}</div>
                   </div>
                 ))}
               </div>
@@ -1577,20 +1577,20 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
 
           {/* Floating panel toggles */}
           <div style={{ display: "flex", gap: 4 }}>
-            <button onClick={() => togglePanel("activity")} style={{
-              padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
+            <button aria-label="Action" onClick={() => togglePanel("activity")} style={{
+              padding: "5px 10px", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
               background: activityPanel ? `${T.accent}15` : T.bg2,
               color: activityPanel ? T.accent : T.text3,
               border: `1px solid ${activityPanel ? `${T.accent}44` : T.bg3}`,
             }}>⚡ Activity</button>
-            <button onClick={() => togglePanel("chat")} style={{
-              padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
+            <button aria-label="Action" onClick={() => togglePanel("chat")} style={{
+              padding: "5px 10px", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: "pointer",
               background: chatPanel ? `${T.purple || "#8b5cf6"}15` : T.bg2,
               color: chatPanel ? (T.purple || "#8b5cf6") : T.text3,
               border: `1px solid ${chatPanel ? `${T.purple || "#8b5cf6"}44` : T.bg3}`,
             }}>
               💬 Chat
-              {chatMessages.length > 0 && <span style={{ marginLeft: 4, fontSize: 9, background: T.purple || "#8b5cf6", color: "#fff", borderRadius: 999, padding: "1px 5px", fontWeight: 700 }}>{chatMessages.length}</span>}
+              {chatMessages.length > 0 && <span style={{ marginLeft: 4, fontSize: 14, background: T.purple || "#8b5cf6", color: "#fff", borderRadius: 999, padding: "1px 5px", fontWeight: 700 }}>{chatMessages.length}</span>}
             </button>
           </div>
         </div>
@@ -1612,7 +1612,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               <div style={{ textAlign: "center", padding: 40 }}>
                 <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.2 }}>📌</div>
                 <div style={{ fontSize: 16, color: T.text3, fontWeight: 600, marginBottom: 4 }}>Empty board</div>
-                <div style={{ fontSize: 12, color: T.text3, opacity: 0.6 }}>Use the toolbar above to add notes, checklists, charts, and more</div>
+                <div style={{ fontSize: 14, color: T.text3, opacity: 0.6 }}>Use the toolbar above to add notes, checklists, charts, and more</div>
               </div>
             </div>
           )}
@@ -1651,19 +1651,19 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                 <div style={{ fontSize: 16, fontWeight: 800, color: T.text0, letterSpacing: "-0.02em" }}>
                   Note for {directNoteTarget.name}
                 </div>
-                <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>{directNoteTarget.role} · {directNoteTarget.status}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{directNoteTarget.role} · {directNoteTarget.status}</div>
               </div>
             </div>
 
             {/* Existing notes for this person */}
             {directNotes.filter(n => n.to === directNoteTarget.name).length > 0 && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Previous Notes</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Previous Notes</div>
                 <div style={{ maxHeight: 160, overflowY: "auto" }}>
                   {directNotes.filter(n => n.to === directNoteTarget.name).map(n => (
                     <div key={n.id} style={{ padding: "8px 10px", background: T.bg2, borderRadius: 8, marginBottom: 4, border: `1px solid ${T.bg3}` }}>
-                      <div style={{ fontSize: 11, color: T.text2, lineHeight: 1.4 }}>{n.text}</div>
-                      <div style={{ fontSize: 9, color: T.text3, marginTop: 3 }}>
+                      <div style={{ fontSize: 14, color: T.text2, lineHeight: 1.4 }}>{n.text}</div>
+                      <div style={{ fontSize: 14, color: T.text3, marginTop: 3 }}>
                         {n.from === me ? "You" : n.from} · {timeAgo(n.at)} · {n.board}
                       </div>
                     </div>
@@ -1673,33 +1673,33 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             )}
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>Your Note</label>
+              <label style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.1em", display: "block", marginBottom: 6 }}>Your Note</label>
               <textarea
                 autoFocus
                 value={directNoteText}
-                onChange={e => setDirectNoteText(e.target.value)}
+                onChange={e = aria-label="textarea"> setDirectNoteText(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter" && e.metaKey) sendDirectNote(); }}
                 placeholder={`Leave a note for ${directNoteTarget.name}…`}
                 style={{
                   width: "100%", minHeight: 100, background: T.bg2, border: `1px solid ${T.bg3}`,
-                  borderRadius: 10, color: T.text1, padding: "10px 14px", fontSize: 13,
+                  borderRadius: 10, color: T.text1, padding: "10px 14px", fontSize: 14,
                   lineHeight: 1.6, resize: "vertical", outline: "none", fontFamily: "inherit",
                 }}
               />
-              <div style={{ fontSize: 9, color: T.text3, marginTop: 4, opacity: 0.6 }}>⌘+Enter to send</div>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 4, opacity: 0.6 }}>⌘+Enter to send</div>
             </div>
 
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={sendDirectNote} disabled={!directNoteText.trim()} style={{
+              <button aria-label="send" onClick={sendDirectNote} disabled={!directNoteText.trim()} style={{
                 flex: 1, padding: "10px 16px", borderRadius: 10,
                 background: directNoteText.trim() ? `linear-gradient(135deg, ${directNoteTarget.color}, ${directNoteTarget.color}cc)` : T.bg3,
                 border: "none", color: directNoteText.trim() ? "#fff" : T.text3,
-                fontSize: 13, fontWeight: 700, cursor: directNoteText.trim() ? "pointer" : "not-allowed",
+                fontSize: 14, fontWeight: 700, cursor: directNoteText.trim() ? "pointer" : "not-allowed",
                 transition: "all 0.2s",
               }}>Send Note</button>
-              <button onClick={() => { setDirectNoteTarget(null); setDirectNoteText(""); }} style={{
+              <button aria-label="Action" onClick={() => { setDirectNoteTarget(null); setDirectNoteText(""); }} style={{
                 padding: "10px 16px", borderRadius: 10, background: T.bg2,
-                border: `1px solid ${T.bg3}`, color: T.text2, fontSize: 13,
+                border: `1px solid ${T.bg3}`, color: T.text2, fontSize: 14,
                 fontWeight: 600, cursor: "pointer",
               }}>Cancel</button>
             </div>
@@ -1714,14 +1714,14 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             <h2 style={{ fontSize: 18, fontWeight: 800, color: T.text0, margin: "0 0 18px", letterSpacing: "-0.02em" }}>New Board</h2>
             <div style={{ marginBottom: 14 }}>
               <label style={S.label as React.CSSProperties}>Name</label>
-              <input value={newBoardName} onChange={e => setNewBoardName(e.target.value)} onKeyDown={e => e.key === "Enter" && addBoard()}
+              <input value={newBoardName} onChange={e = aria-label="input"> setNewBoardName(e.target.value)} onKeyDown={e => e.key === "Enter" && addBoard()}
                 style={S.input as React.CSSProperties} autoFocus placeholder="Board name…" />
             </div>
             <div style={{ marginBottom: 18 }}>
               <label style={S.label as React.CSSProperties}>Color</label>
               <div style={{ display: "flex", gap: 8 }}>
                 {BOARD_COLORS.map(c => (
-                  <button key={c} onClick={() => setNewBoardColor(c)} style={{
+                  <button aria-label="Action" key={c} onClick={() => setNewBoardColor(c)} style={{
                     width: 28, height: 28, borderRadius: "50%", background: c, cursor: "pointer",
                     border: newBoardColor === c ? "3px solid #fff" : "2px solid transparent", transition: "all 0.15s",
                   }} />
@@ -1729,8 +1729,8 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={addBoard} style={S.btn as React.CSSProperties}>Create Board</button>
-              <button onClick={() => setShowNewBoard(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+              <button aria-label="add" onClick={addBoard} style={S.btn as React.CSSProperties}>Create Board</button>
+              <button aria-label="Action" onClick={() => setShowNewBoard(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
             </div>
           </div>
         </div>

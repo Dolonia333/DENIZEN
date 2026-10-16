@@ -411,11 +411,11 @@
     const card = document.createElement('div');
     card.id = 'prof-mcp-connect';
     card.className = 'prof-mcp-card';
-    card.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(card, `
       <div class="prof-section-title">External AI (MCP)</div>
       <div class="prof-hint">Connect Cursor, ChatGPT, or Claude to your Denizen NPC tools.</div>
       <button type="button" class="prof-btn secondary" id="prof-open-mcp">Connect MCP</button>
-    `;
+    `);
     panel.insertBefore(card, panel.firstChild);
     card.querySelector('#prof-open-mcp')?.addEventListener('click', () => {
       globalThis.DenizenVisitorMcpConnectUI?.openConnect?.();
@@ -427,7 +427,7 @@
     if (!rootEl.querySelector('#prof-shell')) {
       const shell = document.createElement('div');
       shell.id = 'prof-shell';
-      shell.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(shell, `
         ${renderHeader(profile)}
         ${renderTabs()}
         <div class="prof-status" id="prof-status"></div>
@@ -435,7 +435,7 @@
         <div class="prof-panel${activeTab === 'identity' ? ' active' : ''}" data-prof-panel="identity" id="prof-panel-identity"></div>
         <div class="prof-panel${activeTab === 'memory' ? ' active' : ''}" data-prof-panel="memory" id="prof-panel-memory"></div>
         <div class="prof-panel${activeTab === 'connect' ? ' active' : ''}" data-prof-panel="connect" id="prof-panel-connect"></div>
-      `;
+      `);
       const statsEl = rootEl.querySelector('#denizen-acct-stats');
       const settingsEl = rootEl.querySelector('#denizen-acct-settings');
       const rulesEl = rootEl.querySelector('#denizen-acct-rules');
@@ -513,7 +513,7 @@
       'CEO', 'Product Manager', 'Software Engineer', 'Designer', 'Executive Assistant', 'Intern',
     ];
     const datalistOptions = suggestions.map((s) => `<option value="${escapeHtml(s)}"></option>`).join('');
-    panel.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panel, `
       <div class="prof-section-title">Your identity</div>
       <div class="prof-hint">Who you are — name, email, and the work you do. Overview shows your account ID (tier, server, credits).</div>
       <div class="prof-field">
@@ -555,7 +555,7 @@
       ` : `
         <div class="prof-hint" style="margin-top:8px">Create a demo account from the banner on Overview to set a password.</div>
       `}
-    `;
+    `);
     panel.querySelector('#prof-save-identity')?.addEventListener('click', () => {
       saveIdentity(rootEl).catch((err) => setStatus(rootEl, err?.message || 'Save failed', true));
     });
@@ -575,7 +575,7 @@
     if (!panel) return;
     const prefs = Array.isArray(deepProfile?.preferences) ? deepProfile.preferences : [];
     const vips = Array.isArray(deepProfile?.vips) ? deepProfile.vips : [];
-    panel.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panel, `
       <div class="prof-section-title">AI memory</div>
       <div class="prof-hint">NPCs use these notes when you chat. Preferences are also learned from conversation.</div>
       <div class="prof-field">
@@ -607,7 +607,7 @@
         <textarea id="prof-long-horizon" maxlength="800" placeholder="Quarter goals, priorities NPCs should remember">${escapeHtml(deepProfile?.long_horizon || '')}</textarea>
       </div>
       <button type="button" class="prof-btn" id="prof-save-memory">Save AI memory</button>
-    `;
+    `);
     panel.querySelectorAll('[data-remove-chip]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const field = btn.getAttribute('data-remove-chip');

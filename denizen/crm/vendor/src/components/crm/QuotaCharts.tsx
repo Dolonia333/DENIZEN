@@ -70,7 +70,7 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
   if (quotas.length === 0) return null;
 
   const tooltipStyle = {
-    contentStyle: { background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, fontSize: 12, color: T.text1 },
+    contentStyle: { background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 8, fontSize: 14, color: T.text1 },
     labelStyle: { color: T.text0, fontWeight: 700, marginBottom: 4 },
   };
 
@@ -78,7 +78,7 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
       {/* Bar Chart */}
       <div style={{ ...S.card as React.CSSProperties, padding: "20px 20px 12px" }}>
-        <h4 style={{ fontSize: 13, fontWeight: 700, color: T.text0, margin: "0 0 16px" }}>📊 Attainment by Member</h4>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: "0 0 16px" }}>📊 Attainment by Member</h4>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={barData} barCategoryGap="20%" onClick={(data) => {
             if (data?.activeLabel && onDrilldown) {
@@ -87,8 +87,8 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
             }
           }} style={{ cursor: "pointer" }}>
             <CartesianGrid strokeDasharray="3 3" stroke={`${T.bg4}`} />
-            <XAxis dataKey="name" tick={{ fill: T.text3, fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: T.text3, fontSize: 10 }} axisLine={false} tickLine={false} unit="%" domain={[0, 120]} />
+            <XAxis dataKey="name" tick={{ fill: T.text3, fontSize: 14 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.text3, fontSize: 14 }} axisLine={false} tickLine={false} unit="%" domain={[0, 120]} />
             <Tooltip {...tooltipStyle} formatter={(v: number) => [`${v}%`, ""]} />
             {quotaTypes.map((t, i) => (
               <Bar key={t} dataKey={t} fill={MEMBER_COLORS[i % MEMBER_COLORS.length]} radius={[4, 4, 0, 0]} style={{ cursor: "pointer" }} />
@@ -99,12 +99,12 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
 
       {/* Radar Chart */}
       <div style={{ ...S.card as React.CSSProperties, padding: "20px 20px 12px" }}>
-        <h4 style={{ fontSize: 13, fontWeight: 700, color: T.text0, margin: "0 0 16px" }}>🕸 Multi-Dimension Comparison</h4>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: "0 0 16px" }}>🕸 Multi-Dimension Comparison</h4>
         <ResponsiveContainer width="100%" height={220}>
           <RadarChart data={radarData} outerRadius="70%">
             <PolarGrid stroke={T.bg4} />
-            <PolarAngleAxis dataKey="type" tick={{ fill: T.text3, fontSize: 10 }} />
-            <PolarRadiusAxis tick={{ fill: T.text3, fontSize: 9 }} domain={[0, 120]} />
+            <PolarAngleAxis dataKey="type" tick={{ fill: T.text3, fontSize: 14 }} />
+            <PolarRadiusAxis tick={{ fill: T.text3, fontSize: 14 }} domain={[0, 120]} />
             {activeMembers.map((m, i) => (
               <Radar
                 key={m.id}
@@ -116,7 +116,7 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
                 strokeWidth={2}
               />
             ))}
-            <Legend wrapperStyle={{ fontSize: 11, color: T.text2 }} />
+            <Legend wrapperStyle={{ fontSize: 14, color: T.text2 }} />
             <Tooltip {...tooltipStyle} formatter={(v: number) => [`${v}%`, ""]} />
           </RadarChart>
         </ResponsiveContainer>
@@ -124,7 +124,7 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
 
       {/* Line Chart - History Trends (full width) */}
       <div style={{ ...S.card as React.CSSProperties, padding: "20px 20px 12px", gridColumn: "1 / -1" }}>
-        <h4 style={{ fontSize: 13, fontWeight: 700, color: T.text0, margin: "0 0 16px" }}>📈 Attainment Trends (Last 6 Periods)</h4>
+        <h4 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: "0 0 16px" }}>📈 Attainment Trends (Last 6 Periods)</h4>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={historyData} onClick={(data) => {
             if (data?.activeLabel && onDrilldown) {
@@ -142,8 +142,8 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
             }
           }} style={{ cursor: "pointer" }}>
             <CartesianGrid strokeDasharray="3 3" stroke={`${T.bg4}`} />
-            <XAxis dataKey="period" tick={{ fill: T.text3, fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: T.text3, fontSize: 10 }} axisLine={false} tickLine={false} unit="%" domain={[0, 120]} />
+            <XAxis dataKey="period" tick={{ fill: T.text3, fontSize: 14 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: T.text3, fontSize: 14 }} axisLine={false} tickLine={false} unit="%" domain={[0, 120]} />
             <Tooltip {...tooltipStyle} formatter={(v: number) => [`${v}%`, ""]} />
             {activeMembers.map((m, i) => (
               <Line
@@ -156,7 +156,7 @@ export function QuotaCharts({ quotas, onDrilldown }: Props) {
                 activeDot={{ r: 6, style: { cursor: "pointer" } }}
               />
             ))}
-            <Legend wrapperStyle={{ fontSize: 11, color: T.text2 }} />
+            <Legend wrapperStyle={{ fontSize: 14, color: T.text2 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>

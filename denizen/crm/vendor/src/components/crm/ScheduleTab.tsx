@@ -129,22 +129,22 @@ function TaskDetailPanel({ task, onClose, onUpdate }: { task: Task; onClose: () 
       display: "flex", flexDirection: "column", boxShadow: "-12px 0 60px rgba(0,0,0,0.6)",
     }}>
       <div style={{ padding: "18px 22px", borderBottom: `1px solid ${T.bg4}`, display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={onClose} style={{ ...glassCard() as any, padding: "7px 14px", color: T.text2, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>← Back</button>
+        <button aria-label="Close" onClick={onClose} style={{ ...glassCard() as any, padding: "7px 14px", color: T.text2, cursor: "pointer", fontSize: 14, fontWeight: 600 }}>← Back</button>
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700, letterSpacing: "0.02em" }}>{pm.label}</span>
-        {task.isClientFacing && <span style={{ fontSize: 10, padding: "4px 10px", borderRadius: T.radius.full, background: `${T.accent}18`, color: T.accent, fontWeight: 600 }}>Client</span>}
+        <span style={{ fontSize: 14, padding: "4px 10px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700, letterSpacing: "0.02em" }}>{pm.label}</span>
+        {task.isClientFacing && <span style={{ fontSize: 14, padding: "4px 10px", borderRadius: T.radius.full, background: `${T.accent}18`, color: T.accent, fontWeight: 600 }}>Client</span>}
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: 22 }}>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: T.text0, margin: "0 0 6px", letterSpacing: "-0.02em" }}>{task.title}</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 12, marginBottom: 18 }}>
-          {task.assignee && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Avatar name={task.assignee} size={22} /><span style={{ fontSize: 12, color: T.text2 }}>{task.assignee}</span></div>}
-          {task.due && <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: urgencyColor[urgency] }} /><span style={{ fontSize: 12, color: T.text2 }}>Due {task.due}</span></div>}
+          {task.assignee && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><Avatar name={task.assignee} size={22} /><span style={{ fontSize: 14, color: T.text2 }}>{task.assignee}</span></div>}
+          {task.due && <div style={{ display: "flex", alignItems: "center", gap: 5 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: urgencyColor[urgency] }} /><span style={{ fontSize: 14, color: T.text2 }}>Due {task.due}</span></div>}
         </div>
         {/* Status buttons */}
         <div style={{ display: "flex", gap: 4, marginBottom: 22 }}>
           {COLUMNS.map(c => (
-            <button key={c.key} onClick={() => changeStatus(c.key)} style={{
-              flex: 1, padding: "7px 0", borderRadius: T.radius.sm, fontSize: 11, fontWeight: 600, cursor: "pointer",
+            <button aria-label="Action" key={c.key} onClick={() => changeStatus(c.key)} style={{
+              flex: 1, padding: "7px 0", borderRadius: T.radius.sm, fontSize: 14, fontWeight: 600, cursor: "pointer",
               background: task.status === c.key ? `${c.color}22` : "rgba(255,255,255,0.03)",
               color: task.status === c.key ? c.color : T.text3,
               border: `1px solid ${task.status === c.key ? `${c.color}66` : T.bg4}`,
@@ -154,57 +154,57 @@ function TaskDetailPanel({ task, onClose, onUpdate }: { task: Task; onClose: () 
         </div>
         {/* Description */}
         <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Description</div>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Description</div>
           {editDesc ? (
             <div>
-              <textarea value={desc} onChange={e => setDesc(e.target.value)} style={{ ...S.input as React.CSSProperties, minHeight: 80, resize: "vertical" }} />
+              <textarea value={desc} onChange={e = aria-label="textarea"> setDesc(e.target.value)} style={{ ...S.input as React.CSSProperties, minHeight: 80, resize: "vertical" }} />
               <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                <button onClick={() => { onUpdate({ ...task, description: desc }); setEditDesc(false); }} style={{ ...S.btn as React.CSSProperties, padding: "5px 12px", fontSize: 11 }}>Save</button>
-                <button onClick={() => setEditDesc(false)} style={{ ...S.btnGhost as React.CSSProperties, padding: "5px 12px", fontSize: 11 }}>Cancel</button>
+                <button aria-label="Action" onClick={() => { onUpdate({ ...task, description: desc }); setEditDesc(false); }} style={{ ...S.btn as React.CSSProperties, padding: "5px 12px", fontSize: 14 }}>Save</button>
+                <button aria-label="Action" onClick={() => setEditDesc(false)} style={{ ...S.btnGhost as React.CSSProperties, padding: "5px 12px", fontSize: 14 }}>Cancel</button>
               </div>
             </div>
           ) : (
-            <div onClick={() => setEditDesc(true)} style={{ fontSize: 13, color: task.description ? T.text1 : T.text3, cursor: "pointer", padding: "10px 12px", ...glassCard() as any, minHeight: 40 }}>
+            <div onClick={() => setEditDesc(true)} style={{ fontSize: 14, color: task.description ? T.text1 : T.text3, cursor: "pointer", padding: "10px 12px", ...glassCard() as any, minHeight: 40 }}>
               {task.description || "Click to add description…"}
             </div>
           )}
         </div>
         {/* Subtasks */}
         <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
             Subtasks {task.subtasks && task.subtasks.length > 0 && `(${task.subtasks.filter(s => s.done).length}/${task.subtasks.length})`}
           </div>
           {(task.subtasks || []).map(st => (
             <div key={st.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0" }}>
-              <button onClick={() => toggleSubtask(st.id)} style={{
+              <button aria-label="Action" onClick={() => toggleSubtask(st.id)} style={{
                 width: 18, height: 18, borderRadius: T.radius.xs, flexShrink: 0,
                 border: `2px solid ${st.done ? T.green : T.bg5}`, background: st.done ? T.green : "transparent",
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14,
               }}>{st.done && "✓"}</button>
-              <span style={{ fontSize: 13, color: st.done ? T.text3 : T.text1, textDecoration: st.done ? "line-through" : "none" }}>{st.title}</span>
+              <span style={{ fontSize: 14, color: st.done ? T.text3 : T.text1, textDecoration: st.done ? "line-through" : "none" }}>{st.title}</span>
             </div>
           ))}
           <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-            <input value={newSubtask} onChange={e => setNewSubtask(e.target.value)} placeholder="Add subtask…" onKeyDown={e => e.key === "Enter" && addSubtask()} style={{ ...S.input as React.CSSProperties, flex: 1, padding: "6px 10px", fontSize: 12 }} />
-            <button onClick={addSubtask} style={{ ...S.btn as React.CSSProperties, padding: "6px 10px", fontSize: 11 }}>Add</button>
+            <input value={newSubtask} onChange={e = aria-label="input"> setNewSubtask(e.target.value)} placeholder="Add subtask…" onKeyDown={e => e.key === "Enter" && addSubtask()} style={{ ...S.input as React.CSSProperties, flex: 1, padding: "6px 10px", fontSize: 14 }} />
+            <button aria-label="add" onClick={addSubtask} style={{ ...S.btn as React.CSSProperties, padding: "6px 10px", fontSize: 14 }}>Add</button>
           </div>
         </div>
         {/* Comments */}
         <div>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Comments</div>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Comments</div>
           {(task.comments || []).map(c => (
             <div key={c.id} style={{ padding: "10px 12px", ...glassCard() as any, marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <Avatar name={c.user} size={18} />
-                <span style={{ fontSize: 11, fontWeight: 600, color: T.text1 }}>{c.user}</span>
-                <span style={{ fontSize: 10, color: T.text3, marginLeft: "auto" }}>{new Date(c.at).toLocaleDateString()}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{c.user}</span>
+                <span style={{ fontSize: 14, color: T.text3, marginLeft: "auto" }}>{new Date(c.at).toLocaleDateString()}</span>
               </div>
-              <p style={{ fontSize: 12, color: T.text2, margin: 0 }}>{c.text}</p>
+              <p style={{ fontSize: 14, color: T.text2, margin: 0 }}>{c.text}</p>
             </div>
           ))}
           <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-            <input value={newComment} onChange={e => setNewComment(e.target.value)} placeholder="Add a comment…" onKeyDown={e => e.key === "Enter" && addComment()} style={{ ...S.input as React.CSSProperties, flex: 1, padding: "6px 10px", fontSize: 12 }} />
-            <button onClick={addComment} style={{ ...S.btn as React.CSSProperties, padding: "6px 10px", fontSize: 11 }}>Post</button>
+            <input value={newComment} onChange={e = aria-label="input"> setNewComment(e.target.value)} placeholder="Add a comment…" onKeyDown={e => e.key === "Enter" && addComment()} style={{ ...S.input as React.CSSProperties, flex: 1, padding: "6px 10px", fontSize: 14 }} />
+            <button aria-label="add" onClick={addComment} style={{ ...S.btn as React.CSSProperties, padding: "6px 10px", fontSize: 14 }}>Post</button>
           </div>
         </div>
       </div>
@@ -250,9 +250,9 @@ function NewMeetingModal({ date, contacts, onSave, onClose }: {
         {/* Templates */}
         <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
           {MEETING_TEMPLATES.map(tpl => (
-            <button key={tpl.name} type="button" onClick={() => { setTitle(tpl.name); setType(tpl.type); setDuration(tpl.duration); }}
+            <button aria-label="Action" key={tpl.name} type="button" onClick={() => { setTitle(tpl.name); setType(tpl.type); setDuration(tpl.duration); }}
               style={{
-                fontSize: 11, padding: "8px 12px", borderRadius: T.radius.sm, cursor: "pointer",
+                fontSize: 14, padding: "8px 12px", borderRadius: T.radius.sm, cursor: "pointer",
                 background: title === tpl.name ? `${T.accent}22` : "rgba(255,255,255,0.04)",
                 border: `1px solid ${title === tpl.name ? `${T.accent}66` : T.bg4}`,
                 color: title === tpl.name ? T.accent : T.text3, fontWeight: 600, whiteSpace: "nowrap",
@@ -261,9 +261,9 @@ function NewMeetingModal({ date, contacts, onSave, onClose }: {
             </button>
           ))}
         </div>
-        <div style={{ marginBottom: 12 }}><label style={S.label as React.CSSProperties}>Title *</label><input value={title} onChange={e => setTitle(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} /></div>
+        <div style={{ marginBottom: 12 }}><label style={S.label as React.CSSProperties}>Title *</label><input value={title} onChange={e = aria-label="input"> setTitle(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} /></div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 12 }}>
-          <div><label style={S.label as React.CSSProperties}>Time</label><input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} /></div>
+          <div><label style={S.label as React.CSSProperties}>Time</label><input type="time" value={time} onChange={e = aria-label="time"> setTime(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} /></div>
           <div><label style={S.label as React.CSSProperties}>Duration</label>
             <select value={duration} onChange={e => setDuration(Number(e.target.value))} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }}>
               {[15, 30, 45, 60, 90].map(d => <option key={d} value={d}>{d} min</option>)}
@@ -277,11 +277,11 @@ function NewMeetingModal({ date, contacts, onSave, onClose }: {
           </select>
         </div>
         <div style={{ marginBottom: 12 }}><label style={S.label as React.CSSProperties}>Notes</label>
-          <textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical", width: "100%", boxSizing: "border-box" }} />
+          <textarea value={notes} onChange={e = aria-label="textarea"> setNotes(e.target.value)} style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical", width: "100%", boxSizing: "border-box" }} />
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={save} style={{ ...(S.btn as React.CSSProperties), flex: "1 1 100%" }}>Create Meeting</button>
-          <button onClick={onClose} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
+          <button aria-label="save" onClick={save} style={{ ...(S.btn as React.CSSProperties), flex: "1 1 100%" }}>Create Meeting</button>
+          <button aria-label="Close" onClick={onClose} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
         </div>
       </div>
     </div>,
@@ -439,7 +439,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
 
   // ── Nav arrow btn ──
   const navBtn = (onClick: () => void, label: string) => (
-    <button onClick={onClick} style={{
+    <button aria-label="Action" onClick={onClick} style={{
       ...glassCard() as any, padding: "5px 12px", color: T.text2, cursor: "pointer", fontSize: 14,
       fontWeight: 500, transition: "all 0.15s", lineHeight: 1,
     }}
@@ -456,13 +456,13 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
           <h1 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, color: T.text0, margin: 0, letterSpacing: "-0.03em" }}>
             Schedule {isMobile ? null : <span style={{ fontSize: 14, fontWeight: 500, color: T.text3, marginLeft: 6 }}>Command Center</span>}
           </h1>
-          <p style={{ fontSize: 12, color: T.text3, marginTop: 4 }}>
+          <p style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
             {today.toLocaleDateString("en-US", { weekday: isMobile ? "short" : "long", month: "long", day: "numeric", year: "numeric" })}
           </p>
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", width: isMobile ? "100%" : undefined }}>
           {(["schedule", "kanban", "agenda"] as MainView[]).map(v => (
-            <button key={v} onClick={() => setMainView(v)} style={{
+            <button aria-label="Action" key={v} onClick={() => setMainView(v)} style={{
               ...glassCard(mainView === v ? T.accent : undefined) as any,
               padding: isMobile ? "8px 10px" : "7px 16px", fontSize: isMobile ? 11 : 12, fontWeight: 600, cursor: "pointer",
               color: mainView === v ? T.accent : T.text3, transition: "all 0.15s",
@@ -482,42 +482,42 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
         <div style={{ ...glassCard(T.accent), padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ position: "relative" }}>
             <MiniRing segments={taskRingSegments} size={56} stroke={5} />
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{completionPct}%</div>
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{completionPct}%</div>
           </div>
           <div>
-            <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Completion</div>
+            <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Completion</div>
             <div style={{ fontSize: 18, fontWeight: 800, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{doneTasks}/{totalTasks}</div>
           </div>
         </div>
 
         {/* Due Today */}
         <div onClick={() => setSelectedDate(todayStr)} style={{ ...glassCard(T.accent), padding: 16, cursor: "pointer" }}>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Due Today</div>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Due Today</div>
           <div style={{ fontSize: 28, fontWeight: 900, color: T.accent, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>{tasksDueToday.length}</div>
-          <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>{inProgressTasks} in progress</div>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>{inProgressTasks} in progress</div>
         </div>
 
         {/* Overdue */}
         <div style={{ ...glassCard(overdueTasks.length > 0 ? "#ef4444" : undefined), padding: 16 }}>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Overdue</div>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Overdue</div>
           <div style={{ fontSize: 28, fontWeight: 900, color: overdueTasks.length > 0 ? "#ef4444" : T.text0, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>{overdueTasks.length}</div>
-          <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
             {overdueTasks.length > 0 ? "Needs attention" : "All clear"}
           </div>
         </div>
 
         {/* Upcoming */}
         <div style={{ ...glassCard(), padding: 16 }}>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Next 7 Days</div>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Next 7 Days</div>
           <div style={{ fontSize: 28, fontWeight: 900, color: T.blue, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>{upcomingTasks.length}</div>
-          <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>tasks upcoming</div>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>tasks upcoming</div>
         </div>
 
         {/* Meetings */}
         <div style={{ ...glassCard("#8b5cf6"), padding: 16 }}>
-          <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Meetings Today</div>
+          <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Meetings Today</div>
           <div style={{ fontSize: 28, fontWeight: 900, color: "#8b5cf6", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>{meetingsToday.length}</div>
-          <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>{meetings.length} total scheduled</div>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>{meetings.length} total scheduled</div>
         </div>
       </div>
 
@@ -528,8 +528,8 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
           {isMobile && (
             <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
               {(["calendar", "tasks"] as const).map(p => (
-                <button key={p} onClick={() => setMobilePanel(p)} style={{
-                  flex: 1, padding: "9px 0", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                <button aria-label="Action" key={p} onClick={() => setMobilePanel(p)} style={{
+                  flex: 1, padding: "9px 0", fontSize: 14, fontWeight: 600, cursor: "pointer",
                   ...glassCard(mobilePanel === p ? T.accent : undefined) as any,
                   color: mobilePanel === p ? T.accent : T.text3,
                 }}>{p === "calendar" ? "📅 Calendar" : "☑ Tasks"}</button>
@@ -551,9 +551,9 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                 }}>
                   <div style={{ display: "flex", gap: 3, flex: isMobile ? "1 1 100%" : undefined }}>
                     {(["month", "week", "day"] as CalView[]).map(v => (
-                      <button key={v} onClick={() => setCalView(v)} style={{
+                      <button aria-label="Action" key={v} onClick={() => setCalView(v)} style={{
                         padding: isMobile ? "8px 0" : "5px 12px",
-                        borderRadius: T.radius.full, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                        borderRadius: T.radius.full, fontSize: 14, fontWeight: 600, cursor: "pointer",
                         background: calView === v ? `${T.accent}22` : "rgba(255,255,255,0.03)",
                         color: calView === v ? T.accent : T.text3,
                         border: `1px solid ${calView === v ? `${T.accent}55` : "transparent"}`,
@@ -584,7 +584,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                       <tr>
                         {(["S", "M", "T", "W", "T", "F", "S"] as const).map((d, i) => (
                           <th key={`${d}-${i}`} style={{
-                            textAlign: "center", fontSize: 10, color: i === 0 || i === 6 ? T.text3 : T.text2,
+                            textAlign: "center", fontSize: 14, color: i === 0 || i === 6 ? T.text3 : T.text2,
                             fontWeight: 600, padding: isMobile ? "6px 0" : "10px 0",
                             letterSpacing: isMobile ? "0.04em" : "0.12em",
                             fontFamily: "'JetBrains Mono', monospace",
@@ -649,21 +649,21 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                   {events.slice(0, 2).map((ev, i) => (
                                     <div key={i} style={{
-                                      fontSize: 9, lineHeight: 1.3, padding: "2px 5px", borderRadius: 4,
+                                      fontSize: 14, lineHeight: 1.3, padding: "2px 5px", borderRadius: 4,
                                       background: `${ev.color}14`, color: ev.color, fontWeight: 500,
                                       whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                                       borderLeft: `2px solid ${ev.color}66`,
                                     }}>{ev.label}</div>
                                   ))}
                                   {events.length > 2 && (
-                                    <span style={{ fontSize: 9, color: T.text3, fontWeight: 500, paddingLeft: 5, fontFamily: "'JetBrains Mono', monospace" }}>
+                                    <span style={{ fontSize: 14, color: T.text3, fontWeight: 500, paddingLeft: 5, fontFamily: "'JetBrains Mono', monospace" }}>
                                       +{events.length - 2} more
                                     </span>
                                   )}
                                 </div>
                                 )}
                                 {isMobile && events.length > 0 && (
-                                  <div style={{ fontSize: 8, color: T.text3, textAlign: "center", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>
+                                  <div style={{ fontSize: 14, color: T.text3, textAlign: "center", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>
                                     {events.length}
                                   </div>
                                 )}
@@ -687,7 +687,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                           const isToday = dateStr === todayStr;
                           const isSelected = dateStr === selectedDate;
                           return (
-                            <button
+                            <button aria-label="Action"
                               key={dateStr}
                               type="button"
                               onClick={() => { setSelectedDate(dateStr); setMobilePanel("tasks"); }}
@@ -700,7 +700,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                               }}
                             >
                               <div style={{ width: 44, flexShrink: 0, textAlign: "center" }}>
-                                <div style={{ fontSize: 9, color: T.text3, textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "'JetBrains Mono', monospace" }}>
+                                <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.1em", fontFamily: "'JetBrains Mono', monospace" }}>
                                   {d.toLocaleDateString("en-US", { weekday: "short" })}
                                 </div>
                                 <div style={{ fontSize: 18, fontWeight: isToday ? 900 : 700, color: isToday ? T.accent : T.text0, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -709,22 +709,22 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 {events.length === 0 ? (
-                                  <div style={{ fontSize: 11, color: T.text3 }}>No meetings</div>
+                                  <div style={{ fontSize: 14, color: T.text3 }}>No meetings</div>
                                 ) : (
                                   <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                                     {events.slice(0, 2).map((ev, i) => (
                                       <div key={i} style={{
-                                        fontSize: 11, color: ev.color, fontWeight: 500,
+                                        fontSize: 14, color: ev.color, fontWeight: 500,
                                         whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                                       }}>{ev.label}</div>
                                     ))}
                                     {events.length > 2 && (
-                                      <div style={{ fontSize: 10, color: T.text3 }}>+{events.length - 2} more</div>
+                                      <div style={{ fontSize: 14, color: T.text3 }}>+{events.length - 2} more</div>
                                     )}
                                   </div>
                                 )}
                               </div>
-                              <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, flexShrink: 0 }}>Open →</span>
+                              <span style={{ fontSize: 14, color: T.accent, fontWeight: 600, flexShrink: 0 }}>Open →</span>
                             </button>
                           );
                         })}
@@ -755,7 +755,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                           >
                             {isSelected && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, borderRadius: `${T.radius.md} ${T.radius.md} 0 0`, background: `linear-gradient(90deg, ${T.accent}, transparent)` }} />}
                             <div style={{ textAlign: "center", marginBottom: 8, paddingBottom: 8, borderBottom: `1px solid ${T.gridLine}` }}>
-                              <div style={{ fontSize: 9, color: T.text3, textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.15em", fontFamily: "'JetBrains Mono', monospace" }}>{d.toLocaleDateString("en-US", { weekday: "short" })}</div>
+                              <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.15em", fontFamily: "'JetBrains Mono', monospace" }}>{d.toLocaleDateString("en-US", { weekday: "short" })}</div>
                               <div style={{
                                 fontSize: 22, fontWeight: isToday ? 900 : 700,
                                 color: isToday ? T.accent : T.text0,
@@ -765,14 +765,14 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                               {events.slice(0, 4).map((ev, i) => (
                                 <div key={i} style={{
-                                  fontSize: 9, padding: "3px 6px", borderRadius: 4,
+                                  fontSize: 14, padding: "3px 6px", borderRadius: 4,
                                   background: `${ev.color}14`, color: ev.color, fontWeight: 500,
                                   borderLeft: `2px solid ${ev.color}66`,
                                   whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                                 }}>{ev.label}</div>
                               ))}
-                              {events.length > 4 && <span style={{ fontSize: 9, color: T.text3, paddingLeft: 6, fontFamily: "'JetBrains Mono', monospace" }}>+{events.length - 4}</span>}
-                              {events.length === 0 && <div style={{ fontSize: 9, color: T.text3, textAlign: "center", opacity: 0.3, marginTop: 8 }}>—</div>}
+                              {events.length > 4 && <span style={{ fontSize: 14, color: T.text3, paddingLeft: 6, fontFamily: "'JetBrains Mono', monospace" }}>+{events.length - 4}</span>}
+                              {events.length === 0 && <div style={{ fontSize: 14, color: T.text3, textAlign: "center", opacity: 0.3, marginTop: 8 }}>—</div>}
                             </div>
                           </div>
                         );
@@ -798,7 +798,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                               background: isToday ? `linear-gradient(135deg, ${T.accent}, #d97706)` : T.bg3,
                               display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column",
                             }}>
-                              <span style={{ fontSize: 9, fontWeight: 700, color: isToday ? "#080d18" : T.text3, textTransform: "uppercase", lineHeight: 1, fontFamily: "'JetBrains Mono', monospace" }}>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: isToday ? "#080d18" : T.text3, textTransform: "uppercase", lineHeight: 1, fontFamily: "'JetBrains Mono', monospace" }}>
                                 {new Date(dayViewDate + "T12:00:00").toLocaleDateString("en-US", { month: "short" })}
                               </span>
                               <span style={{ fontSize: 20, fontWeight: 900, color: isToday ? "#080d18" : T.text0, lineHeight: 1, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -809,19 +809,19 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                               <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>
                                 {new Date(dayViewDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" })}
                               </div>
-                              <div style={{ fontSize: 11, color: T.text3 }}>
+                              <div style={{ fontSize: 14, color: T.text3 }}>
                                 {dayMeetings.length} meeting{dayMeetings.length !== 1 ? "s" : ""} · {dayTasks.length} task{dayTasks.length !== 1 ? "s" : ""}
                               </div>
                             </div>
                             <div style={{ display: "flex", gap: 6, flex: isMobile ? "1 1 100%" : undefined }}>
-                              <button onClick={() => openQuickAdd(dayViewDate)} style={{ ...glassCard() as any, padding: "8px 14px", fontSize: 11, fontWeight: 600, color: T.accent, cursor: "pointer", flex: isMobile ? 1 : undefined }}>+ Task</button>
-                              <button onClick={() => openNewMeeting(dayViewDate)} style={{ ...glassCard() as any, padding: "8px 14px", fontSize: 11, fontWeight: 600, color: "#8b5cf6", cursor: "pointer", flex: isMobile ? 1 : undefined }}>+ Meeting</button>
+                              <button aria-label="Action" onClick={() => openQuickAdd(dayViewDate)} style={{ ...glassCard() as any, padding: "8px 14px", fontSize: 14, fontWeight: 600, color: T.accent, cursor: "pointer", flex: isMobile ? 1 : undefined }}>+ Task</button>
+                              <button aria-label="Action" onClick={() => openNewMeeting(dayViewDate)} style={{ ...glassCard() as any, padding: "8px 14px", fontSize: 14, fontWeight: 600, color: "#8b5cf6", cursor: "pointer", flex: isMobile ? 1 : undefined }}>+ Meeting</button>
                             </div>
                           </div>
 
                           {dayMeetings.length > 0 && (
                             <div style={{ marginBottom: 20 }}>
-                              <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, fontFamily: "'JetBrains Mono', monospace" }}>Meetings</div>
+                              <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, fontFamily: "'JetBrains Mono', monospace" }}>Meetings</div>
                               {dayMeetings.map(m => (
                                 <div key={m.id} style={{
                                   display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", marginBottom: 6,
@@ -832,19 +832,19 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                   onMouseLeave={e => { e.currentTarget.style.background = "rgba(139,92,246,0.04)"; }}
                                 >
                                   <div style={{ width: 3, height: 32, borderRadius: 2, background: MEETING_TYPE_COLORS[m.type] || "#8b5cf6", flexShrink: 0 }} />
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: "#8b5cf6", fontFamily: "'JetBrains Mono', monospace", width: 52, flexShrink: 0 }}>{m.time}</span>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: "#8b5cf6", fontFamily: "'JetBrains Mono', monospace", width: 52, flexShrink: 0 }}>{m.time}</span>
                                   <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{m.title}</div>
-                                    {m.contact && <div style={{ fontSize: 10, color: T.text3, marginTop: 1 }}>with {m.contact}</div>}
+                                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{m.title}</div>
+                                    {m.contact && <div style={{ fontSize: 14, color: T.text3, marginTop: 1 }}>with {m.contact}</div>}
                                   </div>
-                                  <span style={{ fontSize: 10, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>{m.duration}m</span>
+                                  <span style={{ fontSize: 14, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>{m.duration}m</span>
                                 </div>
                               ))}
                             </div>
                           )}
                           {dayTasks.length > 0 && (
                             <div>
-                              <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, fontFamily: "'JetBrains Mono', monospace" }}>Tasks</div>
+                              <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10, fontFamily: "'JetBrains Mono', monospace" }}>Tasks</div>
                               {dayTasks.map(t => {
                                 const pm = PRIORITY_META[t.priority] || PRIORITY_META.Medium;
                                 return (
@@ -857,8 +857,8 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                                     onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
                                     onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
                                   >
-                                    <span style={{ fontSize: 13, color: t.done ? T.text3 : T.text0, flex: 1, fontWeight: 500, textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
-                                    <span style={{ fontSize: 9, padding: "3px 10px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700 }}>{pm.label}</span>
+                                    <span style={{ fontSize: 14, color: t.done ? T.text3 : T.text0, flex: 1, fontWeight: 500, textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
+                                    <span style={{ fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700 }}>{pm.label}</span>
                                   </div>
                                 );
                               })}
@@ -868,7 +868,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                             <div style={{ padding: 60, textAlign: "center" }}>
                               <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.3 }}>📭</div>
                               <div style={{ fontSize: 14, color: T.text3, fontWeight: 500, marginBottom: 6 }}>Nothing scheduled</div>
-                              <div style={{ fontSize: 11, color: T.text3, opacity: 0.6 }}>Double-click a date to add a task</div>
+                              <div style={{ fontSize: 14, color: T.text3, opacity: 0.6 }}>Double-click a date to add a task</div>
                             </div>
                           )}
                         </div>
@@ -889,7 +889,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                     background: `linear-gradient(135deg, ${T.accent}, #d97706)`,
                     display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column",
                   }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "#080d18", textTransform: "uppercase", lineHeight: 1 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#080d18", textTransform: "uppercase", lineHeight: 1 }}>
                       {selectedDate ? new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { month: "short" }) : "ALL"}
                     </span>
                     <span style={{ fontSize: 16, fontWeight: 900, color: "#080d18", lineHeight: 1 }}>
@@ -897,35 +897,35 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                     </span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>
                       {selectedDate
                         ? new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
                         : "All Open Tasks"
                       }
                     </div>
-                    <div style={{ fontSize: 11, color: T.text3 }}>
+                    <div style={{ fontSize: 14, color: T.text3 }}>
                       {tasksForDate.length} task{tasksForDate.length !== 1 ? "s" : ""} · {meetingsForDate.length} meeting{meetingsForDate.length !== 1 ? "s" : ""}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 4 }}>
-                    <button onClick={() => openQuickAdd(selectedDate || todayStr)} title="Add Task" style={{
+                    <button aria-label="Action" onClick={() => openQuickAdd(selectedDate || todayStr)} title="Add Task" style={{
                       ...glassCard() as any, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 16, color: T.accent, cursor: "pointer",
                     }}>+</button>
-                    <button onClick={() => openNewMeeting(selectedDate || todayStr)} title="Add Meeting" style={{
+                    <button aria-label="Action" onClick={() => openNewMeeting(selectedDate || todayStr)} title="Add Meeting" style={{
                       ...glassCard() as any, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: 14, color: "#8b5cf6", cursor: "pointer",
                     }}>📅</button>
                   </div>
                   {selectedDate && (
-                    <button onClick={() => setSelectedDate(null)} style={{ ...glassCard() as any, padding: "4px 10px", fontSize: 10, color: T.text3, cursor: "pointer" }}>✕</button>
+                    <button aria-label="Action" onClick={() => setSelectedDate(null)} style={{ ...glassCard() as any, padding: "4px 10px", fontSize: 14, color: T.text3, cursor: "pointer" }}>✕</button>
                   )}
                 </div>
 
                 {/* Meetings section */}
                 {meetingsForDate.length > 0 && (
                   <div style={{ ...glassCard("#8b5cf6"), padding: 14 }}>
-                    <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+                    <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
                       Meetings ({meetingsForDate.length})
                     </div>
                     {meetingsForDate.map(m => (
@@ -934,12 +934,12 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                         borderRadius: T.radius.sm, marginBottom: 4,
                         background: "rgba(139,92,246,0.06)", borderLeft: `3px solid ${MEETING_TYPE_COLORS[m.type] || "#8b5cf6"}`,
                       }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#8b5cf6", fontFamily: "'JetBrains Mono', monospace", width: 48 }}>{m.time}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#8b5cf6", fontFamily: "'JetBrains Mono', monospace", width: 48 }}>{m.time}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: T.text0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.title}</div>
-                          {m.contact && <div style={{ fontSize: 10, color: T.text3 }}>{m.contact}</div>}
+                          <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.title}</div>
+                          {m.contact && <div style={{ fontSize: 14, color: T.text3 }}>{m.contact}</div>}
                         </div>
-                        <span style={{ fontSize: 9, color: T.text3 }}>{m.duration}m</span>
+                        <span style={{ fontSize: 14, color: T.text3 }}>{m.duration}m</span>
                       </div>
                     ))}
                   </div>
@@ -947,11 +947,11 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
 
                 {/* Tasks section */}
                 <div style={{ ...glassCard(), padding: 14, flex: 1, maxHeight: isMobile ? undefined : 400, overflowY: "auto" }}>
-                  <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+                  <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
                     Tasks ({tasksForDate.length})
                   </div>
                   {tasksForDate.length === 0 && (
-                    <div style={{ padding: 24, textAlign: "center", color: T.text3, fontSize: 12 }}>
+                    <div style={{ padding: 24, textAlign: "center", color: T.text3, fontSize: 14 }}>
                       {selectedDate ? "No tasks for this date" : "No open tasks"}
                     </div>
                   )}
@@ -971,10 +971,10 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                         onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = T.bg4; }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: t.done ? T.text3 : T.text0, flex: 1, textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
-                          <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700 }}>{pm.label}</span>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: t.done ? T.text3 : T.text0, flex: 1, textDecoration: t.done ? "line-through" : "none" }}>{t.title}</span>
+                          <span style={{ fontSize: 14, padding: "2px 6px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700 }}>{pm.label}</span>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 10, color: T.text3 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: T.text3 }}>
                           {col && <span style={{ color: col.color }}>{col.icon} {col.label}</span>}
                           {t.due && <span style={{ display: "flex", alignItems: "center", gap: 3 }}><div style={{ width: 5, height: 5, borderRadius: "50%", background: urgencyColor[urgency] }} />{t.due}</span>}
                           {t.assignee && <span>→ {t.assignee.split(" ")[0]}</span>}
@@ -990,10 +990,10 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                   <div style={{ ...glassCard(), padding: 14, display: "flex", alignItems: "center", gap: 14 }}>
                     <MiniRing segments={priorityRingSegments} size={48} stroke={4} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>By Priority</div>
+                      <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>By Priority</div>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {priorityRingSegments.map(s => (
-                          <span key={s.label} style={{ fontSize: 10, color: s.color, fontWeight: 600 }}>
+                          <span key={s.label} style={{ fontSize: 14, color: s.color, fontWeight: 600 }}>
                             {s.label}: {s.value}
                           </span>
                         ))}
@@ -1025,8 +1025,8 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 6px 12px", borderBottom: `2px solid ${col.color}22` }}>
                   <span style={{ fontSize: 14, color: col.color }}>{col.icon}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.text0, flex: 1 }}>{col.label}</span>
-                  <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: T.radius.full, background: `${col.color}18`, color: col.color, fontFamily: "'JetBrains Mono', monospace" }}>{items.length}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: T.text0, flex: 1 }}>{col.label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, padding: "2px 8px", borderRadius: T.radius.full, background: `${col.color}18`, color: col.color, fontFamily: "'JetBrains Mono', monospace" }}>{items.length}</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, paddingTop: 8 }}>
                   {items.map(t => {
@@ -1043,20 +1043,20 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                         onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
-                          <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700 }}>{pm.label}</span>
-                          {t.projectTag && <span style={{ fontSize: 8, padding: "2px 6px", borderRadius: T.radius.full, background: `${t.projectColor || T.bg4}18`, color: t.projectColor || T.text2, fontWeight: 600, marginLeft: "auto" }}>{t.projectTag}</span>}
+                          <span style={{ fontSize: 14, padding: "2px 6px", borderRadius: T.radius.full, background: pm.bg, color: pm.color, fontWeight: 700 }}>{pm.label}</span>
+                          {t.projectTag && <span style={{ fontSize: 14, padding: "2px 6px", borderRadius: T.radius.full, background: `${t.projectColor || T.bg4}18`, color: t.projectColor || T.text2, fontWeight: 600, marginLeft: "auto" }}>{t.projectTag}</span>}
                         </div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: T.text0, lineHeight: 1.3, marginBottom: 6 }}>{t.title}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, lineHeight: 1.3, marginBottom: 6 }}>{t.title}</div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            {t.due && <><div style={{ width: 6, height: 6, borderRadius: "50%", background: urgencyColor[urgency] }} /><span style={{ fontSize: 9, color: T.text3 }}>{t.due}</span></>}
+                            {t.due && <><div style={{ width: 6, height: 6, borderRadius: "50%", background: urgencyColor[urgency] }} /><span style={{ fontSize: 14, color: T.text3 }}>{t.due}</span></>}
                           </div>
                           {t.assignee && <Avatar name={t.assignee} size={20} />}
                         </div>
                       </div>
                     );
                   })}
-                  {items.length === 0 && <div style={{ padding: 20, textAlign: "center", color: T.text3, fontSize: 11, opacity: 0.4 }}>No tasks</div>}
+                  {items.length === 0 && <div style={{ padding: 20, textAlign: "center", color: T.text3, fontSize: 14, opacity: 0.4 }}>No tasks</div>}
                 </div>
               </div>
             );
@@ -1084,11 +1084,11 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                       borderBottom: `1px solid ${T.bg4}`, display: "flex", alignItems: "center", gap: 8,
                     }}>
                       <span style={{
-                        fontSize: 12, fontWeight: 700, color: isToday ? T.accent : isPast ? T.text3 : T.text0,
+                        fontSize: 14, fontWeight: 700, color: isToday ? T.accent : isPast ? T.text3 : T.text0,
                       }}>
                         {isToday ? "Today" : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                       </span>
-                      {isToday && <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: T.radius.full, background: `${T.accent}22`, color: T.accent, fontWeight: 700 }}>NOW</span>}
+                      {isToday && <span style={{ fontSize: 14, padding: "2px 8px", borderRadius: T.radius.full, background: `${T.accent}22`, color: T.accent, fontWeight: 700 }}>NOW</span>}
                     </div>
                   )}
                   <div
@@ -1102,11 +1102,11 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
                   >
                     <div style={{ width: 4, height: 24, borderRadius: 2, background: item.color, flexShrink: 0 }} />
-                    {item.time && <span style={{ fontSize: 11, fontWeight: 600, color: item.color, fontFamily: "'JetBrains Mono', monospace", width: 48 }}>{item.time}</span>}
+                    {item.time && <span style={{ fontSize: 14, fontWeight: 600, color: item.color, fontFamily: "'JetBrains Mono', monospace", width: 48 }}>{item.time}</span>}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: T.text0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</div>
                     </div>
-                    <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: T.radius.full, background: `${item.color}15`, color: item.color, fontWeight: 600, textTransform: "uppercase" }}>{item.type}</span>
+                    <span style={{ fontSize: 14, padding: "2px 8px", borderRadius: T.radius.full, background: `${item.color}15`, color: item.color, fontWeight: 600, textTransform: "uppercase" }}>{item.type}</span>
                   </div>
                 </div>
               );
@@ -1133,7 +1133,7 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
             </h2>
             <div style={{ marginBottom: 12 }}>
               <label style={S.label as React.CSSProperties}>Title *</label>
-              <input value={quickTitle} onChange={e => setQuickTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && handleQuickAdd()} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} autoFocus placeholder="Task title…" />
+              <input value={quickTitle} onChange={e = aria-label="input"> setQuickTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && handleQuickAdd()} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} autoFocus placeholder="Task title…" />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12, marginBottom: 12 }}>
               <div><label style={S.label as React.CSSProperties}>Priority</label>
@@ -1142,12 +1142,12 @@ export function ScheduleTab({ tasks, deals, meetings, contacts, availability, on
                 </select>
               </div>
               <div><label style={S.label as React.CSSProperties}>Assignee</label>
-                <input value={quickAssignee} onChange={e => setQuickAssignee(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} placeholder="Name…" />
+                <input value={quickAssignee} onChange={e = aria-label="input"> setQuickAssignee(e.target.value)} style={{ ...(S.input as React.CSSProperties), width: "100%", boxSizing: "border-box" }} placeholder="Name…" />
               </div>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button onClick={handleQuickAdd} style={{ ...(S.btn as React.CSSProperties), flex: "1 1 100%" }}>Create Task</button>
-              <button onClick={() => setShowQuickAdd(false)} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
+              <button aria-label="Add" onClick={handleQuickAdd} style={{ ...(S.btn as React.CSSProperties), flex: "1 1 100%" }}>Create Task</button>
+              <button aria-label="Action" onClick={() => setShowQuickAdd(false)} style={{ ...(S.btnGhost as React.CSSProperties), flex: "1 1 auto" }}>Cancel</button>
             </div>
           </div>
         </div>,

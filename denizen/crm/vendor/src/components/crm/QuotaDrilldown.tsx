@@ -56,11 +56,11 @@ export function QuotaDrilldown({ quota, memberQuotas, onClose }: Props) {
               }}>{member?.avatar || "?"}</div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>{quota.assigneeName}</div>
-                <div style={{ fontSize: 11, color: T.text3 }}>{member?.role === "manager" ? "Manager" : "Sales Rep"}</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>{member?.role === "manager" ? "Manager" : "Sales Rep"}</div>
               </div>
             </div>
           </div>
-          <button onClick={onClose} style={{
+          <button aria-label="Close" onClick={onClose} style={{
             ...S.btnGhost as React.CSSProperties, fontSize: 16, padding: "4px 8px",
           }}>✕</button>
         </div>
@@ -73,7 +73,7 @@ export function QuotaDrilldown({ quota, memberQuotas, onClose }: Props) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: T.text0 }}>{quota.type}</div>
             <span style={{
-              fontSize: 11, padding: "3px 10px", borderRadius: T.radius.full,
+              fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
               background: meta.bg, color: meta.color, fontWeight: 600,
             }}>{meta.label}</span>
           </div>
@@ -83,7 +83,7 @@ export function QuotaDrilldown({ quota, memberQuotas, onClose }: Props) {
             <span style={{ fontSize: 36, fontWeight: 800, color: meta.color, fontFamily: "'JetBrains Mono', monospace" }}>
               {pct}%
             </span>
-            <span style={{ fontSize: 13, color: T.text3 }}>attainment</span>
+            <span style={{ fontSize: 14, color: T.text3 }}>attainment</span>
           </div>
 
           {/* Progress bar */}
@@ -114,7 +114,7 @@ export function QuotaDrilldown({ quota, memberQuotas, onClose }: Props) {
               { label: "End Date", value: quota.endDate },
             ].map(s => (
               <div key={s.label}>
-                <div style={{ fontSize: 10, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{s.label}</div>
+                <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{s.label}</div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: T.text1, fontFamily: "'JetBrains Mono', monospace" }}>{s.value}</div>
               </div>
             ))}
@@ -125,8 +125,8 @@ export function QuotaDrilldown({ quota, memberQuotas, onClose }: Props) {
         {allMemberQuotas.length > 1 && (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <h4 style={{ fontSize: 13, fontWeight: 700, color: T.text0, margin: 0 }}>All Quotas for {quota.assigneeName.split(" ")[0]}</h4>
-              <span style={{ fontSize: 11, color: T.text3 }}>Avg: {avgAttainment}%</span>
+              <h4 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>All Quotas for {quota.assigneeName.split(" ")[0]}</h4>
+              <span style={{ fontSize: 14, color: T.text3 }}>Avg: {avgAttainment}%</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {allMemberQuotas.map(q => {
@@ -140,8 +140,8 @@ export function QuotaDrilldown({ quota, memberQuotas, onClose }: Props) {
                     background: isActive ? `${qMeta.color}08` : undefined,
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{q.type}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: qMeta.color, fontFamily: "'JetBrains Mono', monospace" }}>{qPct}%</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{q.type}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: qMeta.color, fontFamily: "'JetBrains Mono', monospace" }}>{qPct}%</span>
                     </div>
                     <div style={{ height: 5, background: T.bg4, borderRadius: T.radius.full, overflow: "hidden" }}>
                       <div style={{
@@ -149,7 +149,7 @@ export function QuotaDrilldown({ quota, memberQuotas, onClose }: Props) {
                         background: qMeta.color, transition: "width 0.4s ease",
                       }} />
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 10, color: T.text3 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 14, color: T.text3 }}>
                       <span>{PERIOD_LABELS[q.period]}</span>
                       <span>{q.type === "Revenue" ? fmt(q.currentValue) : q.currentValue} / {q.type === "Revenue" ? fmt(q.targetValue) : q.targetValue}</span>
                     </div>

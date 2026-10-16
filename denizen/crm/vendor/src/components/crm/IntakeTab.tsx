@@ -125,21 +125,21 @@ type View = "list" | "new-intake" | "new-quote" | "import";
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "10px 14px", borderRadius: 8,
   border: `1px solid ${T.bg4}`, background: T.bg3, color: T.text0,
-  fontSize: 13, outline: "none",
+  fontSize: 14, outline: "none",
 };
 const labelStyle: React.CSSProperties = {
-  display: "block", fontSize: 11, fontWeight: 600, color: T.text2,
+  display: "block", fontSize: 14, fontWeight: 600, color: T.text2,
   marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em",
 };
 const btnPrimary: React.CSSProperties = {
   padding: "10px 20px", borderRadius: 8, border: "none",
-  background: T.accent, color: "#000", fontSize: 13,
+  background: T.accent, color: "#000", fontSize: 14,
   fontWeight: 700, cursor: "pointer",
 };
 const btnSecondary: React.CSSProperties = {
   padding: "10px 20px", borderRadius: 8,
   border: `1px solid ${T.bg4}`, background: "transparent",
-  color: T.text1, fontSize: 13, fontWeight: 600, cursor: "pointer",
+  color: T.text1, fontSize: 14, fontWeight: 600, cursor: "pointer",
 };
 
 export function IntakeTab({
@@ -408,17 +408,17 @@ export function IntakeTab({
         marginBottom: 20, padding: "16px 18px", borderRadius: 12,
         background: `${T.blue}12`, border: `1px solid ${T.blue}33`,
       }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: T.text0, marginBottom: 6 }}>🌐 Public intake form</div>
-        <div style={{ fontSize: 12, color: T.text2, marginBottom: 10 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, marginBottom: 6 }}>🌐 Public intake form</div>
+        <div style={{ fontSize: 14, color: T.text2, marginBottom: 10 }}>
           Embed on your site or connect a form builder. Submissions land here automatically via{" "}
           <code style={{ color: T.accent }}>POST /api/crm/intake</code> with org slug <strong>{orgSlug}</strong>.
         </div>
         <pre style={{
           margin: 0, padding: 12, borderRadius: 8, background: T.bg0, border: `1px solid ${T.bg4}`,
-          fontSize: 11, color: T.text2, overflowX: "auto", maxHeight: 140,
+          fontSize: 14, color: T.text2, overflowX: "auto", maxHeight: 140,
         }}>{publicIntakeExample}</pre>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
-          <button
+          <button aria-label="Action"
             type="button"
             onClick={() => {
               void navigator.clipboard.writeText(publicIntakeExample).then(() => {
@@ -426,16 +426,16 @@ export function IntakeTab({
                 setTimeout(() => setCopiedApi(false), 1800);
               });
             }}
-            style={{ ...btnSecondary, fontSize: 12 }}
+            style={{ ...btnSecondary, fontSize: 14 }}
           >
             {copiedApi ? "✓ Copied JSON" : "Copy example JSON"}
           </button>
           {intakePageUrl && (
             <>
-              <a href={intakePageUrl} target="_blank" rel="noreferrer" style={{ ...btnPrimary, fontSize: 12, textDecoration: "none", display: "inline-block" }}>
+              <a aria-label="Link" href={intakePageUrl} target="_blank" rel="noreferrer" style={{ ...btnPrimary, fontSize: 14, textDecoration: "none", display: "inline-block" }}>
                 Open hosted form ↗
               </a>
-              <button
+              <button aria-label="Action"
                 type="button"
                 onClick={() => {
                   void navigator.clipboard.writeText(intakePageUrl).then(() => {
@@ -443,7 +443,7 @@ export function IntakeTab({
                     setTimeout(() => setCopiedPage(false), 1800);
                   });
                 }}
-                style={{ ...btnSecondary, fontSize: 12 }}
+                style={{ ...btnSecondary, fontSize: 14 }}
               >
                 {copiedPage ? "✓ Copied URL" : "Copy form URL"}
               </button>
@@ -459,17 +459,17 @@ export function IntakeTab({
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>Intake & Quotes</h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>{submissions.length} submissions · {quotes.length} quotes generated</p>
+        <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>{submissions.length} submissions · {quotes.length} quotes generated</p>
       </div>
       {view === "list" && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button onClick={() => setView("new-intake")} style={btnPrimary}>+ New Intake</button>
-          <button onClick={() => setView("new-quote")} style={{ ...btnPrimary, background: `${T.purple}` }}>+ New Quote</button>
-          <button onClick={() => setView("import")} style={btnSecondary}>↑ Import</button>
+          <button aria-label="Action" onClick={() => setView("new-intake")} style={btnPrimary}>+ New Intake</button>
+          <button aria-label="Action" onClick={() => setView("new-quote")} style={{ ...btnPrimary, background: `${T.purple}` }}>+ New Quote</button>
+          <button aria-label="Action" onClick={() => setView("import")} style={btnSecondary}>↑ Import</button>
         </div>
       )}
       {view !== "list" && (
-        <button onClick={() => { setView("list"); setImportPreview([]); setImportError(""); }} style={btnSecondary}>← Back to List</button>
+        <button aria-label="Action" onClick={() => { setView("list"); setImportPreview([]); setImportError(""); }} style={btnSecondary}>← Back to List</button>
       )}
     </div>
   );
@@ -482,15 +482,15 @@ export function IntakeTab({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
         <div>
           <label style={labelStyle}>Client Name *</label>
-          <input style={inputStyle} value={intakeForm.clientName} onChange={e => setIntakeForm(f => ({ ...f, clientName: e.target.value }))} placeholder="John Smith" />
+          <input style={inputStyle} value={intakeForm.clientName} onChange={e = aria-label="input"> setIntakeForm(f => ({ ...f, clientName: e.target.value }))} placeholder="John Smith" />
         </div>
         <div>
           <label style={labelStyle}>Email *</label>
-          <input style={inputStyle} type="email" value={intakeForm.clientEmail} onChange={e => setIntakeForm(f => ({ ...f, clientEmail: e.target.value }))} placeholder="john@company.com" />
+          <input style={inputStyle} type="email" value={intakeForm.clientEmail} onChange={e = aria-label="email"> setIntakeForm(f => ({ ...f, clientEmail: e.target.value }))} placeholder="john@company.com" />
         </div>
         <div style={{ gridColumn: "1 / -1" }}>
           <label style={labelStyle}>Company</label>
-          <input style={inputStyle} value={intakeForm.company} onChange={e => setIntakeForm(f => ({ ...f, company: e.target.value }))} placeholder="Acme Corp" />
+          <input style={inputStyle} value={intakeForm.company} onChange={e = aria-label="input"> setIntakeForm(f => ({ ...f, company: e.target.value }))} placeholder="Acme Corp" />
         </div>
       </div>
 
@@ -500,10 +500,10 @@ export function IntakeTab({
           <div key={q.id}>
             <label style={labelStyle}>{q.icon} {q.label} {q.required && "*"}</label>
             {q.type === "text" && (
-              <input style={inputStyle} value={intakeForm.answers[q.label] || ""} onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))} />
+              <input style={inputStyle} value={intakeForm.answers[q.label] || ""} onChange={e = aria-label="input"> setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))} />
             )}
             {q.type === "textarea" && (
-              <textarea style={{ ...inputStyle, minHeight: 70, resize: "vertical" }} value={intakeForm.answers[q.label] || ""} onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))} />
+              <textarea style={{ ...inputStyle, minHeight: 70, resize: "vertical" }} value={intakeForm.answers[q.label] || ""} onChange={e = aria-label="textarea"> setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))} />
             )}
             {q.type === "select" && (
               <select style={inputStyle} value={intakeForm.answers[q.label] || ""} onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))}>
@@ -517,12 +517,12 @@ export function IntakeTab({
                   const selected = (intakeForm.answers[q.label] || []) as string[];
                   const isSelected = selected.includes(o);
                   return (
-                    <button key={o} type="button" onClick={() => {
+                    <button aria-label="Action" key={o} type="button" onClick={() => {
                       const current = (intakeForm.answers[q.label] || []) as string[];
                       const next = isSelected ? current.filter(x => x !== o) : [...current, o];
                       setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: next } }));
                     }} style={{
-                      padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                      padding: "6px 12px", borderRadius: 6, fontSize: 14, fontWeight: 600, cursor: "pointer",
                       border: `1px solid ${isSelected ? T.accent : T.bg4}`,
                       background: isSelected ? `${T.accent}22` : T.bg3,
                       color: isSelected ? T.accent : T.text2,
@@ -538,10 +538,10 @@ export function IntakeTab({
       </div>
 
       <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-        <button onClick={handleSubmitIntake} disabled={!intakeForm.clientName || !intakeForm.clientEmail} style={{ ...btnPrimary, opacity: (!intakeForm.clientName || !intakeForm.clientEmail) ? 0.5 : 1 }}>
+        <button aria-label="Action" onClick={handleSubmitIntake} disabled={!intakeForm.clientName || !intakeForm.clientEmail} style={{ ...btnPrimary, opacity: (!intakeForm.clientName || !intakeForm.clientEmail) ? 0.5 : 1 }}>
           Submit Intake
         </button>
-        <button onClick={resetIntakeForm} style={btnSecondary}>Cancel</button>
+        <button aria-label="Action" onClick={resetIntakeForm} style={btnSecondary}>Cancel</button>
       </div>
     </div>
   );
@@ -554,11 +554,11 @@ export function IntakeTab({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
         <div>
           <label style={labelStyle}>Client Name *</label>
-          <input style={inputStyle} value={quoteForm.clientName} onChange={e => setQuoteForm(f => ({ ...f, clientName: e.target.value }))} placeholder="Client name" />
+          <input style={inputStyle} value={quoteForm.clientName} onChange={e = aria-label="input"> setQuoteForm(f => ({ ...f, clientName: e.target.value }))} placeholder="Client name" />
         </div>
         <div>
           <label style={labelStyle}>Company</label>
-          <input style={inputStyle} value={quoteForm.company} onChange={e => setQuoteForm(f => ({ ...f, company: e.target.value }))} placeholder="Company" />
+          <input style={inputStyle} value={quoteForm.company} onChange={e = aria-label="input"> setQuoteForm(f => ({ ...f, company: e.target.value }))} placeholder="Company" />
         </div>
         <div>
           <label style={labelStyle}>Recommended Package</label>
@@ -569,13 +569,13 @@ export function IntakeTab({
         </div>
         <div>
           <label style={labelStyle}>Valid For (days)</label>
-          <input style={inputStyle} type="number" value={quoteForm.validDays} onChange={e => setQuoteForm(f => ({ ...f, validDays: Number(e.target.value) || 30 }))} />
+          <input style={inputStyle} type="number" value={quoteForm.validDays} onChange={e = aria-label="number"> setQuoteForm(f => ({ ...f, validDays: Number(e.target.value) || 30 }))} />
         </div>
       </div>
 
       {/* Prefill from package */}
       {quoteForm.recommendedPackage !== "Custom" && (
-        <button
+        <button aria-label="Action"
           onClick={() => {
             const pkg = packages.find(p => p.name === quoteForm.recommendedPackage);
             if (pkg) {
@@ -587,7 +587,7 @@ export function IntakeTab({
               }));
             }
           }}
-          style={{ ...btnSecondary, marginBottom: 16, fontSize: 11 }}
+          style={{ ...btnSecondary, marginBottom: 16, fontSize: 14 }}
         >
           ⚡ Pre-fill from {quoteForm.recommendedPackage} package
         </button>
@@ -598,13 +598,13 @@ export function IntakeTab({
         {quoteForm.lineItems.map((item, idx) => (
           <div key={item.id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input style={{ ...inputStyle, flex: 2 }} value={item.name} placeholder="Service name"
-              onChange={e => {
+              onChange={e = aria-label="Service name"> {
                 const items = [...quoteForm.lineItems];
                 items[idx] = { ...items[idx], name: e.target.value };
                 setQuoteForm(f => ({ ...f, lineItems: items }));
               }} />
             <input style={{ ...inputStyle, flex: 0.7 }} type="number" value={item.price || ""} placeholder="Price"
-              onChange={e => {
+              onChange={e = aria-label="Price"> {
                 const items = [...quoteForm.lineItems];
                 items[idx] = { ...items[idx], price: Number(e.target.value) || 0 };
                 setQuoteForm(f => ({ ...f, lineItems: items }));
@@ -619,12 +619,12 @@ export function IntakeTab({
               <option value="one-time">one-time</option>
               <option value="/yr">/yr</option>
             </select>
-            <button onClick={() => setQuoteForm(f => ({ ...f, lineItems: f.lineItems.filter((_, i) => i !== idx) }))}
+            <button aria-label="Action" onClick={() => setQuoteForm(f => ({ ...f, lineItems: f.lineItems.filter((_, i) => i !== idx) }))}
               style={{ background: "none", border: "none", color: T.red, fontSize: 16, cursor: "pointer", padding: 4 }}>✕</button>
           </div>
         ))}
-        <button onClick={() => setQuoteForm(f => ({ ...f, lineItems: [...f.lineItems, { id: Date.now(), name: "", price: 0, unit: "/mo" }] }))}
-          style={{ ...btnSecondary, fontSize: 11, alignSelf: "flex-start" }}>+ Add Line Item</button>
+        <button aria-label="Action" onClick={() => setQuoteForm(f => ({ ...f, lineItems: [...f.lineItems, { id: Date.now(), name: "", price: 0, unit: "/mo" }] }))}
+          style={{ ...btnSecondary, fontSize: 14, alignSelf: "flex-start" }}>+ Add Line Item</button>
       </div>
 
       {/* Totals preview */}
@@ -632,7 +632,7 @@ export function IntakeTab({
         const monthly = quoteForm.lineItems.filter(i => i.unit === "/mo").reduce((s, i) => s + i.price, 0);
         const onetime = quoteForm.lineItems.filter(i => i.unit !== "/mo" && i.unit !== "/yr").reduce((s, i) => s + i.price, 0);
         return monthly + onetime > 0 ? (
-          <div style={{ background: T.bg3, borderRadius: 8, padding: "12px 16px", marginBottom: 16, display: "flex", gap: 24, fontSize: 13 }}>
+          <div style={{ background: T.bg3, borderRadius: 8, padding: "12px 16px", marginBottom: 16, display: "flex", gap: 24, fontSize: 14 }}>
             <span style={{ color: T.text2 }}>Monthly: <strong style={{ color: T.accent }}>{fmt(monthly)}/mo</strong></span>
             {onetime > 0 && <span style={{ color: T.text2 }}>One-time: <strong style={{ color: T.text0 }}>{fmt(onetime)}</strong></span>}
             <span style={{ color: T.text2 }}>First month: <strong style={{ color: T.green }}>{fmt(monthly + onetime)}</strong></span>
@@ -643,15 +643,15 @@ export function IntakeTab({
       <div style={{ marginBottom: 20 }}>
         <label style={labelStyle}>Notes</label>
         <textarea style={{ ...inputStyle, minHeight: 60, resize: "vertical" }} value={quoteForm.notes}
-          onChange={e => setQuoteForm(f => ({ ...f, notes: e.target.value }))} placeholder="Additional notes for the client..." />
+          onChange={e = aria-label="textarea"> setQuoteForm(f => ({ ...f, notes: e.target.value }))} placeholder="Additional notes for the client..." />
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
-        <button onClick={handleSubmitQuote} disabled={!quoteForm.clientName || quoteForm.lineItems.filter(i => i.name).length === 0}
+        <button aria-label="Action" onClick={handleSubmitQuote} disabled={!quoteForm.clientName || quoteForm.lineItems.filter(i => i.name).length === 0}
           style={{ ...btnPrimary, background: T.purple, opacity: (!quoteForm.clientName) ? 0.5 : 1 }}>
           Create Quote
         </button>
-        <button onClick={() => setView("list")} style={btnSecondary}>Cancel</button>
+        <button aria-label="Action" onClick={() => setView("list")} style={btnSecondary}>Cancel</button>
       </div>
     </div>
   );
@@ -660,7 +660,7 @@ export function IntakeTab({
   const renderImport = () => (
     <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 12, padding: 28, maxWidth: 720 }}>
       <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, marginBottom: 8 }}>↑ Import Intake Submissions</h2>
-      <p style={{ fontSize: 12, color: T.text2, marginBottom: 20 }}>Upload a CSV or JSON file with intake form submissions.</p>
+      <p style={{ fontSize: 14, color: T.text2, marginBottom: 20 }}>Upload a CSV or JSON file with intake form submissions.</p>
 
       <div style={{
         border: `2px dashed ${T.bg4}`, borderRadius: 12, padding: "40px 20px",
@@ -680,20 +680,20 @@ export function IntakeTab({
         }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>📁</div>
         <div style={{ fontSize: 14, color: T.text1, fontWeight: 600 }}>Drop file here or click to browse</div>
-        <div style={{ fontSize: 11, color: T.text3, marginTop: 4 }}>Supports .csv and .json</div>
+        <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>Supports .csv and .json</div>
       </div>
-      <input ref={fileRef} type="file" accept=".csv,.json" style={{ display: "none" }} onChange={handleFileUpload} />
+      <input ref={fileRef} type="file" accept=".csv,.json" style={{ display: "none" }} onChange={handleFileUpload} / aria-label="file" />
 
       {importError && (
-        <div style={{ background: `${T.red}14`, border: `1px solid ${T.red}33`, borderRadius: 8, padding: "10px 14px", fontSize: 12, color: T.red, marginBottom: 16 }}>
+        <div style={{ background: `${T.red}14`, border: `1px solid ${T.red}33`, borderRadius: 8, padding: "10px 14px", fontSize: 14, color: T.red, marginBottom: 16 }}>
           ⚠ {importError}
         </div>
       )}
 
       {/* CSV format guide */}
       <div style={{ background: T.bg3, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: T.text2, marginBottom: 6 }}>CSV Format</div>
-        <code style={{ fontSize: 11, color: T.accent, display: "block", lineHeight: 1.6 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text2, marginBottom: 6 }}>CSV Format</div>
+        <code style={{ fontSize: 14, color: T.accent, display: "block", lineHeight: 1.6 }}>
           name,email,company,budget,timeline<br />
           John Smith,john@co.com,Acme,$800-$2500/mo,Within 30 days
         </code>
@@ -712,16 +712,16 @@ export function IntakeTab({
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{sub.clientName}</div>
-                  <div style={{ fontSize: 11, color: T.text2 }}>{sub.clientEmail} · {sub.company}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{sub.clientName}</div>
+                  <div style={{ fontSize: 14, color: T.text2 }}>{sub.clientEmail} · {sub.company}</div>
                 </div>
-                <div style={{ fontSize: 11, color: T.text3 }}>{Object.keys(sub.answers).length} fields</div>
+                <div style={{ fontSize: 14, color: T.text3 }}>{Object.keys(sub.answers).length} fields</div>
               </div>
             ))}
           </div>
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={confirmImport} style={btnPrimary}>Import {importPreview.length} Submissions</button>
-            <button onClick={() => setImportPreview([])} style={btnSecondary}>Clear</button>
+            <button aria-label="Action" onClick={confirmImport} style={btnPrimary}>Import {importPreview.length} Submissions</button>
+            <button aria-label="Action" onClick={() => setImportPreview([])} style={btnSecondary}>Clear</button>
           </div>
         </div>
       )}
@@ -735,7 +735,7 @@ export function IntakeTab({
         <div style={{ textAlign: "center", padding: 48, color: T.text3 }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
           <div style={{ fontSize: 14 }}>No submissions yet</div>
-          <div style={{ fontSize: 12, marginTop: 4 }}>Create a new intake or import from CSV/JSON</div>
+          <div style={{ fontSize: 14, marginTop: 4 }}>Create a new intake or import from CSV/JSON</div>
         </div>
       )}
       {submissions.map(sub => {
@@ -753,28 +753,28 @@ export function IntakeTab({
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>{sub.clientName}</span>
-                  <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: pBg, color: pColor, fontWeight: 600 }}>{pLabel}</span>
-                  <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 6, background: sm.bg, color: sm.color, fontWeight: 600 }}>{sm.label}</span>
+                  <span style={{ fontSize: 14, padding: "2px 8px", borderRadius: 6, background: pBg, color: pColor, fontWeight: 600 }}>{pLabel}</span>
+                  <span style={{ fontSize: 14, padding: "2px 8px", borderRadius: 6, background: sm.bg, color: sm.color, fontWeight: 600 }}>{sm.label}</span>
                 </div>
-                <div style={{ fontSize: 12, color: T.text2 }}>{sub.company} · {sub.clientEmail}</div>
-                <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>Submitted {sub.submittedAt}</div>
+                <div style={{ fontSize: 14, color: T.text2 }}>{sub.company} · {sub.clientEmail}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>Submitted {sub.submittedAt}</div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 {!quote && (
                   <>
-                    <button onClick={() => handleGenerateAIQuote(sub)}
+                    <button aria-label="Action" onClick={() => handleGenerateAIQuote(sub)}
                       disabled={aiGenerating === sub.id}
-                      style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${T.accent}44`, background: `${T.accent}14`, color: T.accent, fontSize: 11, fontWeight: 600, cursor: "pointer", opacity: aiGenerating === sub.id ? 0.6 : 1 }}>
+                      style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${T.accent}44`, background: `${T.accent}14`, color: T.accent, fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: aiGenerating === sub.id ? 0.6 : 1 }}>
                       {aiGenerating === sub.id ? "⏳ Generating..." : "🤖 AI Quote"}
                     </button>
-                    <button onClick={() => createQuoteFromSubmission(sub)}
-                      style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${T.purple}44`, background: `${T.purple}14`, color: T.purple, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                    <button aria-label="Action" onClick={() => createQuoteFromSubmission(sub)}
+                      style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${T.purple}44`, background: `${T.purple}14`, color: T.purple, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                       + Manual Quote
                     </button>
                   </>
                 )}
                 <select value={sub.status} onChange={e => onStatusChange(sub.id, e.target.value)}
-                  style={{ background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 6, color: T.text1, padding: "4px 8px", fontSize: 11 }}>
+                  style={{ background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 6, color: T.text1, padding: "4px 8px", fontSize: 14 }}>
                   {Object.entries(STATUS_META).map(([k, v]) => (
                     <option key={k} value={k}>{v.label}</option>
                   ))}
@@ -786,8 +786,8 @@ export function IntakeTab({
               <div className="crm-intake-answers" style={{ display: "grid", gap: 8, marginBottom: 12 }}>
                 {Object.entries(sub.answers).slice(0, 4).map(([q, a]) => (
                   <div key={q} style={{ background: T.bg3, borderRadius: 6, padding: "8px 10px" }}>
-                    <div style={{ fontSize: 10, color: T.text3, marginBottom: 2 }}>{q}</div>
-                    <div style={{ fontSize: 12, color: T.text1 }}>{Array.isArray(a) ? a.join(", ") : String(a)}</div>
+                    <div style={{ fontSize: 14, color: T.text3, marginBottom: 2 }}>{q}</div>
+                    <div style={{ fontSize: 14, color: T.text1 }}>{Array.isArray(a) ? a.join(", ") : String(a)}</div>
                   </div>
                 ))}
               </div>
@@ -796,28 +796,28 @@ export function IntakeTab({
             {quote && (
               <div style={{ background: `${T.accent}08`, border: `1px solid ${T.accent}22`, borderRadius: 8, padding: "12px 16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ fontSize: 11, color: T.accent, fontWeight: 600 }}>✦ Quote: {quote.recommendedPackage} Plan</div>
+                  <div style={{ fontSize: 14, color: T.accent, fontWeight: 600 }}>✦ Quote: {quote.recommendedPackage} Plan</div>
                   <ProposalPDFButton quote={quote} branding={branding} />
                 </div>
-                <div style={{ display: "flex", gap: 16, fontSize: 13, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 16, fontSize: 14, flexWrap: "wrap" }}>
                   <span style={{ color: T.text0, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}>{fmt(quote.monthlyTotal)}/mo</span>
                   {quote.onetimeTotal > 0 && <span style={{ color: T.text2 }}>+ {fmt(quote.onetimeTotal)} setup</span>}
                   {quote.discount && quote.discount.value > 0 && (
-                    <span style={{ color: T.green, fontSize: 11 }}>💸 {quote.discount.type === 'percent' ? `${quote.discount.value}%` : fmt(quote.discount.value)} discount</span>
+                    <span style={{ color: T.green, fontSize: 14 }}>💸 {quote.discount.type === 'percent' ? `${quote.discount.value}%` : fmt(quote.discount.value)} discount</span>
                   )}
                 </div>
                 {quote.aiReasoning && (
-                  <div style={{ fontSize: 11, color: T.text2, marginTop: 6, lineHeight: 1.5 }}>💡 {quote.aiReasoning}</div>
+                  <div style={{ fontSize: 14, color: T.text2, marginTop: 6, lineHeight: 1.5 }}>💡 {quote.aiReasoning}</div>
                 )}
                 {quote.customisations && quote.customisations.length > 0 && (
                   <div style={{ marginTop: 6 }}>
                     {quote.customisations.map((c, i) => (
-                      <div key={i} style={{ fontSize: 10, color: T.purple, marginTop: 2 }}>• {c}</div>
+                      <div key={i} style={{ fontSize: 14, color: T.purple, marginTop: 2 }}>• {c}</div>
                     ))}
                   </div>
                 )}
                 {quote.upsellNote && (
-                  <div style={{ fontSize: 10, color: T.blue, marginTop: 6 }}>⬆ {quote.upsellNote}</div>
+                  <div style={{ fontSize: 14, color: T.blue, marginTop: 6 }}>⬆ {quote.upsellNote}</div>
                 )}
               </div>
             )}
@@ -843,24 +843,24 @@ export function IntakeTab({
             <div style={{ fontSize: 18, fontWeight: 700, color: T.text0, marginBottom: 6 }}>
               🤖 AI-Generated Quote
             </div>
-            <div style={{ fontSize: 12, color: T.text2, marginBottom: 20 }}>
+            <div style={{ fontSize: 14, color: T.text2, marginBottom: 20 }}>
               Review and customise before saving
             </div>
 
             {/* AI Reasoning */}
             <div style={{ background: `${T.accent}08`, border: `1px solid ${T.accent}22`, borderRadius: 8, padding: "12px 16px", marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: T.accent, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>AI Reasoning</div>
-              <div style={{ fontSize: 12, color: T.text1, lineHeight: 1.5 }}>{aiQuoteEdit.aiReasoning}</div>
+              <div style={{ fontSize: 14, color: T.accent, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>AI Reasoning</div>
+              <div style={{ fontSize: 14, color: T.text1, lineHeight: 1.5 }}>{aiQuoteEdit.aiReasoning}</div>
               {aiQuoteEdit.customisations.length > 0 && (
                 <div style={{ marginTop: 8, borderTop: `1px solid ${T.bg4}`, paddingTop: 8 }}>
-                  <div style={{ fontSize: 10, color: T.purple, fontWeight: 600, marginBottom: 4 }}>Customisations</div>
+                  <div style={{ fontSize: 14, color: T.purple, fontWeight: 600, marginBottom: 4 }}>Customisations</div>
                   {aiQuoteEdit.customisations.map((c, i) => (
-                    <div key={i} style={{ fontSize: 11, color: T.text2, marginTop: 2 }}>• {c}</div>
+                    <div key={i} style={{ fontSize: 14, color: T.text2, marginTop: 2 }}>• {c}</div>
                   ))}
                 </div>
               )}
               {aiQuoteEdit.upsellNote && (
-                <div style={{ fontSize: 11, color: T.blue, marginTop: 8 }}>⬆ {aiQuoteEdit.upsellNote}</div>
+                <div style={{ fontSize: 14, color: T.blue, marginTop: 8 }}>⬆ {aiQuoteEdit.upsellNote}</div>
               )}
             </div>
 
@@ -883,7 +883,7 @@ export function IntakeTab({
                     <option value="flat">$</option>
                   </select>
                   <input type="number" value={aiQuoteEdit.discount.value || ""} placeholder="0"
-                    onChange={e => setAiQuoteEdit(prev => prev && { ...prev, discount: { ...prev.discount, value: Number(e.target.value) || 0 } })}
+                    onChange={e = aria-label="0"> setAiQuoteEdit(prev => prev && { ...prev, discount: { ...prev.discount, value: Number(e.target.value) || 0 } })}
                     style={{ ...S.input, flex: 0.6 }} />
                 </div>
               </div>
@@ -892,7 +892,7 @@ export function IntakeTab({
             {aiQuoteEdit.discount.value > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ ...S.label }}>Discount Reason</div>
-                <input value={aiQuoteEdit.discount.reason} onChange={e => setAiQuoteEdit(prev => prev && { ...prev, discount: { ...prev.discount, reason: e.target.value } })}
+                <input value={aiQuoteEdit.discount.reason} onChange={e = aria-label="input"> setAiQuoteEdit(prev => prev && { ...prev, discount: { ...prev.discount, reason: e.target.value } })}
                   placeholder="e.g. Early bird pricing" style={{ ...S.input }} />
               </div>
             )}
@@ -902,11 +902,11 @@ export function IntakeTab({
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
               {aiQuoteEdit.lineItems.map((item, idx) => (
                 <div key={item.id} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input value={item.name} onChange={e => setAiQuoteEdit(prev => {
+                  <input value={item.name} onChange={e = aria-label="input"> setAiQuoteEdit(prev => {
                     if (!prev) return prev;
                     const items = [...prev.lineItems]; items[idx] = { ...items[idx], name: e.target.value }; return { ...prev, lineItems: items };
                   })} style={{ ...S.input, flex: 2 }} />
-                  <input type="number" value={item.price || ""} onChange={e => setAiQuoteEdit(prev => {
+                  <input type="number" value={item.price || ""} onChange={e = aria-label="number"> setAiQuoteEdit(prev => {
                     if (!prev) return prev;
                     const items = [...prev.lineItems]; items[idx] = { ...items[idx], price: Number(e.target.value) || 0 }; return { ...prev, lineItems: items };
                   })} style={{ ...S.input, flex: 0.6, textAlign: "right" }} />
@@ -917,12 +917,12 @@ export function IntakeTab({
                     <option value="/mo">/mo</option>
                     <option value="one-time">one-time</option>
                   </select>
-                  <button onClick={() => setAiQuoteEdit(prev => prev && { ...prev, lineItems: prev.lineItems.filter((_, i) => i !== idx) })}
+                  <button aria-label="Action" onClick={() => setAiQuoteEdit(prev => prev && { ...prev, lineItems: prev.lineItems.filter((_, i) => i !== idx) })}
                     style={{ background: "none", border: "none", color: T.red, fontSize: 14, cursor: "pointer" }}>✕</button>
                 </div>
               ))}
-              <button onClick={() => setAiQuoteEdit(prev => prev && { ...prev, lineItems: [...prev.lineItems, { id: Date.now(), name: "", price: 0, unit: "/mo" }] })}
-                style={{ ...S.btnGhost, fontSize: 11, padding: "4px 10px", alignSelf: "flex-start" }}>+ Add Item</button>
+              <button aria-label="Action" onClick={() => setAiQuoteEdit(prev => prev && { ...prev, lineItems: [...prev.lineItems, { id: Date.now(), name: "", price: 0, unit: "/mo" }] })}
+                style={{ ...S.btnGhost, fontSize: 14, padding: "4px 10px", alignSelf: "flex-start" }}>+ Add Item</button>
             </div>
 
             {/* Live totals */}
@@ -940,21 +940,21 @@ export function IntakeTab({
                   : Math.max(0, monthly - aiQuoteEdit.discount.value);
               }
               return (
-                <div style={{ background: T.bg3, borderRadius: 8, padding: "12px 16px", marginBottom: 16, display: "flex", gap: 20, fontSize: 13, flexWrap: "wrap", alignItems: "center" }}>
+                <div style={{ background: T.bg3, borderRadius: 8, padding: "12px 16px", marginBottom: 16, display: "flex", gap: 20, fontSize: 14, flexWrap: "wrap", alignItems: "center" }}>
                   <span style={{ color: T.text2 }}>Monthly: <strong style={{ color: T.accent, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(monthly)}/mo</strong></span>
                   {onetime > 0 && <span style={{ color: T.text2 }}>One-time: <strong style={{ color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{fmt(onetime)}</strong></span>}
-                  {discountLabel && <span style={{ color: T.green, fontSize: 11, fontWeight: 600 }}>💸 {discountLabel}</span>}
+                  {discountLabel && <span style={{ color: T.green, fontSize: 14, fontWeight: 600 }}>💸 {discountLabel}</span>}
                 </div>
               );
             })()}
 
             <div style={{ ...S.label }}>Client-Facing Note</div>
-            <textarea value={aiQuoteEdit.notes} onChange={e => setAiQuoteEdit(prev => prev && { ...prev, notes: e.target.value })}
+            <textarea value={aiQuoteEdit.notes} onChange={e = aria-label="textarea"> setAiQuoteEdit(prev => prev && { ...prev, notes: e.target.value })}
               placeholder="Additional notes for the client portal..." style={{ ...S.input, minHeight: 50, resize: "vertical", marginBottom: 16 }} />
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button onClick={() => setAiQuoteEdit(null)} style={{ ...S.btnGhost, fontSize: 12 }}>Cancel</button>
-              <button onClick={saveAIQuote} style={{ ...S.btn, fontSize: 12 }}>Save Quote</button>
+              <button aria-label="Action" onClick={() => setAiQuoteEdit(null)} style={{ ...S.btnGhost, fontSize: 14 }}>Cancel</button>
+              <button aria-label="save" onClick={saveAIQuote} style={{ ...S.btn, fontSize: 14 }}>Save Quote</button>
             </div>
           </div>
         </div>

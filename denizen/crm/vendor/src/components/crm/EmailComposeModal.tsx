@@ -136,7 +136,7 @@ export function EmailComposeModal({
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.text0 }}>✉️ Compose Email</h2>
-          <button type="button" onClick={onClose} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 18 }}>×</button>
+          <button aria-label="Close" type="button" onClick={onClose} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 18 }}>×</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
@@ -171,7 +171,7 @@ export function EmailComposeModal({
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div>
             <label style={S.label as React.CSSProperties}>To email *</label>
-            <input value={toEmail} onChange={(e) => setToEmail(e.target.value)} style={S.input as React.CSSProperties} placeholder="client@company.com" />
+            <input value={toEmail} onChange={(e) = aria-label="input"> setToEmail(e.target.value)} style={S.input as React.CSSProperties} placeholder="client@company.com" />
           </div>
           <div>
             <label style={S.label as React.CSSProperties}>Related deal</label>
@@ -190,43 +190,43 @@ export function EmailComposeModal({
 
         <div style={{ marginBottom: 12 }}>
           <label style={S.label as React.CSSProperties}>Subject</label>
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} style={S.input as React.CSSProperties} />
+          <input value={subject} onChange={(e) = aria-label="input"> setSubject(e.target.value)} style={S.input as React.CSSProperties} />
         </div>
 
         <div style={{ marginBottom: 12 }}>
           <label style={S.label as React.CSSProperties}>Body</label>
           <textarea
             value={body}
-            onChange={(e) => setBody(e.target.value)}
+            onChange={(e) = aria-label="textarea"> setBody(e.target.value)}
             style={{ ...S.input as React.CSSProperties, minHeight: 180, resize: "vertical", fontFamily: "inherit", lineHeight: 1.6 }}
           />
         </div>
 
         {preview && (
           <div style={{ background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: 14, marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: T.text3, marginBottom: 6 }}>Preview</div>
+            <div style={{ fontSize: 14, color: T.text3, marginBottom: 6 }}>Preview</div>
             <div style={{ fontWeight: 600, color: T.text0, marginBottom: 8 }}>{previewSubject || "(No subject)"}</div>
-            <div style={{ fontSize: 13, color: T.text1, whiteSpace: "pre-wrap" }}>{previewBody || "(Empty)"}</div>
+            <div style={{ fontSize: 14, color: T.text1, whiteSpace: "pre-wrap" }}>{previewBody || "(Empty)"}</div>
           </div>
         )}
 
         {error && (
-          <div style={{ color: T.red, fontSize: 12, marginBottom: 12 }}>{error}</div>
+          <div style={{ color: T.red, fontSize: 14, marginBottom: 12 }}>{error}</div>
         )}
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
-          <button type="button" onClick={() => setPreview((p) => !p)} style={S.btnGhost as React.CSSProperties}>
+          <button aria-label="Action" type="button" onClick={() => setPreview((p) => !p)} style={S.btnGhost as React.CSSProperties}>
             {preview ? "Hide preview" : "Preview"}
           </button>
-          <button type="button" disabled={busy} onClick={() => send(true)} style={S.btnGhost as React.CSSProperties}>
+          <button aria-label="Action" type="button" disabled={busy} onClick={() => send(true)} style={S.btnGhost as React.CSSProperties}>
             Open in mail app
           </button>
-          <button type="button" disabled={busy} onClick={() => send(false)} style={{ ...S.btn as React.CSSProperties, opacity: busy ? 0.6 : 1 }}>
+          <button aria-label="Action" type="button" disabled={busy} onClick={() => send(false)} style={{ ...S.btn as React.CSSProperties, opacity: busy ? 0.6 : 1 }}>
             {busy ? "Sending…" : "Send email"}
           </button>
         </div>
 
-        <p style={{ fontSize: 11, color: T.text3, marginTop: 12, marginBottom: 0 }}>
+        <p style={{ fontSize: 14, color: T.text3, marginTop: 12, marginBottom: 0 }}>
           Sends via Resend when <code>RESEND_API_KEY</code> is configured on the server; otherwise opens your mail app and logs the message.
         </p>
       </div>

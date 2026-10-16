@@ -150,7 +150,7 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
     <div>
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: 0 }}>🤖 AI Deal Probability</h2>
-        <p style={{ fontSize: 12, color: T.text3, marginTop: 4 }}>
+        <p style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
           Analyzes deal age, engagement, email opens, stage history & similar deals
         </p>
       </div>
@@ -167,7 +167,7 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
             border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "12px 14px", textAlign: "center",
           }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: m.color, fontFamily: "'JetBrains Mono', monospace" }}>{m.value}</div>
-            <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{m.label}</div>
+            <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{m.label}</div>
           </div>
         ))}
       </div>
@@ -189,7 +189,7 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>{sc.deal.title}</div>
-                <div style={{ fontSize: 12, color: T.text3, marginTop: 2 }}>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                   {sc.deal.contact} · {fmt(sc.deal.value)} · {sc.deal.stage}
                 </div>
               </div>
@@ -197,7 +197,7 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
                 <div style={{ fontSize: 28, fontWeight: 800, color: probColor, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1 }}>
                   {sc.aiProbability}%
                 </div>
-                <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
                   Manual: {sc.deal.probability}%
                   {diff !== 0 && (
                     <span style={{ color: diff > 0 ? T.green : T.red, marginLeft: 4 }}>
@@ -225,23 +225,23 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
             {/* Confidence badge */}
             <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "center" }}>
               <span style={{
-                fontSize: 10, padding: "2px 8px", borderRadius: T.radius.sm,
+                fontSize: 14, padding: "2px 8px", borderRadius: T.radius.sm,
                 background: `${confColors[sc.confidence]}18`, color: confColors[sc.confidence],
                 fontWeight: 600, border: `1px solid ${confColors[sc.confidence]}33`,
               }}>
                 {confLabels[sc.confidence]}
               </span>
-              <span style={{ fontSize: 11, color: T.text3, fontStyle: "italic" }}>{sc.recommendation}</span>
+              <span style={{ fontSize: 14, color: T.text3, fontStyle: "italic" }}>{sc.recommendation}</span>
             </div>
 
             {/* Factors */}
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {sc.factors.slice(0, 5).map((f, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
                   <span style={{ width: 18, textAlign: "center" }}>{f.emoji}</span>
                   <span style={{ flex: 1, color: T.text2 }}>{f.label}</span>
                   <span style={{
-                    fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                    fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", fontSize: 14,
                     color: f.impact >= 0 ? T.green : T.red,
                   }}>
                     {f.impact >= 0 ? "+" : ""}{f.impact}

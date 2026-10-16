@@ -18,6 +18,7 @@
 
 const crypto = require('node:crypto');
 const npcRoster = require('./npc-roster');
+const authBase = require('./denizen-auth-base.js');
 
 const CODE_TTL_MS = 5 * 60 * 1000;       // auth code lives 5 min
 const CLIENT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -427,4 +428,5 @@ module.exports = {
   protectedResourceMetadata,
   npcKeyFromResource,
   verifyPkce,
+  authBase,
 };

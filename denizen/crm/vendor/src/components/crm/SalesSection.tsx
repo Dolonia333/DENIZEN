@@ -108,8 +108,8 @@ export function SalesSection({
               { key: "ai", label: "AI Probability", icon: "🤖" },
               { key: "velocity", label: "Velocity", icon: "⚡" },
             ] as { key: string; label: string; icon: string }[]).map(v => (
-              <button key={v.key} onClick={() => setPipelineView(v.key as any)} style={{
-                padding: "6px 14px", borderRadius: "9999px", fontSize: 12, fontWeight: 600,
+              <button aria-label="Action" key={v.key} onClick={() => setPipelineView(v.key as any)} style={{
+                padding: "6px 14px", borderRadius: "9999px", fontSize: 14, fontWeight: 600,
                 background: pipelineView === v.key ? `${T.accent}22` : T.bg3,
                 color: pipelineView === v.key ? T.accent : T.text3,
                 border: `1px solid ${pipelineView === v.key ? `${T.accent}66` : T.bg4}`,
@@ -132,8 +132,8 @@ export function SalesSection({
         <div>
           <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
             {([{ key: "manager", label: "Manager View", icon: "📊" }, { key: "member", label: "My Quotas", icon: "🎯" }] as const).map(v => (
-              <button key={v.key} onClick={() => setQuotaViewMode(v.key)} style={{
-                padding: "6px 14px", borderRadius: "9999px", fontSize: 12, fontWeight: 600,
+              <button aria-label="Action" key={v.key} onClick={() => setQuotaViewMode(v.key)} style={{
+                padding: "6px 14px", borderRadius: "9999px", fontSize: 14, fontWeight: 600,
                 background: quotaViewMode === v.key ? `${T.accent}22` : T.bg3,
                 color: quotaViewMode === v.key ? T.accent : T.text3,
                 border: `1px solid ${quotaViewMode === v.key ? `${T.accent}66` : T.bg4}`,

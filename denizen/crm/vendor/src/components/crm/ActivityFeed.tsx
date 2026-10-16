@@ -212,7 +212,7 @@ export function ActivityFeed({
   return (
     <>
       {launcher === "fixed" && (
-        <button onClick={handleToggle} style={{
+        <button aria-label="Toggle" onClick={handleToggle} style={{
           position: "fixed", bottom: 90, right: 76, zIndex: 800,
           width: 42, height: 42, borderRadius: "50%",
           background: isOpen ? T.bg3 : `linear-gradient(135deg, ${T.purple}, #6366f1)`,
@@ -226,7 +226,7 @@ export function ActivityFeed({
             <span style={{
               position: "absolute", top: -4, right: -4,
               width: 18, height: 18, borderRadius: "50%",
-              background: T.red, color: "#fff", fontSize: 9, fontWeight: 800,
+              background: T.red, color: "#fff", fontSize: 14, fontWeight: 800,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>{unread > 9 ? "9+" : unread}</span>
           )}
@@ -249,13 +249,13 @@ export function ActivityFeed({
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 14 }}>⚡</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>Activity Feed</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>Activity Feed</span>
               <span style={{
-                fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: T.radius.full,
+                fontSize: 14, fontWeight: 700, padding: "2px 6px", borderRadius: T.radius.full,
                 background: `${T.purple}22`, color: T.purple,
               }}>LIVE</span>
             </div>
-            <button onClick={() => setIsOpen(false)} style={{
+            <button aria-label="Action" onClick={() => setIsOpen(false)} style={{
               background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16,
             }}>✕</button>
           </div>
@@ -263,7 +263,7 @@ export function ActivityFeed({
           {/* Events List */}
           <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
             {events.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 12 }}>
+              <div style={{ textAlign: "center", padding: 40, color: T.text3, fontSize: 14 }}>
                 No activity yet — changes will appear here in real time
               </div>
             ) : (
@@ -280,17 +280,17 @@ export function ActivityFeed({
                     width: 28, height: 28, borderRadius: T.radius.full, flexShrink: 0,
                     background: `${event.color}18`, color: event.color,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12,
+                    fontSize: 14,
                   }}>{event.icon}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {event.title}
                     </div>
-                    <div style={{ fontSize: 11, color: T.text3, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {event.description}
                     </div>
                   </div>
-                  <div style={{ fontSize: 9, color: T.text3, whiteSpace: "nowrap", flexShrink: 0, marginTop: 2 }}>
+                  <div style={{ fontSize: 14, color: T.text3, whiteSpace: "nowrap", flexShrink: 0, marginTop: 2 }}>
                     {timeAgo(event.timestamp)}
                   </div>
                 </div>

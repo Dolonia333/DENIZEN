@@ -53,23 +53,23 @@ export function StudioBoardPanel({ deal, glass }: Props) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text3 }}>
           Studio Board
         </div>
-        <a
+        <a aria-label="Link"
           href={boardUrl}
           target="_blank"
           rel="noreferrer"
-          style={{ fontSize: 11, fontWeight: 600, color: T.accent, textDecoration: "none" }}
+          style={{ fontSize: 14, fontWeight: 600, color: T.accent, textDecoration: "none" }}
         >
           Open board →
         </a>
       </div>
 
       {loading ? (
-        <div style={{ ...glass, padding: 14, fontSize: 12, color: T.text3 }}>Loading delivery tasks…</div>
+        <div style={{ ...glass, padding: 14, fontSize: 14, color: T.text3 }}>Loading delivery tasks…</div>
       ) : tasks.length === 0 ? (
-        <div style={{ ...glass, padding: 14, fontSize: 12, color: T.text3 }}>
+        <div style={{ ...glass, padding: 14, fontSize: 14, color: T.text3 }}>
           No linked Studio Board tasks yet. Create a delivery task to hand this deal to the board.
         </div>
       ) : (
@@ -77,40 +77,40 @@ export function StudioBoardPanel({ deal, glass }: Props) {
           <div key={t.id} style={{ ...glass, padding: 12, marginBottom: 8 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "flex-start" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.text1 }}>{t.title || t.id}</div>
-                <div style={{ fontSize: 11, color: T.text3, marginTop: 4 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{t.title || t.id}</div>
+                <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>
                   {t.status || "—"}
                   {t.due ? ` · due ${t.due}` : ""}
                   {t.priority ? ` · ${t.priority}` : ""}
                 </div>
               </div>
-              <a
+              <a aria-label="Link"
                 href={studioBoardDealUrl(deal.id, t.id)}
                 target="_blank"
                 rel="noreferrer"
-                style={{ fontSize: 11, color: T.accent, textDecoration: "none", flexShrink: 0 }}
+                style={{ fontSize: 14, color: T.accent, textDecoration: "none", flexShrink: 0 }}
               >
                 View
               </a>
             </div>
             <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-              <button
+              <button aria-label="Action"
                 type="button"
                 disabled={busy}
                 onClick={() => void run(() => advanceDealStudioTask(deal.id, t.id))}
                 style={{
-                  flex: 1, padding: "6px 0", fontSize: 11, fontWeight: 700, cursor: busy ? "wait" : "pointer",
+                  flex: 1, padding: "6px 0", fontSize: 14, fontWeight: 700, cursor: busy ? "wait" : "pointer",
                   background: `${T.accent}18`, border: `1px solid ${T.accent}33`, borderRadius: T.radius.sm, color: T.accent,
                 }}
               >
                 Advance
               </button>
-              <button
+              <button aria-label="Action"
                 type="button"
                 disabled={busy}
                 onClick={() => void run(() => unlinkDealStudioTask(deal.id, t.id))}
                 style={{
-                  flex: 1, padding: "6px 0", fontSize: 11, fontWeight: 600, cursor: busy ? "wait" : "pointer",
+                  flex: 1, padding: "6px 0", fontSize: 14, fontWeight: 600, cursor: busy ? "wait" : "pointer",
                   background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm, color: T.text2,
                 }}
               >
@@ -124,15 +124,15 @@ export function StudioBoardPanel({ deal, glass }: Props) {
       <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
         <input
           value={draftTitle}
-          onChange={(e) => setDraftTitle(e.target.value)}
+          onChange={(e) = aria-label="input"> setDraftTitle(e.target.value)}
           placeholder="Delivery task title…"
           disabled={busy}
           style={{
             flex: 1, background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md,
-            color: T.text1, padding: "8px 12px", fontSize: 12,
+            color: T.text1, padding: "8px 12px", fontSize: 14,
           }}
         />
-        <button
+        <button aria-label="Action"
           type="button"
           disabled={busy}
           onClick={() => {
@@ -145,7 +145,7 @@ export function StudioBoardPanel({ deal, glass }: Props) {
           }}
           style={{
             background: T.accent, color: T.bg0, border: "none", borderRadius: T.radius.md,
-            padding: "8px 14px", fontWeight: 700, fontSize: 12, cursor: busy ? "wait" : "pointer", whiteSpace: "nowrap",
+            padding: "8px 14px", fontWeight: 700, fontSize: 14, cursor: busy ? "wait" : "pointer", whiteSpace: "nowrap",
           }}
         >
           Create delivery
@@ -153,7 +153,7 @@ export function StudioBoardPanel({ deal, glass }: Props) {
       </div>
 
       {error && (
-        <div style={{ marginTop: 8, fontSize: 11, color: T.orange }}>{error}</div>
+        <div style={{ marginTop: 8, fontSize: 14, color: T.orange }}>{error}</div>
       )}
     </div>
   );

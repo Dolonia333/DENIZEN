@@ -1,10 +1,17 @@
 'use strict';
 
-const { processMeshJob } = require('../src/denizen-mesh-job-runner');
+/**
+ * Desktop compute runner — single source of truth is denizen-mesh-job-runner.
+ * (aislop: unify desktop + runtime job execution)
+ */
+const mesh = require('../src/denizen-mesh-job-runner');
 
-/** Desktop-local job execution (no server DB deps). */
-async function processJobLocally(jobType, payload = {}) {
-  return processMeshJob(jobType, payload);
+async function processJobLocally(jobType, payload = {}, ctx = {}) {
+  return mesh.processMeshJob(jobType, payload, ctx);
 }
 
-module.exports = { processJobLocally };
+module.exports = {
+  processJobLocally,
+  processMeshJob: mesh.processMeshJob,
+  isInferenceReachable: mesh.isInferenceReachable,
+};

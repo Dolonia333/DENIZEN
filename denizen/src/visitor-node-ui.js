@@ -527,23 +527,23 @@
         || state.downloadUrl
         || '/desktop/download.html';
       const platformLabel = globalThis.DenizenClientPlatform?.label?.(platform) || 'Desktop';
-      downloadEl.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(downloadEl, `
         <ol class="node-connect-steps">
           <li><strong>1.</strong> Install <a href="${href}" target="_blank" rel="noopener">Denizen Desktop (${platformLabel})</a> on this computer</li>
           <li><strong>2.</strong> Click below — we open the app and link your Citizen ID</li>
           <li><strong>3.</strong> In the app, approve pairing and turn on City Power</li>
         </ol>
         ${pairBtn}
-      `;
+      `);
     } else {
-      downloadEl.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(downloadEl, `
         <ol class="node-connect-steps">
           <li><strong>1.</strong> Keep Denizen Desktop open on this computer</li>
           <li><strong>2.</strong> Click below — your browser sends a pairing link to the app</li>
           <li><strong>3.</strong> Approve in the app, then enable <strong>Power the city</strong></li>
         </ol>
         ${pairBtn}
-      `;
+      `);
     }
     downloadEl.hidden = false;
   }
@@ -639,7 +639,7 @@
     restoreEl.type = 'button';
     restoreEl.title = 'Show City Power (Ctrl+Shift+H)';
     restoreEl.setAttribute('aria-label', 'Show City Power');
-    restoreEl.innerHTML = '<span class="restore-dot idle" aria-hidden="true"></span><span>City Power</span>';
+    globalThis.DenizenSafeDom.setSafeHtml(restoreEl, '<span class="restore-dot idle" aria-hidden="true"></span><span>City Power</span>');
     const onRestore = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -880,7 +880,7 @@
     injectStyles();
     rootEl = document.createElement('section');
     rootEl.id = ROOT_ID;
-    rootEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(rootEl, `
       <div class="node-top">
         <span class="node-credits">Credits: 0</span>
         <span class="node-top-actions">
@@ -942,7 +942,7 @@
         <div class="node-contrib-row"><span>Current role</span><span class="node-contrib-val" id="denizen-node-how">idle</span></div>
         <div class="node-modes" id="denizen-node-modes"></div>
       </div>
-    `;
+    `);
     document.body.appendChild(rootEl);
     globalThis.DenizenMobileSidebar?.relayout?.();
     panelHidden = globalThis.DenizenMobileSidebar?.isTouchDrawerMode?.()
@@ -1281,10 +1281,10 @@
     if (fleetWrap && fleetList) {
       if (fleet.length) {
         fleetWrap.hidden = false;
-        fleetList.innerHTML = fleet.map(formatFleetMachine).join('');
+        globalThis.DenizenSafeDom.setSafeHtml(fleetList, fleet.map(formatFleetMachine).join(''));
       } else {
         fleetWrap.hidden = true;
-        fleetList.innerHTML = '';
+        fleetList.replaceChildren();
       }
     }
     if (howEl) {
@@ -1312,13 +1312,13 @@
     if (modesEl) {
       const modes = Array.isArray(state.contributionModes) ? state.contributionModes : [];
       if (!modes.length) {
-        modesEl.innerHTML = '<div class="node-mode"><span class="node-mode-dot"></span><span>no modes</span></div>';
+        globalThis.DenizenSafeDom.setSafeHtml(modesEl, '<div class="node-mode"><span class="node-mode-dot"></span><span>no modes</span></div>');
       } else {
-        modesEl.innerHTML = modes.map((mode) => {
+        globalThis.DenizenSafeDom.setSafeHtml(modesEl, modes.map((mode) => {
           const active = isModeActive(mode);
           const label = formatModeLabel(mode);
           return `<div class="node-mode${active ? ' active' : ''}"><span class="node-mode-dot"></span><span>${label}</span></div>`;
-        }).join('');
+        }).join(''));
       }
     }
     if (accountEl) {

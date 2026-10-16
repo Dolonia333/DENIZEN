@@ -17,9 +17,9 @@ export const ChartTooltip = ({ active, payload, label, prefix = "", suffix = "" 
   return (
     <div style={{
       background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 10,
-      padding: "10px 14px", fontSize: 12, boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+      padding: "10px 14px", fontSize: 14, boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
     }}>
-      <div style={{ color: T.text3, marginBottom: 6, fontWeight: 600, fontSize: 11 }}>{label}</div>
+      <div style={{ color: T.text3, marginBottom: 6, fontWeight: 600, fontSize: 14 }}>{label}</div>
       {payload.map((p: any, i: number) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: p.color || p.fill || p.stroke || p.payload?.color }} />

@@ -1,0 +1,13 @@
+# Third-party / generated — not Denizen-owned source
+**/node_modules/**
+**/*.min.js
+**/vendor/phaser/**
+denizen/vendor/**
+denizen/crm/vendor/dist/**
+denizen/crm/vendor/node_modules/**
+denizen/jelly/vendor/**
+discord pixel game/**
+**/.git/**
+**/coverage/**
+**/dist/**
+**/build/**

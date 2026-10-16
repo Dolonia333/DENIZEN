@@ -50,7 +50,7 @@
     if (spectateBanner) return spectateBanner;
     spectateBanner = document.createElement('div');
     spectateBanner.id = 'denizen-spectate-banner';
-    spectateBanner.innerHTML = '<strong>Spectator mode</strong> — live office relay; chat &amp; edits happen on the main site';
+    globalThis.DenizenSafeDom.setSafeHtml(spectateBanner, '<strong>Spectator mode</strong> — live office relay; chat &amp; edits happen on the main site');
     document.body.prepend(spectateBanner);
     return spectateBanner;
   }

@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 require('./src/load-env');
 const http = require('http');
 const net = require('net');

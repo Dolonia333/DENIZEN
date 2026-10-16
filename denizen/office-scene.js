@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 // Phaser loads asynchronously (local-first loader in index.html) — office-scene
 // parses before it's ready. startOfficeWhenPhaserReady() at the bottom of this
 // file waits for the loader's verdict; nothing here may touch Phaser eagerly.
@@ -4222,7 +4223,7 @@ function bootOfficeGame() {
     banner.style.display = '';
     banner.style.background = 'rgba(127, 29, 29, 0.95)';
     banner.style.color = '#fecaca';
-    banner.innerHTML = `<strong>Office failed</strong> — ${msg} <span id="denizen-boot-tag">(boot v7)</span>`;
+    globalThis.DenizenSafeDom.setSafeHtml(banner, `<strong>Office failed</strong> — ${msg} <span id="denizen-boot-tag">(boot v7)</span>`);
   };
 
   if (typeof Phaser === 'undefined') {
@@ -4256,7 +4257,7 @@ function showPhaserBlockedBanner() {
     const el = document.getElementById('denizen-load-banner') || document.createElement('div');
     el.id = 'denizen-load-banner';
     el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;background:rgba(127,29,29,0.95);color:#fecaca;text-align:center;padding:10px;font:12px ui-monospace,monospace';
-    el.innerHTML = '<strong>Office engine blocked</strong> — Phaser did not load. In Brave: click the lion icon → Shields Down for this site, then Ctrl+Shift+R.';
+    globalThis.DenizenSafeDom.setSafeHtml(el, '<strong>Office engine blocked</strong> — Phaser did not load. In Brave: click the lion icon → Shields Down for this site, then Ctrl+Shift+R.');
     if (!el.parentNode) document.body.appendChild(el);
     window.__DenizenChatBootstrap?.setLoadPct?.(100);
   } catch (_) {}
@@ -4722,9 +4723,9 @@ startOfficeWhenPhaserReady();
       const order = { h: 0, corner: 1, tjunction: 2, v: 3 };
       return (order[a.data.type] ?? 9) - (order[b.data.type] ?? 9);
     });
-    list.innerHTML = '';
+    list.replaceChildren();
     if (items.length === 0) {
-      list.innerHTML = '<div class="wall-list-empty">No wall pieces — draw one or rebuild the perimeter box.</div>';
+      globalThis.DenizenSafeDom.setSafeHtml(list, '<div class="wall-list-empty">No wall pieces — draw one or rebuild the perimeter box.</div>');
       return;
     }
     const countEl = document.getElementById('ed-wall-count');
@@ -4736,13 +4737,13 @@ startOfficeWhenPhaserReady();
       row.className = 'wall-list-item';
       if (selectedWallEntry === entry) row.classList.add('active');
       if (dimmed) row.classList.add('dimmed');
-      row.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(row, `
         <div class="wall-list-main">
           <span class="wall-list-badge">${OW.segmentBadge(d)}</span>
           <span class="wall-list-name">${OW.segmentLabel(d)}</span>
         </div>
         <button type="button" class="wall-list-del" title="Delete">×</button>
-      `;
+      `);
       row.addEventListener('click', (e) => {
         if (e.target.classList.contains('wall-list-del')) return;
         if (dimmed) return;
@@ -5366,7 +5367,7 @@ startOfficeWhenPhaserReady();
     const row = document.getElementById('ed-cat-chips');
     const MEP = window.DenizenMapEditorPro;
     if (!row || !MEP) return;
-    row.innerHTML = '';
+    row.replaceChildren();
     MEP.CATEGORIES.forEach((cat) => {
       const chip = document.createElement('button');
       chip.type = 'button';
@@ -5387,7 +5388,7 @@ startOfficeWhenPhaserReady();
     const row = document.getElementById('ed-template-row');
     const MEP = window.DenizenMapEditorPro;
     if (!row || !MEP) return;
-    row.innerHTML = '';
+    row.replaceChildren();
     MEP.getRoomTemplates().forEach((tpl) => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -5642,7 +5643,7 @@ startOfficeWhenPhaserReady();
     }
 
     const frag = document.createDocumentFragment();
-    list.innerHTML = '';
+    list.replaceChildren();
     if (!entries.length) {
       const empty = document.createElement('div');
       empty.className = 'cat-empty';
@@ -5690,7 +5691,7 @@ startOfficeWhenPhaserReady();
       const label = def.displayName || id;
       const typeBits = [def.type || 'unknown'];
       if (def.stack_on === 'surface' || def.stack_on === 'desk') typeBits.push('on desk');
-      meta.innerHTML = `<div class="cat-name" title="${id}">${label}</div><div class="cat-type">${typeBits.join(' · ')}</div>`;
+      globalThis.DenizenSafeDom.setSafeHtml(meta, `<div class="cat-name" title="${id}">${label}</div><div class="cat-type">${typeBits.join(' · ')}</div>`);
       item.appendChild(meta);
 
       item.addEventListener('click', () => setPendingCatalog(id));
@@ -5716,7 +5717,7 @@ startOfficeWhenPhaserReady();
     if (editorUI) return;
     editorUI = document.createElement('div');
     editorUI.id = 'editor-ui';
-    editorUI.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(editorUI, `
       <style>
         #editor-ui {
           position: fixed;
@@ -6505,7 +6506,7 @@ startOfficeWhenPhaserReady();
         </div>
         <div id="ed-catalog-list"></div>
       </aside>
-    `;
+    `);
     document.body.appendChild(editorUI);
 
     document.getElementById('ed-layer').addEventListener('change', (event) => {
