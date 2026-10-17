@@ -150,6 +150,7 @@ than to fragment it.
 
 ## See also
 
+- [SCENE_RUNTIME.md](SCENE_RUNTIME.md) — shared Phaser kernel (`DenizenSceneRuntime.boot`)
 - [ARCHITECTURE.md](ARCHITECTURE.md) — system-level topology
 - [ACTIONS.md](ACTIONS.md) — what `actions.X()` calls do
 - [PATHFINDING.md](PATHFINDING.md) — A* + stuck recovery

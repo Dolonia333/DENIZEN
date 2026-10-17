@@ -158,7 +158,8 @@ describe('Denizen customer product surface', () => {
     assert.match(html, /Click to talk — Lucy is at the desk/);
     assert.match(html, /Lucy talks only after the visitor clicks reception/);
     assert.match(html, /howInView/);
-    assert.match(html, /max-width: 960px\) \{\s*\.tour-bar \{ display: none/);
+    // Fixed rail hides beside the 1080px hero until the viewport is wide enough.
+    assert.match(html, /max-width: 1399px\) and \(min-width: 641px\) \{\s*\.tour-bar \{ display: none/);
     assert.match(html, /max-width: 900px\) \{\s*\.how-beats \{ grid-template-columns: 1fr/);
     assert.match(html, /Lid-closed jobs/);
     assert.match(html, /id="coming"[\s\S]*Talk to Zion on Discord →[\s\S]*Remote office/);
