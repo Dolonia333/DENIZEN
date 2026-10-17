@@ -267,13 +267,17 @@ describe('mobile UI layout fixes', () => {
       /denizen-touch:not\(\.denizen-landscape\) #game-container canvas \{[\s\S]*?width:\s*auto\s*!important/
     );
     assert.match(html, /denizen-portrait #game-frame \{[\s\S]*?padding:\s*0\s*!important/);
-    assert.match(profile, /isLandscape \? 2\.55/);
-    assert.match(profile, /isCompactPhone \? 2\.65 : 2\.5/);
+    // device-profile owns live zoom (whole numbers so walk sheets stay crisp);
+    // office-scene keeps a fallback only when DenizenDeviceProfile is missing.
+    assert.match(profile, /if \(prof\.isLandscape\) return 2/);
+    assert.match(profile, /return 3/);
+    assert.match(profile, /prof\.isTablet\) return prof\.isLandscape \? 3 : 2/);
     assert.match(scene, /isLandscape \? 2\.55/);
     assert.match(scene, /isCompactPhone \? 2\.65 : 2\.5/);
-    assert.match(html, /device-profile\.js\?v=mapFill10/);
-    assert.match(html, /office-scene\.js\?v=playSmooth1/);
+    assert.match(html, /device-profile\.js\?v=walkFix1/);
+    assert.match(html, /office-scene\.js\?v=sceneRuntime1/);
     assert.match(html, /mobile-controls\.js\?v=mapFill10/);
+    assert.match(html, /scene-runtime\.js\?v=runtime1/);
   });
 
   it('portrait Floor Line starts below the HQ frame so it never overlaps the map', () => {
