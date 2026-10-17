@@ -19,6 +19,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Getting Started | [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md) | new/local | New-contributor onboarding path and first-run workflow |
 | Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | on GitHub | Runtime topology, core services, and message flow |
 | Architecture | [SCENE.md](SCENE.md) | on GitHub | `office-scene.js` layout and ownership map |
+| Architecture | [SCENE_RUNTIME.md](SCENE_RUNTIME.md) | on GitHub | Shared Phaser scene runtime API (`DenizenSceneRuntime`) |
 | Architecture | [ACTIONS.md](ACTIONS.md) | on GitHub | NPC action vocabulary and execution semantics |
 | Architecture | [AGENT_BUS.md](AGENT_BUS.md) | on GitHub | Agent-to-agent messaging bus behavior and rules |
 | Architecture | [WORLD_ENGINE.md](WORLD_ENGINE.md) | on GitHub | World engine generation/runtime primitives |

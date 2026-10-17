@@ -4153,6 +4153,10 @@ if (window.DenizenLazyScripts?.loadDeferred) {
 }
 
 function preferCanvasRenderer() {
+  const rt = window.DenizenSceneRuntime;
+  if (rt && typeof rt.preferCanvasRenderer === 'function') {
+    return rt.preferCanvasRenderer();
+  }
   try {
     const q = new URLSearchParams(window.location.search);
     // WebGL texture uploads during office create() have been hanging/OOMing
@@ -4166,9 +4170,32 @@ function preferCanvasRenderer() {
 
 function bootOfficeGame() {
   if (window.game || window.__DenizenOfficeBooting) return;
-  window.__DenizenOfficeBooting = true;
 
   const OfficeScene = createOfficeSceneClass();
+  const rt = window.DenizenSceneRuntime;
+
+  // Shared kernel path (docs/SCENE_RUNTIME.md). Fallback keeps the old
+  // inline boot if scene-runtime.js failed to load.
+  if (rt && typeof rt.boot === 'function') {
+    const banner = document.getElementById('denizen-load-banner');
+    rt.boot({
+      scene: [OfficeScene],
+      parent: document.getElementById('game-container') || 'game-container',
+      bootFlag: '__DenizenOfficeBooting',
+      gameKey: 'game',
+      onError: (msg) => {
+        console.error('[OfficeScene]', msg);
+        if (!banner) return;
+        banner.style.display = '';
+        banner.style.background = 'rgba(127, 29, 29, 0.95)';
+        banner.style.color = '#fecaca';
+        banner.innerHTML = `<strong>Office failed</strong> — ${msg} <span id="denizen-boot-tag">(boot runtime)</span>`;
+      },
+    });
+    return;
+  }
+
+  window.__DenizenOfficeBooting = true;
   const useCanvas = preferCanvasRenderer();
   const perf = (typeof window.DenizenDeviceProfile?.lightPerf === 'function')
     ? window.DenizenDeviceProfile.lightPerf()

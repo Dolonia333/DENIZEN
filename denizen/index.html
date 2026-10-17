@@ -810,6 +810,8 @@
     <script src="./src/openplan-walls.js?v=measured1" defer></script>
     <!-- Map engine — placement + footprint collisions (before scene) -->
     <script src="./src/map-engine.js?v=floorBounds1" defer></script>
+    <!-- Shared Phaser scene runtime (boot / layers / cull / commands) — before scene -->
+    <script src="./src/scene-runtime.js?v=runtime1" defer></script>
     <!-- Movement guard + freeze watchdog — must load before scene -->
     <script src="./src/movement-guard.js?v=npclife1" defer></script>
     <script src="./src/freeze-watchdog.js?v=collide1" defer></script>
@@ -818,7 +820,7 @@
     <script src="./src/map-editor-pro.js?v=pro6tiles" defer></script>
     <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
     <script src="./src/walk-facing.js?v=walkFix1" defer></script>
-    <script src="./office-scene.js?v=playSmooth1" defer></script>
+    <script src="./office-scene.js?v=sceneRuntime1" defer></script>
   </head>
   <body>
     <div id="denizen-night-city" aria-hidden="true" data-tod="day">
