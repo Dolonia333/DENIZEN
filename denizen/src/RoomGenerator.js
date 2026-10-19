@@ -239,25 +239,25 @@ function preferId(pool, id) {
 }
 
 /**
- * A back-facing chair is taller than the desk. Only the top of the backrest
- * slides under the desk's front lip; the rest of the chair stays visible
- * in front of the desk. Swallowing the backrest (a 16px tuck on a 46px
- * chair) is what made the seats look pasted into the desktop.
+ * A LimeZu cubicle is one stall, not a desk with a grey rectangle behind it.
+ * Side posts (the tall L) close each stall, the low rail sits behind the
+ * wood desktop, and the chair back meets the front lip.
  */
-const CHAIR_UNDER = 10;
-const CHAIR_H = 46;
-const CHAIR_TUCK = CHAIR_H - CHAIR_UNDER;
-/** Cubicle panel base hides behind the back edge of the desktop. */
-const PANEL_H = 42;
-const PANEL_INTO_DESK = 8;
-const PANEL_ABOVE = PANEL_H - PANEL_INTO_DESK;
+const POST_W = 32;
+const POST_H = 86;
+const DESK_W = 64;
 const DESK_H_NOMINAL = 38;
-const AISLE = 32;
-const DESK_TOP0 = 128;
-const ROW_STRIDE = PANEL_ABOVE + DESK_H_NOMINAL + CHAIR_TUCK + AISLE;
-const SIDE_MARGIN = CELL * 2;
-/** Monitor base sits this far below the desk's top edge, on the desktop. */
-const MONITOR_ON_DESK = 8;
+const PANEL_INTO_DESK = 10;
+const POST_DROP = 8;
+const CHAIR_TUCK = 18;
+/** Dual-monitor sprite bottom, above the desk's bottom anchor, so the keyboard sits on the wood. */
+const SETUP_LIFT = 22;
+const AISLE = 28;
+const ROW_LEFT = 32;
+const POST_ABOVE = POST_H - DESK_H_NOMINAL - POST_DROP;
+const DESK_TOP0 = 112;
+const ROW_STRIDE = POST_ABOVE + DESK_H_NOMINAL + CHAIR_TUCK + AISLE;
+const SIDE_MARGIN = ROW_LEFT;
 
 /**
  * Drop one catalog sprite using bottom-center coordinates.
@@ -279,107 +279,100 @@ function placeAnchored(items, grid, def, centerX, bottomY, prefix) {
   return true;
 }
 
+function placePost(items, post, left, bottom, flipX) {
+  items.push({
+    id: post.id,
+    instanceId: uid('post'),
+    x: left + Math.floor(post.w / 2),
+    y: bottom,
+    z_index: 1.25,
+    flipX: !!flipX
+  });
+}
+
 function placeWorkstations(items, palette, grid, count, options = {}) {
-  // Reference bays use the same white desk down the row. The private office
-  // uses the light wood desk instead (options.deskId).
+  // The reference bay is light-wood desks inside grey stalls, not white
+  // desks with two monitor sprites floating on them.
   const deskPool = palette.desks
     .filter(d => d.w <= 128 && d.h <= 96)
     .sort((a, b) => a.id.localeCompare(b.id));
   if (deskPool.length === 0) return 0;
 
-  const desk = preferId(deskPool, options.deskId || 'desk_white_wide')
-    || preferId(deskPool, 'desk_white_wide')
+  const desk = preferId(deskPool, options.deskId || 'desk_tan_wide')
     || preferId(deskPool, 'desk_tan_wide')
     || deskPool.find((d) => d.w >= 48 && d.w <= 96)
     || deskPool[0];
-  // Desk is up-screen. The sitter faces it, so the camera sees the back of
-  // the chair. The grey back chair is the dark office chair in this pack.
-  // chair_orange_front shows the seat and faces the camera.
   const chairPool = palette.backChairs.length > 0 ? palette.backChairs : palette.chairs;
-  const chair = preferId(chairPool, 'chair_grey_back')
+  const chair = preferId(chairPool, options.chairId || 'chair_grey_back')
+    || preferId(chairPool, 'chair_grey_back')
     || preferId(chairPool, 'chair_orange_back')
     || chairPool[0]
     || null;
-  // Two separate monitors. The combined "desk setup" sprite is as tall as
-  // the cubicle panel, so it covers the divider instead of sitting on the desk.
-  const monitor = palette.all.monitor_white_on || null;
+  // One sprite: both screens and the keyboard, meant to sit on the desktop.
+  const setup = palette.all.monitor_dual_kb || palette.all.monitor_white_on || null;
   const wantDivider = options.divider !== false;
   const divider = wantDivider
-    ? (preferId(palette.partitions, 'partition_grey_block')
-      || palette.partitions.find((p) => p.w >= 48 && p.w <= 96)
-      || null)
+    ? (preferId(palette.partitions, 'partition_grey_block') || null)
+    : null;
+  const post = wantDivider
+    ? (preferId(palette.partitions, 'partition_grey_corner') || null)
     : null;
 
   const deskW = desk.w;
   const deskH = desk.h;
-  const tuck = chair ? Math.max(CHAIR_UNDER, chair.h - CHAIR_UNDER) : 0;
-  // Panels the same width as the desk butt into one cubicle wall.
-  const slotW = (divider && Math.abs(divider.w - deskW) <= 2)
-    ? Math.ceil(deskW / CELL) * CELL
-    : (Math.ceil(deskW / CELL) + 1) * CELL;
-  const panelAbove = divider ? Math.max(0, divider.h - PANEL_INTO_DESK) : 0;
-  const rowStride = panelAbove + deskH + tuck + AISLE;
-  // Panel top has to clear the wall-art band (whiteboard / AC on row 0–1).
-  const deskTop0 = divider ? Math.max(DESK_TOP0, CELL * 2 + panelAbove) : CELL * 2;
-  const monitorOffsetY = -(deskH - MONITOR_ON_DESK);
+  const tuck = chair ? CHAIR_TUCK : 0;
+  const postW = post ? post.w : 0;
+  const pitch = post ? postW + deskW : Math.ceil(deskW / CELL) * CELL;
+  const rowStride = (post ? POST_ABOVE : 0) + deskH + tuck + (post ? AISLE : CELL);
+  const deskTop0 = post ? DESK_TOP0 : CELL * 2;
 
   let placed = 0;
   let curY = deskTop0;
-  const perRow = Math.max(1, Math.floor((grid.widthPx - SIDE_MARGIN * 2) / slotW));
+  const perRow = Math.max(1, Math.floor((grid.widthPx - ROW_LEFT - postW - ROW_LEFT) / pitch));
 
   while (placed < count) {
     let rowPlaced = 0;
     for (let i = 0; i < perRow && placed < count; i++) {
-      const deskLeft = SIDE_MARGIN + i * slotW;
-      if (deskLeft + deskW > grid.widthPx - SIDE_MARGIN + 1) break;
+      const deskLeft = ROW_LEFT + postW + i * pitch;
+      if (deskLeft + deskW + (post ? postW : 0) > grid.widthPx - 8) break;
       if (!grid.canPlace(deskLeft, curY, deskW, deskH + tuck)) continue;
 
       const cx = deskLeft + Math.floor(deskW / 2);
+      const deskBottom = curY + deskH;
       const deskId = uid('desk');
       items.push({
         id: desk.id,
         instanceId: deskId,
         x: cx,
-        y: curY + deskH,
+        y: deskBottom,
         z_index: 1.6
       });
       grid.occupy(deskLeft, curY, deskW, deskH);
 
       if (chair) {
-        // Under the desk so the front lip covers the top of the backrest.
         items.push({
           id: chair.id,
           instanceId: uid('chair'),
           x: cx,
-          y: curY + deskH + tuck,
-          z_index: 1.4
+          y: deskBottom + tuck,
+          z_index: 1.45
         });
-        grid.occupy(
-          cx - Math.floor(chair.w / 2),
-          curY + deskH,
-          chair.w,
-          tuck,
-        );
+        grid.occupy(cx - Math.floor(chair.w / 2), deskBottom, chair.w, tuck);
       }
 
-      if (monitor) {
-        const spread = Math.max(12, Math.round(monitor.w / 2));
-        for (const ox of [-spread, spread]) {
-          items.push({
-            id: monitor.id,
-            instanceId: uid('mon'),
-            parentInstanceId: deskId,
-            parent_offset_x: ox,
-            parent_offset_y: monitorOffsetY,
-            z_index: 2.2,
-            x: 0,
-            y: 0
-          });
-        }
+      if (setup) {
+        items.push({
+          id: setup.id,
+          instanceId: uid('setup'),
+          parentInstanceId: deskId,
+          parent_offset_y: -SETUP_LIFT,
+          z_index: 2.2,
+          x: 0,
+          y: 0
+        });
       }
 
-      // Panel stands behind the desktop. Its base tucks behind the desk
-      // back edge; depth stays under the desk and the monitors.
+      // Low rail behind this desktop. The side posts close the stall.
       if (divider) {
         const divBottom = curY + PANEL_INTO_DESK;
         const divTop = divBottom - divider.h;
@@ -388,13 +381,22 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
           instanceId: uid('div'),
           x: cx,
           y: divBottom,
-          z_index: 1.2
+          z_index: 1.15
         });
         if (divTop >= 0) grid.occupy(deskLeft, divTop, divider.w, divider.h);
+      }
+      if (post) {
+        const postBottom = deskBottom + POST_DROP;
+        placePost(items, post, deskLeft - postW, postBottom, false);
       }
 
       rowPlaced++;
       placed++;
+    }
+
+    if (post && rowPlaced > 0) {
+      const lastLeft = ROW_LEFT + postW + (rowPlaced - 1) * pitch;
+      placePost(items, post, lastLeft + deskW, curY + deskH + POST_DROP, true);
     }
 
     if (rowPlaced === 0) break;
@@ -832,9 +834,9 @@ function addPartitions(items, palette, grid, deskCount) {
 function baySize(occupants) {
   const cols = Math.min(Math.max(occupants, 1), 3);
   const rows = Math.ceil(Math.max(occupants, 1) / cols);
-  const slotW = 64;
-  const width = SIDE_MARGIN * 2 + cols * slotW;
-  const height = DESK_TOP0 + (rows - 1) * ROW_STRIDE + (DESK_H_NOMINAL + CHAIR_TUCK) + SIDE_MARGIN;
+  // left margin, a post before every desk, a closing post, the desks, right margin
+  const width = ROW_LEFT + (cols + 1) * POST_W + cols * DESK_W + ROW_LEFT;
+  const height = DESK_TOP0 + (rows - 1) * ROW_STRIDE + DESK_H_NOMINAL + CHAIR_TUCK + 64;
   return {
     width: Math.ceil(width / CELL) * CELL,
     height: Math.ceil(height / CELL) * CELL
@@ -884,7 +886,11 @@ export class RoomGenerator {
         placeReferenceDecor(items, this.palette, grid);
         break;
       case 'private_office':
-        placeWorkstations(items, this.palette, grid, 1, { divider: false, deskId: 'desk_tan_wide' });
+        placeWorkstations(items, this.palette, grid, 1, {
+          divider: false,
+          deskId: 'desk_tan_wide',
+          chairId: 'chair_orange_back'
+        });
         placeReferenceDecor(items, this.palette, grid);
         break;
       case 'conference':

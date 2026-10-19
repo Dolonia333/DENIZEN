@@ -684,9 +684,9 @@ class OfficeScene extends Phaser.Scene {
     // --- Room Assembly system mode: render perfect rooms without broken sprites ---
     if (modeParam === 'assembly') {
       Promise.all([
-        import('./src/RoomAssembly.js?v=seat3'),
-        import('./src/RoomGenerator.js?v=seat3'),
-        import('./src/room-tile-renderer.js?v=seat3')
+        import('./src/RoomAssembly.js?v=stall1'),
+        import('./src/RoomGenerator.js?v=stall1'),
+        import('./src/room-tile-renderer.js?v=stall1')
       ]).then(([assemblyModule, generatorModule, tileModule]) => {
         const RoomAssembly = assemblyModule.RoomAssembly || assemblyModule.default;
         const RoomGenerator = generatorModule.RoomGenerator || generatorModule.default;

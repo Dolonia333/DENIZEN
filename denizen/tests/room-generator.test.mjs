@@ -108,13 +108,12 @@ describe('workspace scaling', () => {
         .sort((a, b) => (chair.y - a.y) - (chair.y - b.y))[0];
       assert.ok(desk, 'each chair sits in front of a desk on the same column');
       const gap = chair.y - desk.y;
-      assert.ok(gap >= 30 && gap <= 40, `chair backrest stays in front of the desk, gap=${gap}`);
+      assert.ok(gap >= 14 && gap <= 24, `chair back meets the desk front, gap=${gap}`);
     }
-    const monitors = tpl.items.filter((i) => i.id === 'monitor_white_on');
-    assert.equal(monitors.length, 8, 'two monitors on each desk');
-    for (const monitor of monitors) {
-      assert.ok(monitor.parent_offset_y < -20, 'monitor base sits on the desktop, not in the desk front');
-      assert.ok(Math.abs(monitor.parent_offset_x) > 0, 'the pair sits side by side');
+    const setups = tpl.items.filter((i) => i.id === 'monitor_dual_kb');
+    assert.equal(setups.length, 4, 'keyboard and screens sit on each desk');
+    for (const setup of setups) {
+      assert.ok(setup.parent_offset_y < -16, 'the keyboard sits on the desktop');
     }
   });
 
@@ -124,8 +123,10 @@ describe('workspace scaling', () => {
     const chairs = tpl.items.filter((i) => /^chair_/.test(i.instanceId || ''));
     assert.equal(desks.length, 6, 'one desk per occupant');
     assert.equal(chairs.length, 6);
-    assert.ok(desks.every((d) => d.id === 'desk_white_wide'), 'cubicle desks are the white singles');
+    assert.ok(desks.every((d) => d.id === 'desk_tan_wide'), 'cubicle desks are the light wood singles');
     assert.ok(chairs.every((c) => c.id === 'chair_grey_back'), 'dark chair back faces the camera');
+    const posts = tpl.items.filter((i) => i.id === 'partition_grey_corner');
+    assert.ok(posts.length >= desks.length + 1, 'each stall has a side post and the row closes');
     for (const chair of chairs) {
       assert.equal(chair.z_index < desks[0].z_index, true, 'desk front covers the top of the backrest');
     }

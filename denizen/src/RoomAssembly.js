@@ -139,6 +139,7 @@ export class RoomAssembly {
     const sprite = this.scene.add.image(worldX, worldY, texKey)
       .setOrigin(0.5, originY)
       .setDepth(depth);
+    if (item.flipX) sprite.setFlipX(true);
 
     // Scale sprite if display dimensions are specified
     if (def.display_w || def.display_h) {
