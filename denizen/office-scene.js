@@ -685,10 +685,12 @@ class OfficeScene extends Phaser.Scene {
     if (modeParam === 'assembly') {
       Promise.all([
         import('./src/RoomAssembly.js'),
-        import('./src/RoomGenerator.js')
-      ]).then(([assemblyModule, generatorModule]) => {
+        import('./src/RoomGenerator.js'),
+        import('./src/room-tile-renderer.js')
+      ]).then(([assemblyModule, generatorModule, tileModule]) => {
         const RoomAssembly = assemblyModule.RoomAssembly || assemblyModule.default;
         const RoomGenerator = generatorModule.RoomGenerator || generatorModule.default;
+        const RoomTileRenderer = tileModule.RoomTileRenderer || tileModule.default;
         
         // Initialize assembly system
         const assembly = new RoomAssembly(this);
@@ -725,12 +727,31 @@ class OfficeScene extends Phaser.Scene {
           console.log(`🏗️ Generated template: ${templateName}`);
         }
 
+        const renderAssembled = () => {
         const isReferenceTemplate = templateName === 'reference_office_main';
         // Anchor compact reference composition near the middle so camera can frame it tightly.
         // Reference template uses catalog-placement coords directly (origin at 0,0).
         const originX = isReferenceTemplate ? 0 : 140;
         const originY = isReferenceTemplate ? 0 : 120;
         assembly.renderRoom(templateName, originX, originY);
+
+        if (generateParam && RoomTileRenderer) {
+          const room = assembly.templates[templateName] || {};
+          const tiles = this.cache.json.get('room_builder_tiles');
+          if (tiles && this.textures.exists('rb_floors') && this.textures.exists('rb_walls_3d')) {
+            const shell = new RoomTileRenderer(this, tiles);
+            shell.renderRoom({
+              x: originX,
+              y: originY,
+              cols: Math.max(4, Math.ceil((room.width || 384) / 16)),
+              rows: Math.max(4, Math.ceil((room.height || 320) / 16)),
+              floor: 'tile_grey',
+              wall: 'office_white',
+              openFront: false,
+              depthBase: 0,
+            });
+          }
+        }
 
         // Assembly-specific wall pass: cleaner enclosing walls for the rebuilt template zone.
         // This avoids relying on generic map walls that may feel disconnected from template content.
@@ -781,6 +802,9 @@ class OfficeScene extends Phaser.Scene {
         const zoneW = isReferenceTemplate ? 1264 : 840;
         const zoneH = isReferenceTemplate ? 700 : 430;
 
+        // Generated rooms use the LimeZu tile shell above. The rectangle
+        // enclosure is only for the hand-built templates.
+        if (!generateParam) {
         // Outer enclosure top wall (always drawn)
         drawAsmHWall(zoneX, zoneY, zoneX + zoneW);
         if (!isReferenceTemplate) {
@@ -804,6 +828,7 @@ class OfficeScene extends Phaser.Scene {
           drawAsmVWall(zoneX, zoneY + T * 2, zoneY + zoneH - T * 2);
           drawAsmVWall(zoneX + zoneW - T, zoneY + T * 2, zoneY + zoneH - T * 2);
         }
+        }
 
         // Assembly-mode character pass: keep a visible player + a few NPCs.
         const ensureAnimSet = (prefix, key) => {
@@ -822,8 +847,13 @@ class OfficeScene extends Phaser.Scene {
         };
 
         const playerAnims = ensureAnimSet('asm_player_xp', 'player_xp');
-        const playerStartX = isReferenceTemplate ? 300 : (originX + 250);
-        const playerStartY = isReferenceTemplate ? 260 : (originY + 228);
+        const generatedRoom = generateParam ? (assembly.templates[templateName] || {}) : null;
+        const playerStartX = isReferenceTemplate
+          ? 300
+          : (generatedRoom ? originX + Math.floor((generatedRoom.width || 384) / 2) : originX + 250);
+        const playerStartY = isReferenceTemplate
+          ? 260
+          : (generatedRoom ? originY + (generatedRoom.height || 320) - 40 : originY + 228);
         this.player = this.physics.add.sprite(playerStartX, playerStartY, 'player_xp', 1);
         this.player.setCollideWorldBounds(true).setDepth(2.6).setScale(2);
         // Shrink physics body to foot hitbox
@@ -848,7 +878,9 @@ class OfficeScene extends Phaser.Scene {
 
         this.npcs = [];
         const npcKeys = ['xp_abby', 'xp_alex', 'xp_bob', 'xp_dan'];
-        const npcPoints = isReferenceTemplate
+        const npcPoints = generateParam
+          ? []
+          : (isReferenceTemplate
           ? [
                 { x: 200, y: 210 },
                 { x: 400, y: 390 },
@@ -860,10 +892,10 @@ class OfficeScene extends Phaser.Scene {
               { x: originX + 140, y: originY + 64 },
               { x: originX + 270, y: originY + 64 },
               { x: originX + 598, y: originY + 162 }
-            ];
+            ]);
         npcKeys.forEach((texKey, i) => {
-          if (!this.textures.exists(texKey)) return;
           const p = npcPoints[i];
+          if (!p || !this.textures.exists(texKey)) return;
           const npcAnims = ensureAnimSet(`asm_${texKey}`, texKey);
           const npc = this.physics.add.sprite(p.x, p.y, texKey, 1);
           npc.setDepth(2.6).setScale(2);
@@ -894,9 +926,51 @@ class OfficeScene extends Phaser.Scene {
              cam.centerOn(zoneX + zoneW / 2, zoneY + zoneH / 2);
            }
         }
+
+        if (generateParam) {
+          const room = assembly.templates[templateName] || {};
+          const rw = room.width || 384;
+          const rh = room.height || 320;
+          const cam = this.cameras.main;
+          cam.setBounds(originX - 48, originY - 48, rw + 96, rh + 96);
+          const fit = Math.min(cam.width / (rw + 96), cam.height / (rh + 96));
+          cam.setZoom(Math.max(1, Math.min(2.5, fit)));
+          cam.centerOn(originX + rw / 2, originY + rh / 2);
+          cam.setBackgroundColor('#111111');
+        }
         
         // Store assembly instance on scene for debugging/inspection
         this.roomAssembly = assembly;
+        };
+
+        const assembledTemplate = assembly.templates[templateName];
+        const singleLoads = [];
+        const seenSingleKeys = new Set();
+        for (const item of assembledTemplate?.items || []) {
+          const def = catalogData?.objects?.[item.id];
+          if (!def || def.source_type !== 'single_file' || !def.url_path) continue;
+          const key = `single_${def.single_id || item.id}`;
+          if (seenSingleKeys.has(key) || this.textures.exists(key)) continue;
+          seenSingleKeys.add(key);
+          singleLoads.push({ key, url: String(def.url_path).replace(/\\/g, '/') });
+        }
+        let queued = false;
+        if (generateParam && !this.cache.json.exists('room_builder_tiles')) {
+          this.load.json('room_builder_tiles', './data/room-builder-tiles.json');
+          queued = true;
+        }
+        if (generateParam && RoomTileRenderer && !this.textures.exists('rb_floors')) {
+          RoomTileRenderer.preload(this);
+          queued = true;
+        }
+        singleLoads.forEach(({ key, url }) => this.load.image(key, url));
+        if (singleLoads.length) queued = true;
+        if (!queued) {
+          renderAssembled();
+        } else {
+          this.load.once('complete', renderAssembled);
+          this.load.start();
+        }
       }).catch(err => {
         console.error('❌ Failed to load RoomAssembly module:', err);
       });

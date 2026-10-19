@@ -9,108 +9,96 @@
   "templates": {
 
     "cubicle_pod_4person": {
-      "description": "4-person open cubicle pod: 2x3 grid of desks with monitors and forward-facing chairs.",
+      "description": "2x2 cubicle bay. Coordinates are bottom-center. Chairs tuck 22px past the desk bottom. Monitors sit on the desktop. Grey partitions stand on the back edge.",
       "items": [
-        { "id": "desk_pod",      "instanceId": "d1", "x": 0,   "y": 0 },
-        { "id": "desk_setup",    "instanceId": "ds1", "parentInstanceId": "d1" },
-        { "id": "chair_forward", "instanceId": "c1", "x": 0,   "y": 46 },
+        { "id": "partition_grey_block", "instanceId": "div1", "x": 80, "y": 48, "z_index": 1.65 },
+        { "id": "desk_tan_wide", "instanceId": "d1", "x": 80, "y": 86 },
+        { "id": "desk_setup_monitors_alt", "instanceId": "ds1", "parentInstanceId": "d1", "parent_offset_y": -16 },
+        { "id": "chair_orange_front", "instanceId": "c1", "x": 80, "y": 108 },
 
-        { "id": "desk_pod_alt",  "instanceId": "d2", "x": 68,  "y": 0 },
-        { "id": "desk_setup_alt","instanceId": "ds2", "parentInstanceId": "d2" },
-        { "id": "chair_forward", "instanceId": "c2", "x": 68,  "y": 46 },
+        { "id": "partition_grey_block", "instanceId": "div2", "x": 176, "y": 48, "z_index": 1.65 },
+        { "id": "desk_tan_wide", "instanceId": "d2", "x": 176, "y": 86 },
+        { "id": "desk_setup_monitors_alt", "instanceId": "ds2", "parentInstanceId": "d2", "parent_offset_y": -16 },
+        { "id": "chair_orange_front", "instanceId": "c2", "x": 176, "y": 108 },
 
-        { "id": "desk_pod_b",    "instanceId": "d3", "x": 136, "y": 0 },
-        { "id": "laptop",        "instanceId": "lp3", "parentInstanceId": "d3" },
-        { "id": "chair_forward", "instanceId": "c3", "x": 136, "y": 46 },
+        { "id": "partition_grey_block", "instanceId": "div3", "x": 80, "y": 168, "z_index": 1.65 },
+        { "id": "desk_tan_wide", "instanceId": "d3", "x": 80, "y": 206 },
+        { "id": "desk_setup_monitors_alt", "instanceId": "ds3", "parentInstanceId": "d3", "parent_offset_y": -16 },
+        { "id": "chair_orange_front", "instanceId": "c3", "x": 80, "y": 228 },
 
-        { "id": "desk_pod",      "instanceId": "d4", "x": 0,   "y": 140 },
-        { "id": "desk_setup_alt","instanceId": "ds4", "parentInstanceId": "d4" },
-        { "id": "chair_forward", "instanceId": "c4", "x": 0,   "y": 186 },
+        { "id": "partition_grey_block", "instanceId": "div4", "x": 176, "y": 168, "z_index": 1.65 },
+        { "id": "desk_tan_wide", "instanceId": "d4", "x": 176, "y": 206 },
+        { "id": "desk_setup_monitors_alt", "instanceId": "ds4", "parentInstanceId": "d4", "parent_offset_y": -16 },
+        { "id": "chair_orange_front", "instanceId": "c4", "x": 176, "y": 228 },
 
-        { "id": "desk_pod_alt",  "instanceId": "d5", "x": 68,  "y": 140 },
-        { "id": "desk_setup",    "instanceId": "ds5", "parentInstanceId": "d5" },
-        { "id": "chair_forward", "instanceId": "c5", "x": 68,  "y": 186 },
-
-        { "id": "desk_pod_b",    "instanceId": "d6", "x": 136, "y": 140 },
-        { "id": "desk_setup",    "instanceId": "ds6", "parentInstanceId": "d6" },
-        { "id": "chair_forward", "instanceId": "c6", "x": 136, "y": 186 },
-
-        { "id": "divider",       "instanceId": "div_h1", "x": 0,   "y": -64, "z_index": 1.7 },
-        { "id": "divider",       "instanceId": "div_h2", "x": 68,  "y": -64, "z_index": 1.7 },
-        { "id": "divider",       "instanceId": "div_h3", "x": 136, "y": -64, "z_index": 1.7 },
-        { "id": "divider",       "instanceId": "div_h4", "x": 0,   "y": 64,  "z_index": 1.7 },
-        { "id": "divider",       "instanceId": "div_h5", "x": 68,  "y": 64,  "z_index": 1.7 },
-        { "id": "divider",       "instanceId": "div_h6", "x": 136, "y": 64,  "z_index": 1.7 }
+        { "id": "plant_floor_leafy", "instanceId": "pl1", "x": 280, "y": 90 },
+        { "id": "water_cooler", "instanceId": "wc1", "x": 280, "y": 180 },
+        { "id": "whiteboard_line_chart", "instanceId": "wb1", "x": 128, "y": 36, "z_index": 1.2 }
       ]
     },
 
     "manager_office": {
-      "description": "Manager corner office: large boss desk, bookshelf, couch, plants.",
+      "description": "Private office like the small LimeZu example: one desk, chair tucked in, shelf, sofa, plant.",
       "items": [
-        { "id": "boss_desk",   "instanceId": "mgr_desk",  "x": 128, "y": 140 },
-        { "id": "boss_chair",  "instanceId": "mgr_chair", "x": 128, "y": 80 },
-        { "id": "desk_setup",  "instanceId": "mgr_ds",    "parentInstanceId": "mgr_desk", "parent_offset_y": -12 },
-        { "id": "bookshelf",   "instanceId": "mgr_sh1",   "x": 0,   "y": 80 },
-        { "id": "plant_tall",  "instanceId": "mgr_pt1",   "x": 300, "y": 80 },
-        { "id": "couch",       "instanceId": "mgr_co1",   "x": 60,  "y": 180 }
+        { "id": "desk_tan_wide", "instanceId": "mgr_desk", "x": 160, "y": 110 },
+        { "id": "chair_orange_back", "instanceId": "mgr_chair", "x": 160, "y": 78 },
+        { "id": "desk_setup_monitors_alt", "instanceId": "mgr_ds", "parentInstanceId": "mgr_desk", "parent_offset_y": -16 },
+        { "id": "bookshelf_short", "instanceId": "mgr_sh1", "x": 48, "y": 90 },
+        { "id": "plant_floor_leafy", "instanceId": "mgr_pt1", "x": 270, "y": 100 },
+        { "id": "sofa_grey_two_seat", "instanceId": "mgr_co1", "x": 120, "y": 200 },
+        { "id": "wall_ac_white", "instanceId": "mgr_ac", "x": 200, "y": 28, "z_index": 1.2 }
       ]
     },
 
     "conference_room": {
-      "description": "Conference room: large table, 4 chairs, whiteboard, plants.",
+      "description": "Meeting table with chairs on both long sides and a chart board on the back wall.",
       "items": [
-        { "id": "conference_table",  "instanceId": "ct",   "x": 128, "y": 120 },
-        { "id": "chair_forward",     "instanceId": "cc1",  "x": 68,  "y": 80 },
-        { "id": "chair_forward",     "instanceId": "cc2",  "x": 188, "y": 80 },
-        { "id": "chair_forward",     "instanceId": "cc3",  "x": 68,  "y": 160 },
-        { "id": "chair_forward",     "instanceId": "cc4",  "x": 188, "y": 160 },
-        { "id": "whiteboard_charts", "instanceId": "cwb",  "x": 128, "y": 20 },
-        { "id": "plant_pretty",      "instanceId": "cpl1", "x": 0,   "y": 100 },
-        { "id": "plant_tall",        "instanceId": "cpl2", "x": 280, "y": 100 }
+        { "id": "table_wood_square", "instanceId": "ct", "x": 128, "y": 140 },
+        { "id": "chair_orange_back", "instanceId": "cc1", "x": 96, "y": 100 },
+        { "id": "chair_orange_back", "instanceId": "cc2", "x": 160, "y": 100 },
+        { "id": "chair_orange_front", "instanceId": "cc3", "x": 96, "y": 168 },
+        { "id": "chair_orange_front", "instanceId": "cc4", "x": 160, "y": 168 },
+        { "id": "whiteboard_line_chart", "instanceId": "cwb", "x": 128, "y": 40, "z_index": 1.2 },
+        { "id": "plant_floor_leafy", "instanceId": "cpl1", "x": 36, "y": 120 },
+        { "id": "plant_floor_bushy", "instanceId": "cpl2", "x": 240, "y": 120 }
       ]
     },
 
     "break_room": {
-      "description": "Break room: vending machines, water cooler, coffee, couch, table.",
+      "description": "Break room: vending, water cooler, coffee, sofa, table.",
       "items": [
-        { "id": "vending_machine",  "instanceId": "br_vm1", "x": 0,   "y": 60 },
-        { "id": "vending_machine",  "instanceId": "br_vm2", "x": 64,  "y": 60 },
-        { "id": "water_cooler",     "instanceId": "br_wc",  "x": 128, "y": 60 },
-        { "id": "coffee_machine",   "instanceId": "br_cm",  "x": 192, "y": 60 },
-        { "id": "couch",            "instanceId": "br_co1", "x": 64,  "y": 180 },
-        { "id": "couch",            "instanceId": "br_co2", "x": 160, "y": 180 },
-        { "id": "table",            "instanceId": "br_tb",  "x": 112, "y": 210 },
-        { "id": "plant_tall",       "instanceId": "br_pt1", "x": 0,   "y": 200 },
-        { "id": "plant_prickly",    "instanceId": "br_pp1", "x": 250, "y": 200 }
+        { "id": "vending_machine", "instanceId": "br_vm1", "x": 40, "y": 90 },
+        { "id": "vending_machine_dark", "instanceId": "br_vm2", "x": 100, "y": 90 },
+        { "id": "water_cooler", "instanceId": "br_wc", "x": 160, "y": 90 },
+        { "id": "coffee_machine", "instanceId": "br_cm", "x": 230, "y": 90 },
+        { "id": "sofa_grey_two_seat", "instanceId": "br_co1", "x": 100, "y": 200 },
+        { "id": "sofa_grey_armchair", "instanceId": "br_co2", "x": 190, "y": 200 },
+        { "id": "table_wood_square", "instanceId": "br_tb", "x": 150, "y": 160 },
+        { "id": "plant_floor_leafy", "instanceId": "br_pt1", "x": 36, "y": 200 },
+        { "id": "plant_floor_bushy", "instanceId": "br_pp1", "x": 270, "y": 200 }
       ]
     },
 
     "open_office_row": {
-      "description": "Single row of 3 paired desk stations with chairs and décor.",
+      "description": "One row of three tan desks. Chair bottoms sit 22px past the desk bottom. Monitors are children of the desk.",
       "items": [
-        { "id": "desk_pod",      "instanceId": "r1a",  "x": 0,   "y": 0 },
-        { "id": "desk_setup",    "instanceId": "r1ads","parentInstanceId": "r1a" },
-        { "id": "chair_forward", "instanceId": "r1ac", "x": 0,   "y": 46 },
-        { "id": "desk_pod_alt",  "instanceId": "r1b",  "x": 68,  "y": 0 },
-        { "id": "desk_setup_alt","instanceId": "r1bds","parentInstanceId": "r1b" },
-        { "id": "chair_forward", "instanceId": "r1bc", "x": 68,  "y": 46 },
+        { "id": "partition_grey_block", "instanceId": "rdiv1", "x": 64, "y": 40, "z_index": 1.65 },
+        { "id": "desk_tan_wide", "instanceId": "r1a", "x": 64, "y": 78 },
+        { "id": "desk_setup_monitors_alt", "instanceId": "r1ads", "parentInstanceId": "r1a", "parent_offset_y": -16 },
+        { "id": "chair_orange_front", "instanceId": "r1ac", "x": 64, "y": 100 },
 
-        { "id": "desk_pod_b",    "instanceId": "r2a",  "x": 204, "y": 0 },
-        { "id": "desk_setup",    "instanceId": "r2ads","parentInstanceId": "r2a" },
-        { "id": "chair_forward", "instanceId": "r2ac", "x": 204, "y": 46 },
-        { "id": "desk_pod",      "instanceId": "r2b",  "x": 272, "y": 0 },
-        { "id": "desk_setup_alt","instanceId": "r2bds","parentInstanceId": "r2b" },
-        { "id": "chair_forward", "instanceId": "r2bc", "x": 272, "y": 46 },
+        { "id": "partition_grey_block", "instanceId": "rdiv2", "x": 160, "y": 40, "z_index": 1.65 },
+        { "id": "desk_tan_wide", "instanceId": "r1b", "x": 160, "y": 78 },
+        { "id": "desk_setup_monitors_alt", "instanceId": "r1bds", "parentInstanceId": "r1b", "parent_offset_y": -16 },
+        { "id": "chair_orange_front", "instanceId": "r1bc", "x": 160, "y": 100 },
 
-        { "id": "desk_pod_alt",  "instanceId": "r3a",  "x": 408, "y": 0 },
-        { "id": "laptop",        "instanceId": "r3alp","parentInstanceId": "r3a" },
-        { "id": "chair_forward", "instanceId": "r3ac", "x": 408, "y": 46 },
-        { "id": "desk_pod_b",    "instanceId": "r3b",  "x": 476, "y": 0 },
-        { "id": "desk_setup",    "instanceId": "r3bds","parentInstanceId": "r3b" },
-        { "id": "chair_forward", "instanceId": "r3bc", "x": 476, "y": 46 },
+        { "id": "partition_grey_block", "instanceId": "rdiv3", "x": 256, "y": 40, "z_index": 1.65 },
+        { "id": "desk_tan_wide", "instanceId": "r1c", "x": 256, "y": 78 },
+        { "id": "desk_setup_laptop", "instanceId": "r1cds", "parentInstanceId": "r1c", "parent_offset_y": -16 },
+        { "id": "chair_orange_front", "instanceId": "r1cc", "x": 256, "y": 100 },
 
-        { "id": "plant_tall",    "instanceId": "r_pt1","x": 550, "y": 0 },
-        { "id": "printer",       "instanceId": "r_pr1","x": 550, "y": 60 }
+        { "id": "plant_floor_leafy", "instanceId": "r_pt1", "x": 340, "y": 100 },
+        { "id": "water_cooler", "instanceId": "r_wc", "x": 340, "y": 170 }
       ]
     },
 

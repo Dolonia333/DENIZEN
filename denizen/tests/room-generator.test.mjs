@@ -90,6 +90,53 @@ describe('workspace scaling', () => {
     }
   });
 
+  it('workstations use official singles and tuck the chair into the desk', () => {
+    const tpl = gen.generate({ purpose: 'cubicle_bay', occupants: 4, width: 512, height: 420 });
+    const objects = catalogData.objects;
+    const desks = tpl.items.filter((i) => /^desk_/.test(i.instanceId || ''));
+    const chairs = tpl.items.filter((i) => /^chair_/.test(i.instanceId || ''));
+    assert.equal(desks.length, 4);
+    assert.equal(chairs.length, 4);
+    for (const item of [...desks, ...chairs]) {
+      const def = objects[item.id];
+      assert.equal(def.source_type, 'single_file');
+      assert.match(def.url_path, /\/modern_office\/named\//);
+    }
+    for (const chair of chairs) {
+      const desk = desks
+        .filter((d) => Math.abs(d.x - chair.x) < 8 && chair.y > d.y)
+        .sort((a, b) => (chair.y - a.y) - (chair.y - b.y))[0];
+      assert.ok(desk, 'each chair sits in front of a desk on the same column');
+      const gap = chair.y - desk.y;
+      assert.ok(gap > 0 && gap <= 28, `chair should tuck into the desk front, gap=${gap}`);
+    }
+    const monitors = tpl.items.filter((i) => i.id === 'desk_setup_monitors_alt');
+    assert.equal(monitors.length, 4);
+    for (const monitor of monitors) {
+      assert.ok(monitor.parent_offset_y < 0, 'monitor sits on the desktop, above the desk anchor');
+    }
+  });
+
+  it('cubicle bay fits every occupant and skips the bad trash cut', () => {
+    const tpl = gen.generate({ purpose: 'cubicle_bay', occupants: 6 });
+    const desks = tpl.items.filter((i) => /^desk_/.test(i.instanceId || ''));
+    const chairs = tpl.items.filter((i) => /^chair_/.test(i.instanceId || ''));
+    assert.equal(desks.length, 6, 'one desk per occupant');
+    assert.equal(chairs.length, 6);
+    assert.equal(tpl.items.filter((i) => i.id === 'trash_can').length, 0);
+    assert.ok(tpl.items.some((i) => i.id === 'water_cooler'));
+    assert.ok(tpl.items.some((i) => i.id === 'wall_ac_white' || /whiteboard/.test(i.id)));
+    const dividers = tpl.items.filter((i) => i.id === 'partition_grey_block');
+    assert.equal(dividers.length, 6);
+    for (const divider of dividers) {
+      const desk = desks
+        .filter((d) => Math.abs(d.x - divider.x) < 8 && d.y > divider.y)
+        .sort((a, b) => (a.y - divider.y) - (b.y - divider.y))[0];
+      assert.ok(desk, 'each cubicle screen shares a column with the desk in front of it');
+      assert.ok(desk.y - divider.y <= 48, 'cubicle screen stands on the back edge of that desk');
+    }
+  });
+
   it('more occupants → more items', () => {
     const small = gen.generate({ purpose: 'workspace', occupants: 2, width: 384, height: 384 });
     const big = gen.generate({ purpose: 'workspace', occupants: 8, width: 768, height: 768 });
