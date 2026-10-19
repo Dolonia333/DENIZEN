@@ -243,7 +243,7 @@ function preferId(pool, id) {
  * sits only a short distance past the desk bottom, so the seat overlaps the
  * desktop edge instead of floating a full tile below it.
  */
-const CHAIR_TUCK = 22;
+const CHAIR_TUCK = 16;
 const SIDE_MARGIN = CELL * 2;
 
 /**
@@ -276,8 +276,10 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
   const desk = preferId(deskPool, 'desk_tan_wide')
     || deskPool.find((d) => d.w >= 48 && d.w <= 96)
     || deskPool[0];
-  const chairPool = palette.frontChairs.length > 0 ? palette.frontChairs : palette.chairs;
-  const chair = preferId(chairPool, 'chair_orange_front') || chairPool[0] || null;
+  // The desk is up-screen from the chair, so the sitter faces away from
+  // the camera. chair_orange_front shows the seat and faces the wrong way.
+  const chairPool = palette.backChairs.length > 0 ? palette.backChairs : palette.chairs;
+  const chair = preferId(chairPool, 'chair_orange_back') || chairPool[0] || null;
   const setup = preferId(palette.deskSetups, 'desk_setup_monitors_alt')
     || palette.deskSetups[0]
     || null;
@@ -290,10 +292,11 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
 
   const deskW = desk.w;
   const deskH = desk.h;
-  // One empty cell between desks. The occupancy grid rounds every sprite up
-  // to a whole cell, so a tighter stride makes the next desk look "blocked"
-  // and the row comes out with gaps.
-  const slotW = (Math.ceil(deskW / CELL) + 1) * CELL;
+  // Panels the same width as the desk butt into one cubicle wall.
+  // A gap here reads as separate floating blocks.
+  const slotW = (divider && Math.abs(divider.w - deskW) <= 2)
+    ? Math.ceil(deskW / CELL) * CELL
+    : (Math.ceil(deskW / CELL) + 1) * CELL;
   // The next row's cubicle screen hangs above its desk. Leave a full tile
   // of aisle between this chair and that screen, or the chair sits inside it.
   const screenH = divider ? divider.h : 0;
@@ -307,7 +310,7 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
 
   let placed = 0;
   let curY = deskTop0;
-  const perRow = Math.max(1, Math.floor((grid.widthPx - SIDE_MARGIN) / slotW));
+  const perRow = Math.max(1, Math.floor((grid.widthPx - SIDE_MARGIN * 2) / slotW));
 
   while (placed < count) {
     let rowPlaced = 0;
@@ -807,13 +810,12 @@ function addPartitions(items, palette, grid, deskCount) {
 function baySize(occupants) {
   const cols = Math.min(Math.max(occupants, 1), 3);
   const rows = Math.ceil(Math.max(occupants, 1) / cols);
-  const deskW = 64;
-  const slotW = 96;
-  const width = SIDE_MARGIN + (cols - 1) * slotW + deskW + SIDE_MARGIN;
+  const slotW = 64;
+  const width = SIDE_MARGIN * 2 + cols * slotW;
   // First desktop starts below a 2-cell wall band plus the cubicle screen.
   // Each extra row clears the chair, the next screen, and one aisle tile.
-  const rowStride = 160;
-  const height = 128 + (rows - 1) * rowStride + 60 + SIDE_MARGIN;
+  const rowStride = 128;
+  const height = 128 + (rows - 1) * rowStride + (38 + CHAIR_TUCK) + SIDE_MARGIN;
   return {
     width: Math.ceil(width / CELL) * CELL,
     height: Math.ceil(height / CELL) * CELL

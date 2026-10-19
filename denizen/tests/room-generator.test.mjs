@@ -123,6 +123,7 @@ describe('workspace scaling', () => {
     const chairs = tpl.items.filter((i) => /^chair_/.test(i.instanceId || ''));
     assert.equal(desks.length, 6, 'one desk per occupant');
     assert.equal(chairs.length, 6);
+    assert.ok(chairs.every((c) => c.id === 'chair_orange_back'), 'chairs face the desk, back toward the camera');
     assert.equal(tpl.items.filter((i) => i.id === 'trash_can').length, 0);
     assert.ok(tpl.items.some((i) => i.id === 'water_cooler'));
     assert.ok(tpl.items.some((i) => i.id === 'wall_ac_white' || /whiteboard/.test(i.id)));
