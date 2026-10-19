@@ -121,10 +121,11 @@ export class RoomAssembly {
         console.warn(`⚠️ Parent instance not found: ${item.parentInstanceId}`);
         return null;
       }
+      const xOff = item.parent_offset_x !== undefined ? item.parent_offset_x : 0;
       const yOff = item.parent_offset_y !== undefined
         ? item.parent_offset_y
         : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
-      worldX = parent.x;
+      worldX = parent.x + xOff;
       worldY = parent.y + yOff;
       console.log(`  📦 Stacking '${item.id}' (${item.instanceId}) on parent '${item.parentInstanceId}' at (${worldX}, ${worldY})`);
     } else {

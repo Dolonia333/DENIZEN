@@ -239,12 +239,25 @@ function preferId(pool, id) {
 }
 
 /**
- * LimeZu seats a chair into the front lip of the desk. The chair's bottom
- * sits only a short distance past the desk bottom, so the seat overlaps the
- * desktop edge instead of floating a full tile below it.
+ * A back-facing chair is taller than the desk. Only the top of the backrest
+ * slides under the desk's front lip; the rest of the chair stays visible
+ * in front of the desk. Swallowing the backrest (a 16px tuck on a 46px
+ * chair) is what made the seats look pasted into the desktop.
  */
-const CHAIR_TUCK = 16;
+const CHAIR_UNDER = 10;
+const CHAIR_H = 46;
+const CHAIR_TUCK = CHAIR_H - CHAIR_UNDER;
+/** Cubicle panel base hides behind the back edge of the desktop. */
+const PANEL_H = 42;
+const PANEL_INTO_DESK = 8;
+const PANEL_ABOVE = PANEL_H - PANEL_INTO_DESK;
+const DESK_H_NOMINAL = 38;
+const AISLE = 32;
+const DESK_TOP0 = 128;
+const ROW_STRIDE = PANEL_ABOVE + DESK_H_NOMINAL + CHAIR_TUCK + AISLE;
 const SIDE_MARGIN = CELL * 2;
+/** Monitor base sits this far below the desk's top edge, on the desktop. */
+const MONITOR_ON_DESK = 8;
 
 /**
  * Drop one catalog sprite using bottom-center coordinates.
@@ -267,22 +280,29 @@ function placeAnchored(items, grid, def, centerX, bottomY, prefix) {
 }
 
 function placeWorkstations(items, palette, grid, count, options = {}) {
-  // Same desk repeated down the row, the way the reference cubicle bays are built.
+  // Reference bays use the same white desk down the row. The private office
+  // uses the light wood desk instead (options.deskId).
   const deskPool = palette.desks
     .filter(d => d.w <= 128 && d.h <= 96)
     .sort((a, b) => a.id.localeCompare(b.id));
   if (deskPool.length === 0) return 0;
 
-  const desk = preferId(deskPool, 'desk_tan_wide')
+  const desk = preferId(deskPool, options.deskId || 'desk_white_wide')
+    || preferId(deskPool, 'desk_white_wide')
+    || preferId(deskPool, 'desk_tan_wide')
     || deskPool.find((d) => d.w >= 48 && d.w <= 96)
     || deskPool[0];
-  // The desk is up-screen from the chair, so the sitter faces away from
-  // the camera. chair_orange_front shows the seat and faces the wrong way.
+  // Desk is up-screen. The sitter faces it, so the camera sees the back of
+  // the chair. The grey back chair is the dark office chair in this pack.
+  // chair_orange_front shows the seat and faces the camera.
   const chairPool = palette.backChairs.length > 0 ? palette.backChairs : palette.chairs;
-  const chair = preferId(chairPool, 'chair_orange_back') || chairPool[0] || null;
-  const setup = preferId(palette.deskSetups, 'desk_setup_monitors_alt')
-    || palette.deskSetups[0]
+  const chair = preferId(chairPool, 'chair_grey_back')
+    || preferId(chairPool, 'chair_orange_back')
+    || chairPool[0]
     || null;
+  // Two separate monitors. The combined "desk setup" sprite is as tall as
+  // the cubicle panel, so it covers the divider instead of sitting on the desk.
+  const monitor = palette.all.monitor_white_on || null;
   const wantDivider = options.divider !== false;
   const divider = wantDivider
     ? (preferId(palette.partitions, 'partition_grey_block')
@@ -292,21 +312,16 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
 
   const deskW = desk.w;
   const deskH = desk.h;
+  const tuck = chair ? Math.max(CHAIR_UNDER, chair.h - CHAIR_UNDER) : 0;
   // Panels the same width as the desk butt into one cubicle wall.
-  // A gap here reads as separate floating blocks.
   const slotW = (divider && Math.abs(divider.w - deskW) <= 2)
     ? Math.ceil(deskW / CELL) * CELL
     : (Math.ceil(deskW / CELL) + 1) * CELL;
-  // The next row's cubicle screen hangs above its desk. Leave a full tile
-  // of aisle between this chair and that screen, or the chair sits inside it.
-  const screenH = divider ? divider.h : 0;
-  const rowStride = Math.ceil((deskH + CHAIR_TUCK + screenH + CELL) / CELL) * CELL;
-  // Cubicle screen stands fully above the desktop. Its top has to clear
-  // the wall-art row, and the occupancy grid claims a whole cell, so the
-  // screen starts on the cell below a 2-cell wall band.
-  const deskTop0 = divider
-    ? Math.ceil((CELL * 2 + divider.h) / CELL) * CELL
-    : CELL * 2;
+  const panelAbove = divider ? Math.max(0, divider.h - PANEL_INTO_DESK) : 0;
+  const rowStride = panelAbove + deskH + tuck + AISLE;
+  // Panel top has to clear the wall-art band (whiteboard / AC on row 0–1).
+  const deskTop0 = divider ? Math.max(DESK_TOP0, CELL * 2 + panelAbove) : CELL * 2;
+  const monitorOffsetY = -(deskH - MONITOR_ON_DESK);
 
   let placed = 0;
   let curY = deskTop0;
@@ -316,8 +331,8 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
     let rowPlaced = 0;
     for (let i = 0; i < perRow && placed < count; i++) {
       const deskLeft = SIDE_MARGIN + i * slotW;
-      if (deskLeft + deskW > grid.widthPx) break;
-      if (!grid.canPlace(deskLeft, curY, deskW, deskH + CHAIR_TUCK)) continue;
+      if (deskLeft + deskW > grid.widthPx - SIDE_MARGIN + 1) break;
+      if (!grid.canPlace(deskLeft, curY, deskW, deskH + tuck)) continue;
 
       const cx = deskLeft + Math.floor(deskW / 2);
       const deskId = uid('desk');
@@ -325,48 +340,55 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
         id: desk.id,
         instanceId: deskId,
         x: cx,
-        y: curY + deskH
+        y: curY + deskH,
+        z_index: 1.6
       });
       grid.occupy(deskLeft, curY, deskW, deskH);
 
       if (chair) {
+        // Under the desk so the front lip covers the top of the backrest.
         items.push({
           id: chair.id,
           instanceId: uid('chair'),
           x: cx,
-          y: curY + deskH + CHAIR_TUCK
+          y: curY + deskH + tuck,
+          z_index: 1.4
         });
         grid.occupy(
           cx - Math.floor(chair.w / 2),
           curY + deskH,
           chair.w,
-          CHAIR_TUCK,
+          tuck,
         );
       }
 
-      // Monitor group sits on the desktop, above the desk's bottom anchor.
-      if (setup) {
-        items.push({
-          id: setup.id,
-          instanceId: uid('setup'),
-          parentInstanceId: deskId,
-          parent_offset_y: -Math.round(deskH * 0.42),
-          x: 0,
-          y: 0
-        });
+      if (monitor) {
+        const spread = Math.max(12, Math.round(monitor.w / 2));
+        for (const ox of [-spread, spread]) {
+          items.push({
+            id: monitor.id,
+            instanceId: uid('mon'),
+            parentInstanceId: deskId,
+            parent_offset_x: ox,
+            parent_offset_y: monitorOffsetY,
+            z_index: 2.2,
+            x: 0,
+            y: 0
+          });
+        }
       }
 
-      // Back of the cubicle. Depth stays under the desk so the screen reads
-      // as the wall behind the desktop, not a panel laid on top of it.
+      // Panel stands behind the desktop. Its base tucks behind the desk
+      // back edge; depth stays under the desk and the monitors.
       if (divider) {
-        const divBottom = curY;
+        const divBottom = curY + PANEL_INTO_DESK;
         const divTop = divBottom - divider.h;
         items.push({
           id: divider.id,
           instanceId: uid('div'),
           x: cx,
           y: divBottom,
-          z_index: 1.4
+          z_index: 1.2
         });
         if (divTop >= 0) grid.occupy(deskLeft, divTop, divider.w, divider.h);
       }
@@ -400,16 +422,16 @@ function placeReferenceDecor(items, palette, grid) {
     placeAnchored(items, grid, board, boardX, board.h, 'board');
   }
 
+  // Cooler stands in the bottom-right corner, inset past the wall tile,
+  // not beside a desk. The old mid-wall spot sat on the first cubicle row.
   if (cooler) {
     const cx = grid.widthPx - 16 - Math.ceil(cooler.w / 2) - 4;
-    const bottom = Math.min(grid.heightPx - CELL, CELL * 6);
+    const bottom = grid.heightPx - 16;
     placeAnchored(items, grid, cooler, cx, bottom, 'cooler');
   }
 
   const corners = [
-    { def: leafy, x: CELL + 8, y: grid.heightPx - 20 },
-    { def: bushy, x: grid.widthPx - CELL - 8, y: grid.heightPx - 20 },
-    { def: bushy, x: grid.widthPx - CELL - 8, y: CELL * 4 },
+    { def: leafy, x: 16 + Math.ceil((leafy?.w || 32) / 2) + 4, y: grid.heightPx - 16 },
   ];
   for (const spot of corners) {
     if (!spot.def) continue;
@@ -812,10 +834,7 @@ function baySize(occupants) {
   const rows = Math.ceil(Math.max(occupants, 1) / cols);
   const slotW = 64;
   const width = SIDE_MARGIN * 2 + cols * slotW;
-  // First desktop starts below a 2-cell wall band plus the cubicle screen.
-  // Each extra row clears the chair, the next screen, and one aisle tile.
-  const rowStride = 128;
-  const height = 128 + (rows - 1) * rowStride + (38 + CHAIR_TUCK) + SIDE_MARGIN;
+  const height = DESK_TOP0 + (rows - 1) * ROW_STRIDE + (DESK_H_NOMINAL + CHAIR_TUCK) + SIDE_MARGIN;
   return {
     width: Math.ceil(width / CELL) * CELL,
     height: Math.ceil(height / CELL) * CELL
@@ -865,7 +884,7 @@ export class RoomGenerator {
         placeReferenceDecor(items, this.palette, grid);
         break;
       case 'private_office':
-        placeWorkstations(items, this.palette, grid, 1, { divider: false });
+        placeWorkstations(items, this.palette, grid, 1, { divider: false, deskId: 'desk_tan_wide' });
         placeReferenceDecor(items, this.palette, grid);
         break;
       case 'conference':
