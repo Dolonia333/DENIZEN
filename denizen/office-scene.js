@@ -313,7 +313,7 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const catalogV = 'cat28deskPapers';
+    const catalogV = 'cat29officialCuts';
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
     this.load.json('office_blueprint', `./data/office_blueprint.json?v=${catalogV}`);
@@ -711,8 +711,12 @@ class OfficeScene extends Phaser.Scene {
         const generator = new RoomGenerator(catalogData);
         this.roomGenerator = generator; // expose for console debugging
 
-        // Render a test room - default to the rebuilt reference layout
-        let templateName = new URLSearchParams(window.location.search).get('template') || 'reference_office_main';
+        // The hand-built reference_office_main template is full of sprite-cutter
+        // rectangles (a "desk" that is a person, a "cooler" that is a chair).
+        // With no explicit template, show a generated bay made of official singles.
+        const templateQuery = new URLSearchParams(window.location.search).get('template');
+        let templateName = templateQuery || '';
+        let paintShell = false;
 
         if (generateParam) {
           const occupants = parseInt(new URLSearchParams(window.location.search).get('occupants') || '4', 10);
@@ -724,6 +728,14 @@ class OfficeScene extends Phaser.Scene {
             width: genWidth,
             height: genHeight
           });
+          paintShell = true;
+          console.log(`🏗️ Generated template: ${templateName}`);
+        } else if (!templateName) {
+          templateName = generator.generateAndRegister(assembly, {
+            purpose: 'cubicle_bay',
+            occupants: 6
+          });
+          paintShell = true;
           console.log(`🏗️ Generated template: ${templateName}`);
         }
 
@@ -735,7 +747,7 @@ class OfficeScene extends Phaser.Scene {
         const originY = isReferenceTemplate ? 0 : 120;
         assembly.renderRoom(templateName, originX, originY);
 
-        if (generateParam && RoomTileRenderer) {
+        if (paintShell && RoomTileRenderer) {
           const room = assembly.templates[templateName] || {};
           const tiles = this.cache.json.get('room_builder_tiles');
           if (tiles && this.textures.exists('rb_floors') && this.textures.exists('rb_walls_3d')) {
@@ -804,7 +816,7 @@ class OfficeScene extends Phaser.Scene {
 
         // Generated rooms use the LimeZu tile shell above. The rectangle
         // enclosure is only for the hand-built templates.
-        if (!generateParam) {
+        if (!paintShell) {
         // Outer enclosure top wall (always drawn)
         drawAsmHWall(zoneX, zoneY, zoneX + zoneW);
         if (!isReferenceTemplate) {
@@ -847,7 +859,7 @@ class OfficeScene extends Phaser.Scene {
         };
 
         const playerAnims = ensureAnimSet('asm_player_xp', 'player_xp');
-        const generatedRoom = generateParam ? (assembly.templates[templateName] || {}) : null;
+        const generatedRoom = paintShell ? (assembly.templates[templateName] || {}) : null;
         const playerStartX = isReferenceTemplate
           ? 300
           : (generatedRoom ? originX + Math.floor((generatedRoom.width || 384) / 2) : originX + 250);
@@ -878,7 +890,7 @@ class OfficeScene extends Phaser.Scene {
 
         this.npcs = [];
         const npcKeys = ['xp_abby', 'xp_alex', 'xp_bob', 'xp_dan'];
-        const npcPoints = generateParam
+        const npcPoints = paintShell
           ? []
           : (isReferenceTemplate
           ? [
@@ -927,7 +939,7 @@ class OfficeScene extends Phaser.Scene {
            }
         }
 
-        if (generateParam) {
+        if (paintShell) {
           const room = assembly.templates[templateName] || {};
           const rw = room.width || 384;
           const rh = room.height || 320;
@@ -955,11 +967,11 @@ class OfficeScene extends Phaser.Scene {
           singleLoads.push({ key, url: String(def.url_path).replace(/\\/g, '/') });
         }
         let queued = false;
-        if (generateParam && !this.cache.json.exists('room_builder_tiles')) {
+        if (paintShell && !this.cache.json.exists('room_builder_tiles')) {
           this.load.json('room_builder_tiles', './data/room-builder-tiles.json');
           queued = true;
         }
-        if (generateParam && RoomTileRenderer && !this.textures.exists('rb_floors')) {
+        if (paintShell && RoomTileRenderer && !this.textures.exists('rb_floors')) {
           RoomTileRenderer.preload(this);
           queued = true;
         }

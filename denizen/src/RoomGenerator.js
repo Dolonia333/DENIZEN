@@ -294,7 +294,10 @@ function placeWorkstations(items, palette, grid, count, options = {}) {
   // to a whole cell, so a tighter stride makes the next desk look "blocked"
   // and the row comes out with gaps.
   const slotW = (Math.ceil(deskW / CELL) + 1) * CELL;
-  const rowStride = (Math.ceil((deskH + CHAIR_TUCK) / CELL) + 1) * CELL;
+  // The next row's cubicle screen hangs above its desk. Leave a full tile
+  // of aisle between this chair and that screen, or the chair sits inside it.
+  const screenH = divider ? divider.h : 0;
+  const rowStride = Math.ceil((deskH + CHAIR_TUCK + screenH + CELL) / CELL) * CELL;
   // Cubicle screen stands fully above the desktop. Its top has to clear
   // the wall-art row, and the occupancy grid claims a whole cell, so the
   // screen starts on the cell below a 2-cell wall band.
@@ -808,8 +811,9 @@ function baySize(occupants) {
   const slotW = 96;
   const width = SIDE_MARGIN + (cols - 1) * slotW + deskW + SIDE_MARGIN;
   // First desktop starts below a 2-cell wall band plus the cubicle screen.
-  // Each extra row steps a desk, a tucked chair, and one aisle cell.
-  const height = 128 + (rows - 1) * 96 + 60 + SIDE_MARGIN;
+  // Each extra row clears the chair, the next screen, and one aisle tile.
+  const rowStride = 160;
+  const height = 128 + (rows - 1) * rowStride + 60 + SIDE_MARGIN;
   return {
     width: Math.ceil(width / CELL) * CELL,
     height: Math.ceil(height / CELL) * CELL

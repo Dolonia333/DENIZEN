@@ -11,22 +11,22 @@
     "cubicle_pod_4person": {
       "description": "2x2 cubicle bay. Coordinates are bottom-center. Chairs tuck 22px past the desk bottom. Monitors sit on the desktop. Grey partitions stand on the back edge.",
       "items": [
-        { "id": "partition_grey_block", "instanceId": "div1", "x": 80, "y": 48, "z_index": 1.65 },
+        { "id": "partition_grey_block", "instanceId": "div1", "x": 80, "y": 48, "z_index": 1.4 },
         { "id": "desk_tan_wide", "instanceId": "d1", "x": 80, "y": 86 },
         { "id": "desk_setup_monitors_alt", "instanceId": "ds1", "parentInstanceId": "d1", "parent_offset_y": -16 },
         { "id": "chair_orange_front", "instanceId": "c1", "x": 80, "y": 108 },
 
-        { "id": "partition_grey_block", "instanceId": "div2", "x": 176, "y": 48, "z_index": 1.65 },
+        { "id": "partition_grey_block", "instanceId": "div2", "x": 176, "y": 48, "z_index": 1.4 },
         { "id": "desk_tan_wide", "instanceId": "d2", "x": 176, "y": 86 },
         { "id": "desk_setup_monitors_alt", "instanceId": "ds2", "parentInstanceId": "d2", "parent_offset_y": -16 },
         { "id": "chair_orange_front", "instanceId": "c2", "x": 176, "y": 108 },
 
-        { "id": "partition_grey_block", "instanceId": "div3", "x": 80, "y": 168, "z_index": 1.65 },
+        { "id": "partition_grey_block", "instanceId": "div3", "x": 80, "y": 168, "z_index": 1.4 },
         { "id": "desk_tan_wide", "instanceId": "d3", "x": 80, "y": 206 },
         { "id": "desk_setup_monitors_alt", "instanceId": "ds3", "parentInstanceId": "d3", "parent_offset_y": -16 },
         { "id": "chair_orange_front", "instanceId": "c3", "x": 80, "y": 228 },
 
-        { "id": "partition_grey_block", "instanceId": "div4", "x": 176, "y": 168, "z_index": 1.65 },
+        { "id": "partition_grey_block", "instanceId": "div4", "x": 176, "y": 168, "z_index": 1.4 },
         { "id": "desk_tan_wide", "instanceId": "d4", "x": 176, "y": 206 },
         { "id": "desk_setup_monitors_alt", "instanceId": "ds4", "parentInstanceId": "d4", "parent_offset_y": -16 },
         { "id": "chair_orange_front", "instanceId": "c4", "x": 176, "y": 228 },
@@ -82,17 +82,17 @@
     "open_office_row": {
       "description": "One row of three tan desks. Chair bottoms sit 22px past the desk bottom. Monitors are children of the desk.",
       "items": [
-        { "id": "partition_grey_block", "instanceId": "rdiv1", "x": 64, "y": 40, "z_index": 1.65 },
+        { "id": "partition_grey_block", "instanceId": "rdiv1", "x": 64, "y": 40, "z_index": 1.4 },
         { "id": "desk_tan_wide", "instanceId": "r1a", "x": 64, "y": 78 },
         { "id": "desk_setup_monitors_alt", "instanceId": "r1ads", "parentInstanceId": "r1a", "parent_offset_y": -16 },
         { "id": "chair_orange_front", "instanceId": "r1ac", "x": 64, "y": 100 },
 
-        { "id": "partition_grey_block", "instanceId": "rdiv2", "x": 160, "y": 40, "z_index": 1.65 },
+        { "id": "partition_grey_block", "instanceId": "rdiv2", "x": 160, "y": 40, "z_index": 1.4 },
         { "id": "desk_tan_wide", "instanceId": "r1b", "x": 160, "y": 78 },
         { "id": "desk_setup_monitors_alt", "instanceId": "r1bds", "parentInstanceId": "r1b", "parent_offset_y": -16 },
         { "id": "chair_orange_front", "instanceId": "r1bc", "x": 160, "y": 100 },
 
-        { "id": "partition_grey_block", "instanceId": "rdiv3", "x": 256, "y": 40, "z_index": 1.65 },
+        { "id": "partition_grey_block", "instanceId": "rdiv3", "x": 256, "y": 40, "z_index": 1.4 },
         { "id": "desk_tan_wide", "instanceId": "r1c", "x": 256, "y": 78 },
         { "id": "desk_setup_laptop", "instanceId": "r1cds", "parentInstanceId": "r1c", "parent_offset_y": -16 },
         { "id": "chair_orange_front", "instanceId": "r1cc", "x": 256, "y": 100 },

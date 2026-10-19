@@ -135,6 +135,14 @@ describe('workspace scaling', () => {
       assert.ok(desk, 'each cubicle screen shares a column with the desk in front of it');
       assert.ok(desk.y - divider.y <= 48, 'cubicle screen stands on the back edge of that desk');
     }
+    for (const chair of chairs) {
+      const nextScreen = dividers
+        .filter((d) => Math.abs(d.x - chair.x) < 8 && d.y > chair.y)
+        .sort((a, b) => (a.y - chair.y) - (b.y - chair.y))[0];
+      if (!nextScreen) continue;
+      const screenTop = nextScreen.y - 42;
+      assert.ok(screenTop - chair.y >= 16, `aisle in front of the next cubicle, gap=${screenTop - chair.y}`);
+    }
   });
 
   it('more occupants → more items', () => {

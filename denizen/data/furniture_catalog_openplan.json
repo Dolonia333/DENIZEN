@@ -17,17 +17,17 @@
   },
   "objects": {
     "ac_unit_small": {
-      "sheet": "mo_black_shadow_32",
-      "x": 352,
-      "y": 352,
-      "w": 64,
-      "h": 32,
+      "source_type": "single_file",
+      "single_id": "ac_unit_small",
+      "url_path": "assets/modern_office/named/wall_ac_white.png",
+      "w": 30,
+      "h": 14,
       "origin": "bottom",
       "depth": 1.2,
-      "display_w": 64,
-      "display_h": 32,
+      "display_w": 30,
+      "display_h": 14,
       "type": "decor",
-      "_note": "User cut â€” small AC unit"
+      "_note": "Was a sheet cut of a window. Now the official wall AC single."
     },
     "books_stack": {
       "sheet": "mo_black_shadow_32",
@@ -537,17 +537,17 @@
       "_note": "User cut â€” corner sofa"
     },
     "cubicle_desk": {
-      "sheet": "mo_black_shadow_32",
-      "x": 320,
-      "y": 896,
-      "w": 96,
-      "h": 64,
+      "source_type": "single_file",
+      "single_id": "cubicle_desk",
+      "url_path": "assets/modern_office/named/desk_tan_wide.png",
+      "w": 64,
+      "h": 38,
       "origin": "bottom",
       "depth": 1.5,
-      "display_w": 96,
-      "display_h": 64,
+      "display_w": 64,
+      "display_h": 38,
       "type": "surface",
-      "_note": "User cut â€” office desk for cubicle",
+      "_note": "Was a sheet cut of a standing character. Now the official tan desk single.",
       "action": "use_computer"
     },
     "cubicle_desk_back": {
@@ -579,17 +579,17 @@
       "action": "use_computer"
     },
     "cubicle_divider_full": {
-      "sheet": "mo_black_shadow_32",
-      "x": 0,
-      "y": 832,
-      "w": 224,
-      "h": 96,
+      "source_type": "single_file",
+      "single_id": "cubicle_divider_full",
+      "url_path": "assets/modern_office/named/partition_grey_block.png",
+      "w": 64,
+      "h": 42,
       "origin": "bottom",
-      "depth": 1.7,
-      "display_w": 224,
-      "display_h": 96,
+      "depth": 1.4,
+      "display_w": 64,
+      "display_h": 42,
       "type": "partition",
-      "_note": "User cut â€” full cubicle divider set with end caps"
+      "_note": "Was a 224px sheet cut that included a desk and a chair. Now the official grey cubicle panel."
     },
     "cubicle_g10_28_3x3": {
       "sheet": "mo_black_shadow_32",
@@ -2680,18 +2680,17 @@
       "stack_on": "surface"
     },
     "plant_tree": {
-      "sheet": "mo_black_shadow_32",
-      "x": 384,
-      "y": 256,
-      "w": 64,
-      "h": 64,
+      "source_type": "single_file",
+      "single_id": "plant_tree",
+      "url_path": "assets/modern_office/named/plant_floor_leafy.png",
+      "w": 32,
+      "h": 56,
       "origin": "bottom",
       "depth": 1.55,
-      "display_w": 64,
-      "display_h": 64,
+      "display_w": 32,
+      "display_h": 56,
       "type": "decor",
-      "_note": "User cut â€” potted plant tree",
-      "stack_on": "surface"
+      "_note": "Was a sheet cut of a counter and a monitor. Now the official floor plant single."
     },
     "pop_art_sheet": {
       "sheet": "mo_black_shadow_32",
@@ -3095,17 +3094,17 @@
       "_note": "User cut â€” empty vending machine"
     },
     "vending_full": {
-      "sheet": "mo_black_shadow_32",
-      "x": 64,
-      "y": 736,
-      "w": 64,
-      "h": 96,
+      "source_type": "single_file",
+      "single_id": "vending_full",
+      "url_path": "assets/modern_office/named/vending_machine.png",
+      "w": 46,
+      "h": 68,
       "origin": "bottom",
       "depth": 1.5,
-      "display_w": 64,
-      "display_h": 96,
+      "display_w": 46,
+      "display_h": 68,
       "type": "furniture",
-      "_note": "User cut â€” full vending machine"
+      "_note": "Was a sheet cut of a standing character. Now the official vending machine single."
     },
     "waiting_row_4": {
       "sheet": "mo_black_shadow_32",
@@ -3150,17 +3149,17 @@
       "action": "use_computer"
     },
     "water_dispenser": {
-      "sheet": "mo_black_shadow_32",
-      "x": 384,
-      "y": 480,
-      "w": 32,
-      "h": 96,
+      "source_type": "single_file",
+      "single_id": "water_dispenser",
+      "url_path": "assets/modern_office/named/water_cooler.png",
+      "w": 28,
+      "h": 60,
       "origin": "bottom",
       "depth": 1.5,
-      "display_w": 32,
-      "display_h": 96,
+      "display_w": 28,
+      "display_h": 60,
       "type": "furniture",
-      "_note": "User cut â€” water dispenser"
+      "_note": "Was a sheet cut of an office chair. Now the official water cooler single."
     },
     "whiteboard_1x2": {
       "sheet": "mo_black_shadow_32",
@@ -3284,17 +3283,17 @@
       "_note": "User cut â€” blank whiteboard"
     },
     "whiteboard_charts": {
-      "sheet": "mo_black_shadow_32",
-      "x": 288,
-      "y": 448,
-      "w": 64,
-      "h": 64,
+      "source_type": "single_file",
+      "single_id": "whiteboard_charts",
+      "url_path": "assets/modern_office/named/whiteboard_line_chart.png",
+      "w": 60,
+      "h": 46,
       "origin": "bottom",
       "depth": 1.2,
-      "display_w": 64,
-      "display_h": 64,
+      "display_w": 60,
+      "display_h": 46,
       "type": "decor",
-      "_note": "User cut â€” whiteboard with graphs and charts"
+      "_note": "Was a sheet cut of a filing cabinet. Now the official line-chart board single."
     },
     "whiteboard_graph_sheet": {
       "sheet": "mo_black_shadow_32",
