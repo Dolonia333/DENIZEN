@@ -3,13 +3,14 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import load_infra_env  # noqa: F401
 
 import os
 import re
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 # NOTE: docker-compose.yml for denizen-server declares env_file: .env.production,
@@ -38,10 +39,8 @@ PATCH = {
     "DENIZEN_THINK_USE_FAST_MODEL": "true",
     "LM_STUDIO_PARALLEL": "1",
     "BOUNCER_PATROL": "container",
-    "DENIZEN_HOST_IP": "192.168.1.232",
-    "BOUNCER_INVESTIGATION_URL": os.environ.get(
-        "BOUNCER_INVESTIGATION_URL", "http://192.168.1.232:8890"
-    ),
+    "DENIZEN_HOST_IP": get_host("LM_STUDIO_HOST"),
+    "BOUNCER_INVESTIGATION_URL": (os.environ.get("BOUNCER_INVESTIGATION_URL") or "http://" + get_host("LM_STUDIO_HOST") + ":8890"),
 }
 _token = os.environ.get("BOUNCER_INVESTIGATION_TOKEN", "").strip()
 if _token:

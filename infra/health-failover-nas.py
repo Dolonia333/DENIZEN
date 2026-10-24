@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -12,8 +13,8 @@ import urllib.request
 import load_infra_env  # noqa: F401
 
 PRIMARY = os.environ.get("DENIZEN_PRIMARY_URL", "https://denizen.dolonia.cloud").rstrip("/")
-STANDBY = os.environ.get("DENIZEN_STANDBY_URL", "http://192.168.1.237:8888").rstrip("/")
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+STANDBY = (os.environ.get("DENIZEN_STANDBY_URL") or "http://" + get_host("SYNO_HOST") + ":8888").rstrip("/")
+HOST = get_host("SYNO_HOST")
 FOLLOWER_PORTS = [
     p.strip()
     for p in os.environ.get("DENIZEN_FOLLOWER_PORTS", "8889,8890").split(",")

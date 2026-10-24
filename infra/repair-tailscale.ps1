@@ -44,4 +44,4 @@ Write-Host '==> This machine IP:'
 
 Write-Host ''
 Write-Host '==> Ping Kali laptop:'
-& $ts ping 100.110.205.49
+& $ts ping <KALI_TAILSCALE_IP>

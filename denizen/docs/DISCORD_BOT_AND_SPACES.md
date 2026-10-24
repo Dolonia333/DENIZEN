@@ -488,7 +488,7 @@ Also: root `discord pixel game/` prototype with Free + Full packs.
 |----------|---------|
 | *(defaults)* | Auto-connect `127.0.0.1:2333` / password `youshallnotpass` |
 | `LAVALINK_HOST` / `LAVALINK_PORT` / `LAVALINK_PASSWORD` | Override node |
-| `LAVALINK_URL` | Full HTTP base (e.g. `http://192.168.1.237:2333`) |
+| `LAVALINK_URL` | Full HTTP base (e.g. `http://<NAS_IP>:2333`) |
 | `LAVALINK_DISABLE` | `1` = skip auto-connect |
 
 ```bash

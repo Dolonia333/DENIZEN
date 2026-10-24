@@ -2,7 +2,7 @@
 'use strict';
 /**
  * Lightweight Kali investigation agent for dolonia (.232).
- * NAS sets BOUNCER_INVESTIGATION_URL=http://192.168.1.232:8890
+ * NAS sets BOUNCER_INVESTIGATION_URL=http://<PC_LAN_IP>:8890
  *
  *   node scripts/bouncer-investigation-agent.js
  *

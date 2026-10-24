@@ -6,12 +6,12 @@
  *
  * Usage:
  *   node scripts/ws-load-soak.js
- *   WS_URL=ws://192.168.1.237:8889/agent-ws COUNT=50 node scripts/ws-load-soak.js
+ *   WS_URL=ws://<NAS_IP>:8889/agent-ws COUNT=50 node scripts/ws-load-soak.js
  */
 
 const WebSocket = require('ws');
 
-const TARGET = (process.env.WS_URL || process.env.SPECTATE_WS_URL || 'ws://192.168.1.237:8889/agent-ws').trim();
+const TARGET = (process.env.WS_URL || process.env.SPECTATE_WS_URL || (console.error('Set WS_URL'), process.exit(1))).trim();
 const COUNT = Math.max(1, Number(process.env.COUNT) || 50);
 const RAMP_MS = Number(process.env.RAMP_MS) || 40;
 const HOLD_MS = Number(process.env.HOLD_MS) || 15000;

@@ -1,10 +1,11 @@
+from hostcfg import get_host
 import os
 import paramiko
 
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 c.connect(
-    "192.168.1.237",
+    get_host("SYNO_HOST"),
     username="admin",
     password=os.environ["SYNO_SSH_PASSWORD"],
     look_for_keys=False,

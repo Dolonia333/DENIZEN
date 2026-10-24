@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import os
 import sys
 import tarfile
@@ -12,7 +13,7 @@ from pathlib import Path
 
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 USER = os.environ.get("SYNO_USER", "admin")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 REMOTE_DIR = os.environ.get("SYNO_REMOTE_DIR", "/volume1/docker/supabase-project")
@@ -166,7 +167,7 @@ def main() -> int:
     run_ssh(client, "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/ || true")
 
     client.close()
-    log("==> Done. Open http://192.168.1.237:8000 (or https://supabase.dolonia.cloud)")
+    log("==> Done. Open http://<NAS_IP>:8000 (or https://supabase.dolonia.cloud)")
     return 0
 
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Quick live check: Dolonia conversation stack on NAS."""
 from __future__ import annotations
+from hostcfg import get_host
 import os, sys, json
 from pathlib import Path
 
@@ -9,7 +10,7 @@ sys.path.insert(0, str(INFRA))
 import load_infra_env  # noqa: F401
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 USER = os.environ.get("SYNO_USER", "admin")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

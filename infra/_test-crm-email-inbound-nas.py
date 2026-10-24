@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Inject a sample Angela email into CRM inbound + check n8n workflow active."""
 from __future__ import annotations
+from hostcfg import get_host
 import json, os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -8,7 +9,7 @@ import load_infra_env, paramiko
 
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect(os.environ.get("SYNO_HOST","192.168.1.237"), username=os.environ.get("SYNO_USER","admin"),
+c.connect(get_host("SYNO_HOST"), username=os.environ.get("SYNO_USER","admin"),
           password=os.environ.get("SYNO_SSH_PASSWORD",""), look_for_keys=False, allow_agent=False)
 d = os.environ.get("SYNO_DOCKER","/usr/local/bin/docker")
 port = os.environ.get("SYNO_DENIZEN_PORT","8888")

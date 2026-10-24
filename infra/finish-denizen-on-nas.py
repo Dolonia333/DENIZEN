@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import load_infra_env  # noqa: F401
 
 import os
@@ -15,7 +16,7 @@ INFRA = Path(__file__).resolve().parent
 ROOT = INFRA.parent
 DENIZEN_DIR = ROOT / "denizen"
 
-SYNO_HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+SYNO_HOST = get_host("SYNO_HOST")
 NAS_PORT = os.environ.get("SYNO_DENIZEN_PORT", "8888")
 PUBLIC_URL = os.environ.get("DENIZEN_PUBLIC_URL", "https://denizen.dolonia.cloud").rstrip("/")
 

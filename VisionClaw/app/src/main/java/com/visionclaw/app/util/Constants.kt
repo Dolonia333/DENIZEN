@@ -1,7 +1,7 @@
 package com.visionclaw.app.util
 
 object Constants {
-    const val DEFAULT_SERVER_URL = "ws://192.168.1.232:18791"
+    const val DEFAULT_SERVER_URL = ""
     const val DEFAULT_FRAME_RATE_FPS = 1.0f
     const val MIN_FRAME_RATE_FPS = 0.5f
     const val MAX_FRAME_RATE_FPS = 5.0f

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import subprocess
@@ -18,7 +19,7 @@ import paramiko
 INFRA = Path(__file__).resolve().parent
 ROOT = INFRA.parent
 DENIZEN = ROOT / "denizen"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 NAS_URL = os.environ.get("DENIZEN_NAS_URL", f"http://{HOST}:8888").rstrip("/")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 

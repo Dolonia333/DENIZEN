@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Inspect n8n Gmail credentials/workflows and import Angela→CRM inbound workflow."""
 from __future__ import annotations
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -10,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import load_infra_env  # noqa
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 USER = os.environ.get("SYNO_USER", "admin")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

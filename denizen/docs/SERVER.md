@@ -507,7 +507,7 @@ Loaded from `denizen/.env` via [load-env.js](../src/load-env.js) (shell vars win
 | `CITY_PLAN_PROVIDER` | `/api/llm-city-plan` provider override |
 | `BOUNCER_INVESTIGATION_COOLDOWN_MS` | `900000` — dedup Bouncer scans |
 | `BOUNCER_PATROL` | `container` on NAS Docker; `wsl` on Windows; `off` to disable |
-| `BOUNCER_INVESTIGATION_URL` | Remote dolonia agent e.g. `http://192.168.1.232:8890` |
+| `BOUNCER_INVESTIGATION_URL` | Remote dolonia agent e.g. `http://<PC_LAN_IP>:8890` |
 | `BOUNCER_INVESTIGATION_TOKEN` | Bearer auth for investigation agent + bouncer APIs |
 | `BOUNCER_MESH_PATROL` | `1` — enqueue `bouncer_patrol` mesh jobs |
 | `BOUNCER_DAILY_BRIEF_MS` | Daily brief interval (default 24h) |

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import load_infra_env  # noqa: F401 — loads infra/.env
 
 import io
@@ -14,7 +15,7 @@ from pathlib import Path
 
 import paramiko
 
-HOST = os.environ.get("KALI_HOST", "100.110.205.49")
+HOST = get_host("KALI_HOST")
 USER = os.environ.get("KALI_USER", "dolo")
 PASSWORD = os.environ.get("KALI_SSH_PASSWORD", "") or os.environ.get("SYNO_SSH_PASSWORD", "")
 SSH_KEY = os.environ.get("KALI_SSH_KEY", "")

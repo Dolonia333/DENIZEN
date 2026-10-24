@@ -9,7 +9,7 @@
  *   LAVALINK_HOST (default 127.0.0.1)
  *   LAVALINK_PORT (default 2333)
  *   LAVALINK_PASSWORD (default youshallnotpass)
- *   LAVALINK_URL  (optional full http base, e.g. http://192.168.1.237:2333)
+ *   LAVALINK_URL  (optional full http base, e.g. http://<NAS_IP>:2333)
  *   LAVALINK_SECURE=1 for wss/https
  *   LAVALINK_DISABLE=1 to skip music node auto-connect
  */

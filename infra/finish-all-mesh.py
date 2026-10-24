@@ -96,7 +96,7 @@ def main() -> int:
             log(
                 "\nKali SSH deploy failed — on Kali run:\n"
                 "  export DENIZEN_FLEET_AGENT_TOKEN=<from denizen/.env>\n"
-                "  export DENIZEN_PULL_URL=http://100.71.54.109:8081\n"
+                "  export DENIZEN_PULL_URL=http://<HOME_SERVER_TAILSCALE_IP>:8081\n"
                 "  bash infra/pull-install-kali-agent.sh"
             )
     else:
