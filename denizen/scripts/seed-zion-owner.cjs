@@ -1,7 +1,7 @@
 'use strict';
 /**
  * One-time: register Zion as team owner on org zion with email + password.
- * Usage: node scripts/seed-zion-owner.cjs
+ * Usage: DENIZEN_OWNER_PASSWORD='<new password>' node scripts/seed-zion-owner.cjs
  */
 require('../src/load-env');
 const denizenDb = require('../src/denizen-db');
@@ -11,7 +11,11 @@ const teamAuth = require('../src/denizen-team-auth');
 const EMAIL = 'zionvanzandt@gmail.com';
 const USERNAME = 'Dolonia';
 const DISPLAY = 'Dolonia';
-const PASSWORD = process.argv[2] || '333';
+const PASSWORD = process.env.DENIZEN_OWNER_PASSWORD;
+if (!PASSWORD) {
+  console.error('Set DENIZEN_OWNER_PASSWORD to the owner password before running this script.');
+  process.exit(1);
+}
 const TEAM_CODE = process.env.DENIZEN_TEAM_CODE || '1921';
 
 async function resetPassword(orgId, email, password) {
@@ -66,7 +70,7 @@ async function main() {
     console.log('Updated password for existing account:');
     console.log('  email:', EMAIL);
     console.log('  username:', USERNAME);
-    console.log('  password:', PASSWORD);
+    console.log('  password: (set from DENIZEN_OWNER_PASSWORD)');
     console.log('  min length (dev):', minPasswordLength());
     return;
   }
@@ -82,13 +86,13 @@ async function main() {
     console.log('Created team owner account:');
     console.log('  email:', EMAIL);
     console.log('  username:', USERNAME);
-    console.log('  password:', PASSWORD);
+    console.log('  password: (set from DENIZEN_OWNER_PASSWORD)');
     console.log('  org:', result.org_slug);
     console.log('  team code:', TEAM_CODE);
   } catch (err) {
     if (/already exists/i.test(String(err?.message || ''))) {
       await resetPassword(org.id, EMAIL, PASSWORD);
-      console.log('Account exists — password reset to:', PASSWORD);
+      console.log('Account exists — password reset from DENIZEN_OWNER_PASSWORD');
       return;
     }
     throw err;
