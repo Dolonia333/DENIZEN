@@ -8,7 +8,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
 
-const BRAVE_API_KEY = 'BSAgPTfHr7FVrJGJj37uJMQcIgP0aB_';
+const BRAVE_API_KEY = process.env.BRAVE_API_KEY;
+if (!BRAVE_API_KEY) {
+  console.error('Set BRAVE_API_KEY in your environment before running this test.');
+  process.exit(1);
+}
 
 async function testBraveSearchSetup() {
   console.log('🔍 OpenClaw Brave Search Setup Test\n');
@@ -17,9 +21,6 @@ async function testBraveSearchSetup() {
   const envKey = process.env.BRAVE_API_KEY;
   console.log('1. Environment Variable Check:');
   console.log(`   BRAVE_API_KEY: ${envKey ? '✅ Set' : '❌ Missing'}`);
-  if (envKey && envKey !== BRAVE_API_KEY) {
-    console.log(`   ⚠️  Value mismatch! Expected: BSAgPT..., Got: ${envKey.slice(0, 10)}...`);
-  }
   console.log('');
 
   // Test 2: Config file
@@ -79,7 +80,7 @@ async function testBraveSearchSetup() {
   
   if (!hasEnvKey) {
     console.log('   🔧 Set environment variable:');
-    console.log(`   setx BRAVE_API_KEY "${BRAVE_API_KEY}"`);
+    console.log(`   setx BRAVE_API_KEY "<YOUR_BRAVE_API_KEY>"`);
     console.log('');
     console.log('   🔄 Then restart OpenClaw gateway');
   } else {
