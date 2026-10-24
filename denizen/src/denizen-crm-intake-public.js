@@ -113,4 +113,12 @@ async function submitPublicIntake(body, options = {}) {
   return { ok: true, submissionId: submission.id };
 }
 
-module.exports = { submitPublicIntake };
+module.exports = {
+  submitPublicIntake,
+  // Shared helpers/limits (reused by denizen-crm-intake-ingest.js).
+  _clip,
+  _sanitizeAnswers,
+  _recordHit,
+  MAX_FIELD_LEN,
+  MAX_ANSWER_LEN,
+};

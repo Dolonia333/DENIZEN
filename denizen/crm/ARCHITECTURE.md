@@ -161,6 +161,7 @@ create table denizen_crm_portal_tokens (
 | POST | `/api/crm/assist` | AI copilot |
 | POST | `/api/crm/sequence/enroll` | Enroll contact |
 | POST | `/api/crm/intake-handoff` | Qualified intake → CRM |
+| POST | `/api/crm/intake-ingest` | Server-token (`INTAKE_INGEST_TOKEN`) intake → company/contact/deal/task/note; idempotent; new clients only; no outbound messages |
 | POST | `/api/crm/event` | Office events (deal-won, etc.) |
 
 ## API surface (added)
