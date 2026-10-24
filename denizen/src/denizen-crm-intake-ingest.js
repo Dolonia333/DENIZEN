@@ -9,6 +9,10 @@
  * Design notes:
  *  - Fails closed: 503 when INTAKE_INGEST_TOKEN is unset, 401 on missing/wrong token.
  *  - NEW clients only (client_type must be exactly "new").
+ *  - Fail closed on existing records: a contact (same lowercased email) or
+ *    company (same name) NOT created by this route (no intakeOrigin marker)
+ *    returns 409 {error:'existing_record_needs_review', reason:'contact'|'company'}
+ *    and writes nothing. Records this route created are reused.
  *  - Idempotent on sha256(lowercased trimmed email + "|" + intake_id), stored as
  *    `intakeKey` on the deal, task and note. A retry returns the same ids with
  *    duplicate:true and writes nothing.
@@ -37,7 +41,9 @@ const RATE_MAX_AUTH_FAILS = 20;
 const MAX_NOTE_LEN = 2000;
 const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]{2,}$/;
 const INTAKE_ID_RE = /^[A-Za-z0-9_.:-]{1,100}$/;
-const EARLY_CLIENT_MARKERS = ['early', 'portfolio'];
+// Marker stamped on every contact/company this route creates. Only records
+// carrying it may be reused; anything else needs human review (fail closed).
+const INGEST_ORIGIN = 'intake-ingest';
 
 function nextId(list) {
   const ids = (list || []).map((r) => Number(r?.id) || 0);
@@ -141,10 +147,14 @@ function addBusinessDays(from, n) {
   return d.toISOString().slice(0, 10);
 }
 
-function isEarlyClientContact(contact) {
-  const tags = Array.isArray(contact?.tags) ? contact.tags.map((t) => String(t).toLowerCase()) : [];
-  const ct = String(contact?.clientType || '').toLowerCase();
-  return EARLY_CLIENT_MARKERS.some((m) => ct === m || tags.includes(`client_type=${m}`));
+function createdByIngest(record) {
+  return record?.intakeOrigin === INGEST_ORIGIN;
+}
+
+function needsReview(reason) {
+  return {
+    ok: false, status: 409, error: 'existing_record_needs_review', reason,
+  };
 }
 
 // -------------------------------------------------------- state change
@@ -205,8 +215,18 @@ function applyIngest(prevState, v, now = new Date()) {
 
   const today = now.toISOString().slice(0, 10);
 
-  // 1. company
-  let company = companies.find((c) => String(c?.name || '').trim().toLowerCase() === v.businessName.toLowerCase());
+  // Fail closed BEFORE any change: an existing contact (by lowercased email) or
+  // company (by name) that this route did not create is never touched; a human
+  // reviews it. Checked in a fixed order: contact, then company.
+  const existingContact = contacts.find((c) => String(c?.email || '').trim().toLowerCase() === v.email);
+  if (existingContact && !createdByIngest(existingContact)) return needsReview('contact');
+  const existingCompany = companies.find(
+    (c) => String(c?.name || '').trim().toLowerCase() === v.businessName.toLowerCase(),
+  );
+  if (existingCompany && !createdByIngest(existingCompany)) return needsReview('company');
+
+  // 1. company (reuse only if created by this route)
+  let company = existingCompany;
   if (!company) {
     company = {
       id: nextId(companies),
@@ -222,15 +242,13 @@ function applyIngest(prevState, v, now = new Date()) {
       notes: '',
       linkedContacts: [],
       linkedDeals: [],
+      intakeOrigin: INGEST_ORIGIN,
     };
     companies.push(company);
   }
 
-  // 2. contact (reuse by lowercased email)
-  let contact = contacts.find((c) => String(c?.email || '').trim().toLowerCase() === v.email);
-  if (contact && isEarlyClientContact(contact)) {
-    return { ok: false, status: 409, error: 'existing_contact_is_not_a_new_client' };
-  }
+  // 2. contact (reuse only if created by this route)
+  let contact = existingContact;
   if (!contact) {
     contact = {
       id: nextId(contacts),
@@ -242,6 +260,7 @@ function applyIngest(prevState, v, now = new Date()) {
       status: 'Prospect',
       tags: ['intake', 'client_type=new'],
       clientType: 'new',
+      intakeOrigin: INGEST_ORIGIN,
       score: 60,
       lastContact: today,
       interactions: 1,

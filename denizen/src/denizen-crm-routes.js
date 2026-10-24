@@ -1144,7 +1144,11 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         const body = await readJsonBody(req, 256 * 1024);
         const result = await crmIntakeIngest.ingestIntake(body, { clientKey });
         if (!result.ok) {
-          json(res, result.status || 400, { ok: false, error: result.error });
+          json(res, result.status || 400, {
+            ok: false,
+            error: result.error,
+            ...(result.reason ? { reason: result.reason } : {}),
+          });
           return true;
         }
         json(res, 200, result);

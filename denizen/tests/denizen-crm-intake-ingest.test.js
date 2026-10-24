@@ -222,35 +222,94 @@ describe('POST /api/crm/intake-ingest', () => {
     assert.equal(JSON.stringify(store.state), snapshot);
   });
 
-  it('existing contact (by lowercased email) is reused; new intake_id adds deal, task and note only', async () => {
+  it('ingest-created contact (by lowercased email) is reused on a new intake_id; adds deal, task and note only', async () => {
+    const first = await post(validBody(), authed);
+    assert.equal(first.status, 200);
+    const second = await post(validBody({ intake_id: 'intake-0002', contact_email: 'PAT@example.test' }), authed);
+    assert.equal(second.status, 200);
+    assert.equal(second.data.duplicate, false);
+    assert.equal(second.data.contact_id, first.data.contact_id);
+    assert.equal(second.data.company_id, first.data.company_id);
+    assert.notEqual(second.data.deal_id, first.data.deal_id);
+    assert.notEqual(second.data.task_id, first.data.task_id);
+    assert.equal(store.state.contacts.length, 1);
+    assert.equal(store.state.companies.length, 1);
+    assert.equal(store.state.deals.length, 2);
+    assert.equal(store.state.tasks.length, 2);
+    assert.equal(store.state.notes.length, 2);
+    assert.deepEqual(store.state.companies[0].linkedContacts, [first.data.contact_id]);
+    assert.equal(store.state.companies[0].linkedDeals.length, 2);
+    // Retries of either intake stay idempotent.
+    const retry1 = await post(validBody(), authed);
+    const retry2 = await post(validBody({ intake_id: 'intake-0002' }), authed);
+    assert.equal(retry1.data.duplicate, true);
+    assert.equal(retry1.data.deal_id, first.data.deal_id);
+    assert.equal(retry2.data.duplicate, true);
+    assert.equal(retry2.data.deal_id, second.data.deal_id);
+    assert.equal(store.state.deals.length, 2);
+  });
+
+  it('existing UNTAGGED contact by email -> 409 existing_record_needs_review (contact), state unchanged', async () => {
     store.state = {
-      companies: [{ id: 7, name: 'Test Salon', linkedContacts: [3], linkedDeals: [] }],
-      contacts: [{ id: 3, name: 'Pat T.', email: 'PAT@example.test', company: 'Test Salon', tags: [] }],
+      companies: [{ id: 7, name: 'Someone Else LLC', linkedContacts: [], linkedDeals: [] }],
+      contacts: [{ id: 3, name: 'Pat T.', email: 'PAT@example.test', company: 'Someone Else LLC', tags: [] }],
       deals: [{ id: 9, title: 'Other', stage: 'Lead', value: 500 }],
       tasks: [],
       notes: [],
     };
-    const r = await post(validBody({ intake_id: 'intake-0002' }), authed);
-    assert.equal(r.status, 200);
-    assert.equal(r.data.duplicate, false);
-    assert.equal(r.data.contact_id, 3);
-    assert.equal(r.data.company_id, 7);
-    assert.equal(store.state.contacts.length, 1);
-    assert.equal(store.state.companies.length, 1);
-    assert.equal(store.state.deals.length, 2);
-    assert.equal(store.state.deals[1].id, 10);
-    assert.equal(store.state.tasks.length, 1);
-    assert.equal(store.state.notes.length, 1);
-    assert.deepEqual(store.state.companies[0].linkedContacts, [3]);
-  });
-
-  it('refuses to attach to an existing contact marked as an early client', async () => {
-    store.state = {
-      contacts: [{ id: 3, name: 'Pat', email: 'pat@example.test', tags: ['client_type=early'] }],
-    };
+    const snapshot = JSON.stringify(store.state);
     const r = await post(validBody(), authed);
     assert.equal(r.status, 409);
+    assert.deepEqual(r.data, { ok: false, error: 'existing_record_needs_review', reason: 'contact' });
     assert.equal(upsertCalls.length, 0);
+    assert.equal(JSON.stringify(store.state), snapshot);
+  });
+
+  it('existing contact tagged client_type=new but NOT created by ingest is still refused', async () => {
+    store.state = {
+      contacts: [{
+        id: 3, name: 'Pat', email: 'pat@example.test', tags: ['client_type=new'], clientType: 'new',
+      }],
+    };
+    const snapshot = JSON.stringify(store.state);
+    const r = await post(validBody(), authed);
+    assert.equal(r.status, 409);
+    assert.equal(r.data.reason, 'contact');
+    assert.equal(JSON.stringify(store.state), snapshot);
+  });
+
+  it('existing UNTAGGED company by name -> 409 existing_record_needs_review (company), state unchanged', async () => {
+    store.state = {
+      companies: [{ id: 7, name: 'TEST salon', linkedContacts: [], linkedDeals: [] }],
+      contacts: [{ id: 3, name: 'Other', email: 'other@example.test', tags: [] }],
+      deals: [],
+      tasks: [],
+      notes: [],
+    };
+    const snapshot = JSON.stringify(store.state);
+    const r = await post(validBody(), authed);
+    assert.equal(r.status, 409);
+    assert.deepEqual(r.data, { ok: false, error: 'existing_record_needs_review', reason: 'company' });
+    assert.equal(upsertCalls.length, 0);
+    assert.equal(JSON.stringify(store.state), snapshot);
+  });
+
+  it('ingest-created company is reused by a different contact with the same business name', async () => {
+    const first = await post(validBody(), authed);
+    const r = await post(validBody({
+      intake_id: 'intake-0009', contact_email: 'second@example.test', contact_name: 'Second',
+    }), authed);
+    assert.equal(r.status, 200);
+    assert.equal(r.data.company_id, first.data.company_id);
+    assert.notEqual(r.data.contact_id, first.data.contact_id);
+    assert.equal(store.state.companies.length, 1);
+    assert.equal(store.state.contacts.length, 2);
+  });
+
+  it('records created by ingest carry the intake-ingest origin marker', async () => {
+    await post(validBody(), authed);
+    assert.equal(store.state.contacts[0].intakeOrigin, 'intake-ingest');
+    assert.equal(store.state.companies[0].intakeOrigin, 'intake-ingest');
   });
 
   it('retries on conflict (reloading) and gives up after 3 attempts', async () => {
