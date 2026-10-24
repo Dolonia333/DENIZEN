@@ -10,6 +10,7 @@ const mailPolicy = require('./denizen-mail-policy');
 const { enrollContact } = require('./denizen-crm-sequences');
 const crmPortal = require('./denizen-crm-portal');
 const { submitPublicIntake } = require('./denizen-crm-intake-public');
+const crmIntakeIngest = require('./denizen-crm-intake-ingest');
 const { handleResendWebhook } = require('./denizen-crm-resend-webhook');
 const crmStripe = require('./denizen-crm-stripe');
 const crmCalendar = require('./denizen-crm-calendar');
@@ -377,6 +378,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'POST /api/crm/send-email',
           'POST /api/crm/sequence/enroll',
           'POST /api/crm/intake',
+          'POST /api/crm/intake-ingest',
           'POST /api/crm/intake-handoff',
           'GET /api/crm/team',
           'GET /api/crm/team/activity',
@@ -1119,6 +1121,40 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         return true;
       } catch (err) {
         json(res, 500, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    // Server-to-server intake ingest (n8n client-intake pipeline). Bearer token
+    // from INTAKE_INGEST_TOKEN; fails closed (503) when unset. Creates CRM
+    // records only — never sends email/SMS/webhooks.
+    if (path === '/api/crm/intake-ingest' && req.method === 'POST') {
+      try {
+        const clientKey = String(
+          req.headers['cf-connecting-ip']
+          || String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+          || req.socket?.remoteAddress
+          || '',
+        ).replace(/^::ffff:/, '');
+        const auth = crmIntakeIngest.authorize(req.headers.authorization, clientKey);
+        if (!auth.ok) {
+          json(res, auth.status, { ok: false, error: auth.error });
+          return true;
+        }
+        const body = await readJsonBody(req, 256 * 1024);
+        const result = await crmIntakeIngest.ingestIntake(body, { clientKey });
+        if (!result.ok) {
+          json(res, result.status || 400, {
+            ok: false,
+            error: result.error,
+            ...(result.reason ? { reason: result.reason } : {}),
+          });
+          return true;
+        }
+        json(res, 200, result);
+        return true;
+      } catch (err) {
+        json(res, 500, { ok: false, error: 'intake_ingest_failed' });
         return true;
       }
     }

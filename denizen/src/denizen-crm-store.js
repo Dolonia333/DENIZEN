@@ -158,7 +158,11 @@ async function upsertWorkspace(orgId, state, identityId, opts = {}) {
   const saved = inserted?.[0] || row;
   crmSpine.syncSpine(orgId, clean);
   syncPortalTokenIndex(orgId, clean).catch(() => {});
-  emitCrmWebhooks(existing?.state || {}, clean, orgId).catch(() => {});
+  // Callers that must not trigger any outbound HTTP (e.g. token-protected
+  // server-to-server ingest) set skipWebhooks.
+  if (!opts.skipWebhooks) {
+    emitCrmWebhooks(existing?.state || {}, clean, orgId).catch(() => {});
+  }
   return saved;
 }
 
