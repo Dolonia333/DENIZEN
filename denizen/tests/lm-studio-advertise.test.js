@@ -21,19 +21,19 @@ describe('lm-studio-advertise', () => {
       {
         reachable: true,
         url: 'http://127.0.0.1:1234',
-        advertise_url: 'http://192.168.1.232:1234',
+        advertise_url: 'http://192.168.50.20:1234',
       },
     );
-    assert.equal(url, 'http://192.168.1.232:1234');
+    assert.equal(url, 'http://192.168.50.20:1234');
   });
 
   it('preferServerProbeUrl remaps Tailscale to LAN remote when configured', () => {
     const prev = process.env.LM_STUDIO_REMOTE_URLS;
-    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.232:1234';
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.50.20:1234';
     try {
       const { preferServerProbeUrl } = require('../src/lm-studio-advertise.js');
-      const url = preferServerProbeUrl('http://100.71.54.109:1234', { role: 'desktop' });
-      assert.equal(url, 'http://192.168.1.232:1234');
+      const url = preferServerProbeUrl('http://100.64.0.10:1234', { role: 'desktop' });
+      assert.equal(url, 'http://192.168.50.20:1234');
     } finally {
       if (prev === undefined) delete process.env.LM_STUDIO_REMOTE_URLS;
       else process.env.LM_STUDIO_REMOTE_URLS = prev;

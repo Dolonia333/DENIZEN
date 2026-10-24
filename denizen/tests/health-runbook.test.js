@@ -46,8 +46,8 @@ describe('health-runbook', () => {
     const prevRemote = process.env.LM_STUDIO_REMOTE_URLS;
     try {
       delete process.env.LM_STUDIO_URL;
-      process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.232:1234';
-      assert.equal(healthRunbook.resolveLmStudioUrl(), 'http://192.168.1.232:1234');
+      process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.50.20:1234';
+      assert.equal(healthRunbook.resolveLmStudioUrl(), 'http://192.168.50.20:1234');
     } finally {
       if (prevUrl === undefined) delete process.env.LM_STUDIO_URL;
       else process.env.LM_STUDIO_URL = prevUrl;
