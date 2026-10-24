@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from hostcfg import get_host
 import os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -7,7 +8,7 @@ import load_infra_env, paramiko
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 c.connect(
-    os.environ.get("SYNO_HOST", "192.168.1.237"),
+    get_host("SYNO_HOST"),
     username=os.environ.get("SYNO_USER", "admin"),
     password=os.environ.get("SYNO_SSH_PASSWORD", ""),
     look_for_keys=False,

@@ -6,6 +6,7 @@ Work id: cwr_43c3630b2eabe209
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -429,7 +430,7 @@ def main() -> int:
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(
-        os.environ.get("SYNO_HOST", "192.168.1.237"),
+        get_host("SYNO_HOST"),
         username="admin",
         password=os.environ.get("SYNO_SSH_PASSWORD", ""),
         look_for_keys=False,

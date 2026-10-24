@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import base64
 import json
 import os
@@ -20,7 +21,7 @@ import load_infra_env  # noqa: F401
 
 ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "b3b4fb60c5d98decb3eb90483152204d")
 TUNNEL_ID = os.environ.get("CLOUDFLARE_TUNNEL_ID", "6d77a3dd-cef0-481d-9be0-181b249a8ef6")
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 CERT = Path(os.environ.get("CLOUDFLARE_CERT", Path.home() / ".cloudflared" / "cert.pem"))
 API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
 

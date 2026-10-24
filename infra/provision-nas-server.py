@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import load_infra_env  # noqa: F401
 
 import os
@@ -16,7 +17,7 @@ BUNDLE_DIR = ROOT / "infra" / "nas-server-bundle"
 BUNDLE_ENV = BUNDLE_DIR / ".env"
 INFRA_ENV = ROOT / "infra" / ".env"
 
-SYNO_HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+SYNO_HOST = get_host("SYNO_HOST")
 SYNO_PORT = os.environ.get("SYNO_DENIZEN_PORT", "8888")
 PUBLIC_URL = os.environ.get("DENIZEN_PUBLIC_URL", "https://denizen.dolonia.cloud").rstrip("/")
 LAN_URL = f"http://{SYNO_HOST}:{SYNO_PORT}"
@@ -130,7 +131,7 @@ def main() -> int:
         "LM_STUDIO_ROUTER": local.get("LM_STUDIO_ROUTER", "true"),
         "LM_STUDIO_REMOTE_URLS": local.get(
             "LM_STUDIO_REMOTE_URLS",
-            os.environ.get("DOLONIA_LM_STUDIO_URL", "http://192.168.1.232:1234"),
+            (os.environ.get("DOLONIA_LM_STUDIO_URL") or "http://" + get_host("LM_STUDIO_HOST") + ":1234"),
         ),
         "DENIZEN_ECONOMY_MODE": local.get("DENIZEN_ECONOMY_MODE", "false"),
         "DENIZEN_COFOUNDER_LLM": local.get("DENIZEN_COFOUNDER_LLM", "true"),

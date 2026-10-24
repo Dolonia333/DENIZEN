@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from hostcfg import get_host
 import os
 import sys
 from pathlib import Path
@@ -8,7 +9,7 @@ import paramiko
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCAL = ROOT / "denizen" / "data" / "mentor-dialogue.jsonl"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 REMOTE_DIR = os.environ.get("SYNO_DENIZEN_DIR", "/volume1/docker/denizen-server")

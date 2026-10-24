@@ -2,6 +2,7 @@
 """Apply dolonia_conversation_data migration on NAS Supabase + hot-deploy dual-write code."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import base64
 import os
 import sys
@@ -19,7 +20,7 @@ ROOT = INFRA.parent
 DENIZEN = ROOT / "denizen"
 SQL = DENIZEN / "supabase" / "migrations" / "20260716000001_dolonia_conversation_data.sql"
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 USER = os.environ.get("SYNO_USER", "admin")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

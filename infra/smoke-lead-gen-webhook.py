@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+from hostcfg import get_host
 import json, os, sys, urllib.request
 from pathlib import Path
 INFRA = Path(__file__).resolve().parent
@@ -7,7 +8,7 @@ sys.path.insert(0, str(INFRA))
 import load_infra_env
 import paramiko
 
-HOST = os.environ.get('SYNO_HOST', '192.168.1.237')
+HOST = get_host("SYNO_HOST")
 PWD = os.environ['SYNO_SSH_PASSWORD']
 WEBHOOK = os.environ.get('N8N_URL', 'https://n8n.dolonia.cloud').rstrip('/') + '/webhook/denizen-lead-intake'
 payload = json.dumps({

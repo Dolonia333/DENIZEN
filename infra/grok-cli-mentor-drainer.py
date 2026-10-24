@@ -26,6 +26,7 @@ infra/.env, and .mcp-team-token.local.json at repo root.
 """
 from __future__ import annotations
 
+from hostcfg import get_host
 import argparse
 import json
 import os
@@ -45,7 +46,7 @@ ROOT = INFRA.parent
 TEAM_TOKEN_FILE = ROOT / ".mcp-team-token.local.json"
 IMPROVEMENT_LOG = ROOT / "denizen" / "data" / "consult-improvement-log.jsonl"
 GROK_BIN = os.environ.get("GROK_BIN", str(Path.home() / ".grok" / "bin" / "grok"))
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 MCP_URL = os.environ.get("DENIZEN_MCP_BASE", "https://denizen.dolonia.cloud").rstrip("/") + "/mcp/team"

@@ -2,6 +2,7 @@
 """Wire Dolonia Web Analyzer → Denizen lead intake webhook."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -13,7 +14,7 @@ import load_infra_env  # noqa: F401
 
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 N8N_API_URL = os.environ.get("N8N_API_URL", "http://127.0.0.1:5679/api/v1").rstrip("/")
 API_KEY = os.environ.get("N8N_API_KEY", "")
@@ -25,7 +26,7 @@ LEAD_WEBHOOK = os.environ.get(
 ORG_SLUG = os.environ.get("DENIZEN_CRM_ORG_SLUG", "zion")
 LM_STUDIO_URL = os.environ.get(
     "DOLONIA_LM_STUDIO_URL",
-    os.environ.get("LM_STUDIO_URL", "http://192.168.1.232:1234/v1/chat/completions"),
+    (os.environ.get("LM_STUDIO_URL") or "http://" + get_host("LM_STUDIO_HOST") + ":1234/v1/chat/completions"),
 )
 
 PREPARE_CODE = r"""// Map Web Analyzer scrape + LM output → Denizen lead intake payload.

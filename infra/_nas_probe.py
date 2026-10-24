@@ -1,9 +1,10 @@
+from hostcfg import get_host
 import json, os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import load_infra_env
 import paramiko
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 c = paramiko.SSHClient()

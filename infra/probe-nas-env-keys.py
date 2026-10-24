@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Probe NAS denizen-server .env for email/n8n keys (redacted output)."""
 from __future__ import annotations
+from hostcfg import get_host
 import os
 import sys
 from pathlib import Path
@@ -10,7 +11,7 @@ sys.path.insert(0, str(INFRA))
 import load_infra_env  # noqa: F401
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 ENV_PATH = "/volume1/docker/denizen-server/.env"
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

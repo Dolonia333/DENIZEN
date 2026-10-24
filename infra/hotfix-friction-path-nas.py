@@ -2,6 +2,7 @@
 """Deploy friction domain hooks (path_stuck client bridge + backlog thresholds) to NAS."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import os
 import sys
 import tarfile
@@ -16,7 +17,7 @@ import paramiko
 
 ROOT = INFRA.parent
 DENIZEN = ROOT / "denizen"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 REMOTE_DIR = os.environ.get("SYNO_DENIZEN_DIR", "/volume1/docker/denizen-server")

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import secrets
@@ -135,7 +136,7 @@ def main() -> int:
     nas_env = nas_env_dir / ".env"
     public_url = env.get("DENIZEN_PUBLIC_URL", "https://denizen.dolonia.cloud").rstrip("/")
     nas_port = os.environ.get("SYNO_DENIZEN_PORT", "8888")
-    syno_host = os.environ.get("SYNO_HOST", "192.168.1.237")
+    syno_host = get_host("SYNO_HOST")
     if os.environ.get("DENIZEN_HOST_ON_NAS") == "1":
         lan_url = os.environ.get("DENIZEN_NAS_URL", f"http://127.0.0.1:{nas_port}").rstrip("/")
     else:
@@ -148,8 +149,8 @@ def main() -> int:
         f"DENIZEN_FLEET_SESSION_ID={session_id or ''}",
         f"DENIZEN_FLEET_SESSION_TOKEN={session_token or ''}",
         f"DENIZEN_FLEET_AGENT_TOKEN={fleet_token}",
-        f"DENIZEN_MACHINE_ID=nas-{env.get('SYNO_HOST', '192.168.1.237')}",
-        f"DENIZEN_MACHINE_LABEL=NAS · Synology ({env.get('SYNO_HOST', '192.168.1.237')})",
+        f"DENIZEN_MACHINE_ID=nas-{get_host('SYNO_HOST')}",
+        f"DENIZEN_MACHINE_LABEL=NAS · Synology ({get_host('SYNO_HOST')})",
         "DENIZEN_REPORT_INTERVAL_MS=30000",
         "DENIZEN_AGENT_ROOT=/volume1/docker/denizen-agent",
     ]
