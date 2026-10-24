@@ -63,10 +63,10 @@ Valid `type` values match the category names above. Valid `severity` values: `lo
 
 ```bash
 # Quick smoke — spawns a scanner robber in reception
-curl "http://localhost:8080/security-test?type=scan_probe&severity=high&detail=nmap+scan+from+192.168.1.50"
+curl "http://localhost:8080/security-test?type=scan_probe&severity=high&detail=nmap+scan+from+<NAS_IP>"
 
 # Plaintext credential event — spawns a sniffer robber in storage
-curl "http://localhost:8080/security-test?type=packet_anomaly&severity=high&detail=plaintext+password+captured+from+192.168.1.50"
+curl "http://localhost:8080/security-test?type=packet_anomaly&severity=high&detail=plaintext+password+captured+from+<NAS_IP>"
 ```
 
 ### Trigger real threats (Linux host)

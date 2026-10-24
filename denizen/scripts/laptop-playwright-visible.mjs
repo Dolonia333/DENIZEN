@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { loginOwner, assertOwnerProfile } from './lib/probe-login.mjs';
 
-const BASE = (process.argv[2] || process.env.DENIZEN_URL || 'http://100.71.54.109:8081').replace(/\/$/, '');
+const BASE = (process.argv[2] || process.env.DENIZEN_URL || (console.error('Pass the Denizen base URL as argv[2] or set DENIZEN_URL'), process.exit(1))).replace(/\/$/, '');
 const OUT = 'reports/laptop-ui';
 fs.mkdirSync(OUT, { recursive: true });
 const stamp = Date.now();

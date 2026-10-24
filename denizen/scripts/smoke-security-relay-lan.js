@@ -2,8 +2,8 @@
 'use strict';
 const WebSocket = require('ws');
 
-const PRIMARY = (process.env.PRIMARY_URL || 'http://192.168.1.237:8888').replace(/\/+$/, '');
-const FOLLOWER = (process.env.FOLLOWER_URL || 'http://192.168.1.237:8889').replace(/\/+$/, '');
+const PRIMARY = (process.env.PRIMARY_URL || (console.error('Set PRIMARY_URL'), process.exit(1))).replace(/\/+$/, '');
+const FOLLOWER = (process.env.FOLLOWER_URL || (console.error('Set FOLLOWER_URL'), process.exit(1))).replace(/\/+$/, '');
 const detail = `relay-smoke-${Date.now()}`;
 
 function waitThreat(wsUrl) {

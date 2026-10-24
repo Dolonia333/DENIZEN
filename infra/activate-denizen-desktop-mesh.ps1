@@ -3,7 +3,7 @@
 
 param(
   [string]$Installer = "$PSScriptRoot\..\denizen\desktop\dist-build\Denizen-Setup.exe",
-  [string]$ServerUrl = "http://192.168.1.237:8888",
+  [string]$ServerUrl = "http://<NAS_IP>:8888",
   [string]$DenizenExe = "$env:LOCALAPPDATA\Programs\Denizen\Denizen.exe",
   [string]$SetupFile = "$env:APPDATA\Denizen\denizen-desktop-setup.json"
 )

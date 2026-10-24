@@ -1,6 +1,6 @@
 # NAS platform bridge
 
-Denizen can run on **NAS-only Supabase** (`192.168.1.237:8000`) without the Dolonia **cloud** platform schema. Several migrations bridge Denizen tables to platform CRM tables that exist only on cloud Supabase.
+Denizen can run on **NAS-only Supabase** (`<NAS_IP>:8000`) without the Dolonia **cloud** platform schema. Several migrations bridge Denizen tables to platform CRM tables that exist only on cloud Supabase.
 
 ## Skipped on NAS
 

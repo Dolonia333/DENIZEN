@@ -22,9 +22,9 @@ describe('discord chat', () => {
     const prevRemote = process.env.LM_STUDIO_REMOTE_URLS;
     try {
       process.env.LM_STUDIO_URL = '';
-      process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.232:1234, http://other:1234';
+      process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.50.20:1234, http://other:1234';
       const bases = resolveLmBases();
-      assert.equal(bases[0], 'http://192.168.1.232:1234');
+      assert.equal(bases[0], 'http://192.168.50.20:1234');
       assert.ok(bases.includes('http://other:1234'));
     } finally {
       if (prevUrl === undefined) delete process.env.LM_STUDIO_URL;
