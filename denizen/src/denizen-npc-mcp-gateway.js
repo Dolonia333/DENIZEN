@@ -575,6 +575,7 @@ function configure(deps = {}) {
     removeItem: deps.removeItem,
     restoreItem: deps.restoreItem,
     patchItem: deps.patchItem,
+    patchNode: deps.patchNode,
     readPeople: deps.readPeople,
     countClients: deps.countClients,
     officeId: deps.officeId,

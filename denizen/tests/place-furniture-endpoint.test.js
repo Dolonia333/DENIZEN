@@ -129,7 +129,7 @@ describe('/api/place-furniture validation', () => {
   it('rejects unknown prefabId', async () => {
     const r = await place('TEST_Reject', 'sentient_couch');
     assert.equal(r.status, 400);
-    assert.match(r.body.error, /not in whitelist/);
+    assert.match(r.body.error, /unknown prefab or catalog id/);
     assert.ok(Array.isArray(r.body.allowed));
     assert.ok(r.body.allowed.includes('couch'));
   });
