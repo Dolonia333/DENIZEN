@@ -23,8 +23,8 @@
   "_wallDoc": "3D perspective walls from walls_3d.png (24-col). The sheet has 3 PLAIN-painted wall styles (verified low pattern-variance): brown (edge0/face24), green (edge168/face192), blue-grey (edge1176/face1200). All other schemes are windowed/wallpapered (diamond patterns) and unusable as plain walls. col 0 = plain wall: topEdge = white-above + dark-navy outline + face-top (the 3D depth), face = solid body. topThick = back-wall height in tiles.",
   "_navyDoc": "Each plain wall tile has a 1px dark-navy outline on ONE side (navySide). The renderer draws face tiles 1px wider, overlapping toward the opposite side, so interior seams are covered and navy survives only at the true room edges — matching LimeZu's seamless example.",
   "wallStyles": {
-    "office_white":     { "sheet": "walls_3d", "topThick": 3, "topEdge": 1176, "face": 1200, "navySide": "right" },
-    "office_grey":      { "sheet": "walls_3d", "topThick": 3, "topEdge": 1176, "face": 1200, "navySide": "right" },
+    "office_white":     { "sheet": "walls_3d", "topThick": 3, "topEdge": 336, "face": 384, "navySide": "right" },
+    "office_grey":      { "sheet": "walls_3d", "topThick": 3, "topEdge": 336, "face": 384, "navySide": "right" },
     "warm_wood":        { "sheet": "walls_3d", "topThick": 3, "topEdge": 0,    "face": 24,   "navySide": "left" },
     "warm_red":         { "sheet": "walls_3d", "topThick": 3, "topEdge": 0,    "face": 24,   "navySide": "left" },
     "industrial_dark":  { "sheet": "walls_3d", "topThick": 3, "topEdge": 168,  "face": 192,  "navySide": "left" }

@@ -22,6 +22,22 @@ const CELL = 32; // grid cell size in pixels
  * @param {object} objects - furniture_catalog_openplan.json .objects
  * @returns {{ byType, byAction, desks, chairs, deskSetups, plants, whiteboards, all }}
  */
+/** Official Modern Office singles — one PNG per object, already cut by LimeZu. */
+function isOfficialSingle(def) {
+  return def?.source_type === 'single_file'
+    && String(def.url_path || '').includes('/modern_office/named/');
+}
+
+/**
+ * Sheet rectangles in the openplan catalog often bleed into the next cell
+ * (a "desk" that is really a wall, a "shelf" that includes a chair). When a
+ * category has official singles, use only those.
+ */
+function preferOfficial(list) {
+  const official = (list || []).filter(isOfficialSingle);
+  return official.length ? official : (list || []);
+}
+
 function buildPalette(objects) {
   const byType = {};
   const byAction = {};
@@ -41,26 +57,39 @@ function buildPalette(objects) {
     }
   }
 
-  // Convenience groups
-  const desks = (byType.surface || []).filter(e => e.action === 'use_computer');
-  const chairs = (byType.seat || []).filter(e => e.action === 'seat');
+  const furnitureAndDecor = [...(byType.furniture || []), ...(byType.decor || [])];
+
+  // Convenience groups. Official singles win so a generated room never
+  // places a rectangle that was sliced across two sprites.
+  const desks = preferOfficial(
+    (byType.surface || []).filter((e) => (
+      isOfficialSingle(e)
+        ? /^desk_/.test(e.id) && !/setup|printer|coffee/.test(e.id)
+        : e.action === 'use_computer'
+    )),
+  );
+  const chairs = preferOfficial(
+    (byType.seat || []).filter((e) => isOfficialSingle(e) || e.action === 'seat'),
+  );
   const frontChairs = chairs.filter(e => /front/.test(e.id));
   const backChairs = chairs.filter(e => /back/.test(e.id));
   const sideChairs = chairs.filter(e => /side/.test(e.id));
-  const deskSetups = (byType.decor || []).filter(e => e.action === 'use_computer' && /desk_setup/.test(e.id));
-  const plants = (byType.decor || []).filter(e => /plant/.test(e.id));
-  const whiteboards = (byType.decor || []).filter(e => /whiteboard/.test(e.id));
-  const wallDecor = (byType.decor || []).filter(e =>
-    /cert|cork_board|pop_art|ac_unit/.test(e.id) || (e.depth !== undefined && e.depth <= 1.3)
+  const deskSetups = preferOfficial(
+    furnitureAndDecor.filter((e) => /desk_setup/.test(e.id)),
   );
-  const sofas = (byType.furniture || []).filter(e => /sofa|corner_sofa/.test(e.id));
-  const vendingMachines = (byType.furniture || []).filter(e => /vending|coffee_machine|mini_fridge|water_dispenser|coffee_barista|water_cooler/.test(e.id));
-  const bookshelves = (byType.furniture || []).filter(e => /bookshelf/.test(e.id));
-  const tables = (byType.furniture || []).filter(e => /table/.test(e.id));
-  const partitions = byType.partition || [];
-  const miscFurniture = (byType.furniture || []).filter(e =>
+  const plants = preferOfficial(furnitureAndDecor.filter(e => /plant/.test(e.id)));
+  const whiteboards = preferOfficial(furnitureAndDecor.filter(e => /whiteboard/.test(e.id)));
+  const wallDecor = preferOfficial(furnitureAndDecor.filter(e =>
+    /wall_ac|cert|cork_board|pop_art|ac_unit/.test(e.id)
+  ));
+  const sofas = preferOfficial((byType.furniture || []).filter(e => /sofa|corner_sofa/.test(e.id)));
+  const vendingMachines = preferOfficial((byType.furniture || []).filter(e => /vending|coffee_machine|mini_fridge|water_dispenser|coffee_barista|water_cooler/.test(e.id)));
+  const bookshelves = preferOfficial((byType.furniture || []).filter(e => /bookshelf|shelf_wood/.test(e.id)));
+  const tables = preferOfficial((byType.furniture || []).filter(e => /table/.test(e.id) && !/coffee_station/.test(e.id)));
+  const partitions = preferOfficial(byType.partition || []);
+  const miscFurniture = preferOfficial((byType.furniture || []).filter(e =>
     /trash_can|paper_shredder|printer|stairs/.test(e.id)
-  );
+  ));
 
   return {
     byType, byAction, all,
@@ -205,98 +234,210 @@ function uid(prefix) {
  * We store x as the center-x offset and y as the bottom-y offset within the room.
  */
 
-function placeWorkstations(items, palette, grid, count) {
-  const DESK_GAP_Y = 64; // vertical gap between chair bottom and next desk
-  const chairBehindOffset = 64; // how far behind the desk the chair sits
+function preferId(pool, id) {
+  return (pool || []).find((entry) => entry.id === id) || null;
+}
 
-  // Pick desk variant pool (small desks work best for rows), sorted small→large
+/**
+ * A LimeZu cubicle is one stall, not a desk with a grey rectangle behind it.
+ * Side posts (the tall L) close each stall, the low rail sits behind the
+ * wood desktop, and the chair back meets the front lip.
+ */
+const POST_W = 32;
+const POST_H = 86;
+const DESK_W = 64;
+const DESK_H_NOMINAL = 38;
+const PANEL_INTO_DESK = 10;
+const POST_DROP = 8;
+const CHAIR_TUCK = 18;
+/** Dual-monitor sprite bottom, above the desk's bottom anchor, so the keyboard sits on the wood. */
+const SETUP_LIFT = 22;
+const AISLE = 28;
+const ROW_LEFT = 32;
+const POST_ABOVE = POST_H - DESK_H_NOMINAL - POST_DROP;
+const DESK_TOP0 = 112;
+const ROW_STRIDE = POST_ABOVE + DESK_H_NOMINAL + CHAIR_TUCK + AISLE;
+const SIDE_MARGIN = ROW_LEFT;
+
+/**
+ * Drop one catalog sprite using bottom-center coordinates.
+ * Returns false when the sprite would leave the room or cover something else.
+ */
+function placeAnchored(items, grid, def, centerX, bottomY, prefix) {
+  if (!def) return false;
+  const left = Math.round(centerX - def.w / 2);
+  const top = bottomY - def.h;
+  if (!grid.canPlace(left, top, def.w, def.h)) return false;
+  items.push({
+    id: def.id,
+    instanceId: uid(prefix || def.id.slice(0, 8)),
+    x: Math.round(centerX),
+    y: bottomY,
+    z_index: def.depth || 1.4
+  });
+  grid.occupy(left, top, def.w, def.h);
+  return true;
+}
+
+function placePost(items, post, left, bottom, flipX) {
+  items.push({
+    id: post.id,
+    instanceId: uid('post'),
+    x: left + Math.floor(post.w / 2),
+    y: bottom,
+    z_index: 1.25,
+    flipX: !!flipX
+  });
+}
+
+function placeWorkstations(items, palette, grid, count, options = {}) {
+  // The reference bay is light-wood desks inside grey stalls, not white
+  // desks with two monitor sprites floating on them.
   const deskPool = palette.desks
     .filter(d => d.w <= 128 && d.h <= 96)
-    .sort((a, b) => (a.w * a.h) - (b.w * b.h));
-  if (deskPool.length === 0) return;
+    .sort((a, b) => a.id.localeCompare(b.id));
+  if (deskPool.length === 0) return 0;
 
-  const chairPool = palette.frontChairs.length > 0 ? palette.frontChairs : palette.chairs;
-  const setupPool = palette.deskSetups;
+  const desk = preferId(deskPool, options.deskId || 'desk_tan_wide')
+    || preferId(deskPool, 'desk_tan_wide')
+    || deskPool.find((d) => d.w >= 48 && d.w <= 96)
+    || deskPool[0];
+  const chairPool = palette.backChairs.length > 0 ? palette.backChairs : palette.chairs;
+  const chair = preferId(chairPool, options.chairId || 'chair_grey_back')
+    || preferId(chairPool, 'chair_grey_back')
+    || preferId(chairPool, 'chair_orange_back')
+    || chairPool[0]
+    || null;
+  // One sprite: both screens and the keyboard, meant to sit on the desktop.
+  const setup = palette.all.monitor_dual_kb || palette.all.monitor_white_on || null;
+  const wantDivider = options.divider !== false;
+  const divider = wantDivider
+    ? (preferId(palette.partitions, 'partition_grey_block') || null)
+    : null;
+  const post = wantDivider
+    ? (preferId(palette.partitions, 'partition_grey_corner') || null)
+    : null;
+
+  const deskW = desk.w;
+  const deskH = desk.h;
+  const tuck = chair ? CHAIR_TUCK : 0;
+  const postW = post ? post.w : 0;
+  const pitch = post ? postW + deskW : Math.ceil(deskW / CELL) * CELL;
+  const rowStride = (post ? POST_ABOVE : 0) + deskH + tuck + (post ? AISLE : CELL);
+  const deskTop0 = post ? DESK_TOP0 : CELL * 2;
 
   let placed = 0;
-  let curY = CELL * 2; // start 2 cells from top (room for wall decor above)
+  let curY = deskTop0;
+  const perRow = Math.max(1, Math.floor((grid.widthPx - ROW_LEFT - postW - ROW_LEFT) / pitch));
 
   while (placed < count) {
-    // How many can fit on this row?
-    const desk = pick(deskPool);
-    if (!desk) break;
-
-    const deskW = desk.w;
-    const deskH = desk.h;
-    const slotW = Math.max(deskW, CELL * 4); // min 128px per slot for spacing
-
-    const perRow = Math.min(count - placed, Math.floor(grid.widthPx / slotW));
-    if (perRow === 0) break;
-
-    const rowW = perRow * slotW;
-    const startX = Math.floor((grid.widthPx - rowW) / 2); // center the row
-
+    let rowPlaced = 0;
     for (let i = 0; i < perRow && placed < count; i++) {
-      const cx = startX + i * slotW + Math.floor(slotW / 2);
+      const deskLeft = ROW_LEFT + postW + i * pitch;
+      if (deskLeft + deskW + (post ? postW : 0) > grid.widthPx - 8) break;
+      if (!grid.canPlace(deskLeft, curY, deskW, deskH + tuck)) continue;
 
-      // Pick the desk for THIS slot before testing it. The row-level `desk`
-      // above only sizes the row; picking again after canPlace() meant the
-      // collision test validated one desk's footprint and then occupied
-      // another's, corrupting the grid whenever the second was larger. That
-      // starved later slots: a 4-occupant workspace produced fewer than 3
-      // desks ~70% of the time and none at all ~15%, while chairs were
-      // unaffected — which is what made the room-generator test flaky.
-      const deskChoice = pick(deskPool) || desk;
-      const choiceW = deskChoice.w;
-      const choiceH = deskChoice.h;
-      const deskTopLeftX = cx - Math.floor(choiceW / 2);
-      const deskTopLeftY = curY;
-
-      // Check grid space for desk + chair below
-      if (!grid.canPlace(deskTopLeftX, deskTopLeftY, choiceW, choiceH + chairBehindOffset)) {
-        continue;
-      }
-
+      const cx = deskLeft + Math.floor(deskW / 2);
+      const deskBottom = curY + deskH;
       const deskId = uid('desk');
       items.push({
-        id: deskChoice.id,
+        id: desk.id,
         instanceId: deskId,
         x: cx,
-        y: deskTopLeftY + choiceH // bottom of desk
+        y: deskBottom,
+        z_index: 1.6
       });
-      grid.occupy(deskTopLeftX, deskTopLeftY, choiceW, choiceH);
+      grid.occupy(deskLeft, curY, deskW, deskH);
 
-      // Place chair behind desk (front-facing chair below the desk)
-      const chair = pick(chairPool);
       if (chair) {
-        const chairX = cx;
-        const chairY = deskTopLeftY + choiceH + chairBehindOffset;
         items.push({
           id: chair.id,
           instanceId: uid('chair'),
-          x: chairX,
-          y: chairY
+          x: cx,
+          y: deskBottom + tuck,
+          z_index: 1.45
         });
-        grid.occupy(chairX - Math.floor(chair.w / 2), deskTopLeftY + choiceH, chair.w, chairBehindOffset);
+        grid.occupy(cx - Math.floor(chair.w / 2), deskBottom, chair.w, tuck);
       }
 
-      // Place desk setup as decor on desk
-      const setup = pick(setupPool);
       if (setup) {
         items.push({
           id: setup.id,
           instanceId: uid('setup'),
           parentInstanceId: deskId,
+          parent_offset_y: -SETUP_LIFT,
+          z_index: 2.2,
           x: 0,
           y: 0
         });
       }
 
+      // Low rail behind this desktop. The side posts close the stall.
+      if (divider) {
+        const divBottom = curY + PANEL_INTO_DESK;
+        const divTop = divBottom - divider.h;
+        items.push({
+          id: divider.id,
+          instanceId: uid('div'),
+          x: cx,
+          y: divBottom,
+          z_index: 1.15
+        });
+        if (divTop >= 0) grid.occupy(deskLeft, divTop, divider.w, divider.h);
+      }
+      if (post) {
+        const postBottom = deskBottom + POST_DROP;
+        placePost(items, post, deskLeft - postW, postBottom, false);
+      }
+
+      rowPlaced++;
       placed++;
     }
 
-    curY += deskH + chairBehindOffset + DESK_GAP_Y;
-    if (curY + CELL * 4 > grid.heightPx) break; // no room for another row
+    if (post && rowPlaced > 0) {
+      const lastLeft = ROW_LEFT + postW + (rowPlaced - 1) * pitch;
+      placePost(items, post, lastLeft + deskW, curY + deskH + POST_DROP, true);
+    }
+
+    if (rowPlaced === 0) break;
+    curY += rowStride;
+  }
+  return placed;
+}
+
+/**
+ * Wall chart, AC, cooler, and corner plants — the pieces that show up in
+ * both reference rooms, placed where the workstation grid left a hole.
+ */
+function placeReferenceDecor(items, palette, grid) {
+  const ac = preferId(palette.wallDecor, 'wall_ac_white');
+  const board = preferId(palette.whiteboards, 'whiteboard_line_chart')
+    || preferId(palette.whiteboards, 'whiteboard_large')
+    || palette.whiteboards.find((w) => w.h <= 36 && !/tray|smudge|marker/.test(w.id));
+  const cooler = preferId(palette.vendingMachines, 'water_cooler');
+  const leafy = preferId(palette.plants, 'plant_floor_leafy') || palette.plants[0];
+  const bushy = preferId(palette.plants, 'plant_floor_bushy') || leafy;
+
+  if (ac) placeAnchored(items, grid, ac, SIDE_MARGIN + Math.floor(ac.w / 2), ac.h, 'ac');
+  if (board) {
+    const boardX = SIDE_MARGIN + (ac ? ac.w + CELL : 0) + Math.floor(board.w / 2);
+    placeAnchored(items, grid, board, boardX, board.h, 'board');
+  }
+
+  // Cooler stands in the bottom-right corner, inset past the wall tile,
+  // not beside a desk. The old mid-wall spot sat on the first cubicle row.
+  if (cooler) {
+    const cx = grid.widthPx - 16 - Math.ceil(cooler.w / 2) - 4;
+    const bottom = grid.heightPx - 16;
+    placeAnchored(items, grid, cooler, cx, bottom, 'cooler');
+  }
+
+  const corners = [
+    { def: leafy, x: 16 + Math.ceil((leafy?.w || 32) / 2) + 4, y: grid.heightPx - 16 },
+  ];
+  for (const spot of corners) {
+    if (!spot.def) continue;
+    placeAnchored(items, grid, spot.def, spot.x, spot.y, 'plant');
   }
 }
 
@@ -594,12 +735,13 @@ function addDecorPass(items, palette, grid) {
 
   const plant = () => plantPool[plantIdx++ % Math.max(1, plantPool.length)];
 
-  // Try each corner
+  // Floor corners only. A plant whose bottom sits on the back wall
+  // draws up through the whiteboard.
   const corners = [
-    { x: CELL, y: CELL * 2 },
-    { x: grid.widthPx - CELL * 2, y: CELL * 2 },
     { x: CELL, y: grid.heightPx - CELL },
     { x: grid.widthPx - CELL * 2, y: grid.heightPx - CELL },
+    { x: CELL, y: CELL * 5 },
+    { x: grid.widthPx - CELL * 2, y: CELL * 5 },
   ];
 
   for (const pos of corners) {
@@ -616,8 +758,12 @@ function addDecorPass(items, palette, grid) {
     }
   }
 
-  // Wall decor along top edge (whiteboards, certs, ac units)
-  const wallPool = shuffle([...palette.whiteboards, ...palette.wallDecor]);
+  // Wall decor along the top edge. Marker trays and smudge boards are
+  // tall desk-height sprites; they cover the cubicle screen.
+  const wallPool = shuffle(
+    [...palette.whiteboards, ...palette.wallDecor]
+      .filter((wd) => wd.h <= 36 && !/tray|smudge/.test(wd.id))
+  );
   let wallX = CELL * 2;
   let wallPlaced = 0;
   for (const wd of wallPool) {
@@ -640,7 +786,9 @@ function addDecorPass(items, palette, grid) {
   // Trash can near desks if not already placed
   const hasTrash = items.some(i => /trash/.test(i.id));
   if (!hasTrash) {
-    const trash = palette.all['trash_can'] || pick(palette.miscFurniture.filter(m => /trash/.test(m.id)));
+    // The sheet rect still labeled trash_can is a chair. Only an official
+    // single is safe to drop into a generated room.
+    const trash = palette.miscFurniture.find((m) => /trash/.test(m.id) && isOfficialSingle(m));
     if (trash) {
       const spot = grid.findSpot(trash.w, trash.h);
       if (spot) {
@@ -682,6 +830,19 @@ function addPartitions(items, palette, grid, deskCount) {
   }
 }
 
+/** Width and height for a cubicle bay that can hold `occupants` desks. */
+function baySize(occupants) {
+  const cols = Math.min(Math.max(occupants, 1), 3);
+  const rows = Math.ceil(Math.max(occupants, 1) / cols);
+  // left margin, a post before every desk, a closing post, the desks, right margin
+  const width = ROW_LEFT + (cols + 1) * POST_W + cols * DESK_W + ROW_LEFT;
+  const height = DESK_TOP0 + (rows - 1) * ROW_STRIDE + DESK_H_NOMINAL + CHAIR_TUCK + 64;
+  return {
+    width: Math.ceil(width / CELL) * CELL,
+    height: Math.ceil(height / CELL) * CELL
+  };
+}
+
 // ─── Main Generator ─────────────────────────────────────────────────────
 
 export class RoomGenerator {
@@ -719,7 +880,18 @@ export class RoomGenerator {
     switch (purpose) {
       case 'workspace':
         placeWorkstations(items, this.palette, grid, occupants);
-        addPartitions(items, this.palette, grid, occupants);
+        break;
+      case 'cubicle_bay':
+        placeWorkstations(items, this.palette, grid, occupants, { divider: true });
+        placeReferenceDecor(items, this.palette, grid);
+        break;
+      case 'private_office':
+        placeWorkstations(items, this.palette, grid, 1, {
+          divider: false,
+          deskId: 'desk_tan_wide',
+          chairId: 'chair_orange_back'
+        });
+        placeReferenceDecor(items, this.palette, grid);
         break;
       case 'conference':
         placeConferenceLayout(items, this.palette, grid, Math.max(4, occupants));
@@ -742,17 +914,22 @@ export class RoomGenerator {
         break;
     }
 
-    // Decor pass — plants, wall art, trash cans
-    addDecorPass(items, this.palette, grid);
+    // Cubicle and private rooms already got the reference decor set.
+    // The other archetypes still take the general pass.
+    if (purpose !== 'cubicle_bay' && purpose !== 'private_office') {
+      addDecorPass(items, this.palette, grid);
+    }
 
     this._counter = _idCounter;
 
     const template = {
-      description: `Generated ${purpose} room (${size.width}x${size.height}, ${occupants} occupants)`,
+      description: `Generated ${purpose} room (${grid.widthPx}x${grid.heightPx}, ${occupants} occupants)`,
+      width: grid.widthPx,
+      height: grid.heightPx,
       items
     };
 
-    console.log(`🏗️ Generated '${purpose}' — ${items.length} items in ${size.width}x${size.height}px`);
+    console.log(`🏗️ Generated '${purpose}' — ${items.length} items in ${grid.widthPx}x${grid.heightPx}px`);
     return template;
   }
 
@@ -779,6 +956,8 @@ export class RoomGenerator {
         width: Math.max(384, Math.ceil(occupants / 2) * 192),
         height: Math.max(384, Math.ceil(occupants / 2) * 192 + 128)
       },
+      cubicle_bay: baySize(occupants),
+      private_office: { width: 384, height: 288 },
       conference: { width: 384, height: 320 },
       breakroom: { width: 384, height: 288 },
       manager_office: { width: 320, height: 288 },
