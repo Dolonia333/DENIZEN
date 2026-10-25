@@ -68,8 +68,8 @@ export function CrmHomeStart({
         padding: "36px 32px 28px",
         marginBottom: 24,
         background:
-          "radial-gradient(ellipse 80% 120% at 0% 0%, rgba(240,180,41,0.18), transparent 55%)," +
-          "radial-gradient(ellipse 70% 100% at 100% 20%, rgba(77,158,247,0.12), transparent 50%)," +
+          "radial-gradient(ellipse 80% 120% at 0% 0%, rgba(62,207,154,0.2), transparent 55%)," +
+          "radial-gradient(ellipse 70% 100% at 100% 20%, rgba(212,165,116,0.14), transparent 50%)," +
           `linear-gradient(160deg, ${T.bg2} 0%, ${T.bg1} 100%)`,
         border: `1px solid ${T.bg4}`,
       }}>

@@ -4,38 +4,39 @@
 
 @layer base {
   :root {
-    --background: 222 52% 4%;
-    --foreground: 0 0% 100%;
-    --card: 220 45% 9%;
-    --card-foreground: 0 0% 100%;
-    --popover: 220 45% 9%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 42 87% 55%;
-    --primary-foreground: 222 52% 4%;
-    --secondary: 220 38% 18%;
-    --secondary-foreground: 214 27% 60%;
-    --muted: 221 44% 13%;
-    --muted-foreground: 214 27% 60%;
-    --accent: 263 90% 66%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 92% 66%;
+    /* Meridian Carbon + Verdigris */
+    --background: 220 18% 4%;
+    --foreground: 210 20% 97%;
+    --card: 215 16% 9%;
+    --card-foreground: 210 20% 97%;
+    --popover: 215 16% 9%;
+    --popover-foreground: 210 20% 97%;
+    --primary: 158 60% 53%;
+    --primary-foreground: 160 40% 6%;
+    --secondary: 215 14% 16%;
+    --secondary-foreground: 214 16% 62%;
+    --muted: 215 14% 12%;
+    --muted-foreground: 214 16% 62%;
+    --accent: 158 60% 53%;
+    --accent-foreground: 160 40% 6%;
+    --destructive: 0 84% 71%;
     --destructive-foreground: 0 0% 100%;
-    --border: 223 39% 18%;
-    --input: 223 39% 18%;
-    --ring: 42 87% 55%;
+    --border: 215 16% 20%;
+    --input: 215 16% 20%;
+    --ring: 158 60% 53%;
     --radius: 0.625rem;
-    --sidebar-background: 220 45% 9%;
-    --sidebar-foreground: 214 27% 60%;
-    --sidebar-primary: 42 87% 55%;
-    --sidebar-primary-foreground: 222 52% 4%;
-    --sidebar-accent: 221 44% 13%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 223 39% 18%;
-    --sidebar-ring: 42 87% 55%;
+    --sidebar-background: 215 16% 7%;
+    --sidebar-foreground: 214 16% 62%;
+    --sidebar-primary: 158 60% 53%;
+    --sidebar-primary-foreground: 160 40% 6%;
+    --sidebar-accent: 215 14% 12%;
+    --sidebar-accent-foreground: 210 20% 97%;
+    --sidebar-border: 215 16% 18%;
+    --sidebar-ring: 158 60% 53%;
 
-    --crm-success: 162 72% 48%;
-    --crm-purple: 263 90% 66%;
-    --crm-blue: 213 92% 63%;
+    --crm-success: 142 69% 58%;
+    --crm-copper: 30 52% 64%;
+    --crm-blue: 199 89% 60%;
     --crm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
     --crm-display: "Instrument Serif", "Times New Roman", serif;
   }

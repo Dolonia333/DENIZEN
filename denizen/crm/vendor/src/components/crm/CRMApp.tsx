@@ -1401,9 +1401,9 @@ export default function CRMApp() {
           <button onClick={() => setSidebarOpen(p => !p)} style={{ background: "none", border: "none", color: T.text1, fontSize: 20, cursor: "pointer", padding: "2px 4px" }}>☰</button>
           <div style={{
             width: 24, height: 24, borderRadius: T.radius.sm,
-            background: `linear-gradient(135deg,${T.accent},#d97706)`,
+            background: `linear-gradient(135deg,${T.accent},${T.copper})`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 900, color: "#080d18",
+            fontSize: 11, fontWeight: 900, color: "#071410",
           }}>M</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -1465,16 +1465,16 @@ export default function CRMApp() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px", marginBottom: 20 }}>
           <div style={{
             width: 28, height: 28, borderRadius: T.radius.md,
-            background: `linear-gradient(135deg,${T.accent},#d97706)`,
+            background: `linear-gradient(135deg,${T.accent},${T.copper})`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 14, fontWeight: 900, color: "#080d18",
+            fontSize: 14, fontWeight: 900, color: "#071410",
           }}>M</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, letterSpacing: "-0.02em" }}>Meridian</div>
             <div style={{
               fontSize: 9, fontWeight: 600, color: T.text2, marginTop: 2,
               padding: "2px 6px", borderRadius: 4, display: "inline-block",
-              background: `${T.purple}18`, border: `1px solid ${T.purple}33`,
+              background: `${T.copper}18`, border: `1px solid ${T.copper}33`, color: T.copper,
               letterSpacing: "0.04em", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }} title={editionTitle}>
               {editionTitle.replace("Meridian — ", "")}
@@ -1592,8 +1592,8 @@ export default function CRMApp() {
       <main ref={mainRef} style={{
         flex: 1, overflowY: "auto",
         background:
-          "radial-gradient(ellipse 90% 50% at 10% -10%, rgba(240,180,41,0.07), transparent 50%)," +
-          "radial-gradient(ellipse 70% 40% at 100% 0%, rgba(77,158,247,0.06), transparent 45%)," +
+          "radial-gradient(ellipse 90% 50% at 10% -10%, rgba(62,207,154,0.09), transparent 50%)," +
+          "radial-gradient(ellipse 70% 40% at 100% 0%, rgba(212,165,116,0.07), transparent 45%)," +
           T.bg0,
         padding: isMobile ? "66px 14px 80px" : "28px 32px",
         ...(isMobile ? { width: "100%" } : {}),
@@ -1740,7 +1740,7 @@ export default function CRMApp() {
                   ) : (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <input value={inlineGroupName} onChange={e => setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
+                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: T.accent, description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
                       <button onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
                     </div>
                   )}
@@ -1814,7 +1814,7 @@ export default function CRMApp() {
                   ) : (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <input value={inlineGroupName} onChange={e => setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
+                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: T.accent, description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
                       <button onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
                     </div>
                   )}

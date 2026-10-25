@@ -237,34 +237,36 @@ export interface IntakeQuestion {
   placeholder?: string;
 }
 
-// ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
+// ─── DESIGN TOKENS (Meridian Carbon + Verdigris) ─────────────────────────────
 export const T = {
-  bg0:"#05080f",bg1:"#080d18",bg2:"#0d1422",bg3:"#121b2e",bg4:"#1c2640",bg5:"#1e2d4d",bg6:"#243358",
+  bg0:"#07090c",bg1:"#0d1015",bg2:"#141920",bg3:"#1a212b",bg4:"#263040",bg5:"#2f3b4d",bg6:"#3a475c",
   /** Visible grid lines for calendar month/week/day views */
-  gridLine:"rgba(148, 163, 184, 0.38)",
-  gridLineStrong:"rgba(148, 163, 184, 0.55)",
-  text0:"#ffffff",text1:"#e2eaf8",text2:"#7a92b8",text3:"#3d5278",
-  accent:"#f0b429",accentHi:"#ffd166",accentDim:"#f0b42918",accentGlow:"0 0 20px #f0b42930",
-  purple:"#8b5cf6",purpleDim:"#8b5cf618",
-  blue:"#4d9ef7",blueDim:"#4d9ef718",
-  green:"#22d3a0",greenDim:"#22d3a018",
-  red:"#f85b5b",redDim:"#f85b5b18",
+  gridLine:"rgba(148, 163, 184, 0.32)",
+  gridLineStrong:"rgba(148, 163, 184, 0.5)",
+  text0:"#f5f7fa",text1:"#d8dee9",text2:"#8b97a8",text3:"#5a6678",
+  accent:"#3ecf9a",accentHi:"#6ee7b7",accentDim:"#3ecf9a1a",accentGlow:"0 0 24px #3ecf9a28",
+  /** Secondary brand — warm copper (replaces purple-as-brand) */
+  copper:"#d4a574",copperDim:"#d4a5741a",
+  purple:"#a78bfa",purpleDim:"#a78bfa18",
+  blue:"#38bdf8",blueDim:"#38bdf818",
+  green:"#4ade80",greenDim:"#4ade8018",
+  red:"#f87171",redDim:"#f8717118",
   orange:"#fb923c",
   radius:{xs:4,sm:6,md:10,lg:14,xl:20,full:999} as const,
   shadow:{
-    card:"0 1px 3px rgba(0,0,0,0.4),0 8px 24px rgba(0,0,0,0.25)",
-    elevated:"0 4px 16px rgba(0,0,0,0.5),0 1px 3px rgba(0,0,0,0.4)",
-    glow:(color: string)=>`0 0 0 1px ${color}44,0 4px 20px ${color}22`,
+    card:"0 1px 3px rgba(0,0,0,0.45),0 10px 28px rgba(0,0,0,0.28)",
+    elevated:"0 4px 18px rgba(0,0,0,0.55),0 1px 3px rgba(0,0,0,0.4)",
+    glow:(color: string)=>`0 0 0 1px ${color}44,0 4px 22px ${color}22`,
   },
 };
 
 export const S: Record<string, any> = {
   input: { background:T.bg3, border:"1px solid "+T.bg4, borderRadius:T.radius.md, color:T.text1, padding:"9px 12px", width:"100%", fontSize:13, outline:"none", boxSizing:"border-box", transition:"border-color 0.15s" },
-  card: { background:"linear-gradient(145deg,"+T.bg2+","+T.bg3+"88)", border:"1px solid "+T.bg4, borderRadius:T.radius.lg, padding:"20px 22px" },
-  btn: { background:T.accent, color:"#080d18", border:"none", borderRadius:T.radius.md, padding:"8px 16px", fontWeight:700, fontSize:13, cursor:"pointer", letterSpacing:"0.01em" },
+  card: { background:"linear-gradient(165deg,"+T.bg2+","+T.bg1+")", border:"1px solid "+T.bg4, borderRadius:T.radius.lg, padding:"20px 22px", boxShadow:T.shadow.card },
+  btn: { background:T.accent, color:"#071410", border:"none", borderRadius:T.radius.md, padding:"8px 16px", fontWeight:700, fontSize:13, cursor:"pointer", letterSpacing:"0.01em" },
   btnGhost: { background:T.bg3, color:T.text2, border:"1px solid "+T.bg4, borderRadius:T.radius.md, padding:"8px 16px", fontSize:13, cursor:"pointer" },
-  btnPurple: { background:"linear-gradient(135deg,#7c3aed,#6366f1)", color:"#fff", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize:13, cursor:"pointer" },
-  btnGreen: { background:"linear-gradient(135deg,#059669,#10b981)", color:"#fff", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize:13, cursor:"pointer" },
+  btnPurple: { background:"linear-gradient(135deg,"+T.copper+",#b8895a)", color:"#140e08", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize:13, cursor:"pointer" },
+  btnGreen: { background:"linear-gradient(135deg,#0d9488,#3ecf9a)", color:"#071410", border:"none", borderRadius:T.radius.md, padding:"9px 18px", fontWeight:700, fontSize:13, cursor:"pointer" },
   badge: (color: string, bg: string) => ({ fontSize:11, padding:"2px 8px", borderRadius:T.radius.sm, background:bg, color, fontWeight:600, letterSpacing:"0.02em" }),
   label: { fontSize:11, color:T.text2, display:"block", marginBottom:5, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em" },
   modalBg: { position:"fixed" as const, inset:0, background:"rgba(0,0,0,0.88)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, backdropFilter:"blur(4px)" },
@@ -275,7 +277,14 @@ export const S: Record<string, any> = {
 export const fmt = (n: number) => "$" + Number(n).toLocaleString();
 export const badgeStyle = (color: string, bg: string) => S.badge(color, bg);
 export const STAGES = ["Lead","Qualified","Proposal","Negotiation","Closed Won","Closed Lost"];
-export const STAGE_COLORS: Record<string,string> = { Lead:"#6366f1", Qualified:"#f0b429", Proposal:"#3b82f6", Negotiation:"#8b5cf6", "Closed Won":"#10b981", "Closed Lost":"#ef4444" };
+export const STAGE_COLORS: Record<string,string> = {
+  Lead: "#64748b",
+  Qualified: "#38bdf8",
+  Proposal: "#3ecf9a",
+  Negotiation: "#d4a574",
+  "Closed Won": "#4ade80",
+  "Closed Lost": "#f87171",
+};
 export const CHECKLIST_ITEMS = [
   { id:"profile", label:"Set up your profile", tab:null as string|null },
   { id:"team", label:"Invite team members", tab:"onboarding" },

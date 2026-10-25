@@ -10,6 +10,7 @@ import { LeadGenTab } from "./LeadGenTab";
 import { PipelineTab } from "./PipelineTab";
 import { DealProbabilityAI } from "./DealProbabilityAI";
 import { PipelineVelocity } from "./PipelineVelocity";
+import { PipelineInsights } from "./PipelineInsights";
 import { MobileSwipePipeline } from "./MobileSwipePipeline";
 import { SalesTeamDashboard } from "./SalesTeamDashboard";
 import { QuotaManagementTab } from "./QuotaManagementTab";
@@ -66,7 +67,7 @@ export function SalesSection({
     onSubTabChange?.(key);
     dispatchCrmSubNav("sales", key);
   };
-  const [pipelineView, setPipelineView] = useState<"kanban" | "swipe" | "ai" | "velocity">("kanban");
+  const [pipelineView, setPipelineView] = useState<"kanban" | "swipe" | "ai" | "velocity" | "insights">("kanban");
   const [quotaViewMode, setQuotaViewMode] = useState<"manager" | "member">("manager");
 
   useEffect(() => {
@@ -104,11 +105,12 @@ export function SalesSection({
           <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
             {([
               { key: "kanban", label: "Kanban", icon: "◆" },
-              ...(isMobile ? [{ key: "swipe", label: "Swipe", icon: "📱" }] : []),
-              { key: "ai", label: "AI Probability", icon: "🤖" },
+              ...(isMobile ? [{ key: "swipe", label: "Swipe", icon: "◇" }] : []),
+              { key: "insights", label: "Insights", icon: "▣" },
+              { key: "ai", label: "AI Probability", icon: "✦" },
               { key: "velocity", label: "Velocity", icon: "⚡" },
             ] as { key: string; label: string; icon: string }[]).map(v => (
-              <button key={v.key} onClick={() => setPipelineView(v.key as any)} style={{
+              <button key={v.key} onClick={() => setPipelineView(v.key as typeof pipelineView)} style={{
                 padding: "6px 14px", borderRadius: "9999px", fontSize: 12, fontWeight: 600,
                 background: pipelineView === v.key ? `${T.accent}22` : T.bg3,
                 color: pipelineView === v.key ? T.accent : T.text3,
@@ -119,6 +121,7 @@ export function SalesSection({
           </div>
           {pipelineView === "kanban" && <PipelineTab deals={deals} contacts={contacts} notes={notes} emailLog={emailLog} auditLog={auditLog} dealComments={dealComments} onAddDealComment={onAddDealComment} currentUserName={currentUserName} onDealStageChange={onDealStageChange} onEditDeal={onEditDeal} onDeleteDeal={onDeleteDeal} industryConfig={industryConfig} />}
           {pipelineView === "swipe" && <MobileSwipePipeline deals={deals} onDealStageChange={onDealStageChange} onEditDeal={onEditDeal} />}
+          {pipelineView === "insights" && <PipelineInsights deals={deals} />}
           {pipelineView === "ai" && <DealProbabilityAI deals={deals} contacts={contacts} emailLog={emailLog} notes={notes} />}
           {pipelineView === "velocity" && <PipelineVelocity deals={deals} />}
         </div>
