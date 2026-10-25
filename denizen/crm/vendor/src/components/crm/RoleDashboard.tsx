@@ -51,8 +51,8 @@ function Panel({ title, action, onAction, children, accent }: {
           {title}
         </h3>
         {action && (
-          <button onClick={onAction} style={{
-            background: "none", border: "none", color: T.text2, fontSize: 12, fontWeight: 600,
+          <button aria-label="Action" onClick={onAction} style={{
+            background: "none", border: "none", color: T.text2, fontSize: 14, fontWeight: 600,
             cursor: "pointer", padding: 0,
           }}>{action} →</button>
         )}
@@ -68,7 +68,7 @@ function BarRow({ label, value, max, color, right }: {
   const pct = max > 0 ? Math.max(2, Math.round((value / max) * 100)) : 0;
   return (
     <div style={{ marginBottom: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 12.5 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 14 }}>
         <span style={{ color: T.text1, fontWeight: 500 }}>{label}</span>
         <span style={{ color: T.text2, fontWeight: 600 }}>{right ?? value}</span>
       </div>
@@ -80,7 +80,7 @@ function BarRow({ label, value, max, color, right }: {
 }
 
 function EmptyHint({ text }: { text: string }) {
-  return <div style={{ color: T.text3, fontSize: 12.5, padding: "16px 4px", textAlign: "center" }}>{text}</div>;
+  return <div style={{ color: T.text3, fontSize: 14, padding: "16px 4px", textAlign: "center" }}>{text}</div>;
 }
 
 const PALETTE = ["#6366f1", "#f0b429", "#3b82f6", "#8b5cf6", "#22d3a0", "#fb923c", "#f85b5b", "#4d9ef7"];
@@ -232,9 +232,9 @@ export function RoleDashboard(props: RoleDashboardProps) {
             <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120, paddingTop: 8 }}>
               {months.map((mo) => (
                 <div key={mo.key} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  <div style={{ fontSize: 10, color: T.text2 }}>{mo.val ? `$${Math.round(mo.val / 1000)}k` : ""}</div>
+                  <div style={{ fontSize: 14, color: T.text2 }}>{mo.val ? `$${Math.round(mo.val / 1000)}k` : ""}</div>
                   <div style={{ width: "100%", height: `${Math.max(2, (mo.val / max) * 90)}px`, background: `linear-gradient(180deg,${T.green},${T.green}55)`, borderRadius: "4px 4px 0 0" }} />
-                  <div style={{ fontSize: 11, color: T.text3 }}>{mo.label}</div>
+                  <div style={{ fontSize: 14, color: T.text3 }}>{mo.label}</div>
                 </div>
               ))}
             </div>
@@ -248,7 +248,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
             {rows.length ? rows.map((t) => {
               const od = t.due && t.due < todayStr();
               return (
-                <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+                <div key={t.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                   <span style={{ color: T.text1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{t.title}</span>
                   <span style={{ color: od ? T.red : T.text2, fontWeight: 600 }}>{t.due || "—"}</span>
                 </div>
@@ -266,7 +266,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         return (
           <Panel title="Follow-Up Reminders" accent={T.orange}>
             {rows.length ? rows.map((r) => (
-              <div key={r.d.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+              <div key={r.d.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                 <span style={{ color: T.text1 }}>{r.c!.name}</span>
                 <span style={{ color: T.orange, fontWeight: 600 }}>{daysSince(r.c!.lastContact)}d ago</span>
               </div>
@@ -282,7 +282,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         return (
           <Panel title="Top Scored Leads" action="Contacts" onAction={() => onNavigate("contacts")} accent={T.accent}>
             {rows.length ? rows.map((r) => (
-              <div key={r.c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+              <div key={r.c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                 <span style={{ color: T.text1 }}>{r.c.name}<span style={{ color: T.text3, marginLeft: 6 }}>{r.c.company}</span></span>
                 <span style={{ color: r.score >= 70 ? T.green : T.accent, fontWeight: 700 }}>{r.score}</span>
               </div>
@@ -294,7 +294,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         return (
           <Panel title={`At-Risk ${term.deals}`} accent={T.red}>
             {m.atRisk.length ? m.atRisk.slice(0, 6).map((d) => (
-              <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+              <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                 <span style={{ color: T.text1 }}>{d.title}</span>
                 <span style={{ color: T.red, fontWeight: 600 }}>{fmt(d.value)}</span>
               </div>
@@ -306,7 +306,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         return (
           <Panel title="Recent Activity" accent={T.blue}>
             {auditLog.length ? auditLog.slice(0, 8).map((a) => (
-              <div key={a.id} style={{ padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12 }}>
+              <div key={a.id} style={{ padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                 <span style={{ color: T.text2 }}>{a.user} </span>
                 <span style={{ color: T.text1 }}>{a.action} {a.entity} </span>
                 <span style={{ color: T.text3 }}>{a.entityName}</span>
@@ -338,7 +338,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
             {m.activeSeq.length ? m.activeSeq.slice(0, 6).map((s) => {
               const enrolled = sequenceEnrollments.filter((e) => e.sequenceId === s.id && e.status === "active").length;
               return (
-                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+                <div key={s.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                   <span style={{ color: T.text1 }}>{s.name}</span>
                   <span style={{ color: T.blue, fontWeight: 600 }}>{enrolled} active</span>
                 </div>
@@ -351,7 +351,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         return (
           <Panel title="Today's Meetings" action="Schedule" onAction={() => onNavigate("schedule")} accent={T.purple}>
             {m.meetingsToday.length ? m.meetingsToday.slice(0, 6).map((mt) => (
-              <div key={mt.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+              <div key={mt.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                 <span style={{ color: T.text1 }}>{mt.title}<span style={{ color: T.text3, marginLeft: 6 }}>{mt.contact}</span></span>
                 <span style={{ color: T.purple, fontWeight: 600 }}>{mt.time}</span>
               </div>
@@ -380,7 +380,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         return (
           <Panel title="New Leads" action="Contacts" onAction={() => onNavigate("contacts")} accent={T.blue}>
             {rows.length ? rows.map((c) => (
-              <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+              <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                 <span style={{ color: T.text1 }}>{c.name}<span style={{ color: T.text3, marginLeft: 6 }}>{c.company}</span></span>
                 <span style={{ color: T.text2 }}>{c.status}</span>
               </div>
@@ -397,7 +397,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
             {src.length ? src.slice(0, 7).map((a, i) => {
               const risk = /risk|churn/i.test(a.health);
               return (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                   <span style={{ color: T.text1, display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ width: 7, height: 7, borderRadius: 999, background: risk ? T.red : T.green }} />{a.name}
                   </span>
@@ -412,7 +412,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         return (
           <Panel title="Closing Soon (≤30d)" accent={T.orange}>
             {m.renewals.length ? m.renewals.slice(0, 6).map((d) => (
-              <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 12.5 }}>
+              <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${T.bg3}`, fontSize: 14 }}>
                 <span style={{ color: T.text1 }}>{d.title}</span>
                 <span style={{ color: T.orange, fontWeight: 600 }}>{d.closeDate}</span>
               </div>
@@ -511,7 +511,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
         {deals.length ? (
           <>
             {groupByStage()}
-            {metricLine && <div style={{ marginTop: 10, fontSize: 12, color: T.text2 }}>{metricLine}</div>}
+            {metricLine && <div style={{ marginTop: 10, fontSize: 14, color: T.text2 }}>{metricLine}</div>}
           </>
         ) : <EmptyHint text={`No ${term.deals.toLowerCase()} yet`} />}
       </Panel>
@@ -530,9 +530,9 @@ export function RoleDashboard(props: RoleDashboardProps) {
               borderRadius: T.radius.lg, padding: "16px 18px", position: "relative", overflow: "hidden",
             }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: k.accent }} />
-              <div style={{ fontSize: 10.5, color: T.text2, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{k.label}</div>
+              <div style={{ fontSize: 14, color: T.text2, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{k.label}</div>
               <div style={{ fontSize: 26, fontWeight: 800, color: T.text0, margin: "6px 0 2px" }}>{k.value}</div>
-              <div style={{ fontSize: 11.5, color: T.text3 }}>{k.sub}</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>{k.sub}</div>
             </div>
           );
         })}

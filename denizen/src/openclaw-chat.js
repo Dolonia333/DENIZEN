@@ -281,7 +281,7 @@ class OpenClawChat {
 
     const panel = document.createElement('div');
     panel.id = 'openclaw-ui-panel';
-    panel.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panel, `
       <div id="openclaw-ui-header">
         <span class="title">OpenClaw</span>
         <div class="actions">
@@ -292,7 +292,7 @@ class OpenClawChat {
         </div>
       </div>
       <iframe id="openclaw-ui-iframe"></iframe>
-    `;
+    `);
     document.body.appendChild(panel);
 
     this._panel = panel;

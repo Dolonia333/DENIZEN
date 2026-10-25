@@ -100,7 +100,7 @@ export function TeamCapacityPlanner({ quotas, deals }: Props) {
     <div style={{ ...S.card as React.CSSProperties, padding: "20px 24px", marginBottom: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>👥 Team Capacity Planner</h3>
-        <div style={{ display: "flex", gap: 12, fontSize: 11 }}>
+        <div style={{ display: "flex", gap: 12, fontSize: 14 }}>
           <span style={{ color: T.text3 }}>{totalActive} active deals</span>
           <span style={{ color: "#22d3a0" }}>{totalHeadroom} deal headroom</span>
         </div>
@@ -114,7 +114,7 @@ export function TeamCapacityPlanner({ quotas, deals }: Props) {
         display: "flex", justifyContent: "space-between", alignItems: "center",
       }}>
         <div style={{ flex: 1, marginRight: 20 }}>
-          <div style={{ fontSize: 10, color: T.text3, marginBottom: 4 }}>TEAM UTILIZATION</div>
+          <div style={{ fontSize: 14, color: T.text3, marginBottom: 4 }}>TEAM UTILIZATION</div>
           <div style={{ position: "relative", height: 10, background: T.bg4, borderRadius: T.radius.full, overflow: "hidden" }}>
             <div style={{
               height: "100%", borderRadius: T.radius.full, transition: "width 0.4s",
@@ -128,7 +128,7 @@ export function TeamCapacityPlanner({ quotas, deals }: Props) {
             fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace",
             color: teamLoad < 50 ? "#4d9ef7" : teamLoad < 75 ? "#22d3a0" : teamLoad < 90 ? "#fbbf24" : "#f85b5b",
           }}>{teamLoad}%</div>
-          <div style={{ fontSize: 10, color: T.text3 }}>{totalActive}/{totalCapacity} capacity</div>
+          <div style={{ fontSize: 14, color: T.text3 }}>{totalActive}/{totalCapacity} capacity</div>
         </div>
       </div>
 
@@ -148,17 +148,17 @@ export function TeamCapacityPlanner({ quotas, deals }: Props) {
                     width: 28, height: 28, borderRadius: T.radius.full,
                     background: `linear-gradient(135deg, ${T.purple}, ${T.blue})`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, fontWeight: 700, color: "#fff",
+                    fontSize: 14, fontWeight: 700, color: "#fff",
                   }}>{c.avatar}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>{c.name}</div>
-                    <div style={{ fontSize: 11, color: T.text3 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{c.name}</div>
+                    <div style={{ fontSize: 14, color: T.text3 }}>
                       {c.daysRemaining > 0 ? `${c.daysRemaining} days remaining` : "No active period"}
                     </div>
                   </div>
                 </div>
                 <span style={{
-                  fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
+                  fontSize: 14, padding: "3px 10px", borderRadius: T.radius.full,
                   background: hm.bg, color: hm.color, fontWeight: 600,
                 }}>{hm.icon} {hm.label}</span>
               </div>
@@ -172,7 +172,7 @@ export function TeamCapacityPlanner({ quotas, deals }: Props) {
               </div>
 
               {/* Stats */}
-              <div style={{ display: "flex", gap: 16, fontSize: 11, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 16, fontSize: 14, flexWrap: "wrap" }}>
                 <div>
                   <span style={{ color: T.text3 }}>Active: </span>
                   <span style={{ fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>{c.activeDeals}</span>

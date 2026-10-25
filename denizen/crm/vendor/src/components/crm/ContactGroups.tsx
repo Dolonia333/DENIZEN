@@ -34,13 +34,13 @@ export function CreateGroupModal({ onClose, onSave, editGroup }: CreateGroupModa
         </h2>
         <div style={{ marginBottom: 12 }}>
           <label style={S.label as React.CSSProperties}>Group Name *</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. VIP Clients" style={S.input as React.CSSProperties} />
+          <input value={name} onChange={e = aria-label="input"> setName(e.target.value)} placeholder="e.g. VIP Clients" style={S.input as React.CSSProperties} />
         </div>
         <div style={{ marginBottom: 12 }}>
           <label style={S.label as React.CSSProperties}>Color</label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {PRESET_COLORS.map(c => (
-              <button key={c} onClick={() => setColor(c)} style={{
+              <button aria-label="Action" key={c} onClick={() => setColor(c)} style={{
                 width: 28, height: 28, borderRadius: T.radius.sm, background: c, border: color === c ? "2px solid #fff" : "2px solid transparent",
                 cursor: "pointer", transition: "border 0.1s",
               }} />
@@ -49,11 +49,11 @@ export function CreateGroupModal({ onClose, onSave, editGroup }: CreateGroupModa
         </div>
         <div style={{ marginBottom: 12 }}>
           <label style={S.label as React.CSSProperties}>Description (optional)</label>
-          <input value={description} onChange={e => setDescription(e.target.value)} placeholder="What this group is for…" style={S.input as React.CSSProperties} />
+          <input value={description} onChange={e = aria-label="input"> setDescription(e.target.value)} placeholder="What this group is for…" style={S.input as React.CSSProperties} />
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          <button onClick={handleSave} style={S.btn as React.CSSProperties}>{editGroup ? "Save Changes" : "Create Group"}</button>
-          <button onClick={onClose} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+          <button aria-label="Save" onClick={handleSave} style={S.btn as React.CSSProperties}>{editGroup ? "Save Changes" : "Create Group"}</button>
+          <button aria-label="Close" onClick={onClose} style={S.btnGhost as React.CSSProperties}>Cancel</button>
         </div>
       </div>
     </div>
@@ -71,12 +71,12 @@ export function DeleteGroupConfirm({ group, onClose, onConfirm }: DeleteConfirmP
     <div onClick={onClose} style={S.modalBg as React.CSSProperties}>
       <div onClick={e => e.stopPropagation()} className="animate-scale-in" style={{ ...S.modalBox as React.CSSProperties, width: 400 }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: "0 0 12px" }}>Delete Group</h2>
-        <p style={{ fontSize: 13, color: T.text2, marginBottom: 20 }}>
+        <p style={{ fontSize: 14, color: T.text2, marginBottom: 20 }}>
           Are you sure you want to delete "<strong style={{ color: T.text0 }}>{group.name}</strong>"? Contacts in this group will remain — they'll just lose this group label.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={onConfirm} style={{ ...S.btn as React.CSSProperties, background: T.red }}>Delete Group</button>
-          <button onClick={onClose} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+          <button aria-label="Action" onClick={onConfirm} style={{ ...S.btn as React.CSSProperties, background: T.red }}>Delete Group</button>
+          <button aria-label="Close" onClick={onClose} style={S.btnGhost as React.CSSProperties}>Cancel</button>
         </div>
       </div>
     </div>
@@ -96,9 +96,9 @@ export function GroupAssignDropdown({ groups, assignedGroupIds, onToggle }: Grou
 
   return (
     <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
-      <button onClick={() => setOpen(p => !p)} style={{
+      <button aria-label="Action" onClick={() => setOpen(p => !p)} style={{
         background: T.bg4, border: "none", borderRadius: T.radius.xs, padding: "4px 8px",
-        color: T.text2, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+        color: T.text2, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
       }}>
         🏷 {assignedGroupIds.length > 0 ? assignedGroupIds.length : ""}
       </button>
@@ -113,15 +113,15 @@ export function GroupAssignDropdown({ groups, assignedGroupIds, onToggle }: Grou
             {groups.map(g => {
               const assigned = assignedGroupIds.includes(g.id);
               return (
-                <button key={g.id} onClick={() => onToggle(g.id)} style={{
+                <button aria-label="Action" key={g.id} onClick={() => onToggle(g.id)} style={{
                   display: "flex", alignItems: "center", gap: 8, width: "100%",
                   background: assigned ? `${g.color}18` : "transparent",
                   border: "none", borderRadius: T.radius.sm, padding: "6px 8px",
-                  cursor: "pointer", color: T.text1, fontSize: 12, textAlign: "left",
+                  cursor: "pointer", color: T.text1, fontSize: 14, textAlign: "left",
                 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 2, background: g.color, flexShrink: 0 }} />
                   <span style={{ flex: 1 }}>{g.name}</span>
-                  {assigned && <span style={{ color: T.green, fontSize: 12 }}>✓</span>}
+                  {assigned && <span style={{ color: T.green, fontSize: 14 }}>✓</span>}
                 </button>
               );
             })}
@@ -147,7 +147,7 @@ export function GroupFilterChips({ groups, activeGroupId, onSelect, onEdit, onDe
     <>
       <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
         {groups.map(g => (
-          <button
+          <button aria-label="Action"
             key={g.id}
             onClick={() => onSelect(activeGroupId === g.id ? null : g.id)}
             onContextMenu={e => { e.preventDefault(); setContextMenu({ group: g, x: e.clientX, y: e.clientY }); }}
@@ -156,7 +156,7 @@ export function GroupFilterChips({ groups, activeGroupId, onSelect, onEdit, onDe
               background: activeGroupId === g.id ? `${g.color}22` : T.bg3,
               color: activeGroupId === g.id ? g.color : T.text2,
               border: `1px solid ${activeGroupId === g.id ? `${g.color}66` : T.bg4}`,
-              borderRadius: T.radius.sm, padding: "5px 10px", fontSize: 12, cursor: "pointer",
+              borderRadius: T.radius.sm, padding: "5px 10px", fontSize: 14, cursor: "pointer",
               fontWeight: activeGroupId === g.id ? 600 : 400,
             }}
           >
@@ -173,13 +173,13 @@ export function GroupFilterChips({ groups, activeGroupId, onSelect, onEdit, onDe
             background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md,
             padding: 4, minWidth: 120, boxShadow: T.shadow.elevated,
           }}>
-            <button onClick={() => { onEdit(contextMenu.group); setContextMenu(null); }} style={{
+            <button aria-label="Action" onClick={() => { onEdit(contextMenu.group); setContextMenu(null); }} style={{
               display: "block", width: "100%", background: "none", border: "none", color: T.text1,
-              padding: "6px 10px", fontSize: 12, cursor: "pointer", textAlign: "left", borderRadius: T.radius.sm,
+              padding: "6px 10px", fontSize: 14, cursor: "pointer", textAlign: "left", borderRadius: T.radius.sm,
             }}>✎ Edit Group</button>
-            <button onClick={() => { onDelete(contextMenu.group); setContextMenu(null); }} style={{
+            <button aria-label="Action" onClick={() => { onDelete(contextMenu.group); setContextMenu(null); }} style={{
               display: "block", width: "100%", background: "none", border: "none", color: T.red,
-              padding: "6px 10px", fontSize: 12, cursor: "pointer", textAlign: "left", borderRadius: T.radius.sm,
+              padding: "6px 10px", fontSize: 14, cursor: "pointer", textAlign: "left", borderRadius: T.radius.sm,
             }}>✕ Delete Group</button>
           </div>
         </>

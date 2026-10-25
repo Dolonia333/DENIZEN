@@ -37,7 +37,7 @@ interface ChartTooltipProps {
 const ChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 11 }}>
+    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 14 }}>
       <div style={{ color: T.text3, marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color || p.stroke, fontWeight: 600 }}>{p.name}: {p.value}</div>
@@ -83,9 +83,9 @@ function ConfusionMatrixCard({ matrix }: { matrix: ConfusionMatrix }) {
             <div style={{ fontSize: 22, fontWeight: 800, color: accent, fontFamily: "'JetBrains Mono', monospace" }}>
               {n}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.text1, marginTop: 4 }}>{meta.short}</div>
-            <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{pct}% of sample</div>
-            <div style={{ fontSize: 10, color: T.text2, marginTop: 4, lineHeight: 1.35 }}>{meta.hint}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text1, marginTop: 4 }}>{meta.short}</div>
+            <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{pct}% of sample</div>
+            <div style={{ fontSize: 14, color: T.text2, marginTop: 4, lineHeight: 1.35 }}>{meta.hint}</div>
           </div>
         );
       })}
@@ -180,18 +180,18 @@ export function LeadGenTab({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>🎯 Lead Scoring</h1>
-          <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+          <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>
             Rule-based scores from contacts, deals, emails, tasks, and notes — updates live as your data changes
           </p>
         </div>
-        <button
+        <button aria-label="Action"
           type="button"
           disabled={isTraining || leadModelState.version === "v2"}
           onClick={handleTrainModel}
           style={{
             padding: "10px 18px", borderRadius: T.radius.md, border: "none", cursor: isTraining || leadModelState.version === "v2" ? "not-allowed" : "pointer",
             background: `linear-gradient(135deg, ${T.purple}, #7c3aed)`,
-            color: "#fff", fontSize: 12, fontWeight: 700, opacity: isTraining || leadModelState.version === "v2" ? 0.65 : 1,
+            color: "#fff", fontSize: 14, fontWeight: 700, opacity: isTraining || leadModelState.version === "v2" ? 0.65 : 1,
             position: "relative", overflow: "hidden",
           }}
         >
@@ -210,7 +210,7 @@ export function LeadGenTab({
               borderTopColor: T.purple, borderRadius: "50%", margin: "0 auto 16px",
             }} />
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Optimizing algorithmic weights…</div>
-            <div style={{ fontSize: 12, color: T.text2, marginTop: 6 }}>Est. Accuracy {displayAccuracy}%</div>
+            <div style={{ fontSize: 14, color: T.text2, marginTop: 6 }}>Est. Accuracy {displayAccuracy}%</div>
           </div>
         </div>
       )}
@@ -225,7 +225,7 @@ export function LeadGenTab({
         ].map(s => (
           <div key={s.label} style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 10, minHeight: 84 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{s.label}</div>
+              <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{s.label}</div>
               <div style={{
                 fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'JetBrains Mono', monospace",
                 transition: s.animate ? "color 0.3s ease" : undefined, lineHeight: 1.1,
@@ -251,8 +251,8 @@ export function LeadGenTab({
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={trainingChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
-              <XAxis dataKey="epoch" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} domain={[40, 100]} />
+              <XAxis dataKey="epoch" tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} domain={[40, 100]} />
               <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="accuracy" name="Accuracy %" stroke={T.purple} strokeWidth={2} dot={{ r: 3, fill: T.purple }} />
             </LineChart>
@@ -266,12 +266,12 @@ export function LeadGenTab({
           <ResponsiveContainer width="100%" height={220}>
             <RadarChart data={radarData}>
               <PolarGrid stroke={T.bg4} />
-              <PolarAngleAxis dataKey="feature" tick={{ fontSize: 10, fill: T.text3 }} />
+              <PolarAngleAxis dataKey="feature" tick={{ fontSize: 14, fill: T.text3 }} />
               <Radar name="Weight" dataKey="importance" stroke={T.accent} fill={T.accent} fillOpacity={0.2} strokeWidth={2} />
               <Tooltip content={<ChartTooltip />} />
             </RadarChart>
           </ResponsiveContainer>
-          <div style={{ fontSize: 11, color: T.text3, marginTop: 8 }}>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 8 }}>
             {factors.map(f => `${f.name} (${Math.round(f.weight * 100)}%)`).join(" · ")}
           </div>
         </div>
@@ -284,8 +284,8 @@ export function LeadGenTab({
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={scoreBuckets} barSize={28}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
-              <XAxis dataKey="range" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, "auto"]} />
+              <XAxis dataKey="range" tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 14, fill: T.text3 }} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, "auto"]} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="count" name="Leads" radius={[4, 4, 0, 0]}>
                 {scoreBuckets.map((b, i) => <Cell key={i} fill={b.color} />)}
@@ -299,10 +299,10 @@ export function LeadGenTab({
       <div style={cardStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>Top Scored Leads</div>
-          <div style={{ fontSize: 11, color: T.text3 }}>Ranked by composite score</div>
+          <div style={{ fontSize: 14, color: T.text3 }}>Ranked by composite score</div>
         </div>
         {scoredContacts.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "32px 0", color: T.text3, fontSize: 13 }}>Add contacts to see lead scores</div>
+          <div style={{ textAlign: "center", padding: "32px 0", color: T.text3, fontSize: 14 }}>Add contacts to see lead scores</div>
         ) : (
           <div className="crm-panel-scroll">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -314,22 +314,22 @@ export function LeadGenTab({
                     background: i === 0 ? `${T.accent}08` : "transparent",
                     border: `1px solid ${i === 0 ? `${T.accent}33` : T.bg4}`, borderRadius: T.radius.md,
                   }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: T.text3, width: 20, textAlign: "center", fontFamily: "'JetBrains Mono', monospace" }}>#{i + 1}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text3, width: 20, textAlign: "center", fontFamily: "'JetBrains Mono', monospace" }}>#{i + 1}</div>
                     <div style={{
                       width: 32, height: 32, borderRadius: T.radius.md,
                       background: `linear-gradient(135deg,${scoreColor},${T.bg4})`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0,
+                      fontSize: 14, fontWeight: 700, color: "#fff", flexShrink: 0,
                     }}>{c.name[0]}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{c.name}</div>
-                      <div style={{ fontSize: 11, color: T.text2 }}>{c.company} · {c.status}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: T.text0 }}>{c.name}</div>
+                      <div style={{ fontSize: 14, color: T.text2 }}>{c.company} · {c.status}</div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ width: 60, height: 6, background: T.bg4, borderRadius: 3, overflow: "hidden" }}>
                         <div style={{ height: "100%", width: `${c.aiScore}%`, background: scoreColor, borderRadius: 3, transition: "width 0.35s ease" }} />
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: scoreColor, fontFamily: "'JetBrains Mono', monospace", minWidth: 28, textAlign: "right" }}>{c.aiScore}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: scoreColor, fontFamily: "'JetBrains Mono', monospace", minWidth: 28, textAlign: "right" }}>{c.aiScore}</span>
                     </div>
                   </div>
                 );

@@ -394,13 +394,13 @@ export function AITab({
   };
 
   const scopeBtn = (id: ChatScope, label: string) => (
-    <button
+    <button aria-label="Action"
       key={id}
       onClick={() => setScope(id)}
       style={{
         flex: 1,
         padding: "6px 4px",
-        fontSize: 10,
+        fontSize: 14,
         fontWeight: 600,
         borderRadius: 6,
         border: `1px solid ${scope === id ? `${T.accent}66` : T.bg4}`,
@@ -423,14 +423,14 @@ export function AITab({
         gap: 8,
       }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>Past chats</div>
-          <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{visibleThreads.length} in view</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>Past chats</div>
+          <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{visibleThreads.length} in view</div>
         </div>
         <button type="button" onClick={toggleSidebar} style={iconBtn} title="Collapse sidebar" aria-label="Collapse chat sidebar">
           ‹
         </button>
         {onSaveAiThreads && (
-          <button type="button" onClick={startChat} style={{ ...S.btn, padding: "6px 10px", fontSize: 11 }} title="New chat">
+          <button type="button" onClick={startChat} style={{ ...S.btn, padding: "6px 10px", fontSize: 14 }} title="New chat">
             +
           </button>
         )}
@@ -444,7 +444,7 @@ export function AITab({
 
       <div style={{ flex: 1, overflowY: "auto", padding: "8px 8px 4px" }}>
         {visibleThreads.length === 0 ? (
-          <div style={{ fontSize: 12, color: T.text3, padding: "16px 10px", lineHeight: 1.5 }}>
+          <div style={{ fontSize: 14, color: T.text3, padding: "16px 10px", lineHeight: 1.5 }}>
             No chats here yet. Tap <strong>+</strong> to start one.
           </div>
         ) : visibleThreads.map((t) => {
@@ -453,7 +453,7 @@ export function AITab({
           const dot = mine ? T.accent : authorHue(owner);
           const active = sameThreadId(t.id, activeId);
           return (
-            <button
+            <button aria-label="Action"
               key={t.id}
               type="button"
               onClick={() => pickThread(t.id)}
@@ -471,15 +471,15 @@ export function AITab({
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: dot, flexShrink: 0 }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: T.text0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: T.text0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {t.title || "Chat"}
                 </span>
-                <span style={{ fontSize: 9, color: T.text3 }}>{formatThreadTime(t.updatedAt)}</span>
+                <span style={{ fontSize: 14, color: T.text3 }}>{formatThreadTime(t.updatedAt)}</span>
               </div>
-              <div style={{ fontSize: 10, color: T.text3, marginBottom: 3 }}>
+              <div style={{ fontSize: 14, color: T.text3, marginBottom: 3 }}>
                 {mine ? "You" : owner}{t.npcName ? ` · ${t.npcName}` : ""}
               </div>
-              <div style={{ fontSize: 11, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: 14, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {threadPreview(t)}
               </div>
             </button>
@@ -488,29 +488,29 @@ export function AITab({
       </div>
 
       <div style={{ borderTop: `1px solid ${T.bg3}`, padding: "8px 10px" }}>
-        <button
+        <button aria-label="Action"
           type="button"
           onClick={() => setTeamExpanded((v) => !v)}
           style={{
             width: "100%", background: "none", border: "none", cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "6px 4px", color: T.text2, fontSize: 11, fontWeight: 700,
+            padding: "6px 4px", color: T.text2, fontSize: 14, fontWeight: 700,
           }}
         >
           <span>Team & NPC voice</span>
-          <span style={{ fontSize: 10 }}>{teamExpanded ? "▾" : "▸"}</span>
+          <span style={{ fontSize: 14 }}>{teamExpanded ? "▾" : "▸"}</span>
         </button>
         {teamExpanded && (
           <div style={{ padding: "4px 2px 8px", display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{
-              fontSize: 11, padding: "8px 10px", borderRadius: 8,
+              fontSize: 14, padding: "8px 10px", borderRadius: 8,
               background: `${T.accent}12`, border: `1px solid ${T.accent}33`,
             }}>
               <div style={{ fontWeight: 700, color: T.text0 }}>{userName} (you)</div>
-              {userEmail && <div style={{ fontSize: 10, color: T.text3 }}>{userEmail}</div>}
+              {userEmail && <div style={{ fontSize: 14, color: T.text3 }}>{userEmail}</div>}
             </div>
             {teamMembers.filter((m) => !m.is_self).slice(0, 4).map((m) => (
-              <div key={m.email || m.display_name} style={{ fontSize: 11, color: T.text2, paddingLeft: 4 }}>
+              <div key={m.email || m.display_name} style={{ fontSize: 14, color: T.text2, paddingLeft: 4 }}>
                 <span style={{ color: authorHue(m.display_name), fontWeight: 600 }}>{m.display_name}</span>
                 <span style={{ color: T.text3 }}> · {m.role}</span>
               </div>
@@ -518,7 +518,7 @@ export function AITab({
             <select
               value={selectedNpcKey}
               onChange={(e) => setSelectedNpcKey(e.target.value)}
-              style={{ ...S.input, fontSize: 11, padding: "8px 10px" } as React.CSSProperties}
+              style={{ ...S.input, fontSize: 14, padding: "8px 10px" } as React.CSSProperties}
             >
               {CRM_NPC_PERSONAS.map((p) => (
                 <option key={p.key} value={p.key}>{p.name} — {p.title}</option>
@@ -597,13 +597,13 @@ export function AITab({
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {activeThread?.title || "AI Assistant"}
             </div>
-            <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+            <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
               {activePersona ? `${activePersona.name} · ${activePersona.title}` : "CRM copilot"}
               {threadIsMine ? " · your chat" : activeThread?.ownerName ? ` · ${activeThread.ownerName}'s chat` : ""}
             </div>
           </div>
           {!sidebarOpen && onSaveAiThreads && (
-            <button type="button" onClick={startChat} style={{ ...S.btnGhost, fontSize: 11, padding: "6px 12px" }}>
+            <button aria-label="Action" type="button" onClick={startChat} style={{ ...S.btnGhost, fontSize: 14, padding: "6px 12px" }}>
               + New
             </button>
           )}
@@ -614,7 +614,7 @@ export function AITab({
             margin: "10px 16px 0",
             padding: "8px 12px",
             borderRadius: 8,
-            fontSize: 11,
+            fontSize: 14,
             background: `${authorHue(activeThread.ownerName || "?")}12`,
             border: `1px solid ${T.bg4}`,
             color: T.text2,
@@ -645,7 +645,7 @@ export function AITab({
                 alignItems: isAi ? "flex-start" : "flex-end",
               }}>
                 <div style={{
-                  fontSize: 10,
+                  fontSize: 14,
                   fontWeight: 700,
                   marginBottom: 5,
                   color: isAi ? (T.purple || "#8b5cf6") : (isSelf ? T.accent : teammateColor),
@@ -661,7 +661,7 @@ export function AITab({
                   border: `1px solid ${isAi ? T.bg4 : `${isSelf ? T.accent : teammateColor}44`}`,
                   borderRadius: isAi ? "4px 14px 14px 14px" : "14px 4px 14px 14px",
                   padding: "12px 16px",
-                  fontSize: 13,
+                  fontSize: 14,
                   lineHeight: 1.65,
                   whiteSpace: "pre-wrap",
                   boxShadow: isAi ? "none" : "0 2px 8px rgba(0,0,0,0.12)",
@@ -672,7 +672,7 @@ export function AITab({
             );
           })}
           {busy && (
-            <div style={{ fontSize: 12, color: T.text3, paddingLeft: 4 }}>
+            <div style={{ fontSize: 14, color: T.text3, paddingLeft: 4 }}>
               {activePersona?.name || "AI"} is thinking…
             </div>
           )}
@@ -688,33 +688,33 @@ export function AITab({
               flexDirection: "column",
               gap: 8,
             }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: T.text0 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>
                 Confirm to update CRM
               </div>
               {pendingActions.map((action, idx) => (
                 <div key={`${action.type}-${idx}`} style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: T.text2, flex: 1, minWidth: 120 }}>{action.label}</span>
-                  <button
+                  <span style={{ fontSize: 14, color: T.text2, flex: 1, minWidth: 120 }}>{action.label}</span>
+                  <button aria-label="Action"
                     type="button"
                     disabled={confirmBusy}
                     onClick={() => confirmAction(action)}
                     style={{
                       ...S.btn,
                       padding: "6px 12px",
-                      fontSize: 11,
+                      fontSize: 14,
                       opacity: confirmBusy ? 0.6 : 1,
                     } as React.CSSProperties}
                   >
                     Confirm
                   </button>
-                  <button
+                  <button aria-label="Action"
                     type="button"
                     disabled={confirmBusy}
                     onClick={() => setPendingActions((prev) => prev.filter((a) => a !== action))}
                     style={{
                       ...S.btnGhost,
                       padding: "6px 12px",
-                      fontSize: 11,
+                      fontSize: 14,
                     } as React.CSSProperties}
                   >
                     Dismiss
@@ -736,7 +736,7 @@ export function AITab({
           <input
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) = aria-label="input"> setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && !busy && send()}
             onFocus={() => { if (isMobile && sidebarOpen) setSidebarOpen(false); }}
             placeholder={
@@ -756,7 +756,7 @@ export function AITab({
               opacity: busy ? 0.75 : 1,
             } as React.CSSProperties}
           />
-          <button
+          <button aria-label="send"
             type="button"
             onClick={send}
             disabled={busy || !input.trim()}

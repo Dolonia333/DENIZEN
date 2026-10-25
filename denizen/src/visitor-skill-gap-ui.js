@@ -129,13 +129,13 @@
       : '';
     const guideBtn = '<button type="button" class="sg-btn secondary" data-action="dismiss">Dismiss</button>';
 
-    el.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(el, `
       <p class="sg-title">Skill pipeline${npc}</p>
       <p class="sg-phase">${phaseLabel(active.phase)}</p>
       ${purpose ? `<p class="sg-purpose">${purpose}</p>` : ''}
       ${active.detail ? `<p class="sg-purpose">${String(active.detail).slice(0, 160)}</p>` : ''}
       <div class="sg-actions">${proposalBtn}${guideBtn}</div>
-    `;
+    `);
 
     el.querySelector('[data-action="dismiss"]')?.addEventListener('click', () => {
       el.classList.remove('open', 'ok', 'err');

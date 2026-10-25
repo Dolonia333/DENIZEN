@@ -14,10 +14,10 @@
 
     const bar = document.createElement('div');
     bar.id = 'dzp-phone-embed-back';
-    bar.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(bar, `
       <a class="dzp-back-link" href="/workflow-dashboard.html?embed=1">← Office Build</a>
       <span class="dzp-back-hint">Phone tool</span>
-    `;
+    `);
     const style = document.createElement('style');
     style.textContent = `
       #dzp-phone-embed-back {

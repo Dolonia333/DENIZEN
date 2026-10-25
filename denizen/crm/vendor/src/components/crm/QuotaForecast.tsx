@@ -78,7 +78,7 @@ export function QuotaForecast({ quotas }: Props) {
     <div style={{ ...S.card as React.CSSProperties, padding: "20px 24px", marginBottom: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>🔮 Quota Forecast</h3>
-        <div style={{ display: "flex", gap: 12, fontSize: 11 }}>
+        <div style={{ display: "flex", gap: 12, fontSize: 14 }}>
           <span style={{ color: "#22d3a0" }}>✓ {onTrackCount} on pace</span>
           <span style={{ color: "#fbbf24" }}>⚡ {atRiskCount} at risk</span>
           <span style={{ color: "#f85b5b" }}>✕ {missCount} likely miss</span>
@@ -93,14 +93,14 @@ export function QuotaForecast({ quotas }: Props) {
         display: "flex", justifyContent: "space-between", alignItems: "center",
       }}>
         <div>
-          <div style={{ fontSize: 11, color: T.text3, marginBottom: 2 }}>TEAM AVG PROJECTED ATTAINMENT</div>
+          <div style={{ fontSize: 14, color: T.text3, marginBottom: 2 }}>TEAM AVG PROJECTED ATTAINMENT</div>
           <div style={{
             fontSize: 28, fontWeight: 800,
             color: avgProjected >= 90 ? "#22d3a0" : avgProjected >= 60 ? "#fbbf24" : "#f85b5b",
             fontFamily: "'JetBrains Mono', monospace",
           }}>{avgProjected}%</div>
         </div>
-        <div style={{ fontSize: 11, color: T.text3, textAlign: "right" }}>
+        <div style={{ fontSize: 14, color: T.text3, textAlign: "right" }}>
           Based on current daily pace<br />across {forecasts.length} active quotas
         </div>
       </div>
@@ -126,11 +126,11 @@ export function QuotaForecast({ quotas }: Props) {
                     width: 28, height: 28, borderRadius: T.radius.full,
                     background: `linear-gradient(135deg, ${T.purple}, ${T.blue})`,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 10, fontWeight: 700, color: "#fff",
+                    fontSize: 14, fontWeight: 700, color: "#fff",
                   }}>{member?.avatar || "?"}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>{f.quota.assigneeName}</div>
-                    <div style={{ fontSize: 11, color: T.text3 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{f.quota.assigneeName}</div>
+                    <div style={{ fontSize: 14, color: T.text3 }}>
                       {f.quota.type} · {PERIOD_LABELS[f.quota.period]}
                     </div>
                   </div>
@@ -140,7 +140,7 @@ export function QuotaForecast({ quotas }: Props) {
                     fontSize: 20, fontWeight: 800, color: projColor,
                     fontFamily: "'JetBrains Mono', monospace",
                   }}>{f.projectedPct}%</div>
-                  <div style={{ fontSize: 10, color: T.text3 }}>projected</div>
+                  <div style={{ fontSize: 14, color: T.text3 }}>projected</div>
                 </div>
               </div>
 
@@ -166,7 +166,7 @@ export function QuotaForecast({ quotas }: Props) {
               </div>
 
               {/* Details Row */}
-              <div style={{ display: "flex", gap: 16, fontSize: 11, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 16, fontSize: 14, flexWrap: "wrap" }}>
                 <div>
                   <span style={{ color: T.text3 }}>Current: </span>
                   <span style={{ color: T.text1, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -191,7 +191,7 @@ export function QuotaForecast({ quotas }: Props) {
                   <span style={{ color: trendMeta.color, fontWeight: 600 }}>{trendMeta.label}</span>
                 </div>
                 <span style={{
-                  fontSize: 10, padding: "2px 8px", borderRadius: T.radius.full,
+                  fontSize: 14, padding: "2px 8px", borderRadius: T.radius.full,
                   background: confMeta.bg, color: confMeta.color, fontWeight: 600,
                 }}>Confidence: {confMeta.label}</span>
               </div>

@@ -211,7 +211,7 @@
       ? `Accuracy: ${validated}/${totalPreds} validated${accuracy != null ? `, avg ${Math.round(Number(accuracy) * 100)}%` : ''}`
       : 'No prediction accuracy data yet.';
 
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       <h3>Morning briefing</h3>
       ${pipelineHtml}
       <div class="brief-text">${text.replace(/</g, '&lt;')}</div>
@@ -220,7 +220,7 @@
       ${predictionHtml}
       <h3>Open commitments</h3>
       ${commitHtml}
-    `;
+    `);
 
     panelEl.querySelectorAll('[data-done]').forEach((btn) => {
       btn.addEventListener('click', async () => {

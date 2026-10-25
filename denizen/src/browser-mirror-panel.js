@@ -592,7 +592,7 @@
     document.documentElement.classList.add('denizen-browser-open');
     panelOpen = true;
     const demo = globalThis.DenizenVisitorSession?.isDemo?.();
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       <div class="bm-locked-msg">
         <h3>Live browser mirror</h3>
         <p>Watch your assistant's real browser session in real time — useful when Lucy is researching, filling forms, or browsing for you.</p>
@@ -600,7 +600,7 @@
     ? '<strong>Demo mode:</strong> this is a preview only. Use <strong>Team access</strong> or <strong>CEO access</strong> to unlock the live feed.'
     : 'Use <strong>Team access</strong> or <strong>CEO access</strong> to unlock this feature.'}</p>
         <button type="button" data-bm-locked-close>Got it</button>
-      </div>`;
+      </div>`);
     const closeBtn = panelEl.querySelector('[data-bm-locked-close]');
     const close = () => setPanelOpen(false);
     if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(closeBtn, close);
@@ -645,7 +645,7 @@
   function ensureShell() {
     if (!panelEl || shellReady) return;
     const npcName = npcDisplayName(boundNpcKey).toUpperCase();
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       <div class="bm-resize-handle nw" data-resize="nw"></div>
       <div class="bm-resize-handle ne" data-resize="ne"></div>
       <div class="bm-resize-handle sw" data-resize="sw"></div>
@@ -692,7 +692,7 @@
           <div data-bm="query"></div>
         </div>
         <div class="bm-feed" data-bm="feed"><div class="bm-feed-empty">Activity will show here…</div></div>
-      </div>`;
+      </div>`);
     const refreshBtn = panelEl.querySelector('[data-bm="refresh"]');
     const closeBtn = panelEl.querySelector('[data-bm="close"]');
     const bind = window.DenizenTouchBind?.bindPress;
@@ -908,7 +908,7 @@
     } else if (state.lastActivity && !state.query) {
       bits.push(`<div class="bm-agent-line">${esc(state.lastActivity)}</div>`);
     }
-    el.innerHTML = bits.join('');
+    globalThis.DenizenSafeDom.setSafeHtml(el, bits.join(''));
   }
 
   function liveImg() {
@@ -1417,7 +1417,7 @@
     const idle = $('[data-bm="idle"]');
     if (idle) {
       idle.classList.remove('hidden');
-      if (msg) idle.innerHTML = msg;
+      if (msg) globalThis.DenizenSafeDom.setSafeHtml(idle, msg);
     }
     setChipState();
     updateStatusPill();
@@ -1509,12 +1509,12 @@
     const key = lines.slice(-10).map((e) => `${e.at || ''}:${e.line || ''}`).join('\n');
     if (key === lastFeedKey) return;
     lastFeedKey = key;
-    feedEl.innerHTML = lines.length
+    globalThis.DenizenSafeDom.setSafeHtml(feedEl, lines.length
       ? lines.slice(-10).map((e) => {
         const t = e.at ? new Date(e.at).toLocaleTimeString() : '';
         return `<div class="bm-feed-line"><span style="color:#64748b">${esc(t)}</span> ${esc(e.line || '')}</div>`;
       }).join('')
-      : '<div class="bm-feed-empty">Activity will show here…</div>';
+      : '<div class="bm-feed-empty">Activity will show here…</div>');
     feedEl.scrollTop = feedEl.scrollHeight;
   }
 
@@ -1527,28 +1527,28 @@
     const titleEl = $('[data-bm="title"]');
     if (titleEl) {
       const label = state.browserLabel ? ` · ${state.browserLabel}` : '';
-      titleEl.innerHTML = `<strong>${esc(state.title || `${npcDisplayName(boundNpcKey)}'s browser`)}</strong>${esc(label)}`;
+      globalThis.DenizenSafeDom.setSafeHtml(titleEl, `<strong>${esc(state.title || `${npcDisplayName(boundNpcKey)}'s browser`)}</strong>${esc(label)}`);
     }
     const queryEl = $('[data-bm="query"]');
     if (queryEl) {
-      queryEl.innerHTML = state.query
+      globalThis.DenizenSafeDom.setSafeHtml(queryEl, state.query
         ? `Query: <strong>${esc(state.query)}</strong>`
-        : (state.status === 'computer-use' ? 'Mode: <strong>computer-use</strong> (Lucy driving)' : '');
+        : (state.status === 'computer-use' ? 'Mode: <strong>computer-use</strong> (Lucy driving)' : ''));
     }
     updateResearchStrip();
     const idle = $('[data-bm="idle"]');
     if (idle && !frameLive && !snapshotShown) {
       if (state.searching || state.status === 'searching') {
-        idle.innerHTML = `${npcDisplayName(boundNpcKey)} is launching their browser — <strong>live feed connecting…</strong>`;
+        globalThis.DenizenSafeDom.setSafeHtml(idle, `${npcDisplayName(boundNpcKey)} is launching their browser — <strong>live feed connecting…</strong>`);
       } else if (state.streaming) {
-        idle.innerHTML = 'Browser is running — <strong>waiting for first frame…</strong>';
+        globalThis.DenizenSafeDom.setSafeHtml(idle, 'Browser is running — <strong>waiting for first frame…</strong>');
       } else if (hasStaleSnapshot()) {
         const age = state.frameAgeMs ? ` (${Math.round(state.frameAgeMs / 1000)}s old)` : '';
-        idle.innerHTML = `Last captured frame${age} — browser is <strong>not open</strong>. Ask ${npcDisplayName(boundNpcKey)} to search again for a live feed.`;
+        globalThis.DenizenSafeDom.setSafeHtml(idle, `Last captured frame${age} — browser is <strong>not open</strong>. Ask ${npcDisplayName(boundNpcKey)} to search again for a live feed.`);
       } else if (state.busyWithOtherNpc && state.activeNpcKey) {
-        idle.innerHTML = `Browser is in use by <strong>${esc(npcDisplayName(state.activeNpcKey))}</strong> right now. Ask your assistant to search when it is free.`;
+        globalThis.DenizenSafeDom.setSafeHtml(idle, `Browser is in use by <strong>${esc(npcDisplayName(state.activeNpcKey))}</strong> right now. Ask your assistant to search when it is free.`);
       } else {
-        idle.innerHTML = `Tell ${npcDisplayName(boundNpcKey)} to <strong>search</strong> something. Then use <strong>Watch</strong> / <strong>Drive</strong> / <strong>Point</strong> below to follow along or help.`;
+        globalThis.DenizenSafeDom.setSafeHtml(idle, `Tell ${npcDisplayName(boundNpcKey)} to <strong>search</strong> something. Then use <strong>Watch</strong> / <strong>Drive</strong> / <strong>Point</strong> below to follow along or help.`);
       }
     }
     const feed = $('[data-bm="feed"]');

@@ -297,7 +297,7 @@
     const deepLink = pairing.deepLink || buildDeepLink(pairing.token, pairing.serverUrl);
     modalEl = document.createElement('div');
     modalEl.id = MODAL_ID;
-    modalEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
       <div class="pair-card">
         <h2>Link browser to Denizen Desktop</h2>
         <p>Keep <strong>Denizen Desktop</strong> open on this computer. Click below — the app should open and ask you to approve this link.</p>
@@ -310,7 +310,7 @@
           <button type="button" class="pair-btn close" id="denizen-pair-close">Close</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(modalEl);
     document.documentElement.dataset.denizenModal = 'open';
     try {
@@ -361,7 +361,7 @@
 
     modalEl = document.createElement('div');
     modalEl.id = MODAL_ID;
-    modalEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
       <div class="pair-card">
         <h2>Claim this Denizen station</h2>
         <p class="pair-error" id="denizen-pair-error">${String(message || 'Pairing failed').replace(/</g, '&lt;')}</p>
@@ -369,7 +369,7 @@
           <button type="button" class="pair-btn close" id="denizen-pair-close">Close</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(modalEl);
     document.documentElement.dataset.denizenModal = 'open';
     try {

@@ -1,0 +1,36 @@
+# aislop / Vibecore quality gate for DENIZEN
+engines:
+  format: true
+  lint: true
+  code-quality: true
+  ai-slop: true
+  architecture: true
+  security: true
+
+quality:
+  # Legacy office/server modules are still being decomposed; keep the soft
+  # gate from failing the whole monorepo while security/a11y fixes land.
+  maxFunctionLoc: 120
+  maxFileLoc: 800
+  maxNesting: 8
+  maxParams: 8
+
+exclude:
+  - "**/*.min.js"
+  - "**/vendor/phaser/**"
+  - "denizen/vendor/**"
+  - "denizen/jelly/vendor/**"
+  - "discord pixel game/**"
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/build/**"
+
+security:
+  audit: false
+
+ci:
+  failBelow: 50
+  format: json
+
+telemetry:
+  enabled: false

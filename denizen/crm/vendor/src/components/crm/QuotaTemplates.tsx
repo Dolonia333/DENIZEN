@@ -86,10 +86,10 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <h3 style={{ fontSize: 14, fontWeight: 700, color: T.text0, margin: 0 }}>📋 Quota Templates</h3>
-          <span style={{ fontSize: 11, color: T.text3 }}>{allTemplates.length} templates</span>
+          <span style={{ fontSize: 14, color: T.text3 }}>{allTemplates.length} templates</span>
         </div>
-        <button onClick={() => { setForm({ type: DEFAULT_QUOTA_TYPES[0], period: "monthly" }); setShowBuilder(true); }}
-          style={{ ...S.btnGhost as React.CSSProperties, fontSize: 11 }}>+ Build Template</button>
+        <button aria-label="Action" onClick={() => { setForm({ type: DEFAULT_QUOTA_TYPES[0], period: "monthly" }); setShowBuilder(true); }}
+          style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14 }}>+ Build Template</button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
@@ -100,25 +100,25 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
             position: "relative",
           }}>
             {!tmpl.isBuiltIn && (
-              <button onClick={() => handleDeleteTemplate(tmpl.id)} style={{
+              <button aria-label="Action" onClick={() => handleDeleteTemplate(tmpl.id)} style={{
                 position: "absolute", top: 8, right: 8, background: "none", border: "none",
-                color: T.text3, cursor: "pointer", fontSize: 12, padding: 2,
+                color: T.text3, cursor: "pointer", fontSize: 14, padding: 2,
               }}>✕</button>
             )}
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.text0, marginBottom: 4, paddingRight: 16 }}>{tmpl.name}</div>
-            <div style={{ fontSize: 11, color: T.text3, marginBottom: 8 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text0, marginBottom: 4, paddingRight: 16 }}>{tmpl.name}</div>
+            <div style={{ fontSize: 14, color: T.text3, marginBottom: 8 }}>
               {tmpl.type} · {PERIOD_LABELS[tmpl.period]}
             </div>
-            <div style={{ display: "flex", gap: 12, fontSize: 12, marginBottom: 10 }}>
+            <div style={{ display: "flex", gap: 12, fontSize: 14, marginBottom: 10 }}>
               <div>
-                <span style={{ color: T.text3, fontSize: 10 }}>TARGET </span>
+                <span style={{ color: T.text3, fontSize: 14 }}>TARGET </span>
                 <span style={{ fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>
                   {tmpl.type === "Revenue" ? fmt(tmpl.targetValue) : tmpl.targetValue}
                 </span>
               </div>
               {tmpl.stretchGoal && (
                 <div>
-                  <span style={{ color: T.text3, fontSize: 10 }}>STRETCH </span>
+                  <span style={{ color: T.text3, fontSize: 14 }}>STRETCH </span>
                   <span style={{ fontWeight: 600, color: T.text2, fontFamily: "'JetBrains Mono', monospace" }}>
                     {tmpl.type === "Revenue" ? fmt(tmpl.stretchGoal) : tmpl.stretchGoal}
                   </span>
@@ -126,10 +126,10 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
               )}
             </div>
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => { setAssignModal(tmpl); setSelectedMembers([]); }} style={{
-                ...S.btn as React.CSSProperties, fontSize: 10, padding: "4px 12px", flex: 1,
+              <button aria-label="Action" onClick={() => { setAssignModal(tmpl); setSelectedMembers([]); }} style={{
+                ...S.btn as React.CSSProperties, fontSize: 14, padding: "4px 12px", flex: 1,
               }}>Assign</button>
-              <button onClick={() => {
+              <button aria-label="Action" onClick={() => {
                 setForm({
                   name: tmpl.name + " (copy)",
                   type: tmpl.type,
@@ -139,11 +139,11 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
                 });
                 setShowBuilder(true);
               }} style={{
-                ...S.btnGhost as React.CSSProperties, fontSize: 10, padding: "4px 10px",
+                ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "4px 10px",
               }}>⧉ Duplicate</button>
             </div>
             {tmpl.isBuiltIn && (
-              <div style={{ fontSize: 9, color: T.text3, marginTop: 6, textAlign: "center" }}>Built-in</div>
+              <div style={{ fontSize: 14, color: T.text3, marginTop: 6, textAlign: "center" }}>Built-in</div>
             )}
           </div>
         ))}
@@ -158,7 +158,7 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
             <div style={{ marginBottom: 12 }}>
               <label style={S.label as React.CSSProperties}>Template Name</label>
               <input ref={nameInputRef} value={form.name || ""} placeholder="e.g. Q3 Revenue Push"
-                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                onChange={e = aria-label="e.g. Q3 Revenue Push"> setForm(p => ({ ...p, name: e.target.value }))}
                 style={S.input as React.CSSProperties} />
             </div>
 
@@ -185,20 +185,20 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
               <div>
                 <label style={S.label as React.CSSProperties}>Target Value</label>
                 <input type="number" value={form.targetValue || ""} placeholder="e.g. 50000"
-                  onChange={e => setForm(p => ({ ...p, targetValue: e.target.value }))}
+                  onChange={e = aria-label="e.g. 50000"> setForm(p => ({ ...p, targetValue: e.target.value }))}
                   style={S.input as React.CSSProperties} />
               </div>
               <div>
                 <label style={S.label as React.CSSProperties}>Stretch Goal (optional)</label>
                 <input type="number" value={form.stretchGoal || ""} placeholder="e.g. 65000"
-                  onChange={e => setForm(p => ({ ...p, stretchGoal: e.target.value }))}
+                  onChange={e = aria-label="e.g. 65000"> setForm(p => ({ ...p, stretchGoal: e.target.value }))}
                   style={S.input as React.CSSProperties} />
               </div>
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button onClick={() => setShowBuilder(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-              <button onClick={handleCreateTemplate} style={S.btn as React.CSSProperties}>Create Template</button>
+              <button aria-label="Action" onClick={() => setShowBuilder(false)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+              <button aria-label="Action" onClick={handleCreateTemplate} style={S.btn as React.CSSProperties}>Create Template</button>
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
             <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text0, marginBottom: 6 }}>
               Assign "{assignModal.name}"
             </h3>
-            <p style={{ fontSize: 12, color: T.text3, marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: T.text3, marginBottom: 20 }}>
               {assignModal.type} · {PERIOD_LABELS[assignModal.period]} · Target: {" "}
               <strong style={{ color: T.text0 }}>
                 {assignModal.type === "Revenue" ? fmt(assignModal.targetValue) : assignModal.targetValue}
@@ -224,8 +224,8 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
                 {TEAM_MEMBERS.filter(m => m.role !== "manager").map(m => {
                   const selected = selectedMembers.includes(m.id);
                   return (
-                    <button key={m.id} onClick={() => toggleMember(m.id)} style={{
-                      padding: "8px 16px", borderRadius: T.radius.md, fontSize: 12, fontWeight: 600,
+                    <button aria-label="Action" key={m.id} onClick={() => toggleMember(m.id)} style={{
+                      padding: "8px 16px", borderRadius: T.radius.md, fontSize: 14, fontWeight: 600,
                       background: selected ? `${T.accent}22` : T.bg3,
                       color: selected ? T.accent : T.text3,
                       border: `2px solid ${selected ? T.accent : T.bg4}`,
@@ -235,20 +235,20 @@ export function QuotaTemplates({ onAssignFromTemplate }: Props) {
                 })}
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <button onClick={() => setSelectedMembers(TEAM_MEMBERS.filter(m => m.role !== "manager").map(m => m.id))}
-                  style={{ ...S.btnGhost as React.CSSProperties, fontSize: 10, padding: "4px 10px" }}>Select All</button>
-                <button onClick={() => setSelectedMembers([])}
-                  style={{ ...S.btnGhost as React.CSSProperties, fontSize: 10, padding: "4px 10px" }}>Clear</button>
+                <button aria-label="Action" onClick={() => setSelectedMembers(TEAM_MEMBERS.filter(m => m.role !== "manager").map(m => m.id))}
+                  style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "4px 10px" }}>Select All</button>
+                <button aria-label="Action" onClick={() => setSelectedMembers([])}
+                  style={{ ...S.btnGhost as React.CSSProperties, fontSize: 14, padding: "4px 10px" }}>Clear</button>
               </div>
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: T.text2 }}>
+              <span style={{ fontSize: 14, color: T.text2 }}>
                 {selectedMembers.length} member{selectedMembers.length !== 1 ? "s" : ""} selected
               </span>
               <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => setAssignModal(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
-                <button onClick={handleAssign} disabled={selectedMembers.length === 0} style={{
+                <button aria-label="Action" onClick={() => setAssignModal(null)} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                <button aria-label="Action" onClick={handleAssign} disabled={selectedMembers.length === 0} style={{
                   ...S.btn as React.CSSProperties,
                   opacity: selectedMembers.length === 0 ? 0.5 : 1,
                 }}>Assign Quotas</button>

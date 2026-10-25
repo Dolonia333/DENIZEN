@@ -108,7 +108,7 @@ export function ContactTimeline({ contact, deals, notes, tasks, emailLog, meetin
       <div style={{ textAlign: "center", padding: 40, color: T.text3 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📭</div>
         <div style={{ fontSize: 14 }}>No activity recorded yet</div>
-        <div style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>Emails, calls, notes, and deals will appear here</div>
+        <div style={{ fontSize: 14, marginTop: 4, opacity: 0.6 }}>Emails, calls, notes, and deals will appear here</div>
       </div>
     );
   }
@@ -129,7 +129,7 @@ export function ContactTimeline({ contact, deals, notes, tasks, emailLog, meetin
               width: 32, height: 20, borderRadius: T.radius.sm,
               background: T.bg3, border: `1px solid ${T.bg4}`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 9, fontWeight: 700, color: T.text3, letterSpacing: "0.05em",
+              fontSize: 14, fontWeight: 700, color: T.text3, letterSpacing: "0.05em",
             }}>
               {new Date(date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </div>
@@ -151,15 +151,15 @@ export function ContactTimeline({ contact, deals, notes, tasks, emailLog, meetin
                 {ev.icon}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, color: T.text1, lineHeight: 1.4 }}>{ev.title}</div>
-                {ev.detail && <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>{ev.detail}</div>}
+                <div style={{ fontSize: 14, color: T.text1, lineHeight: 1.4 }}>{ev.title}</div>
+                {ev.detail && <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{ev.detail}</div>}
                 <div style={{ display: "flex", gap: 6, marginTop: 4, alignItems: "center" }}>
                   <span style={{
-                    fontSize: 9, padding: "1px 6px", borderRadius: T.radius.sm,
+                    fontSize: 14, padding: "1px 6px", borderRadius: T.radius.sm,
                     background: `${ev.color}14`, color: ev.color, fontWeight: 600,
                     textTransform: "capitalize",
                   }}>{ev.type.replace("_", " ")}</span>
-                  {ev.meta && <span style={{ fontSize: 9, color: T.text3 }}>· {ev.meta}</span>}
+                  {ev.meta && <span style={{ fontSize: 14, color: T.text3 }}>· {ev.meta}</span>}
                 </div>
               </div>
             </div>

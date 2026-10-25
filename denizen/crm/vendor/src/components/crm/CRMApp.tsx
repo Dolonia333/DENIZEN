@@ -621,14 +621,14 @@ export default function CRMApp() {
               </select>
             ) : f.type === "checkbox" ? (
               <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-                <input type="checkbox" checked={formData[`cf_${f.id}`] === "true"} onChange={e => setFormData(p => ({ ...p, [`cf_${f.id}`]: e.target.checked ? "true" : "false" }))} />
-                <span style={{ fontSize: 13, color: T.text1 }}>{f.label}</span>
+                <input type="checkbox" checked={formData[`cf_${f.id}`] === "true"} onChange={e = aria-label="checkbox"> setFormData(p => ({ ...p, [`cf_${f.id}`]: e.target.checked ? "true" : "false" }))} />
+                <span style={{ fontSize: 14, color: T.text1 }}>{f.label}</span>
               </label>
             ) : f.type === "textarea" ? (
-              <textarea value={formData[`cf_${f.id}`] || ""} onChange={e => setFormData(p => ({ ...p, [`cf_${f.id}`]: e.target.value }))} style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical" as const }} />
+              <textarea value={formData[`cf_${f.id}`] || ""} onChange={e = aria-label="textarea"> setFormData(p => ({ ...p, [`cf_${f.id}`]: e.target.value }))} style={{ ...S.input as React.CSSProperties, minHeight: 60, resize: "vertical" as const }} />
             ) : (
               <input type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "url" ? "url" : f.type === "email" ? "email" : "text"}
-                value={formData[`cf_${f.id}`] || ""} onChange={e => setFormData(p => ({ ...p, [`cf_${f.id}`]: e.target.value }))} style={S.input as React.CSSProperties} />
+                value={formData[`cf_${f.id}`] || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, [`cf_${f.id}`]: e.target.value }))} style={S.input as React.CSSProperties} />
             )}
           </div>
         ))}
@@ -1110,13 +1110,13 @@ export default function CRMApp() {
         display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
         marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}`,
       }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
           Dashboard view
         </span>
         {CRM_ROLES.map((r) => {
           const on = r.id === activeRole;
           return (
-            <button
+            <button aria-label="Action"
               key={r.id}
               onClick={() => switchRole(r.id)}
               title={r.blurb}
@@ -1126,7 +1126,7 @@ export default function CRMApp() {
                 border: `1px solid ${on ? r.accent : T.bg4}`,
                 color: on ? r.accent : T.text2,
                 borderRadius: T.radius.full, padding: "6px 12px",
-                fontSize: 12.5, fontWeight: on ? 700 : 600, cursor: "pointer",
+                fontSize: 14, fontWeight: on ? 700 : 600, cursor: "pointer",
                 transition: "all 0.12s",
               }}
             >
@@ -1139,7 +1139,7 @@ export default function CRMApp() {
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text0 }}>
           {role.icon} {role.label} Dashboard
         </h1>
-        <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text2 }}>{role.blurb}</p>
+        <p style={{ margin: "4px 0 0", fontSize: 14, color: T.text2 }}>{role.blurb}</p>
       </div>
       <MyWorkPanel
         userName={denizenProfile.name}
@@ -1334,7 +1334,7 @@ export default function CRMApp() {
   return (
     <IndustryConfigBridge config={industryConfig}>
     <div style={{ display: "flex", height: "100vh", background: T.bg0, overflow: "hidden" }}>
-      <input ref={fileInputRef} type="file" accept=".csv" onChange={handleImportContacts} style={{ display: "none" }} />
+      <input ref={fileInputRef} type="file" accept=".csv" onChange={handleImportContacts} style={{ display: "none" }} / aria-label="file" />
 
       {/* MOBILE HEADER */}
       {isMobile && (
@@ -1353,23 +1353,23 @@ export default function CRMApp() {
               color: T.accent, fontSize: 15, textDecoration: "none", flexShrink: 0,
             }}
           >⬡</a>
-          <button onClick={() => setSidebarOpen(p => !p)} style={{ background: "none", border: "none", color: T.text1, fontSize: 20, cursor: "pointer", padding: "2px 4px" }}>☰</button>
+          <button aria-label="Action" onClick={() => setSidebarOpen(p => !p)} style={{ background: "none", border: "none", color: T.text1, fontSize: 20, cursor: "pointer", padding: "2px 4px" }}>☰</button>
           <div style={{
             width: 24, height: 24, borderRadius: T.radius.sm,
             background: `linear-gradient(135deg,${T.accent},#d97706)`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 900, color: "#080d18",
+            fontSize: 14, fontWeight: 900, color: "#080d18",
           }}>M</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {currentNavItem?.label || "Meridian"}
             </div>
-            <div style={{ fontSize: 8, fontWeight: 600, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.text2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {editionTitle.replace("Meridian — ", "")}
             </div>
           </div>
           <NotificationBell deals={deals} tasks={tasks} onClick={() => setNotificationsOpen(true)} />
-          <button onClick={() => setCmdOpen(true)} style={{
+          <button aria-label="Action" onClick={() => setCmdOpen(true)} style={{
             background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm,
             padding: "4px 8px", color: T.text3, fontSize: 14, cursor: "pointer",
           }}>⌘</button>
@@ -1427,7 +1427,7 @@ export default function CRMApp() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, letterSpacing: "-0.02em" }}>Meridian</div>
             <div style={{
-              fontSize: 9, fontWeight: 600, color: T.text2, marginTop: 2,
+              fontSize: 14, fontWeight: 600, color: T.text2, marginTop: 2,
               padding: "2px 6px", borderRadius: 4, display: "inline-block",
               background: `${T.purple}18`, border: `1px solid ${T.purple}33`,
               letterSpacing: "0.04em", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -1437,18 +1437,18 @@ export default function CRMApp() {
           </div>
           {!isMobile && <NotificationBell deals={deals} tasks={tasks} onClick={() => setNotificationsOpen(true)} />}
           {isMobile && (
-            <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", color: T.text3, fontSize: 18, cursor: "pointer" }}>✕</button>
+            <button aria-label="Action" onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", color: T.text3, fontSize: 18, cursor: "pointer" }}>✕</button>
           )}
         </div>
 
-        <button onClick={() => { setCmdOpen(true); if (isMobile) setSidebarOpen(false); }} style={{
+        <button aria-label="Action" onClick={() => { setCmdOpen(true); if (isMobile) setSidebarOpen(false); }} style={{
           display: "flex", alignItems: "center", gap: 8, width: "100%",
           background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md,
-          padding: "8px 12px", marginBottom: 16, cursor: "pointer", color: T.text3, fontSize: 12,
+          padding: "8px 12px", marginBottom: 16, cursor: "pointer", color: T.text3, fontSize: 14,
         }}>
           <span>⌘</span>
           <span style={{ flex: 1, textAlign: "left" }}>Search…</span>
-          <span style={{ fontSize: 10, background: T.bg4, padding: "1px 5px", borderRadius: 3 }}>K</span>
+          <span style={{ fontSize: 14, background: T.bg4, padding: "1px 5px", borderRadius: 3 }}>K</span>
         </button>
 
         {/* REFACTORED: Collapsible sidebar groups with dividers, count badges, tooltips */}
@@ -1467,14 +1467,14 @@ export default function CRMApp() {
           borderRadius: T.radius.sm,
           border: `1px solid ${T.bg4}`,
           background: T.bg3,
-          fontSize: 10,
+          fontSize: 14,
           color: syncStatus === "error" ? T.red : syncStatus === "no-session" || syncStatus === "draft" ? T.text3 : T.green,
           lineHeight: 1.35,
         }}>
           {syncLabel}
         </div>
 
-        <a
+        <a aria-label="Link"
           href={studioBoardHref}
           style={{
             display: "flex",
@@ -1486,7 +1486,7 @@ export default function CRMApp() {
             border: `1px solid ${T.bg4}`,
             background: T.bg2,
             color: T.text2,
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: 600,
             textDecoration: "none",
           }}
@@ -1495,7 +1495,7 @@ export default function CRMApp() {
           <span>Studio Board</span>
         </a>
 
-        <a
+        <a aria-label="Link"
           href={denizenPhoneHref}
           style={{
             display: "flex",
@@ -1507,7 +1507,7 @@ export default function CRMApp() {
             border: `1px solid ${T.bg4}`,
             background: T.bg2,
             color: T.text2,
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: 600,
             textDecoration: "none",
           }}
@@ -1524,11 +1524,11 @@ export default function CRMApp() {
             width: 30, height: 30, borderRadius: T.radius.md,
             background: `linear-gradient(135deg,${T.purple},${T.bg4})`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 12, fontWeight: 700, color: "#fff",
+            fontSize: 14, fontWeight: 700, color: "#fff",
           }}>{denizenProfile.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?"}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: T.text1 }}>{denizenProfile.name}</div>
-            <div style={{ fontSize: 10, color: T.text3 }}>{denizenProfile.role}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{denizenProfile.name}</div>
+            <div style={{ fontSize: 14, color: T.text3 }}>{denizenProfile.role}</div>
           </div>
         </div>
       </aside>
@@ -1546,11 +1546,11 @@ export default function CRMApp() {
             borderRadius: 10,
             border: `1px solid ${T.bg3}`,
             background: T.bg2,
-            fontSize: 12,
+            fontSize: 14,
             color: T.text2,
           }}>
             Showing <strong style={{ color: T.text0 }}>your CRM records only</strong>. AI assistants and owners still see the full org.
-            {" "}Open <button type="button" onClick={() => handleNavigate("team")} style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", padding: 0, fontSize: 12 }}>Team viewer</button> to see what everyone is doing.
+            {" "}Open <button aria-label="Action" type="button" onClick={() => handleNavigate("team")} style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", padding: 0, fontSize: 14 }}>Team viewer</button> to see what everyone is doing.
           </div>
         )}
         <div key={tab} className="crm-page-fade">
@@ -1627,18 +1627,18 @@ export default function CRMApp() {
                     {formData.avatar ? <img src={formData.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "📷"}
                   </div>
                   <div>
-                    <label style={{ display: "inline-block", background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm, padding: "6px 12px", color: T.accent, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>
+                    <label style={{ display: "inline-block", background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm, padding: "6px 12px", color: T.accent, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>
                       Upload Photo
-                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = () => setFormData(p => ({ ...p, avatar: reader.result as string })); reader.readAsDataURL(file); } }} />
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={e = aria-label="file"> { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = () => setFormData(p => ({ ...p, avatar: reader.result as string })); reader.readAsDataURL(file); } }} />
                     </label>
-                    {formData.avatar && <button onClick={() => setFormData(p => ({ ...p, avatar: "" }))} style={{ background: "none", border: "none", color: T.red, fontSize: 11, cursor: "pointer", marginLeft: 8 }}>Remove</button>}
-                    <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>JPG, PNG · Max 2MB</div>
+                    {formData.avatar && <button aria-label="Action" onClick={() => setFormData(p => ({ ...p, avatar: "" }))} style={{ background: "none", border: "none", color: T.red, fontSize: 14, cursor: "pointer", marginLeft: 8 }}>Remove</button>}
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>JPG, PNG · Max 2MB</div>
                   </div>
                 </div>
                 {[["name", "Name *", "text"], ["email", "Email", "email"], ["company", "Company", "text"], ["phone", "Phone", "tel"]].map(([key, label, type]) => (
                   <div key={key} style={{ marginBottom: 12 }}>
                     <label style={S.label as React.CSSProperties}>{label}</label>
-                    <input value={formData[key] || ""} onChange={e => setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
+                    <input value={formData[key] || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
                   </div>
                 ))}
                 <div style={{ marginBottom: 12 }}>
@@ -1663,10 +1663,10 @@ export default function CRMApp() {
                       {contactGroups.map(g => {
                         const active = selectedGroupIds.includes(g.id);
                         return (
-                          <button key={g.id} onClick={() => setSelectedGroupIds(p => active ? p.filter(x => x !== g.id) : [...p, g.id])} style={{
+                          <button aria-label="Action" key={g.id} onClick={() => setSelectedGroupIds(p => active ? p.filter(x => x !== g.id) : [...p, g.id])} style={{
                             display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: T.radius.sm,
                             background: active ? `${g.color}22` : T.bg3, color: active ? g.color : T.text2,
-                            border: `1px solid ${active ? `${g.color}66` : T.bg4}`, fontSize: 12, cursor: "pointer", fontWeight: active ? 600 : 400,
+                            border: `1px solid ${active ? `${g.color}66` : T.bg4}`, fontSize: 14, cursor: "pointer", fontWeight: active ? 600 : 400,
                           }}>
                             <div style={{ width: 8, height: 8, borderRadius: 2, background: g.color }} />
                             {g.name}
@@ -1677,18 +1677,18 @@ export default function CRMApp() {
                     </div>
                   )}
                   {!inlineNewGroup ? (
-                    <button onClick={() => setInlineNewGroup(true)} style={{ background: "none", border: `1px dashed ${T.bg5}`, borderRadius: T.radius.sm, padding: "5px 10px", color: T.accent, fontSize: 11, cursor: "pointer" }}>+ New Group</button>
+                    <button aria-label="Action" onClick={() => setInlineNewGroup(true)} style={{ background: "none", border: `1px dashed ${T.bg5}`, borderRadius: T.radius.sm, padding: "5px 10px", color: T.accent, fontSize: 14, cursor: "pointer" }}>+ New Group</button>
                   ) : (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input value={inlineGroupName} onChange={e => setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
-                      <button onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
+                      <input value={inlineGroupName} onChange={e = aria-label="input"> setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
+                      <button aria-label="Action" onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 14 }}>Add</button>
+                      <button aria-label="Action" onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
                     </div>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button onClick={handleAddContact} style={S.btn as React.CSSProperties}>Add {term.contact}</button>
-                  <button onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Add" onClick={handleAddContact} style={S.btn as React.CSSProperties}>Add {term.contact}</button>
+                  <button aria-label="close" onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
                 </div>
               </>
             )}
@@ -1701,18 +1701,18 @@ export default function CRMApp() {
                     {formData.avatar ? <img src={formData.avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (formData.name?.[0] || "📷")}
                   </div>
                   <div>
-                    <label style={{ display: "inline-block", background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm, padding: "6px 12px", color: T.accent, fontSize: 11, cursor: "pointer", fontWeight: 600 }}>
+                    <label style={{ display: "inline-block", background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm, padding: "6px 12px", color: T.accent, fontSize: 14, cursor: "pointer", fontWeight: 600 }}>
                       Upload Photo
-                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = () => setFormData(p => ({ ...p, avatar: reader.result as string })); reader.readAsDataURL(file); } }} />
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={e = aria-label="file"> { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = () => setFormData(p => ({ ...p, avatar: reader.result as string })); reader.readAsDataURL(file); } }} />
                     </label>
-                    {formData.avatar && <button onClick={() => setFormData(p => ({ ...p, avatar: "" }))} style={{ background: "none", border: "none", color: T.red, fontSize: 11, cursor: "pointer", marginLeft: 8 }}>Remove</button>}
-                    <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>JPG, PNG · Max 2MB</div>
+                    {formData.avatar && <button aria-label="Action" onClick={() => setFormData(p => ({ ...p, avatar: "" }))} style={{ background: "none", border: "none", color: T.red, fontSize: 14, cursor: "pointer", marginLeft: 8 }}>Remove</button>}
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 4 }}>JPG, PNG · Max 2MB</div>
                   </div>
                 </div>
                 {[["name", "Name *", "text"], ["email", "Email", "email"], ["company", "Company", "text"], ["phone", "Phone", "tel"]].map(([key, label, type]) => (
                   <div key={key} style={{ marginBottom: 12 }}>
                     <label style={S.label as React.CSSProperties}>{label}</label>
-                    <input value={formData[key] || ""} onChange={e => setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
+                    <input value={formData[key] || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
                   </div>
                 ))}
                 <div style={{ marginBottom: 12 }}>
@@ -1737,10 +1737,10 @@ export default function CRMApp() {
                       {contactGroups.map(g => {
                         const active = selectedGroupIds.includes(g.id);
                         return (
-                          <button key={g.id} onClick={() => setSelectedGroupIds(p => active ? p.filter(x => x !== g.id) : [...p, g.id])} style={{
+                          <button aria-label="Action" key={g.id} onClick={() => setSelectedGroupIds(p => active ? p.filter(x => x !== g.id) : [...p, g.id])} style={{
                             display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: T.radius.sm,
                             background: active ? `${g.color}22` : T.bg3, color: active ? g.color : T.text2,
-                            border: `1px solid ${active ? `${g.color}66` : T.bg4}`, fontSize: 12, cursor: "pointer", fontWeight: active ? 600 : 400,
+                            border: `1px solid ${active ? `${g.color}66` : T.bg4}`, fontSize: 14, cursor: "pointer", fontWeight: active ? 600 : 400,
                           }}>
                             <div style={{ width: 8, height: 8, borderRadius: 2, background: g.color }} />
                             {g.name}
@@ -1751,18 +1751,18 @@ export default function CRMApp() {
                     </div>
                   )}
                   {!inlineNewGroup ? (
-                    <button onClick={() => setInlineNewGroup(true)} style={{ background: "none", border: `1px dashed ${T.bg5}`, borderRadius: T.radius.sm, padding: "5px 10px", color: T.accent, fontSize: 11, cursor: "pointer" }}>+ New Group</button>
+                    <button aria-label="Action" onClick={() => setInlineNewGroup(true)} style={{ background: "none", border: `1px dashed ${T.bg5}`, borderRadius: T.radius.sm, padding: "5px 10px", color: T.accent, fontSize: 14, cursor: "pointer" }}>+ New Group</button>
                   ) : (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input value={inlineGroupName} onChange={e => setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
-                      <button onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
+                      <input value={inlineGroupName} onChange={e = aria-label="input"> setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
+                      <button aria-label="Action" onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 14 }}>Add</button>
+                      <button aria-label="Action" onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
                     </div>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button onClick={handleEditContact} style={S.btn as React.CSSProperties}>Save Changes</button>
-                  <button onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Edit" onClick={handleEditContact} style={S.btn as React.CSSProperties}>Save Changes</button>
+                  <button aria-label="close" onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
                 </div>
               </>
             )}
@@ -1771,7 +1771,7 @@ export default function CRMApp() {
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: "0 0 20px" }}>New {term.deal}</h2>
                 <div style={{ marginBottom: 12 }}>
                   <label style={S.label as React.CSSProperties}>{term.deal} Title *</label>
-                  <input value={formData.title || ""} onChange={e => setFormData(p => ({ ...p, title: e.target.value }))} style={S.input as React.CSSProperties} />
+                  <input value={formData.title || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, title: e.target.value }))} style={S.input as React.CSSProperties} />
                 </div>
                 {contactSelect("contact", term.contact)}
                 <div style={{ marginBottom: 12 }}>
@@ -1783,13 +1783,13 @@ export default function CRMApp() {
                 {[["value", `${term.value} ($)`, "number"], ["closeDate", term.closeDate, "date"]].map(([key, label, type]) => (
                   <div key={key} style={{ marginBottom: 12 }}>
                     <label style={S.label as React.CSSProperties}>{label}</label>
-                    <input value={formData[key] || ""} onChange={e => setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
+                    <input value={formData[key] || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
                   </div>
                 ))}
                 {renderCustomFields("deal")}
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button onClick={handleAddDeal} style={S.btn as React.CSSProperties}>Create {term.deal}</button>
-                  <button onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Add" onClick={handleAddDeal} style={S.btn as React.CSSProperties}>Create {term.deal}</button>
+                  <button aria-label="close" onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
                 </div>
               </>
             )}
@@ -1798,7 +1798,7 @@ export default function CRMApp() {
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: "0 0 20px" }}>Edit {term.deal}</h2>
                 <div style={{ marginBottom: 12 }}>
                   <label style={S.label as React.CSSProperties}>{term.deal} Title *</label>
-                  <input value={formData.title || ""} onChange={e => setFormData(p => ({ ...p, title: e.target.value }))} style={S.input as React.CSSProperties} />
+                  <input value={formData.title || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, title: e.target.value }))} style={S.input as React.CSSProperties} />
                 </div>
                 {contactSelect("contact", term.contact)}
                 <div style={{ marginBottom: 12 }}>
@@ -1810,7 +1810,7 @@ export default function CRMApp() {
                 {[["value", `${term.value} ($)`, "number"], ["closeDate", term.closeDate, "date"]].map(([key, label, type]) => (
                   <div key={key} style={{ marginBottom: 12 }}>
                     <label style={S.label as React.CSSProperties}>{label}</label>
-                    <input value={formData[key] || ""} onChange={e => setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
+                    <input value={formData[key] || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, [key]: e.target.value }))} style={S.input as React.CSSProperties} type={type} />
                   </div>
                 ))}
                 <div style={{ marginBottom: 12 }}>
@@ -1821,8 +1821,8 @@ export default function CRMApp() {
                 </div>
                 {renderCustomFields("deal")}
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button onClick={handleEditDeal} style={S.btn as React.CSSProperties}>Save Changes</button>
-                  <button onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Edit" onClick={handleEditDeal} style={S.btn as React.CSSProperties}>Save Changes</button>
+                  <button aria-label="close" onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
                 </div>
               </>
             )}
@@ -1838,11 +1838,11 @@ export default function CRMApp() {
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <label style={S.label as React.CSSProperties}>{term.note} *</label>
-                  <textarea value={formData.text || ""} onChange={e => setFormData(p => ({ ...p, text: e.target.value }))} style={{ ...S.input as React.CSSProperties, minHeight: 100, resize: "vertical" as const }} />
+                  <textarea value={formData.text || ""} onChange={e = aria-label="textarea"> setFormData(p => ({ ...p, text: e.target.value }))} style={{ ...S.input as React.CSSProperties, minHeight: 100, resize: "vertical" as const }} />
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button onClick={handleAddNote} style={S.btn as React.CSSProperties}>Log {term.note}</button>
-                  <button onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Add" onClick={handleAddNote} style={S.btn as React.CSSProperties}>Log {term.note}</button>
+                  <button aria-label="close" onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
                 </div>
               </>
             )}
@@ -1851,12 +1851,12 @@ export default function CRMApp() {
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: "0 0 20px" }}>New {term.task}</h2>
                 <div style={{ marginBottom: 12 }}>
                   <label style={S.label as React.CSSProperties}>{term.task} Title *</label>
-                  <input value={formData.title || ""} onChange={e => setFormData(p => ({ ...p, title: e.target.value }))} style={S.input as React.CSSProperties} />
+                  <input value={formData.title || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, title: e.target.value }))} style={S.input as React.CSSProperties} />
                 </div>
                 {contactSelect("contact", "Contact")}
                 <div style={{ marginBottom: 12 }}>
                   <label style={S.label as React.CSSProperties}>Due Date</label>
-                  <input value={formData.due || ""} onChange={e => setFormData(p => ({ ...p, due: e.target.value }))} style={S.input as React.CSSProperties} type="date" />
+                  <input value={formData.due || ""} onChange={e = aria-label="input"> setFormData(p => ({ ...p, due: e.target.value }))} style={S.input as React.CSSProperties} type="date" />
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <label style={S.label as React.CSSProperties}>Priority</label>
@@ -1865,8 +1865,8 @@ export default function CRMApp() {
                   </select>
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button onClick={handleAddTask} style={S.btn as React.CSSProperties}>Create {term.task}</button>
-                  <button onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
+                  <button aria-label="Add" onClick={handleAddTask} style={S.btn as React.CSSProperties}>Create {term.task}</button>
+                  <button aria-label="close" onClick={closeModal} style={S.btnGhost as React.CSSProperties}>Cancel</button>
                 </div>
               </>
             )}
@@ -1885,8 +1885,8 @@ export default function CRMApp() {
               borderLeft: `3px solid ${t.type === "success" ? T.green : t.type === "error" ? T.red : T.blue}`,
             }}>
               <span style={{ fontSize: 14 }}>{t.type === "success" ? "✓" : t.type === "error" ? "✕" : "ℹ"}</span>
-              <span style={{ fontSize: 13, color: T.text1, flex: 1 }}>{t.message}</span>
-              <button onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16, padding: 0 }}>×</button>
+              <span style={{ fontSize: 14, color: T.text1, flex: 1 }}>{t.message}</span>
+              <button aria-label="Action" onClick={() => setToasts(prev => prev.filter(x => x.id !== t.id))} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16, padding: 0 }}>×</button>
             </div>
           ))}
         </div>

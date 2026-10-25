@@ -426,7 +426,7 @@
 
   async function refresh(opts = {}) {
     const el = ensurePanel();
-    if (!opts.silent) el.innerHTML = '<p class="rh-muted" style="padding:24px">Loading market…</p>';
+    if (!opts.silent) globalThis.DenizenSafeDom.setSafeHtml(el, '<p class="rh-muted" style="padding:24px">Loading market…</p>');
     try {
       const data = await loadBase();
       if (state.symbol !== 'PAPER') {
@@ -438,10 +438,10 @@
       } else {
         state.chart = null;
       }
-      el.innerHTML = render(data);
+      globalThis.DenizenSafeDom.setSafeHtml(el, render(data));
     } catch (err) {
       const msg = err?.name === 'AbortError' ? 'Timed out — try again' : (err?.message || 'Load failed');
-      el.innerHTML = `<p class="rh-down" style="padding:16px">${esc(msg)}</p><button type="button" class="rh-btn" data-refresh>Retry</button>`;
+      globalThis.DenizenSafeDom.setSafeHtml(el, `<p class="rh-down" style="padding:16px">${esc(msg)}</p><button type="button" class="rh-btn" data-refresh>Retry</button>`);
     }
   }
 

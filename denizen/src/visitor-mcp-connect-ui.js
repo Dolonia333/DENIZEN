@@ -424,7 +424,7 @@
   async function renderSettingsPanel(hostEl) {
     if (!hostEl) return;
     injectStyles();
-    hostEl.innerHTML = '<p class="mcp-set-empty">Loading connections…</p>';
+    globalThis.DenizenSafeDom.setSafeHtml(hostEl, '<p class="mcp-set-empty">Loading connections…</p>');
 
     const cards = [];
     const assistant = getAssistantConnection();
@@ -440,9 +440,9 @@
     }
 
     if (!cards.length) {
-      hostEl.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(hostEl, `
         <p class="mcp-set-hint">Connect Cursor, Claude, or ChatGPT to Denizen — CRM (sell), Studio Board (deliver), Business Studio (prove), plus coding and office skills.</p>
-        <p class="mcp-set-empty">Claim an assistant in chat first, then return here to connect.</p>`;
+        <p class="mcp-set-empty">Claim an assistant in chat first, then return here to connect.</p>`);
       renderOptionalAddons(hostEl, { prominent: true });
       return;
     }
@@ -456,10 +456,10 @@
       }
     }));
 
-    hostEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(hostEl, `
       <p class="mcp-set-hint">Your Denizen URL exposes CRM, Studio Board, Business Studio, and agency tools — plus <code>run_skill</code> for coding/research. Prefer <strong>Full access</strong> so ChatGPT can write, not only read.</p>
       <div class="mcp-set" id="mcp-set-denizen"></div>
-      <div id="mcp-set-addons"></div>`;
+      <div id="mcp-set-addons"></div>`);
     const denizenHost = hostEl.querySelector('#mcp-set-denizen');
     const addonsHost = hostEl.querySelector('#mcp-set-addons');
 
@@ -473,7 +473,7 @@
       const meta = row.error
         ? row.error
         : (tools.length ? `${tools.length} tools` : 'Ready to connect');
-      card.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(card, `
         <div class="mcp-set-head">
           <strong>${escHtml(row.title)}</strong>
           <span class="mcp-set-tag">${escHtml(row.tag)}</span>
@@ -485,7 +485,7 @@
         <div class="mcp-set-actions">
           <button type="button" class="primary" data-act="connect">Connect</button>
           <button type="button" data-act="copy-url" ${row.info?.mcp_url ? '' : 'disabled'}>Copy URL</button>
-        </div>`;
+        </div>`);
       const scopeSelect = card.querySelector('[data-scope-preset]');
       scopeSelect?.addEventListener('change', () => {
         const hint = card.querySelector('.mcp-set-scope-hint');
@@ -566,13 +566,13 @@
     if (!listed.ok || !listed.tokens?.length) return;
     const wrap = document.createElement('div');
     wrap.className = 'mcp-set';
-    wrap.innerHTML = '<p class="mcp-set-hint" style="margin-top:10px">Active tokens — revoke any connection you no longer trust.</p>';
+    globalThis.DenizenSafeDom.setSafeHtml(wrap, '<p class="mcp-set-hint" style="margin-top:10px">Active tokens — revoke any connection you no longer trust.</p>');
     for (const t of listed.tokens) {
       const row = document.createElement('div');
       row.className = 'mcp-set-card mcp-token-row';
       const scopes = Array.isArray(t.scopes) ? t.scopes.join(', ') : 'full';
       const label = t.label || t.npc_key;
-      row.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(row, `
         <div class="mcp-set-head">
           <strong>${escHtml(label)}</strong>
           <span class="mcp-set-tag">${escHtml(t.npc_key === '_team' ? 'Team' : 'NPC')}</span>
@@ -580,7 +580,7 @@
         <div class="mcp-set-meta">Scopes: ${escHtml(scopes)} · last used ${escHtml(formatTokenWhen(t.last_used_at))}</div>
         <div class="mcp-set-actions">
           <button type="button" data-act="revoke">Revoke</button>
-        </div>`;
+        </div>`);
       row.querySelector('[data-act="revoke"]')?.addEventListener('click', async (e) => {
         const btn = e.currentTarget;
         if (!confirm(`Revoke token for ${label}? Connected AIs will stop working.`)) return;
@@ -615,7 +615,7 @@
     for (const ext of OPTIONAL_ADDONS) {
       const card = document.createElement('div');
       card.className = prominent ? 'mcp-set-card mcp-addon-prominent' : 'mcp-set-card';
-      card.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(card, `
         <div class="mcp-set-head">
           <strong>${escHtml(ext.title)}</strong>
           <span class="mcp-set-tag ext">Trading</span>
@@ -624,7 +624,7 @@
         <div class="mcp-set-url">${escHtml(ext.url)}</div>
         <div class="mcp-set-actions">
           <button type="button" data-act="copy-url">Copy URL</button>
-        </div>`;
+        </div>`);
       card.querySelector('[data-act="copy-url"]')?.addEventListener('click', async (e) => {
         await copyText(ext.url);
         const btn = e.currentTarget;
@@ -723,7 +723,7 @@
       : 'full';
     const modal = document.createElement('div');
     modal.id = MODAL_ID;
-    modal.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(modal, `
       <div class="mcp-card">
         <h3>Connect your AI to ${displayName}</h3>
         <p class="mcp-scope-line">Token scopes: ${escHtml(scopeLine)}</p>
@@ -825,7 +825,7 @@
           <button type="button" class="mcp-close">Done</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(modal);
 
     const texts = {
@@ -1031,7 +1031,7 @@
     const name = escHtml(displayName || 'your assistant');
     const overlay = document.createElement('div');
     overlay.id = OFFER_ID;
-    overlay.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(overlay, `
       <div class="mcp-offer-card" role="dialog" aria-label="Connect an external AI">
         <h3>Connect an external AI to ${name}?</h3>
         <p>Optional — let ChatGPT, Claude, or Cursor work through ${name}. You can do this anytime from the <strong>Connect AI</strong> button in the chat header.</p>
@@ -1040,7 +1040,7 @@
           <button type="button" class="mcp-offer-connect">Connect</button>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(overlay);
 
     const close = () => overlay.remove();

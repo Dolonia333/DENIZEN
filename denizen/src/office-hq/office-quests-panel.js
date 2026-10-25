@@ -112,7 +112,7 @@
   function createDOM() {
     const panel = document.createElement('div');
     panel.id = PANEL_ID;
-    panel.innerHTML = '<div class="qp-body"></div>';
+    globalThis.DenizenSafeDom.setSafeHtml(panel, '<div class="qp-body"></div>');
     document.body.appendChild(panel);
     panelEl = panel;
     bodyEl = panel.querySelector('.qp-body');
@@ -121,7 +121,7 @@
     const btn = document.createElement('button');
     btn.id = TOGGLE_ID;
     btn.type = 'button';
-    btn.innerHTML = `${ti('target', { size: 14 })} Quests`;
+    globalThis.DenizenSafeDom.setSafeHtml(btn, `${ti('target', { size: 14 })} Quests`);
     btn.dataset.active = 'false';
     btn.title = 'Office quests and achievements';
     btn.addEventListener('click', toggle);
@@ -174,7 +174,7 @@
       (data.locked || []).map((a) => renderBadge(a, true)).join(''),
       '</div>',
     ].join('');
-    bodyEl.innerHTML = html;
+    globalThis.DenizenSafeDom.setSafeHtml(bodyEl, html);
 
     bodyEl.querySelectorAll('.qp-claim').forEach((btn) => {
       btn.addEventListener('click', () => claim(btn.dataset.quest));

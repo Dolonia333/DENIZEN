@@ -333,12 +333,12 @@
 
   function renderLoading(message) {
     if (!bodyEl) return;
-    bodyEl.innerHTML = `<div class="hq-loading">${_esc(message || 'loading office statsΓÇª')}</div>`;
+    globalThis.DenizenSafeDom.setSafeHtml(bodyEl, `<div class="hq-loading">${_esc(message || 'loading office statsΓÇª')}</div>`);
   }
 
   function renderError(message) {
     if (!bodyEl) return;
-    bodyEl.innerHTML = `<div class="hq-error">${_esc(message)}</div>`;
+    globalThis.DenizenSafeDom.setSafeHtml(bodyEl, `<div class="hq-error">${_esc(message)}</div>`);
   }
 
   function emptyHqPayload() {
@@ -395,7 +395,7 @@
     const weekly = (data.quests || []).filter((q) => q.period === 'weekly');
     const achievements = data.achievements || {};
 
-    bodyEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(bodyEl, `
       <div class="hq-hero">
         <div class="hq-level-row">
           <span class="hq-level">Level ${p.level || 1}</span>
@@ -418,7 +418,7 @@
         ${(achievements.locked || []).map((a) => renderBadge(a, true)).join('')}
       </div>
       <button type="button" class="hq-enter">enter office ΓåÆ</button>
-    `;
+    `);
 
     bodyEl.querySelectorAll('.hq-claim').forEach((btn) => {
       btn.addEventListener('click', () => claim(btn.dataset.quest));
@@ -437,13 +437,13 @@
   function createDOM() {
     const overlay = document.createElement('div');
     overlay.id = OVERLAY_ID;
-    overlay.innerHTML = `<div id="${PANEL_ID}" role="dialog" aria-label="Office HQ">
+    globalThis.DenizenSafeDom.setSafeHtml(overlay, `<div id="${PANEL_ID}" role="dialog" aria-label="Office HQ">
       <div class="hq-topbar">
         <span class="hq-title">Office HQ</span>
         <button type="button" class="hq-close" aria-label="Close">esc</button>
       </div>
       <div class="hq-body"></div>
-    </div>`;
+    </div>`);
     document.body.appendChild(overlay);
     overlayEl = overlay;
     panelEl = overlay.querySelector(`#${PANEL_ID}`);
@@ -455,7 +455,7 @@
     const btn = document.createElement('button');
     btn.id = TOGGLE_ID;
     btn.type = 'button';
-    btn.innerHTML = `${ti('building-skyscraper', { size: 14 })} HQ`;
+    globalThis.DenizenSafeDom.setSafeHtml(btn, `${ti('building-skyscraper', { size: 14 })} HQ`);
     btn.dataset.active = 'false';
     btn.title = 'Office HQ ΓÇö level, streaks, quests, achievements';
     btn.addEventListener('click', toggle);

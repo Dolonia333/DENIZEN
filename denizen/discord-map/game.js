@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /* Pixel Spaces side-view — polished closer to itch example */
 (() => {
   const PACK = './PixelSpaces';

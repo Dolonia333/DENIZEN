@@ -172,14 +172,14 @@
     if (document.getElementById(ROOT_ID)) return;
     const bar = document.createElement('div');
     bar.id = ROOT_ID;
-    bar.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(bar, `
       <div class="dm-pad" aria-label="Movement controls">
         <button type="button" class="dm-btn dm-up" data-act="enter" aria-label="Enter or go up">▲</button>
         <button type="button" class="dm-btn dm-left" data-act="left" aria-label="Move left">◀</button>
         <button type="button" class="dm-btn dm-down" data-act="exit" aria-label="Exit or go down">▼</button>
         <button type="button" class="dm-btn dm-right" data-act="right" aria-label="Move right">▶</button>
       </div>
-    `;
+    `);
     document.body.appendChild(bar);
     bindHold(bar.querySelector('.dm-left'), 'left');
     bindHold(bar.querySelector('.dm-right'), 'right');

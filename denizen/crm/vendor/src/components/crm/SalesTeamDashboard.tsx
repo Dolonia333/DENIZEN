@@ -133,9 +133,9 @@ const CustomTooltip = ({ active, payload, label, prefix, suffix }: any) => {
   return (
     <div style={{
       background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: 10,
-      padding: "10px 14px", fontSize: 12, boxShadow: T.shadow.card,
+      padding: "10px 14px", fontSize: 14, boxShadow: T.shadow.card,
     }}>
-      <div style={{ color: T.text3, marginBottom: 6, fontWeight: 600, fontSize: 11 }}>{label}</div>
+      <div style={{ color: T.text3, marginBottom: 6, fontWeight: 600, fontSize: 14 }}>{label}</div>
       {payload.map((p: any, i: number) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: p.color || p.fill || p.payload?.color }} />
@@ -372,7 +372,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4, gap:8, flexWrap:"wrap" }}>
           <div style={{ display:"flex", alignItems:"center", gap:6, flex:1, minWidth:0 }}>
             {editingTitle === chart.id ? (
-              <input autoFocus value={titleDraft} onChange={e => setTitleDraft(e.target.value)}
+              <input autoFocus value={titleDraft} onChange={e = aria-label="input"> setTitleDraft(e.target.value)}
                 onBlur={() => { updateChart(chart.id, c => ({ ...c, title: titleDraft || c.title })); setEditingTitle(null); }}
                 onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                 style={{ background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:4, color:T.text0, fontSize:14, fontWeight:700, padding:"2px 6px", width:"100%" }}
@@ -384,17 +384,17 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
             )}
           </div>
           <div style={{ display:"flex", gap:4 }}>
-            <button onClick={() => toggleChartType(chart.id)} title="Switch chart type"
+            <button aria-label="Action" onClick={() => toggleChartType(chart.id)} title="Switch chart type"
               style={smallBtn}>⇄ {chart.type}</button>
             {!isEditing ? (
-              <button onClick={() => startEditChart(chart.id)} style={smallBtn}>✏️ Edit</button>
+              <button aria-label="Action" onClick={() => startEditChart(chart.id)} style={smallBtn}>✏️ Edit</button>
             ) : (
               <>
-                <button onClick={() => saveChart(chart.id)} style={{ ...smallBtn, background:`${T.green}22`, color:T.green }}>✓ Save</button>
-                <button onClick={() => resetChart(chart.id)} style={{ ...smallBtn, background:`${T.red}22`, color:T.red }}>↺ Reset</button>
+                <button aria-label="Action" onClick={() => saveChart(chart.id)} style={{ ...smallBtn, background:`${T.green}22`, color:T.green }}>✓ Save</button>
+                <button aria-label="Action" onClick={() => resetChart(chart.id)} style={{ ...smallBtn, background:`${T.red}22`, color:T.red }}>↺ Reset</button>
               </>
             )}
-            <button onClick={() => {
+            <button aria-label="Action" onClick={() => {
               const summary = chart.data.map(d => `${d.label}: ${d.value}`).join(", ");
               pullToDiscuss("chart", chart.id, chart.title, { type: chart.type, summary, data: chart.data });
             }} style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple }} title="Pull to Discussion">💬</button>
@@ -402,7 +402,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
         </div>
 
         {/* Description */}
-        <p style={{ fontSize: 11, color: T.text3, margin: "0 0 6px", lineHeight: 1.4 }}>
+        <p style={{ fontSize: 14, color: T.text3, margin: "0 0 6px", lineHeight: 1.4 }}>
           {chart.description}
         </p>
 
@@ -411,7 +411,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
           <span style={{ fontSize: 20, fontWeight: 800, color: T.text0, fontFamily: "'JetBrains Mono', monospace" }}>
             {chart.valuePrefix}{totalValue.toLocaleString()}{chart.valueSuffix}
           </span>
-          <span style={{ fontSize: 11, color: T.text3 }}>total across {chart.data.length} segments</span>
+          <span style={{ fontSize: 14, color: T.text3 }}>total across {chart.data.length} segments</span>
         </div>
 
         {/* Chart visualization */}
@@ -420,8 +420,8 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
             {chart.type === "bar" ? (
               <BarChart data={chart.data}>
                 <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} />
-                <XAxis dataKey="label" tick={{ fill:T.text3, fontSize:11 }} axisLine={{ stroke:T.bg4 }} />
-                <YAxis tick={{ fill:T.text3, fontSize:10 }} axisLine={{ stroke:T.bg4 }}
+                <XAxis dataKey="label" tick={{ fill:T.text3, fontSize: 14 }} axisLine={{ stroke:T.bg4 }} />
+                <YAxis tick={{ fill:T.text3, fontSize: 14 }} axisLine={{ stroke:T.bg4 }}
                   tickFormatter={(v: number) => chart.valuePrefix === "$" ? `$${(v/1000).toFixed(0)}k` : String(v)} />
                 <Tooltip content={<CustomTooltip prefix={chart.valuePrefix} suffix={chart.valueSuffix} />} />
                 <Bar dataKey="value" name="Value" radius={[6,6,0,0]}>
@@ -431,8 +431,8 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
             ) : chart.type === "line" ? (
               <LineChart data={chart.data}>
                 <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} />
-                <XAxis dataKey="label" tick={{ fill:T.text3, fontSize:11 }} axisLine={{ stroke:T.bg4 }} />
-                <YAxis tick={{ fill:T.text3, fontSize:10 }} axisLine={{ stroke:T.bg4 }} allowDecimals={false} />
+                <XAxis dataKey="label" tick={{ fill:T.text3, fontSize: 14 }} axisLine={{ stroke:T.bg4 }} />
+                <YAxis tick={{ fill:T.text3, fontSize: 14 }} axisLine={{ stroke:T.bg4 }} allowDecimals={false} />
                 <Tooltip content={<CustomTooltip prefix={chart.valuePrefix} suffix={chart.valueSuffix} />} />
                 <Line type="monotone" dataKey="value" stroke={chart.data[0]?.color || COLORS[0]} strokeWidth={2.5}
                   dot={{ fill: chart.data[0]?.color || COLORS[0], r: 5, strokeWidth: 2, stroke: T.bg2 }}
@@ -447,8 +447,8 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                 </Pie>
                 <Tooltip content={<CustomTooltip prefix={chart.valuePrefix} suffix={chart.valueSuffix} />} />
                 <Legend
-                  formatter={(value: string) => <span style={{ color: T.text2, fontSize: 10 }}>{value}</span>}
-                  wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
+                  formatter={(value: string) => <span style={{ color: T.text2, fontSize: 14 }}>{value}</span>}
+                  wrapperStyle={{ fontSize: 14, paddingTop: 4 }}
                 />
               </PieChart>
             )}
@@ -459,7 +459,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
         {isEditing && (
           <div style={{ marginTop:6, maxHeight:150, overflowY:"auto", borderTop:`1px solid ${T.bg4}`, paddingTop:8 }}>
             {chart.data.map((dp, idx) => (
-              <div key={idx} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4, fontSize:12 }}>
+              <div key={idx} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4, fontSize: 14 }}>
                 <div style={{ position:"relative" }}>
                   <div onClick={() => setColorPicker(colorPicker?.chartId === chart.id && colorPicker.idx === idx ? null : { chartId:chart.id, idx })}
                     style={{ width:16, height:16, borderRadius:4, background:dp.color, cursor:"pointer", border:`1px solid ${T.bg5}` }} />
@@ -473,27 +473,27 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                   )}
                 </div>
                 {editingCell?.chartId === chart.id && editingCell.idx === idx && editingCell.field === "label" ? (
-                  <input autoFocus value={cellDraft} onChange={e => setCellDraft(e.target.value)}
+                  <input autoFocus value={cellDraft} onChange={e = aria-label="input"> setCellDraft(e.target.value)}
                     onBlur={() => { updateChart(chart.id, c => ({...c, data:c.data.map((d,i)=>i===idx?{...d,label:cellDraft||d.label}:d)})); setEditingCell(null); }}
                     onKeyDown={e => { if(e.key==="Enter")(e.target as HTMLInputElement).blur(); }}
-                    style={{ background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:3, color:T.text1, fontSize:11, padding:"1px 4px", width:60 }} />
+                    style={{ background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:3, color:T.text1, fontSize: 14, padding:"1px 4px", width:60 }} />
                 ) : (
                   <span onClick={() => { setEditingCell({chartId:chart.id,idx,field:"label"}); setCellDraft(dp.label); }}
                     style={{ color:T.text2, cursor:"pointer", minWidth:50 }}>{dp.label}</span>
                 )}
                 {editingCell?.chartId === chart.id && editingCell.idx === idx && editingCell.field === "value" ? (
-                  <input autoFocus type="number" value={cellDraft} onChange={e => setCellDraft(e.target.value)}
+                  <input autoFocus type="number" value={cellDraft} onChange={e = aria-label="number"> setCellDraft(e.target.value)}
                     onBlur={() => { updateChart(chart.id, c => ({...c, data:c.data.map((d,i)=>i===idx?{...d,value:Number(cellDraft)||0}:d)})); setEditingCell(null); }}
                     onKeyDown={e => { if(e.key==="Enter")(e.target as HTMLInputElement).blur(); }}
-                    style={{ background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:3, color:T.text1, fontSize:11, padding:"1px 4px", width:70 }} />
+                    style={{ background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:3, color:T.text1, fontSize: 14, padding:"1px 4px", width:70 }} />
                 ) : (
                   <span onClick={() => { setEditingCell({chartId:chart.id,idx,field:"value"}); setCellDraft(String(dp.value)); }}
                     style={{ color:T.accent, cursor:"pointer", fontVariantNumeric:"tabular-nums" }}>{dp.value.toLocaleString()}</span>
                 )}
-                <button onClick={() => removeDataPoint(chart.id, idx)} style={{ ...smallBtn, padding:"1px 5px", color:T.red, fontSize:10 }}>−</button>
+                <button aria-label="Action" onClick={() => removeDataPoint(chart.id, idx)} style={{ ...smallBtn, padding:"1px 5px", color:T.red, fontSize: 14 }}>−</button>
               </div>
             ))}
-            <button onClick={() => addDataPoint(chart.id)} style={{ ...smallBtn, marginTop:4, color:T.green }}>+ Add point</button>
+            <button aria-label="Action" onClick={() => addDataPoint(chart.id)} style={{ ...smallBtn, marginTop:4, color:T.green }}>+ Add point</button>
           </div>
         )}
       </div>
@@ -513,27 +513,27 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
         <div style={{ display: "flex", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATUS_COLORS.Hot }} />
-            <span style={{ fontSize: 11, color: T.text2 }}>{hotCount} Hot</span>
+            <span style={{ fontSize: 14, color: T.text2 }}>{hotCount} Hot</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATUS_COLORS.Warm }} />
-            <span style={{ fontSize: 11, color: T.text2 }}>{warmCount} Warm</span>
+            <span style={{ fontSize: 14, color: T.text2 }}>{warmCount} Warm</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATUS_COLORS.Cold }} />
-            <span style={{ fontSize: 11, color: T.text2 }}>{coldCount} Cold</span>
+            <span style={{ fontSize: 14, color: T.text2 }}>{coldCount} Cold</span>
           </div>
-          <span style={{ fontSize: 11, color: T.text3, marginLeft: "auto" }}>
+          <span style={{ fontSize: 14, color: T.text3, marginLeft: "auto" }}>
             Total: <strong style={{ color: T.accent }}>{fmt$(totalVal)}</strong>
           </span>
         </div>
 
         <div style={{ overflowY: "auto", flex: 1 }}>
-          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
+          <table style={{ width:"100%", borderCollapse:"collapse", fontSize: 14 }}>
             <thead>
               <tr style={{ borderBottom:`1px solid ${T.bg4}` }}>
                 {["Name","Company","Status","Value","Stage","Owner",""].map(h => (
-                  <th key={h} style={{ textAlign:"left", padding:"8px 6px", color:T.text3, fontWeight:600, fontSize:11 }}>{h}</th>
+                  <th key={h} style={{ textAlign:"left", padding:"8px 6px", color:T.text3, fontWeight:600, fontSize: 14 }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -542,23 +542,23 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                 <tr key={lead.id} style={{ borderBottom:`1px solid ${T.bg4}10` }}>
                   <td style={{ padding:"8px 6px", color:T.text1, fontWeight:500 }}>
                     <div>{lead.name}</div>
-                    <div style={{ fontSize: 10, color: T.text3, marginTop: 1 }}>{lead.notes}</div>
+                    <div style={{ fontSize: 14, color: T.text3, marginTop: 1 }}>{lead.notes}</div>
                   </td>
                   <td style={{ padding:"8px 6px", color:T.text2 }}>{lead.company}</td>
                   <td style={{ padding:"8px 6px" }}>
-                    <span style={{ fontSize:10, padding:"2px 8px", borderRadius:999, background:`${STATUS_COLORS[lead.status]}18`, color:STATUS_COLORS[lead.status], fontWeight:600 }}>{lead.status}</span>
+                    <span style={{ fontSize: 14, padding:"2px 8px", borderRadius:999, background:`${STATUS_COLORS[lead.status]}18`, color:STATUS_COLORS[lead.status], fontWeight:600 }}>{lead.status}</span>
                   </td>
                   <td style={{ padding:"8px 6px", color:T.accent, fontVariantNumeric:"tabular-nums", fontWeight: 600 }}>{fmt$(lead.value)}</td>
                   <td style={{ padding:"8px 6px" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 4, color: T.text2 }}>
-                      <span style={{ fontSize: 12 }}>{STAGE_ICONS[lead.stage] || "📋"}</span>
+                      <span style={{ fontSize: 14 }}>{STAGE_ICONS[lead.stage] || "📋"}</span>
                       {lead.stage}
                     </span>
                   </td>
                   <td style={{ padding:"8px 6px", color:T.text2 }}>{lead.owner}</td>
                   <td style={{ padding:"8px 6px" }}>
-                    <button onClick={() => pullToDiscuss("lead", lead.id, lead.name, { company:lead.company, status:lead.status, value:lead.value, stage:lead.stage, notes:lead.notes, owner:lead.owner })}
-                      style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple, fontSize:10 }} title="Pull to Discuss">💬</button>
+                    <button aria-label="Action" onClick={() => pullToDiscuss("lead", lead.id, lead.name, { company:lead.company, status:lead.status, value:lead.value, stage:lead.stage, notes:lead.notes, owner:lead.owner })}
+                      style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple, fontSize: 14 }} title="Pull to Discuss">💬</button>
                   </td>
                 </tr>
               ))}
@@ -577,7 +577,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
     return (
       <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
         {/* Deal summary */}
-        <div style={{ display: "flex", gap: 16, marginBottom: 10, flexWrap: "wrap", fontSize: 11 }}>
+        <div style={{ display: "flex", gap: 16, marginBottom: 10, flexWrap: "wrap", fontSize: 14 }}>
           <div>
             <span style={{ color: T.text3 }}>Weighted Value: </span>
             <strong style={{ color: T.green }}>{fmt$(Math.round(weightedTotal))}</strong>
@@ -589,11 +589,11 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
         </div>
 
         <div style={{ overflowY:"auto", flex:1 }}>
-          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
+          <table style={{ width:"100%", borderCollapse:"collapse", fontSize: 14 }}>
             <thead>
               <tr style={{ borderBottom:`1px solid ${T.bg4}` }}>
                 {["Deal","Owner","Amount","Close Date","Probability","Stage",""].map(h => (
-                  <th key={h} style={{ textAlign:"left", padding:"8px 6px", color:T.text3, fontWeight:600, fontSize:11 }}>{h}</th>
+                  <th key={h} style={{ textAlign:"left", padding:"8px 6px", color:T.text3, fontWeight:600, fontSize: 14 }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -605,7 +605,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                   <tr key={deal.id} style={{ borderBottom:`1px solid ${T.bg4}10` }}>
                     <td style={{ padding:"8px 6px", color:T.text1, fontWeight:500 }}>
                       <div>{deal.name}</div>
-                      {isUrgent && <div style={{ fontSize: 9, color: T.red, fontWeight: 700, marginTop: 1 }}>⚠ Closing in {daysUntilClose}d</div>}
+                      {isUrgent && <div style={{ fontSize: 14, color: T.red, fontWeight: 700, marginTop: 1 }}>⚠ Closing in {daysUntilClose}d</div>}
                     </td>
                     <td style={{ padding:"8px 6px", color:T.text2 }}>{deal.owner}</td>
                     <td style={{ padding:"8px 6px", color:T.accent, fontVariantNumeric:"tabular-nums", fontWeight: 600 }}>{fmt$(deal.amount)}</td>
@@ -618,20 +618,20 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                             transition: "width 0.3s"
                           }} />
                         </div>
-                        <span style={{ color: deal.probability>70 ? T.green : deal.probability>40 ? T.accent : T.red, fontSize:11, fontWeight:700, fontFamily:"'JetBrains Mono', monospace" }}>
+                        <span style={{ color: deal.probability>70 ? T.green : deal.probability>40 ? T.accent : T.red, fontSize: 14, fontWeight:700, fontFamily:"'JetBrains Mono', monospace" }}>
                           {deal.probability}%
                         </span>
                       </div>
                     </td>
                     <td style={{ padding:"8px 6px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 4, color: T.text2 }}>
-                        <span style={{ fontSize: 12 }}>{STAGE_ICONS[deal.stage] || "📋"}</span>
+                        <span style={{ fontSize: 14 }}>{STAGE_ICONS[deal.stage] || "📋"}</span>
                         {deal.stage}
                       </span>
                     </td>
                     <td style={{ padding:"8px 6px" }}>
-                      <button onClick={() => pullToDiscuss("deal", deal.id, deal.name, { owner:deal.owner, amount:deal.amount, closeDate:deal.closeDate, probability:deal.probability, stage:deal.stage })}
-                        style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple, fontSize:10 }} title="Pull to Discuss">💬</button>
+                      <button aria-label="Action" onClick={() => pullToDiscuss("deal", deal.id, deal.name, { owner:deal.owner, amount:deal.amount, closeDate:deal.closeDate, probability:deal.probability, stage:deal.stage })}
+                        style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple, fontSize: 14 }} title="Pull to Discuss">💬</button>
                     </td>
                   </tr>
                 );
@@ -661,19 +661,19 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:10 }}>
         <div>
           <h1 style={{ fontSize:22, fontWeight:700, color:T.text0, margin:0, letterSpacing:"-0.02em" }}>Sales Team Dashboard</h1>
-          <p style={{ fontSize:12, color:T.text3, margin:"4px 0 0" }}>
+          <p style={{ fontSize: 14, color:T.text3, margin:"4px 0 0" }}>
             Overview of your pipeline, revenue, and team performance. Click 💬 on any item to pull it into a team discussion.
           </p>
         </div>
-        <button onClick={() => setDiscussionOpen(p => !p)}
+        <button aria-label="Action" onClick={() => setDiscussionOpen(p => !p)}
           style={{
-            padding:"8px 16px", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer",
+            padding:"8px 16px", borderRadius:10, fontSize: 14, fontWeight:600, cursor:"pointer",
             background: discussionOpen ? T.purple : `${T.purple}22`,
             color: discussionOpen ? "#fff" : T.purple,
             border:`1px solid ${discussionOpen ? T.purple : `${T.purple}44`}`,
             transition:"all 0.15s",
           }}>
-          💬 Team Discussion {discussions.length > 0 && <span style={{ marginLeft:6, background:`${T.red}`, color:"#fff", borderRadius:999, padding:"1px 6px", fontSize:10, fontWeight:700 }}>{discussions.length}</span>}
+          💬 Team Discussion {discussions.length > 0 && <span style={{ marginLeft:6, background:`${T.red}`, color:"#fff", borderRadius:999, padding:"1px 6px", fontSize: 14, fontWeight:700 }}>{discussions.length}</span>}
         </button>
       </div>
 
@@ -687,10 +687,10 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
               <span style={{ fontSize: 14 }}>{k.icon}</span>
-              <span style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{k.label}</span>
+              <span style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{k.label}</span>
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: k.color, fontFamily: "'JetBrains Mono', monospace" }}>{k.value}</div>
-            <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{k.sub}</div>
+            <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>{k.sub}</div>
           </div>
         ))}
       </div>
@@ -714,7 +714,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <span style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>👥 Rep Performance</span>
-              <span style={{ fontSize: 11, color: T.text3 }}>Pipeline ownership & win probability by sales rep</span>
+              <span style={{ fontSize: 14, color: T.text3 }}>Pipeline ownership & win probability by sales rep</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
               {ownerData.map(rep => (
@@ -733,10 +733,10 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                     }}>{rep.owner.charAt(0)}</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{rep.owner}</div>
-                      <div style={{ fontSize: 10, color: T.text3 }}>{rep.deals} deals · {rep.leads} leads</div>
+                      <div style={{ fontSize: 14, color: T.text3 }}>{rep.deals} deals · {rep.leads} leads</div>
                     </div>
                     {rep.highProbDeals > 0 && (
-                      <span style={{ marginLeft: "auto", fontSize: 9, padding: "2px 7px", borderRadius: 999, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
+                      <span style={{ marginLeft: "auto", fontSize: 14, padding: "2px 7px", borderRadius: 999, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
                         {rep.highProbDeals} likely win{rep.highProbDeals > 1 ? "s" : ""}
                       </span>
                     )}
@@ -744,7 +744,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
 
                   {/* Pipeline bar */}
                   <div style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 4 }}>
                       <span style={{ color: T.text3 }}>Pipeline</span>
                       <span style={{ color: rep.color, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>{fmt$(rep.pipelineValue)}</span>
                     </div>
@@ -756,18 +756,18 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                   {/* Stat grid */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     <div style={{ background: T.bg3, borderRadius: 8, padding: "8px 10px" }}>
-                      <div style={{ fontSize: 9, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Weighted</div>
+                      <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Weighted</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: T.green, fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{fmt$(Math.round(rep.weightedValue))}</div>
                     </div>
                     <div style={{ background: T.bg3, borderRadius: 8, padding: "8px 10px" }}>
-                      <div style={{ fontSize: 9, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Win Prob</div>
+                      <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Win Prob</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: rep.avgProb >= 60 ? T.green : rep.avgProb >= 40 ? T.accent : STATUS_COLORS.Hot, fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>{rep.avgProb}%</div>
                     </div>
                   </div>
 
                   {/* Hot leads indicator */}
                   {rep.hotLeads > 0 && (
-                    <div style={{ marginTop: 8, fontSize: 10, color: STATUS_COLORS.Hot, display: "flex", alignItems: "center", gap: 4 }}>
+                    <div style={{ marginTop: 8, fontSize: 14, color: STATUS_COLORS.Hot, display: "flex", alignItems: "center", gap: 4 }}>
                       🔥 {rep.hotLeads} hot lead{rep.hotLeads > 1 ? "s" : ""} in pipeline
                     </div>
                   )}
@@ -869,16 +869,16 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
             )}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
               <span style={{ fontSize:16, fontWeight:700, color:T.text0 }}>💬 Team Discussion</span>
-              <button onClick={() => setDiscussionOpen(false)} style={{ background:"none", border:"none", color:T.text3, fontSize:18, cursor:"pointer" }}>✕</button>
+              <button aria-label="Action" onClick={() => setDiscussionOpen(false)} style={{ background:"none", border:"none", color:T.text3, fontSize:18, cursor:"pointer" }}>✕</button>
             </div>
 
             {/* Search & filter */}
-            <input value={discSearch} onChange={e => setDiscSearch(e.target.value)} placeholder="Search discussions…"
-              style={{ background:T.bg3, border:`1px solid ${T.bg4}`, borderRadius:8, color:T.text1, padding:"8px 12px", width:"100%", fontSize:12, marginBottom:10, outline:"none", boxSizing:"border-box" }} />
+            <input value={discSearch} onChange={e = aria-label="input"> setDiscSearch(e.target.value)} placeholder="Search discussions…"
+              style={{ background:T.bg3, border:`1px solid ${T.bg4}`, borderRadius:8, color:T.text1, padding:"8px 12px", width:"100%", fontSize: 14, marginBottom:10, outline:"none", boxSizing:"border-box" }} />
             <div style={{ display:"flex", gap:4, marginBottom:16, flexWrap:"wrap" }}>
               {["all","lead","deal","chart","Needs Review","In Progress","Resolved"].map(f => (
-                <button key={f} onClick={() => setDiscFilter(f)} style={{
-                  padding:"4px 10px", borderRadius:999, fontSize:10, fontWeight:600, cursor:"pointer",
+                <button aria-label="Action" key={f} onClick={() => setDiscFilter(f)} style={{
+                  padding:"4px 10px", borderRadius:999, fontSize: 14, fontWeight:600, cursor:"pointer",
                   background: discFilter === f ? `${T.accent}22` : T.bg3,
                   color: discFilter === f ? T.accent : T.text3,
                   border:`1px solid ${discFilter === f ? `${T.accent}44` : T.bg4}`,
@@ -887,7 +887,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
             </div>
 
             {filteredDiscussions.length === 0 && (
-              <div style={{ textAlign:"center", padding:40, color:T.text3, fontSize:13 }}>
+              <div style={{ textAlign:"center", padding:40, color:T.text3, fontSize: 14 }}>
                 No items yet — click 💬 on any lead, deal, or chart to pull it here.
               </div>
             )}
@@ -896,13 +896,13 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
               <div key={item.id} style={{ background:T.bg2, border:`1px solid ${T.bg4}`, borderRadius:10, padding:14, marginBottom:10 }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8, gap:6 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:12, padding:"2px 8px", borderRadius:999, background:`${T.purple}18`, color:T.purple, fontWeight:600 }}>
+                    <span style={{ fontSize: 14, padding:"2px 8px", borderRadius:999, background:`${T.purple}18`, color:T.purple, fontWeight:600 }}>
                       {item.sourceType}
                     </span>
-                    <span style={{ fontSize:13, fontWeight:600, color:T.text0 }}>{item.title}</span>
+                    <span style={{ fontSize: 14, fontWeight:600, color:T.text0 }}>{item.title}</span>
                   </div>
                   <select value={item.status} onChange={e => updateDiscussion(item.id, { status: e.target.value as DiscussionItem["status"] })}
-                    style={{ background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:6, color: STATUS_COLORS[item.status] || T.text2, fontSize:10, fontWeight:600, padding:"2px 6px", cursor:"pointer" }}>
+                    style={{ background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:6, color: STATUS_COLORS[item.status] || T.text2, fontSize: 14, fontWeight:600, padding:"2px 6px", cursor:"pointer" }}>
                     <option value="Needs Review">Needs Review</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Resolved">Resolved</option>
@@ -910,7 +910,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                 </div>
 
                 {/* Snapshot data */}
-                <div style={{ background:T.bg3, borderRadius:8, padding:10, marginBottom:8, fontSize:11, color:T.text2 }}>
+                <div style={{ background:T.bg3, borderRadius:8, padding:10, marginBottom:8, fontSize: 14, color:T.text2 }}>
                   {Object.entries(item.snapshot).filter(([k]) => k !== "data").map(([k, v]) => (
                     <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"2px 0" }}>
                       <span style={{ color:T.text3 }}>{k}</span>
@@ -920,11 +920,11 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                 </div>
 
                 {/* Notes */}
-                <textarea value={item.notes} onChange={e => updateDiscussion(item.id, { notes: e.target.value })}
+                <textarea value={item.notes} onChange={e = aria-label="textarea"> updateDiscussion(item.id, { notes: e.target.value })}
                   placeholder="Add team notes…"
-                  style={{ width:"100%", background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:6, color:T.text1, fontSize:12, padding:8, resize:"vertical", minHeight:50, outline:"none", boxSizing:"border-box" }} />
+                  style={{ width:"100%", background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:6, color:T.text1, fontSize: 14, padding:8, resize:"vertical", minHeight:50, outline:"none", boxSizing:"border-box" }} />
 
-                <div style={{ fontSize:10, color:T.text3, marginTop:6 }}>
+                <div style={{ fontSize: 14, color:T.text3, marginTop:6 }}>
                   Pulled {new Date(item.pulledAt).toLocaleString()}
                 </div>
               </div>
@@ -943,6 +943,6 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
 
 const smallBtn: React.CSSProperties = {
   background:T.bg4, border:`1px solid ${T.bg5}`, borderRadius:6,
-  color:T.text2, fontSize:11, padding:"3px 8px", cursor:"pointer",
+  color:T.text2, fontSize: 14, padding:"3px 8px", cursor:"pointer",
   transition:"all 0.1s", whiteSpace:"nowrap",
 };

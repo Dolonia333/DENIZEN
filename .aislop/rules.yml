@@ -1,0 +1,7 @@
+# Architecture preferences for Denizen.
+# Enforced in tests (auth-flows, org-query) more than import bans.
+rules:
+  - name: no-legacy-compute-job-runner-fork
+    type: forbid_import
+    match: "compute-job-runner-legacy"
+    severity: error

@@ -69,7 +69,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
       <div style={{ textAlign: "center", padding: 60, color: T.text3 }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
         <div style={{ fontSize: 16, fontWeight: 600 }}>No open deals</div>
-        <div style={{ fontSize: 12, marginTop: 4 }}>Create a deal to start swiping</div>
+        <div style={{ fontSize: 14, marginTop: 4 }}>Create a deal to start swiping</div>
       </div>
     );
   }
@@ -82,7 +82,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 16 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>📱 Swipe Pipeline</div>
-        <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
+        <div style={{ fontSize: 14, color: T.text3, marginTop: 2 }}>
           {currentIndex + 1} of {openDeals.length} deals
         </div>
       </div>
@@ -90,14 +90,14 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
       {/* Swipe hints */}
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, padding: "0 8px" }}>
         <div style={{
-          fontSize: 10, color: swipeAction === "left" ? T.red : T.text3,
+          fontSize: 14, color: swipeAction === "left" ? T.red : T.text3,
           fontWeight: swipeAction === "left" ? 700 : 400, transition: "all 0.15s",
           opacity: swipeAction === "left" ? 1 : 0.5,
         }}>
           ← {stageIdx > 0 ? `Back to ${STAGES[stageIdx - 1]}` : "Mark Lost"}
         </div>
         <div style={{
-          fontSize: 10, color: swipeAction === "right" ? T.green : T.text3,
+          fontSize: 14, color: swipeAction === "right" ? T.green : T.text3,
           fontWeight: swipeAction === "right" ? 700 : 400, transition: "all 0.15s",
           opacity: swipeAction === "right" ? 1 : 0.5,
         }}>
@@ -110,7 +110,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
         <div style={{
           position: "fixed", top: 70, left: "50%", transform: "translateX(-50%)",
           background: T.bg2, border: `1px solid ${T.accent}44`, borderRadius: T.radius.md,
-          padding: "8px 20px", fontSize: 13, fontWeight: 700, color: T.accent,
+          padding: "8px 20px", fontSize: 14, fontWeight: 700, color: T.accent,
           boxShadow: T.shadow.elevated, zIndex: 1000,
         }}>
           {lastAction}
@@ -145,11 +145,11 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
           {/* Stage badge */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, position: "relative" }}>
             <span style={{
-              fontSize: 11, padding: "3px 10px", borderRadius: T.radius.sm,
+              fontSize: 14, padding: "3px 10px", borderRadius: T.radius.sm,
               background: `${stageColor}22`, color: stageColor, fontWeight: 700,
               border: `1px solid ${stageColor}44`,
             }}>{currentDeal.stage}</span>
-            <span style={{ fontSize: 11, color: T.text3 }}>{currentDeal.daysInStage}d in stage</span>
+            <span style={{ fontSize: 14, color: T.text3 }}>{currentDeal.daysInStage}d in stage</span>
           </div>
 
           {/* Deal info */}
@@ -170,7 +170,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
                 { label: "Stage", value: `${stageIdx + 1}/${STAGES.length}`, color: stageColor },
               ].map(s => (
                 <div key={s.label} style={{ background: T.bg4 + "44", borderRadius: T.radius.md, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 9, color: T.text3, textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>{s.label}</div>
+                  <div style={{ fontSize: 14, color: T.text3, textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>{s.label}</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: s.color, marginTop: 2 }}>{s.value}</div>
                 </div>
               ))}
@@ -178,11 +178,11 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
 
             {/* Quick action buttons */}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => onEditDeal(currentDeal)} style={{
+              <button aria-label="Action" onClick={() => onEditDeal(currentDeal)} style={{
                 flex: 1, background: T.bg4, border: "none", borderRadius: T.radius.md,
-                padding: "10px", color: T.text2, fontSize: 12, cursor: "pointer", fontWeight: 600,
+                padding: "10px", color: T.text2, fontSize: 14, cursor: "pointer", fontWeight: 600,
               }}>✎ Edit</button>
-              <button onClick={() => {
+              <button aria-label="Action" onClick={() => {
                 if (stageIdx < STAGES.length - 2) {
                   onDealStageChange(currentDeal.id, STAGES[stageIdx + 1]);
                   setLastAction(`→ ${STAGES[stageIdx + 1]}`);
@@ -190,7 +190,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
                 }
               }} style={{
                 flex: 1, background: `${T.green}22`, border: `1px solid ${T.green}44`,
-                borderRadius: T.radius.md, padding: "10px", color: T.green, fontSize: 12,
+                borderRadius: T.radius.md, padding: "10px", color: T.green, fontSize: 14,
                 cursor: "pointer", fontWeight: 700,
               }}>Advance →</button>
             </div>
@@ -200,7 +200,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
 
       {/* Navigation dots */}
       <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 20, alignItems: "center" }}>
-        <button onClick={() => setCurrentIndex(i => Math.max(0, i - 1))} disabled={currentIndex === 0} style={{
+        <button aria-label="Action" onClick={() => setCurrentIndex(i => Math.max(0, i - 1))} disabled={currentIndex === 0} style={{
           background: "none", border: "none", color: currentIndex > 0 ? T.text1 : T.text3,
           fontSize: 18, cursor: currentIndex > 0 ? "pointer" : "default", padding: "4px 8px",
         }}>‹</button>
@@ -208,7 +208,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
           {openDeals.slice(Math.max(0, currentIndex - 3), currentIndex + 4).map((d, i) => {
             const idx = Math.max(0, currentIndex - 3) + i;
             return (
-              <button key={d.id} onClick={() => setCurrentIndex(idx)} style={{
+              <button aria-label="Action" key={d.id} onClick={() => setCurrentIndex(idx)} style={{
                 width: idx === currentIndex ? 16 : 6, height: 6, borderRadius: 3,
                 background: idx === currentIndex ? T.accent : T.bg4,
                 border: "none", cursor: "pointer", transition: "all 0.15s", padding: 0,
@@ -216,7 +216,7 @@ export function MobileSwipePipeline({ deals, onDealStageChange, onEditDeal }: Pr
             );
           })}
         </div>
-        <button onClick={() => setCurrentIndex(i => Math.min(openDeals.length - 1, i + 1))} disabled={currentIndex >= openDeals.length - 1} style={{
+        <button aria-label="Action" onClick={() => setCurrentIndex(i => Math.min(openDeals.length - 1, i + 1))} disabled={currentIndex >= openDeals.length - 1} style={{
           background: "none", border: "none", color: currentIndex < openDeals.length - 1 ? T.text1 : T.text3,
           fontSize: 18, cursor: currentIndex < openDeals.length - 1 ? "pointer" : "default", padding: "4px 8px",
         }}>›</button>

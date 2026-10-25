@@ -500,8 +500,8 @@
     ringEl.setAttribute('role', 'menu');
     ringEl.setAttribute('aria-label', 'Buzz capture');
     ringEl.dataset.acts = actions().map((a) => a.id).join(',');
-    ringEl.innerHTML = `<svg class="bz-orbit" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="118" fill="none" stroke="rgba(163,230,53,0.35)" stroke-width="1.5" stroke-dasharray="3 7"/></svg>`
-      + ringActionsHtml();
+    globalThis.DenizenSafeDom.setSafeHtml(ringEl, `<svg class="bz-orbit" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="118" fill="none" stroke="rgba(163,230,53,0.35)" stroke-width="1.5" stroke-dasharray="3 7"/></svg>`
+      + ringActionsHtml());
     let lastActAt = 0;
     const activate = (e) => {
       const btn = e.target.closest?.('[data-act]');
@@ -541,7 +541,7 @@
     noteEl.id = NOTE_ID;
     noteEl.setAttribute('role', 'dialog');
     noteEl.setAttribute('aria-label', 'Buzz note');
-    noteEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(noteEl, `
       <header>
         <div class="bz-head-main">
           <strong id="bz-title">Buzz note</strong>
@@ -561,7 +561,7 @@
         <button type="button" data-note="stop">Stop</button>
         <button type="button" class="primary" data-note="send">Send</button>
       </footer>
-    `;
+    `);
     const runNoteAct = (act) => {
       if (!act) return;
       if (act === 'discard') closeNote();
@@ -602,7 +602,7 @@
     const assistant = globalThis.DenizenVisitorSession?.getAssistant?.();
     const preferred = assistant?.assistant_name || assistant?.npc_key || 'Abby';
     const names = Array.from(new Set([preferred, 'Abby', ...roster]));
-    sel.innerHTML = names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    globalThis.DenizenSafeDom.setSafeHtml(sel, names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join(''));
     sel.value = preferred;
     state.target = preferred;
     sel.onchange = () => { state.target = sel.value; };
@@ -839,7 +839,7 @@
       const hint = isPhoneUi()
         ? 'Drag a box to crop · tap to keep the full shot'
         : 'Drag a box to crop · click or Esc to keep the full shot';
-      overlay.innerHTML = `<img alt="Screenshot — drag a box" /><div class="bz-crop-box" hidden></div><p>${hint}</p>`;
+      globalThis.DenizenSafeDom.setSafeHtml(overlay, `<img alt="Screenshot — drag a box" /><div class="bz-crop-box" hidden></div><p>${hint}</p>`);
 
       const beginCrop = (clientX, clientY, target) => {
         if (target?.closest?.('p')) return false;

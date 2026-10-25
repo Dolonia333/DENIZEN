@@ -715,9 +715,9 @@
 
   function renderErrorPanel(message) {
     if (!panelEl) return;
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       ${renderHeader()}
-      <div class="prop-empty">${message}</div>`;
+      <div class="prop-empty">${message}</div>`);
     wirePanelEvents();
   }
 
@@ -1486,13 +1486,13 @@
 
     const subtitle = serverMeta.label ? `Server · ${serverMeta.label}` : '';
 
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       ${renderHeader(filtersHtml, subtitle)}
       <div class="prop-body">
         <nav class="prop-index" aria-label="Approval queue">${indexHtml}</nav>
         <main class="prop-reader">${readerHtml}</main>
       </div>
-      ${renderNoteModalHtml()}`;
+      ${renderNoteModalHtml()}`);
 
     wirePanelEvents();
 

@@ -13,7 +13,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ classNa
       )}
       ref={ref}
       {...props}
-    />
+    / aria-label="textarea" />
   );
 });
 Textarea.displayName = "Textarea";

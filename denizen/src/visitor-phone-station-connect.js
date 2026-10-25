@@ -279,22 +279,22 @@
     const steps = hostEl.querySelector('.dzp-station-steps');
     if (steps) {
       if (linked) {
-        steps.innerHTML = `
+        globalThis.DenizenSafeDom.setSafeHtml(steps, `
           <li><strong>✓</strong><span>Station linked — your browser and desktop share one Citizen ID.</span></li>
           <li><strong>→</strong><span>Open <strong>City Power</strong> to turn on mesh contribution when you want.</span></li>
-        `;
+        `);
       } else if (needsDownload) {
-        steps.innerHTML = `
+        globalThis.DenizenSafeDom.setSafeHtml(steps, `
           <li><strong>1</strong><span>Install <a href="${href}" target="_blank" rel="noopener">Denizen Desktop (${label})</a> on this computer</span></li>
           <li><strong>2</strong><span>Keep the desktop app open, then tap <strong>Connect Desktop app</strong> below</span></li>
           <li><strong>3</strong><span>Approve the link in Denizen Desktop</span></li>
-        `;
+        `);
       } else {
-        steps.innerHTML = `
+        globalThis.DenizenSafeDom.setSafeHtml(steps, `
           <li><strong>1</strong><span>Keep <strong>Denizen Desktop</strong> open on this computer</span></li>
           <li><strong>2</strong><span>Tap <strong>Connect Desktop app</strong> — we send a pairing link to the app</span></li>
           <li><strong>3</strong><span>Approve in the app, then enable City Power</span></li>
-        `;
+        `);
       }
     }
 
@@ -323,16 +323,16 @@
     if (fleetList) {
       const fleet = Array.isArray(state.fleet) ? state.fleet : [];
       if (fleet.length) {
-        fleetList.innerHTML = fleet.slice(0, 4).map((m) => {
+        globalThis.DenizenSafeDom.setSafeHtml(fleetList, fleet.slice(0, 4).map((m) => {
           const name = m.label || m.hostname || m.machine_id || 'station';
           const bits = [];
           if (m.reachable === true) bits.push('online');
           else if (m.reachable === false) bits.push('offline');
           if (m.cpu_percent != null) bits.push(`CPU ${Math.round(m.cpu_percent)}%`);
           return `<li><strong>${name}</strong><span>${bits.join(' · ') || m.role || 'linked'}</span></li>`;
-        }).join('');
+        }).join(''));
       } else {
-        fleetList.innerHTML = '<li><span>No extra machines yet — add a NAS or Linux PC below.</span></li>';
+        globalThis.DenizenSafeDom.setSafeHtml(fleetList, '<li><span>No extra machines yet — add a NAS or Linux PC below.</span></li>');
       }
     }
 
@@ -508,7 +508,7 @@
     lastError = null;
     busy = false;
     lastProvision = null;
-    hostEl.innerHTML = buildHtml();
+    globalThis.DenizenSafeDom.setSafeHtml(hostEl, buildHtml());
     wireEvents();
 
     const api = globalThis.DenizenVisitorSession;

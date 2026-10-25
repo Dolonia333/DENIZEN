@@ -648,7 +648,7 @@
       if (role && kind !== 'demo') badges.push(`<span class="acct-badge">${escapeHtml(role)}</span>`);
       if (profile?.canApproveSkills) badges.push(`<span class="acct-badge team">Approver</span>`);
       }
-      badgesEl.innerHTML = badges.join('');
+      globalThis.DenizenSafeDom.setSafeHtml(badgesEl, badges.join(''));
     }
 
     if (rulesTitle) rulesTitle.textContent = kind === 'team' || kind === 'ceo' ? 'Team server rules' : 'Personal server rules';
@@ -675,7 +675,7 @@
     rootEl = document.createElement('section');
     rootEl.id = ROOT_ID;
     rootEl.dataset.expanded = expanded ? '1' : '0';
-    rootEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(rootEl, `
       <div class="acct-top">
         <div class="acct-identity" id="denizen-acct-identity" role="button" tabindex="0" aria-expanded="false">
           <div class="acct-name" id="denizen-acct-name">Guest</div>
@@ -738,7 +738,7 @@
           <div id="denizen-acct-skills-list"></div>
         </div>
       </div>
-    `;
+    `);
     document.body.appendChild(rootEl);
     globalThis.DenizenMobileSidebar?.relayout?.();
 
@@ -899,7 +899,7 @@
       return;
     }
     el.hidden = false;
-    el.innerHTML = `${invitePlatformLabel(p)} installer: <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url.split('/').pop() || 'Download')}</a>`;
+    globalThis.DenizenSafeDom.setSafeHtml(el, `${invitePlatformLabel(p)} installer: <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url.split('/').pop() || 'Download')}</a>`);
   }
 
   function syncInvitePlatformSelect() {
@@ -1076,7 +1076,7 @@
     if (!panel || !list) return;
     if (!canApprove) {
       panel.hidden = true;
-      list.innerHTML = '';
+      list.replaceChildren();
       return;
     }
     panel.hidden = false;
@@ -1089,16 +1089,16 @@
         { headers: api.authHeaders?.() || {} },
       );
       if (!res.ok) {
-        list.innerHTML = '<div class="acct-settings-hint">Could not load skill proposals.</div>';
+        globalThis.DenizenSafeDom.setSafeHtml(list, '<div class="acct-settings-hint">Could not load skill proposals.</div>');
         return;
       }
       const data = await res.json();
       const proposals = Array.isArray(data.proposals) ? data.proposals : [];
       if (!proposals.length) {
-        list.innerHTML = '<div class="acct-settings-hint">No pending skill proposals.</div>';
+        globalThis.DenizenSafeDom.setSafeHtml(list, '<div class="acct-settings-hint">No pending skill proposals.</div>');
         return;
       }
-      list.innerHTML = proposals.map((p) => `
+      globalThis.DenizenSafeDom.setSafeHtml(list, proposals.map((p) => `
         <div class="acct-skill-card" data-skill-id="${p.id}">
           <div><b>${p.slug || p.name || 'skill'}</b> · ${p.by || p.npc || 'NPC'}</div>
           <div class="acct-settings-hint">${String(p.purpose || p.description || '').slice(0, 120)}</div>
@@ -1107,7 +1107,7 @@
             <button type="button" class="reject" data-action="reject-skill" data-id="${p.id}">Reject</button>
           </div>
         </div>
-      `).join('');
+      `).join(''));
       list.querySelectorAll('[data-action="approve-skill"]').forEach((btn) => {
         btn.addEventListener('click', () => {
           decideSkillProposal(btn.getAttribute('data-id'), 'approve').catch((err) => {
@@ -1123,7 +1123,7 @@
         });
       });
     } catch (_) {
-      list.innerHTML = '<div class="acct-settings-hint">Skill proposals unavailable.</div>';
+      globalThis.DenizenSafeDom.setSafeHtml(list, '<div class="acct-settings-hint">Skill proposals unavailable.</div>');
     }
   }
 
@@ -1221,7 +1221,7 @@
       if (profile.email) html += statRow('Email', escapeHtml(profile.email));
       if (serverLabel) html += statRow(kind === 'team' ? 'Team server' : 'Server', escapeHtml(serverLabel));
       html += statRow('Server rules', 'Refreshing');
-      statsEl.innerHTML = html;
+      globalThis.DenizenSafeDom.setSafeHtml(statsEl, html);
       return;
     }
     let stats = getContributionStats();
@@ -1346,7 +1346,7 @@
       if (activeModes.length) html += statRow('Modes', activeModes.join(', '), 'active');
     }
 
-    if (seq === statsRenderSeq) statsEl.innerHTML = html;
+    if (seq === statsRenderSeq) globalThis.DenizenSafeDom.setSafeHtml(statsEl, html);
   }
 
   function init() {

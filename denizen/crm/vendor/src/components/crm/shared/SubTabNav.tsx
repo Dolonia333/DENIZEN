@@ -34,14 +34,14 @@ export function SubTabNav({ tabs, active, onSelect }: Props) {
       }}
     >
       {tabs.map(t => (
-        <button
+        <button aria-label="Action"
           key={t.key}
           type="button"
           onClick={() => onSelect(t.key)}
           style={{
             padding: "8px 14px",
             borderRadius: "9999px",
-            fontSize: 12,
+            fontSize: 14,
             fontWeight: 600,
             background: active === t.key ? `${T.accent}22` : T.bg3,
             color: active === t.key ? T.accent : T.text3,

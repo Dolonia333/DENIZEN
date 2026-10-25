@@ -69,7 +69,7 @@
     ensureStyles();
     root = document.createElement('div');
     root.id = 'denizen-voice-call';
-    root.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(root, `
       <div class="vc-orb" aria-hidden="true"></div>
       <div class="vc-label">Voice call</div>
       <div class="vc-sub">Speak naturally — pauses end your turn</div>
@@ -78,7 +78,7 @@
         <button type="button" class="vc-mute" id="denizen-vc-mute">🎤 Mute</button>
         <button type="button" class="vc-end" id="denizen-vc-end">End call</button>
       </div>
-    `;
+    `);
     document.body.appendChild(root);
     orb = root.querySelector('.vc-orb');
     label = root.querySelector('.vc-label');

@@ -41,7 +41,7 @@
     const bg = tone === 'info' ? 'rgba(8,47,73,0.96)' : tone === 'ok' ? 'rgba(5,46,22,0.96)' : 'rgba(69,10,10,0.96)';
     el.style.borderColor = border;
     el.style.background = bg;
-    el.innerHTML = `<b>${title}</b><br>${body}`;
+    globalThis.DenizenSafeDom.setSafeHtml(el, `<b>${title}</b><br>${body}`);
     el.style.display = 'block';
     if (hideTimer) clearTimeout(hideTimer);
     hideTimer = setTimeout(() => { el.style.display = 'none'; }, 12000);

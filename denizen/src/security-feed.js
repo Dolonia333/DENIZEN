@@ -134,14 +134,14 @@
     if (panel) return panel;
     panel = document.createElement('div');
     panel.id = PANEL_ID;
-    panel.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panel, `
       <header>
         <span>🛡️ Bouncer — Security</span>
         <button type="button" data-action="clear">Clear</button>
         <button type="button" data-action="close">✕</button>
       </header>
       <div class="sec-list"></div>
-    `;
+    `);
     document.body.appendChild(panel);
     listEl = panel.querySelector('.sec-list');
     panel.querySelector('[data-action="close"]').addEventListener('click', () => setOpen(false));
@@ -181,15 +181,15 @@
     ensurePanel();
     if (!listEl) return;
     if (!entries.length) {
-      listEl.innerHTML = '<div style="color:#94a3b8;padding:8px">No security events yet.</div>';
+      globalThis.DenizenSafeDom.setSafeHtml(listEl, '<div style="color:#94a3b8;padding:8px">No security events yet.</div>');
       return;
     }
-    listEl.innerHTML = entries.slice(0, 30).map((e) => `
+    globalThis.DenizenSafeDom.setSafeHtml(listEl, entries.slice(0, 30).map((e) => `
       <div class="sec-row">
         <div class="sec-time">${esc(fmtTime(e.ts))} · ${esc(e.kind || 'event')}</div>
         <div class="sec-text">${esc(e.text)}</div>
       </div>
-    `).join('');
+    `).join(''));
   }
 
   function setOpen(next) {

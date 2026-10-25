@@ -108,8 +108,8 @@ export function SettingsTab({
 
   const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0" }}>
-      <span style={{ fontSize: 13, color: T.text1 }}>{label}</span>
-      <button onClick={onChange} style={{
+      <span style={{ fontSize: 14, color: T.text1 }}>{label}</span>
+      <button aria-label="Action" onClick={onChange} style={{
         width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
         background: checked ? T.accent : T.bg4, position: "relative", transition: "all 0.2s",
       }}>
@@ -167,14 +167,14 @@ export function SettingsTab({
     <div>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>⚙️ Settings</h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Profile, industry config, custom fields & preferences</p>
+        <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Profile, industry config, custom fields & preferences</p>
       </div>
 
       {/* Section tabs */}
       <div style={{ display: "flex", gap: 6, marginBottom: 20, flexWrap: "wrap" }}>
         {sections.map(s => (
-          <button key={s.id} onClick={() => setActiveSection(s.id)} style={{
-            padding: "7px 14px", borderRadius: T.radius.full, fontSize: 12, fontWeight: 600,
+          <button aria-label="Action" key={s.id} onClick={() => setActiveSection(s.id)} style={{
+            padding: "7px 14px", borderRadius: T.radius.full, fontSize: 14, fontWeight: 600,
             background: activeSection === s.id ? `${T.accent}22` : T.bg3,
             color: activeSection === s.id ? T.accent : T.text3,
             border: `1px solid ${activeSection === s.id ? `${T.accent}66` : T.bg4}`,
@@ -196,27 +196,27 @@ export function SettingsTab({
             }}>{profile.name.split(" ").map(n => n[0]).join("")}</div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: T.text0 }}>{profile.name}</div>
-              <div style={{ fontSize: 12, color: T.text3 }}>{profile.role}</div>
+              <div style={{ fontSize: 14, color: T.text3 }}>{profile.role}</div>
             </div>
           </div>
           {[["name", "Name"], ["email", "Email"], ["role", "Role"], ["timezone", "Timezone"]].map(([key, label]) => (
             <div key={key} style={{ marginBottom: 12 }}>
               <label style={S.label as React.CSSProperties}>{label}</label>
-              <input value={(profile as any)[key]} onChange={e => setProfile(p => ({ ...p, [key]: e.target.value }))}
+              <input value={(profile as any)[key]} onChange={e = aria-label="input"> setProfile(p => ({ ...p, [key]: e.target.value }))}
                 style={S.input as React.CSSProperties} />
             </div>
           ))}
-          <p style={{ fontSize: 12, color: T.text3, margin: "12px 0 0", lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: T.text3, margin: "12px 0 0", lineHeight: 1.5 }}>
             Name and role come from your Denizen office session. Export data from Data Tools before resetting local storage.
           </p>
-          <button onClick={handleSave} style={{
+          <button aria-label="Save" onClick={handleSave} style={{
             ...S.btn as React.CSSProperties, marginTop: 8,
             background: saved ? T.green : T.accent, transition: "all 0.2s",
           }}>
             {saved ? "✓ Saved!" : "Save Profile"}
           </button>
           {onLoadDemoData && (
-            <button onClick={onLoadDemoData} style={{
+            <button aria-label="adD" onClick={onLoadDemoData} style={{
               ...S.btn as React.CSSProperties, marginTop: 10, background: T.bg4, color: T.text1,
             }}>
               Load sample CRM data
@@ -230,23 +230,23 @@ export function SettingsTab({
         <div>
           <div style={cardStyle}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 6 }}>🏭 Industry Template</div>
-            <p style={{ fontSize: 12, color: T.text3, marginBottom: 12 }}>
+            <p style={{ fontSize: 14, color: T.text3, marginBottom: 12 }}>
               Select a template to auto-configure terminology, pipeline stages, and custom fields for your industry.
             </p>
             <input
               value={industrySearch}
-              onChange={(e) => setIndustrySearch(e.target.value)}
+              onChange={(e) = aria-label="input"> setIndustrySearch(e.target.value)}
               placeholder="Search industries (e.g. SaaS, govcon, healthcare)…"
               style={{ ...S.input as React.CSSProperties, marginBottom: 14, maxWidth: 420 }}
             />
-            <div style={{ fontSize: 11, color: T.text3, marginBottom: 10 }}>
+            <div style={{ fontSize: 14, color: T.text3, marginBottom: 10 }}>
               {filteredIndustryTemplates.length} of {INDUSTRY_TEMPLATES.length} templates
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
               {filteredIndustryTemplates.map(tmpl => {
                 const active = localConfig.id === tmpl.id;
                 return (
-                  <button key={tmpl.id} onClick={() => handleSelectTemplate(tmpl)} style={{
+                  <button aria-label="Action" key={tmpl.id} onClick={() => handleSelectTemplate(tmpl)} style={{
                     padding: "16px 14px", borderRadius: T.radius.lg, cursor: "pointer",
                     background: active ? `${T.accent}14` : `linear-gradient(145deg,${T.bg3},${T.bg4}44)`,
                     border: `1.5px solid ${active ? T.accent : T.bg4}`,
@@ -254,11 +254,11 @@ export function SettingsTab({
                     transition: "all 0.15s",
                   }}>
                     <span style={{ fontSize: 28 }}>{tmpl.icon}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: active ? T.accent : T.text1 }}>{tmpl.name}</span>
-                    <span style={{ fontSize: 10, color: T.text3, textAlign: "center" }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: active ? T.accent : T.text1 }}>{tmpl.name}</span>
+                    <span style={{ fontSize: 14, color: T.text3, textAlign: "center" }}>
                       {tmpl.pipelineStages.length} stages · {tmpl.customFields.length} fields
                     </span>
-                    {active && <span style={{ fontSize: 10, color: T.accent, fontWeight: 700 }}>✓ Active</span>}
+                    {active && <span style={{ fontSize: 14, color: T.accent, fontWeight: 700 }}>✓ Active</span>}
                   </button>
                 );
               })}
@@ -270,17 +270,17 @@ export function SettingsTab({
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 12 }}>📋 Current Configuration</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Terminology</div>
+                <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Terminology</div>
                 {(["contact", "deal", "pipeline", "company", "value", "closeDate"] as const).map(k => (
-                  <div key={k} style={{ fontSize: 12, color: T.text2, padding: "3px 0" }}>
+                  <div key={k} style={{ fontSize: 14, color: T.text2, padding: "3px 0" }}>
                     <span style={{ color: T.text3 }}>{k}:</span> {localConfig.terminology[k]}
                   </div>
                 ))}
               </div>
               <div>
-                <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Pipeline Stages</div>
+                <div style={{ fontSize: 14, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Pipeline Stages</div>
                 {localConfig.pipelineStages.map((s, i) => (
-                  <div key={i} style={{ fontSize: 12, color: T.text2, padding: "3px 0" }}>{i + 1}. {s}</div>
+                  <div key={i} style={{ fontSize: 14, color: T.text2, padding: "3px 0" }}>{i + 1}. {s}</div>
                 ))}
               </div>
             </div>
@@ -292,7 +292,7 @@ export function SettingsTab({
       {activeSection === "terminology" && (
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 6 }}>📝 Custom Terminology</div>
-          <p style={{ fontSize: 12, color: T.text3, marginBottom: 16 }}>
+          <p style={{ fontSize: 14, color: T.text3, marginBottom: 16 }}>
             Rename entities to match your industry language. Changes appear across the entire CRM.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -301,13 +301,13 @@ export function SettingsTab({
                 <label style={{ ...S.label as React.CSSProperties, textTransform: "capitalize" }}>{key.replace(/([A-Z])/g, " $1")}</label>
                 <input
                   value={localConfig.terminology[key]}
-                  onChange={e => updateTerm(key, e.target.value)}
+                  onChange={e = aria-label="input"> updateTerm(key, e.target.value)}
                   style={S.input as React.CSSProperties}
                 />
               </div>
             ))}
           </div>
-          <button onClick={handleSaveConfig} style={{
+          <button aria-label="Save" onClick={handleSaveConfig} style={{
             ...S.btn as React.CSSProperties, marginTop: 16,
             background: configSaved ? T.green : T.accent, transition: "all 0.2s",
           }}>
@@ -322,7 +322,7 @@ export function SettingsTab({
           {/* Pipeline Stages */}
           <div style={cardStyle}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 12 }}>◆ {localConfig.terminology.pipeline} Stages</div>
-            <p style={{ fontSize: 12, color: T.text3, marginBottom: 12 }}>Drag to reorder or add/remove stages.</p>
+            <p style={{ fontSize: 14, color: T.text3, marginBottom: 12 }}>Drag to reorder or add/remove stages.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {localConfig.pipelineStages.map((stage, i) => (
                 <div key={i} style={{
@@ -330,40 +330,40 @@ export function SettingsTab({
                   background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md,
                   padding: "8px 12px",
                 }}>
-                  <span style={{ color: T.text3, fontSize: 12, width: 22, textAlign: "center" }}>{i + 1}</span>
+                  <span style={{ color: T.text3, fontSize: 14, width: 22, textAlign: "center" }}>{i + 1}</span>
                   <input
                     value={stage}
-                    onChange={e => {
+                    onChange={e = aria-label="input"> {
                       const stages = [...localConfig.pipelineStages];
                       stages[i] = e.target.value;
                       setLocalConfig(prev => ({ ...prev, pipelineStages: stages }));
                     }}
                     style={{ ...S.input as React.CSSProperties, background: "transparent", border: "none", padding: "4px 0", flex: 1 }}
                   />
-                  <button onClick={() => {
+                  <button aria-label="Action" onClick={() => {
                     if (i > 0) {
                       const stages = [...localConfig.pipelineStages];
                       [stages[i - 1], stages[i]] = [stages[i], stages[i - 1]];
                       setLocalConfig(prev => ({ ...prev, pipelineStages: stages }));
                     }
                   }} style={{ background: "none", border: "none", color: i > 0 ? T.text2 : T.bg4, cursor: i > 0 ? "pointer" : "default", fontSize: 14 }}>↑</button>
-                  <button onClick={() => {
+                  <button aria-label="Action" onClick={() => {
                     if (i < localConfig.pipelineStages.length - 1) {
                       const stages = [...localConfig.pipelineStages];
                       [stages[i], stages[i + 1]] = [stages[i + 1], stages[i]];
                       setLocalConfig(prev => ({ ...prev, pipelineStages: stages }));
                     }
                   }} style={{ background: "none", border: "none", color: i < localConfig.pipelineStages.length - 1 ? T.text2 : T.bg4, cursor: i < localConfig.pipelineStages.length - 1 ? "pointer" : "default", fontSize: 14 }}>↓</button>
-                  <button onClick={() => {
+                  <button aria-label="Action" onClick={() => {
                     setLocalConfig(prev => ({ ...prev, pipelineStages: prev.pipelineStages.filter((_, j) => j !== i) }));
                   }} style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14 }}>✕</button>
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
-              <input value={newStage} onChange={e => setNewStage(e.target.value)} placeholder="New stage name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-              <button onClick={() => { if (!newStage.trim()) return; setLocalConfig(prev => ({ ...prev, pipelineStages: [...prev.pipelineStages, newStage.trim()] })); setNewStage(""); }}
-                style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 12 }}>Add</button>
+              <input value={newStage} onChange={e = aria-label="input"> setNewStage(e.target.value)} placeholder="New stage name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
+              <button aria-label="Action" onClick={() => { if (!newStage.trim()) return; setLocalConfig(prev => ({ ...prev, pipelineStages: [...prev.pipelineStages, newStage.trim()] })); setNewStage(""); }}
+                style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 14 }}>Add</button>
             </div>
           </div>
 
@@ -375,18 +375,18 @@ export function SettingsTab({
                 <div key={i} style={{
                   display: "flex", alignItems: "center", gap: 6,
                   background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm,
-                  padding: "6px 10px", fontSize: 12, color: T.text1,
+                  padding: "6px 10px", fontSize: 14, color: T.text1,
                 }}>
                   {status}
-                  <button onClick={() => setLocalConfig(prev => ({ ...prev, contactStatuses: prev.contactStatuses.filter((_, j) => j !== i) }))}
-                    style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 12, padding: 0 }}>✕</button>
+                  <button aria-label="Action" onClick={() => setLocalConfig(prev => ({ ...prev, contactStatuses: prev.contactStatuses.filter((_, j) => j !== i) }))}
+                    style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0 }}>✕</button>
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-              <input value={newStatus} onChange={e => setNewStatus(e.target.value)} placeholder="New status…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-              <button onClick={() => { if (!newStatus.trim()) return; setLocalConfig(prev => ({ ...prev, contactStatuses: [...prev.contactStatuses, newStatus.trim()] })); setNewStatus(""); }}
-                style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 12 }}>Add</button>
+              <input value={newStatus} onChange={e = aria-label="input"> setNewStatus(e.target.value)} placeholder="New status…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
+              <button aria-label="Action" onClick={() => { if (!newStatus.trim()) return; setLocalConfig(prev => ({ ...prev, contactStatuses: [...prev.contactStatuses, newStatus.trim()] })); setNewStatus(""); }}
+                style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 14 }}>Add</button>
             </div>
           </div>
 
@@ -398,22 +398,22 @@ export function SettingsTab({
                 <div key={i} style={{
                   display: "flex", alignItems: "center", gap: 6,
                   background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.sm,
-                  padding: "6px 10px", fontSize: 12, color: T.text1,
+                  padding: "6px 10px", fontSize: 14, color: T.text1,
                 }}>
                   {type}
-                  <button onClick={() => setLocalConfig(prev => ({ ...prev, noteTypes: prev.noteTypes.filter((_, j) => j !== i) }))}
-                    style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 12, padding: 0 }}>✕</button>
+                  <button aria-label="Action" onClick={() => setLocalConfig(prev => ({ ...prev, noteTypes: prev.noteTypes.filter((_, j) => j !== i) }))}
+                    style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14, padding: 0 }}>✕</button>
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-              <input value={newNoteType} onChange={e => setNewNoteType(e.target.value)} placeholder="New type…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-              <button onClick={() => { if (!newNoteType.trim()) return; setLocalConfig(prev => ({ ...prev, noteTypes: [...prev.noteTypes, newNoteType.trim()] })); setNewNoteType(""); }}
-                style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 12 }}>Add</button>
+              <input value={newNoteType} onChange={e = aria-label="input"> setNewNoteType(e.target.value)} placeholder="New type…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
+              <button aria-label="Action" onClick={() => { if (!newNoteType.trim()) return; setLocalConfig(prev => ({ ...prev, noteTypes: [...prev.noteTypes, newNoteType.trim()] })); setNewNoteType(""); }}
+                style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 14 }}>Add</button>
             </div>
           </div>
 
-          <button onClick={handleSaveConfig} style={{
+          <button aria-label="Save" onClick={handleSaveConfig} style={{
             ...S.btn as React.CSSProperties,
             background: configSaved ? T.green : T.accent, transition: "all 0.2s",
           }}>
@@ -427,13 +427,13 @@ export function SettingsTab({
         <div>
           <div style={cardStyle}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 6 }}>📋 Custom Fields</div>
-            <p style={{ fontSize: 12, color: T.text3, marginBottom: 16 }}>
+            <p style={{ fontSize: 14, color: T.text3, marginBottom: 16 }}>
               Add custom fields to {localConfig.terminology.contacts.toLowerCase()} and {localConfig.terminology.deals.toLowerCase()}.
             </p>
 
             {/* Existing fields */}
             {localConfig.customFields.length === 0 && (
-              <div style={{ textAlign: "center", padding: 20, color: T.text3, fontSize: 13 }}>No custom fields configured yet.</div>
+              <div style={{ textAlign: "center", padding: 20, color: T.text3, fontSize: 14 }}>No custom fields configured yet.</div>
             )}
             {(["contact", "deal"] as const).map(entity => {
               const fields = localConfig.customFields.filter(f => f.entity === entity);
@@ -449,15 +449,15 @@ export function SettingsTab({
                       background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md,
                       padding: "10px 12px", marginBottom: 6,
                     }}>
-                      <span style={{ fontSize: 12, color: T.text1, flex: 1, fontWeight: 600 }}>{field.label}</span>
+                      <span style={{ fontSize: 14, color: T.text1, flex: 1, fontWeight: 600 }}>{field.label}</span>
                       <span style={{
-                        fontSize: 10, padding: "2px 8px", borderRadius: T.radius.sm,
+                        fontSize: 14, padding: "2px 8px", borderRadius: T.radius.sm,
                         background: `${T.blue}18`, color: T.blue, fontWeight: 600,
                       }}>{field.type}</span>
                       {field.options && (
-                        <span style={{ fontSize: 10, color: T.text3 }}>{field.options.length} options</span>
+                        <span style={{ fontSize: 14, color: T.text3 }}>{field.options.length} options</span>
                       )}
-                      <button onClick={() => setLocalConfig(prev => ({ ...prev, customFields: prev.customFields.filter(f => f.id !== field.id) }))}
+                      <button aria-label="Action" onClick={() => setLocalConfig(prev => ({ ...prev, customFields: prev.customFields.filter(f => f.id !== field.id) }))}
                         style={{ background: "none", border: "none", color: T.red, cursor: "pointer", fontSize: 14 }}>✕</button>
                     </div>
                   ))}
@@ -468,11 +468,11 @@ export function SettingsTab({
             {/* Add new field form */}
             {newFieldForm.open ? (
               <div style={{ background: T.bg3, border: `1px solid ${T.bg5}`, borderRadius: T.radius.lg, padding: 16, marginTop: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.text0, marginBottom: 12 }}>Add Custom Field</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 12 }}>Add Custom Field</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
                     <label style={S.label as React.CSSProperties}>Field Label *</label>
-                    <input value={newFieldForm.label || ""} onChange={e => setNewFieldForm(p => ({ ...p, label: e.target.value }))}
+                    <input value={newFieldForm.label || ""} onChange={e = aria-label="input"> setNewFieldForm(p => ({ ...p, label: e.target.value }))}
                       style={S.input as React.CSSProperties} placeholder="e.g. Property Type" />
                   </div>
                   <div>
@@ -497,7 +497,7 @@ export function SettingsTab({
                       <label style={S.label as React.CSSProperties}>Options (comma-separated)</label>
                       <input
                         value={(newFieldForm.options || []).join(", ")}
-                        onChange={e => setNewFieldForm(p => ({ ...p, options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }))}
+                        onChange={e = aria-label="input"> setNewFieldForm(p => ({ ...p, options: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }))}
                         style={S.input as React.CSSProperties}
                         placeholder="Option 1, Option 2, …"
                       />
@@ -505,18 +505,18 @@ export function SettingsTab({
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                  <button onClick={addCustomField} style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 12 }}>Add Field</button>
-                  <button onClick={() => setNewFieldForm({})} style={{ ...S.btnGhost as React.CSSProperties, padding: "8px 14px", fontSize: 12 }}>Cancel</button>
+                  <button aria-label="add" onClick={addCustomField} style={{ ...S.btn as React.CSSProperties, padding: "8px 14px", fontSize: 14 }}>Add Field</button>
+                  <button aria-label="Action" onClick={() => setNewFieldForm({})} style={{ ...S.btnGhost as React.CSSProperties, padding: "8px 14px", fontSize: 14 }}>Cancel</button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setNewFieldForm({ open: true, type: "text", entity: "contact" })}
+              <button aria-label="Action" onClick={() => setNewFieldForm({ open: true, type: "text", entity: "contact" })}
                 style={{ ...S.btnGhost as React.CSSProperties, marginTop: 8, width: "100%", borderStyle: "dashed" }}>
                 + Add Custom Field
               </button>
             )}
           </div>
-          <button onClick={handleSaveConfig} style={{
+          <button aria-label="Save" onClick={handleSaveConfig} style={{
             ...S.btn as React.CSSProperties,
             background: configSaved ? T.green : T.accent, transition: "all 0.2s",
           }}>
@@ -529,27 +529,27 @@ export function SettingsTab({
       {activeSection === "integrations" && (
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 6 }}>🔌 Outbound webhooks (n8n)</div>
-          <p style={{ fontSize: 12, color: T.text3, marginBottom: 16, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: T.text3, marginBottom: 16, lineHeight: 1.5 }}>
             Denizen POSTs JSON to these URLs when events fire. In n8n, add a <strong>Webhook</strong> trigger node
-            (POST), copy its URL (e.g. <code style={{ fontSize: 11 }}>http://192.168.1.50:5678/webhook/deal-won</code> on your NAS),
+            (POST), copy its URL (e.g. <code style={{ fontSize: 14 }}>http://192.168.1.50:5678/webhook/deal-won</code> on your NAS),
             and paste it here. The Denizen server must be able to reach your n8n host (same LAN is fine).
-            Inbound leads still go to <code style={{ fontSize: 11 }}>POST /api/crm/intake</code>.
+            Inbound leads still go to <code style={{ fontSize: 14 }}>POST /api/crm/intake</code>.
           </p>
           <label style={S.label as React.CSSProperties}>Deal won → n8n webhook URL</label>
           <input
             value={dealWonWebhook}
-            onChange={(e) => setDealWonWebhook(e.target.value)}
+            onChange={(e) = aria-label="input"> setDealWonWebhook(e.target.value)}
             placeholder="http://192.168.1.50:5678/webhook/deal-won"
             style={{ ...S.input as React.CSSProperties, marginBottom: 12, width: "100%" }}
           />
           <label style={S.label as React.CSSProperties}>Contact added → n8n webhook URL</label>
           <input
             value={contactAddedWebhook}
-            onChange={(e) => setContactAddedWebhook(e.target.value)}
+            onChange={(e) = aria-label="input"> setContactAddedWebhook(e.target.value)}
             placeholder="http://192.168.1.50:5678/webhook/contact-added"
             style={{ ...S.input as React.CSSProperties, marginBottom: 16, width: "100%" }}
           />
-          <button onClick={handleSaveWebhooks} style={{ ...S.btn as React.CSSProperties, background: webhooksSaved ? T.green : T.accent }}>
+          <button aria-label="Save" onClick={handleSaveWebhooks} style={{ ...S.btn as React.CSSProperties, background: webhooksSaved ? T.green : T.accent }}>
             {webhooksSaved ? "✓ Saved!" : "Save webhook URLs"}
           </button>
         </div>
@@ -570,12 +570,12 @@ export function SettingsTab({
           {/* Danger zone */}
           <div style={{ ...cardStyle, borderColor: `${T.red}33` }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.red, marginBottom: 12 }}>🗑 Danger Zone</div>
-            <div style={{ fontSize: 12, color: T.text3, marginBottom: 12 }}>These actions cannot be undone.</div>
+            <div style={{ fontSize: 14, color: T.text3, marginBottom: 12 }}>These actions cannot be undone.</div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button style={{ background: `${T.red}18`, color: T.red, border: `1px solid ${T.red}33`, borderRadius: T.radius.md, padding: "8px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+              <button aria-label="Action" style={{ background: `${T.red}18`, color: T.red, border: `1px solid ${T.red}33`, borderRadius: T.radius.md, padding: "8px 14px", fontSize: 14, cursor: "pointer", fontWeight: 600 }}>
                 Reset All Data
               </button>
-              <button style={{ background: `${T.red}18`, color: T.red, border: `1px solid ${T.red}33`, borderRadius: T.radius.md, padding: "8px 14px", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>
+              <button aria-label="Action" style={{ background: `${T.red}18`, color: T.red, border: `1px solid ${T.red}33`, borderRadius: T.radius.md, padding: "8px 14px", fontSize: 14, cursor: "pointer", fontWeight: 600 }}>
                 Delete Account
               </button>
             </div>

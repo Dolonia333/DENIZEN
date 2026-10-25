@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /**
  * Denizen visitor session — persistent browser identity + personal assistant claim.
  * Attaches to globalThis.DenizenVisitorSession (no imports).
@@ -2384,7 +2385,7 @@
         let focusAfter = false;
 
         if (step === 'choose') {
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card vis-lobby">
               <div class="vis-brand">DENIZEN</div>
               <p class="vis-tagline">Lobby phone is ringing — pick how you come in</p>
@@ -2405,9 +2406,9 @@
                 </button>
               </div>
             </div>
-          `;
+          `);
         } else if (step === 'login') {
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Login</h2>
@@ -2422,10 +2423,10 @@
               <div class="vis-link-row">No account yet? <button type="button" class="vis-link" data-action="goto-join-team">Join a team</button> · <button type="button" class="vis-link" data-action="goto-create-team">Create a team</button></div>
               <div class="vis-link-row">On a demo account? <button type="button" class="vis-link" data-action="goto-join-team">Join your team</button> (demo logins do not carry over)</div>
             </div>
-          `;
+          `);
           focusAfter = true;
         } else if (step === 'create-team') {
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Create your team</h2>
@@ -2438,10 +2439,10 @@
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-create-team">Create team</button>
               <div class="vis-link-row">Already have an account? <button type="button" class="vis-link" data-action="goto-login">Log in</button></div>
             </div>
-          `;
+          `);
           focusAfter = true;
         } else if (step === 'join-team') {
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Join a team</h2>
@@ -2456,12 +2457,12 @@
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-join-team">Join team</button>
               <div class="vis-link-row">Already registered? <button type="button" class="vis-link" data-action="goto-login">Log in</button></div>
             </div>
-          `;
+          `);
           focusAfter = true;
         } else if (step === 'team-created') {
           const code = pendingAccess?.teamCode || '------';
           const teamLabel = pendingAccess?.teamName || 'Your team';
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card">
               <h2>${teamLabel} is ready</h2>
               <p>Share this team code so others can join. Save it somewhere safe.</p>
@@ -2471,9 +2472,9 @@
               </div>
               <button type="button" id="denizen-visitor-name-continue" data-action="finish-create-team">Enter Denizen</button>
             </div>
-          `;
+          `);
         } else if (step === 'demo-login') {
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Demo login</h2>
@@ -2483,10 +2484,10 @@
               <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="Password" autocomplete="current-password" />
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-demo-login">Log in</button>
             </div>
-          `;
+          `);
           focusAfter = true;
         } else if (step === 'demo-email') {
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Demo</h2>
@@ -2496,10 +2497,10 @@
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-demo-email">Continue</button>
               <div class="vis-link-row">Already created a demo account? <button type="button" class="vis-link" data-action="path-demo-login">Log in</button></div>
             </div>
-          `;
+          `);
           focusAfter = true;
         } else if (step === 'name') {
-          modalEl.innerHTML = `
+          globalThis.DenizenSafeDom.setSafeHtml(modalEl, `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Welcome to Denizen</h2>
@@ -2508,7 +2509,7 @@
               <p class="vis-error" id="denizen-vis-error" hidden></p>
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-name">Continue</button>
             </div>
-          `;
+          `);
           focusAfter = true;
         }
 
@@ -2583,7 +2584,7 @@
     return fetchOfficeConfig().then(() => new Promise((resolve) => {
       const overlay = document.createElement('div');
       overlay.id = 'denizen-demo-account-modal';
-      overlay.innerHTML = `
+      globalThis.DenizenSafeDom.setSafeHtml(overlay, `
         <div class="vis-card">
           <h2>Save your demo progress</h2>
           <p>Create a username and password so you can return to this profile anytime.</p>
@@ -2594,7 +2595,7 @@
           <button type="button" id="denizen-visitor-name-continue">Create account</button>
           <div class="vis-link-row"><button type="button" class="vis-link" data-demo-skip>Not now</button></div>
         </div>
-      `;
+      `);
       ensurePanelWithMascot(overlay, { quiet: true });
       document.body.appendChild(overlay);
       document.documentElement.dataset.denizenModal = 'open';

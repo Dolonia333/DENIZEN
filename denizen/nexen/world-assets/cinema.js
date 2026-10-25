@@ -85,7 +85,7 @@ export function mountCinema(options = {}) {
   const dock = hostDocument.createElement('section');
   dock.id = 'nexen-cinema'; dock.className = 'nx-cinema'; dock.hidden = true;
   dock.setAttribute('role', 'region'); dock.setAttribute('aria-label', 'WDR TV player');
-  dock.innerHTML = `
+  globalThis.DenizenSafeDom.setSafeHtml(dock, `
     <header class="nx-cinema-head">
       <div class="nx-cinema-brand"><span aria-hidden="true" class="nx-cinema-light"></span><div><strong>WDR TV</strong><small data-tv-status>Ready when you are</small></div></div>
       <div class="nx-cinema-actions"><button type="button" data-tv-minimize aria-label="Minimize TV without unloading" title="Minimize; playback may continue">−</button><button type="button" data-tv-expand aria-label="Expand TV" title="Expand TV">↗</button><button type="button" data-tv-close aria-label="Close TV and unload the player" title="Close and stop the player">×</button></div>
@@ -95,10 +95,10 @@ export function mountCinema(options = {}) {
       <form class="nx-cinema-form" data-tv-form><label for="nexen-cinema-url">YouTube video link</label><div><input id="nexen-cinema-url" data-tv-input type="url" inputmode="url" autocomplete="off" spellcheck="false" maxlength="2048" required aria-describedby="nexen-cinema-help"><button type="submit">Load video</button></div></form>
       <p class="nx-cinema-message" data-tv-message role="status"></p>
       <footer class="nx-cinema-foot"><a data-tv-watch target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a><p id="nexen-cinema-help">Use the player's play, pause, volume and captions. YouTube links only; protected movie services are not supported.</p></footer>
-    </div>`;
+    </div>`);
   const launcher = hostDocument.createElement('button');
   launcher.id='nexen-tv-open'; launcher.className='nx-cinema-launcher'; launcher.type='button';
-  launcher.innerHTML='<span aria-hidden="true">▣</span> WDR TV';launcher.setAttribute('aria-label','Open WDR TV');launcher.setAttribute('aria-controls',dock.id);launcher.setAttribute('aria-expanded','false');
+  globalThis.DenizenSafeDom.setSafeHtml(launcher, '<span aria-hidden="true">▣</span> WDR TV');launcher.setAttribute('aria-label','Open WDR TV');launcher.setAttribute('aria-controls',dock.id);launcher.setAttribute('aria-expanded','false');
   hostDocument.body.append(launcher,dock);
   const find = attr => dock.querySelector('[data-tv-'+attr+']');
   let selected=selectedDefault, iframe=null, minimized=false, expanded=false;

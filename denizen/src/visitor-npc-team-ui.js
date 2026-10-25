@@ -1111,12 +1111,12 @@
         rosterMode = 'org';
         orgSelectedKey = null;
       } else {
-        panelEl.innerHTML = `
+        globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
           <div class="nt-head">
             <div class="nt-title"><h2>Org NPC default</h2><p>Shared defaults for your organization — teammates inherit unless they override.</p></div>
             <button type="button" class="nt-close" data-action="close">×</button>
           </div>
-          <div class="nt-body">${orgDetailHtml(member, detailTab)}</div>`;
+          <div class="nt-body">${orgDetailHtml(member, detailTab)}</div>`);
         wirePanelButtons();
         return;
       }
@@ -1128,18 +1128,18 @@
         view = 'roster';
         selectedKey = null;
       } else {
-        panelEl.innerHTML = `
+        globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
           <div class="nt-head">
             <div class="nt-title"><h2>NPC ID</h2><p>Edit profile, job, and watch soul growth.</p></div>
             <button type="button" class="nt-close" data-action="close">×</button>
           </div>
-          <div class="nt-body">${detailHtml(member, detailSoul, detailTab)}</div>`;
+          <div class="nt-body">${detailHtml(member, detailSoul, detailTab)}</div>`);
         wirePanelButtons();
         return;
       }
     }
 
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       <div class="nt-head">
         <div class="nt-title">
           <h2>NPC Team</h2>
@@ -1147,7 +1147,7 @@
         </div>
         <button type="button" class="nt-close" data-action="close">×</button>
       </div>
-      <div class="nt-body">${rosterHtml(data)}</div>`;
+      <div class="nt-body">${rosterHtml(data)}</div>`);
     wirePanelButtons();
   }
 
@@ -1187,7 +1187,7 @@
     ensurePanel();
     setPanelOpen(true);
     if (!team) {
-      panelEl.innerHTML = '<div class="nt-head"><div class="nt-title"><h2>NPC Team</h2><p>Loading…</p></div><button type="button" class="nt-close" data-action="close" aria-label="Close">×</button></div>';
+      globalThis.DenizenSafeDom.setSafeHtml(panelEl, '<div class="nt-head"><div class="nt-title"><h2>NPC Team</h2><p>Loading…</p></div><button type="button" class="nt-close" data-action="close" aria-label="Close">×</button></div>');
       await loadTeam();
     }
     view = 'roster';

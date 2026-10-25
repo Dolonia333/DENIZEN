@@ -140,7 +140,7 @@
 
       loadBanner.id = 'denizen-load-banner';
 
-      loadBanner.innerHTML = '<strong>Denizen</strong> loading office… <span id="denizen-load-pct">0%</span> <span id="denizen-boot-tag">(boot v7)</span> — 💬 Chat works now';
+      globalThis.DenizenSafeDom.setSafeHtml(loadBanner, '<strong>Denizen</strong> loading office… <span id="denizen-load-pct">0%</span> <span id="denizen-boot-tag">(boot v7)</span> — 💬 Chat works now');
 
       document.body.appendChild(loadBanner);
 
@@ -479,7 +479,7 @@
 
     if (el) {
 
-      el.innerHTML = '<strong>Starting chat…</strong> loading scripts — try again in a few seconds';
+      globalThis.DenizenSafeDom.setSafeHtml(el, '<strong>Starting chat…</strong> loading scripts — try again in a few seconds');
 
       el.style.background = 'rgba(113, 63, 18, 0.95)';
 
@@ -560,7 +560,7 @@
         : (!window.game
           ? 'Phaser loaded but the office scene never started — check DevTools Console (F12) for red errors.'
           : 'Office scene started but no canvas — WebGL/canvas may be blocked.');
-      loadBanner.innerHTML = `<strong>Office stuck</strong> — ${reason} <span id="denizen-boot-tag">(boot v7)</span>`;
+      globalThis.DenizenSafeDom.setSafeHtml(loadBanner, `<strong>Office stuck</strong> — ${reason} <span id="denizen-boot-tag">(boot v7)</span>`);
       if (tag) tag.textContent = '(boot v7)';
     };
     setTimeout(failsafe, 5000);

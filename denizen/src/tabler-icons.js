@@ -167,7 +167,7 @@
   /** Set a button/chip element to icon + optional label (uses innerHTML). */
   function setEl(el, iconName, text, opts = {}) {
     if (!el) return;
-    if (iconName) el.innerHTML = chip(iconName, text, opts);
+    if (iconName) globalThis.DenizenSafeDom.setSafeHtml(el, chip(iconName, text, opts));
     else el.textContent = text == null ? '' : String(text);
   }
 
@@ -180,10 +180,10 @@
     const name = String(iconName || 'circle').replace(/[^a-z0-9-]/gi, '');
     const text = label == null ? '' : String(label);
     if (iconOnly) {
-      el.innerHTML = icon(name, { size: opts.size || 14, fallback: opts.fallback });
+      globalThis.DenizenSafeDom.setSafeHtml(el, icon(name, { size: opts.size || 14, fallback: opts.fallback }));
       el.title = opts.title != null ? String(opts.title) : text;
     } else {
-      el.innerHTML = text ? chip(name, text, { size: opts.size || 13, fallback: opts.fallback }) : icon(name, { size: opts.size || 14, fallback: opts.fallback });
+      globalThis.DenizenSafeDom.setSafeHtml(el, text ? chip(name, text, { size: opts.size || 13, fallback: opts.fallback }) : icon(name, { size: opts.size || 14, fallback: opts.fallback }));
       if (opts.title != null) el.title = String(opts.title);
     }
   }

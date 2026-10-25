@@ -234,7 +234,7 @@
     injectStyles();
     panelEl = document.createElement('div');
     panelEl.id = PANEL_ID;
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       <div class="proj-header">
         <span>Your projects</span>
         <button type="button" class="proj-close" aria-label="Close">✕</button>
@@ -245,7 +245,7 @@
         <textarea id="denizen-project-notes" maxlength="500" rows="2" placeholder="Notes (optional)"></textarea>
         <button type="button" class="proj-add" id="denizen-project-add">Add project</button>
       </div>
-    `;
+    `);
     document.body.appendChild(panelEl);
     panelEl.querySelector('.proj-close').addEventListener('click', () => closePanel());
     panelEl.querySelector('#denizen-project-add').addEventListener('click', () => onAddProject());
@@ -275,14 +275,14 @@
   async function refreshList() {
     const listEl = document.getElementById('denizen-projects-list');
     if (!listEl) return;
-    listEl.innerHTML = '<div class="proj-empty">Loading…</div>';
+    globalThis.DenizenSafeDom.setSafeHtml(listEl, '<div class="proj-empty">Loading…</div>');
     try {
       const projects = await globalThis.DenizenVisitorSession.listProjects();
       if (!projects.length) {
-        listEl.innerHTML = '<div class="proj-empty">No projects yet — add one below.</div>';
+        globalThis.DenizenSafeDom.setSafeHtml(listEl, '<div class="proj-empty">No projects yet — add one below.</div>');
         return;
       }
-      listEl.innerHTML = projects.map((p) => `
+      globalThis.DenizenSafeDom.setSafeHtml(listEl, projects.map((p) => `
         <div class="proj-item" data-id="${esc(p.id)}">
           <div>
             <div class="proj-name">${esc(p.name)}</div>
@@ -290,12 +290,12 @@
           </div>
           <button type="button" class="proj-delete" data-id="${esc(p.id)}">Delete</button>
         </div>
-      `).join('');
+      `).join(''));
       listEl.querySelectorAll('.proj-delete').forEach((btn) => {
         btn.addEventListener('click', () => onDeleteProject(btn.dataset.id));
       });
     } catch (err) {
-      listEl.innerHTML = `<div class="proj-empty">${esc(err?.message || 'Could not load projects')}</div>`;
+      globalThis.DenizenSafeDom.setSafeHtml(listEl, `<div class="proj-empty">${esc(err?.message || 'Could not load projects')}</div>`);
     }
   }
 

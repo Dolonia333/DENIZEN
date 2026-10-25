@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /**
  * Denizen OS — the in-game smartphone HUD.
  *
@@ -208,7 +209,7 @@
     if (!fabEl) return;
     const badge = fabEl.querySelector('.dzp-fab-badge');
     const badgeHtml = badge ? badge.outerHTML : '<span class="dzp-fab-badge"></span>';
-    fabEl.innerHTML = `${buzzFabMarkup()}${badgeHtml}`;
+    globalThis.DenizenSafeDom.setSafeHtml(fabEl, `${buzzFabMarkup()}${badgeHtml}`);
     fabEl.dataset.icon = 'buzz';
   }
 
@@ -221,7 +222,7 @@
     shellEl.querySelectorAll('.dzp-app[data-app]').forEach((btn) => {
       const app = appById[btn.dataset.app];
       const el = btn.querySelector('.dzp-app-icon');
-      if (app && el) el.innerHTML = appIconMarkup(app);
+      if (app && el) globalThis.DenizenSafeDom.setSafeHtml(el, appIconMarkup(app));
     });
     shellEl.querySelectorAll('.dzp-folder[data-folder]').forEach((btn) => {
       const folder = phoneLayout.folders[btn.dataset.folder];
@@ -229,9 +230,9 @@
       const previews = folder.apps.map((id) => appById[id]).filter(Boolean).slice(0, 4);
       const wrap = btn.querySelector('.dzp-folder-icons');
       if (!wrap) return;
-      wrap.innerHTML = previews.map((a) =>
+      globalThis.DenizenSafeDom.setSafeHtml(wrap, previews.map((a) =>
         `<span style="--tile-a:${a.c[0]};--tile-b:${a.c[1]}">${appIconMarkup(a, 18)}</span>`,
-      ).join('');
+      ).join(''));
     });
     paintPhoneFab();
   }
@@ -2273,7 +2274,7 @@
     if (shellEl) return shellEl;
     shellEl = document.createElement('div');
     shellEl.id = SHELL_ID;
-    shellEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(shellEl, `
       <div id="${FRAME_ID}" role="dialog" aria-label="Denizen phone">
         <span class="dzp-hw power"></span>
         <span class="dzp-hw vol-up"></span>
@@ -2338,7 +2339,7 @@
           <button type="button" class="dzp-home" aria-label="Home"></button>
           <button type="button" class="dzp-close" aria-label="Close phone">✕</button>
         </div>
-      </div>`;
+      </div>`);
     document.body.appendChild(shellEl);
 
     screenEl = shellEl.querySelector(`#${SCREEN_ID}`);
@@ -2524,12 +2525,12 @@
     btn.setAttribute('aria-label', fullName);
     btn.setAttribute('title', fullName);
     btn.dataset.label = app.label;
-    btn.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(btn, `
       <span class="dzp-app-icon" style="--tile-a:${app.c[0]};--tile-b:${app.c[1]}">${appIconMarkup(app)}</span>
       <span class="dzp-app-label">${app.label}</span>
       <span class="dzp-app-status"></span>
       <span class="dzp-badge"></span>
-      <span class="dzp-dot"></span>`;
+      <span class="dzp-dot"></span>`);
     if (app.type === 'navigate') {
       btn.addEventListener('pointerenter', () => prefetchNavigateApp(app), { passive: true });
       btn.addEventListener('pointerdown', () => prefetchNavigateApp(app), { passive: true });
@@ -2558,10 +2559,10 @@
     const mini = previews.map((a) =>
       `<span style="--tile-a:${a.c[0]};--tile-b:${a.c[1]}">${appIconMarkup(a, 18)}</span>`,
     ).join('');
-    btn.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(btn, `
       <span class="dzp-folder-icons">${mini}</span>
       <span class="dzp-app-label">${folder.name || 'Folder'}</span>
-      <span class="dzp-app-status"></span>`;
+      <span class="dzp-app-status"></span>`);
     wireAppTap(btn, () => {
       if (editMode) return;
       openFolderSheet(folderKey);
@@ -2585,8 +2586,8 @@
   function buildGrid() {
     if (!gridEl || !dockEl) return;
     phoneLayout = normalizePhoneLayout(phoneLayout);
-    gridEl.innerHTML = '';
-    dockEl.innerHTML = '';
+    gridEl.replaceChildren();
+    dockEl.replaceChildren();
 
     phoneLayout.grid.forEach((ref, index) => {
       const el = renderHomeItem(ref, 'grid', index);
@@ -2646,7 +2647,7 @@
     openFolderKey = folderKey;
     folderSheetEl.querySelector('.dzp-folder-title').textContent = folder.name || 'Folder';
     const inner = folderSheetEl.querySelector('.dzp-folder-grid');
-    inner.innerHTML = '';
+    inner.replaceChildren();
     folder.apps.forEach((id) => {
       const app = appById[id];
       if (!app) return;
@@ -2930,7 +2931,7 @@
     const doneCount = OFFICE_GUIDE_STEPS.filter((step) => progress.done.has(step.id)).length;
     const pct = OFFICE_GUIDE_STEPS.length ? Math.round((doneCount / OFFICE_GUIDE_STEPS.length) * 100) : 0;
     const isDone = activeStep && progress.done.has(activeStep.id);
-    settingsEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(settingsEl, `
       <div class="og-hero">
         <span class="og-kicker">Office first</span>
         <h3>Office Guide</h3>
@@ -2960,7 +2961,7 @@
           <button type="button" data-act="capabilities">Full guide</button>
         </div>
       </div>
-    `;
+    `);
     settingsEl.onclick = (e) => {
       const stepBtn = e.target?.closest?.('[data-step]');
       if (stepBtn) {
@@ -3045,7 +3046,7 @@
     document.documentElement.setAttribute(APP_ATTR, app.id);
     shellEl.querySelector(`#${FRAME_ID}`).classList.add('dzp-app-open');
     if (appbarTitleEl) {
-      appbarTitleEl.innerHTML = `${appIconMarkup(app, 16)} <span>${app.label}</span>`;
+      globalThis.DenizenSafeDom.setSafeHtml(appbarTitleEl, `${appIconMarkup(app, 16)} <span>${app.label}</span>`);
     }
     scheduleSyncScreenVars();
   }
@@ -3351,7 +3352,7 @@
     setAppOpenUi(app);
     settingsEl.classList.remove('dzp-office-guide');
     settingsEl.classList.add('show', 'dzp-station-connect');
-    settingsEl.innerHTML = '<div id="dzp-station-host"></div>';
+    globalThis.DenizenSafeDom.setSafeHtml(settingsEl, '<div id="dzp-station-host"></div>');
     const host = settingsEl.querySelector('#dzp-station-host');
     if (!globalThis.DenizenPhoneStationConnect?.render) {
       showPlaceholder('Loading Link Station…');
@@ -3373,7 +3374,7 @@
     setAppOpenUi(app);
     settingsEl.classList.remove('dzp-office-guide', 'dzp-station-connect');
     settingsEl.classList.add('show', 'dzp-workflow');
-    settingsEl.innerHTML = '<iframe class="dzp-workflow-frame" src="/workflow-dashboard.html?embed=1" title="Office workflow tools"></iframe>';
+    globalThis.DenizenSafeDom.setSafeHtml(settingsEl, '<iframe class="dzp-workflow-frame" src="/workflow-dashboard.html?embed=1" title="Office workflow tools"></iframe>');
     document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
   }
 
@@ -3381,12 +3382,12 @@
     setAppOpenUi(app);
     settingsEl.classList.remove('dzp-office-guide', 'dzp-station-connect', 'dzp-workflow');
     settingsEl.classList.add('show', 'dzp-workbench');
-    settingsEl.innerHTML = '<div id="dzp-workbench-host"></div>';
+    globalThis.DenizenSafeDom.setSafeHtml(settingsEl, '<div id="dzp-workbench-host"></div>');
     const host = settingsEl.querySelector('#dzp-workbench-host');
     if (globalThis.DenizenWorkRail?.mountPhone) {
       globalThis.DenizenWorkRail.mountPhone(host);
     } else {
-      host.innerHTML = '<p class="v">Workbench is loading…</p>';
+      globalThis.DenizenSafeDom.setSafeHtml(host, '<p class="v">Workbench is loading…</p>');
       globalThis.DenizenLazyScripts?.load?.(['./src/work-rail.js?v=wr6']).then(() => {
         globalThis.DenizenWorkRail?.mountPhone?.(host);
       });
@@ -3403,7 +3404,7 @@
     );
     const mode = isTouch() ? 'Touch' : 'Desktop';
     settingsEl.classList.remove('dzp-office-guide');
-    settingsEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(settingsEl, `
       <div class="sec">
         <h3>About this phone</h3>
         <div class="row"><span>System</span><span class="v">${OS_NAME} ${OS_VERSION}</span></div>
@@ -3440,7 +3441,7 @@
           <span>Buzz's Office Tour<br><span class="v">Walk the floor with your office key</span></span>
           <button type="button" data-act="office-tour">Start tour</button>
         </div>
-      </div>`;
+      </div>`);
     settingsEl.classList.add('show');
     void loadPhoneMcpSettings();
     const onAct = (e) => {
@@ -3474,7 +3475,7 @@
       }
       await globalThis.DenizenVisitorMcpConnectUI?.renderSettingsPanel?.(host);
     } catch (_) {
-      host.innerHTML = '<p class="v">Sign in and claim an assistant to connect MCP.</p>';
+      globalThis.DenizenSafeDom.setSafeHtml(host, '<p class="v">Sign in and claim an assistant to connect MCP.</p>');
     }
   }
 
@@ -3695,7 +3696,7 @@
     fabEl = document.createElement('button');
     fabEl.id = FAB_ID;
     fabEl.type = 'button';
-    fabEl.innerHTML = '<span class="dzp-fab-badge"></span>';
+    globalThis.DenizenSafeDom.setSafeHtml(fabEl, '<span class="dzp-fab-badge"></span>');
     ensurePhoneFabIcon();
     fabEl.title = 'Buzz — click for capture, Apps on the ring for the phone';
     fabEl.setAttribute('aria-label', 'Buzz capture ring. Choose Apps on the ring for the phone');

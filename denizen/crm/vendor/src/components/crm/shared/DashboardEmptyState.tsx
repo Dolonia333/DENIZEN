@@ -22,7 +22,7 @@ export function DashboardEmptyState({ icon, title, subtitle }: Props) {
     >
       <span style={{ fontSize: 32, lineHeight: 1 }} aria-hidden>{icon}</span>
       <div style={{ fontSize: 14, fontWeight: 600, color: T.text1 }}>{title}</div>
-      <div style={{ fontSize: 12, color: T.text2, maxWidth: 280, lineHeight: 1.45 }}>{subtitle}</div>
+      <div style={{ fontSize: 14, color: T.text2, maxWidth: 280, lineHeight: 1.45 }}>{subtitle}</div>
     </div>
   );
 }

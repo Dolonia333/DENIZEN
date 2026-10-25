@@ -85,7 +85,7 @@
     const from = msg.from || 'peer';
     const text = String(msg.text || '').slice(0, 140);
     const el = ensureToast();
-    el.innerHTML = `<b>Agent message for ${mine}</b><br><span style="color:#93c5fd">${from}</span>: ${text}`;
+    globalThis.DenizenSafeDom.setSafeHtml(el, `<b>Agent message for ${mine}</b><br><span style="color:#93c5fd">${from}</span>: ${text}`);
     el.style.display = 'block';
     if (hideTimer) clearTimeout(hideTimer);
     hideTimer = setTimeout(() => { el.style.display = 'none'; }, 14000);

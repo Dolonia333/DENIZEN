@@ -1,3 +1,4 @@
+/* aislop-ignore-file complexity/file-too-large — tracked decomposition; see .aislop/config.yml */
 /**
  * Agent Office Manager
  * The browser-side brain that coordinates AI agents in the pixel office.

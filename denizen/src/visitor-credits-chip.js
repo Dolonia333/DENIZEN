@@ -64,7 +64,7 @@
     injectStyles();
     chipEl = document.createElement('div');
     chipEl.id = CHIP_ID;
-    chipEl.innerHTML = '<span class="credits">Credits: 0</span>';
+    globalThis.DenizenSafeDom.setSafeHtml(chipEl, '<span class="credits">Credits: 0</span>');
     document.body.appendChild(chipEl);
     return chipEl;
   }
@@ -74,7 +74,7 @@
     const el = ensureChip();
     const credits = Number.isFinite(Number(status.credits)) ? Math.round(Number(status.credits)) : 0;
     const superBadge = status.isSuperNode ? '<span class="super">Super Node</span>' : '';
-    el.innerHTML = `<span class="credits">Credits: ${credits}</span>${superBadge}`;
+    globalThis.DenizenSafeDom.setSafeHtml(el, `<span class="credits">Credits: ${credits}</span>${superBadge}`);
   }
 
   function refreshFromNodeUi() {

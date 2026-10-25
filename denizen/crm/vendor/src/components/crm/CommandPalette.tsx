@@ -69,7 +69,7 @@ export function CommandPalette({ isOpen, onClose, contacts, deals, notes = [], t
   let idx = -1;
   const section = (title: string, children: React.ReactNode) => (
     <>
-      <div style={{ fontSize: 10, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", padding: "8px 18px 4px" }}>{title}</div>
+      <div style={{ fontSize: 14, color: T.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", padding: "8px 18px 4px" }}>{title}</div>
       {children}
     </>
   );
@@ -83,8 +83,8 @@ export function CommandPalette({ isOpen, onClose, contacts, deals, notes = [], t
       }}>
       <span style={{ fontSize: 14 }}>{icon}</span>
       <div>
-        <div style={{ fontSize: 13, color: T.text0, fontWeight: 600 }}>{label}</div>
-        <div style={{ fontSize: 11, color: T.text3 }}>{sub}</div>
+        <div style={{ fontSize: 14, color: T.text0, fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: 14, color: T.text3 }}>{sub}</div>
       </div>
     </div>
   );
@@ -94,8 +94,8 @@ export function CommandPalette({ isOpen, onClose, contacts, deals, notes = [], t
       <div onClick={e => e.stopPropagation()} className="animate-scale-in" style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.xl, width: 600, maxWidth: "94vw", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: `1px solid ${T.bg4}` }}>
           <span style={{ color: T.text3, fontSize: 16 }}>🔍</span>
-          <input ref={inputRef} value={q} onChange={e => { setQ(e.target.value); setSel(0); }} placeholder="Search contacts, deals, tasks, companies…" style={{ flex: 1, background: "none", border: "none", color: T.text0, fontSize: 15, outline: "none" }} onKeyDown={handleKey} />
-          <span style={{ fontSize: 10, color: T.text3, background: T.bg3, padding: "2px 6px", borderRadius: 4 }}>esc</span>
+          <input ref={inputRef} value={q} onChange={e = aria-label="input"> { setQ(e.target.value); setSel(0); }} placeholder="Search contacts, deals, tasks, companies…" style={{ flex: 1, background: "none", border: "none", color: T.text0, fontSize: 15, outline: "none" }} onKeyDown={handleKey} />
+          <span style={{ fontSize: 14, color: T.text3, background: T.bg3, padding: "2px 6px", borderRadius: 4 }}>esc</span>
         </div>
         <div style={{ maxHeight: 440, overflowY: "auto", padding: "8px 0" }}>
           {results.contacts.length > 0 && section("Contacts", results.contacts.map(c => { idx++; const i = idx; return row(c.name, c.company, "◉", i, () => { if (onSelectContact) onSelectContact(c); else onNavigate("contacts"); onClose(); }); }))}
@@ -104,7 +104,7 @@ export function CommandPalette({ isOpen, onClose, contacts, deals, notes = [], t
           {results.companies.length > 0 && section("Companies", results.companies.map(c => { idx++; const i = idx; return row(c.name, c.industry || c.domain, "🏢", i, () => { onNavigate("companies"); onClose(); }); }))}
           {results.notes.length > 0 && section("Notes", results.notes.map(n => { idx++; const i = idx; return row(n.contact, n.text.slice(0, 60), "📌", i, () => { onNavigate("notes"); onClose(); }); }))}
           {results.pages.length > 0 && section("Pages", results.pages.map(p => { idx++; const i = idx; return row(p.label, "Navigate", p.icon, i, () => { onNavigate(p.id); onClose(); }); }))}
-          {flat.length === 0 && q.trim() && <div style={{ padding: 24, textAlign: "center", color: T.text3, fontSize: 13 }}>No results for "{q}"</div>}
+          {flat.length === 0 && q.trim() && <div style={{ padding: 24, textAlign: "center", color: T.text3, fontSize: 14 }}>No results for "{q}"</div>}
         </div>
       </div>
     </div>

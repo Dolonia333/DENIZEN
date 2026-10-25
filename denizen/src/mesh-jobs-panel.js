@@ -354,7 +354,7 @@
     sections.push('</div>');
 
     const updated = s.fetchedAt ? fmtTime(new Date(s.fetchedAt).toISOString()) : '—';
-    panelEl.innerHTML = `
+    globalThis.DenizenSafeDom.setSafeHtml(panelEl, `
       <header>
         <h2>CITY POWER</h2>
         <button type="button" class="mesh-close" aria-label="Close">✕</button>
@@ -362,7 +362,7 @@
       <div class="mesh-body">
         ${sections.join('')}
         <div class="mesh-meta">updated ${updated} · refresh every ${POLL_MS / 1000}s</div>
-      </div>`;
+      </div>`);
 
     panelEl.querySelector('.mesh-close')?.addEventListener('click', () => setPanelOpen(false));
   }
