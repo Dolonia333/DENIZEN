@@ -657,44 +657,50 @@ export interface NavGroup {
   items: { id: string; label: string; icon: string }[];
 }
 
+/** Full Meridian surface — every module stays available for solo and team use. */
 export const NAV_GROUPS: NavGroup[] = [
   {
-    group: "MAIN",
+    group: "DAILY",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: "◈" },
+      { id: "dashboard", label: "Home", icon: "◈" },
       { id: "contacts", label: "Contacts", icon: "◉" },
-      { id: "sales", label: "Sales", icon: "◆" },
-      { id: "schedule", label: "Schedule", icon: "📅" },
+      { id: "sales", label: "Pipeline", icon: "◆" },
+      { id: "schedule", label: "Schedule", icon: "◷" },
     ],
   },
   {
-    group: "WORKSPACE",
+    group: "SELL",
     items: [
-      { id: "companies", label: "Companies", icon: "🏢" },
-      { id: "support", label: "Support", icon: "🎧" },
-      { id: "marketing", label: "Marketing", icon: "📣" },
-      { id: "team", label: "Team", icon: "👥" },
-      { id: "notes", label: "Notes", icon: "📌" },
-      { id: "sequences", label: "Sequences", icon: "📬" },
+      { id: "intake", label: "Intake & Quotes", icon: "▣" },
       { id: "packages", label: "Packages", icon: "⊞" },
-      { id: "intake", label: "Proposals & Intake", icon: "📋" },
-      { id: "email-templates", label: "Email Templates", icon: "✉️" },
+      { id: "sequences", label: "Sequences", icon: "⇢" },
+      { id: "marketing", label: "Marketing", icon: "◎" },
+      { id: "companies", label: "Accounts", icon: "⌂" },
+      { id: "email-templates", label: "Email Templates", icon: "✉" },
       { id: "automations", label: "Automations", icon: "⚡" },
+    ],
+  },
+  {
+    group: "COLLABORATE",
+    items: [
+      { id: "support", label: "Support", icon: "◌" },
+      { id: "team", label: "Team", icon: "☰" },
+      { id: "notes", label: "Notes", icon: "✎" },
+      { id: "portal", label: "Client Portal", icon: "◈" },
     ],
   },
   {
     group: "INTELLIGENCE",
     items: [
-      { id: "analytics", label: "Analytics", icon: "▣" },
-      { id: "ai-prospector", label: "AI Prospector", icon: "🔍" },
-      { id: "ai", label: "AI", icon: "✦" },
-      { id: "portal", label: "Portal", icon: "🌐" },
+      { id: "analytics", label: "Analytics", icon: "▦" },
+      { id: "ai-prospector", label: "AI Prospector", icon: "⌕" },
+      { id: "ai", label: "AI Assist", icon: "✦" },
     ],
   },
   {
     group: "SYSTEM",
     items: [
-      { id: "data-tools", label: "Data Management", icon: "📦" },
+      { id: "data-tools", label: "Data Management", icon: "⬡" },
       { id: "onboarding", label: "Setup", icon: "⊕" },
       { id: "settings", label: "Settings", icon: "⚙" },
     ],

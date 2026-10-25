@@ -36,6 +36,8 @@
     --crm-success: 162 72% 48%;
     --crm-purple: 263 90% 66%;
     --crm-blue: 213 92% 63%;
+    --crm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --crm-display: "Instrument Serif", "Times New Roman", serif;
   }
 }
 
@@ -46,10 +48,15 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: var(--crm-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.65;
+  }
+
+  h1, h2, .crm-display {
+    font-family: var(--crm-display);
+    letter-spacing: -0.02em;
   }
 
   /* Remove default browser tap highlight & outlines */

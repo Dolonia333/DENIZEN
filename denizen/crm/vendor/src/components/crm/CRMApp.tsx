@@ -63,6 +63,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocalStorage } from "@/lib/crm-hooks";
 import { dispatchCrmSubNav, isKnownCrmTab, resolveCrmNav } from "@/lib/crm-nav";
 import { useCrmCloudSync, crmSyncLabel } from "@/hooks/use-crm-cloud-sync";
+import { CrmHomeStart } from "./CrmHomeStart";
+import { resolveWorkspaceMode, workspaceModeLabel } from "@/lib/crm-workspace-mode";
 
 
 export default function CRMApp() {
@@ -282,7 +284,7 @@ export default function CRMApp() {
 
   const syncLabel = crmSyncLabel(syncStatus, teamLabel, lastSavedAt, updatedByName);
 
-  const [denizenProfile, setDenizenProfile] = useState({ name: "Guest", role: "Team member" });
+  const [denizenProfile, setDenizenProfile] = useState({ name: "Guest", role: "Solo" });
   const [claimedNpcKey, setClaimedNpcKey] = useState<string | null>(null);
   const [crmScope, setCrmScope] = useState<CrmScope>("org");
   const [selfIdentityId, setSelfIdentityId] = useState<string | null>(null);
@@ -336,7 +338,8 @@ export default function CRMApp() {
         const tr = String(session.team_role || "").toLowerCase();
         if (tr === "owner") return "Owner";
         if (tr === "admin") return "Admin";
-        return "Team member";
+        const members = Array.isArray(team?.members) ? team.members.length : 0;
+        return members >= 2 ? "Team member" : "Solo";
       };
       setDenizenProfile({ name, role: roleLabel(info) });
       if (info.email) setSelfEmail(info.email);
@@ -359,6 +362,15 @@ export default function CRMApp() {
     }
     return names.length ? names : [denizenProfile.name];
   }, [crmTeam, denizenProfile.name]);
+
+  const workspaceMode = useMemo(
+    () => resolveWorkspaceMode({
+      syncStatus,
+      teamSize: Math.max(crmTeam.length, teamMemberNames.length > 1 ? teamMemberNames.length : (orgLabel ? 1 : 0)),
+    }),
+    [syncStatus, crmTeam.length, teamMemberNames.length, orgLabel],
+  );
+  const isTeamMode = workspaceMode === "team";
 
   // MOBILE: lock body scroll while sidebar drawer is open to prevent background scrolling
   useEffect(() => {
@@ -1108,15 +1120,41 @@ export default function CRMApp() {
     if (r.defaultTab && r.defaultTab !== tab) handleNavigate(r.defaultTab);
   };
 
-  const renderDashboard = () => (
+  const isEmptyWorkspace = contacts.length === 0 && deals.length === 0;
+
+  const renderDashboard = () => {
+    if (isEmptyWorkspace) {
+      return (
+        <CrmHomeStart
+          mode={workspaceMode}
+          syncStatus={syncStatus}
+          onAddContact={() => setModal("add-contact")}
+          onOpenPipeline={() => handleNavigate("sales")}
+          onOpenIntake={() => handleNavigate("intake")}
+          onLoadSample={handleLoadDemoData}
+          onOpenSetup={() => handleNavigate("onboarding")}
+          onOpenTeam={() => handleNavigate("team")}
+        />
+      );
+    }
+
+    return (
     <div>
-      {/* Role switcher — reshapes the dashboard per persona */}
       <div style={{
         display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
         marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}`,
       }}>
+        <span style={{
+          fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
+          padding: "4px 10px", borderRadius: 999,
+          background: isTeamMode ? `${T.purple}18` : `${T.blue}18`,
+          color: isTeamMode ? T.purple : T.blue,
+          border: `1px solid ${isTeamMode ? `${T.purple}33` : `${T.blue}33`}`,
+        }}>
+          {workspaceModeLabel(workspaceMode)}
+        </span>
         <span style={{ fontSize: 11, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
-          Dashboard view
+          Role view
         </span>
         {CRM_ROLES.map((r) => {
           const on = r.id === activeRole;
@@ -1141,8 +1179,8 @@ export default function CRMApp() {
         })}
       </div>
       <div style={{ marginBottom: 14 }}>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text0 }}>
-          {role.icon} {role.label} Dashboard
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600, color: T.text0, fontFamily: "var(--crm-display)", letterSpacing: "-0.02em" }}>
+          {role.label}
         </h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text2 }}>{role.blurb}</p>
       </div>
@@ -1151,6 +1189,7 @@ export default function CRMApp() {
         deals={deals}
         tasks={tasks}
         tickets={supportTickets}
+        isTeamMode={isTeamMode}
         onNavigate={handleNavigate}
       />
       <RoleDashboard
@@ -1170,7 +1209,8 @@ export default function CRMApp() {
         onNavigate={handleNavigate}
       />
     </div>
-  );
+    );
+  };
 
   const renderTab = () => (
     <LazyTab>
@@ -1468,15 +1508,25 @@ export default function CRMApp() {
 
         <div style={{
           marginTop: 8,
-          padding: "6px 10px",
+          padding: "8px 10px",
           borderRadius: T.radius.sm,
           border: `1px solid ${T.bg4}`,
           background: T.bg3,
           fontSize: 10,
-          color: syncStatus === "error" ? T.red : syncStatus === "no-session" || syncStatus === "draft" ? T.text3 : T.green,
-          lineHeight: 1.35,
+          lineHeight: 1.4,
         }}>
-          {syncLabel}
+          <div style={{
+            fontWeight: 700,
+            color: isTeamMode ? T.purple : T.blue,
+            marginBottom: 2,
+          }}>
+            {workspaceModeLabel(workspaceMode)}
+          </div>
+          <div style={{
+            color: syncStatus === "error" ? T.red : syncStatus === "no-session" || syncStatus === "draft" ? T.text3 : T.green,
+          }}>
+            {syncLabel}
+          </div>
         </div>
 
         <a
@@ -1540,11 +1590,15 @@ export default function CRMApp() {
 
       {/* MAIN CONTENT */}
       <main ref={mainRef} style={{
-        flex: 1, overflowY: "auto", background: T.bg0,
+        flex: 1, overflowY: "auto",
+        background:
+          "radial-gradient(ellipse 90% 50% at 10% -10%, rgba(240,180,41,0.07), transparent 50%)," +
+          "radial-gradient(ellipse 70% 40% at 100% 0%, rgba(77,158,247,0.06), transparent 45%)," +
+          T.bg0,
         padding: isMobile ? "66px 14px 80px" : "28px 32px",
         ...(isMobile ? { width: "100%" } : {}),
       }}>
-        {crmScope === "own" && (
+        {crmScope === "own" && isTeamMode && (
           <div style={{
             marginBottom: 14,
             padding: "10px 14px",
@@ -1554,8 +1608,8 @@ export default function CRMApp() {
             fontSize: 12,
             color: T.text2,
           }}>
-            Showing <strong style={{ color: T.text0 }}>your CRM records only</strong>. AI assistants and owners still see the full org.
-            {" "}Open <button type="button" onClick={() => handleNavigate("team")} style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", padding: 0, fontSize: 12 }}>Team viewer</button> to see what everyone is doing.
+            Showing <strong style={{ color: T.text0 }}>your records</strong> in this shared workspace.
+            {" "}Open <button type="button" onClick={() => handleNavigate("team")} style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", padding: 0, fontSize: 12 }}>Team activity</button> to see what everyone is doing.
           </div>
         )}
         <div key={tab} className="crm-page-fade">
