@@ -29,11 +29,10 @@ export const chartMargin = { top: 8, right: 12, left: 0, bottom: 4 };
 
 export function chartPanelStyle(): CSSProperties {
   return {
-    background: `linear-gradient(165deg, ${T.bg2} 0%, ${T.bg1} 100%)`,
+    background: T.bg2,
     border: `1px solid ${T.bg4}`,
-    borderRadius: T.radius.lg,
+    borderRadius: 12,
     padding: "18px 18px 14px",
-    boxShadow: T.shadow.card,
   };
 }
 

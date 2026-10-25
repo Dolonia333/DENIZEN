@@ -17,12 +17,10 @@ function PremiumTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: "rgba(13,16,21,0.94)",
+      background: T.bg1,
       border: `1px solid ${T.bg4}`,
-      borderRadius: 12,
-      padding: "10px 14px",
-      boxShadow: T.shadow.elevated,
-      backdropFilter: "blur(8px)",
+      borderRadius: 8,
+      padding: "10px 12px",
       minWidth: 160,
     }}>
       {label != null && label !== "" && (
@@ -148,14 +146,10 @@ export function PipelineInsights({ deals }: Props) {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{
-          margin: 0, fontSize: 26, fontWeight: 600, color: T.text0,
-          fontFamily: "var(--crm-display)", letterSpacing: "-0.02em",
-        }}>
-          Pipeline insights
-        </h2>
-        <p style={{ margin: "6px 0 0", fontSize: 13, color: T.text2 }}>
-          Premium viz for coverage, aging, and forecast — {openDeals.length} open · {fmt(totalOpen)} pipeline · {fmt(Math.round(totalWeighted))} weighted
+        <div className="crm-kicker">Pipeline</div>
+        <h2 className="crm-page-title" style={{ marginTop: 6 }}>Insights</h2>
+        <p className="crm-page-sub">
+          {openDeals.length} open · {fmt(totalOpen)} pipeline · {fmt(Math.round(totalWeighted))} weighted
         </p>
       </div>
 
@@ -164,11 +158,11 @@ export function PipelineInsights({ deals }: Props) {
           { label: "Open value", value: fmt(totalOpen), color: T.accent },
           { label: "Weighted", value: fmt(Math.round(totalWeighted)), color: T.blue },
           { label: "Commit", value: fmt(forecast[0].value), color: T.green },
-          { label: "Open deals", value: String(openDeals.length), color: T.copper },
+          { label: "Open deals", value: String(openDeals.length), color: T.text1 },
         ].map((k) => (
-          <div key={k.label} style={{ ...chartPanelStyle(), padding: "14px 16px" }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>{k.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: k.color, marginTop: 6, fontVariantNumeric: "tabular-nums" }}>{k.value}</div>
+          <div key={k.label} className="crm-panel" style={{ padding: "14px 16px" }}>
+            <div className="crm-kicker">{k.label}</div>
+            <div className="crm-metric" style={{ fontSize: 22, color: k.color, marginTop: 8 }}>{k.value}</div>
           </div>
         ))}
       </div>
@@ -182,16 +176,17 @@ export function PipelineInsights({ deals }: Props) {
             {funnel.map((f) => (
               <div key={f.stage} style={{ width: `${f.width}%`, minWidth: "40%", maxWidth: "100%" }}>
                 <div style={{
-                  background: `linear-gradient(90deg, ${f.color}, ${f.color}99)`,
+                  background: `${f.color}22`,
+                  border: `1px solid ${f.color}55`,
+                  borderLeft: `3px solid ${f.color}`,
                   borderRadius: 8,
                   padding: "10px 14px",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  boxShadow: `0 0 20px ${f.color}22`,
                 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#071410" }}>{f.stage}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#071410", opacity: 0.85 }}>
+                  <span style={{ fontSize: 12, fontWeight: 650, color: T.text0 }}>{f.stage}</span>
+                  <span className="crm-metric" style={{ fontSize: 12, color: T.text2 }}>
                     {f.count} · {fmt(f.value)}
                   </span>
                 </div>

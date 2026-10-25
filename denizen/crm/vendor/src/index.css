@@ -83,16 +83,76 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Button press effect */
-  button:active:not(:disabled),
-  [role="button"]:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  /* Cursor pointer on all clickables */
+  /* Cursor pointer on all clickables — no bounce/scale (reads as toy UI) */
   button, a, [role="button"], [role="tab"], [role="menuitem"],
   [role="row"], [data-clickable], summary, label[for] {
     cursor: pointer;
+  }
+
+  /* Product chrome — prefer classes over one-off inline cards */
+  .crm-panel {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+  }
+  .crm-panel-quiet {
+    background: transparent;
+    border: 1px solid hsl(var(--border) / 0.7);
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+  }
+  .crm-kicker {
+    font-family: var(--crm-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .crm-page-title {
+    font-family: var(--crm-display);
+    font-size: clamp(22px, 2.4vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: hsl(var(--foreground));
+    margin: 0;
+  }
+  .crm-page-sub {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+  }
+  .crm-seg {
+    display: inline-flex;
+    gap: 0;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.55);
+  }
+  .crm-seg-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    font: 600 12px/1.2 var(--crm-sans);
+    padding: 7px 12px;
+    border-radius: 7px;
+    white-space: nowrap;
+  }
+  .crm-seg-btn[aria-pressed="true"],
+  .crm-seg-btn.is-active {
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+    box-shadow: 0 1px 0 hsl(var(--border));
+  }
+  .crm-metric {
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    letter-spacing: -0.02em;
   }
 
   /* Smooth panel/card entrance */

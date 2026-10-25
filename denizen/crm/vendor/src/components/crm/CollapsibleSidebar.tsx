@@ -128,7 +128,10 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
                         borderRadius: "0 2px 2px 0", background: T.accent,
                       }} />
                     )}
-                    <span style={{ fontSize: 16, width: 20, textAlign: "center", opacity: active ? 1 : 0.6 }}>{item.icon}</span>
+                    <span style={{
+                      fontSize: 11, width: 18, textAlign: "center", opacity: active ? 0.9 : 0.45,
+                      fontWeight: 700, letterSpacing: "0.02em",
+                    }} aria-hidden>{item.icon}</span>
                     <span style={{ flex: 1 }}>{termLabel}</span>
                     {/* Count badge */}
                     {count !== null && count > 0 && (

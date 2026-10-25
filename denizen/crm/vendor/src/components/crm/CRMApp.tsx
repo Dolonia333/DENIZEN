@@ -1116,7 +1116,7 @@ export default function CRMApp() {
   const switchRole = (id: string) => {
     setActiveRole(id);
     const r = getRole(id);
-    addToast("info", `${r.icon} ${r.label} view`);
+    addToast("info", `${r.label} view`);
     if (r.defaultTab && r.defaultTab !== tab) handleNavigate(r.defaultTab);
   };
 
@@ -1141,48 +1141,33 @@ export default function CRMApp() {
     return (
     <div>
       <div style={{
-        display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-        marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}`,
+        display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+        marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}`,
       }}>
-        <span style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
-          padding: "4px 10px", borderRadius: 999,
-          background: isTeamMode ? `${T.purple}18` : `${T.blue}18`,
-          color: isTeamMode ? T.purple : T.blue,
-          border: `1px solid ${isTeamMode ? `${T.purple}33` : `${T.blue}33`}`,
-        }}>
+        <span className="crm-kicker" style={{ color: isTeamMode ? T.copper : T.blue }}>
           {workspaceModeLabel(workspaceMode)}
         </span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
-          Role view
-        </span>
-        {CRM_ROLES.map((r) => {
-          const on = r.id === activeRole;
-          return (
-            <button
-              key={r.id}
-              onClick={() => switchRole(r.id)}
-              title={r.blurb}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: on ? `${r.accent}1f` : T.bg3,
-                border: `1px solid ${on ? r.accent : T.bg4}`,
-                color: on ? r.accent : T.text2,
-                borderRadius: T.radius.full, padding: "6px 12px",
-                fontSize: 12.5, fontWeight: on ? 700 : 600, cursor: "pointer",
-                transition: "all 0.12s",
-              }}
-            >
-              <span style={{ fontSize: 14 }}>{r.icon}</span>{r.label}
-            </button>
-          );
-        })}
+        <div className="crm-seg">
+          {CRM_ROLES.map((r) => {
+            const on = r.id === activeRole;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                title={r.blurb}
+                aria-pressed={on}
+                className={`crm-seg-btn${on ? " is-active" : ""}`}
+                onClick={() => switchRole(r.id)}
+              >
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div style={{ marginBottom: 14 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 600, color: T.text0, fontFamily: "var(--crm-display)", letterSpacing: "-0.02em" }}>
-          {role.label}
-        </h1>
-        <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text2 }}>{role.blurb}</p>
+        <h1 className="crm-page-title">{role.label}</h1>
+        <p className="crm-page-sub">{role.blurb}</p>
       </div>
       <MyWorkPanel
         userName={denizenProfile.name}
