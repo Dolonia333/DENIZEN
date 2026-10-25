@@ -1,9 +1,11 @@
 # Godot × REA engine study (for an AI game engine)
 
-> Status: **Phase 1 complete** (REA artifact + historical source + binary string evidence).  
-> Phase 2 (full Ghidra decompile of the 123 MB editor) was started; first pass hit
-> REA’s default 330 s startup deadline; a longer run (`REA_GHIDRA_STARTUP_TIMEOUT_MS=1800000`)
-> was left importing under AnalyzeHeadless.
+> Status: **Phase 2 deep internals** (source of the hot path).  
+> The Linux editor ELF is **stripped** (`file`: no `.symtab`). Ghidra 12.1.4 via REA
+> imported it and entered full analysis (`ANALYZING all memory` at 04:29:53 UTC);
+> decompiler switch analysis was still running after ~15 minutes. Unnamed `FUN_*`
+> output is less useful than the MIT source below — that source **is** the deepest
+> accurate model.
 
 **Targets (official, MIT-licensed):**
 
@@ -210,7 +212,86 @@ Optional: `npx rea-agents setup` to register REA MCP in Cursor/Grok for interact
 - REA **did** inventory the Godot editor ELF and **fully imported** the 4.4.1 source graph.  
 - Architecture to copy for AI: **Servers/RID verbs + scene composition + resource/import pipeline + ClassDB-like command surface**.  
 - Denizen should become that surface via MCP (office body + asset factory), using Godot as the open reference — not as a cracked binary clone.  
-- Full native decompile is optional polish; **source + ClassDB/strings already give the study you need to design an AI engine.**
+- Full native decompile of the **stripped** editor yields unnamed functions and is still running under Ghidra; the **source hot path below is the deep study**.
+
+---
+
+## 10. Deep internals (4.4.1 source)
+
+The shipping ELF has **no symbol table**. Ghidra is analyzing code, not recovering C++ names. These are the mechanisms an AI engine should copy.
+
+### Frame loop — `SceneTree::_process` (`scene/main/scene_tree.cpp`)
+
+1. Drop groups marked `removed`, then re-sort by process-thread order.
+2. Snapshot `group_count` so groups added mid-frame are ignored until next frame.
+3. For each process group: sort nodes by `process_priority` if dirty, **copy the node vector**, then notify.
+4. Physics path: `NOTIFICATION_INTERNAL_PHYSICS_PROCESS` then `NOTIFICATION_PHYSICS_PROCESS`.
+5. Idle path: `NOTIFICATION_INTERNAL_PROCESS` then `NOTIFICATION_PROCESS`.
+6. Nodes removed during the call are skipped via `nodes_removed_on_group_call`.
+7. `call_queue.flush()` before **and** after the group (deferred calls).
+8. Groups flagged `PROCESS_THREAD_GROUP_SUB_THREAD` run on `WorkerThreadPool` and are joined before the next order band.
+9. `PhysicsServer2D::set_active` follows suspend/pause so the server loop and the scene loop stay coupled.
+
+**AI engine lesson:** one ordered tick, copy-on-iterate, deferred queue, physics vs idle split. Denizen’s Phaser `update()` should grow the same contract (process groups + deferred commands), not a pile of ad-hoc `setInterval`s.
+
+### Entering the world — `Node::_propagate_enter_tree` (`scene/main/node.cpp`)
+
+- Depth = parent depth + 1; viewport inherited from parent.
+- `inside_tree = true` **before** notifications.
+- Re-register every group on the tree.
+- Order: `ENTER_TREE` → virtual `_enter_tree` → signal `tree_entered` → `node_added` → parent `child_entered_tree` → children (pre-order).
+- `_propagate_ready` is **post-order**: children ready first, then `POST_ENTER_TREE` + `READY` once (`ready_first`).
+
+**AI engine lesson:** spawn is not “add sprite”. It is enter-tree (groups, viewport, parent notify) then ready (children first). MCP `spawn` should do both phases.
+
+### RID — stable server handles (`core/templates/rid.h`, `rid_owner.h`)
+
+- `RID` is a `uint64_t`. Local index is the low 32 bits.
+- Owner slot stores a **validator** in the high 32 bits (`_gen_id() & 0x7FFFFFFF`).
+- High bit `0x80000000` means uninitialized until first `get_or_null(..., initialize=true)`.
+- `get_or_null` rejects mismatched validator (use-after-free) and `0xFFFFFFFF` free slots.
+
+**AI engine lesson:** furniture/NPC ids should be generation-counted handles, not raw array indexes, so agents can’t poke a deleted desk.
+
+### Resource binary — `RSRC` (`core/io/resource_format_binary.cpp`)
+
+- Magic bytes `RSRC` written at the **end** of the file as well as the header path (`store_buffer("RSRC")`).
+- `FORMAT_VERSION = 6` in 4.4.1. Loader refuses `ver_format > 6` or a newer `ver_major`.
+- Import metadata offset, UID, dependency rename (format ≥ 1), NodePath property change (format ≥ 3).
+
+**AI engine lesson:** Denizen catalog JSON is the friendly form; a versioned binary blob with a trailing magic (like RSRC) is how you ship packed rooms without a text parse every boot.
+
+### PCK — `FileAccessPack` (`core/io/file_access_pack.cpp`)
+
+- Magic `PACK_HEADER_MAGIC = 0x43504447` (`GDPC` little-endian).
+- This tree’s `PACK_FORMAT_VERSION` is **2** (matches REA’s note that 4.4.1 emits format 2).
+- Search order: embedded `pck` section, else **EOF trailer** (last 4 bytes magic, then 8-byte size back to header). REA’s PCK reader follows this same loader.
+- After magic: `version`, `ver_major`, `ver_minor`, unused patch, `pack_flags`, `file_base` u64, 16 reserved u32s, `file_count`.
+- Flags: `PACK_DIR_ENCRYPTED` (bit 0), `PACK_REL_FILEBASE`. Encrypted directories go through `FileAccessEncrypted` — REA **does not decrypt**.
+- Directory key is MD5 of the path with `res://` stripped (`PathMD5`).
+
+**AI engine lesson:** one content pack (office + sprites) addressed by path hash, with optional encryption you do not pretend to break.
+
+### Atlas packer — `EditorAtlasPacker::chart_pack`
+
+- Rasterize chart AABBs into bitmaps divided by `min(64, cell_resolution)`.
+- Plot triangle edges with Bresenham, optional transpose if taller than wide.
+- Shelf-pack into a power-of-two atlas capped by `atlas_max_size`.
+- Write `final_offset` + `transposed` back onto each chart.
+
+**AI engine lesson:** Denizen’s `build-ext-atlas` should grow the same contract: input rects → power-of-two page → frame table (`x,y,w,h`) that `DenizenSceneRuntime.setupAtlas` already consumes. Shirt cutouts are charts; sheets are the packed page.
+
+### What Ghidra added beyond the source
+
+| Observation | Meaning |
+|-------------|---------|
+| ELF stripped | No `SceneTree::` symbols for `nm` |
+| Import 04:29:50 | Loader `x86:LE:64:default:gcc` |
+| `ANALYZING` 04:29:53 | Full-memory auto-analysis, not a quick header dump |
+| PNG datatype errors at `05795f20` etc. | Embedded image blobs, not a pack of scenes |
+| Decompiler switch restart 04:36:53 | Still inside analysis; not a finished function catalog |
+
+When that job exits, `godot-ghidra.snapshot.json` can be re-queried. It will not beat the source for names.
 
 ## Related Denizen docs
 
