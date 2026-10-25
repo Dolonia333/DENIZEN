@@ -179,9 +179,9 @@ export function LeadGenTab({
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>🎯 Lead Scoring</h1>
-          <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
-            Rule-based scores from contacts, deals, emails, tasks, and notes — updates live as your data changes
+          <h1 className="crm-page-title">Lead scoring</h1>
+          <p className="crm-page-sub">
+            Rule-based scores from contacts, deals, emails, tasks, and notes
           </p>
         </div>
         <button
@@ -189,10 +189,9 @@ export function LeadGenTab({
           disabled={isTraining || leadModelState.version === "v2"}
           onClick={handleTrainModel}
           style={{
-            padding: "10px 18px", borderRadius: T.radius.md, border: "none", cursor: isTraining || leadModelState.version === "v2" ? "not-allowed" : "pointer",
-            background: `linear-gradient(135deg, ${T.purple}, #7c3aed)`,
-            color: "#fff", fontSize: 12, fontWeight: 700, opacity: isTraining || leadModelState.version === "v2" ? 0.65 : 1,
-            position: "relative", overflow: "hidden",
+            padding: "10px 16px", borderRadius: 8, border: "none", cursor: isTraining || leadModelState.version === "v2" ? "not-allowed" : "pointer",
+            background: T.accent,
+            color: "#071410", fontSize: 12, fontWeight: 700, opacity: isTraining || leadModelState.version === "v2" ? 0.65 : 1,
           }}
         >
           {isTraining ? "Optimizing algorithmic weights…" : leadModelState.version === "v2" ? "Model Trained (v2)" : "Train Model (v2)"}
@@ -279,7 +278,7 @@ export function LeadGenTab({
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Score Distribution</div>
           {scoredContacts.length === 0 ? (
-            <DashboardEmptyState icon="📊" title="No scored leads yet" subtitle="Add non-customer contacts to populate the score histogram." />
+            <DashboardEmptyState title="No scored leads yet" subtitle="Add non-customer contacts to populate the score histogram." />
           ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={scoreBuckets} barSize={28}>

@@ -7,7 +7,7 @@ export const CHART_SERIES = [
   T.blue,
   T.copper,
   T.green,
-  "#a78bfa",
+  "#64748b",
   T.orange,
   T.red,
   "#94a3b8",

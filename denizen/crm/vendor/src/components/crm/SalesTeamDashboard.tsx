@@ -34,7 +34,7 @@ interface DiscussionItem {
 }
 
 // ─── MOCK DATA ───────────────────────────────────────────────────────────────
-const COLORS = ["#f0b429","#4d9ef7","#22d3a0","#f85b5b","#8b5cf6","#fb923c","#ec4899","#06b6d4"];
+const COLORS = ["#d4a574","#38bdf8","#3ecf9a","#f87171","#64748b","#fb923c","#4ade80","#06b6d4"];
 
 function leadHeat(contact: Contact): string {
   const score = Number(contact.score) || 0;
@@ -118,10 +118,6 @@ const initialPanels: PanelConfig[] = [
 const STATUS_COLORS: Record<string, string> = {
   "Hot":"#f85b5b","Warm":"#fb923c","Cold":"#4d9ef7",
   "Needs Review":"#fb923c","In Progress":"#4d9ef7","Resolved":"#22d3a0",
-};
-
-const STAGE_ICONS: Record<string, string> = {
-  Discovery: "🔍", Qualified: "✅", Demo: "🖥️", Proposal: "📄", Negotiation: "🤝",
 };
 
 const fmt$ = (v: number) => "$" + v.toLocaleString();
@@ -387,7 +383,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
             <button onClick={() => toggleChartType(chart.id)} title="Switch chart type"
               style={smallBtn}>⇄ {chart.type}</button>
             {!isEditing ? (
-              <button onClick={() => startEditChart(chart.id)} style={smallBtn}>✏️ Edit</button>
+              <button onClick={() => startEditChart(chart.id)} style={smallBtn}>Edit</button>
             ) : (
               <>
                 <button onClick={() => saveChart(chart.id)} style={{ ...smallBtn, background:`${T.green}22`, color:T.green }}>✓ Save</button>
@@ -397,7 +393,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
             <button onClick={() => {
               const summary = chart.data.map(d => `${d.label}: ${d.value}`).join(", ");
               pullToDiscuss("chart", chart.id, chart.title, { type: chart.type, summary, data: chart.data });
-            }} style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple }} title="Pull to Discussion">💬</button>
+            }} style={{ ...smallBtn, background: T.bg4, color: T.text2 }} title="Pull to Discussion">Discuss</button>
           </div>
         </div>
 
@@ -549,16 +545,11 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                     <span style={{ fontSize:10, padding:"2px 8px", borderRadius:999, background:`${STATUS_COLORS[lead.status]}18`, color:STATUS_COLORS[lead.status], fontWeight:600 }}>{lead.status}</span>
                   </td>
                   <td style={{ padding:"8px 6px", color:T.accent, fontVariantNumeric:"tabular-nums", fontWeight: 600 }}>{fmt$(lead.value)}</td>
-                  <td style={{ padding:"8px 6px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4, color: T.text2 }}>
-                      <span style={{ fontSize: 12 }}>{STAGE_ICONS[lead.stage] || "📋"}</span>
-                      {lead.stage}
-                    </span>
-                  </td>
+                  <td style={{ padding:"8px 6px", color: T.text2 }}>{lead.stage}</td>
                   <td style={{ padding:"8px 6px", color:T.text2 }}>{lead.owner}</td>
                   <td style={{ padding:"8px 6px" }}>
                     <button onClick={() => pullToDiscuss("lead", lead.id, lead.name, { company:lead.company, status:lead.status, value:lead.value, stage:lead.stage, notes:lead.notes, owner:lead.owner })}
-                      style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple, fontSize:10 }} title="Pull to Discuss">💬</button>
+                      style={{ ...smallBtn, background: T.bg4, color: T.text2, fontSize:10 }} title="Pull to Discuss">Discuss</button>
                   </td>
                 </tr>
               ))}
@@ -624,14 +615,11 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                       </div>
                     </td>
                     <td style={{ padding:"8px 6px" }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: 4, color: T.text2 }}>
-                        <span style={{ fontSize: 12 }}>{STAGE_ICONS[deal.stage] || "📋"}</span>
-                        {deal.stage}
-                      </span>
+                      <span style={{ color: T.text2 }}>{deal.stage}</span>
                     </td>
                     <td style={{ padding:"8px 6px" }}>
                       <button onClick={() => pullToDiscuss("deal", deal.id, deal.name, { owner:deal.owner, amount:deal.amount, closeDate:deal.closeDate, probability:deal.probability, stage:deal.stage })}
-                        style={{ ...smallBtn, background:`${T.purple}22`, color:T.purple, fontSize:10 }} title="Pull to Discuss">💬</button>
+                        style={{ ...smallBtn, background: T.bg4, color: T.text2, fontSize:10 }} title="Pull to Discuss">Discuss</button>
                     </td>
                   </tr>
                 );
@@ -647,12 +635,12 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
   const isMobile = useIsMobile();
 
   const kpiCards = [
-    { label: "Total Pipeline", value: fmt$(kpis.totalPipeline), sub: `${activeDeals.length} active deals`, color: T.accent, icon: "📊" },
-    { label: "Weighted Forecast", value: fmt$(Math.round(kpis.weightedPipeline)), sub: "Probability-adjusted", color: T.green, icon: "🎯" },
-    { label: "Avg Deal Size", value: fmt$(kpis.avgDealSize), sub: "Across pipeline", color: COLORS[1], icon: "💰" },
-    { label: "Avg Win Probability", value: `${kpis.avgProbability}%`, sub: `${kpis.closingSoon} closing within 30d`, color: COLORS[4], icon: "📈" },
-    { label: "YTD Revenue", value: fmt$(kpis.totalRevenue), sub: "All quarters combined", color: COLORS[0], icon: "🏆" },
-    { label: "Hot Leads", value: String(kpis.hotLeads), sub: `of ${leads.length} total leads`, color: STATUS_COLORS.Hot, icon: "🔥" },
+    { label: "Total Pipeline", value: fmt$(kpis.totalPipeline), sub: `${activeDeals.length} active deals`, color: T.accent },
+    { label: "Weighted Forecast", value: fmt$(Math.round(kpis.weightedPipeline)), sub: "Probability-adjusted", color: T.green },
+    { label: "Avg Deal Size", value: fmt$(kpis.avgDealSize), sub: "Across pipeline", color: COLORS[1] },
+    { label: "Avg Win Probability", value: `${kpis.avgProbability}%`, sub: `${kpis.closingSoon} closing within 30d`, color: T.text1 },
+    { label: "YTD Revenue", value: fmt$(kpis.totalRevenue), sub: "All quarters combined", color: COLORS[0] },
+    { label: "Hot Leads", value: String(kpis.hotLeads), sub: `of ${leads.length} total leads`, color: STATUS_COLORS.Hot },
   ];
 
   return (
@@ -660,36 +648,29 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
       {/* Header */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:10 }}>
         <div>
-          <h1 style={{ fontSize:22, fontWeight:700, color:T.text0, margin:0, letterSpacing:"-0.02em" }}>Sales Team Dashboard</h1>
-          <p style={{ fontSize:12, color:T.text3, margin:"4px 0 0" }}>
-            Overview of your pipeline, revenue, and team performance. Click 💬 on any item to pull it into a team discussion.
+          <h1 className="crm-page-title">Sales Hub</h1>
+          <p className="crm-page-sub">
+            Pipeline, revenue, and team performance. Pull any row into discussion.
           </p>
         </div>
         <button onClick={() => setDiscussionOpen(p => !p)}
           style={{
-            padding:"8px 16px", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer",
-            background: discussionOpen ? T.purple : `${T.purple}22`,
-            color: discussionOpen ? "#fff" : T.purple,
-            border:`1px solid ${discussionOpen ? T.purple : `${T.purple}44`}`,
-            transition:"all 0.15s",
+            padding:"8px 14px", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer",
+            background: discussionOpen ? T.accent : "transparent",
+            color: discussionOpen ? "#071410" : T.text1,
+            border:`1px solid ${discussionOpen ? T.accent : T.bg4}`,
+            transition:"background 0.15s, color 0.15s",
           }}>
-          💬 Team Discussion {discussions.length > 0 && <span style={{ marginLeft:6, background:`${T.red}`, color:"#fff", borderRadius:999, padding:"1px 6px", fontSize:10, fontWeight:700 }}>{discussions.length}</span>}
+          Discussion {discussions.length > 0 && <span style={{ marginLeft:6, background: discussionOpen ? "#07141022" : T.bg4, color: discussionOpen ? "#071410" : T.text0, borderRadius:6, padding:"1px 6px", fontSize:10, fontWeight:700 }}>{discussions.length}</span>}
         </button>
       </div>
 
       {/* KPI Cards Row */}
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 20 }}>
         {kpiCards.map(k => (
-          <div key={k.label} style={{
-            background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-            border: `1px solid ${T.bg4}`, borderRadius: 12, padding: "14px 16px",
-            transition: "border-color 0.15s",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={{ fontSize: 14 }}>{k.icon}</span>
-              <span style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{k.label}</span>
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: k.color, fontFamily: "'JetBrains Mono', monospace" }}>{k.value}</div>
+          <div key={k.label} className="crm-panel" style={{ padding: "14px 16px" }}>
+            <div className="crm-kicker" style={{ marginBottom: 6 }}>{k.label}</div>
+            <div className="crm-metric" style={{ fontSize: 20, color: k.color }}>{k.value}</div>
             <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{k.sub}</div>
           </div>
         ))}
@@ -713,30 +694,26 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
         return (
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>👥 Rep Performance</span>
-              <span style={{ fontSize: 11, color: T.text3 }}>Pipeline ownership & win probability by sales rep</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: T.text0 }}>Rep performance</span>
+              <span style={{ fontSize: 11, color: T.text3 }}>Pipeline ownership & win probability</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
               {ownerData.map(rep => (
-                <div key={rep.owner} style={{
-                  background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-                  border: `1px solid ${T.bg4}`, borderRadius: 12, padding: "16px 18px",
-                  transition: "border-color 0.15s, box-shadow 0.15s",
-                }}>
+                <div key={rep.owner} className="crm-panel" style={{ padding: "16px 18px" }}>
                   {/* Rep header */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                     <div style={{
-                      width: 36, height: 36, borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${rep.color}, ${rep.color}88)`,
+                      width: 36, height: 36, borderRadius: 8,
+                      background: T.bg3, border: `1px solid ${T.bg4}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 14, fontWeight: 800, color: "#fff",
+                      fontSize: 14, fontWeight: 700, color: rep.color,
                     }}>{rep.owner.charAt(0)}</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>{rep.owner}</div>
                       <div style={{ fontSize: 10, color: T.text3 }}>{rep.deals} deals · {rep.leads} leads</div>
                     </div>
                     {rep.highProbDeals > 0 && (
-                      <span style={{ marginLeft: "auto", fontSize: 9, padding: "2px 7px", borderRadius: 999, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
+                      <span style={{ marginLeft: "auto", fontSize: 9, padding: "2px 7px", borderRadius: 6, background: `${T.green}18`, color: T.green, fontWeight: 700 }}>
                         {rep.highProbDeals} likely win{rep.highProbDeals > 1 ? "s" : ""}
                       </span>
                     )}
@@ -765,10 +742,9 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                     </div>
                   </div>
 
-                  {/* Hot leads indicator */}
                   {rep.hotLeads > 0 && (
-                    <div style={{ marginTop: 8, fontSize: 10, color: STATUS_COLORS.Hot, display: "flex", alignItems: "center", gap: 4 }}>
-                      🔥 {rep.hotLeads} hot lead{rep.hotLeads > 1 ? "s" : ""} in pipeline
+                    <div style={{ marginTop: 8, fontSize: 10, color: STATUS_COLORS.Hot }}>
+                      {rep.hotLeads} hot lead{rep.hotLeads > 1 ? "s" : ""} in pipeline
                     </div>
                   )}
                 </div>
@@ -796,7 +772,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                 className="sales-panel"
                 style={{
                   ...(isMobile ? { position:"relative" as const, width:"100%", minHeight: panel.type === "chart" ? 380 : 320 } : { position:"absolute" as const, left:panel.x, top:panel.y, width:panel.w, height:panel.h }),
-                  background:`linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
+                  background: T.bg2,
                   border:`1px solid ${T.bg4}`, borderRadius:14,
                   padding:16, display:"flex", flexDirection:"column",
                   overflow:"hidden", transition: resizeRef.current?.panelId === panel.id ? "none" : "box-shadow 0.2s",
@@ -863,12 +839,12 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
                   background: "transparent",
                   transition: "background 0.15s",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = `${T.purple}44`)}
+                onMouseEnter={e => (e.currentTarget.style.background = T.bg4)}
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               />
             )}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-              <span style={{ fontSize:16, fontWeight:700, color:T.text0 }}>💬 Team Discussion</span>
+              <span style={{ fontSize:16, fontWeight:700, color:T.text0 }}>Team discussion</span>
               <button onClick={() => setDiscussionOpen(false)} style={{ background:"none", border:"none", color:T.text3, fontSize:18, cursor:"pointer" }}>✕</button>
             </div>
 
@@ -888,7 +864,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
 
             {filteredDiscussions.length === 0 && (
               <div style={{ textAlign:"center", padding:40, color:T.text3, fontSize:13 }}>
-                No items yet — click 💬 on any lead, deal, or chart to pull it here.
+                No items yet — use Discuss on any lead, deal, or chart.
               </div>
             )}
 
@@ -896,7 +872,7 @@ export function SalesTeamDashboard({ contacts = [], deals = [] }: SalesTeamDashb
               <div key={item.id} style={{ background:T.bg2, border:`1px solid ${T.bg4}`, borderRadius:10, padding:14, marginBottom:10 }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8, gap:6 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <span style={{ fontSize:12, padding:"2px 8px", borderRadius:999, background:`${T.purple}18`, color:T.purple, fontWeight:600 }}>
+                    <span style={{ fontSize:12, padding:"2px 8px", borderRadius:6, background: T.bg4, color: T.text2, fontWeight:600 }}>
                       {item.sourceType}
                     </span>
                     <span style={{ fontSize:13, fontWeight:600, color:T.text0 }}>{item.title}</span>

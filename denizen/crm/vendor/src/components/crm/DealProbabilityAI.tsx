@@ -5,7 +5,7 @@ interface DealScore {
   deal: Deal;
   aiProbability: number;
   confidence: "high" | "medium" | "low";
-  factors: { label: string; impact: number; emoji: string }[];
+  factors: { label: string; impact: number }[];
   recommendation: string;
 }
 
@@ -17,24 +17,24 @@ interface Props {
 }
 
 function analyzeDeal(deal: Deal, contacts: Contact[], emailLog: EmailLogEntry[], notes: Note[], allDeals: Deal[]): DealScore {
-  const factors: { label: string; impact: number; emoji: string }[] = [];
+  const factors: { label: string; impact: number }[] = [];
   let score = 50; // baseline
 
   // 1. Stage progression bonus
   const stageIndex = STAGES.indexOf(deal.stage);
   const stageBonus = stageIndex * 12;
-  factors.push({ label: `Stage: ${deal.stage} (${stageIndex + 1}/${STAGES.length})`, impact: stageBonus, emoji: "📊" });
+  factors.push({ label: `Stage: ${deal.stage} (${stageIndex + 1}/${STAGES.length})`, impact: stageBonus });
   score += stageBonus;
 
   // 2. Days in stage penalty
   if (deal.daysInStage > 21) {
-    factors.push({ label: `Stale: ${deal.daysInStage} days in stage`, impact: -20, emoji: "⏳" });
+    factors.push({ label: `Stale: ${deal.daysInStage} days in stage`, impact: -20 });
     score -= 20;
   } else if (deal.daysInStage > 14) {
-    factors.push({ label: `Aging: ${deal.daysInStage} days in stage`, impact: -10, emoji: "⏳" });
+    factors.push({ label: `Aging: ${deal.daysInStage} days in stage`, impact: -10 });
     score -= 10;
   } else if (deal.daysInStage < 5) {
-    factors.push({ label: `Fresh: ${deal.daysInStage} days in stage`, impact: 8, emoji: "⚡" });
+    factors.push({ label: `Fresh: ${deal.daysInStage} days in stage`, impact: 8 });
     score += 8;
   }
 
@@ -44,38 +44,38 @@ function analyzeDeal(deal: Deal, contacts: Contact[], emailLog: EmailLogEntry[],
     const emails = emailLog.filter(e => e.contactId === contact.id || e.to === contact.name);
     const opens = emails.reduce((s, e) => s + (e.opens?.length || 0), 0);
     if (opens >= 3) {
-      factors.push({ label: `High engagement: ${opens} email opens`, impact: 15, emoji: "📧" });
+      factors.push({ label: `High engagement: ${opens} email opens`, impact: 15 });
       score += 15;
     } else if (opens >= 1) {
-      factors.push({ label: `Some engagement: ${opens} email opens`, impact: 8, emoji: "📧" });
+      factors.push({ label: `Some engagement: ${opens} email opens`, impact: 8 });
       score += 8;
     } else if (emails.length > 0) {
-      factors.push({ label: "Emails sent but no opens", impact: -8, emoji: "📧" });
+      factors.push({ label: "Emails sent but no opens", impact: -8 });
       score -= 8;
     }
 
     // Contact score influence
     if (contact.score >= 80) {
-      factors.push({ label: `Hot lead (score: ${contact.score})`, impact: 12, emoji: "🔥" });
+      factors.push({ label: `Hot lead (score: ${contact.score})`, impact: 12 });
       score += 12;
     } else if (contact.score < 40) {
-      factors.push({ label: `Cold lead (score: ${contact.score})`, impact: -10, emoji: "❄️" });
+      factors.push({ label: `Cold lead (score: ${contact.score})`, impact: -10 });
       score -= 10;
     }
 
     // Recent contact
     const daysSince = Math.floor((Date.now() - new Date(contact.lastContact).getTime()) / 86400000);
     if (daysSince < 7) {
-      factors.push({ label: `Recently contacted (${daysSince}d ago)`, impact: 10, emoji: "✅" });
+      factors.push({ label: `Recently contacted (${daysSince}d ago)`, impact: 10 });
       score += 10;
     } else if (daysSince > 30) {
-      factors.push({ label: `No contact in ${daysSince} days`, impact: -15, emoji: "⚠️" });
+      factors.push({ label: `No contact in ${daysSince} days`, impact: -15 });
       score -= 15;
     }
 
     // Enterprise tag boost
     if (contact.tags?.includes("Enterprise")) {
-      factors.push({ label: "Enterprise account", impact: 8, emoji: "🏢" });
+      factors.push({ label: "Enterprise account", impact: 8 });
       score += 8;
     }
   }
@@ -83,33 +83,33 @@ function analyzeDeal(deal: Deal, contacts: Contact[], emailLog: EmailLogEntry[],
   // 4. Notes & activity
   const dealNotes = notes.filter(n => n.contact === deal.contact);
   if (dealNotes.length >= 3) {
-    factors.push({ label: `Active: ${dealNotes.length} notes logged`, impact: 10, emoji: "📝" });
+    factors.push({ label: `Active: ${dealNotes.length} notes logged`, impact: 10 });
     score += 10;
   } else if (dealNotes.length === 0) {
-    factors.push({ label: "No notes logged", impact: -8, emoji: "📝" });
+    factors.push({ label: "No notes logged", impact: -8 });
     score -= 8;
   }
 
   // 5. Deal value vs average (large deals take longer)
   const avgValue = allDeals.filter(d => !["Closed Won", "Closed Lost"].includes(d.stage)).reduce((s, d) => s + d.value, 0) / Math.max(1, allDeals.length);
   if (deal.value > avgValue * 2) {
-    factors.push({ label: `High value (${fmt(deal.value)} vs avg ${fmt(avgValue)})`, impact: -5, emoji: "💰" });
+    factors.push({ label: `High value (${fmt(deal.value)} vs avg ${fmt(avgValue)})`, impact: -5 });
     score -= 5;
   }
 
   // 6. Close date proximity
   const daysToClose = Math.floor((new Date(deal.closeDate).getTime() - Date.now()) / 86400000);
   if (daysToClose < 0) {
-    factors.push({ label: `Past due by ${Math.abs(daysToClose)} days`, impact: -12, emoji: "🚨" });
+    factors.push({ label: `Past due by ${Math.abs(daysToClose)} days`, impact: -12 });
     score -= 12;
   } else if (daysToClose < 14) {
-    factors.push({ label: `Closing soon (${daysToClose} days)`, impact: 5, emoji: "🎯" });
+    factors.push({ label: `Closing soon (${daysToClose} days)`, impact: 5 });
     score += 5;
   }
 
   // 7. Health indicator
   if (deal.health === "at-risk") {
-    factors.push({ label: "Marked at-risk", impact: -15, emoji: "⚠️" });
+    factors.push({ label: "Marked at-risk", impact: -15 });
     score -= 15;
   }
 
@@ -118,7 +118,7 @@ function analyzeDeal(deal: Deal, contacts: Contact[], emailLog: EmailLogEntry[],
   const lostDeals = allDeals.filter(d => d.stage === "Closed Lost");
   if (wonDeals.length + lostDeals.length > 0) {
     const winRate = wonDeals.length / (wonDeals.length + lostDeals.length);
-    factors.push({ label: `Historical win rate: ${Math.round(winRate * 100)}%`, impact: Math.round((winRate - 0.5) * 20), emoji: "📈" });
+    factors.push({ label: `Historical win rate: ${Math.round(winRate * 100)}%`, impact: Math.round((winRate - 0.5) * 20) });
     score += Math.round((winRate - 0.5) * 20);
   }
 
@@ -149,9 +149,9 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: 0 }}>🤖 AI Deal Probability</h2>
-        <p style={{ fontSize: 12, color: T.text3, marginTop: 4 }}>
-          Analyzes deal age, engagement, email opens, stage history & similar deals
+        <h2 className="crm-page-title" style={{ fontSize: 22 }}>Deal probability</h2>
+        <p className="crm-page-sub">
+          Score from stage, engagement, email opens, age, and similar deals
         </p>
       </div>
 
@@ -162,12 +162,11 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
           { label: "High Conf", value: String(scores.filter(s => s.confidence === "high").length), color: T.green },
           { label: "At Risk", value: String(scores.filter(s => s.aiProbability < 40).length), color: T.red },
         ].map(m => (
-          <div key={m.label} style={{
-            flex: "1 1 100px", background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-            border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "12px 14px", textAlign: "center",
+          <div key={m.label} className="crm-panel" style={{
+            flex: "1 1 100px", padding: "12px 14px", textAlign: "center",
           }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: m.color, fontFamily: "'JetBrains Mono', monospace" }}>{m.value}</div>
-            <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{m.label}</div>
+            <div className="crm-metric" style={{ fontSize: 20, color: m.color }}>{m.value}</div>
+            <div className="crm-kicker" style={{ marginTop: 4 }}>{m.label}</div>
           </div>
         ))}
       </div>
@@ -180,11 +179,7 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
         const probColor = sc.aiProbability >= 70 ? T.green : sc.aiProbability >= 45 ? T.accent : T.red;
         const diff = sc.aiProbability - sc.deal.probability;
         return (
-          <div key={sc.deal.id} style={{
-            background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-            border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: "18px 20px",
-            marginBottom: 12,
-          }}>
+          <div key={sc.deal.id} className="crm-panel" style={{ marginBottom: 12 }}>
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
               <div>
@@ -238,7 +233,7 @@ export function DealProbabilityAI({ deals, contacts, emailLog, notes }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {sc.factors.slice(0, 5).map((f, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-                  <span style={{ width: 18, textAlign: "center" }}>{f.emoji}</span>
+                  <span style={{ width: 6, height: 6, borderRadius: 2, background: f.impact >= 0 ? T.green : T.red, flexShrink: 0 }} />
                   <span style={{ flex: 1, color: T.text2 }}>{f.label}</span>
                   <span style={{
                     fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
