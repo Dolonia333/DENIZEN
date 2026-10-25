@@ -94,6 +94,15 @@ Good for chat demos; **Grok Build + MCP** is better for coding + office in one t
 }
 ```
 
+## Bot activity routines (paste into Grok Bots)
+
+For Home Lab / Github Master standing instructions that keep the office feed
+live, see **[GROK_BOT_ACTIVITY_ROUTINES.md](GROK_BOT_ACTIVITY_ROUTINES.md)** —
+writer (`log_activity`) + reader (`get_status` → `announce_in_office`).
+
+`get_status` returns your `recent_work` plus org-wide `office_recent_work` so
+bots can avoid overlapping tasks.
+
 ## What you'll see in the office
 
 | MCP tool | Office effect |
@@ -102,6 +111,7 @@ Good for chat demos; **Grok Build + MCP** is better for coding + office in one t
 | `run_skill` | Work feed / skill output |
 | `assign_task` / `delegate_task` | Think loop wakes target NPC |
 | `log_activity` | Activity log + work feed |
+| `get_status` | Self work + org `office_recent_work` |
 | `update_memory` | Persists to DB + MEMORY.md path |
 
 ## Security

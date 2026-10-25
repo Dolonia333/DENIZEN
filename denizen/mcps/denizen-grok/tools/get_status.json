@@ -1,12 +1,16 @@
 {
   "name": "get_status",
-  "description": "Read current NPC status: recent work, memories, roster info.",
+  "description": "Read current NPC status: recent work, memories, roster info. Also returns office_recent_work — the latest activity notes from every NPC/agent in the org (use before starting overlapping work).",
   "inputSchema": {
     "type": "object",
     "properties": {
       "limit": {
         "type": "number",
-        "description": "Max recent items (default 10)"
+        "description": "Max recent items for self + office feed (default 10)"
+      },
+      "include_office": {
+        "type": "boolean",
+        "description": "Include org-wide office_recent_work (default true). Set false for self-only."
       }
     }
   }
