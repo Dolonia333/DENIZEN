@@ -81,19 +81,19 @@ An agent uses the same verbs through MCP, the way a person uses an editor. Selec
 
 | Tool | Scope | What it does |
 |---|---|---|
-| `office_look` | read | Rooms, stations, decor, placed items, recent errors. |
+| `office_look` | read | Rooms, furniture, where each person is standing, their last line, and your errors. |
 | `scene_tree` | read | The office as a tree: floor, stations, decor, items. |
 | `node_get` | read | One node by id. |
-| `node_set` | delegate | Move or rename that node. Undoable. Live sprites follow `engine_command`. |
-| `office_act` | delegate | `walkTo`, `speak`, `speakTo`, `useComputer`, `standUp`, `goToRoom`, `goToBreakroom`, `joinMeeting`, `emote`, `think`. |
-| `office_place_furniture` | delegate | Whitelisted prefab, pixel bounds, 3/day, 250 cap, no duplicate within 12px. Broadcasts `furniture_placed`. |
-| `office_remove_furniture` | delegate | Only `npc_` instance ids. |
+| `node_set` | office | Move or rename that node. Undoable. Live sprites follow `engine_command`. |
+| `office_act` | office | `walkTo`, `speak`, `speakTo`, `useComputer`, `standUp`, `goToRoom`, `goToBreakroom`, `joinMeeting`, `emote`, `think`. Returns whether a client answered and the sprite was found. |
+| `office_place_furniture` | office | Whitelisted prefab, pixel bounds, 3/day, 250 cap, no duplicate within 12px. Broadcasts `furniture_placed`. |
+| `office_remove_furniture` | office | Only `npc_` instance ids. |
 | `sprite_cut` | skills | Grid of frames from a sheet size. No image bytes. |
 | `atlas_pack` | skills | Shelf-pack onto one power-of-two page. |
-| `edit_undo` | delegate | Pops the last node edit, placement, or removal. |
+| `edit_undo` | office | Pops your last node edit, placement, or removal in that office. |
 | `office_errors` | read | Recent tool errors. |
 
-The browser hears `engine_command` for look, act, and node moves, and the existing `furniture_placed` / `furniture_removed` path for props.
+The browser hears `engine_command` for look, act, and node moves, and the existing `furniture_placed` / `furniture_removed` path for props. Pass `officeId` to work in a team office. Undo is per agent and per office. A standard Connect AI token includes the `office` scope, so it can act and place without `delegate`.
 
 ## How the cofounder reaches an action
 

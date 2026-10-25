@@ -147,6 +147,7 @@ function mcpInitializeInstructions({ mode = 'team' } = {}) {
     'Denizen is not a mystery chat: CRM sells, Studio Board delivers client work, Business Studio proves founder progress with evidence, Agency links CRM deals to Board tasks.',
     'CRM cleanup is crm_operate or run_skill crm-operate. Actions: list-records, update-contact, delete-contact, upsert-company, link, update-task, close-task, upsert-package, sync-business-context. Use the contact_id from list-records when updating email or phone.',
     'Always orient with crm_working_set / studio_board_working_set / business_studio_working_set / agency_working_set (or business_studio_explain) before creating records.',
+    'On the floor, call office_look before office_act or office_place_furniture. office_look shows who is standing where. office_act uses walkTo, speak, goToRoom, and the other office verbs.',
     'Business Studio menu apps: call business_studio_catalog or business_studio_section (Lean Canvas, PAVE, Moat, Capital Pathway, …) so you know what each app is and which tools read/update it.',
     'Never invent pipeline data, board people, or funding evidence. Empty boards are valid.',
     'Read resource docs://product-map (and docs://business-studio-sections) for the full surface guide. Writes require crm_write (Full access).',

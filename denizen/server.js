@@ -3321,6 +3321,8 @@ npcMcpGateway.configure({
   removeItem: (officeId, instanceId) => officeLayout.removeFurnitureItem(ROOT, officeId, instanceId),
   restoreItem: (officeId, item) => officeLayout.appendFurnitureItem(ROOT, officeId, item),
   patchItem: (officeId, instanceId, patch) => _enginePatchFurniture(officeId, instanceId, patch),
+  readPeople: (officeId) => _engineReadPeople(officeId),
+  countClients: (officeId) => _engineCountClients(officeId),
 });
 teamMcpGateway.configure({
   runNpcSkill,
@@ -3420,6 +3422,33 @@ function _engineAppendFurniture(officeId, item) {
     worldState.pushEvent('shipped', `${by} placed ${item.prefabId} at (${item.x},${item.y})`);
   } catch (_) {}
   return item;
+}
+
+function _engineReadPeople(officeId) {
+  const body = typeof worldState.officePeople === 'function'
+    ? worldState.officePeople(officeId)
+    : { people: [] };
+  let players = [];
+  try {
+    players = officeRegistry.listPlayersInOffice(officeId).map((p) => ({
+      name: p.displayName,
+      x: p.x,
+      y: p.y,
+      room: p.room || null,
+      facing: p.facing || null,
+    }));
+  } catch (_) {}
+  return { ...body, players };
+}
+
+function _engineCountClients(officeId) {
+  let n = 0;
+  const probe = { type: 'engine_command', office_id: officeId };
+  for (const ws of _agentClients()) {
+    if (ws?.readyState !== 1) continue;
+    if (officeRegistry.shouldDeliverToSocket(probe, ws)) n += 1;
+  }
+  return n;
 }
 
 function _enginePatchFurniture(officeId, instanceId, patch) {
@@ -12197,11 +12226,24 @@ agentWss.on('connection', (ws) => {
             }, { excludeWs: ws, excludePresenceKey: presenceKey });
           }
         }
+      } else if (msg.type === 'engine_command_result') {
+        try {
+          require('./src/denizen-mcp-engine-tools').settleFloor(msg.commandId, {
+            ok: msg.ok !== false,
+            stage: msg.stage || 'started',
+            npcKey: msg.npcKey || null,
+            verb: msg.verb || null,
+            error: msg.error || null,
+            x: msg.x,
+            y: msg.y,
+          });
+        } catch (_) {}
       } else if (msg.type === 'npc_poses') {
         const officeId = ws._denizenOfficeId || msg.office_id || msg.officeId;
         const presenceKey = officeRegistry.ensurePresenceKey(ws);
         const host = officeId ? officeRegistry.getSimHost(officeId) : null;
         if (officeId && host && host.presenceKey === presenceKey && Array.isArray(msg.npcs)) {
+          try { worldState.rememberOfficePoses(officeId, msg.npcs); } catch (_) {}
           _broadcastToOffice(officeId, {
             type: 'npc_poses',
             office_id: officeId,

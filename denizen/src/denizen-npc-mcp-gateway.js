@@ -425,6 +425,10 @@ async function toolGetStatus(scope, args) {
     out.office_feed_hint =
       'office_recent_work is org-wide (all NPCs/agents). recent_work is yours only. '
       + 'Mention overlapping work in your next log_activity note.';
+    out.office_floor = {
+      tools: [...mcpEngineTools.FLOOR_TOOLS],
+      hint: 'Call office_look before you move or place anything. It includes who is standing where. office_act uses the office verbs (walkTo, speak, goToRoom).',
+    };
   }
   return out;
 }
@@ -571,6 +575,8 @@ function configure(deps = {}) {
     removeItem: deps.removeItem,
     restoreItem: deps.restoreItem,
     patchItem: deps.patchItem,
+    readPeople: deps.readPeople,
+    countClients: deps.countClients,
     officeId: deps.officeId,
   });
   mcpActions.configure(deps);

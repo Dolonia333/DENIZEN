@@ -79,11 +79,11 @@ describe('denizen-mcp-engine-tools', () => {
     assert.equal(engine.callTool(SCOPE, 'node_get', { id: 'desk_lucy' }).node.x, 200);
   });
 
-  it('office_act dispatches a known verb for the connected npc', () => {
+  it('office_act dispatches a known verb for the connected npc', async () => {
     const { sent } = memoryOffice();
-    const bad = engine.callTool(SCOPE, 'office_act', { verb: 'fly' });
+    const bad = await engine.callTool(SCOPE, 'office_act', { verb: 'fly' });
     assert.equal(bad.ok, false);
-    const act = engine.callTool(SCOPE, 'office_act', { verb: 'goToRoom', room: 'breakroom' });
+    const act = await engine.callTool(SCOPE, 'office_act', { verb: 'goToRoom', room: 'breakroom' });
     assert.equal(act.ok, true);
     assert.equal(act.dispatched.verb, 'goToRoom');
     assert.equal(act.dispatched.npcKey, 'xp_lucy');
@@ -181,16 +181,124 @@ describe('denizen-mcp-engine-tools', () => {
     assert.match(manager, /this\.actions\.goToRoom\(npcKey, msg\.room \|\| 'open_office'\)/);
     assert.match(manager, /this\.actions\.walkTo\(npcKey, Number\(msg\.x\), Number\(msg\.y\)\)/);
     assert.match(scene, /move\(instanceId, x, y\)/);
-    assert.match(html, /agent-office-manager\.js\?v=engineTools1/);
+    assert.match(manager, /_reportEngineResult\(msg,/);
+    assert.match(html, /agent-office-manager\.js\?v=engineTools2/);
     assert.match(html, /office-scene\.js\?v=engineTools1/);
+  });
+
+  it('office_look includes people and the player', () => {
+    const { sent } = memoryOffice();
+    engine.configure({
+      officeId: 'ceo-operator',
+      readLayout: () => ({ stations: [], decor: [], items: [] }),
+      readPeople: () => ({
+        people: [{
+          key: 'xp_lucy', name: 'Lucy', x: 120, y: 200, room: 'breakroom',
+          sitting: false, lastLine: 'Coffee is ready.',
+        }],
+        players: [{ name: 'Zion', x: 300, y: 180, room: 'open_office' }],
+      }),
+      broadcast: (msg) => sent.push(msg),
+    });
+    const look = engine.callTool(SCOPE, 'office_look', { officeId: 'team-jake' });
+    assert.equal(look.officeId, 'team-jake');
+    assert.equal(look.people[0].name, 'Lucy');
+    assert.equal(look.people[0].lastLine, 'Coffee is ready.');
+    assert.equal(look.players[0].name, 'Zion');
+    assert.ok(look.floorTools.includes('office_act'));
+  });
+
+  it('office_act reports a missing sprite and a quiet office', async () => {
+    memoryOffice();
+    engine.configure({
+      officeId: 'ceo-operator',
+      readLayout: () => ({ stations: [], decor: [], items: [] }),
+      countClients: () => 0,
+      broadcast: () => {},
+    });
+    const quiet = await engine.callTool(SCOPE, 'office_act', { verb: 'speak', text: 'hi' });
+    assert.equal(quiet.ok, false);
+    assert.equal(quiet.error, 'no office client connected');
+
+    engine.configure({
+      officeId: 'ceo-operator',
+      readLayout: () => ({ stations: [], decor: [], items: [] }),
+      countClients: () => 1,
+      broadcast: (msg) => {
+        engine.settleFloor(msg.commandId, {
+          ok: false,
+          stage: 'missing_sprite',
+          npcKey: msg.npcKey,
+          verb: msg.verb,
+        });
+      },
+    });
+    const missing = await engine.callTool(SCOPE, 'office_act', { verb: 'goToRoom', room: 'conference' });
+    assert.equal(missing.ok, false);
+    assert.equal(missing.error, 'sprite not in the office');
+    assert.equal(missing.floor.stage, 'missing_sprite');
+    assert.equal(missing.clients, 1);
+
+    const look = engine.callTool(SCOPE, 'office_look', {});
+    assert.equal(look.lastAct.stage, 'missing_sprite');
+  });
+
+  it('a later arrived result shows up on the next look', async () => {
+    memoryOffice();
+    let commandId = null;
+    engine.configure({
+      readLayout: () => ({ stations: [], decor: [], items: [] }),
+      countClients: () => 1,
+      broadcast: (msg) => {
+        commandId = msg.commandId;
+        engine.settleFloor(msg.commandId, { ok: true, stage: 'started', verb: msg.verb, npcKey: msg.npcKey });
+      },
+    });
+    const act = await engine.callTool(SCOPE, 'office_act', { verb: 'goToRoom', room: 'breakroom' });
+    assert.equal(act.ok, true);
+    assert.equal(act.floor.stage, 'started');
+    engine.settleFloor(commandId, { ok: true, stage: 'arrived', verb: 'goToRoom', npcKey: 'xp_lucy' });
+    const look = engine.callTool(SCOPE, 'office_look', {});
+    assert.equal(look.lastAct.stage, 'arrived');
+  });
+
+  it('undo stays inside one office and one agent', () => {
+    const offices = {
+      'ceo-operator': { stations: [{ id: 'desk_a', type: 'desk', x: 100, y: 100, name: 'A' }], decor: [], items: [] },
+      'team-jake': { stations: [{ id: 'desk_b', type: 'desk', x: 140, y: 140, name: 'B' }], decor: [], items: [] },
+    };
+    engine.configure({
+      readLayout: (officeId) => offices[officeId],
+      broadcast: () => {},
+    });
+    engine.callTool({ npc_key: 'lucy' }, 'node_set', { officeId: 'ceo-operator', id: 'desk_a', x: 180 });
+    engine.callTool({ npc_key: 'abby' }, 'node_set', { officeId: 'ceo-operator', id: 'desk_a', name: 'Abby desk' });
+    const lucyUndo = engine.callTool({ npc_key: 'lucy' }, 'edit_undo', { officeId: 'ceo-operator' });
+    assert.equal(lucyUndo.undone, 'node_set');
+    const afterLucy = engine.callTool({ npc_key: 'lucy' }, 'node_get', { id: 'desk_a' });
+    assert.equal(afterLucy.node.x, 100);
+    const abbyView = engine.callTool({ npc_key: 'abby' }, 'node_get', { id: 'desk_a' });
+    assert.equal(abbyView.node.name, 'Abby desk');
+    const otherOffice = engine.callTool({ npc_key: 'lucy' }, 'edit_undo', { officeId: 'team-jake' });
+    assert.equal(otherOffice.ok, false);
+  });
+
+  it('a team connection must name who walks', async () => {
+    memoryOffice();
+    const act = await engine.callTool({ npc_key: '_team' }, 'office_act', { verb: 'speak', text: 'hi' });
+    assert.equal(act.ok, false);
+    assert.equal(act.error, 'npcKey required');
+    const named = await engine.callTool({ npc_key: '_team' }, 'office_act', { verb: 'emote', npcKey: 'lucy', emote: 'idea' });
+    assert.equal(named.dispatched.npcKey, 'xp_lucy');
   });
 
   it('scopes match the editor docks', () => {
     assert.equal(scopes.requiredScope('office_look'), 'read');
     assert.equal(scopes.requiredScope('sprite_cut'), 'skills');
-    assert.equal(scopes.requiredScope('office_act'), 'delegate');
+    assert.equal(scopes.requiredScope('office_act'), 'office');
     assert.equal(scopes.toolAllowed({ scopes: ['read'] }, 'office_look'), true);
     assert.equal(scopes.toolAllowed({ scopes: ['read'] }, 'office_place_furniture'), false);
+    assert.equal(scopes.toolAllowed({ scopes: ['read', 'skills', 'handoff', 'office'] }, 'office_act'), true);
     assert.equal(scopes.toolAllowed({ scopes: ['read', 'skills'] }, 'atlas_pack'), true);
   });
 });

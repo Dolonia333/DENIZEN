@@ -148,6 +148,8 @@ describe('npc-mcp-gateway', () => {
     assert.equal(result.office_recent_work.length, 2);
     assert.equal(result.office_recent_work[0].npc_key, 'lucy');
     assert.match(String(result.office_feed_hint || ''), /office_recent_work/);
+    assert.ok(result.office_floor.tools.includes('office_look'));
+    assert.ok(result.office_floor.tools.includes('office_act'));
   });
 
   it('get_status can omit office feed', async () => {
@@ -459,7 +461,7 @@ describe('npc-mcp-gateway', () => {
     );
     assert.equal(denied.ok, false);
     assert.equal(denied.error, 'scope_denied');
-    assert.equal(denied.required_scope, 'delegate');
+    assert.equal(denied.required_scope, 'office');
   });
 
   it('read-only scope denies run_skill', async () => {

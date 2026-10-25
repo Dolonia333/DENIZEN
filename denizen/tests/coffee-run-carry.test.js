@@ -31,6 +31,6 @@ describe('Coffee run carry-through delivery', () => {
   it('cache busters bumped for coffee carry', () => {
     const html = read('index.html');
     assert.match(html, /agent-actions\.js\?v=floorBounds1/);
-    assert.match(html, /agent-office-manager\.js\?v=engineTools1/);
+    assert.match(html, /agent-office-manager\.js\?v=engineTools2/);
   });
 });

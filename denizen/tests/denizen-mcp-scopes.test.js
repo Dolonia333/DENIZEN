@@ -12,7 +12,7 @@ describe('denizen-mcp-scopes', () => {
 
   it('expands presets', () => {
     assert.deepEqual(mcpScopes.normalizeScopes('read'), ['read']);
-    assert.deepEqual(mcpScopes.normalizeScopes('standard'), ['read', 'skills', 'handoff']);
+    assert.deepEqual(mcpScopes.normalizeScopes('standard'), ['read', 'skills', 'handoff', 'office']);
   });
 
   it('maps tools to scopes', () => {
@@ -27,6 +27,9 @@ describe('denizen-mcp-scopes', () => {
     assert.equal(mcpScopes.requiredScope('schedule_job'), 'delegate');
     assert.equal(mcpScopes.requiredScope('send_handoff'), 'handoff');
     assert.equal(mcpScopes.requiredScope('delegate_task'), 'delegate');
+    assert.equal(mcpScopes.requiredScope('office_act'), 'office');
+    assert.equal(mcpScopes.toolAllowed({ scopes: ['read', 'skills', 'handoff', 'office'] }, 'office_act'), true);
+    assert.equal(mcpScopes.toolAllowed({ scopes: ['read', 'skills', 'handoff'] }, 'office_act'), false);
   });
 
   it('filters tools by granted scopes', () => {

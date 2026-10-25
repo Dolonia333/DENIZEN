@@ -462,6 +462,87 @@ class WorldState extends EventEmitter {
     return out;
   }
 
+  /** Latest sim-host sprite poses for one office. */
+  rememberOfficePoses(officeId, npcs) {
+    const id = String(officeId || '').trim();
+    if (!id) return;
+    if (!this.officePoses) this.officePoses = new Map();
+    const list = (Array.isArray(npcs) ? npcs : []).slice(0, 40).map((n) => ({
+      key: String(n.key || n.id || n.npcKey || ''),
+      x: Number(n.x) || 0,
+      y: Number(n.y) || 0,
+      facing: n.facing || 'down',
+      anim: n.anim || null,
+      taskState: n.taskState || n.status || null,
+    })).filter((n) => n.key);
+    this.officePoses.set(id, { ts: Date.now(), npcs: list });
+  }
+
+  lastLine(name) {
+    const ring = this.recentSelfMessages?.get(name);
+    if (!ring?.length) return null;
+    const last = ring[ring.length - 1];
+    return last?.text ? String(last.text).slice(0, 160) : null;
+  }
+
+  /**
+   * People an editor can see: live sprites from the sim host, plus any
+   * NPC the brains have updated even when no pose has arrived yet.
+   */
+  officePeople(officeId) {
+    const id = String(officeId || '').trim();
+    const snap = this.officePoses?.get(id);
+    const live = this.getAllNpcs();
+    const used = new Set();
+    const people = [];
+    const match = (key, name) => {
+      const a = String(key || '').toLowerCase().replace(/^xp_/, '').replace(/[^a-z0-9]/g, '');
+      const b = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      return !!(a && b && a === b);
+    };
+    for (const pose of snap?.npcs || []) {
+      const name = Object.keys(live).find((n) => match(pose.key, n)) || null;
+      const s = name ? live[name] : null;
+      if (name) used.add(name);
+      const sitting = /sit/i.test(String(pose.anim || ''))
+        || /sit/i.test(String(pose.taskState || ''))
+        || s?.state === 'sitting';
+      people.push({
+        key: pose.key,
+        name: name || String(pose.key).replace(/^xp_/, ''),
+        x: pose.x,
+        y: pose.y,
+        facing: pose.facing,
+        anim: pose.anim,
+        taskState: pose.taskState,
+        room: s?.room || null,
+        state: s?.state || pose.taskState || null,
+        lastAction: s?.lastAction || null,
+        lastLine: name ? this.lastLine(name) : null,
+        sitting: !!sitting,
+      });
+    }
+    for (const [name, s] of Object.entries(live)) {
+      if (used.has(name)) continue;
+      if (!s?.position && !s?.room && !s?.lastAction && !this.lastLine(name)) continue;
+      people.push({
+        key: `xp_${String(name).toLowerCase().replace(/\s+/g, '')}`,
+        name,
+        x: s.position?.x ?? null,
+        y: s.position?.y ?? null,
+        facing: null,
+        anim: null,
+        taskState: s.state || null,
+        room: s.room || null,
+        state: s.state || null,
+        lastAction: s.lastAction || null,
+        lastLine: this.lastLine(name),
+        sitting: s?.state === 'sitting',
+      });
+    }
+    return { ts: snap?.ts || null, people };
+  }
+
   /**
    * Find NPCs within `radius` pixels of (x, y). Used by NPCs to ask
    * "who is near me right now?" before deciding what to say.

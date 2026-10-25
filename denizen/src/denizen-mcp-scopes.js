@@ -3,15 +3,15 @@
 /**
  * MCP token scopes — tool access governance (Phase 4).
  *
- * Scopes: read, skills, crm_write, handoff, delegate
+ * Scopes: read, skills, office, crm_write, handoff, delegate
  * Missing scopes on a token = full access (backward compatible).
  */
 
-const ALL_SCOPES = Object.freeze(['read', 'skills', 'crm_write', 'handoff', 'delegate', 'compute']);
+const ALL_SCOPES = Object.freeze(['read', 'skills', 'office', 'crm_write', 'handoff', 'delegate', 'compute']);
 
 const SCOPE_PRESETS = Object.freeze({
   read: ['read'],
-  standard: ['read', 'skills', 'handoff'],
+  standard: ['read', 'skills', 'handoff', 'office'],
   full: [...ALL_SCOPES],
 });
 
@@ -185,11 +185,11 @@ const TOOL_SCOPE = Object.freeze({
   office_errors: 'read',
   sprite_cut: 'skills',
   atlas_pack: 'skills',
-  office_act: 'delegate',
-  node_set: 'delegate',
-  office_place_furniture: 'delegate',
-  office_remove_furniture: 'delegate',
-  edit_undo: 'delegate',
+  office_act: 'office',
+  node_set: 'office',
+  office_place_furniture: 'office',
+  office_remove_furniture: 'office',
+  edit_undo: 'office',
 });
 
 function normalizeScopes(input) {

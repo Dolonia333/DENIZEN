@@ -112,7 +112,7 @@ Same optional object. `null` only if the health module fails to load.
     "teamTokens": "/api/mcp/team-tokens",
     "connectInfo": "/api/mcp/connect-info"
   },
-  "scopesCount": 6,
+  "scopesCount": 7,
   "serversFromFile": {
     "present": true,
     "path": "data/mcp-servers.json",

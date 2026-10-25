@@ -4864,6 +4864,27 @@ class AgentOfficeManager {
   }
 
   /**
+   * Tell the MCP tool what this screen did. The sim host reports walks.
+   * Every screen can report speech. A later `arrived` updates office_look.
+   */
+  _reportEngineResult(msg, result) {
+    if (!msg?.commandId) return;
+    try {
+      this._send({
+        type: 'engine_command_result',
+        commandId: msg.commandId,
+        office_id: msg.office_id || msg.officeId || null,
+        ...result,
+      });
+    } catch (_) {}
+  }
+
+  _engineReportsBody() {
+    if (!this._simHostKnown) return true;
+    return !!this._isSimHost;
+  }
+
+  /**
    * Editor tools (office_act, node_set). Verbs are the same ones in
    * docs/ACTIONS.md. The sim host walks; every screen still hears speech.
    */
@@ -4871,27 +4892,52 @@ class AgentOfficeManager {
     const command = String(msg?.command || '');
     if (command === 'look') return;
     if (command === 'node_set') {
+      if (!this._engineReportsBody()) return;
       const id = String(msg.id || '');
       const x = Number(msg.x);
       const y = Number(msg.y);
+      let moved = false;
       if (id && Number.isFinite(x) && Number.isFinite(y) && window.DenizenLiveFurniture?.move) {
-        window.DenizenLiveFurniture.move(id, x, y);
+        moved = !!window.DenizenLiveFurniture.move(id, x, y);
       }
+      this._reportEngineResult(msg, {
+        ok: true,
+        stage: moved ? 'moved' : 'no_live_sprite',
+        id,
+        x,
+        y,
+      });
       return;
     }
     if (command !== 'act' || !this.actions) return;
 
     const verb = String(msg.verb || '');
     const npcKey = String(msg.npcKey || '').trim();
-    if (!npcKey) return;
-    if (!this.actions._getNpc?.(npcKey) && npcKey.includes('plugin')) {
-      this._ensurePluginNpc(npcKey, npcKey.replace(/^xp_/, ''), null);
-    }
-    if (!this.actions._getNpc?.(npcKey)) return;
-
     const movement = verb === 'walkTo' || verb === 'useComputer' || verb === 'standUp'
       || verb === 'goToRoom' || verb === 'goToBreakroom' || verb === 'joinMeeting'
       || verb === 'speakTo';
+    if (!npcKey) {
+      if (this._engineReportsBody()) {
+        this._reportEngineResult(msg, { ok: false, stage: 'failed', verb, error: 'npcKey required' });
+      }
+      return;
+    }
+    if (!this.actions._getNpc?.(npcKey) && npcKey.includes('plugin')) {
+      this._ensurePluginNpc(npcKey, npcKey.replace(/^xp_/, ''), null);
+    }
+    if (!this.actions._getNpc?.(npcKey)) {
+      if (this._engineReportsBody()) {
+        this._reportEngineResult(msg, {
+          ok: false,
+          stage: 'missing_sprite',
+          verb,
+          npcKey,
+          error: 'sprite not in the office',
+        });
+      }
+      return;
+    }
+
     const hostOwnsWalk = this._simHostKnown && !this._isSimHost;
     if (hostOwnsWalk && movement) return;
 
@@ -4903,44 +4949,75 @@ class AgentOfficeManager {
       });
     }
 
+    const reportDone = (promise) => {
+      this._reportEngineResult(msg, { ok: true, stage: 'started', verb, npcKey });
+      if (promise && typeof promise.then === 'function') {
+        promise.then(() => {
+          this._reportEngineResult(msg, { ok: true, stage: 'arrived', verb, npcKey });
+        }).catch((err) => {
+          this._reportEngineResult(msg, {
+            ok: false,
+            stage: 'failed',
+            verb,
+            npcKey,
+            error: err?.message || 'act failed',
+          });
+        });
+      }
+    };
+
     try {
       switch (verb) {
         case 'walkTo':
-          if (msg.x == null || msg.y == null) return;
-          this.actions.walkTo(npcKey, Number(msg.x), Number(msg.y));
+          if (msg.x == null || msg.y == null) {
+            this._reportEngineResult(msg, { ok: false, stage: 'failed', verb, npcKey, error: 'x and y required' });
+            return;
+          }
+          reportDone(this.actions.walkTo(npcKey, Number(msg.x), Number(msg.y)));
           break;
         case 'speak':
-          if (msg.text) this.actions.speak(npcKey, msg.text);
+          if (msg.text) reportDone(this.actions.speak(npcKey, msg.text));
+          else this._reportEngineResult(msg, { ok: false, stage: 'failed', verb, npcKey, error: 'text required' });
           break;
         case 'speakTo':
-          if (msg.targetKey && msg.text) this.actions.speakTo(npcKey, msg.targetKey, msg.text);
+          if (msg.targetKey && msg.text) reportDone(this.actions.speakTo(npcKey, msg.targetKey, msg.text));
+          else this._reportEngineResult(msg, { ok: false, stage: 'failed', verb, npcKey, error: 'targetKey and text required' });
           break;
         case 'useComputer':
-          this.actions.useComputer(npcKey, msg.deskId || agent?.assignedDesk);
+          reportDone(this.actions.useComputer(npcKey, msg.deskId || agent?.assignedDesk));
           break;
         case 'standUp':
-          this.actions.standUp(npcKey);
+          reportDone(this.actions.standUp(npcKey));
           break;
         case 'goToRoom':
-          this.actions.goToRoom(npcKey, msg.room || 'open_office');
+          reportDone(this.actions.goToRoom(npcKey, msg.room || 'open_office'));
           break;
         case 'goToBreakroom':
-          this.actions.goToBreakroom(npcKey);
+          reportDone(this.actions.goToBreakroom(npcKey));
           break;
         case 'joinMeeting':
-          this.actions.joinMeeting(npcKey);
+          reportDone(this.actions.joinMeeting(npcKey));
           break;
         case 'emote':
-          this.actions.emote(npcKey, msg.emote || 'idea');
+          reportDone(this.actions.emote(npcKey, msg.emote || 'idea'));
           break;
         case 'think':
-          if (msg.text) this.actions.think(npcKey, msg.text);
+          if (msg.text) reportDone(this.actions.think(npcKey, msg.text));
+          else this._reportEngineResult(msg, { ok: false, stage: 'failed', verb, npcKey, error: 'text required' });
           break;
         default:
+          this._reportEngineResult(msg, { ok: false, stage: 'failed', verb, npcKey, error: 'unknown verb' });
           break;
       }
     } catch (err) {
       console.warn('[AgentManager] engine_command failed:', err?.message || err);
+      this._reportEngineResult(msg, {
+        ok: false,
+        stage: 'failed',
+        verb,
+        npcKey,
+        error: err?.message || 'act failed',
+      });
     }
   }
 
