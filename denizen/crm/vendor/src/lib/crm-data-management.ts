@@ -385,6 +385,7 @@ export function restoreWorkspace(current: CrmWorkspaceState, imported: CrmWorksp
     contactGroups: imported.contactGroups ?? current.contactGroups,
     contactGroupMap: imported.contactGroupMap ?? current.contactGroupMap,
     crmQuotas: imported.crmQuotas ?? current.crmQuotas,
+    intakeQuestions: imported.intakeQuestions ?? current.intakeQuestions,
   };
 }
 

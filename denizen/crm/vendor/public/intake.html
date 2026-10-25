@@ -45,6 +45,12 @@
       font-size: 0.9rem;
     }
     textarea { min-height: 88px; resize: vertical; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .chip {
+      padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--border); background: #121b2e; color: var(--muted);
+    }
+    .chip.on { border-color: var(--accent); background: #f0b42922; color: var(--accent); }
     button {
       width: 100%;
       padding: 12px 16px;
@@ -61,14 +67,16 @@
     .msg.ok { display: block; background: #22d3a018; border: 1px solid #22d3a044; color: var(--green); }
     .msg.err { display: block; background: #f85b5b18; border: 1px solid #f85b5b44; color: var(--red); }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .loading { color: var(--muted); font-size: 0.9rem; padding: 24px 0; text-align: center; }
     @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Tell us about your project</h1>
-    <p class="sub">Submit this form and our team will follow up with a tailored proposal.</p>
-    <form class="card" id="form">
+    <h1 id="title">Tell us about your project</h1>
+    <p class="sub" id="subtitle">Submit this form and our team will follow up with a tailored proposal.</p>
+    <div class="loading" id="loading">Loading form…</div>
+    <form class="card" id="form" style="display:none">
       <div class="row">
         <div>
           <label for="name">Your name *</label>
@@ -81,22 +89,7 @@
       </div>
       <label for="company">Company</label>
       <input id="company" name="company" autocomplete="organization" />
-      <label for="budget">Expected monthly budget</label>
-      <select id="budget" name="budget">
-        <option value="">Select…</option>
-        <option value="$300–$800/mo">$300–$800/mo</option>
-        <option value="$800–$2,500/mo">$800–$2,500/mo</option>
-        <option value="$2,500+/mo">$2,500+/mo</option>
-      </select>
-      <label for="timeline">How soon to get started?</label>
-      <select id="timeline" name="timeline">
-        <option value="">Select…</option>
-        <option value="Right away">Right away</option>
-        <option value="Within 30 days">Within 30 days</option>
-        <option value="1–3 months">1–3 months</option>
-      </select>
-      <label for="goals">Primary goals</label>
-      <textarea id="goals" name="goals" placeholder="What are you hoping to achieve?"></textarea>
+      <div id="dynamic"></div>
       <button type="submit" id="submit">Submit intake</button>
       <div class="msg" id="msg"></div>
     </form>
@@ -104,47 +97,163 @@
   <script>
     (function () {
       const params = new URLSearchParams(window.location.search);
-      const orgSlug = params.get("org") || params.get("org_slug") || "zion";
+      const orgSlug = params.get("org") || params.get("org_slug") || "";
       const form = document.getElementById("form");
       const msg = document.getElementById("msg");
       const btn = document.getElementById("submit");
+      const loading = document.getElementById("loading");
+      const dynamic = document.getElementById("dynamic");
+      const multiState = {};
 
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        msg.className = "msg";
-        msg.textContent = "";
-        btn.disabled = true;
-        const payload = {
-          org_slug: orgSlug,
-          clientName: document.getElementById("name").value.trim(),
-          clientEmail: document.getElementById("email").value.trim(),
-          company: document.getElementById("company").value.trim(),
-          answers: {
-            "What's your expected monthly budget?": document.getElementById("budget").value,
-            "How soon are you looking to get started?": document.getElementById("timeline").value,
-            "What are your primary goals?": document.getElementById("goals").value.trim(),
-          },
-        };
-        try {
-          const res = await fetch("/api/crm/intake", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json().catch(function () { return {}; });
-          if (!res.ok || !data.ok) {
-            throw new Error(data.error || "Submission failed");
+      function fieldId(q) { return "q_" + String(q.id); }
+
+      function renderQuestions(questions) {
+        dynamic.innerHTML = "";
+        (questions || []).forEach(function (q) {
+          const wrap = document.createElement("div");
+          const label = document.createElement("label");
+          label.textContent = (q.icon ? q.icon + " " : "") + q.label + (q.required ? " *" : "");
+          wrap.appendChild(label);
+
+          if (q.type === "textarea") {
+            const el = document.createElement("textarea");
+            el.id = fieldId(q);
+            el.dataset.label = q.label;
+            if (q.required) el.required = true;
+            if (q.placeholder) el.placeholder = q.placeholder;
+            wrap.appendChild(el);
+          } else if (q.type === "select") {
+            const el = document.createElement("select");
+            el.id = fieldId(q);
+            el.dataset.label = q.label;
+            if (q.required) el.required = true;
+            const blank = document.createElement("option");
+            blank.value = "";
+            blank.textContent = "Select…";
+            el.appendChild(blank);
+            (q.options || []).forEach(function (o) {
+              const opt = document.createElement("option");
+              opt.value = o;
+              opt.textContent = o;
+              el.appendChild(opt);
+            });
+            wrap.appendChild(el);
+          } else if (q.type === "multiselect") {
+            const chips = document.createElement("div");
+            chips.className = "chips";
+            chips.id = fieldId(q);
+            chips.dataset.label = q.label;
+            multiState[q.label] = [];
+            (q.options || []).forEach(function (o) {
+              const chip = document.createElement("button");
+              chip.type = "button";
+              chip.className = "chip";
+              chip.textContent = o;
+              chip.addEventListener("click", function () {
+                const selected = multiState[q.label];
+                const idx = selected.indexOf(o);
+                if (idx >= 0) selected.splice(idx, 1);
+                else selected.push(o);
+                chip.classList.toggle("on", selected.indexOf(o) >= 0);
+              });
+              chips.appendChild(chip);
+            });
+            wrap.appendChild(chips);
+          } else {
+            const el = document.createElement("input");
+            el.id = fieldId(q);
+            el.dataset.label = q.label;
+            if (q.required) el.required = true;
+            if (q.placeholder) el.placeholder = q.placeholder;
+            if (q.type === "number") el.type = "number";
+            else if (q.type === "email") el.type = "email";
+            else if (q.type === "phone") el.type = "tel";
+            else el.type = "text";
+            wrap.appendChild(el);
           }
-          msg.className = "msg ok";
-          msg.textContent = "Thanks! We received your intake and will be in touch soon.";
-          form.reset();
-        } catch (err) {
-          msg.className = "msg err";
-          msg.textContent = err.message || "Something went wrong. Please try again.";
-        } finally {
-          btn.disabled = false;
+          dynamic.appendChild(wrap);
+        });
+      }
+
+      function collectAnswers(questions) {
+        const answers = {};
+        (questions || []).forEach(function (q) {
+          if (q.type === "multiselect") {
+            answers[q.label] = (multiState[q.label] || []).slice();
+            return;
+          }
+          const el = document.getElementById(fieldId(q));
+          if (!el) return;
+          answers[q.label] = el.value;
+        });
+        return answers;
+      }
+
+      async function boot() {
+        if (!orgSlug) {
+          loading.textContent = "Add ?org=YOUR_ORG_SLUG to this URL.";
+          return;
         }
-      });
+        let questions = [];
+        try {
+          const res = await fetch("/api/crm/intake/form?org=" + encodeURIComponent(orgSlug));
+          const data = await res.json().catch(function () { return {}; });
+          if (!res.ok || !data.ok) throw new Error(data.error || "Could not load form");
+          questions = data.questions || [];
+          if (data.branding) {
+            if (data.branding.accentColor) {
+              document.documentElement.style.setProperty("--accent", data.branding.accentColor);
+            }
+            const name = data.branding.companyName || "Meridian";
+            document.title = "Get started — " + name;
+            document.getElementById("title").textContent = "Tell " + name + " about your project";
+            if (data.branding.tagline) document.getElementById("subtitle").textContent = data.branding.tagline;
+          }
+        } catch (err) {
+          loading.textContent = err.message || "Could not load form.";
+          return;
+        }
+        renderQuestions(questions);
+        loading.style.display = "none";
+        form.style.display = "block";
+
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          msg.className = "msg";
+          msg.textContent = "";
+          btn.disabled = true;
+          const payload = {
+            org_slug: orgSlug,
+            clientName: document.getElementById("name").value.trim(),
+            clientEmail: document.getElementById("email").value.trim(),
+            company: document.getElementById("company").value.trim(),
+            answers: collectAnswers(questions),
+          };
+          try {
+            const res = await fetch("/api/crm/intake", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            const data = await res.json().catch(function () { return {}; });
+            if (!res.ok || !data.ok) {
+              throw new Error(data.error || "Submission failed");
+            }
+            msg.className = "msg ok";
+            msg.textContent = "Thanks! We received your intake and will be in touch soon.";
+            form.reset();
+            Object.keys(multiState).forEach(function (k) { multiState[k] = []; });
+            dynamic.querySelectorAll(".chip.on").forEach(function (c) { c.classList.remove("on"); });
+          } catch (err) {
+            msg.className = "msg err";
+            msg.textContent = err.message || "Something went wrong. Please try again.";
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      }
+
+      boot();
     })();
   </script>
 </body>

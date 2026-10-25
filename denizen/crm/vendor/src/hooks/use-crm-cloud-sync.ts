@@ -48,6 +48,7 @@ export type CrmSyncApplyFns = {
   setMarketingCampaigns?: (v: unknown[]) => void;
   setTeamPolicy?: (v: Record<string, unknown>) => void;
   setUsageLog?: (v: unknown[]) => void;
+  setIntakeQuestions?: (v: unknown[]) => void;
 };
 
 function applyWorkspace(state: CrmWorkspaceState, fns: CrmSyncApplyFns) {
@@ -85,6 +86,7 @@ function applyWorkspace(state: CrmWorkspaceState, fns: CrmSyncApplyFns) {
   if (state.marketingCampaigns && fns.setMarketingCampaigns) fns.setMarketingCampaigns(state.marketingCampaigns);
   if (state.teamPolicy && fns.setTeamPolicy) fns.setTeamPolicy(state.teamPolicy);
   if (state.usageLog && fns.setUsageLog) fns.setUsageLog(state.usageLog);
+  if (state.intakeQuestions && fns.setIntakeQuestions) fns.setIntakeQuestions(state.intakeQuestions);
 }
 
 function hasLocalData(state: CrmWorkspaceState): boolean {

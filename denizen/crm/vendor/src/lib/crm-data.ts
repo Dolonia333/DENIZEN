@@ -233,6 +233,8 @@ export interface Commission {
 export interface IntakeQuestion {
   id: number; label: string; type: string; required: boolean;
   options?: string[]; icon: string;
+  /** Optional hint shown in public + in-app intake fields. */
+  placeholder?: string;
 }
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────

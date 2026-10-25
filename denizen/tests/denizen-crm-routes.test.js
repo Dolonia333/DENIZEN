@@ -146,6 +146,7 @@ describe('denizen-crm-routes', () => {
       assert.ok(data.routes.some((r) => r.includes('/api/crm/assist/execute')));
       assert.ok(data.routes.some((r) => r.includes('/api/crm/my-day')));
       assert.ok(data.routes.some((r) => r.includes('/api/crm/team/activity')));
+      assert.ok(data.routes.some((r) => r.includes('/api/crm/intake/form')));
       assert.ok(data.routes.some((r) => r.includes('/api/crm/deals/:dealId/studio-tasks')));
       assert.ok(data.routes.some((r) => r.includes('studio-tasks/unlink')));
     } finally {

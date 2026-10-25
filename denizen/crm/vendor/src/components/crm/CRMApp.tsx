@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   T, S, NAV_ITEMS, NAV_GROUPS, fmt,
   initialPackages, initialSubmissions, initialQuotes, initialBranding,
-  defaultIntakeQuestions, initialAvailability,
+  defaultIntakeQuestions, initialAvailability, type IntakeQuestion,
   initialAutomations, contactsToCsv, dealsToCsv, parseCsvAuto, loadDemoWorkspace,
   type Contact, type Deal, type Note, type Task, type ToastItem, type Automation,
   CONTACT_FREQUENCIES, type Quota,
@@ -111,6 +111,7 @@ export default function CRMApp() {
   const [teamPolicy, setTeamPolicy] = useLocalStorage<TeamPolicy>("teamPolicy", DEFAULT_TEAM_POLICY);
   const [usageLog, setUsageLog] = useLocalStorage<UsageLogEntry[]>("usageLog", []);
   const [aiThreads, setAiThreads] = useLocalStorage<AiThread[]>("aiThreads", []);
+  const [intakeQuestions, setIntakeQuestions] = useLocalStorage<IntakeQuestion[]>("intakeQuestions", defaultIntakeQuestions);
   // pipelineView moved into SalesSection
 
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -231,12 +232,14 @@ export default function CRMApp() {
     marketingCampaigns,
     teamPolicy,
     usageLog,
+    intakeQuestions,
   }), [
     contacts, deals, notes, tasks, companies, goals, sequences, sequenceEnrollments,
     submissions, quotes, packages, meetings, automations, emailTemplates,
     emailLog, auditLog, noteBoards, industryConfig, contactGroups, contactGroupMap, crmQuotas,
     userPrefs, onboarding, availability, integrations, metricSnapshots, automationRuns,
     dealComments, aiThreads, leadModelState, supportTickets, marketingCampaigns, teamPolicy, usageLog,
+    intakeQuestions,
   ]);
 
   const { status: syncStatus, orgLabel, teamLabel, lastSavedAt, updatedByName } = useCrmCloudSync(workspaceSnapshot, {
@@ -274,6 +277,7 @@ export default function CRMApp() {
     setMarketingCampaigns,
     setTeamPolicy,
     setUsageLog,
+    setIntakeQuestions,
   });
 
   const syncLabel = crmSyncLabel(syncStatus, teamLabel, lastSavedAt, updatedByName);
@@ -973,8 +977,9 @@ export default function CRMApp() {
     if (state.marketingCampaigns) setMarketingCampaigns(state.marketingCampaigns as MarketingCampaign[]);
     if (state.teamPolicy) setTeamPolicy(state.teamPolicy as TeamPolicy);
     if (state.usageLog) setUsageLog(state.usageLog as UsageLogEntry[]);
+    if (state.intakeQuestions) setIntakeQuestions(state.intakeQuestions as IntakeQuestion[]);
     markCrmUserEdited();
-  }, [setContacts, setDeals, setNotes, setTasks, setCompanies, setGoals, setSequences, setSequenceEnrollments, setSubmissions, setQuotes, setPackages, setMeetings, setAutomations, setEmailTemplates, setEmailLog, setAuditLog, setNoteBoards, setIndustryConfigRaw, setContactGroups, setContactGroupMap, setCrmQuotas, setUserPrefs, setOnboarding, setAvailability, setIntegrations, setSupportTickets, setMarketingCampaigns, setTeamPolicy, setUsageLog]);
+  }, [setContacts, setDeals, setNotes, setTasks, setCompanies, setGoals, setSequences, setSequenceEnrollments, setSubmissions, setQuotes, setPackages, setMeetings, setAutomations, setEmailTemplates, setEmailLog, setAuditLog, setNoteBoards, setIndustryConfigRaw, setContactGroups, setContactGroupMap, setCrmQuotas, setUserPrefs, setOnboarding, setAvailability, setIntegrations, setSupportTickets, setMarketingCampaigns, setTeamPolicy, setUsageLog, setIntakeQuestions]);
 
   const handleRestoreWorkspace = useCallback((imported: CrmWorkspaceState, mode: RestoreMode) => {
     const next = restoreWorkspace(workspaceSnapshot, imported, mode);
@@ -1208,7 +1213,7 @@ export default function CRMApp() {
         />
       );
       case "packages": return <PackagesTab packages={packages} quotes={quotes} onUpdatePackages={setPackages} onAddQuote={handleAddQuote} contacts={contacts} />;
-      case "intake": return <IntakeTab submissions={submissions} quotes={quotes} packages={packages} branding={initialBranding} intakeQuestions={defaultIntakeQuestions} orgSlug={orgLabel} onStatusChange={handleSubmissionStatus} onAddSubmission={handleAddSubmission} onAddQuote={handleAddQuote} onImportSubmissions={handleImportSubmissions} />;
+      case "intake": return <IntakeTab submissions={submissions} quotes={quotes} packages={packages} branding={initialBranding} intakeQuestions={intakeQuestions} orgSlug={orgLabel} onStatusChange={handleSubmissionStatus} onAddSubmission={handleAddSubmission} onAddQuote={handleAddQuote} onImportSubmissions={handleImportSubmissions} onUpdateIntakeQuestions={setIntakeQuestions} />;
       case "tasks": return <TasksTab tasks={tasks} teamMembers={teamMemberNames} currentUserName={denizenProfile.name} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onUpdateTask={(t) => setTasks(prev => prev.map(x => x.id === t.id ? t : x))} />;
       case "analytics": return <AnalyticsTab deals={deals} contacts={contacts} metricSnapshots={metricSnapshots} />;
       case "ai-prospector": return <AIProspector onImportLead={handleProspectorImport} />;

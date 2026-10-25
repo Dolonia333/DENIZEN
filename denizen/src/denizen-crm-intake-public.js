@@ -17,6 +17,19 @@ const MAX_ANSWER_KEYS = 60;
 const MAX_ANSWER_LEN = 5000;
 const _rateHits = new Map(); // key -> number[] (timestamps)
 
+const OPTION_TYPES = new Set(['select', 'multiselect']);
+const KNOWN_TYPES = new Set(['text', 'textarea', 'select', 'multiselect', 'number', 'email', 'phone']);
+
+const DEFAULT_INTAKE_QUESTIONS = [
+  { id: 1, label: 'How many people are on your team?', type: 'select', required: true, options: ['Just me', '2–10', '11–50', '51–200', '200+'], icon: '👥' },
+  { id: 2, label: 'What is your annual revenue range?', type: 'select', required: true, options: ['Under $500K', '$500K–$2M', '$2M–$10M', '$10M–$50M', '$50M+'], icon: '💰' },
+  { id: 3, label: 'What are your top goals with our platform?', type: 'multiselect', required: true, options: ['Increase sales revenue', 'Improve customer retention', 'Automate workflows', 'Better reporting & analytics', 'Team collaboration', 'Customer support management'], icon: '🎯' },
+  { id: 4, label: "What's your biggest current challenge?", type: 'textarea', required: true, icon: '🔧' },
+  { id: 5, label: "What's your expected monthly budget?", type: 'select', required: true, options: ['Under $300/mo', '$300–$800/mo', '$800–$2,500/mo', '$2,500+/mo', 'Not sure yet'], icon: '💳' },
+  { id: 6, label: 'How soon are you looking to get started?', type: 'select', required: false, options: ['Right away', 'Within 30 days', '1–3 months', 'Just exploring'], icon: '⏱' },
+  { id: 7, label: 'Any specific integrations or requirements?', type: 'textarea', required: false, icon: '🔌' },
+];
+
 function _recordHit(key) {
   if (!key) return 0;
   const now = Date.now();
@@ -49,6 +62,65 @@ function _sanitizeAnswers(raw) {
     count += 1;
   }
   return out;
+}
+
+function sanitizeIntakeQuestions(raw) {
+  if (!Array.isArray(raw) || !raw.length) return DEFAULT_INTAKE_QUESTIONS.map((q) => ({ ...q }));
+  const out = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const label = _clip(item.label, 200);
+    if (!label) continue;
+    const typeRaw = String(item.type || 'text').trim().toLowerCase();
+    const type = KNOWN_TYPES.has(typeRaw) ? typeRaw : 'text';
+    const options = Array.isArray(item.options)
+      ? item.options.map((o) => _clip(o, 120)).filter(Boolean).slice(0, 40)
+      : [];
+    const row = {
+      id: Number(item.id) || out.length + 1,
+      label,
+      type,
+      required: Boolean(item.required),
+      icon: _clip(item.icon || '•', 8) || '•',
+    };
+    const placeholder = _clip(item.placeholder, 200);
+    if (placeholder) row.placeholder = placeholder;
+    if (OPTION_TYPES.has(type)) row.options = options.length ? options : ['Option 1'];
+    out.push(row);
+    if (out.length >= 40) break;
+  }
+  return out.length ? out : DEFAULT_INTAKE_QUESTIONS.map((q) => ({ ...q }));
+}
+
+function publicBranding(state, org) {
+  const b = state?.branding && typeof state.branding === 'object' ? state.branding : {};
+  return {
+    companyName: _clip(b.companyName || org?.display_name || org?.name || 'Meridian', 80) || 'Meridian',
+    tagline: _clip(b.tagline || 'Tell us about your project', 120),
+    accentColor: _clip(b.accentColor || '#f0b429', 32) || '#f0b429',
+    logoEmoji: _clip(b.logoEmoji || 'M', 8) || 'M',
+  };
+}
+
+/**
+ * Public intake form schema — no session required.
+ * Query/body: org / org_slug
+ */
+async function getPublicIntakeForm(orgSlugRaw) {
+  const orgSlug = String(orgSlugRaw || '').trim().toLowerCase();
+  if (!orgSlug) return { ok: false, error: 'org_slug is required' };
+
+  const org = await denizenVisitor.resolveOrgBySlug(orgSlug);
+  if (!org?.id) return { ok: false, error: 'Organization not found' };
+
+  const row = await crmStore.getWorkspace(org.id);
+  const state = row?.state || {};
+  return {
+    ok: true,
+    org_slug: orgSlug,
+    questions: sanitizeIntakeQuestions(state.intakeQuestions),
+    branding: publicBranding(state, org),
+  };
 }
 
 /**
@@ -113,4 +185,9 @@ async function submitPublicIntake(body, options = {}) {
   return { ok: true, submissionId: submission.id };
 }
 
-module.exports = { submitPublicIntake };
+module.exports = {
+  submitPublicIntake,
+  getPublicIntakeForm,
+  sanitizeIntakeQuestions,
+  DEFAULT_INTAKE_QUESTIONS,
+};
