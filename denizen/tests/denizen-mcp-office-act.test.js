@@ -44,6 +44,12 @@ describe('denizen-mcp-office-act', () => {
     assert.equal(officeAct.buildBeat({ npc_key: 'lucy' }, 'announce_in_office'), null);
   });
 
+  it('leaves editor tools alone so they do not walk to a guessed room', () => {
+    assert.equal(officeAct.buildBeat({ npc_key: 'lucy' }, 'office_act'), null);
+    assert.equal(officeAct.buildBeat({ npc_key: 'lucy' }, 'office_look'), null);
+    assert.equal(officeAct.buildBeat({ npc_key: 'lucy' }, 'office_place_furniture'), null);
+  });
+
   it('throttles repeat calls to the same room', () => {
     const sent = [];
     officeAct.configure({ broadcast: (msg) => sent.push(msg) });

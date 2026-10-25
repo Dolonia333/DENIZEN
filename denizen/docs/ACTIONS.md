@@ -75,6 +75,26 @@ to the right JS call (or proposal queue endpoint).
 - **Depth flag.** Every action that moves a sprite sets the scene's
   `_depthDirty = true` so the Y-sort runs once on the next frame.
 
+## MCP editor tools
+
+An agent uses the same verbs through MCP, the way a person uses an editor. Select, then act. Do not invent a second action language.
+
+| Tool | Scope | What it does |
+|---|---|---|
+| `office_look` | read | Rooms, stations, decor, placed items, recent errors. |
+| `scene_tree` | read | The office as a tree: floor, stations, decor, items. |
+| `node_get` | read | One node by id. |
+| `node_set` | delegate | Move or rename that node. Undoable. Live sprites follow `engine_command`. |
+| `office_act` | delegate | `walkTo`, `speak`, `speakTo`, `useComputer`, `standUp`, `goToRoom`, `goToBreakroom`, `joinMeeting`, `emote`, `think`. |
+| `office_place_furniture` | delegate | Whitelisted prefab, pixel bounds, 3/day, 250 cap, no duplicate within 12px. Broadcasts `furniture_placed`. |
+| `office_remove_furniture` | delegate | Only `npc_` instance ids. |
+| `sprite_cut` | skills | Grid of frames from a sheet size. No image bytes. |
+| `atlas_pack` | skills | Shelf-pack onto one power-of-two page. |
+| `edit_undo` | delegate | Pops the last node edit, placement, or removal. |
+| `office_errors` | read | Recent tool errors. |
+
+The browser hears `engine_command` for look, act, and node moves, and the existing `furniture_placed` / `furniture_removed` path for props.
+
 ## How the cofounder reaches an action
 
 ```

@@ -179,6 +179,17 @@ const TOOL_SCOPE = Object.freeze({
   mentor_get_session: 'read',
   mentor_peer_reply: 'skills',
   mentor_finalize: 'delegate',
+  office_look: 'read',
+  scene_tree: 'read',
+  node_get: 'read',
+  office_errors: 'read',
+  sprite_cut: 'skills',
+  atlas_pack: 'skills',
+  office_act: 'delegate',
+  node_set: 'delegate',
+  office_place_furniture: 'delegate',
+  office_remove_furniture: 'delegate',
+  edit_undo: 'delegate',
 });
 
 function normalizeScopes(input) {

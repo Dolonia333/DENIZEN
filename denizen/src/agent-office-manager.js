@@ -3715,6 +3715,9 @@ class AgentOfficeManager {
       case 'mcp_office_act':
         this._actOutMcp(msg);
         break;
+      case 'engine_command':
+        this._executeEngineCommand(msg);
+        break;
       case 'spawn_agent':
         this._spawnAgent(msg);
         break;
@@ -4858,6 +4861,87 @@ class AgentOfficeManager {
         this.actions.goToRoom(npcKey, room);
       }
     } catch (_) {}
+  }
+
+  /**
+   * Editor tools (office_act, node_set). Verbs are the same ones in
+   * docs/ACTIONS.md. The sim host walks; every screen still hears speech.
+   */
+  _executeEngineCommand(msg) {
+    const command = String(msg?.command || '');
+    if (command === 'look') return;
+    if (command === 'node_set') {
+      const id = String(msg.id || '');
+      const x = Number(msg.x);
+      const y = Number(msg.y);
+      if (id && Number.isFinite(x) && Number.isFinite(y) && window.DenizenLiveFurniture?.move) {
+        window.DenizenLiveFurniture.move(id, x, y);
+      }
+      return;
+    }
+    if (command !== 'act' || !this.actions) return;
+
+    const verb = String(msg.verb || '');
+    const npcKey = String(msg.npcKey || '').trim();
+    if (!npcKey) return;
+    if (!this.actions._getNpc?.(npcKey) && npcKey.includes('plugin')) {
+      this._ensurePluginNpc(npcKey, npcKey.replace(/^xp_/, ''), null);
+    }
+    if (!this.actions._getNpc?.(npcKey)) return;
+
+    const movement = verb === 'walkTo' || verb === 'useComputer' || verb === 'standUp'
+      || verb === 'goToRoom' || verb === 'goToBreakroom' || verb === 'joinMeeting'
+      || verb === 'speakTo';
+    const hostOwnsWalk = this._simHostKnown && !this._isSimHost;
+    if (hostOwnsWalk && movement) return;
+
+    const agent = this.agents.get(npcKey);
+    if (agent && movement) {
+      agent.status = 'task_override';
+      this.scene?.time?.delayedCall?.(12000, () => {
+        if (agent.status === 'task_override') agent.status = 'idle';
+      });
+    }
+
+    try {
+      switch (verb) {
+        case 'walkTo':
+          if (msg.x == null || msg.y == null) return;
+          this.actions.walkTo(npcKey, Number(msg.x), Number(msg.y));
+          break;
+        case 'speak':
+          if (msg.text) this.actions.speak(npcKey, msg.text);
+          break;
+        case 'speakTo':
+          if (msg.targetKey && msg.text) this.actions.speakTo(npcKey, msg.targetKey, msg.text);
+          break;
+        case 'useComputer':
+          this.actions.useComputer(npcKey, msg.deskId || agent?.assignedDesk);
+          break;
+        case 'standUp':
+          this.actions.standUp(npcKey);
+          break;
+        case 'goToRoom':
+          this.actions.goToRoom(npcKey, msg.room || 'open_office');
+          break;
+        case 'goToBreakroom':
+          this.actions.goToBreakroom(npcKey);
+          break;
+        case 'joinMeeting':
+          this.actions.joinMeeting(npcKey);
+          break;
+        case 'emote':
+          this.actions.emote(npcKey, msg.emote || 'idea');
+          break;
+        case 'think':
+          if (msg.text) this.actions.think(npcKey, msg.text);
+          break;
+        default:
+          break;
+      }
+    } catch (err) {
+      console.warn('[AgentManager] engine_command failed:', err?.message || err);
+    }
   }
 
   _ensurePluginNpc(npcKey, name, donorTexture) {

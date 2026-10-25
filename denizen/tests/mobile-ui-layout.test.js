@@ -275,7 +275,7 @@ describe('mobile UI layout fixes', () => {
     assert.match(scene, /isLandscape \? 2\.55/);
     assert.match(scene, /isCompactPhone \? 2\.65 : 2\.5/);
     assert.match(html, /device-profile\.js\?v=walkFix1/);
-    assert.match(html, /office-scene\.js\?v=playSmooth1/);
+    assert.match(html, /office-scene\.js\?v=engineTools1/);
     assert.match(html, /mobile-controls\.js\?v=mapFill10/);
   });
 

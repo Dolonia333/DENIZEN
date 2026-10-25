@@ -112,6 +112,8 @@ describe('npc-mcp-gateway', () => {
     assert.ok(names.includes('list_team'));
     assert.ok(names.includes('send_handoff'));
     assert.ok(names.includes('get_market_quote'));
+    assert.ok(names.includes('office_look'));
+    assert.ok(names.includes('office_act'));
   });
 
   it('toolsForScope includes CRM tools for Lucy', () => {
@@ -446,6 +448,20 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.close(resolve));
   });
 
+  it('office_look returns the office and a read token cannot act', async () => {
+    const look = await gateway.callTool(SCOPE, 'office_look', {});
+    assert.equal(look.ok, true);
+    assert.ok(look.rooms.includes('breakroom'));
+    const denied = await gateway.callTool(
+      { ...SCOPE, scopes: ['read'] },
+      'office_act',
+      { verb: 'speak', text: 'hi' },
+    );
+    assert.equal(denied.ok, false);
+    assert.equal(denied.error, 'scope_denied');
+    assert.equal(denied.required_scope, 'delegate');
+  });
+
   it('read-only scope denies run_skill', async () => {
     const readScope = { ...SCOPE, scopes: ['read'] };
     const allowed = await gateway.callTool(readScope, 'get_status', { limit: 3 });
@@ -460,7 +476,9 @@ describe('npc-mcp-gateway', () => {
     const readScope = { ...SCOPE, scopes: ['read'] };
     const names = gateway.toolsForScope(readScope).map((t) => t.name);
     assert.ok(names.includes('get_status'));
+    assert.ok(names.includes('office_look'));
     assert.ok(!names.includes('run_skill'));
+    assert.ok(!names.includes('office_act'));
   });
 });
 

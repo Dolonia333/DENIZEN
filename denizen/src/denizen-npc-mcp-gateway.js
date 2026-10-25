@@ -27,6 +27,7 @@ const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const mcpActor = require('./denizen-mcp-actor.js');
 const mcpOfficeAct = require('./denizen-mcp-office-act.js');
+const mcpEngineTools = require('./denizen-mcp-engine-tools.js');
 const browserEyes = require('./browser-eyes.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
@@ -490,6 +491,9 @@ async function callToolImpl(scope, name, args) {
   if (mcpMentorTools.isMentorTool(name)) {
     return mcpMentorTools.callTool(scope, name, args);
   }
+  if (mcpEngineTools.isEngineTool(name)) {
+    return mcpEngineTools.callTool(scope, name, args);
+  }
   switch (name) {
     case 'update_memory': return toolUpdateMemory(scope, args);
     case 'get_status': return toolGetStatus(scope, args);
@@ -550,12 +554,25 @@ async function callTool(scope, name, args) {
   }
   const result = await callToolImpl(enriched, toolName, args);
   logMcpAudit(enriched, toolName, result);
-  try { mcpOfficeAct.noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
+  // Editor tools already broadcast engine_command. A second floor beat
+  // would walk the NPC to a guessed room on top of the verb they chose.
+  if (!mcpEngineTools.isEngineTool(toolName)) {
+    try { mcpOfficeAct.noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
+  }
   return result;
 }
 
 function configure(deps = {}) {
   mcpOfficeAct.configure(deps);
+  mcpEngineTools.configure({
+    broadcast: deps.broadcast,
+    readLayout: deps.readLayout,
+    appendItem: deps.appendItem,
+    removeItem: deps.removeItem,
+    restoreItem: deps.restoreItem,
+    patchItem: deps.patchItem,
+    officeId: deps.officeId,
+  });
   mcpActions.configure(deps);
   mcpMarketTools.configure(deps);
   mcpTeamTools.configure(deps);
@@ -593,6 +610,7 @@ function toolsForScope(scope) {
     base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
   }
   base.push(...TOOL_DEFINITIONS);
+  base.push(...mcpEngineTools.TOOL_DEFINITIONS);
   if (scope?.npc_key) {
     base.push(...mcpTeamTools.toolsForNpc(scope.npc_key));
     base.push(...mcpStudioBoardTools.toolsForNpc(scope.npc_key));

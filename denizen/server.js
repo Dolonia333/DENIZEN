@@ -3315,6 +3315,12 @@ npcMcpGateway.configure({
       queue_depth: queueDepth,
     };
   },
+  officeId: officeRegistry.CEO_OFFICE_ID,
+  readLayout: (officeId) => officeLayout.readLayoutSync(ROOT, officeId),
+  appendItem: (officeId, item) => _engineAppendFurniture(officeId, item),
+  removeItem: (officeId, instanceId) => officeLayout.removeFurnitureItem(ROOT, officeId, instanceId),
+  restoreItem: (officeId, item) => officeLayout.appendFurnitureItem(ROOT, officeId, item),
+  patchItem: (officeId, instanceId, patch) => _enginePatchFurniture(officeId, instanceId, patch),
 });
 teamMcpGateway.configure({
   runNpcSkill,
@@ -3383,6 +3389,48 @@ function _consumePlacementBudget(by) {
   if (by === 'system' || by === 'operator') return;
   const k = _budgetKey(by);
   _placementBudget.set(k, (_placementBudget.get(k) || 0) + 1);
+}
+
+// MCP editor place. Same budget, cap, and 12px duplicate rule as
+// POST /api/place-furniture. The tool already checked the prefab whitelist
+// and the pixel bounds. Throws so the tool can return the error and skip
+// the live broadcast.
+function _engineAppendFurniture(officeId, item) {
+  const by = String(item?.placedBy || 'mcp').slice(0, 40);
+  const budgetCheck = _checkPlacementBudget(by);
+  if (!budgetCheck.allowed) {
+    throw new Error(`${by} has hit the daily placement budget (${budgetCheck.cap})`);
+  }
+  const existingLayout = officeLayout.readLayoutSync(ROOT, officeId);
+  const existingItems = Array.isArray(existingLayout?.items) ? existingLayout.items : [];
+  if (existingItems.length >= 250) {
+    throw new Error('office layout is full (250 placed items) — remove something first');
+  }
+  const dup = existingItems.find((it) => (
+    it.prefabId === item.prefabId
+    && Math.abs((it.x || 0) - item.x) <= 12
+    && Math.abs((it.y || 0) - item.y) <= 12
+  ));
+  if (dup) {
+    throw new Error(`a ${item.prefabId} already sits at (${dup.x}, ${dup.y}) — pick a different spot`);
+  }
+  officeLayout.appendFurnitureItem(ROOT, officeId, item);
+  _consumePlacementBudget(by);
+  try {
+    worldState.pushEvent('shipped', `${by} placed ${item.prefabId} at (${item.x},${item.y})`);
+  } catch (_) {}
+  return item;
+}
+
+function _enginePatchFurniture(officeId, instanceId, patch) {
+  const layout = officeLayout.readLayoutSync(ROOT, officeId);
+  if (!layout || !Array.isArray(layout.items)) throw new Error('no layout');
+  const item = layout.items.find((it) => it.instanceId === instanceId);
+  if (!item) throw new Error('item not found');
+  if (patch?.x != null && Number.isFinite(Number(patch.x))) item.x = Math.round(Number(patch.x));
+  if (patch?.y != null && Number.isFinite(Number(patch.y))) item.y = Math.round(Number(patch.y));
+  officeLayout.writeLayoutSync(ROOT, officeId, layout);
+  return item;
 }
 
 // --- Per-NPC daily animation request budget ---
