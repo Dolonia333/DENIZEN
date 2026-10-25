@@ -3321,6 +3321,7 @@ npcMcpGateway.configure({
   removeItem: (officeId, instanceId) => officeLayout.removeFurnitureItem(ROOT, officeId, instanceId),
   restoreItem: (officeId, item) => officeLayout.appendFurnitureItem(ROOT, officeId, item),
   patchItem: (officeId, instanceId, patch) => _enginePatchFurniture(officeId, instanceId, patch),
+  patchNode: (officeId, id, patch) => _enginePatchNode(officeId, id, patch),
   readPeople: (officeId) => _engineReadPeople(officeId),
   countClients: (officeId) => _engineCountClients(officeId),
 });
@@ -3361,9 +3362,10 @@ npcThinkRunner.configure({
 });
 
 // --- Furniture-placement whitelist + per-NPC daily budget ---
-// The whitelist is shared between /api/place-furniture and the prompt
-// hint in src/npc-brains.js. Edit both together if you ever expand it.
-// Daily budget keeps a chatty NPC from spamming the office with couches.
+// The 15 aliases are shared with the prompt in src/npc-brains.js.
+// Catalog ids from furniture_catalog_openplan.json are also allowed
+// (plant_potted), and they are not the same strings as these aliases
+// (plant_small). Daily budget keeps a chatty NPC from spamming the office.
 const ALLOWED_PREFABS = new Set([
   'desk_small', 'desk_2x2', 'office_chair', 'monitor',
   'plant_small', 'plant_large', 'whiteboard', 'bookshelf',
@@ -3460,6 +3462,51 @@ function _enginePatchFurniture(officeId, instanceId, patch) {
   if (patch?.y != null && Number.isFinite(Number(patch.y))) item.y = Math.round(Number(patch.y));
   officeLayout.writeLayoutSync(ROOT, officeId, layout);
   return item;
+}
+
+function _applyNodePatch(node, patch, withName) {
+  if (patch?.x != null && Number.isFinite(Number(patch.x))) node.x = Math.round(Number(patch.x));
+  if (patch?.y != null && Number.isFinite(Number(patch.y))) node.y = Math.round(Number(patch.y));
+  if (withName && patch?.name != null) node.name = String(patch.name).slice(0, 40);
+  return node;
+}
+
+// Persist a station, decor, or placed item. An overlay that is not in the
+// layout file is an error — the tool must not report a move that dies on restart.
+function _enginePatchNode(officeId, id, patch) {
+  const layout = officeLayout.readLayoutSync(ROOT, officeId);
+  if (!layout) throw new Error('no layout');
+  const key = String(id || '');
+  if (Array.isArray(layout.items)) {
+    const item = layout.items.find((it) => it.instanceId === key);
+    if (item) {
+      _applyNodePatch(item, patch, false);
+      officeLayout.writeLayoutSync(ROOT, officeId, layout);
+      return item;
+    }
+  }
+  if (Array.isArray(layout.stations)) {
+    const station = layout.stations.find((s) => s.id === key);
+    if (station) {
+      _applyNodePatch(station, patch, true);
+      officeLayout.writeLayoutSync(ROOT, officeId, layout);
+      return station;
+    }
+  }
+  if (Array.isArray(layout.decor)) {
+    const decor = layout.decor.find((d) => d.id === key);
+    if (decor) {
+      _applyNodePatch(decor, patch, true);
+      officeLayout.writeLayoutSync(ROOT, officeId, layout);
+      return decor;
+    }
+  }
+  throw new Error('node not in the saved layout');
+}
+
+function _catalogHas(id) {
+  try { return !!require('./src/denizen-catalog-index').has(id); }
+  catch (_) { return false; }
 }
 
 // --- Per-NPC daily animation request budget ---
@@ -4250,9 +4297,13 @@ const server = http.createServer((req, res) => {
 
       // Whitelist + bounds. Keep this short — expanding it should be a
       // deliberate change, not a wide-open "NPC can spawn anything" API.
-      if (!ALLOWED_PREFABS.has(prefabId)) {
+      if (!ALLOWED_PREFABS.has(prefabId) && !_catalogHas(prefabId)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `prefabId not in whitelist: ${prefabId}`, allowed: [...ALLOWED_PREFABS] }));
+        res.end(JSON.stringify({
+          error: `unknown prefab or catalog id: ${prefabId}`,
+          allowed: [...ALLOWED_PREFABS],
+          hint: 'Catalog ids such as plant_potted are allowed. Aliases such as desk_small still work.',
+        }));
         return;
       }
       if (!Number.isFinite(x) || !Number.isFinite(y) || x < 16 || y < 16 || x > 1264 || y > 704) {

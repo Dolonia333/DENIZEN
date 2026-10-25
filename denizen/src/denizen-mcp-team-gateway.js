@@ -679,12 +679,14 @@ async function handleHttpRequest(req, res) {
     const toolArgs = params?.arguments || {};
     try {
       const result = await callTool(scope, toolName, toolArgs);
+      const content = [{ type: 'text', text: JSON.stringify(result, null, 2) }];
+      mcpEngineTools.attachMcpImage(content, result);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         jsonrpc: '2.0',
         id,
         result: {
-          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          content,
           isError: !result?.ok,
         },
       }));

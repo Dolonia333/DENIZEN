@@ -10,6 +10,10 @@
  * do not touch disk.
  */
 
+const path = require('node:path');
+const spriteSheet = require('./denizen-sprite-sheet');
+const catalogIndex = require('./denizen-catalog-index');
+
 const ALLOWED_PREFABS = Object.freeze([
   'desk_small', 'desk_2x2', 'office_chair', 'monitor',
   'plant_small', 'plant_large', 'whiteboard', 'bookshelf',
@@ -61,7 +65,7 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'node_set',
-    description: 'Move or rename one node. Select it with node_get first. Pushed onto the undo stack.',
+    description: 'Move or rename one node. Select it with node_get first. The move is written into the office layout and pushed onto the undo stack.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -123,7 +127,7 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'sprite_cut',
-    description: 'Cut a sprite sheet into a grid of frames. Pass frame size and sheet size in pixels.',
+    description: 'Arithmetic only: divide a sheet size into a grid. Does not open a PNG, does not check leftover pixels, and does not name directions. For a real sheet use sprite_sheet_cut.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -170,6 +174,56 @@ const TOOL_DEFINITIONS = [
     },
   },
   {
+    name: 'catalog_search',
+    description: 'Search the furniture catalog by id, type, or note. Returns real catalog ids (plant_potted), not the 15 placeFurniture aliases (plant_small).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Substring matched against id, type, sheet, and note.' },
+        limit: { type: 'number', description: 'Max hits (default 15, cap 40).' },
+      },
+    },
+  },
+  {
+    name: 'office_place_catalog',
+    description: 'Place one catalog object by its catalog id. Same bounds, daily budget, 250 cap, and 12px duplicate rule as office_place_furniture.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        catalogId: { type: 'string', description: 'Catalog id such as plant_potted or ac_unit_small.' },
+        x: { type: 'number' },
+        y: { type: 'number' },
+        reason: { type: 'string' },
+        officeId: { type: 'string', description: 'Office id. Defaults to the CEO office.' },
+      },
+      required: ['catalogId', 'x', 'y'],
+    },
+  },
+  {
+    name: 'sprite_sheet_cut',
+    description: 'Open a PNG under assets/ or data/ and cut it on an exact pixel grid. Refuses a frame size that does not divide the sheet or that splits opaque pixels. Names direction rows: XP is down, left, right, up; LimeZu is right, up, left, down. Animation frames stay on the grid — the content box is padding only, and trimming it makes walk cycles jitter. saveFrames writes draft PNGs under data/sprite-cuts/ and does not edit the furniture catalog.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path relative to the denizen root, starting with assets/ or data/.' },
+        frameWidth: { type: 'number', description: 'Optional. Used only when it divides the sheet exactly.' },
+        frameHeight: { type: 'number' },
+        saveFrames: { type: 'boolean', description: 'Write grid-rect PNGs and frames.json under data/sprite-cuts/. Default false.' },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'office_picture',
+    description: 'A small top-down picture of this office: stations, decor, placed items, and people. Read the legend. Call office_look for exact coordinates.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        officeId: { type: 'string', description: 'Office id. Defaults to the CEO office.' },
+      },
+    },
+  },
+  {
     name: 'office_errors',
     description: 'Debugger: recent engine-tool errors.',
     inputSchema: {
@@ -189,7 +243,9 @@ const _pending = new Map();
 const _floorResults = new Map();
 
 const FLOOR_TOOLS = Object.freeze([
-  'office_look', 'scene_tree', 'node_get', 'office_act', 'office_place_furniture', 'edit_undo',
+  'office_look', 'office_picture', 'scene_tree', 'node_get', 'office_act',
+  'office_place_furniture', 'office_place_catalog', 'catalog_search',
+  'sprite_sheet_cut', 'edit_undo',
 ]);
 
 function configure(deps = {}) {
@@ -363,7 +419,7 @@ function toolOfficeLook(scope, args) {
     lastAct: freshLastAct(bucket),
     errors: bucket.errors.slice(-5),
     floorTools: [...FLOOR_TOOLS],
-    hint: 'People are in `people`. Select a node with node_get, then node_set or office_act.',
+    hint: 'People are in `people`. Select a node with node_get, then node_set or office_act. catalog_search finds real sprite ids. sprite_sheet_cut refuses a grid that splits pixels.',
   };
 }
 
@@ -414,7 +470,8 @@ function toolNodeSet(scope, args) {
   if (args.x != null) next.x = Number(args.x);
   if (args.y != null) next.y = Number(args.y);
   if (args.name != null) next.name = String(args.name).slice(0, 40);
-  if (node.kind === 'item' && (args.x != null || args.y != null)) {
+  const moving = args.x != null || args.y != null;
+  if (moving) {
     const x = args.x != null ? Number(args.x) : Number(node.x);
     const y = args.y != null ? Number(args.y) : Number(node.y);
     if (!inBounds(x, y)) {
@@ -422,7 +479,18 @@ function toolNodeSet(scope, args) {
       return { ok: false, error: 'x/y out of bounds (16..1264, 16..704)' };
     }
   }
-  if (node.kind === 'item' && typeof _deps.patchItem === 'function' && (next.x != null || next.y != null)) {
+  if (typeof _deps.patchNode === 'function' && (moving || args.name != null)) {
+    try {
+      _deps.patchNode(officeId, node.id, {
+        x: args.x != null ? Number(args.x) : undefined,
+        y: args.y != null ? Number(args.y) : undefined,
+        name: args.name != null ? next.name : undefined,
+      });
+    } catch (err) {
+      noteError(bucket, err?.message || String(err));
+      return { ok: false, error: err?.message || String(err) };
+    }
+  } else if (node.kind === 'item' && typeof _deps.patchItem === 'function' && moving) {
     try {
       _deps.patchItem(officeId, node.id, {
         x: next.x != null ? next.x : node.x,
@@ -523,13 +591,24 @@ function inBounds(x, y) {
   return Number.isFinite(x) && Number.isFinite(y) && x >= 16 && y >= 16 && x <= 1264 && y <= 704;
 }
 
-function toolPlace(scope, args) {
+function toolPlace(scope, args, opts = {}) {
   const officeId = officeFor(args);
   const bucket = stateFor(scope, officeId);
-  const prefabId = String(args?.prefabId || '');
+  const prefabId = String(opts.catalog ? (args?.catalogId || args?.prefabId || '') : (args?.prefabId || ''));
   const x = Number(args?.x);
   const y = Number(args?.y);
-  if (!ALLOWED_PREFABS.includes(prefabId)) {
+  let catalogHit = null;
+  if (opts.catalog) {
+    try { catalogHit = catalogIndex.get(prefabId); }
+    catch (err) {
+      noteError(bucket, err?.message || String(err));
+      return { ok: false, error: err?.message || String(err) };
+    }
+    if (!catalogHit) {
+      noteError(bucket, `catalog id not found: ${prefabId}`);
+      return { ok: false, error: 'catalog id not found', catalogId: prefabId };
+    }
+  } else if (!ALLOWED_PREFABS.includes(prefabId)) {
     noteError(bucket, `prefab not allowed: ${prefabId}`);
     return { ok: false, error: 'prefabId not in whitelist', allowed: [...ALLOWED_PREFABS] };
   }
@@ -556,7 +635,79 @@ function toolPlace(scope, args) {
   }
   bucket.undo.push({ op: 'place', item });
   broadcast({ type: 'furniture_placed', item, by, office_id: officeId }, bucket);
-  return { ok: true, officeId, item };
+  return { ok: true, officeId, item, catalog: catalogHit || undefined };
+}
+
+function toolPlaceCatalog(scope, args) {
+  return toolPlace(scope, args, { catalog: true });
+}
+
+function toolCatalogSearch(scope, args) {
+  const bucket = stateFor(scope, officeFor(args));
+  try {
+    return catalogIndex.search(args?.query, args?.limit);
+  } catch (err) {
+    noteError(bucket, err?.message || String(err));
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+function toolSpriteSheetCut(scope, args) {
+  const bucket = stateFor(scope, officeFor(args));
+  const result = spriteSheet.cutFile({
+    root: path.join(__dirname, '..'),
+    relPath: args?.path,
+    frameWidth: args?.frameWidth,
+    frameHeight: args?.frameHeight,
+    saveFrames: args?.saveFrames === true,
+  });
+  if (!result.ok) noteError(bucket, result.error || 'sprite_sheet_cut failed');
+  return result;
+}
+
+function toolOfficePicture(scope, args) {
+  const officeId = officeFor(args);
+  const bucket = stateFor(scope, officeId);
+  const view = layout(officeId, bucket);
+  const nodes = nodeList(view, bucket.overlays);
+  let people = [];
+  if (typeof _deps.readPeople === 'function') {
+    try {
+      const snap = _deps.readPeople(officeId) || {};
+      people = [
+        ...(Array.isArray(snap.people) ? snap.people : []),
+        ...(Array.isArray(snap.players) ? snap.players : []),
+      ].slice(0, 60);
+    } catch (err) {
+      noteError(bucket, err?.message || String(err));
+    }
+  }
+  let png;
+  try {
+    png = spriteSheet.officePicturePng({ nodes, people });
+  } catch (err) {
+    noteError(bucket, err?.message || String(err));
+    return { ok: false, error: err?.message || String(err) };
+  }
+  return {
+    ok: true,
+    officeId,
+    _mcp_image: true,
+    image_base64: png.toString('base64'),
+    mime: 'image/png',
+    width: 160,
+    height: 90,
+    scale: 8,
+    legend: {
+      floor: '#1c2430',
+      station: '#4aa3ff',
+      decor: '#7dcea0',
+      item: '#f5c16c',
+      person: '#ff5a7a',
+    },
+    counts: { nodes: nodes.length, people: people.length },
+    note: 'Each pixel is 8 office pixels. Stations are blue, decor green, placed items gold, people pink.',
+  };
 }
 
 function rawItem(instanceId, officeId, bucket) {
@@ -674,7 +825,15 @@ function toolUndo(scope, args) {
   if (!entry) return { ok: false, error: 'nothing to undo', officeId };
   if (entry.op === 'node_set') {
     bucket.overlays.set(entry.id, { ...entry.prev });
-    if (entry.kind === 'item' && typeof _deps.patchItem === 'function') {
+    if (typeof _deps.patchNode === 'function') {
+      try {
+        _deps.patchNode(officeId, entry.id, {
+          x: entry.prev.x,
+          y: entry.prev.y,
+          name: entry.prev.name,
+        });
+      } catch (err) { noteError(bucket, err?.message || String(err)); }
+    } else if (entry.kind === 'item' && typeof _deps.patchItem === 'function') {
       try { _deps.patchItem(officeId, entry.id, { x: entry.prev.x, y: entry.prev.y }); }
       catch (err) { noteError(bucket, err?.message || String(err)); }
     }
@@ -729,8 +888,12 @@ function callTool(scope, name, args) {
     case 'node_set': return toolNodeSet(scope, args);
     case 'office_act': return toolOfficeAct(scope, args);
     case 'office_place_furniture': return toolPlace(scope, args);
+    case 'office_place_catalog': return toolPlaceCatalog(scope, args);
     case 'office_remove_furniture': return toolRemove(scope, args);
+    case 'catalog_search': return toolCatalogSearch(scope, args);
     case 'sprite_cut': return toolSpriteCut(scope, args);
+    case 'sprite_sheet_cut': return toolSpriteSheetCut(scope, args);
+    case 'office_picture': return toolOfficePicture(scope, args);
     case 'atlas_pack': return toolAtlasPack(scope, args);
     case 'edit_undo': return toolUndo(scope, args);
     case 'office_errors': return toolErrors(scope, args);
@@ -750,4 +913,5 @@ module.exports = {
   FLOOR_TOOLS,
   spriteCut: toolSpriteCut,
   atlasPack: toolAtlasPack,
+  attachMcpImage: spriteSheet.attachMcpImage,
 };

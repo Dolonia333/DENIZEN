@@ -507,6 +507,14 @@ describe('npc-mcp-gateway rate limit', () => {
     else process.env.DENIZEN_MCP_RATE_LIMIT = prevRate;
   });
 
+  it('defaults to 600 tools/call per hour', () => {
+    const saved = process.env.DENIZEN_MCP_RATE_LIMIT;
+    delete process.env.DENIZEN_MCP_RATE_LIMIT;
+    assert.equal(gateway.rateLimitPerHour(), 600);
+    if (saved === undefined) delete process.env.DENIZEN_MCP_RATE_LIMIT;
+    else process.env.DENIZEN_MCP_RATE_LIMIT = saved;
+  });
+
   it('env 0 skips the check', () => {
     process.env.DENIZEN_MCP_RATE_LIMIT = '0';
     gateway.clearRateLimitBuckets();

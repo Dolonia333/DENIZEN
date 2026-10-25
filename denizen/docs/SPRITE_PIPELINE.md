@@ -132,7 +132,14 @@ blueprint, renders each zone with RoomTileRenderer, dresses it from
   labeler when touching that area; don't let new errors hide among them.
 - **NPC placement ids ≠ catalog ids.** server.js ALLOWED_PREFABS uses ids like
   `desk_2x2` that don't exist in the catalog — see the alias map in office-scene.js
-  (`NPC_PREFAB_ALIASES`) which translates them at render time.
+  (`NPC_PREFAB_ALIASES`) which translates them at render time. `placeCatalog` and
+  `office_place_catalog` take the real catalog id.
+- **Blind grid cuts are wrong.** `sprite_cut` only divides numbers. `sprite_sheet_cut`
+  opens the PNG, refuses a frame size that does not divide the sheet or that splits
+  opaque pixels, and names direction rows (XP: down, left, right, up; LimeZu: right,
+  up, left, down). The content box is padding — do not trim animation frames to it.
+  Drafts land in `data/sprite-cuts/` only. It does not edit this catalog. Furniture
+  rects still come from the labeler.
 
 ## What to ignore (abandoned generations — art is safe, tools feed nothing)
 

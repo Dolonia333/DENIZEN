@@ -182,7 +182,7 @@ describe('denizen-mcp-engine-tools', () => {
     assert.match(manager, /this\.actions\.walkTo\(npcKey, Number\(msg\.x\), Number\(msg\.y\)\)/);
     assert.match(scene, /move\(instanceId, x, y\)/);
     assert.match(manager, /_reportEngineResult\(msg,/);
-    assert.match(html, /agent-office-manager\.js\?v=engineTools2/);
+    assert.match(html, /agent-office-manager\.js\?v=engineTools3/);
     assert.match(html, /office-scene\.js\?v=engineTools1/);
   });
 
@@ -295,10 +295,94 @@ describe('denizen-mcp-engine-tools', () => {
   it('scopes match the editor docks', () => {
     assert.equal(scopes.requiredScope('office_look'), 'read');
     assert.equal(scopes.requiredScope('sprite_cut'), 'skills');
+    assert.equal(scopes.requiredScope('sprite_sheet_cut'), 'skills');
+    assert.equal(scopes.requiredScope('catalog_search'), 'read');
+    assert.equal(scopes.requiredScope('office_picture'), 'read');
+    assert.equal(scopes.requiredScope('office_place_catalog'), 'office');
     assert.equal(scopes.requiredScope('office_act'), 'office');
     assert.equal(scopes.toolAllowed({ scopes: ['read'] }, 'office_look'), true);
     assert.equal(scopes.toolAllowed({ scopes: ['read'] }, 'office_place_furniture'), false);
     assert.equal(scopes.toolAllowed({ scopes: ['read', 'skills', 'handoff', 'office'] }, 'office_act'), true);
     assert.equal(scopes.toolAllowed({ scopes: ['read', 'skills'] }, 'atlas_pack'), true);
+    assert.equal(scopes.toolAllowed({ scopes: ['read'] }, 'catalog_search'), true);
+    assert.equal(scopes.toolAllowed({ scopes: ['read'] }, 'office_place_catalog'), false);
+  });
+
+  it('catalog_search and office_place_catalog use catalog ids', () => {
+    const { items } = memoryOffice();
+    const found = engine.callTool(SCOPE, 'catalog_search', { query: 'ac_unit', limit: 5 });
+    assert.equal(found.ok, true);
+    assert.ok(found.objects.some((obj) => obj.id === 'ac_unit_small'));
+    const alias = engine.callTool(SCOPE, 'office_place_catalog', { catalogId: 'desk_small', x: 200, y: 200 });
+    assert.equal(alias.ok, false);
+    const placed = engine.callTool(SCOPE, 'office_place_catalog', {
+      catalogId: 'ac_unit_small', x: 200, y: 200, reason: 'window',
+    });
+    assert.equal(placed.ok, true);
+    assert.equal(placed.item.prefabId, 'ac_unit_small');
+    assert.equal(items[0].prefabId, 'ac_unit_small');
+    assert.equal(placed.catalog.origin, 'bottom');
+  });
+
+  it('node_set writes a station through patchNode and does not fake a save', () => {
+    const layout = {
+      stations: [{ id: 'desk_lucy', type: 'desk', x: 200, y: 180, name: 'Lucy' }],
+      decor: [],
+      items: [],
+    };
+    engine.configure({
+      readLayout: () => layout,
+      patchNode: (_officeId, id, patch) => {
+        const station = layout.stations.find((node) => node.id === id);
+        if (!station) throw new Error('node not in the saved layout');
+        if (patch.x != null) station.x = patch.x;
+        if (patch.y != null) station.y = patch.y;
+        if (patch.name != null) station.name = patch.name;
+        return station;
+      },
+      broadcast: () => {},
+    });
+    const moved = engine.callTool(SCOPE, 'node_set', { id: 'desk_lucy', x: 240, name: 'Window' });
+    assert.equal(moved.ok, true);
+    assert.equal(layout.stations[0].x, 240);
+    assert.equal(layout.stations[0].name, 'Window');
+    const undone = engine.callTool(SCOPE, 'edit_undo', {});
+    assert.equal(undone.undone, 'node_set');
+    assert.equal(layout.stations[0].x, 200);
+
+    engine.configure({
+      readLayout: () => layout,
+      patchNode: () => { throw new Error('node not in the saved layout'); },
+      broadcast: () => {},
+    });
+    const missed = engine.callTool(SCOPE, 'node_set', { id: 'desk_lucy', x: 300 });
+    assert.equal(missed.ok, false);
+    assert.match(missed.error, /saved layout/);
+    assert.equal(engine.callTool(SCOPE, 'node_get', { id: 'desk_lucy' }).node.x, 200);
+  });
+
+  it('office_picture is a png the gateway can attach', () => {
+    memoryOffice();
+    const shot = engine.callTool(SCOPE, 'office_picture', {});
+    assert.equal(shot.ok, true);
+    assert.equal(shot.mime, 'image/png');
+    assert.equal(shot.legend.person, '#ff5a7a');
+    const buf = Buffer.from(shot.image_base64, 'base64');
+    assert.equal(buf[0], 0x89);
+    assert.equal(buf[1], 0x50);
+    const content = [];
+    engine.attachMcpImage(content, shot);
+    assert.equal(content[0].mimeType, 'image/png');
+    const jpeg = [];
+    engine.attachMcpImage(jpeg, { _mcp_image: true, screenshot_jpeg_base64: 'abc' });
+    assert.equal(jpeg[0].mimeType, 'image/jpeg');
+  });
+
+  it('a seated brain can place a catalog id', () => {
+    const root = path.join(__dirname, '..');
+    const manager = fs.readFileSync(path.join(root, 'src/agent-office-manager.js'), 'utf8');
+    const brains = fs.readFileSync(path.join(root, 'src/npc-brains.js'), 'utf8');
+    assert.match(manager, /case 'placeCatalog':/);
+    assert.match(brains, /\[ACTION:placeCatalog:catalogId:x:y:reason\]/);
   });
 });

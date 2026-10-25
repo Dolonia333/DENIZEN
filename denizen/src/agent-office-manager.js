@@ -5532,6 +5532,25 @@ class AgentOfficeManager {
             }).catch(err => console.warn('[AgentManager] placeFurniture error:', err?.message || err));
             break;
           }
+          case 'placeCatalog': {
+            const catalogId = params[0] || '';
+            const x = parseInt(params[1], 10);
+            const y = parseInt(params[2], 10);
+            const reason = params.slice(3).join(':') || null;
+            fetch('/api/place-furniture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ by: npcName, prefabId: catalogId, x, y, reason }),
+            }).then(r => r.json()).then(res => {
+              if (res?.ok) {
+                console.log(`[AgentManager] ${npcName} placed catalog ${catalogId} at (${x},${y})`);
+                if (this.actions?.emote) this.actions.emote(npcKey, 'idea');
+              } else {
+                console.warn(`[AgentManager] placeCatalog rejected:`, res?.error);
+              }
+            }).catch(err => console.warn('[AgentManager] placeCatalog error:', err?.message || err));
+            break;
+          }
           case 'requestAnimation': {
             // Stage 2 of the self-advancement roadmap. NPC proposes a
             // new animation; it goes to an operator-review queue. The

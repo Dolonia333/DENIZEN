@@ -25,6 +25,7 @@ npcs/*/MEMORY.md
 
 # Persisted runtime data
 layouts/
+data/sprite-cuts/
 reports/run-*.json
 reports/**/*.md
 data/job-crm.json
