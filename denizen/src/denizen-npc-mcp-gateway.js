@@ -66,11 +66,18 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'get_status',
-    description: 'Read current NPC status: recent work, memories, roster info.',
+    description:
+      'Read current NPC status: recent work, memories, roster info. '
+      + 'Also returns office_recent_work — the latest activity notes from every NPC/agent in the org '
+      + '(use before starting overlapping work).',
     inputSchema: {
       type: 'object',
       properties: {
-        limit: { type: 'number', description: 'Max recent items (default 10)' },
+        limit: { type: 'number', description: 'Max recent items for self + office feed (default 10)' },
+        include_office: {
+          type: 'boolean',
+          description: 'Include org-wide office_recent_work (default true). Set false for self-only.',
+        },
       },
     },
   },
@@ -378,24 +385,33 @@ async function toolUpdateMemory(scope, args) {
 
 async function toolGetStatus(scope, args) {
   const limit = Math.max(1, Math.min(50, Number(args?.limit) || 10));
+  const includeOffice = args?.include_office !== false;
   const npcKey = scope.npc_key;
   const orgId = scope.org_id;
 
-  const [npcRows, memories, work] = await Promise.all([
+  const [npcRows, memories, work, officeWork] = await Promise.all([
     denizenDb._get(`denizen_npcs?select=npc_key,display_name,role,protected,claimable&npc_key=eq.${encodeURIComponent(npcKey)}&limit=1`).catch(() => []),
     denizenDb.listNpcMemories({ orgId, npcKey, limit, source: 'mcp' }).catch(() => []),
     denizenDb._get([
-      'denizen_work_output?select=phase,action,note,ts',
+      'denizen_work_output?select=npc_key,phase,action,note,ts',
       `org_id=eq.${encodeURIComponent(orgId)}`,
       `npc_key=eq.${encodeURIComponent(npcKey)}`,
       'order=ts.desc',
       `limit=${limit}`,
     ].join('&')).catch(() => []),
+    includeOffice
+      ? denizenDb._get([
+        'denizen_work_output?select=npc_key,phase,action,note,ts,metadata',
+        `org_id=eq.${encodeURIComponent(orgId)}`,
+        'order=ts.desc',
+        `limit=${limit}`,
+      ].join('&')).catch(() => [])
+      : Promise.resolve(null),
   ]);
 
   const extras = await mcpTeamTools.buildStatusExtras(scope, { work: work || [] });
 
-  return {
+  const out = {
     ok: true,
     npc: npcRows?.[0] || { npc_key: npcKey, display_name: npcDisplayName(npcKey) },
     recent_mcp_memories: memories,
@@ -403,6 +419,13 @@ async function toolGetStatus(scope, args) {
     org_slug: scope.org_slug,
     ...extras,
   };
+  if (includeOffice) {
+    out.office_recent_work = officeWork || [];
+    out.office_feed_hint =
+      'office_recent_work is org-wide (all NPCs/agents). recent_work is yours only. '
+      + 'Mention overlapping work in your next log_activity note.';
+  }
+  return out;
 }
 
 async function toolLogActivity(scope, args) {

@@ -71,7 +71,16 @@ describe('npc-mcp-gateway', () => {
       if (path.includes('denizen_npcs')) {
         return [{ npc_key: 'roki', display_name: 'Roki', protected: false }];
       }
-      if (path.includes('denizen_work_output')) return [];
+      if (path.includes('denizen_work_output')) {
+        // Self feed filters by npc_key=eq; office feed is org-wide (no npc filter).
+        if (path.includes('npc_key=eq.')) {
+          return [{ npc_key: 'roki', phase: 'coding', action: 'update', note: 'Self work', ts: '2026-06-06T12:00:00Z' }];
+        }
+        return [
+          { npc_key: 'lucy', phase: 'crm', action: 'update', note: 'Pipeline sync', ts: '2026-06-06T12:01:00Z' },
+          { npc_key: 'roki', phase: 'coding', action: 'update', note: 'Self work', ts: '2026-06-06T12:00:00Z' },
+        ];
+      }
       return [];
     };
     denizenDb.recordFact = async () => 'fact-1';
@@ -131,6 +140,18 @@ describe('npc-mcp-gateway', () => {
     assert.equal(result.recent_mcp_memories.length, 1);
     assert.ok(Array.isArray(result.skills));
     assert.equal(result.session_linked, true);
+    assert.equal(result.recent_work.length, 1);
+    assert.equal(result.recent_work[0].npc_key, 'roki');
+    assert.ok(Array.isArray(result.office_recent_work));
+    assert.equal(result.office_recent_work.length, 2);
+    assert.equal(result.office_recent_work[0].npc_key, 'lucy');
+    assert.match(String(result.office_feed_hint || ''), /office_recent_work/);
+  });
+
+  it('get_status can omit office feed', async () => {
+    const result = await gateway.callTool(SCOPE, 'get_status', { limit: 5, include_office: false });
+    assert.equal(result.ok, true);
+    assert.equal(result.office_recent_work, undefined);
   });
 
   it('log_activity records work output', async () => {

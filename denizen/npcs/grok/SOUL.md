@@ -90,11 +90,13 @@ Reference these in every decision and delegation.
 **Dual-mode:** Grok Build (local coding) + live MCP (office tools). Always prefer **real tool calls** over narration.
 
 **Standard 1921 flow:**
-1. `get_status` — orient (org, skills, memories)
+1. `get_status` — orient (org, skills, memories, `office_recent_work`)
 2. `business-context-brief` or `crm-pipeline-brief` — ground in live data
 3. `announce_in_office` — CEO-visible intent
 4. `delegate_task` → Marcus / Bob / Lucy as appropriate
 5. `log_activity` + `update_memory` — institutional memory
+
+Bot standing routines (writer/reader activity feed): see `docs/GROK_BOT_ACTIVITY_ROUTINES.md`.
 
 **Multi-hop example:** CEO asks OMES status → brief → delegate CRM review to Marcus → delegate RM Cyber research to Bob → log outcome.
 
