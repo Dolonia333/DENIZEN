@@ -6,6 +6,7 @@
  */
 
 const roster = require('./npc-roster');
+const engineTools = require('./denizen-mcp-engine-tools');
 
 const THROTTLE_MS = 6000;
 const _last = new Map();
@@ -23,6 +24,8 @@ function resetForTests() {
 function placeForTool(toolName) {
   const t = String(toolName || '').toLowerCase().replace(/-/g, '_');
   if (!t || t === 'announce_in_office' || t === 'announce') return null;
+  // These tools move the office themselves. A guessed room would fight the verb.
+  if (engineTools.isEngineTool(t)) return null;
   if (t.includes('browser')) return { room: 'desk', line: 'Looking at the screen.' };
   if (t.includes('business_studio')) return { room: 'manager_office', line: 'In the studio.' };
   if (t.includes('studio_board')) return { room: 'conference', line: 'On the board.' };

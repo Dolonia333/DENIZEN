@@ -17,6 +17,7 @@ const mcpBusinessStudioTools = require('./denizen-mcp-business-studio-tools.js')
 const mcpAgencyTools = require('./denizen-mcp-agency-tools.js');
 const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
+const mcpEngineTools = require('./denizen-mcp-engine-tools.js');
 const mcpActor = require('./denizen-mcp-actor.js');
 const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
@@ -240,7 +241,10 @@ async function toolTeamStatus(scope) {
 }
 
 function toolsForScope(scope) {
-  return mcpScopes.filterTools(scope, TEAM_TOOL_DEFINITIONS);
+  return mcpScopes.filterTools(scope, [
+    ...TEAM_TOOL_DEFINITIONS,
+    ...mcpEngineTools.TOOL_DEFINITIONS,
+  ]);
 }
 
 async function logTeamAudit(scope, toolName, result) {
@@ -477,6 +481,9 @@ async function callToolImpl(scope, name, args) {
       if (mcpMentorTools.isMentorTool(name)) {
         return mcpMentorTools.callTool(scope, name, args);
       }
+      if (mcpEngineTools.isEngineTool(name)) {
+        return mcpEngineTools.callTool(scope, name, args);
+      }
       return { ok: false, error: `unknown team tool: ${name}` };
   }
 }
@@ -501,7 +508,9 @@ async function callTool(scope, name, args) {
   }
   const result = await callToolImpl(enriched, toolName, args);
   logTeamAudit(enriched, toolName, result);
-  try { require('./denizen-mcp-office-act').noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
+  if (!mcpEngineTools.isEngineTool(toolName)) {
+    try { require('./denizen-mcp-office-act').noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
+  }
   return result;
 }
 
@@ -670,12 +679,14 @@ async function handleHttpRequest(req, res) {
     const toolArgs = params?.arguments || {};
     try {
       const result = await callTool(scope, toolName, toolArgs);
+      const content = [{ type: 'text', text: JSON.stringify(result, null, 2) }];
+      mcpEngineTools.attachMcpImage(content, result);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         jsonrpc: '2.0',
         id,
         result: {
-          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          content,
           isError: !result?.ok,
         },
       }));

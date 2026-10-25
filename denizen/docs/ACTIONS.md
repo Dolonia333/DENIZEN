@@ -57,7 +57,8 @@ to the right JS call (or proposal queue endpoint).
 | `[ACTION:checkBookshelf]` | `checkBookshelf` | — |
 | `[ACTION:standUp]` | `standUp` | — |
 | `[ACTION:thinkAloud:<text>]` | `think` (thought bubble) | Silent internal monologue. No pin, no TTS, no peer-side wakeup. |
-| `[ACTION:placeFurniture:<prefab>:<x>:<y>:<reason>]` | `POST /api/place-furniture` → `furniture_placed` WS broadcast → live sprite spawn | 15-prefab whitelist + bounds check. 3/NPC/day budget. See roadmap Stage 1. |
+| `[ACTION:placeFurniture:<prefab>:<x>:<y>:<reason>]` | `POST /api/place-furniture` → `furniture_placed` WS broadcast → live sprite spawn | 15-prefab aliases + bounds check. 3/NPC/day budget. See roadmap Stage 1. |
+| `[ACTION:placeCatalog:<catalogId>:<x>:<y>:<reason>]` | same `POST /api/place-furniture` | Catalog id such as `plant_potted`, not an alias. Same bounds and budget. |
 | `[ACTION:removeFurniture:<instanceId>]` | `POST /api/remove-furniture` → `furniture_removed` broadcast | Only `npc_*` instanceIds; scene furniture is read-only. |
 | `[ACTION:requestAnimation:<animName>:<description>]` | `POST /api/request-animation` (proposal queue, no live spawn) | Operator-gated; 2/NPC/day. See [ANIMATION_FORGE.md](ANIMATION_FORGE.md). |
 | `[ACTION:requestCapability:<verbName>:<description>]` | `POST /api/request-capability` (proposal queue) | Operator-gated; 1/NPC/day. See [CAPABILITY_PROPOSALS.md](CAPABILITY_PROPOSALS.md). |
@@ -74,6 +75,30 @@ to the right JS call (or proposal queue endpoint).
   CPU.
 - **Depth flag.** Every action that moves a sprite sets the scene's
   `_depthDirty = true` so the Y-sort runs once on the next frame.
+
+## MCP editor tools
+
+An agent uses the same verbs through MCP, the way a person uses an editor. Select, then act. Do not invent a second action language.
+
+| Tool | Scope | What it does |
+|---|---|---|
+| `office_look` | read | Rooms, furniture, where each person is standing, their last line, and your errors. |
+| `scene_tree` | read | The office as a tree: floor, stations, decor, items. |
+| `node_get` | read | One node by id. |
+| `office_picture` | read | 160×90 PNG of the floor. Stations blue, decor green, items gold, people pink. |
+| `node_set` | office | Move or rename that node. Saved in the office layout. Undoable. Live sprites follow `engine_command`. |
+| `office_act` | office | `walkTo`, `speak`, `speakTo`, `useComputer`, `standUp`, `goToRoom`, `goToBreakroom`, `joinMeeting`, `emote`, `think`. Returns whether a client answered and the sprite was found. |
+| `office_place_furniture` | office | One of the 15 aliases, pixel bounds, 3/day, 250 cap, no duplicate within 12px. Broadcasts `furniture_placed`. |
+| `catalog_search` | read | Real catalog ids (`plant_potted`), not the 15 aliases. |
+| `office_place_catalog` | office | Place a catalog id. Same bounds, budget, cap, and duplicate rule. |
+| `office_remove_furniture` | office | Only `npc_` instance ids. |
+| `sprite_cut` | skills | Arithmetic grid only. Does not open a PNG. |
+| `sprite_sheet_cut` | skills | Opens the PNG. Refuses a size that does not divide the sheet or that splits opaque pixels. Names XP rows down/left/right/up and LimeZu rows right/up/left/down. Drafts go under `data/sprite-cuts/` only. |
+| `atlas_pack` | skills | Shelf-pack onto one power-of-two page. |
+| `edit_undo` | office | Pops your last node edit, placement, or removal in that office. |
+| `office_errors` | read | Recent tool errors. |
+
+The browser hears `engine_command` for look, act, and node moves, and the existing `furniture_placed` / `furniture_removed` path for props. Pass `officeId` to work in a team office. Undo is per agent and per office. A standard Connect AI token includes the `office` scope, so it can act and place without `delegate`.
 
 ## How the cofounder reaches an action
 

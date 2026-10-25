@@ -112,7 +112,7 @@ Same optional object. `null` only if the health module fails to load.
     "teamTokens": "/api/mcp/team-tokens",
     "connectInfo": "/api/mcp/connect-info"
   },
-  "scopesCount": 6,
+  "scopesCount": 7,
   "serversFromFile": {
     "present": true,
     "path": "data/mcp-servers.json",
@@ -152,7 +152,7 @@ Same optional object. `null` only if the health module fails to load.
 | `401` / `invalid or revoked token` | Wrong NPC path, revoked, or typo | Token is scoped to **one** NPC — URL must match (`/mcp/npc/roki` for a Roki token). Re-mint if rotated |
 | `401` after OAuth | Public URL mismatch | `DENIZEN_PUBLIC_URL` must match the host Claude/Cursor calls (scheme + host) |
 | Tools empty after connect | Scope too narrow | Re-mint with `standard` or `full` scopes (see Connect AI / scopes presets) |
-| `429` rate limit | Burst `tools/call` traffic | Default `DENIZEN_MCP_RATE_LIMIT` ≈ 120 **tools/call**/hour/token (handshakes free); wait for `Retry-After` or raise carefully (e.g. 2000). Env `0` disables (lab only). |
+| `429` rate limit | Burst `tools/call` traffic | Default `DENIZEN_MCP_RATE_LIMIT` ≈ 600 **tools/call**/hour/token (handshakes free; read tools are not counted); wait for `Retry-After` or raise carefully (e.g. 2000). Env `0` disables (lab only). |
 | Works in browser, fails in IDE | IDE cached old token | Restart MCP server in Cursor/Claude after pasting a new token |
 | Local only, remote client 401/timeout | Tunnel / firewall | Ensure Cloudflare/NAS exposes `/mcp/*` and `/.well-known/oauth*` |
 

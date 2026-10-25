@@ -5997,6 +5997,10 @@ ${roleActions}
   Use sparingly — only if you genuinely need something that doesn't exist yet. Tell the team WHY in the reason.
   Daily limit per NPC: 3 placements. The item appears live without a reload.
   Example: "We need a second whiteboard near my desk. [ACTION:placeFurniture:whiteboard:480:180:For sprint planning]"
+- Place a real catalog sprite: [ACTION:placeCatalog:catalogId:x:y:reason]
+  catalogId is an id from the furniture catalog (plant_potted, ac_unit_small), not one of the 15 aliases above.
+  Same pixel bounds (16..1264, 16..704), 3 placements a day, and live spawn.
+  Example: "[ACTION:placeCatalog:plant_potted:420:240:By the window]"
 - Remove NPC-placed furniture: [ACTION:removeFurniture:instanceId]
   Only items placed by NPCs (instanceId starts with "npc_") can be removed. The
   scene's hand-placed furniture is permanent. Use to fix mistakes or reorganize.

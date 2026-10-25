@@ -27,18 +27,19 @@ const mcpProductMap = require('./denizen-mcp-product-map.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const mcpActor = require('./denizen-mcp-actor.js');
 const mcpOfficeAct = require('./denizen-mcp-office-act.js');
+const mcpEngineTools = require('./denizen-mcp-engine-tools.js');
 const browserEyes = require('./browser-eyes.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
 const _rateBuckets = new Map();
 
-/** Default 120 hits/hour/token. Set DENIZEN_MCP_RATE_LIMIT=0 to disable (lab only). */
+/** Default 600 hits/hour/token so look → act → look does not stall. Set DENIZEN_MCP_RATE_LIMIT=0 to disable (lab only). */
 function rateLimitPerHour() {
   const raw = process.env.DENIZEN_MCP_RATE_LIMIT;
-  if (raw == null || String(raw).trim() === '') return 120;
+  if (raw == null || String(raw).trim() === '') return 600;
   const n = Number(raw);
-  return Number.isFinite(n) ? n : 120;
+  return Number.isFinite(n) ? n : 600;
 }
 
 function secondsUntilNextHourBucket() {
@@ -424,6 +425,10 @@ async function toolGetStatus(scope, args) {
     out.office_feed_hint =
       'office_recent_work is org-wide (all NPCs/agents). recent_work is yours only. '
       + 'Mention overlapping work in your next log_activity note.';
+    out.office_floor = {
+      tools: [...mcpEngineTools.FLOOR_TOOLS],
+      hint: 'Call office_look before you move or place anything. It includes who is standing where. office_act uses the office verbs (walkTo, speak, goToRoom). catalog_search then office_place_catalog places a real sprite. sprite_sheet_cut refuses a grid that splits pixels. office_picture is a top-down view.',
+    };
   }
   return out;
 }
@@ -490,6 +495,9 @@ async function callToolImpl(scope, name, args) {
   if (mcpMentorTools.isMentorTool(name)) {
     return mcpMentorTools.callTool(scope, name, args);
   }
+  if (mcpEngineTools.isEngineTool(name)) {
+    return mcpEngineTools.callTool(scope, name, args);
+  }
   switch (name) {
     case 'update_memory': return toolUpdateMemory(scope, args);
     case 'get_status': return toolGetStatus(scope, args);
@@ -550,12 +558,28 @@ async function callTool(scope, name, args) {
   }
   const result = await callToolImpl(enriched, toolName, args);
   logMcpAudit(enriched, toolName, result);
-  try { mcpOfficeAct.noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
+  // Editor tools already broadcast engine_command. A second floor beat
+  // would walk the NPC to a guessed room on top of the verb they chose.
+  if (!mcpEngineTools.isEngineTool(toolName)) {
+    try { mcpOfficeAct.noteToolCall(enriched, toolName); } catch (_) { /* floor beat is optional */ }
+  }
   return result;
 }
 
 function configure(deps = {}) {
   mcpOfficeAct.configure(deps);
+  mcpEngineTools.configure({
+    broadcast: deps.broadcast,
+    readLayout: deps.readLayout,
+    appendItem: deps.appendItem,
+    removeItem: deps.removeItem,
+    restoreItem: deps.restoreItem,
+    patchItem: deps.patchItem,
+    patchNode: deps.patchNode,
+    readPeople: deps.readPeople,
+    countClients: deps.countClients,
+    officeId: deps.officeId,
+  });
   mcpActions.configure(deps);
   mcpMarketTools.configure(deps);
   mcpTeamTools.configure(deps);
@@ -593,6 +617,7 @@ function toolsForScope(scope) {
     base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
   }
   base.push(...TOOL_DEFINITIONS);
+  base.push(...mcpEngineTools.TOOL_DEFINITIONS);
   if (scope?.npc_key) {
     base.push(...mcpTeamTools.toolsForNpc(scope.npc_key));
     base.push(...mcpStudioBoardTools.toolsForNpc(scope.npc_key));
@@ -650,14 +675,8 @@ async function handleRpc(scope, req, res, message, sessionId) {
     try {
       const result = await callTool(scope, toolName, toolArgs);
       const content = [{ type: 'text', text: JSON.stringify(result, null, 2) }];
-      // Claude MCP (and vision clients): attach the JPEG so the model IS the eyes.
-      if (result?._mcp_image && result.screenshot_jpeg_base64) {
-        content.push({
-          type: 'image',
-          data: result.screenshot_jpeg_base64,
-          mimeType: result.mime || 'image/jpeg',
-        });
-      }
+      // Vision clients: attach the JPEG (browser eyes) or PNG (office picture).
+      mcpEngineTools.attachMcpImage(content, result);
       return sendJson(res, 200, {
         jsonrpc: '2.0',
         id,

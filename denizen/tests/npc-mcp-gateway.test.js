@@ -112,6 +112,8 @@ describe('npc-mcp-gateway', () => {
     assert.ok(names.includes('list_team'));
     assert.ok(names.includes('send_handoff'));
     assert.ok(names.includes('get_market_quote'));
+    assert.ok(names.includes('office_look'));
+    assert.ok(names.includes('office_act'));
   });
 
   it('toolsForScope includes CRM tools for Lucy', () => {
@@ -146,6 +148,8 @@ describe('npc-mcp-gateway', () => {
     assert.equal(result.office_recent_work.length, 2);
     assert.equal(result.office_recent_work[0].npc_key, 'lucy');
     assert.match(String(result.office_feed_hint || ''), /office_recent_work/);
+    assert.ok(result.office_floor.tools.includes('office_look'));
+    assert.ok(result.office_floor.tools.includes('office_act'));
   });
 
   it('get_status can omit office feed', async () => {
@@ -446,6 +450,20 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.close(resolve));
   });
 
+  it('office_look returns the office and a read token cannot act', async () => {
+    const look = await gateway.callTool(SCOPE, 'office_look', {});
+    assert.equal(look.ok, true);
+    assert.ok(look.rooms.includes('breakroom'));
+    const denied = await gateway.callTool(
+      { ...SCOPE, scopes: ['read'] },
+      'office_act',
+      { verb: 'speak', text: 'hi' },
+    );
+    assert.equal(denied.ok, false);
+    assert.equal(denied.error, 'scope_denied');
+    assert.equal(denied.required_scope, 'office');
+  });
+
   it('read-only scope denies run_skill', async () => {
     const readScope = { ...SCOPE, scopes: ['read'] };
     const allowed = await gateway.callTool(readScope, 'get_status', { limit: 3 });
@@ -460,7 +478,9 @@ describe('npc-mcp-gateway', () => {
     const readScope = { ...SCOPE, scopes: ['read'] };
     const names = gateway.toolsForScope(readScope).map((t) => t.name);
     assert.ok(names.includes('get_status'));
+    assert.ok(names.includes('office_look'));
     assert.ok(!names.includes('run_skill'));
+    assert.ok(!names.includes('office_act'));
   });
 });
 
@@ -485,6 +505,14 @@ describe('npc-mcp-gateway rate limit', () => {
     gateway.clearRateLimitBuckets();
     if (prevRate === undefined) delete process.env.DENIZEN_MCP_RATE_LIMIT;
     else process.env.DENIZEN_MCP_RATE_LIMIT = prevRate;
+  });
+
+  it('defaults to 600 tools/call per hour', () => {
+    const saved = process.env.DENIZEN_MCP_RATE_LIMIT;
+    delete process.env.DENIZEN_MCP_RATE_LIMIT;
+    assert.equal(gateway.rateLimitPerHour(), 600);
+    if (saved === undefined) delete process.env.DENIZEN_MCP_RATE_LIMIT;
+    else process.env.DENIZEN_MCP_RATE_LIMIT = saved;
   });
 
   it('env 0 skips the check', () => {

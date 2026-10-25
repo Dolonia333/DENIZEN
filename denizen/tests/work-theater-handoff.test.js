@@ -40,6 +40,6 @@ describe('Work theater + research handoff', () => {
   it('cache busters bumped for work theater', () => {
     const html = read('index.html');
     assert.match(html, /agent-actions\.js\?v=floorBounds1/);
-    assert.match(html, /agent-office-manager\.js\?v=floorBounds1/);
+    assert.match(html, /agent-office-manager\.js\?v=engineTools3/);
   });
 });

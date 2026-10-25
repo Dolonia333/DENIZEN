@@ -8261,5 +8261,27 @@ startOfficeWhenPhaserReady();
       removeEntry(scene, entry);
       return true;
     },
+    move(instanceId, x, y) {
+      const scene = getScene();
+      if (!scene || !instanceId || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+      const entry = scene._interactables?.find((it) => it.instanceId === instanceId);
+      if (!entry?.sprite) return false;
+      entry.sprite.x = x;
+      entry.sprite.y = y;
+      if (entry.obstacle) {
+        entry.obstacle.x = x;
+        entry.obstacle.y = y;
+        if (entry.obstacle.body?.updateFromGameObject) entry.obstacle.body.updateFromGameObject();
+      }
+      if (entry.def?._placement) {
+        entry.def._placement.x = x;
+        entry.def._placement.y = y;
+      }
+      try { refreshFurnitureDepth(entry); } catch (_) {}
+      if (scene._pathfinder?.buildFromScene) {
+        try { scene._pathfinder.buildFromScene(scene); } catch (_) {}
+      }
+      return true;
+    },
   };
 })();

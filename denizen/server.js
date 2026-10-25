@@ -3315,6 +3315,15 @@ npcMcpGateway.configure({
       queue_depth: queueDepth,
     };
   },
+  officeId: officeRegistry.CEO_OFFICE_ID,
+  readLayout: (officeId) => officeLayout.readLayoutSync(ROOT, officeId),
+  appendItem: (officeId, item) => _engineAppendFurniture(officeId, item),
+  removeItem: (officeId, instanceId) => officeLayout.removeFurnitureItem(ROOT, officeId, instanceId),
+  restoreItem: (officeId, item) => officeLayout.appendFurnitureItem(ROOT, officeId, item),
+  patchItem: (officeId, instanceId, patch) => _enginePatchFurniture(officeId, instanceId, patch),
+  patchNode: (officeId, id, patch) => _enginePatchNode(officeId, id, patch),
+  readPeople: (officeId) => _engineReadPeople(officeId),
+  countClients: (officeId) => _engineCountClients(officeId),
 });
 teamMcpGateway.configure({
   runNpcSkill,
@@ -3353,9 +3362,10 @@ npcThinkRunner.configure({
 });
 
 // --- Furniture-placement whitelist + per-NPC daily budget ---
-// The whitelist is shared between /api/place-furniture and the prompt
-// hint in src/npc-brains.js. Edit both together if you ever expand it.
-// Daily budget keeps a chatty NPC from spamming the office with couches.
+// The 15 aliases are shared with the prompt in src/npc-brains.js.
+// Catalog ids from furniture_catalog_openplan.json are also allowed
+// (plant_potted), and they are not the same strings as these aliases
+// (plant_small). Daily budget keeps a chatty NPC from spamming the office.
 const ALLOWED_PREFABS = new Set([
   'desk_small', 'desk_2x2', 'office_chair', 'monitor',
   'plant_small', 'plant_large', 'whiteboard', 'bookshelf',
@@ -3383,6 +3393,120 @@ function _consumePlacementBudget(by) {
   if (by === 'system' || by === 'operator') return;
   const k = _budgetKey(by);
   _placementBudget.set(k, (_placementBudget.get(k) || 0) + 1);
+}
+
+// MCP editor place. Same budget, cap, and 12px duplicate rule as
+// POST /api/place-furniture. The tool already checked the prefab whitelist
+// and the pixel bounds. Throws so the tool can return the error and skip
+// the live broadcast.
+function _engineAppendFurniture(officeId, item) {
+  const by = String(item?.placedBy || 'mcp').slice(0, 40);
+  const budgetCheck = _checkPlacementBudget(by);
+  if (!budgetCheck.allowed) {
+    throw new Error(`${by} has hit the daily placement budget (${budgetCheck.cap})`);
+  }
+  const existingLayout = officeLayout.readLayoutSync(ROOT, officeId);
+  const existingItems = Array.isArray(existingLayout?.items) ? existingLayout.items : [];
+  if (existingItems.length >= 250) {
+    throw new Error('office layout is full (250 placed items) — remove something first');
+  }
+  const dup = existingItems.find((it) => (
+    it.prefabId === item.prefabId
+    && Math.abs((it.x || 0) - item.x) <= 12
+    && Math.abs((it.y || 0) - item.y) <= 12
+  ));
+  if (dup) {
+    throw new Error(`a ${item.prefabId} already sits at (${dup.x}, ${dup.y}) — pick a different spot`);
+  }
+  officeLayout.appendFurnitureItem(ROOT, officeId, item);
+  _consumePlacementBudget(by);
+  try {
+    worldState.pushEvent('shipped', `${by} placed ${item.prefabId} at (${item.x},${item.y})`);
+  } catch (_) {}
+  return item;
+}
+
+function _engineReadPeople(officeId) {
+  const body = typeof worldState.officePeople === 'function'
+    ? worldState.officePeople(officeId)
+    : { people: [] };
+  let players = [];
+  try {
+    players = officeRegistry.listPlayersInOffice(officeId).map((p) => ({
+      name: p.displayName,
+      x: p.x,
+      y: p.y,
+      room: p.room || null,
+      facing: p.facing || null,
+    }));
+  } catch (_) {}
+  return { ...body, players };
+}
+
+function _engineCountClients(officeId) {
+  let n = 0;
+  const probe = { type: 'engine_command', office_id: officeId };
+  for (const ws of _agentClients()) {
+    if (ws?.readyState !== 1) continue;
+    if (officeRegistry.shouldDeliverToSocket(probe, ws)) n += 1;
+  }
+  return n;
+}
+
+function _enginePatchFurniture(officeId, instanceId, patch) {
+  const layout = officeLayout.readLayoutSync(ROOT, officeId);
+  if (!layout || !Array.isArray(layout.items)) throw new Error('no layout');
+  const item = layout.items.find((it) => it.instanceId === instanceId);
+  if (!item) throw new Error('item not found');
+  if (patch?.x != null && Number.isFinite(Number(patch.x))) item.x = Math.round(Number(patch.x));
+  if (patch?.y != null && Number.isFinite(Number(patch.y))) item.y = Math.round(Number(patch.y));
+  officeLayout.writeLayoutSync(ROOT, officeId, layout);
+  return item;
+}
+
+function _applyNodePatch(node, patch, withName) {
+  if (patch?.x != null && Number.isFinite(Number(patch.x))) node.x = Math.round(Number(patch.x));
+  if (patch?.y != null && Number.isFinite(Number(patch.y))) node.y = Math.round(Number(patch.y));
+  if (withName && patch?.name != null) node.name = String(patch.name).slice(0, 40);
+  return node;
+}
+
+// Persist a station, decor, or placed item. An overlay that is not in the
+// layout file is an error — the tool must not report a move that dies on restart.
+function _enginePatchNode(officeId, id, patch) {
+  const layout = officeLayout.readLayoutSync(ROOT, officeId);
+  if (!layout) throw new Error('no layout');
+  const key = String(id || '');
+  if (Array.isArray(layout.items)) {
+    const item = layout.items.find((it) => it.instanceId === key);
+    if (item) {
+      _applyNodePatch(item, patch, false);
+      officeLayout.writeLayoutSync(ROOT, officeId, layout);
+      return item;
+    }
+  }
+  if (Array.isArray(layout.stations)) {
+    const station = layout.stations.find((s) => s.id === key);
+    if (station) {
+      _applyNodePatch(station, patch, true);
+      officeLayout.writeLayoutSync(ROOT, officeId, layout);
+      return station;
+    }
+  }
+  if (Array.isArray(layout.decor)) {
+    const decor = layout.decor.find((d) => d.id === key);
+    if (decor) {
+      _applyNodePatch(decor, patch, true);
+      officeLayout.writeLayoutSync(ROOT, officeId, layout);
+      return decor;
+    }
+  }
+  throw new Error('node not in the saved layout');
+}
+
+function _catalogHas(id) {
+  try { return !!require('./src/denizen-catalog-index').has(id); }
+  catch (_) { return false; }
 }
 
 // --- Per-NPC daily animation request budget ---
@@ -4173,9 +4297,13 @@ const server = http.createServer((req, res) => {
 
       // Whitelist + bounds. Keep this short — expanding it should be a
       // deliberate change, not a wide-open "NPC can spawn anything" API.
-      if (!ALLOWED_PREFABS.has(prefabId)) {
+      if (!ALLOWED_PREFABS.has(prefabId) && !_catalogHas(prefabId)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: `prefabId not in whitelist: ${prefabId}`, allowed: [...ALLOWED_PREFABS] }));
+        res.end(JSON.stringify({
+          error: `unknown prefab or catalog id: ${prefabId}`,
+          allowed: [...ALLOWED_PREFABS],
+          hint: 'Catalog ids such as plant_potted are allowed. Aliases such as desk_small still work.',
+        }));
         return;
       }
       if (!Number.isFinite(x) || !Number.isFinite(y) || x < 16 || y < 16 || x > 1264 || y > 704) {
@@ -12149,11 +12277,24 @@ agentWss.on('connection', (ws) => {
             }, { excludeWs: ws, excludePresenceKey: presenceKey });
           }
         }
+      } else if (msg.type === 'engine_command_result') {
+        try {
+          require('./src/denizen-mcp-engine-tools').settleFloor(msg.commandId, {
+            ok: msg.ok !== false,
+            stage: msg.stage || 'started',
+            npcKey: msg.npcKey || null,
+            verb: msg.verb || null,
+            error: msg.error || null,
+            x: msg.x,
+            y: msg.y,
+          });
+        } catch (_) {}
       } else if (msg.type === 'npc_poses') {
         const officeId = ws._denizenOfficeId || msg.office_id || msg.officeId;
         const presenceKey = officeRegistry.ensurePresenceKey(ws);
         const host = officeId ? officeRegistry.getSimHost(officeId) : null;
         if (officeId && host && host.presenceKey === presenceKey && Array.isArray(msg.npcs)) {
+          try { worldState.rememberOfficePoses(officeId, msg.npcs); } catch (_) {}
           _broadcastToOffice(officeId, {
             type: 'npc_poses',
             office_id: officeId,
