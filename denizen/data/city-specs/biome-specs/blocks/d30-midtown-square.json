@@ -1,0 +1,93 @@
+{
+  "_doc": "Street-grid block fill: grid block r2c3, measured at 25% sprite coverage in the real renderer (bare concrete with two stray trees at play zoom). This block sits dead centre of the city between the residential west side and the civic campus east, so it becomes the town square rather than more retail — the mixed-density brief. A short civic frame on the north edge encloses it; the rest is open plaza with lawn panels, a clock tower and statues. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/blocks/d30-midtown-square.json --qa -v. See d29-midtown-retail.json's _layout_doc for the 16px-lattice and 16px-halo rules every pinned row must obey.",
+  "schema": "exterior-district-spec/1",
+  "id": "d30-midtown-square",
+  "district": "D30 Midtown Square",
+  "biome": "urban_core",
+  "palette": "neutral_urban",
+  "palette_secondary": "verdant",
+  "_biome_doc": "urban_core, NOT civic. The first cut used biome 'civic' because a town square felt institutional, but civic's themes are 12_Hotel_and_Hospital / 15_Police_Station / 18_Fire_Station, so pass E furnished the square with hospital gurneys and dropped a HOSPITAL sign in the middle of it. urban_core's pool is 3_City_Props — benches, bins, planters, lamps — which is what a square actually needs, and its forbid_tags already exclude beach/camping/grave/military/farm.",
+
+  "compiler": {
+    "version": 1,
+    "rules": "data/limezu-visual-catalog/placement-rules.json",
+    "seed": 30231,
+    "coords": "local",
+    "out": "data/city-specs/generated/d30-midtown-square.json",
+    "_doc": "coords 'local'. Grid block r2c3 sits between arterials x1728/x2560 and y1872/y2560."
+  },
+
+  "bbox": { "x": 1792, "y": 1936, "w": 768, "h": 624 },
+  "label": "MIDTOWN SQUARE",
+  "label_at": { "x": 384, "y": 16 },
+
+  "surfaces": [
+    { "surface": "sidewalk", "x": 0, "y": 0, "w": 768, "h": 624, "depth": 0.87,
+      "_doc": "plaza pavement over the whole bbox first, per structure-grammar pass A" },
+    { "surface": "grass", "name": "lawn_west", "x": 96, "y": 288, "w": 176, "h": 144, "depth": 0.9 },
+    { "surface": "grass", "name": "lawn_east", "x": 496, "y": 288, "w": 176, "h": 144, "depth": 0.9 }
+  ],
+
+  "landmarks": [
+    { "me": "me.generic_building.facade_redbrick_cornice_white", "at": { "x": 48, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter",
+      "_doc": "Mixed-use north frame. FOUR DIFFERENT buildings on purpose: the first cut repeated police.facade_narrow_blue/red twice each and rendered as four identical POLICE stations in a row." },
+    { "me": "me.generic_building.storefront_blue_three_story", "at": { "x": 208, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.hotel_hospital.hotel_full", "at": { "x": 352, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter",
+      "_doc": "272x144 => y96-240; the wide low block that gives the frame a centre" },
+    { "me": "me.shopping.store_green_bay_shadow", "at": { "x": 656, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+
+    { "me": "me.school.clock_tower", "at": { "x": 320, "y": 528 }, "anchor": "bl", "pin": true, "solid": true, "interact": "read",
+      "_doc": "the square's hero: 128x240 on the paved centre between the two lawn panels" },
+    { "me": "me.garden.statue_angel_standing", "at": { "x": 128, "y": 416 }, "anchor": "bl", "pin": true, "interact": "read",
+      "_doc": "80x112 on lawn_west" },
+    { "me": "me.garden.statue_angel_standing", "at": { "x": 528, "y": 416 }, "anchor": "bl", "pin": true, "interact": "read",
+      "_doc": "80x112 on lawn_east" }
+  ],
+
+  "slots": [
+    { "slot": "plaza", "name": "square", "x": 48, "y": 272, "w": 672, "h": 256,
+      "density": { "street_furn": "light", "vegetation": "medium", "npc_anchor": "light" },
+      "_doc": "Three roles only, and street_furn kept light. Everything else was cut after reading the compiled output: `decal` scattered six me.city_props.brake_marks (road skid marks) across a pedestrian square; `signage` produced me.subway.ui_number_blue/orange and regulatory sign grids; `furniture_ext` under biome civic filled it with hospital beds. street_furn at medium also stacked SEVEN post-office mailboxes, because that pool is mailbox-heavy — light thins them to one or two, which is what a square would actually have." },
+    { "slot": "interior_fill", "name": "lawn_west_fill", "x": 96, "y": 288, "w": 176, "h": 144,
+      "density": { "vegetation": "dense", "decor_small": "medium" } },
+    { "slot": "interior_fill", "name": "lawn_east_fill", "x": 496, "y": 288, "w": 176, "h": 144,
+      "density": { "vegetation": "dense", "decor_small": "medium" } },
+    { "slot": "path_edge", "name": "north_walk", "x": 48, "y": 256, "w": 672, "h": 16,
+      "density": { "street_furn": "light", "signage": "light" } },
+    { "slot": "path_edge", "name": "south_walk", "x": 48, "y": 528, "w": 672, "h": 16,
+      "density": { "street_furn": "medium", "vegetation": "light" } }
+  ],
+
+  "interactions": {
+    "sit": "auto",
+    "read": "auto",
+    "enter": "auto"
+  },
+
+  "constraints": {
+    "keep_clear": [
+      { "x": 0, "y": 544, "w": 768, "h": 48,
+        "why": "full-width through-route: full-world.js build() hardcodes addPath(1920,2480,1500,48), the plaza-to-helipad walk, straight across this block at world y2480-2528. Nothing may stand in it." },
+      { "x": 0, "y": 0, "w": 768, "h": 32,
+        "why": "north kerb band: d00 traffic light + planters stand here" },
+      { "x": 0, "y": 592, "w": 768, "h": 32,
+        "why": "south kerb band stays walkable against the arterial" }
+    ],
+    "max_stamps": 120,
+    "coverage_target_singles": 30,
+    "max_solid_cell_ratio": 0.3,
+    "min_free_cell_ratio": 0.45,
+    "_doc": "48x39 tiles = 1872 cells. A square must READ as open, so the solid budget is tighter and the free budget looser than the retail block's."
+  },
+
+  "passes": {
+    "A_ground": { "enabled": true },
+    "B_skeleton": { "enabled": true },
+    "C_landmarks": { "enabled": true },
+    "D_groups": { "enabled": true },
+    "E_props": { "enabled": true },
+    "F_canopy": { "enabled": true },
+    "G_detail": { "enabled": true },
+    "H_life": { "enabled": true }
+  }
+}

@@ -578,7 +578,7 @@
       "palettes": ["verdant", "warm_autumn", "pastel_suburb"],
       "districts": ["d7-park"],
       "density": { "vegetation": "packed", "furniture_ext": "medium", "play_sport": "medium", "building_shell": "sparse" },
-      "forbid_tags": ["military", "worksite", "subway", "grave"],
+      "forbid_tags": ["military", "worksite", "subway", "grave", "camping"],
       "require_roles": ["vegetation", "furniture_ext", "street_furn"]
     },
     "beach": {

@@ -1,0 +1,70 @@
+{
+  "_doc": "Street-grid block fill: grid block r1c5, measured at 28% sprite coverage. It sits between the new d29 retail block and the civic campus (r1c6, already 71%), so it becomes a mixed-use office frontage. NOTE the bbox is 624 wide, not the full 768: the block's east third is NOT empty — a road crosses at world x4112-5088 y1488-1536, and the civic/mainstreet districts already spill in from local x648 (hospital sign, bus shelter, cart corrals, phone booths, dumpster). 624 stops clear of all of it at world x4080. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/blocks/d32-midtown-offices.json --qa -v. See d29-midtown-retail.json's _layout_doc for the 16px-lattice and 16px-halo rules.",
+  "schema": "exterior-district-spec/1",
+  "id": "d32-midtown-offices",
+  "district": "D32 Midtown Offices",
+  "biome": "commercial",
+  "palette": "neutral_urban",
+  "palette_secondary": "civic_blue",
+
+  "compiler": {
+    "version": 1,
+    "rules": "data/limezu-visual-catalog/placement-rules.json",
+    "seed": 32155,
+    "coords": "local",
+    "out": "data/city-specs/generated/d32-midtown-offices.json"
+  },
+
+  "bbox": { "x": 3456, "y": 1264, "w": 624, "h": 608 },
+  "label": "MIDTOWN OFFICES",
+  "label_at": { "x": 312, "y": 16 },
+
+  "surfaces": [
+    { "surface": "sidewalk", "x": 0, "y": 0, "w": 624, "h": 608, "depth": 0.87 },
+    { "surface": "asphalt", "name": "office_forecourt", "x": 48, "y": 304, "w": 528, "h": 96, "depth": 1.1,
+      "_doc": "mid-block service/parking apron between the two rows" }
+  ],
+
+  "landmarks": [
+    { "me": "me.generic_building.facade_redbrick_cornice_white", "at": { "x": 48, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter" },
+    { "me": "me.shopping.store_blue_flat_shadow", "at": { "x": 208, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.shopping.store_green_bay_shadow", "at": { "x": 320, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.generic_building.storefront_blue_three_story", "at": { "x": 448, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter" },
+
+    { "me": "me.office_ext.building_lime_corp", "at": { "x": 48, "y": 592 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter",
+      "_doc": "304x288 corporate anchor on the south arterial frontage — the reason this block reads as offices rather than more shops" },
+    { "me": "me.generic_building.storefront_blue_three_story", "at": { "x": 400, "y": 592 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.shopping.store_tan_bay_shadow", "at": { "x": 528, "y": 592 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" }
+  ],
+
+  "slots": [
+    { "slot": "parking_bay", "name": "forecourt_bay", "x": 64, "y": 304, "w": 496, "h": 96,
+      "density": { "vehicle": "medium", "road_marking": "light", "decor_small": "light" } },
+    { "slot": "path_edge", "name": "forecourt_north_walk", "x": 48, "y": 256, "w": 528, "h": 32,
+      "density": { "street_furn": "light", "signage": "light" } },
+    { "slot": "path_edge", "name": "forecourt_south_walk", "x": 48, "y": 400, "w": 528, "h": 32,
+      "density": { "street_furn": "light", "vegetation": "light" } }
+  ],
+
+  "interactions": { "shop": "auto", "enter": "auto", "sit": "auto" },
+
+  "constraints": {
+    "keep_clear": [
+      { "x": 0, "y": 0, "w": 624, "h": 32, "why": "north kerb band: d00 traffic light + planters stand here" },
+      { "x": 0, "y": 592, "w": 624, "h": 16, "why": "south kerb band stays walkable against the arterial" },
+      { "x": 352, "y": 256, "w": 32, "h": 336, "why": "pedestrian gap between the lime-corp block and the retail units" }
+    ],
+    "max_stamps": 90,
+    "coverage_target_singles": 18,
+    "max_solid_cell_ratio": 0.42,
+    "min_free_cell_ratio": 0.32,
+    "_doc": "39x38 tiles = 1482 cells. Solid ratio is the highest of the block fills because the 304x288 lime-corp shell alone claims a big share."
+  },
+
+  "passes": {
+    "A_ground": { "enabled": true }, "B_skeleton": { "enabled": true },
+    "C_landmarks": { "enabled": true }, "D_groups": { "enabled": true },
+    "E_props": { "enabled": true }, "F_canopy": { "enabled": true },
+    "G_detail": { "enabled": true }, "H_life": { "enabled": true }
+  }
+}

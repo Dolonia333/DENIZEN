@@ -4158,8 +4158,22 @@ function preferCanvasRenderer() {
     // WebGL texture uploads during office create() have been hanging/OOMing
     // browsers in the wild (Brave, low-RAM machines, and others we couldn't
     // pin down). Canvas2D is plenty for a 2D pixel-art office, so it's the
-    // default now — pass ?webgl=1 to opt back into WebGL.
+    // default — pass ?webgl=1 to opt back into WebGL, ?canvas=1 to force 2D.
     if (q.get('webgl') === '1') return false;
+    if (q.get('canvas') === '1') return true;
+    // ...but the CITY is a different workload, and the Canvas default was
+    // chosen for the office. ?world=full early-returns out of office create()
+    // entirely (see the `world === 'full'` branch below), so it never performs
+    // the many-texture upload that caused those OOMs — it draws ~11.7k objects
+    // from ONE packed atlas page, which is exactly the case Canvas2D handles
+    // worst because it cannot batch. Measured in city-viewer.html at the same
+    // camera positions and identical visible-object counts:
+    //     play zoom, 1110 visible   Canvas  9.78ms  WebGL 2.63ms   3.7x
+    //     play zoom, 1332 visible   Canvas 10.92ms  WebGL 2.86ms   3.8x
+    //     zoomed out, 2439 visible  Canvas 17.28ms  WebGL 3.29ms   5.3x
+    // The gap widens with object count, so Canvas is worst precisely where the
+    // city is densest. Canvas ~11ms/frame leaves no headroom on weak hardware.
+    if (q.get('world') === 'full') return false;
   } catch (_) {}
   return true;
 }
