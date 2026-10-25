@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { T, fmt, STAGE_COLORS, type Deal, type Contact, type MetricSnapshot } from "@/lib/crm-data";
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from "recharts";
+import { chartPanelStyle, chartGridProps, chartAxisTick, moneyTick } from "@/lib/crm-chart-theme";
 import { MiniRing } from "./shared/MiniRing";
 import { DashboardEmptyState } from "./shared/DashboardEmptyState";
 
@@ -13,7 +14,7 @@ interface Props {
 const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name?: string; value?: number; color?: string; fill?: string }[]; label?: string }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: T.bg2, border: `1px solid ${T.bg4}`, borderRadius: T.radius.md, padding: "8px 12px", fontSize: 11 }}>
+    <div style={{ background: T.bg1, border: `1px solid ${T.bg4}`, borderRadius: 8, padding: "8px 12px", fontSize: 11 }}>
       <div style={{ color: T.text3, marginBottom: 4 }}>{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color || p.fill, fontWeight: 600 }}>{p.name}: {typeof p.value === "number" && p.value > 100 ? fmt(p.value) : p.value}</div>
@@ -34,7 +35,7 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
     { label: "Win Rate", value: `${winRate}%`, color: T.green },
     { label: "Avg Deal Size", value: fmt(avgDealSize), color: T.accent },
     { label: "Avg Lead Score", value: String(avgScore), color: T.blue },
-    { label: "Total Revenue", value: fmt(wonDeals.reduce((s, d) => s + d.value, 0)), color: T.purple },
+    { label: "Total Revenue", value: fmt(wonDeals.reduce((s, d) => s + d.value, 0)), color: T.copper },
   ];
 
   const stageData = useMemo(() => {
@@ -51,7 +52,7 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
     const statuses: Record<string, number> = {};
     contacts.forEach(c => { statuses[c.status] = (statuses[c.status] || 0) + 1; });
     const colors: Record<string, string> = { Lead: T.blue, Prospect: T.accent, Customer: T.green };
-    return Object.entries(statuses).map(([name, value]) => ({ name, value, fill: colors[name] || T.purple }));
+    return Object.entries(statuses).map(([name, value]) => ({ name, value, fill: colors[name] || T.copper }));
   }, [contacts]);
 
   const funnelData = useMemo(() => {
@@ -93,16 +94,13 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
       }));
   }, [metricSnapshots]);
 
-  const cardStyle = {
-    background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-    border: `1px solid ${T.bg4}`, borderRadius: T.radius.lg, padding: "14px 14px",
-  };
+  const cardStyle = chartPanelStyle();
 
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>Analytics</h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+        <h1 className="crm-page-title">Analytics</h1>
+        <p className="crm-page-sub">
           Sales performance metrics{trendData.length ? ` · ${trendData.length} daily snapshots` : ""}
         </p>
       </div>
@@ -117,16 +115,16 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
           ];
           const ringVal = idx === 0 ? winRate : idx === 2 ? Math.min(avgScore, 100) : null;
           return (
-            <div key={m.label} style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 12, minHeight: 88 }}>
+            <div key={m.label} className="crm-panel" style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 88, padding: "14px 16px" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{m.label}</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: m.color, fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.1 }}>{m.value}</div>
+                <div className="crm-kicker" style={{ marginBottom: 6 }}>{m.label}</div>
+                <div className="crm-metric" style={{ fontSize: 24, color: m.color, lineHeight: 1.1 }}>{m.value}</div>
                 <div style={{ fontSize: 10, color: T.text3, marginTop: 6 }}>{hints[idx]}</div>
               </div>
               {ringVal != null && (
                 <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0 }}>
                   <MiniRing segments={[{ value: Math.max(ringVal, 1), color: m.color, label: m.label }, { value: Math.max(100 - ringVal, 0), color: T.bg4, label: "rest" }]} size={52} stroke={5} />
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: m.color, fontFamily: "'JetBrains Mono', monospace" }}>{ringVal}%</div>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: m.color, fontVariantNumeric: "tabular-nums" }}>{ringVal}%</div>
                 </div>
               )}
             </div>
@@ -139,16 +137,16 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
         {trendData.length >= 2 ? (
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} width={40} />
+              <CartesianGrid {...chartGridProps} />
+              <XAxis dataKey="date" tick={chartAxisTick} axisLine={false} tickLine={false} />
+              <YAxis tick={chartAxisTick} axisLine={false} tickLine={false} tickFormatter={moneyTick} width={40} />
               <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="pipeline" name="Pipeline" stroke={T.accent} strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="won" name="Won" stroke={T.green} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <DashboardEmptyState icon="📈" title="No trend history yet" subtitle="Daily snapshots appear here once pipeline activity is recorded." />
+          <DashboardEmptyState title="No trend history yet" subtitle="Daily snapshots appear here once pipeline activity is recorded." />
         )}
       </div>
 
@@ -157,9 +155,9 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Pipeline Value by Stage</div>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={stageData} barSize={28}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+              <CartesianGrid {...chartGridProps} />
+              <XAxis dataKey="name" tick={chartAxisTick} axisLine={false} tickLine={false} />
+              <YAxis tick={chartAxisTick} axisLine={false} tickLine={false} tickFormatter={moneyTick} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
                 {stageData.map((s, i) => <Cell key={i} fill={s.fill} />)}
@@ -171,7 +169,7 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
         <div style={cardStyle}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Contact Distribution</div>
           {statusPie.length === 0 ? (
-            <DashboardEmptyState icon="👥" title="No contacts yet" subtitle="Add contacts to see Lead / Prospect / Customer mix." />
+            <DashboardEmptyState title="No contacts yet" subtitle="Add contacts to see Lead / Prospect / Customer mix." />
           ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
             <ResponsiveContainer width={150} height={150}>
@@ -185,9 +183,9 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 120 }}>
               {statusPie.map(d => (
                 <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: d.fill, flexShrink: 0 }} />
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: d.fill, flexShrink: 0 }} />
                   <span style={{ fontSize: 12, color: T.text2 }}>{d.name}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: T.text0, fontFamily: "'JetBrains Mono', monospace", marginLeft: "auto" }}>{d.value}</span>
+                  <span className="crm-metric" style={{ fontSize: 12, color: T.text0, marginLeft: "auto" }}>{d.value}</span>
                 </div>
               ))}
             </div>
@@ -213,17 +211,16 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
                     </span>
                   )}
                 </span>
-                <span style={{ fontSize: 11, color: T.text3, fontFamily: "'JetBrains Mono', monospace" }}>
+                <span className="crm-metric" style={{ fontSize: 11, color: T.text3 }}>
                   {f.count} deals · {fmt(f.value)} · {f.rate}% of top
                   {f.dropOff > 0 ? ` · −${f.dropOff} drop` : ""}
                 </span>
               </div>
-              <div style={{ height: 14, background: T.bg4, borderRadius: 7, overflow: "hidden", position: "relative" }}>
+              <div style={{ height: 10, background: T.bg4, borderRadius: 3, overflow: "hidden" }}>
                 <div style={{
                   height: "100%", width: `${Math.max(f.rate, f.count > 0 ? 8 : 0)}%`,
-                  background: `linear-gradient(90deg, ${f.fill}, ${f.fill}88)`,
-                  borderRadius: 7, transition: "width 0.5s ease",
-                  boxShadow: f.rate > 0 ? `0 0 12px ${f.fill}33` : undefined,
+                  background: f.fill,
+                  borderRadius: 3, transition: "width 0.35s ease",
                 }} />
               </div>
             </div>
@@ -242,14 +239,14 @@ export function AnalyticsTab({ deals, contacts, metricSnapshots = [] }: Props) {
               {funnelData.map((f) => (
                 <tr key={`row-${f.stage}`}>
                   <td style={{ padding: "7px 8px", color: T.text0, borderBottom: `1px solid ${T.bg4}` }}>
-                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: f.fill, marginRight: 6 }} />
+                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: f.fill, marginRight: 6 }} />
                     {f.stage}
                   </td>
-                  <td style={{ padding: "7px 8px", color: T.text1, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{f.count}</td>
-                  <td style={{ padding: "7px 8px", color: T.text1, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{fmt(f.value)}</td>
-                  <td style={{ padding: "7px 8px", color: T.text1, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{f.rate}%</td>
-                  <td style={{ padding: "7px 8px", color: f.stepRate >= 50 ? T.green : T.orange, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}`, fontWeight: 700 }}>{f.stepRate}%</td>
-                  <td style={{ padding: "7px 8px", color: f.dropOff ? T.red : T.text3, fontFamily: "'JetBrains Mono', monospace", borderBottom: `1px solid ${T.bg4}` }}>{f.dropOff || "—"}</td>
+                  <td className="crm-metric" style={{ padding: "7px 8px", color: T.text1, borderBottom: `1px solid ${T.bg4}` }}>{f.count}</td>
+                  <td className="crm-metric" style={{ padding: "7px 8px", color: T.text1, borderBottom: `1px solid ${T.bg4}` }}>{fmt(f.value)}</td>
+                  <td className="crm-metric" style={{ padding: "7px 8px", color: T.text1, borderBottom: `1px solid ${T.bg4}` }}>{f.rate}%</td>
+                  <td className="crm-metric" style={{ padding: "7px 8px", color: f.stepRate >= 50 ? T.green : T.orange, borderBottom: `1px solid ${T.bg4}`, fontWeight: 700 }}>{f.stepRate}%</td>
+                  <td className="crm-metric" style={{ padding: "7px 8px", color: f.dropOff ? T.red : T.text3, borderBottom: `1px solid ${T.bg4}` }}>{f.dropOff || "—"}</td>
                 </tr>
               ))}
             </tbody>

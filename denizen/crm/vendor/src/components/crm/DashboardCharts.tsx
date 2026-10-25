@@ -73,21 +73,21 @@ export function DashboardCharts({
                 },
                 status: "In Progress",
               })}
-              style={{ fontSize: 11, color: T.purple, background: `${T.purple}12`, border: `1px solid ${T.purple}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
+              style={{ fontSize: 11, color: T.copper, background: `${T.copper}12`, border: `1px solid ${T.copper}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
             >
-              💬 Share
+              Share
             </button>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={revenueTrend}>
               <defs>
                 <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={T.accent} stopOpacity={0.3} />
+                  <stop offset="0%" stopColor={T.accent} stopOpacity={0.35} />
                   <stop offset="100%" stopColor={T.accent} stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradPipeline" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={T.purple} stopOpacity={0.2} />
-                  <stop offset="100%" stopColor={T.purple} stopOpacity={0} />
+                  <stop offset="0%" stopColor={T.copper} stopOpacity={0.28} />
+                  <stop offset="100%" stopColor={T.copper} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={T.bg4} />
@@ -95,11 +95,11 @@ export function DashboardCharts({
               <YAxis tick={{ fontSize: 10, fill: T.text3 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTooltip />} />
               <Area type="monotone" dataKey="revenue" name="Revenue" stroke={T.accent} fill="url(#gradRevenue)" strokeWidth={2} />
-              <Area type="monotone" dataKey="pipeline" name="Pipeline" stroke={T.purple} fill="url(#gradPipeline)" strokeWidth={2} />
+              <Area type="monotone" dataKey="pipeline" name="Pipeline" stroke={T.copper} fill="url(#gradPipeline)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
           <div style={{ display: "flex", gap: 16, marginTop: 8, justifyContent: "center" }}>
-            {[["Revenue", T.accent], ["Pipeline", T.purple]].map(([label, color]) => (
+            {[["Revenue", T.accent], ["Pipeline", T.copper]].map(([label, color]) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.text3 }}>
                 <div style={{ width: 8, height: 3, borderRadius: 2, background: color as string }} />{label}
               </div>
@@ -118,13 +118,13 @@ export function DashboardCharts({
               </div>
               <button
                 onClick={() => shareToGlobalChat({
-                  title: "Pipeline by Stage", type: "chart", color: T.purple,
+                  title: "Pipeline by Stage", type: "chart", color: T.copper,
                   snapshot: Object.fromEntries(stageData.map((s) => [s.name, fmt(s.value)])),
                   status: "In Progress",
                 })}
-                style={{ fontSize: 11, color: T.purple, background: `${T.purple}12`, border: `1px solid ${T.purple}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
+                style={{ fontSize: 11, color: T.copper, background: `${T.copper}12`, border: `1px solid ${T.copper}22`, borderRadius: T.radius.sm, padding: "4px 10px", cursor: "pointer", fontWeight: 600 }}
               >
-                💬 Share
+                Share
               </button>
             </div>
             <button onClick={() => onNavigate("sales")} style={{ fontSize: 11, color: T.accent, background: "none", border: "none", cursor: "pointer" }}>View board →</button>

@@ -171,6 +171,7 @@ create table denizen_crm_portal_tokens (
 | POST | `/api/crm/quote/:token/sign` | E-signature |
 | POST | `/api/crm/quote/:token/event` | Portal analytics |
 | POST | `/api/crm/intake` | Public form submit |
+| GET | `/api/crm/intake/form?org=` | Public form schema (questions + branding) |
 | POST | `/api/crm/resend-webhook` | Email tracking |
 | POST | `/api/crm/quote/:token/checkout` | Stripe Checkout session |
 | POST | `/api/crm/stripe-webhook` | Mark quote paid |

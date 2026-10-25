@@ -4,12 +4,13 @@
  */
 import { useState, useEffect } from "react";
 import { CRM_SUBNAV_EVENT, dispatchCrmSubNav } from "@/lib/crm-nav";
-import { T, type Contact, type Deal, type Note, type Quota, type EmailLogEntry, type AuditEntry, type DealComment } from "@/lib/crm-data";
+import { type Contact, type Deal, type Note, type Quota, type EmailLogEntry, type AuditEntry, type DealComment } from "@/lib/crm-data";
 import { SubTabNav } from "./shared/SubTabNav";
 import { LeadGenTab } from "./LeadGenTab";
 import { PipelineTab } from "./PipelineTab";
 import { DealProbabilityAI } from "./DealProbabilityAI";
 import { PipelineVelocity } from "./PipelineVelocity";
+import { PipelineInsights } from "./PipelineInsights";
 import { MobileSwipePipeline } from "./MobileSwipePipeline";
 import { SalesTeamDashboard } from "./SalesTeamDashboard";
 import { QuotaManagementTab } from "./QuotaManagementTab";
@@ -20,10 +21,10 @@ import type { Task } from "@/lib/crm-data";
 function salesTabs(industryConfig?: IndustryConfig) {
   const term = industryConfig?.terminology;
   return [
-    { key: "leads", label: "Leads", icon: "🎯" },
-    { key: "pipeline", label: term?.pipeline || "Pipeline", icon: "◆" },
-    { key: "hub", label: term?.salesHub || "Sales Hub", icon: "📊" },
-    { key: "quotas", label: "Quotas", icon: "🏆" },
+    { key: "leads", label: "Leads" },
+    { key: "pipeline", label: term?.pipeline || "Pipeline" },
+    { key: "hub", label: term?.salesHub || "Sales Hub" },
+    { key: "quotas", label: "Quotas" },
   ];
 }
 
@@ -66,7 +67,7 @@ export function SalesSection({
     onSubTabChange?.(key);
     dispatchCrmSubNav("sales", key);
   };
-  const [pipelineView, setPipelineView] = useState<"kanban" | "swipe" | "ai" | "velocity">("kanban");
+  const [pipelineView, setPipelineView] = useState<"kanban" | "swipe" | "ai" | "velocity" | "insights">("kanban");
   const [quotaViewMode, setQuotaViewMode] = useState<"manager" | "member">("manager");
 
   useEffect(() => {
@@ -101,24 +102,31 @@ export function SalesSection({
       {activeTab === "pipeline" && (
         <div>
           {/* Pipeline view toggle */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+          <div className="crm-seg" style={{ marginBottom: 16, flexWrap: "wrap" }}>
             {([
-              { key: "kanban", label: "Kanban", icon: "◆" },
-              ...(isMobile ? [{ key: "swipe", label: "Swipe", icon: "📱" }] : []),
-              { key: "ai", label: "AI Probability", icon: "🤖" },
-              { key: "velocity", label: "Velocity", icon: "⚡" },
-            ] as { key: string; label: string; icon: string }[]).map(v => (
-              <button key={v.key} onClick={() => setPipelineView(v.key as any)} style={{
-                padding: "6px 14px", borderRadius: "9999px", fontSize: 12, fontWeight: 600,
-                background: pipelineView === v.key ? `${T.accent}22` : T.bg3,
-                color: pipelineView === v.key ? T.accent : T.text3,
-                border: `1px solid ${pipelineView === v.key ? `${T.accent}66` : T.bg4}`,
-                cursor: "pointer", transition: "all 0.15s",
-              }}>{v.icon} {v.label}</button>
-            ))}
+              { key: "kanban", label: "Board" },
+              ...(isMobile ? [{ key: "swipe", label: "Swipe" }] : []),
+              { key: "insights", label: "Insights" },
+              { key: "ai", label: "Probability" },
+              { key: "velocity", label: "Velocity" },
+            ] as { key: string; label: string }[]).map((v) => {
+              const on = pipelineView === v.key;
+              return (
+                <button
+                  key={v.key}
+                  type="button"
+                  aria-pressed={on}
+                  className={`crm-seg-btn${on ? " is-active" : ""}`}
+                  onClick={() => setPipelineView(v.key as typeof pipelineView)}
+                >
+                  {v.label}
+                </button>
+              );
+            })}
           </div>
           {pipelineView === "kanban" && <PipelineTab deals={deals} contacts={contacts} notes={notes} emailLog={emailLog} auditLog={auditLog} dealComments={dealComments} onAddDealComment={onAddDealComment} currentUserName={currentUserName} onDealStageChange={onDealStageChange} onEditDeal={onEditDeal} onDeleteDeal={onDeleteDeal} industryConfig={industryConfig} />}
           {pipelineView === "swipe" && <MobileSwipePipeline deals={deals} onDealStageChange={onDealStageChange} onEditDeal={onEditDeal} />}
+          {pipelineView === "insights" && <PipelineInsights deals={deals} />}
           {pipelineView === "ai" && <DealProbabilityAI deals={deals} contacts={contacts} emailLog={emailLog} notes={notes} />}
           {pipelineView === "velocity" && <PipelineVelocity deals={deals} />}
         </div>
@@ -130,16 +138,21 @@ export function SalesSection({
 
       {activeTab === "quotas" && (
         <div>
-          <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-            {([{ key: "manager", label: "Manager View", icon: "📊" }, { key: "member", label: "My Quotas", icon: "🎯" }] as const).map(v => (
-              <button key={v.key} onClick={() => setQuotaViewMode(v.key)} style={{
-                padding: "6px 14px", borderRadius: "9999px", fontSize: 12, fontWeight: 600,
-                background: quotaViewMode === v.key ? `${T.accent}22` : T.bg3,
-                color: quotaViewMode === v.key ? T.accent : T.text3,
-                border: `1px solid ${quotaViewMode === v.key ? `${T.accent}66` : T.bg4}`,
-                cursor: "pointer",
-              }}>{v.icon} {v.label}</button>
-            ))}
+          <div className="crm-seg" style={{ marginBottom: 16 }}>
+            {([{ key: "manager", label: "Manager" }, { key: "member", label: "My quotas" }] as const).map((v) => {
+              const on = quotaViewMode === v.key;
+              return (
+                <button
+                  key={v.key}
+                  type="button"
+                  aria-pressed={on}
+                  className={`crm-seg-btn${on ? " is-active" : ""}`}
+                  onClick={() => setQuotaViewMode(v.key)}
+                >
+                  {v.label}
+                </button>
+              );
+            })}
           </div>
           <QuotaManagementTab quotas={quotas} onUpdateQuotas={onUpdateQuotas} isManager={quotaViewMode === "manager"} currentUserId="john" deals={deals} />
         </div>

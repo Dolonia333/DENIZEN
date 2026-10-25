@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   T, S, NAV_ITEMS, NAV_GROUPS, fmt,
   initialPackages, initialSubmissions, initialQuotes, initialBranding,
-  defaultIntakeQuestions, initialAvailability,
+  defaultIntakeQuestions, initialAvailability, type IntakeQuestion,
   initialAutomations, contactsToCsv, dealsToCsv, parseCsvAuto, loadDemoWorkspace,
   type Contact, type Deal, type Note, type Task, type ToastItem, type Automation,
   CONTACT_FREQUENCIES, type Quota,
@@ -63,6 +63,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocalStorage } from "@/lib/crm-hooks";
 import { dispatchCrmSubNav, isKnownCrmTab, resolveCrmNav } from "@/lib/crm-nav";
 import { useCrmCloudSync, crmSyncLabel } from "@/hooks/use-crm-cloud-sync";
+import { CrmHomeStart } from "./CrmHomeStart";
+import { resolveWorkspaceMode, workspaceModeLabel } from "@/lib/crm-workspace-mode";
 
 
 export default function CRMApp() {
@@ -111,6 +113,7 @@ export default function CRMApp() {
   const [teamPolicy, setTeamPolicy] = useLocalStorage<TeamPolicy>("teamPolicy", DEFAULT_TEAM_POLICY);
   const [usageLog, setUsageLog] = useLocalStorage<UsageLogEntry[]>("usageLog", []);
   const [aiThreads, setAiThreads] = useLocalStorage<AiThread[]>("aiThreads", []);
+  const [intakeQuestions, setIntakeQuestions] = useLocalStorage<IntakeQuestion[]>("intakeQuestions", defaultIntakeQuestions);
   // pipelineView moved into SalesSection
 
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -231,12 +234,14 @@ export default function CRMApp() {
     marketingCampaigns,
     teamPolicy,
     usageLog,
+    intakeQuestions,
   }), [
     contacts, deals, notes, tasks, companies, goals, sequences, sequenceEnrollments,
     submissions, quotes, packages, meetings, automations, emailTemplates,
     emailLog, auditLog, noteBoards, industryConfig, contactGroups, contactGroupMap, crmQuotas,
     userPrefs, onboarding, availability, integrations, metricSnapshots, automationRuns,
     dealComments, aiThreads, leadModelState, supportTickets, marketingCampaigns, teamPolicy, usageLog,
+    intakeQuestions,
   ]);
 
   const { status: syncStatus, orgLabel, teamLabel, lastSavedAt, updatedByName } = useCrmCloudSync(workspaceSnapshot, {
@@ -274,11 +279,12 @@ export default function CRMApp() {
     setMarketingCampaigns,
     setTeamPolicy,
     setUsageLog,
+    setIntakeQuestions,
   });
 
   const syncLabel = crmSyncLabel(syncStatus, teamLabel, lastSavedAt, updatedByName);
 
-  const [denizenProfile, setDenizenProfile] = useState({ name: "Guest", role: "Team member" });
+  const [denizenProfile, setDenizenProfile] = useState({ name: "Guest", role: "Solo" });
   const [claimedNpcKey, setClaimedNpcKey] = useState<string | null>(null);
   const [crmScope, setCrmScope] = useState<CrmScope>("org");
   const [selfIdentityId, setSelfIdentityId] = useState<string | null>(null);
@@ -332,7 +338,8 @@ export default function CRMApp() {
         const tr = String(session.team_role || "").toLowerCase();
         if (tr === "owner") return "Owner";
         if (tr === "admin") return "Admin";
-        return "Team member";
+        const members = Array.isArray(team?.members) ? team.members.length : 0;
+        return members >= 2 ? "Team member" : "Solo";
       };
       setDenizenProfile({ name, role: roleLabel(info) });
       if (info.email) setSelfEmail(info.email);
@@ -355,6 +362,15 @@ export default function CRMApp() {
     }
     return names.length ? names : [denizenProfile.name];
   }, [crmTeam, denizenProfile.name]);
+
+  const workspaceMode = useMemo(
+    () => resolveWorkspaceMode({
+      syncStatus,
+      teamSize: Math.max(crmTeam.length, teamMemberNames.length > 1 ? teamMemberNames.length : (orgLabel ? 1 : 0)),
+    }),
+    [syncStatus, crmTeam.length, teamMemberNames.length, orgLabel],
+  );
+  const isTeamMode = workspaceMode === "team";
 
   // MOBILE: lock body scroll while sidebar drawer is open to prevent background scrolling
   useEffect(() => {
@@ -973,8 +989,9 @@ export default function CRMApp() {
     if (state.marketingCampaigns) setMarketingCampaigns(state.marketingCampaigns as MarketingCampaign[]);
     if (state.teamPolicy) setTeamPolicy(state.teamPolicy as TeamPolicy);
     if (state.usageLog) setUsageLog(state.usageLog as UsageLogEntry[]);
+    if (state.intakeQuestions) setIntakeQuestions(state.intakeQuestions as IntakeQuestion[]);
     markCrmUserEdited();
-  }, [setContacts, setDeals, setNotes, setTasks, setCompanies, setGoals, setSequences, setSequenceEnrollments, setSubmissions, setQuotes, setPackages, setMeetings, setAutomations, setEmailTemplates, setEmailLog, setAuditLog, setNoteBoards, setIndustryConfigRaw, setContactGroups, setContactGroupMap, setCrmQuotas, setUserPrefs, setOnboarding, setAvailability, setIntegrations, setSupportTickets, setMarketingCampaigns, setTeamPolicy, setUsageLog]);
+  }, [setContacts, setDeals, setNotes, setTasks, setCompanies, setGoals, setSequences, setSequenceEnrollments, setSubmissions, setQuotes, setPackages, setMeetings, setAutomations, setEmailTemplates, setEmailLog, setAuditLog, setNoteBoards, setIndustryConfigRaw, setContactGroups, setContactGroupMap, setCrmQuotas, setUserPrefs, setOnboarding, setAvailability, setIntegrations, setSupportTickets, setMarketingCampaigns, setTeamPolicy, setUsageLog, setIntakeQuestions]);
 
   const handleRestoreWorkspace = useCallback((imported: CrmWorkspaceState, mode: RestoreMode) => {
     const next = restoreWorkspace(workspaceSnapshot, imported, mode);
@@ -1099,53 +1116,65 @@ export default function CRMApp() {
   const switchRole = (id: string) => {
     setActiveRole(id);
     const r = getRole(id);
-    addToast("info", `${r.icon} ${r.label} view`);
+    addToast("info", `${r.label} view`);
     if (r.defaultTab && r.defaultTab !== tab) handleNavigate(r.defaultTab);
   };
 
-  const renderDashboard = () => (
+  const isEmptyWorkspace = contacts.length === 0 && deals.length === 0;
+
+  const renderDashboard = () => {
+    if (isEmptyWorkspace) {
+      return (
+        <CrmHomeStart
+          mode={workspaceMode}
+          syncStatus={syncStatus}
+          onAddContact={() => setModal("add-contact")}
+          onOpenPipeline={() => handleNavigate("sales")}
+          onOpenIntake={() => handleNavigate("intake")}
+          onLoadSample={handleLoadDemoData}
+          onOpenSetup={() => handleNavigate("onboarding")}
+          onOpenTeam={() => handleNavigate("team")}
+        />
+      );
+    }
+
+    return (
     <div>
-      {/* Role switcher — reshapes the dashboard per persona */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-        marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}`,
+        display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+        marginBottom: 18, paddingBottom: 14, borderBottom: `1px solid ${T.bg4}`,
       }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: 4 }}>
-          Dashboard view
+        <span className="crm-kicker" style={{ color: isTeamMode ? T.copper : T.blue }}>
+          {workspaceModeLabel(workspaceMode)}
         </span>
-        {CRM_ROLES.map((r) => {
-          const on = r.id === activeRole;
-          return (
-            <button
-              key={r.id}
-              onClick={() => switchRole(r.id)}
-              title={r.blurb}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: on ? `${r.accent}1f` : T.bg3,
-                border: `1px solid ${on ? r.accent : T.bg4}`,
-                color: on ? r.accent : T.text2,
-                borderRadius: T.radius.full, padding: "6px 12px",
-                fontSize: 12.5, fontWeight: on ? 700 : 600, cursor: "pointer",
-                transition: "all 0.12s",
-              }}
-            >
-              <span style={{ fontSize: 14 }}>{r.icon}</span>{r.label}
-            </button>
-          );
-        })}
+        <div className="crm-seg">
+          {CRM_ROLES.map((r) => {
+            const on = r.id === activeRole;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                title={r.blurb}
+                aria-pressed={on}
+                className={`crm-seg-btn${on ? " is-active" : ""}`}
+                onClick={() => switchRole(r.id)}
+              >
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div style={{ marginBottom: 14 }}>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.text0 }}>
-          {role.icon} {role.label} Dashboard
-        </h1>
-        <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text2 }}>{role.blurb}</p>
+        <h1 className="crm-page-title">{role.label}</h1>
+        <p className="crm-page-sub">{role.blurb}</p>
       </div>
       <MyWorkPanel
         userName={denizenProfile.name}
         deals={deals}
         tasks={tasks}
         tickets={supportTickets}
+        isTeamMode={isTeamMode}
         onNavigate={handleNavigate}
       />
       <RoleDashboard
@@ -1165,7 +1194,8 @@ export default function CRMApp() {
         onNavigate={handleNavigate}
       />
     </div>
-  );
+    );
+  };
 
   const renderTab = () => (
     <LazyTab>
@@ -1208,7 +1238,7 @@ export default function CRMApp() {
         />
       );
       case "packages": return <PackagesTab packages={packages} quotes={quotes} onUpdatePackages={setPackages} onAddQuote={handleAddQuote} contacts={contacts} />;
-      case "intake": return <IntakeTab submissions={submissions} quotes={quotes} packages={packages} branding={initialBranding} intakeQuestions={defaultIntakeQuestions} orgSlug={orgLabel} onStatusChange={handleSubmissionStatus} onAddSubmission={handleAddSubmission} onAddQuote={handleAddQuote} onImportSubmissions={handleImportSubmissions} />;
+      case "intake": return <IntakeTab submissions={submissions} quotes={quotes} packages={packages} branding={initialBranding} intakeQuestions={intakeQuestions} orgSlug={orgLabel} onStatusChange={handleSubmissionStatus} onAddSubmission={handleAddSubmission} onAddQuote={handleAddQuote} onImportSubmissions={handleImportSubmissions} onUpdateIntakeQuestions={setIntakeQuestions} />;
       case "tasks": return <TasksTab tasks={tasks} teamMembers={teamMemberNames} currentUserName={denizenProfile.name} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onUpdateTask={(t) => setTasks(prev => prev.map(x => x.id === t.id ? t : x))} />;
       case "analytics": return <AnalyticsTab deals={deals} contacts={contacts} metricSnapshots={metricSnapshots} />;
       case "ai-prospector": return <AIProspector onImportLead={handleProspectorImport} />;
@@ -1356,9 +1386,9 @@ export default function CRMApp() {
           <button onClick={() => setSidebarOpen(p => !p)} style={{ background: "none", border: "none", color: T.text1, fontSize: 20, cursor: "pointer", padding: "2px 4px" }}>☰</button>
           <div style={{
             width: 24, height: 24, borderRadius: T.radius.sm,
-            background: `linear-gradient(135deg,${T.accent},#d97706)`,
+            background: `linear-gradient(135deg,${T.accent},${T.copper})`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 11, fontWeight: 900, color: "#080d18",
+            fontSize: 11, fontWeight: 900, color: "#071410",
           }}>M</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -1420,16 +1450,16 @@ export default function CRMApp() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px", marginBottom: 20 }}>
           <div style={{
             width: 28, height: 28, borderRadius: T.radius.md,
-            background: `linear-gradient(135deg,${T.accent},#d97706)`,
+            background: `linear-gradient(135deg,${T.accent},${T.copper})`,
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 14, fontWeight: 900, color: "#080d18",
+            fontSize: 14, fontWeight: 900, color: "#071410",
           }}>M</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text0, letterSpacing: "-0.02em" }}>Meridian</div>
             <div style={{
               fontSize: 9, fontWeight: 600, color: T.text2, marginTop: 2,
               padding: "2px 6px", borderRadius: 4, display: "inline-block",
-              background: `${T.purple}18`, border: `1px solid ${T.purple}33`,
+              background: `${T.copper}18`, border: `1px solid ${T.copper}33`, color: T.copper,
               letterSpacing: "0.04em", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }} title={editionTitle}>
               {editionTitle.replace("Meridian — ", "")}
@@ -1463,15 +1493,25 @@ export default function CRMApp() {
 
         <div style={{
           marginTop: 8,
-          padding: "6px 10px",
+          padding: "8px 10px",
           borderRadius: T.radius.sm,
           border: `1px solid ${T.bg4}`,
           background: T.bg3,
           fontSize: 10,
-          color: syncStatus === "error" ? T.red : syncStatus === "no-session" || syncStatus === "draft" ? T.text3 : T.green,
-          lineHeight: 1.35,
+          lineHeight: 1.4,
         }}>
-          {syncLabel}
+          <div style={{
+            fontWeight: 700,
+            color: isTeamMode ? T.purple : T.blue,
+            marginBottom: 2,
+          }}>
+            {workspaceModeLabel(workspaceMode)}
+          </div>
+          <div style={{
+            color: syncStatus === "error" ? T.red : syncStatus === "no-session" || syncStatus === "draft" ? T.text3 : T.green,
+          }}>
+            {syncLabel}
+          </div>
         </div>
 
         <a
@@ -1535,11 +1575,15 @@ export default function CRMApp() {
 
       {/* MAIN CONTENT */}
       <main ref={mainRef} style={{
-        flex: 1, overflowY: "auto", background: T.bg0,
+        flex: 1, overflowY: "auto",
+        background:
+          "radial-gradient(ellipse 90% 50% at 10% -10%, rgba(62,207,154,0.09), transparent 50%)," +
+          "radial-gradient(ellipse 70% 40% at 100% 0%, rgba(212,165,116,0.07), transparent 45%)," +
+          T.bg0,
         padding: isMobile ? "66px 14px 80px" : "28px 32px",
         ...(isMobile ? { width: "100%" } : {}),
       }}>
-        {crmScope === "own" && (
+        {crmScope === "own" && isTeamMode && (
           <div style={{
             marginBottom: 14,
             padding: "10px 14px",
@@ -1549,8 +1593,8 @@ export default function CRMApp() {
             fontSize: 12,
             color: T.text2,
           }}>
-            Showing <strong style={{ color: T.text0 }}>your CRM records only</strong>. AI assistants and owners still see the full org.
-            {" "}Open <button type="button" onClick={() => handleNavigate("team")} style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", padding: 0, fontSize: 12 }}>Team viewer</button> to see what everyone is doing.
+            Showing <strong style={{ color: T.text0 }}>your records</strong> in this shared workspace.
+            {" "}Open <button type="button" onClick={() => handleNavigate("team")} style={{ background: "none", border: "none", color: T.accent, cursor: "pointer", padding: 0, fontSize: 12 }}>Team activity</button> to see what everyone is doing.
           </div>
         )}
         <div key={tab} className="crm-page-fade">
@@ -1681,7 +1725,7 @@ export default function CRMApp() {
                   ) : (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <input value={inlineGroupName} onChange={e => setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
+                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: T.accent, description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
                       <button onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
                     </div>
                   )}
@@ -1755,7 +1799,7 @@ export default function CRMApp() {
                   ) : (
                     <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                       <input value={inlineGroupName} onChange={e => setInlineGroupName(e.target.value)} placeholder="Group name…" style={{ ...S.input as React.CSSProperties, flex: 1 }} />
-                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: "#f0b429", description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
+                      <button onClick={() => { if (!inlineGroupName.trim()) return; const ng = { id: Date.now(), name: inlineGroupName.trim(), color: T.accent, description: "" }; setContactGroups(p => [...p, ng]); setSelectedGroupIds(p => [...p, ng.id]); setInlineNewGroup(false); setInlineGroupName(""); addToast("success", `Group "${ng.name}" created`); }} style={{ ...S.btn as React.CSSProperties, padding: "6px 12px", fontSize: 11 }}>Add</button>
                       <button onClick={() => { setInlineNewGroup(false); setInlineGroupName(""); }} style={{ background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
                     </div>
                   )}
