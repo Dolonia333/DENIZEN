@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import os
 import re
 import subprocess
@@ -12,7 +13,7 @@ from pathlib import Path
 import paramiko
 
 DESKTOP_DB = "supabase_db_Desktop"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 USER = os.environ.get("SYNO_USER", "admin")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = "/usr/local/bin/docker"

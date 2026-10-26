@@ -37,10 +37,10 @@ const fromEnv = (process.env.BRAVE_API_KEY ?? "").trim();
 Remove-Item Env:BRAVE_SEARCH_API_KEY -ErrorAction SilentlyContinue
 
 # Set the correct one
-setx BRAVE_API_KEY "BSAgPTfHr7FVrJGJj37uJMQcIgP0aB_"
+setx BRAVE_API_KEY "<YOUR_BRAVE_API_KEY>"
 
 # Or for current session only:
-$env:BRAVE_API_KEY = "BSAgPTfHr7FVrJGJj37uJMQcIgP0aB_"
+$env:BRAVE_API_KEY = "<YOUR_BRAVE_API_KEY>"
 ```
 
 ### Step 2: Restart Gateway
@@ -79,7 +79,7 @@ If env vars don't work, put it directly in config:
       "search": {
         "enabled": true,
         "provider": "brave",
-        "apiKey": "BSAgPTfHr7FVrJGJj37uJMQcIgP0aB_",
+        "apiKey": "<YOUR_BRAVE_API_KEY>",
         "maxResults": 5,
         "timeoutSeconds": 30
       }

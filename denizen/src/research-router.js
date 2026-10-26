@@ -31,7 +31,7 @@ function researchBackend() {
 
 function getMeshStatusHint() {
   // Called by health/briefs to surface actionable hint when 0 nodes
-  return 'Mesh enabled but 0 fleet nodes. Activate by running Denizen Desktop on 192.168.1.232, pairing it, then in Compute/City Power UI: set level + toggle "Power the city". See COMPUTE_MESH.md.';
+  return 'Mesh enabled but 0 fleet nodes. Activate by running Denizen Desktop on <PC_LAN_IP>, pairing it, then in Compute/City Power UI: set level + toggle "Power the city". See COMPUTE_MESH.md.';
 }
 
 function extractQuery(skillParams = {}) {

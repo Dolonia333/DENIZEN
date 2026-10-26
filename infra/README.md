@@ -18,11 +18,11 @@ copy infra\.env.example infra\.env
 
 | Machine | Tailscale IP | LAN IP | Role |
 |---------|--------------|--------|------|
-| dolonia | `100.71.54.109` | `192.168.1.232` | Denizen host, LM Studio GPU |
-| hp81081d (Kali) | `100.110.205.49` | `192.168.1.240` | Headless compute worker |
-| NAS (Synology) | — | `192.168.1.237` | Self-hosted Supabase + **Denizen app** + NAS agent |
+| dolonia | `<HOME_SERVER_TAILSCALE_IP>` | `<PC_LAN_IP>` | Denizen host, LM Studio GPU |
+| hp81081d (Kali) | `<KALI_TAILSCALE_IP>` | `<KALI_LAN_IP>` | Headless compute worker |
+| NAS (Synology) | — | `<NAS_IP>` | Self-hosted Supabase + **Denizen app** + NAS agent |
 
-**Rule:** remote agents use **public URL** (`https://denizen.dolonia.cloud`) or NAS LAN (`http://192.168.1.237:8888`), not dolonia's LAN IP — unless dolonia is standby.
+**Rule:** remote agents use **public URL** (`https://denizen.dolonia.cloud`) or NAS LAN (`http://<NAS_IP>:8888`), not dolonia's LAN IP — unless dolonia is standby.
 
 ## Quick start — full mesh
 
@@ -49,7 +49,7 @@ This runs in order:
 
 | Variable | Default |
 |----------|---------|
-| `SYNO_HOST` | `192.168.1.237` |
+| `SYNO_HOST` | `<NAS_IP>` |
 | `SYNO_USER` | `admin` |
 | `SYNO_SSH_PASSWORD` | *(required in infra/.env)* |
 | `SYNO_AGENT_DIR` | `/volume1/docker/denizen-agent` |
@@ -113,7 +113,7 @@ Then point Cloudflare tunnel `denizen.dolonia.cloud` → `http://<NAS-IP>:8888`.
 |----------|---------|
 | `SYNO_DENIZEN_PORT` | `8888` |
 | `SYNO_DENIZEN_DIR` | `/volume1/docker/denizen-server` |
-| `DENIZEN_NAS_URL` | `http://192.168.1.237:8888` |
+| `DENIZEN_NAS_URL` | `http://<NAS_IP>:8888` |
 
 ### Supabase on NAS
 
@@ -165,10 +165,10 @@ SSH user is **`dolo`** (not `kali`).
 
 | Variable | Default |
 |----------|---------|
-| `KALI_HOST` | `100.110.205.49` |
+| `KALI_HOST` | `<KALI_TAILSCALE_IP>` |
 | `KALI_USER` | `dolo` |
 | `KALI_SSH_PASSWORD` | optional — enables `deploy-kali-agent.py` |
-| `KALI_DENIZEN_URL` | `http://100.71.54.109:8081` |
+| `KALI_DENIZEN_URL` | `http://<HOME_SERVER_TAILSCALE_IP>:8081` |
 | `DENIZEN_TAILSCALE_URL` | same — used in agent bundles |
 
 ### Pull install (recommended)
@@ -177,7 +177,7 @@ Run **on Kali**:
 
 ```bash
 export DENIZEN_FLEET_AGENT_TOKEN='<from denizen/.env on dolonia>'
-export DENIZEN_PULL_URL='http://100.71.54.109:8081'
+export DENIZEN_PULL_URL='http://<HOME_SERVER_TAILSCALE_IP>:8081'
 curl -fsSL https://raw.githubusercontent.com/Dolonia333/DENIZEN/main/infra/pull-install-kali-agent.sh | bash
 ```
 
@@ -191,7 +191,7 @@ Install directory: `~/denizen-agent/`
 Success log lines:
 
 ```
-server http://100.71.54.109:8081 identity ...
+server http://<HOME_SERVER_TAILSCALE_IP>:8081 identity ...
 reported hp81081d -> hp81081d
 registered compute node <uuid>
 worker loop started
@@ -235,7 +235,7 @@ Verify:
 
 ```powershell
 & "C:\Program Files\Tailscale\tailscale.exe" status
-& "C:\Program Files\Tailscale\tailscale.exe" ping 100.110.205.49
+& "C:\Program Files\Tailscale\tailscale.exe" ping <KALI_TAILSCALE_IP>
 ```
 
 On Kali after install: `sudo tailscale up`

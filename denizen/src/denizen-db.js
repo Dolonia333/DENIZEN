@@ -8,16 +8,13 @@
  * Env:
  *   SUPABASE_URL              PostgREST base (default http://127.0.0.1:54321)
  *   SUPABASE_SERVICE_ROLE_KEY Server key (preferred; bypasses RLS in production)
- *   SUPABASE_ANON_KEY         Anon key fallback (local dev / fleet agents)
+ *   SUPABASE_ANON_KEY         Anon key fallback (local dev / fleet agents); no built-in default
  *   DENIZEN_DB_ENABLED        true|false (default true when URL set)
  *   DENIZEN_ORG_SLUG          org slug (default zion)
  */
 
 const os = require('node:os');
 const npcRoster = require('./npc-roster');
-
-const LOCAL_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 const DISPLAY_TO_NPC_KEY = Object.fromEntries(
   (npcRoster.entries || []).map((e) => [e.display.toLowerCase(), e.folder]),
@@ -32,10 +29,11 @@ class DenizenDb {
     this.key =
       this.env.SUPABASE_SERVICE_ROLE_KEY ||
       this.env.SUPABASE_ANON_KEY ||
-      LOCAL_ANON_KEY;
+      '';
     const enabledEnv = this.env.DENIZEN_DB_ENABLED;
     this.enabled =
       this.url.length > 0 &&
+      this.key.length > 0 &&
       (enabledEnv == null || !/^(0|false|no|off)$/i.test(String(enabledEnv)));
     this.orgSlug = this.env.DENIZEN_ORG_SLUG || 'zion';
     this.orgId = null;
@@ -54,7 +52,7 @@ class DenizenDb {
 
   async init() {
     if (!this.enabled) {
-      console.log('[DenizenDb] disabled (no SUPABASE_URL or DENIZEN_DB_ENABLED=false)');
+      console.log('[DenizenDb] disabled (no SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY, or DENIZEN_DB_ENABLED=false)');
       return { ok: false, reason: 'disabled' };
     }
     try {

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Quick redeploy: desktop folder only, rebuild AppImage on laptop."""
 import os, tarfile, tempfile, paramiko
+from _laptop_env import connect_kwargs
 
-HOST, USER, PASS = '100.110.205.49', 'dolo', '333'
 LOCAL_DESKTOP = r'c:\Users\zionv\OneDrive\Desktop\multbot\denizen\desktop'
 REMOTE = '/home/dolo/denizen-deploy/desktop'
 INSTALL = '/home/dolo/Applications/Denizen.AppImage'
@@ -19,7 +19,7 @@ def pack():
     return path
 
 ssh = paramiko.SSHClient(); ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect(HOST, username=USER, password=PASS, timeout=20)
+ssh.connect(**connect_kwargs())
 
 def run(cmd, t=900):
     print('$', cmd[:120])

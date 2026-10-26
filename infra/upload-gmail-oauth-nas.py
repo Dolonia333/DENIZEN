@@ -2,6 +2,7 @@
 """Upload denizen/data/gmail-oauth.json to NAS denizen-server + ensure googleapis + GMAIL env."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import base64
 import json
 import os
@@ -15,7 +16,7 @@ import paramiko
 
 ROOT = Path(__file__).resolve().parent.parent
 OAUTH_FILE = ROOT / "denizen" / "data" / "gmail-oauth.json"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 USER = os.environ.get("SYNO_USER", "admin")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

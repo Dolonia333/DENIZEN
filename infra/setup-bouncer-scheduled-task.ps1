@@ -1,5 +1,5 @@
 # Register Bouncer Kali investigation agent to start at logon (dolonia .232).
-# NAS sets BOUNCER_INVESTIGATION_URL=http://192.168.1.232:8890
+# NAS sets BOUNCER_INVESTIGATION_URL=http://<PC_LAN_IP>:8890
 
 $ErrorActionPreference = "Stop"
 

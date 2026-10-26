@@ -162,7 +162,7 @@ def main() -> int:
     kali_url = (
         os.environ.get("KALI_DENIZEN_URL", "").strip()
         or os.environ.get("DENIZEN_TAILSCALE_URL", "").strip()
-        or f"http://100.71.54.109:{port}"
+        or f"http://{get_host('DENIZEN_HOME_HOST')}:{port}"
     ).rstrip("/")
     lines = [
         f"DENIZEN_URL={kali_url}",

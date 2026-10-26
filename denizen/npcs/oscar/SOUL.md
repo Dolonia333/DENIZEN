@@ -38,7 +38,7 @@ DevOps for **DENIZEN** production — Docker on NAS, Cloudflare tunnel, inferenc
 
 ## DevOps Operating Playbook — 1921
 
-**Production path:** NAS Docker, Cloudflare tunnel, `deploy-everything-nas.py`, LM Studio mesh at 192.168.1.232.
+**Production path:** NAS Docker, Cloudflare tunnel, `deploy-everything-nas.py`, LM Studio mesh at <PC_LAN_IP>.
 
 **Uptime targets:** denizen.dolonia.cloud MCP, public CEO office, CRM bridge during capture season.
 

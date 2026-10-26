@@ -1,6 +1,6 @@
 # Provision + deploy Denizen NAS metrics agent (requires SYNO_SSH_PASSWORD)
 param(
-  [string]$SynoHost = "192.168.1.237",
+  [string]$SynoHost = "<NAS_IP>",
   [string]$SynoUser = "admin"
 )
 

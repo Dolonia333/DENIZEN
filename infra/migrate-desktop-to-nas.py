@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import os
 import shutil
 import subprocess
@@ -13,7 +14,7 @@ from pathlib import Path
 import paramiko
 
 DESKTOP_DB = "supabase_db_Desktop"
-NAS_HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+NAS_HOST = get_host("SYNO_HOST")
 NAS_USER = os.environ.get("SYNO_USER", "admin")
 NAS_PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 NAS_DOCKER = "/usr/local/bin/docker"
