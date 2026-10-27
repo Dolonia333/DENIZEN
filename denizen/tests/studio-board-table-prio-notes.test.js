@@ -26,6 +26,14 @@ describe('studio-board table priority + notes', () => {
     assert.match(html, /t-notes/);
   });
 
+  it('Notes modal keeps a shared conversation thread for everyone', () => {
+    assert.match(html, /id="tn-thread"/);
+    assert.match(html, /function addTableNoteComment\(/);
+    assert.match(html, /function notesWithMe\(/);
+    assert.match(html, /Team notes/);
+    assert.match(html, /Everyone on the board can see this thread/);
+  });
+
   it('Status can be changed from table view', () => {
     assert.match(html, /function inlineStatus\(/);
     assert.match(html, /function statusOpts\(/);
