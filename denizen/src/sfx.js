@@ -28,6 +28,9 @@
 (function () {
   'use strict';
 
+  // Temporary: office bed, footsteps, doors, and event clips stay off.
+  const OFFICE_SFX_MUTED = true;
+
   // NB: served from /assets (part of the image), NOT /data — in production
   // ./data is a bind-mounted volume that shadows the repo's committed files.
   const SFX_MAP_URL = '/assets/sfx-map.json';
@@ -401,6 +404,15 @@
 
   // ----- Boot -----
   async function init() {
+    if (OFFICE_SFX_MUTED) {
+      window.DenizenSfx = {
+        play() {},
+        playEvent() {},
+        setLoop() {},
+      };
+      console.log('[SFX] muted');
+      return;
+    }
     try {
       const res = await fetch(SFX_MAP_URL, { cache: 'no-store' });
       if (!res.ok) return;
