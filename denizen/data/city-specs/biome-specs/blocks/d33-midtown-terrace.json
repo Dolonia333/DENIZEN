@@ -1,0 +1,70 @@
+{
+  "_doc": "Street-grid block fill: grid block r3c4, measured at 31% sprite coverage. Its west neighbour r3c3 just became parkland (d31), so this one is BUILT — two facing terraces — to stop the whole southern band turning into one continuous green swathe. NOTE the bbox is 672x576, not 768x624: a road crosses at world x3296-4096 y2992-3056, the d5 district spills in from local x680 (mailboxes, info boards, police box), and the park/graveyard/camping band already occupies local y592+ where the big grass patch starts at world y3200. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/blocks/d33-midtown-terrace.json --qa -v. See d29-midtown-retail.json's _layout_doc for the 16px-lattice and 16px-halo rules.",
+  "schema": "exterior-district-spec/1",
+  "id": "d33-midtown-terrace",
+  "district": "D33 Midtown Terrace",
+  "biome": "residential",
+  "palette": "pastel_suburb",
+  "palette_secondary": "verdant",
+
+  "compiler": {
+    "version": 1,
+    "rules": "data/limezu-visual-catalog/placement-rules.json",
+    "seed": 33244,
+    "coords": "local",
+    "out": "data/city-specs/generated/d33-midtown-terrace.json"
+  },
+
+  "bbox": { "x": 2624, "y": 2624, "w": 672, "h": 576 },
+  "label": "MIDTOWN TERRACE",
+  "label_at": { "x": 336, "y": 16 },
+
+  "surfaces": [
+    { "surface": "sidewalk", "x": 0, "y": 0, "w": 672, "h": 576, "depth": 0.87 },
+    { "surface": "grass", "name": "front_gardens", "x": 32, "y": 272, "w": 608, "h": 48, "depth": 0.9,
+      "_doc": "planting strip between the two terraces; the south row's sprites start at y320 so nothing is buried" }
+  ],
+
+  "landmarks": [
+    { "me": "me.houses.terraced_house_5", "at": { "x": 48, "y": 256 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter",
+      "_doc": "north terrace, 160x240 => y16-256. No two adjacent houses share a design: terraced_house_3 and _5 are both grey corrugated and read as the SAME building side by side, which made the first cut look copy-pasted." },
+    { "me": "me.houses.terraced_house_porch", "at": { "x": 256, "y": 256 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter" },
+    { "me": "me.houses.terraced_house_3", "at": { "x": 464, "y": 256 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter",
+      "_doc": "192x240; claim 448-672 fits the 672 bbox" },
+
+    { "me": "me.houses.country_house", "at": { "x": 48, "y": 560 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter",
+      "_doc": "south terrace fronting the arterial. 288x256 balconied house => y304-560; a different massing from the north row so the two sides of the garden strip don't mirror each other." },
+    { "me": "me.houses.terraced_house_3", "at": { "x": 384, "y": 560 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter" }
+  ],
+
+  "slots": [
+    { "slot": "interior_fill", "name": "garden_strip", "x": 32, "y": 272, "w": 608, "h": 48,
+      "density": { "vegetation": "dense", "decor_small": "light" },
+      "_doc": "decor_small kept light: residential.forbid_tags covers military/grave/worksite/subway but NOT camping, so a heavier scatter pulls in camp furniture" },
+    { "slot": "path_edge", "name": "north_walk", "x": 32, "y": 256, "w": 608, "h": 16,
+      "density": { "street_furn": "light", "signage": "light" } },
+    { "slot": "path_edge", "name": "south_walk", "x": 32, "y": 320, "w": 608, "h": 16,
+      "density": { "street_furn": "light", "vegetation": "light" } }
+  ],
+
+  "interactions": { "enter": "auto", "sit": "auto" },
+
+  "constraints": {
+    "keep_clear": [
+      { "x": 0, "y": 0, "w": 672, "h": 32, "why": "north kerb band: d00 traffic light + planters stand here" },
+      { "x": 0, "y": 560, "w": 672, "h": 16, "why": "south kerb stays walkable; the park/graveyard band begins just below at world y3200" }
+    ],
+    "max_stamps": 90,
+    "coverage_target_singles": 14,
+    "max_solid_cell_ratio": 0.4,
+    "min_free_cell_ratio": 0.34,
+    "_doc": "42x36 tiles = 1512 cells. Five house shells (three 160-192px north, a 288px country house plus one terrace south) claim most of the solid budget by design."
+  },
+
+  "passes": {
+    "A_ground": { "enabled": true }, "B_skeleton": { "enabled": true },
+    "C_landmarks": { "enabled": true }, "D_groups": { "enabled": true },
+    "E_props": { "enabled": true }, "F_canopy": { "enabled": true },
+    "G_detail": { "enabled": true }, "H_life": { "enabled": true }
+  }
+}

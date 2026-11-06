@@ -1,0 +1,61 @@
+{
+  "_doc": "Parks vehicles on the asphalt aprons that had nothing standing on them — bare dark rectangles that read as abandoned lots at play zoom, most visibly beside Station Square (world 5776,1600) and in the civic campus. Found by listing every asphalt patch over 100x100 and counting stamps whose BASELINE falls inside it; these had <=2. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/blocks/d34-parking-fill.json --qa -v",
+  "_scope_doc": "coords are WORLD and the bbox is deliberately huge (4832x2528) because the lots are scattered across the city. That is safe because `surfaces` declares ONLY the lot rects: everywhere else inside the bbox has no surface, so surface_at() returns nothing, surface_allows() fails, and no pass can place there. The surface rects intentionally duplicate the existing city-plan asphalt patches — pass A needs a surface map to place onto, and the cost is a few redundant tileSprites at the same depth as the originals.",
+  "_biome_doc": "biome is `residential`, NOT urban_core, purely for its forbid_tags. urban_core forbids beach/camping/grave/military/farm but NOT subway, so the vehicle pool included rolling stock and pass E parked ME_Singles_Subway_and_Train_Station_Train_White_Middle_Down in a civic-campus car park. residential forbids military/grave/worksite/subway, which leaves ordinary road vehicles.",
+  "_inset_doc": "Every bay is inset 32px from its lot, not 16. At 16 the outermost cars overlapped content standing just beyond the apron edge (a traffic light, two mailboxes, a tree house) and the merge QA flagged five OVERLAPs. The two smallest lots (world 5504,2288 at 48 tiles and 1264,4000 at 40 tiles) were dropped: a 32px inset leaves them too thin to hold a car, and the second one abuts a villa tree house.",
+  "schema": "exterior-district-spec/1",
+  "id": "d34-parking-fill",
+  "district": "D34 Parking Fill",
+  "biome": "residential",
+  "palette": "neutral_urban",
+  "palette_secondary": "civic_blue",
+
+  "compiler": {
+    "version": 1,
+    "rules": "data/limezu-visual-catalog/placement-rules.json",
+    "seed": 34077,
+    "coords": "world",
+    "out": "data/city-specs/generated/d34-parking-fill.json"
+  },
+
+  "bbox": { "x": 1264, "y": 1600, "w": 4832, "h": 2528 },
+
+  "surfaces": [
+    { "surface": "asphalt", "name": "lot_civic_north", "x": 3744, "y": 2224, "w": 336, "h": 192, "depth": 0.9 },
+    { "surface": "asphalt", "name": "lot_station",     "x": 5776, "y": 1600, "w": 320, "h": 176, "depth": 0.9 },
+    { "surface": "asphalt", "name": "lot_south_yard",  "x": 3328, "y": 3904, "w": 224, "h": 224, "depth": 0.9 },
+    { "surface": "asphalt", "name": "lot_civic_west",  "x": 3328, "y": 2272, "w": 352, "h": 128, "depth": 0.9 },
+    { "surface": "asphalt", "name": "lot_civic_small", "x": 3776, "y": 2464, "w": 176, "h": 128, "depth": 0.9 }
+  ],
+
+  "slots": [
+    { "slot": "parking_bay", "name": "bay_civic_north", "x": 3776, "y": 2256, "w": 176, "h": 96,
+      "density": { "vehicle": "dense", "road_marking": "light" },
+      "_doc": "176x96, well inside the 336x192 apron, and no decor_small. This bay borders the civic campus's own props on two sides and needed three passes to settle: at h=128 a scattered ice-cream-truck prop hit the hospital sign at (3800,2432); at w=272 a 96px-wide Tacos_Truck anchored near the east edge reached the mailbox at (4088,2368). The bay bounds the ANCHOR, not the sprite, so a wide vehicle still overhangs — leave room for the widest thing in the pool." },
+    { "slot": "parking_bay", "name": "bay_station", "x": 5808, "y": 1632, "w": 256, "h": 112,
+      "density": { "vehicle": "dense", "road_marking": "light", "decor_small": "light" } },
+    { "slot": "parking_bay", "name": "bay_south_yard", "x": 3360, "y": 3936, "w": 160, "h": 160,
+      "density": { "vehicle": "medium", "road_marking": "light", "decor_small": "medium" } },
+    { "slot": "parking_bay", "name": "bay_civic_west", "x": 3360, "y": 2304, "w": 288, "h": 64,
+      "density": { "vehicle": "medium", "road_marking": "light" } },
+    { "slot": "parking_bay", "name": "bay_civic_small", "x": 3808, "y": 2496, "w": 112, "h": 64,
+      "density": { "vehicle": "medium", "road_marking": "light" } }
+  ],
+
+  "interactions": {},
+
+  "constraints": {
+    "max_stamps": 50,
+    "coverage_target_singles": 10,
+    "max_solid_cell_ratio": 0.6,
+    "min_free_cell_ratio": 0.2,
+    "_doc": "Ratios are measured over the whole 4832x2528 bbox, almost all of which has no declared surface, so the usual budgets do not apply — they are set permissively on purpose."
+  },
+
+  "passes": {
+    "A_ground": { "enabled": true }, "B_skeleton": { "enabled": true },
+    "C_landmarks": { "enabled": true }, "D_groups": { "enabled": true },
+    "E_props": { "enabled": true }, "F_canopy": { "enabled": true },
+    "G_detail": { "enabled": true }, "H_life": { "enabled": true }
+  }
+}

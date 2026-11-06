@@ -313,7 +313,7 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const catalogV = 'cat30officeRestore';
+    const catalogV = 'cat37moneySpark';
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
     this.load.json('office_blueprint', `./data/office_blueprint.json?v=${catalogV}`);
@@ -1602,6 +1602,7 @@ class OfficeScene extends Phaser.Scene {
       const masterObjs = masterCatalog ? masterCatalog.objects : {};
       
       const requiresDynamicLoad = new Set();
+      const queuedSingleIds = new Set();
 
       placements.forEach((pl) => {
         const id = pl.id;
@@ -1611,9 +1612,12 @@ class OfficeScene extends Phaser.Scene {
         
         if (def.source_type === 'single_file') {
            // Singles are preloaded in preload() as single_${catalog object id}.
-           if (!this.textures.exists(`single_${pl.id}`) && def.url_path) {
+           // One texture per id — a second copy of the same tower or laptop
+           // must not be queued or the loader drops the whole batch.
+           if (!this.textures.exists(`single_${pl.id}`) && def.url_path && !queuedSingleIds.has(pl.id)) {
+             queuedSingleIds.add(pl.id);
              const fullUrl = def.url_path.replace(/\\/g, '/');
-             requiresDynamicLoad.add({ id: pl.id, url: fullUrl });
+             requiresDynamicLoad.add({ id: pl.id, url: fullUrl, anim: def.anim || null });
            }
            return;
         }
@@ -1640,6 +1644,37 @@ class OfficeScene extends Phaser.Scene {
         canvasTex.refresh();
       });
 
+      const addPlacementSprite = (x, y, texKey, def, pl) => {
+        const originY = def.origin === 'center' ? 0.5 : 1;
+        const depth = furnitureRenderDepth(y, def, pl);
+        const s = def.anim
+          ? this.add.sprite(x, y, texKey)
+          : this.add.image(x, y, texKey);
+        s.setOrigin(0.5, originY).setDepth(depth);
+        applyPlacementTransform(s, pl, def);
+        if (def.anim && typeof s.play === 'function') {
+          const animKey = `${texKey}_loop`;
+          if (!this.anims.exists(animKey)) {
+            this.anims.create({
+              key: animKey,
+              frames: this.anims.generateFrameNumbers(texKey, {
+                start: 0,
+                end: def.anim.frame_end ?? 2,
+              }),
+              frameRate: def.anim.frame_rate || 4,
+              repeat: -1,
+            });
+          }
+          s.play(animKey);
+          if (def.source_type === 'single_file') {
+            const scale = Number(pl?.scale);
+            const mul = Number.isFinite(scale) && scale > 0 ? scale : 1;
+            s.setDisplaySize((def.display_w || 32) * mul, (def.display_h || 48) * mul);
+          }
+        }
+        return s;
+      };
+
       // Define a helper to actually place the objects once assets are ready
       const finalizePlacements = () => {
         // Place furniture first (bottom-center = placement x,y)
@@ -1652,16 +1687,8 @@ class OfficeScene extends Phaser.Scene {
           if (def && def.source_type === 'single_file') texKey = `single_${pl.id}`;
 
           if (!def || !this.textures.exists(texKey)) return;
-          const originY = def.origin === 'center' ? 0.5 : 1;
-          const depth = furnitureRenderDepth(pl.y, def, pl);
-          const s = this.add.image(pl.x, pl.y, texKey).setOrigin(0.5, originY).setDepth(depth);
-          if (def.source_type === 'single_file') {
-            const dw = def.display_w || 32;
-            const dh = def.display_h || 48;
-            s.setDisplaySize(dw, dh);
-          }
-          applyPlacementTransform(s, pl, def);
-          this.furnitureDecorSprites.push({ sprite: s, depth });
+          const s = addPlacementSprite(pl.x, pl.y, texKey, def, pl);
+          this.furnitureDecorSprites.push({ sprite: s, depth: s.depth });
           const instanceId = pl.instanceId || pl.id;
           this._placedCatalogSprites[instanceId] = s;
           const interactable = { id: pl.id, instanceId, sprite: s, def: { ...def, _placement: pl }, obstacle: null, parentInstanceId: null };
@@ -1703,16 +1730,8 @@ class OfficeScene extends Phaser.Scene {
           const offsetX = pl.parent_offset_x !== undefined ? pl.parent_offset_x : (def.parent_offset_x !== undefined ? def.parent_offset_x : 0);
           const px = parentSprite.x + offsetX;
           const py = parentSprite.y + offsetY;
-          const depth = furnitureRenderDepth(py, def, pl);
-          const originY = def.origin === 'center' ? 0.5 : 1;
-          const s = this.add.image(px, py, texKey).setOrigin(0.5, originY).setDepth(depth);
-          if (def.source_type === 'single_file') {
-            const dw = def.display_w || 32;
-            const dh = def.display_h || 48;
-            s.setDisplaySize(dw, dh);
-          }
-          applyPlacementTransform(s, pl, def);
-          this.furnitureDecorSprites.push({ sprite: s, depth });
+          const s = addPlacementSprite(px, py, texKey, def, pl);
+          this.furnitureDecorSprites.push({ sprite: s, depth: s.depth });
           const instanceId = pl.instanceId || pl.id;
           this._interactables.push({ id: pl.id, instanceId, sprite: s, def: { ...def, _placement: pl }, obstacle: null, parentInstanceId: pl.parentInstanceId || null });
         });
@@ -1770,12 +1789,8 @@ class OfficeScene extends Phaser.Scene {
             x = parentSprite.x + offsetX;
             y = parentSprite.y + offsetY;
           }
-          const depth = furnitureRenderDepth(y, def, pl);
-          const originY = def.origin === 'center' ? 0.5 : 1;
-          const s = this.add.image(x, y, texKey).setOrigin(0.5, originY).setDepth(depth);
-          s.setDisplaySize(def.display_w || 32, def.display_h || 48);
-          applyPlacementTransform(s, pl, def);
-          this.furnitureDecorSprites.push({ sprite: s, depth });
+          const s = addPlacementSprite(x, y, texKey, def, pl);
+          this.furnitureDecorSprites.push({ sprite: s, depth: s.depth });
           this._placedCatalogSprites[instanceId] = s;
           const interactable = {
             id: pl.id,
@@ -1810,7 +1825,15 @@ class OfficeScene extends Phaser.Scene {
         }
 
         pending.forEach((req) => {
-          this.load.image(`single_${req.id}`, req.url);
+          const key = `single_${req.id}`;
+          if (req.anim) {
+            this.load.spritesheet(key, req.url, {
+              frameWidth: req.anim.frame_w,
+              frameHeight: req.anim.frame_h,
+            });
+          } else {
+            this.load.image(key, req.url);
+          }
         });
         this.load.once('complete', placeMissingSingles);
         if (!this.load.isLoading()) this.load.start();

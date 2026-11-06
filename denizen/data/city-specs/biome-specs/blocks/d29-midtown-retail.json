@@ -1,0 +1,114 @@
+{
+  "_doc": "Street-grid block fill. d00-structure lays the arterial lattice, paving and perimeter trees/lamps for every block, but only 6 of the 21 core blocks were ever claimed by a district — the rest render as bare concrete lots at play zoom. This fills grid block r1c4, the emptiest (12% sprite coverage measured in the real renderer). Buildings are PINNED landmarks, not scattered: pass E's scatter is occupancy-aware but has no row aligner, so letting it pick building_shell produced a novelty ice-cream kiosk and a giant mushroom at random baselines instead of a street wall. Compile: python3 scripts/compile-exterior-district.py --spec data/city-specs/biome-specs/blocks/d29-midtown-retail.json --qa -v. Vocabulary: data/limezu-visual-catalog/placement-rules.json. Format: docs/EXTERIOR-COMPILER.md",
+  "_layout_doc": "TWO RULES this spec learned the hard way, both silent 'no accepting surface / overlaps a claim' rejections. (1) LATTICE: every landmark x/y and every keep_clear rect must be a multiple of 16. An off-lattice x like 280 makes the collider band start mid-cell, so it bleeds into the neighbouring cell and trips is_free. (2) HALO: pass C claims each shell's sprite rect PLUS a 16px halo on all sides, so a row must advance by sprite_width + 32 to leave a clear cell between claims. Vertical bands are chosen so scattered props never sit where a building sprite will draw over them: props live at y256-288 and y400-448, the rows occupy y64-240 and y464-592.",
+  "schema": "exterior-district-spec/1",
+  "id": "d29-midtown-retail",
+  "district": "D29 Midtown Retail Block",
+  "biome": "commercial",
+  "palette": "neutral_urban",
+  "palette_secondary": "warm_autumn",
+
+  "compiler": {
+    "version": 1,
+    "rules": "data/limezu-visual-catalog/placement-rules.json",
+    "seed": 29141,
+    "coords": "local",
+    "out": "data/city-specs/generated/d29-midtown-retail.json",
+    "_doc": "coords 'local': every rect/point is relative to bbox. Grid block r1c4 sits between arterials x2560/x3392 and y1200/y1872."
+  },
+
+  "bbox": { "x": 2624, "y": 1264, "w": 768, "h": 608 },
+  "label": "MIDTOWN RETAIL",
+  "label_at": { "x": 384, "y": 16 },
+
+  "surfaces": [
+    {
+      "surface": "sidewalk",
+      "x": 0, "y": 0, "w": 768, "h": 608,
+      "depth": 0.87,
+      "_doc": "block pavement over the whole bbox first, per structure-grammar pass A"
+    },
+    {
+      "surface": "asphalt",
+      "name": "service_alley",
+      "x": 48, "y": 304, "w": 672, "h": 96,
+      "depth": 1.1,
+      "_doc": "mid-block delivery lane between the two building rows"
+    }
+  ],
+
+  "landmarks": [
+    { "me": "me.generic_building.facade_redbrick_cornice_white", "at": { "x": 48, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter",
+      "_doc": "north row, backs onto the alley. 112x160 => y80-240." },
+    { "me": "me.shopping.store_blue_bay_shadow", "at": { "x": 192, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.shopping.store_tan_bay_shadow", "at": { "x": 464, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.generic_building.storefront_blue_three_story", "at": { "x": 576, "y": 240 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter" },
+
+    { "me": "me.vehicles.gas_station_building", "at": { "x": 48, "y": 592 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop",
+      "_doc": "south frontage on the arterial — the row the player actually walks past. 192x176 forecourt anchor." },
+    { "me": "me.shopping.store_tan_flat_shadow", "at": { "x": 288, "y": 592 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.shopping.store_blue_flat_shadow", "at": { "x": 464, "y": 592 }, "anchor": "bl", "pin": true, "solid": true, "interact": "shop" },
+    { "me": "me.generic_building.facade_redbrick_cornice_white", "at": { "x": 576, "y": 592 }, "anchor": "bl", "pin": true, "solid": true, "interact": "enter" }
+  ],
+
+  "slots": [
+    {
+      "slot": "parking_bay",
+      "name": "alley_bay",
+      "x": 64, "y": 304, "w": 640, "h": 96,
+      "density": { "vehicle": "medium", "road_marking": "light", "decor_small": "light" }
+    },
+    {
+      "slot": "path_edge",
+      "name": "alley_north_walk",
+      "x": 48, "y": 256, "w": 672, "h": 32,
+      "density": { "street_furn": "medium", "signage": "light" },
+      "_doc": "narrow bands hugging the kerbs. A path_edge derived from patches spans the WHOLE pavement (1331 cells), which sprinkled 35 bins and 18 signs across open concrete mid-block."
+    },
+    {
+      "slot": "path_edge",
+      "name": "alley_south_walk",
+      "x": 48, "y": 400, "w": 672, "h": 32,
+      "density": { "street_furn": "medium", "signage": "light", "vegetation": "light" }
+    },
+    {
+      "slot": "plaza",
+      "name": "shop_forecourt",
+      "x": 48, "y": 432, "w": 672, "h": 32,
+      "density": { "street_furn": "light", "vegetation": "light", "decal": "light" }
+    }
+  ],
+
+  "interactions": {
+    "shop": "auto",
+    "enter": "auto",
+    "sit": "auto"
+  },
+
+  "constraints": {
+    "keep_clear": [
+      { "x": 384, "y": 256, "w": 64, "h": 336,
+        "why": "north-south pedestrian passage so the block is crossable instead of a solid wall of shells" },
+      { "x": 0, "y": 0, "w": 768, "h": 32,
+        "why": "north kerb band: d00 traffic light + planters stand here" },
+      { "x": 0, "y": 592, "w": 768, "h": 16,
+        "why": "south kerb band stays walkable against the arterial" }
+    ],
+    "max_stamps": 110,
+    "coverage_target_singles": 26,
+    "max_solid_cell_ratio": 0.4,
+    "min_free_cell_ratio": 0.35,
+    "_doc": "48x38 tiles = 1824 cells. max_solid_cell_ratio raised from 0.34 because 8 pinned shells legitimately claim more of the block than a scatter would; coverage_target_singles is 26 rather than 45 because a deliberately repeated shopfront row reuses variants on purpose."
+  },
+
+  "passes": {
+    "A_ground": { "enabled": true },
+    "B_skeleton": { "enabled": true },
+    "C_landmarks": { "enabled": true },
+    "D_groups": { "enabled": true },
+    "E_props": { "enabled": true },
+    "F_canopy": { "enabled": true },
+    "G_detail": { "enabled": true },
+    "H_life": { "enabled": true }
+  }
+}
