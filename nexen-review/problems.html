@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NEXEN · Life & Jarvis</title><link rel="icon" href="/branding/NEXEN.ico"><style>
+:root{color-scheme:dark;--muted:#9cbace;--line:#75bbdf35}*{box-sizing:border-box}body{margin:0;background:radial-gradient(at 0 0,#174d71,transparent 60%),#071624;color:#e4f5ff;font:15px/1.65 'Segoe UI',sans-serif}main{max-width:1120px;margin:auto;padding:28px}nav{display:flex;gap:18px;align-items:center;margin-bottom:50px}nav img{width:42px}a{color:#9ce0ff}nav a{text-decoration:none}h1{font:600 clamp(36px,5vw,58px)/1.07 Bahnschrift,sans-serif;letter-spacing:-2px;margin:12px 0}p{color:var(--muted)}.tag{letter-spacing:2px;font-size:11px;color:#91d8fd}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:28px 0}.panel{background:#12324b80;border:1px solid var(--line);border-radius:20px;padding:25px;box-shadow:0 24px 60px #0002;backdrop-filter:blur(18px)}h2{margin:0 0 16px;font-size:21px}label{display:block;margin:12px 0 7px}textarea,select,input,button{font:inherit}textarea,select{width:100%;padding:12px;border:1px solid var(--line);background:#061b2c;color:inherit;border-radius:10px}textarea{min-height:145px;resize:vertical}button,.button{padding:11px 16px;background:#addff7;border:0;border-radius:9px;color:#092236;cursor:pointer;text-decoration:none;display:inline-block}button:disabled{opacity:.45;cursor:wait}.quiet{background:#28506a;color:#d7efff}.buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}button:focus-visible,a:focus-visible{outline:3px solid #a8eaff;outline-offset:4px}.preview{display:none;max-width:100%;max-height:220px;border-radius:12px;margin:16px 0}.status{min-height:28px;color:#b6ddf3;font-size:13px}#answer{white-space:pre-wrap;overflow-wrap:anywhere;max-height:580px;overflow:auto}.help{font-size:12px}.urgent{border-left:3px solid #efc788;padding:12px 18px;background:#ba965411;border-radius:8px}.history button{display:block;margin:8px 0;width:100%;text-align:left;background:#163b54;color:#cceafa}#photo{max-width:100%}@media(max-width:760px){.grid{grid-template-columns:1fr}main{padding:20px}nav{gap:12px;margin-bottom:32px}nav a{font-size:12px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style></head><body><main><nav><img src="/branding/NEXEN-logo.png" alt="NEXEN"><a href="/">Control center</a><a href="/game">WDR City</a><a href="/tasks">All tasks</a><a href="/photos">Photo memory</a></nav><div class="tag">LIFE OS / YOUR NEXT STEP</div><h1>Bring your life.<br>Work through it with Jarvis.</h1><p>A problem, a screenshot, a plan. Your local model uses relevant shared memory to help you decide what to do next.</p><div class="urgent"><strong>Rent comes first.</strong> Keep the written notice and its deadline in your task record. <a href="/tasks">Open urgent tasks →</a></div><div class="grid"><section class="panel"><h2>What needs your attention?</h2><label for="problem">Your situation</label><textarea id="problem" maxlength="3000" placeholder="What is happening, when is it due, and what would a good outcome look like?"></textarea><div data-nexen-voice style="margin:20px 0"></div><p class="help">Ask JARVIS mode uses the photo and model you select below, then reads the local draft aloud when a device voice is available.</p><label for="photo">Add a photo or use your camera</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"><img class="preview" id="preview" alt="Your selected problem photo"><label for="model">Local model</label><select id="model"><option value="qwen3.5:9b">Loading installed models…</option></select><div class="buttons"><button id="analyze" disabled>Save & ask Jarvis</button><a class="button quiet" href="/lab">Hidden / Local AI</a></div><div id="status" class="status" role="status"></div><p class="help">Your problem becomes a tracked task before model generation. Analysis stays on this PC. Suggestions do not run code, make payments or contact people.</p></section><section class="panel"><h2>Your response</h2><div id="answer">Jarvis will explain what it can see, relevant context, and suggested next steps.</div><div class="buttons"><button class="quiet" id="speak" disabled>Read aloud</button><button class="quiet" id="stop">Stop voice</button><button id="save" disabled>Keep suggestion in my plan</button></div><p id="voice-status" class="help">Read-aloud uses an installed device voice. British voice availability depends on this device.</p><p class="help">Phone calls require a connected calling provider and your verified number. No calling service is connected yet.</p></section></div><section class="panel"><h2>Recent problems</h2><div class="history" id="history">Loading saved activity…</div></section></main><script>
+const $=id=>document.getElementById(id);
+let selected=null,previewURL=null,analysisId=null,currentAnswer='',analysisBusy=false,modelsReady=false;
+const PENDING_QUESTION='nexen.voice.pending_question';
+async function api(url,body){
+  const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),body===undefined?12000:150000);
+  try{
+    const r=await fetch(url,{credentials:'same-origin',signal:abort.signal,...(body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json','X-Nexen-Action':'launch'},body:JSON.stringify(body)})});
+    if(r.status===401||new URL(r.url,location.origin).pathname==='/login')throw Error('NEXEN is locked. Sign in again; your current question remains in this field.');
+    const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Request could not be completed');return d;
+  }catch(e){if(e.name==='AbortError')throw Error('The local request timed out. Check Recent problems before retrying; a submitted request may still finish.');throw e}finally{clearTimeout(timeout)}
+}
+$('photo').onchange=e=>{selected=e.target.files[0]||null;if(previewURL)URL.revokeObjectURL(previewURL);previewURL=null;$('preview').style.display=selected?'block':'none';if(selected){previewURL=URL.createObjectURL(selected);$('preview').src=previewURL}};
+function voices(){if(!('speechSynthesis'in window))return [];return speechSynthesis.getVoices().filter(v=>v.localService&&v.lang.toLowerCase().startsWith('en'))}
+function voiceLabel(){const all=voices(),british=all.find(v=>v.lang.toLowerCase()==='en-gb');$('voice-status').textContent=british?'Device voice: '+british.name+' (British English).':all.length?'Device voice: '+all[0].name+'. British voice is not installed.':'No local English voice is available in this browser.';return british||all[0]}
+function read(){
+  if(!currentAnswer.trim())return;
+  const voice=voiceLabel();if(!voice){$('voice-status').textContent='The draft is ready, but no local English voice is available. Read the text or install a device voice.';return}
+  speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(currentAnswer);utterance.voice=voice;utterance.lang=voice.lang;utterance.rate=.96;
+  utterance.onstart=()=>{$('voice-status').textContent='Reading with local device voice: '+voice.name+'.'};
+  utterance.onend=voiceLabel;utterance.onerror=()=>{$('voice-status').textContent='The device could not play this voice. The draft remains visible; try Read aloud.'};speechSynthesis.speak(utterance);
+}
+$('speak').onclick=read;$('stop').onclick=()=>{if('speechSynthesis'in window)speechSynthesis.cancel();window.NexenVoice?.stop();$('voice-status').textContent='Voice playback stopped.'};
+if('speechSynthesis'in window){speechSynthesis.onvoiceschanged=voiceLabel;voiceLabel()}
+async function history(){try{const d=await api('/api/life/status');$('history').replaceChildren();if(!Array.isArray(d.history)||!d.history.length){$('history').textContent='No life problems saved yet.';return}d.history.forEach(item=>{const b=document.createElement('button');b.textContent='Task #'+item.request_id+' · '+item.status+' · '+new Date(item.created_at).toLocaleString();b.onclick=()=>{analysisId=item.id;currentAnswer=item.answer||'Analysis has not produced a response.';$('answer').textContent=currentAnswer;$('speak').disabled=!item.answer;$('save').disabled=item.status!=='draft_ready'};$('history').append(b)})}catch(e){$('history').textContent=e.message}}
+function announceBusy(busy,message){window.dispatchEvent(new CustomEvent('nexen:jarvis-state',{detail:{busy,message}}))}
+async function runAnalysis({readAfter=false}={}){
+  if(analysisBusy){$('status').textContent='A local response is still being prepared. Your next question remains in the field.';return false}
+  const text=$('problem').value.trim(),photo=selected,model=$('model').value;
+  if(!text){$('status').textContent='Describe your situation first.';return false}
+  if(text.length>3000){$('status').textContent='Keep this question within 3,000 characters.';return false}
+  if(!modelsReady||!model){$('status').textContent='Choose an available local model first. Your question remains in the field.';return false}
+  if(photo&&(!['image/png','image/jpeg','image/webp'].includes(photo.type)||photo.size>8*1024*1024)){$('status').textContent='Choose a PNG, JPEG or WebP under 8 MiB.';return false}
+  analysisBusy=true;$('analyze').disabled=true;$('save').disabled=true;$('speak').disabled=true;$('photo').disabled=true;$('model').disabled=true;
+  $('status').textContent='Saving your problem and preparing local context…';announceBusy(true,'JARVIS is preparing one local response. The selected photo and model are fixed for this request.');
+  let successful=false;
+  try{
+    let photo_id=null;
+    if(photo){
+      const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),30000);
+      try{const r=await fetch('/api/photos',{method:'POST',credentials:'same-origin',signal:abort.signal,headers:{'Content-Type':photo.type,'X-Nexen-Action':'launch'},body:photo});const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:'Photo could not be saved');if(!d.photo?.id)throw Error('The photo service did not return a saved image reference.');photo_id=d.photo.id}finally{clearTimeout(timeout)}
+    }
+    $('status').textContent='Sending your problem to the local model. A submitted request may take up to two minutes.';
+    const d=await api('/api/life/analyze',{text,photo_id,model});
+    if(typeof d.answer!=='string'||!d.answer.trim())throw Error('No usable draft was returned. Check Recent problems.');
+    analysisId=d.id;currentAnswer=d.answer;$('answer').textContent=currentAnswer;$('speak').disabled=false;$('save').disabled=false;$('status').textContent='Draft ready · tracked task #'+d.request_id+' · no actions executed.';successful=true;
+    if(readAfter&&!document.hidden)read();
+    return true;
+  }catch(e){$('status').textContent=e.name==='AbortError'?'The photo upload timed out. Your question and selected image remain available.':e.message;return false}
+  finally{analysisBusy=false;$('analyze').disabled=!modelsReady;$('photo').disabled=false;$('model').disabled=false;announceBusy(false,successful?'Local draft ready. Readback uses an installed device voice; no task was marked complete.':'The local request did not return a new draft. Your question remains on this page.');history()}
+}
+$('analyze').onclick=()=>runAnalysis();
+$('save').onclick=async()=>{try{const d=await api('/api/life/analyses/'+analysisId+'/save-plan',{});$('status').textContent=d.memory_note_saved?'Suggestion retained with task #'+d.request_id+' ('+d.status+') and shared memory.':(d.warning||'Task retained; the memory note still needs to be saved.');$('save').disabled=Boolean(d.memory_note_saved)}catch(e){$('status').textContent=e.message}};
+function restoreQuestion(){
+  try{const raw=sessionStorage.getItem(PENDING_QUESTION);if(!raw)return;const item=JSON.parse(raw),age=Date.now()-item.createdAt;
+    if(item.version!==1||typeof item.text!=='string'||!item.text.trim()||item.text.length>3000||!Number.isFinite(age)||age<0||age>5*60*1000){sessionStorage.removeItem(PENDING_QUESTION);return}
+    if(!$('problem').value.trim()){$('problem').value=item.text;sessionStorage.removeItem(PENDING_QUESTION);$('status').textContent='Your spoken question was carried here. Choose a photo/model, then Save & ask JARVIS. Nothing has been submitted yet.'}
+    else $('status').textContent='A spoken question is still saved for this tab. Your current typed question was preserved.';
+  }catch{$('status').textContent='The saved voice question could not be restored. Its transcript remains on the previous page when available.'}
+}
+const modelsPromise=api('/api/lab/models').then(d=>{
+  if(!Array.isArray(d.models))throw Error('The local model list is unavailable.');
+  const models=d.models.filter(m=>m&&typeof m.name==='string'&&m.name.length<=160);$('model').replaceChildren();
+  models.forEach(m=>{const o=document.createElement('option');o.value=m.name;o.textContent=m.name;$('model').append(o)});
+  if(models.some(m=>m.name==='qwen3.5:9b'))$('model').value='qwen3.5:9b';modelsReady=models.length>0;$('analyze').disabled=!modelsReady;
+  if(!modelsReady)$('status').textContent='No local models are available. Your question remains in the field.';return modelsReady;
+}).catch(e=>{$('status').textContent=e.message;modelsReady=false;$('analyze').disabled=true;return false});
+window.addEventListener('nexen:voice-intent',async event=>{
+  const d=event.detail;if(d?.type!=='ask_jarvis'||typeof d.text!=='string')return;
+  const question=d.text.trim();if(!question||question.length>3000){$('status').textContent='The spoken question was empty or too long. Try a shorter question.';return}
+  $('problem').value=question;
+  if(analysisBusy){$('status').textContent='Your next spoken question is kept in the field. Wait for the current response, then press Save & ask JARVIS.';return}
+  const ready=await modelsPromise;if(!ready)return;await runAnalysis({readAfter:true});
+});
+window.NexenProblems=Object.freeze({getState:()=>({busy:analysisBusy,modelsReady}),read});
+restoreQuestion();history();document.addEventListener('visibilitychange',()=>{if(document.hidden&&'speechSynthesis'in window)speechSynthesis.cancel()});
+addEventListener('beforeunload',()=>{if(previewURL)URL.revokeObjectURL(previewURL);if('speechSynthesis'in window)speechSynthesis.cancel()});
+</script><script type="module" src="/world-assets/voice-control.js"></script><script type="module" src="/world-assets/development-status.js"></script></body></html>

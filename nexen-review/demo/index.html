@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NEXEN · Review UI demo</title>
+  <link rel="icon" href="/branding/NEXEN-logo.png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #eaf6ff;
+      --muted: #94adc9;
+      --line: #8bc6ff2c;
+      --blue: #83cfff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font: 16px/1.55 "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 80% 0, #174e8266, transparent 48%),
+        radial-gradient(ellipse at 5% 50%, #10487630, transparent 45%),
+        #07101f;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .brand img {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(140deg, #d8f6ff, #529cf0);
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--blue);
+      font-weight: 700;
+    }
+    h1 {
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: -1.5px;
+      margin: 8px 0 12px;
+      line-height: 1.15;
+    }
+    p { color: var(--muted); max-width: 62ch; }
+    .notice {
+      margin: 22px 0 28px;
+      padding: 14px 16px;
+      border-left: 2px solid var(--blue);
+      background: #3569912b;
+      border-radius: 0 10px 10px 0;
+      color: #c4e2f8;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    a.card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(125deg, #9bd4ff13, #183b592f);
+      transition: border-color .15s, transform .15s;
+    }
+    a.card:hover {
+      border-color: #aadfff9c;
+      transform: translateY(-2px);
+    }
+    a.card strong { display: block; font-size: 15px; margin-bottom: 6px; }
+    a.card span { font-size: 12px; color: var(--muted); }
+    footer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #7998b6;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+    code { color: #b9ecff; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">
+      <img src="/branding/NEXEN-logo.png" alt="NEXEN">
+      <div>
+        <div class="eyebrow">PUBLIC REVIEW SNAPSHOT</div>
+        <strong>NEXEN UI demo</strong>
+      </div>
+    </div>
+    <h1>Browse the Command Center without private runtime.</h1>
+    <p>
+      This tree is a filtered source review (see <code>REVIEW-SCOPE.md</code>).
+      The demo server serves included HTML/CSS/JS with stub APIs and placeholder branding.
+      It does not start workers, load personal data, or claim full product readiness.
+    </p>
+    <div class="notice" role="status">
+      Run <code>python3 demo_server.py</code> then open the pages below.
+      Connection pills and counts are stubbed for layout review only.
+    </div>
+    <div class="grid">
+      <a class="card" href="/"><strong>Command Center</strong><span>Main hub / Today</span></a>
+      <a class="card" href="/login"><strong>Unlock screen</strong><span>Password gate shell</span></a>
+      <a class="card" href="/game"><strong>WDR City</strong><span>Playable workspace shell</span></a>
+      <a class="card" href="/money"><strong>Money Engine</strong><span>Business / plans UI</span></a>
+      <a class="card" href="/next"><strong>Next step</strong><span>Task + guide shell</span></a>
+      <a class="card" href="/readiness"><strong>Readiness</strong><span>Setup checklist UI</span></a>
+      <a class="card" href="/agents"><strong>Agent Desk</strong><span>Agents console</span></a>
+      <a class="card" href="/voice"><strong>Voice</strong><span>Local voice controls</span></a>
+      <a class="card" href="/check-in"><strong>Daily check-in</strong><span>Mood / notes shell</span></a>
+      <a class="card" href="/connections"><strong>Needs you</strong><span>Blocked setup steps</span></a>
+    </div>
+    <footer>
+      WDR × NEXEN · demo branding is a placeholder · excluded modules remain excluded.
+    </footer>
+  </main>
+</body>
+</html>
