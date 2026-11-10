@@ -1,0 +1,16 @@
+{
+  "name": "get_handoff",
+  "description": "Fetch one handoff by id (full message, kind, lifecycle, document, completion). Either party in the handoff pair can read it \u2014 use after a wake webhook.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "handoff_id": {
+        "type": "string",
+        "description": "Handoff id"
+      }
+    },
+    "required": [
+      "handoff_id"
+    ]
+  }
+}

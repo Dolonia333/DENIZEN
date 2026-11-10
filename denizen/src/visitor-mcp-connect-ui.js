@@ -291,9 +291,11 @@
     {
       label: 'Team & tasks',
       tools: [
-        'team_standup', 'list_team', 'send_handoff',
-        'list_pending_handoffs', 'acknowledge_handoff', 'complete_handoff',
+        'team_standup', 'list_team', 'send_handoff', 'reply_handoff',
+        'list_pending_handoffs', 'list_handoffs', 'get_handoff', 'list_handoff_thread',
+        'acknowledge_handoff', 'complete_handoff',
         'register_handoff_webhook', 'get_handoff_webhook',
+        'list_directives', 'complete_directive', 'record_outcome',
         'team_status', 'run_as_npc', 'broadcast_task',
         'delegate_task', 'assign_task', 'announce_in_office',
       ],

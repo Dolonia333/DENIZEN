@@ -1,0 +1,17 @@
+{
+  "name": "list_directives",
+  "description": "List NPC directives with lifecycle status (queued|running|done|blocked|expired). Pass include_archived to see recent completions.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "description": "Filter: queued|running|done|blocked|expired"
+      },
+      "include_archived": {
+        "type": "boolean",
+        "description": "Include archived completions (default false)"
+      }
+    }
+  }
+}

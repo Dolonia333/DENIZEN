@@ -1,12 +1,19 @@
 {
   "name": "complete_handoff",
-  "description": "Mark a handoff as done (lifecycle=done) after the task/question is finished.",
+  "description": "Mark a handoff done (lifecycle=done). Optionally attach note + artifact; wakes the sender webhook with event=handoff.done when registered.",
   "inputSchema": {
     "type": "object",
     "properties": {
       "handoff_id": {
+        "type": "string"
+      },
+      "note": {
         "type": "string",
-        "description": "Handoff / message id"
+        "description": "What you did / answer summary"
+      },
+      "artifact": {
+        "type": "string",
+        "description": "Commit, path, ticket id, URL, etc."
       }
     },
     "required": [

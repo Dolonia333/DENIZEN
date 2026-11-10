@@ -1,6 +1,6 @@
 {
   "name": "list_skills",
-  "description": "List OpenClaw/Jelly skills this NPC is allowed to run (research, canvas-render, CRM, etc.).",
+  "description": "List skills this NPC may run, with category/param hints when known (research, CRM, coding-agent, etc.).",
   "inputSchema": {
     "type": "object",
     "properties": {}

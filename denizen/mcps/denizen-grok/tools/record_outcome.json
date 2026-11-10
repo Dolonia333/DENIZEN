@@ -1,0 +1,34 @@
+{
+  "name": "record_outcome",
+  "description": "Write one outcome ledger receipt (owner, type, artifact, pass/fail). This is what morning standup reads \u2014 not log_activity diary lines.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "outcome_type": {
+        "type": "string"
+      },
+      "value_text": {
+        "type": "string"
+      },
+      "entity_type": {
+        "type": "string"
+      },
+      "entity_key": {
+        "type": "string"
+      },
+      "artifact": {
+        "type": "string"
+      },
+      "pass": {
+        "type": "boolean"
+      },
+      "actor": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "outcome_type",
+      "value_text"
+    ]
+  }
+}

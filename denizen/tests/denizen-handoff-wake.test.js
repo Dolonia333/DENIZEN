@@ -224,4 +224,135 @@ describe('team tools handoff wake integration', () => {
     assert.equal(r.ok, true);
     assert.equal(r.lifecycle, 'read');
   });
+
+  it('get_handoff + reply_handoff + complete with note', async () => {
+    const store = {
+      h1: {
+        id: 'h1',
+        from_session_id: 'sess-other',
+        to_session_id: 'sess-jenny-active',
+        from_npc: 'josh',
+        to_npc: 'jenny',
+        message: 'Need RFP review',
+        status: 'pending',
+        metadata: { kind: 'question' },
+        kind: 'question',
+        lifecycle: 'sent',
+        created_at: '2026-11-10T00:00:00.000Z',
+      },
+    };
+    teamTools.configure({
+      denizenVisitor: {
+        getSession: async (id) => ({
+          id,
+          display_name: id.includes('jenny') ? 'Jenny' : 'Jake',
+          metadata: id === 'sess-other'
+            ? { handoff_wake_url: 'https://hooks.example.com/jake' }
+            : {},
+        }),
+        getHandoffForSession: async (id, sessionId) => {
+          const raw = store[id];
+          if (!raw) {
+            const err = new Error('Handoff not found');
+            err.code = 'NOT_FOUND';
+            throw err;
+          }
+          const wake = require('../src/denizen-handoff-wake.js');
+          return {
+            raw,
+            handoff: wake.projectHandoff({
+              ...raw,
+              direction: raw.to_session_id === sessionId ? 'inbound' : 'outbound',
+            }),
+          };
+        },
+        listHandoffThread: async (id) => ({
+          root_id: id,
+          seed_id: id,
+          count: 1,
+          handoffs: [{ id, message: store[id].message, kind: 'question', lifecycle: 'sent' }],
+        }),
+        sendHandoff: async (payload) => ({
+          id: 'h2',
+          from_session_id: payload.fromSessionId,
+          to_session_id: payload.toSessionId,
+          message: payload.message,
+          status: 'pending',
+          metadata: payload.metadata || {},
+          kind: payload.kind,
+          lifecycle: 'sent',
+          reply_to: payload.replyTo,
+        }),
+        resolveHandoffTarget: async ({ toSessionId }) => ({
+          session_id: toSessionId,
+          display_name: 'Jake',
+        }),
+        markHandoffStatus: async (id, _sid, lifecycle, opts = {}) => ({
+          id,
+          from_session_id: 'sess-other',
+          to_session_id: 'sess-jenny-active',
+          message: 'Need RFP review',
+          status: lifecycle === 'done' ? 'done' : 'delivered',
+          lifecycle,
+          kind: 'question',
+          metadata: {
+            kind: 'question',
+            completion: { note: opts.note || null, artifact: opts.artifact || null },
+          },
+        }),
+        getPendingHandoffs: async () => [],
+        listHandoffs: async () => [],
+      },
+      visitorConnections: { assertCanMessage: async () => true },
+      broadcast: () => {},
+      fetchImpl: async () => ({ ok: true, status: 200 }),
+    });
+
+    const got = await teamTools.callTool(SCOPE, 'get_handoff', { handoff_id: 'h1' });
+    assert.equal(got.ok, true);
+    assert.equal(got.handoff.kind, 'question');
+
+    const thread = await teamTools.callTool(SCOPE, 'list_handoff_thread', { handoff_id: 'h1' });
+    assert.equal(thread.ok, true);
+    assert.equal(thread.count, 1);
+
+    const reply = await teamTools.callTool(SCOPE, 'reply_handoff', {
+      handoff_id: 'h1',
+      message: 'Reviewed — looks good',
+    });
+    assert.equal(reply.ok, true);
+    assert.equal(reply.reply_to, 'h1');
+    assert.ok(reply.handoff);
+
+    const done = await teamTools.callTool(SCOPE, 'complete_handoff', {
+      handoff_id: 'h1',
+      note: 'Answered in chat',
+      artifact: 'thread:h1',
+    });
+    assert.equal(done.ok, true);
+    assert.equal(done.lifecycle, 'done');
+    assert.equal(done.note, 'Answered in chat');
+    assert.equal(done.sender_wake.notified, true);
+  });
+
+  it('list_directives available on team tools', async () => {
+    teamTools.configure({
+      npcBrains: {
+        listDirectives: () => ([{ npc: 'Jenny', status: 'queued', task: 'Ship' }]),
+        getAllDirectives: () => ({}),
+        getDirective: () => null,
+        getOpenCommitments: () => [],
+      },
+      denizenVisitor: {
+        getPendingHandoffs: async () => [],
+        listTeammatesWithPresence: async () => [],
+        getSession: async (id) => ({ id, display_name: 'Jenny' }),
+        getAssistant: async () => ({ npc_key: 'jenny' }),
+      },
+      listOnlineSessionIds: () => new Set(),
+    });
+    const r = await teamTools.callTool(SCOPE, 'list_directives', {});
+    assert.equal(r.ok, true);
+    assert.equal(r.count, 1);
+  });
 });

@@ -428,51 +428,244 @@ async function getHandoffById(messageId) {
   return rows?.[0] || null;
 }
 
-async function getPendingHandoffs(sessionId) {
+async function _enrichHandoffWithNames(row) {
+  if (!row) return null;
+  let fromDisplayName = null;
+  let toDisplayName = null;
+  if (row.from_session_id) {
+    try {
+      const fromSession = await getSession(row.from_session_id);
+      fromDisplayName = fromSession?.display_name ?? null;
+    } catch (_) { /* optional */ }
+  }
+  if (row.to_session_id) {
+    try {
+      const toSession = await getSession(row.to_session_id);
+      toDisplayName = toSession?.display_name ?? null;
+    } catch (_) { /* optional */ }
+  }
+  return {
+    ..._enrichHandoffRow(row, fromDisplayName),
+    to_display_name: toDisplayName,
+  };
+}
+
+async function getHandoffForSession(messageId, sessionId) {
+  _ensureDb();
+  if (!messageId || !sessionId) {
+    throw new VisitorError('messageId and sessionId required', 'BAD_INPUT');
+  }
+  const row = await getHandoffById(messageId);
+  if (!row) {
+    throw new VisitorError('Handoff not found', 'NOT_FOUND');
+  }
+  if (row.from_session_id !== sessionId && row.to_session_id !== sessionId) {
+    throw new VisitorError('Handoff not visible to this session', 'PROTECTED');
+  }
+  const enriched = await _enrichHandoffWithNames(row);
+  const wake = require('./denizen-handoff-wake.js');
+  const projected = wake.projectHandoff({
+    ...enriched,
+    direction: row.to_session_id === sessionId ? 'inbound' : 'outbound',
+  });
+  return { raw: enriched, handoff: projected };
+}
+
+function _statusFilterClause(statusFilter) {
+  const s = String(statusFilter || 'open').toLowerCase();
+  if (s === 'all') return null;
+  if (s === 'open' || s === 'sent' || s === 'pending') return 'status=in.(pending,sent)';
+  if (s === 'read' || s === 'delivered') return 'status=in.(delivered,read)';
+  if (s === 'done') return 'status=eq.done';
+  return 'status=in.(pending,sent)';
+}
+
+async function listHandoffs(sessionId, {
+  direction = 'inbound',
+  status = 'open',
+  kind = null,
+  limit = 20,
+} = {}) {
   _ensureDb();
   if (!sessionId) {
     throw new VisitorError('sessionId required', 'BAD_INPUT');
   }
-  // pending + sent are open; delivered/read/done are closed for the inbox.
-  const rows = await denizenDb._get(
-    `denizen_assistant_messages?select=*&status=in.(pending,sent)&to_session_id=eq.${encodeURIComponent(sessionId)}&order=created_at.desc&limit=20`,
-  );
-  const enriched = [];
-  for (const row of rows || []) {
-    let fromDisplayName = null;
-    if (row.from_session_id) {
-      try {
-        const fromSession = await getSession(row.from_session_id);
-        fromDisplayName = fromSession?.display_name ?? null;
-      } catch (_) {
-        /* optional enrichment */
+  const wake = require('./denizen-handoff-wake.js');
+  const lim = Math.max(1, Math.min(50, Number(limit) || 20));
+  const dir = String(direction || 'inbound').toLowerCase();
+  const statusClause = _statusFilterClause(status);
+  const kindNorm = kind ? wake.normalizeHandoffKind(kind) : null;
+
+  async function fetchSide(side) {
+    const sessionCol = side === 'inbound' ? 'to_session_id' : 'from_session_id';
+    let path = `denizen_assistant_messages?select=*&${sessionCol}=eq.${encodeURIComponent(sessionId)}&order=created_at.desc&limit=${lim}`;
+    if (statusClause) path += `&${statusClause}`;
+    const rows = await denizenDb._get(path);
+    const out = [];
+    for (const row of rows || []) {
+      const enriched = await _enrichHandoffWithNames(row);
+      if (kindNorm && enriched.kind !== kindNorm) continue;
+      out.push({
+        ...enriched,
+        direction: side,
+      });
+    }
+    return out;
+  }
+
+  let rows = [];
+  if (dir === 'outbound') rows = await fetchSide('outbound');
+  else if (dir === 'both') {
+    const [inbound, outbound] = await Promise.all([fetchSide('inbound'), fetchSide('outbound')]);
+    rows = [...inbound, ...outbound]
+      .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+      .slice(0, lim);
+  } else {
+    rows = await fetchSide('inbound');
+  }
+
+  return rows.map((r) => ({
+    ...r,
+    projected: wake.projectHandoff(r),
+  }));
+}
+
+async function getPendingHandoffs(sessionId) {
+  const rows = await listHandoffs(sessionId, { direction: 'inbound', status: 'open', limit: 20 });
+  return rows.map((r) => {
+    const { projected, ...rest } = r;
+    return rest;
+  });
+}
+
+async function listHandoffThread(messageId, sessionId, { limit = 40 } = {}) {
+  _ensureDb();
+  if (!messageId || !sessionId) {
+    throw new VisitorError('messageId and sessionId required', 'BAD_INPUT');
+  }
+  const wake = require('./denizen-handoff-wake.js');
+  const start = await getHandoffById(messageId);
+  if (!start) {
+    throw new VisitorError('Handoff not found', 'NOT_FOUND');
+  }
+  if (start.from_session_id !== sessionId && start.to_session_id !== sessionId) {
+    throw new VisitorError('Handoff not visible to this session', 'PROTECTED');
+  }
+
+  // Walk parents to root.
+  const seen = new Set();
+  let root = start;
+  let guard = 0;
+  while (guard++ < 40) {
+    const parentId = root?.metadata?.reply_to || null;
+    if (!parentId || seen.has(parentId)) break;
+    seen.add(parentId);
+    const parent = await getHandoffById(parentId);
+    if (!parent) break;
+    root = parent;
+  }
+
+  const a = root.from_session_id;
+  const b = root.to_session_id;
+  const lim = Math.max(1, Math.min(100, Number(limit) || 40));
+  // Fetch recent messages involving either session, then filter to the pair + thread.
+  const [fromA, fromB] = await Promise.all([
+    denizenDb._get(
+      `denizen_assistant_messages?select=*&or=(from_session_id.eq.${encodeURIComponent(a)},to_session_id.eq.${encodeURIComponent(a)})&order=created_at.asc&limit=100`,
+    ),
+    denizenDb._get(
+      `denizen_assistant_messages?select=*&or=(from_session_id.eq.${encodeURIComponent(b)},to_session_id.eq.${encodeURIComponent(b)})&order=created_at.asc&limit=100`,
+    ),
+  ]);
+  const byId = new Map();
+  for (const row of [...(fromA || []), ...(fromB || [])]) {
+    if (!row?.id) continue;
+    const pairOk = (
+      (row.from_session_id === a && row.to_session_id === b)
+      || (row.from_session_id === b && row.to_session_id === a)
+    );
+    if (!pairOk) continue;
+    byId.set(row.id, row);
+  }
+
+  // Include root + descendants that reply_to-chain back to root.
+  const rootId = root.id;
+  const inThread = new Set([rootId]);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const row of byId.values()) {
+      const parent = row.metadata?.reply_to || null;
+      if (parent && inThread.has(parent) && !inThread.has(row.id)) {
+        inThread.add(row.id);
+        grew = true;
       }
     }
-    enriched.push(_enrichHandoffRow(row, fromDisplayName));
   }
-  return enriched;
+
+  const chron = [...inThread]
+    .map((id) => byId.get(id))
+    .filter(Boolean)
+    .sort((x, y) => String(x.created_at || '').localeCompare(String(y.created_at || '')))
+    .slice(0, lim);
+
+  const enriched = [];
+  for (const row of chron) {
+    const e = await _enrichHandoffWithNames(row);
+    enriched.push({
+      ...e,
+      direction: row.to_session_id === sessionId ? 'inbound' : 'outbound',
+      projected: wake.projectHandoff({
+        ...e,
+        direction: row.to_session_id === sessionId ? 'inbound' : 'outbound',
+      }),
+    });
+  }
+
+  return {
+    root_id: rootId,
+    seed_id: messageId,
+    count: enriched.length,
+    handoffs: enriched.map((r) => r.projected),
+  };
 }
 
 async function markHandoffDelivered(messageId, sessionId) {
   return markHandoffStatus(messageId, sessionId, 'read');
 }
 
-async function markHandoffStatus(messageId, sessionId, lifecycle) {
+async function markHandoffStatus(messageId, sessionId, lifecycle, { note, artifact } = {}) {
   _ensureDb();
   if (!messageId || !sessionId) {
     throw new VisitorError('messageId and sessionId required', 'BAD_INPUT');
   }
   const wake = require('./denizen-handoff-wake.js');
   const status = wake.statusFromLifecycle(lifecycle) || wake.statusFromLifecycle('read');
+  const existing = await getHandoffById(messageId);
+  if (!existing || existing.to_session_id !== sessionId) {
+    throw new VisitorError('Handoff not found', 'NOT_FOUND');
+  }
+  const meta = {
+    ...(existing.metadata && typeof existing.metadata === 'object' ? existing.metadata : {}),
+  };
+  if (note != null || artifact != null || lifecycle === 'done' || status === 'done') {
+    meta.completion = {
+      ...(meta.completion && typeof meta.completion === 'object' ? meta.completion : {}),
+      note: note != null ? String(note).slice(0, 2000) : (meta.completion?.note || null),
+      artifact: artifact != null ? String(artifact).slice(0, 500) : (meta.completion?.artifact || null),
+      at: new Date().toISOString(),
+      lifecycle: wake.lifecycleFromStatus(status),
+    };
+  }
   const rows = await denizenDb._patch(
     `denizen_assistant_messages?id=eq.${encodeURIComponent(messageId)}&to_session_id=eq.${encodeURIComponent(sessionId)}`,
-    { status },
+    { status, metadata: meta },
     { prefer: 'return=representation' },
   );
   if (!rows?.length) {
     throw new VisitorError('Handoff not found', 'NOT_FOUND');
   }
-  return _enrichHandoffRow(rows[0]);
+  return _enrichHandoffWithNames(rows[0]);
 }
 
 async function setHandoffWakeUrl(sessionId, { url, secret, clear } = {}) {
@@ -979,6 +1172,9 @@ module.exports = {
   listTeammatesWithPresence,
   sendHandoff,
   getHandoffById,
+  getHandoffForSession,
+  listHandoffs,
+  listHandoffThread,
   getPendingHandoffs,
   markHandoffDelivered,
   markHandoffStatus,

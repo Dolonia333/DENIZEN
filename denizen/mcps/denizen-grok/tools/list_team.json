@@ -1,6 +1,6 @@
 {
   "name": "list_team",
-  "description": "List teammates in your org with claimed assistant NPC and online presence.",
+  "description": "List human teammates in your org with claimed assistant, WS online, and MCP/AI presence (ChatGPT/Cursor recently active).",
   "inputSchema": {
     "type": "object",
     "properties": {}

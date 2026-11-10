@@ -108,26 +108,85 @@ function maskWakeUrl(url) {
   }
 }
 
-function buildWakePayload({ handoff, fromDisplayName, kind, replyTo, lifecycle } = {}) {
+function buildWakePayload({
+  handoff,
+  fromDisplayName,
+  kind,
+  replyTo,
+  lifecycle,
+  event,
+  note,
+  artifact,
+} = {}) {
   const id = handoff?.id || null;
   const message = String(handoff?.message || '').slice(0, 4000);
-  return {
+  const evt = String(event || 'handoff.received').trim() || 'handoff.received';
+  const handoffKind = kind || normalizeHandoffKind(handoff?.metadata?.kind || handoff?.kind);
+  const life = lifecycle || lifecycleFromStatus(handoff?.status);
+  const base = {
     source: 'denizen',
-    event: 'handoff.received',
+    event: evt,
     at: new Date().toISOString(),
     handoff_id: id,
-    kind: kind || normalizeHandoffKind(handoff?.metadata?.kind),
-    lifecycle: lifecycle || lifecycleFromStatus(handoff?.status),
+    kind: handoffKind,
+    lifecycle: life,
     status: handoff?.status || 'pending',
-    reply_to: replyTo || handoff?.metadata?.reply_to || null,
+    reply_to: replyTo || handoff?.metadata?.reply_to || handoff?.reply_to || null,
     from_session_id: handoff?.from_session_id || null,
     to_session_id: handoff?.to_session_id || null,
     from_npc: handoff?.from_npc || null,
     to_npc: handoff?.to_npc || null,
     from_display_name: fromDisplayName || handoff?.from_display_name || null,
     message,
-    suggested_actions: suggestedActionsForKind(kind || handoff?.metadata?.kind),
-    next_step: 'Call list_pending_handoffs, act, then acknowledge_handoff (read) or complete_handoff (done)',
+    note: note || handoff?.metadata?.completion?.note || null,
+    artifact: artifact || handoff?.metadata?.completion?.artifact || null,
+  };
+  if (evt === 'handoff.received') {
+    return {
+      ...base,
+      suggested_actions: suggestedActionsForKind(handoffKind),
+      next_step: 'Call get_handoff or list_pending_handoffs, act, then acknowledge_handoff / complete_handoff / reply_handoff',
+    };
+  }
+  if (evt === 'handoff.done' || evt === 'handoff.read') {
+    return {
+      ...base,
+      suggested_actions: evt === 'handoff.done'
+        ? ['optional: list_handoff_thread for context', 'record_outcome if this was a deliverable']
+        : ['wait for complete_handoff or reply'],
+      next_step: evt === 'handoff.done'
+        ? 'Recipient finished this handoff'
+        : 'Recipient marked this handoff read',
+    };
+  }
+  return base;
+}
+
+/** Stable bot-facing projection (drops noisy raw metadata dumps). */
+function projectHandoff(row) {
+  if (!row) return null;
+  const meta = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const kind = row.kind || normalizeHandoffKind(meta.kind);
+  const lifecycle = row.lifecycle || lifecycleFromStatus(row.status);
+  const document = meta.document && typeof meta.document === 'object' ? meta.document : null;
+  return {
+    id: row.id,
+    kind,
+    lifecycle,
+    status: row.status,
+    message: row.message,
+    from_session_id: row.from_session_id,
+    to_session_id: row.to_session_id,
+    from_npc: row.from_npc,
+    to_npc: row.to_npc,
+    from_display_name: row.from_display_name || null,
+    to_display_name: row.to_display_name || null,
+    reply_to: row.reply_to || meta.reply_to || null,
+    document,
+    completion: meta.completion || null,
+    created_at: row.created_at || null,
+    suggested_actions: row.suggested_actions || suggestedActionsForKind(kind),
+    direction: row.direction || null,
   };
 }
 
@@ -234,6 +293,7 @@ module.exports = {
   validateWakeUrl,
   maskWakeUrl,
   buildWakePayload,
+  projectHandoff,
   suggestedActionsForKind,
   postWakeWebhook,
   wakeConfigFromSession,

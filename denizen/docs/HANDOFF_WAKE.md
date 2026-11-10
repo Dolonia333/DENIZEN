@@ -52,6 +52,22 @@ Headers: `Content-Type: application/json`, `X-Denizen-Event: handoff.received`, 
 
 Lifecycle: **sent** → **read** → **done** (`pending` / `delivered` / `done` in DB).
 
+## Bot loop (recommended)
+
+```text
+# once
+register_handoff_webhook({ url, secret })
+
+# on wake OR poll
+get_handoff({ handoff_id })            # full row
+list_handoff_thread({ handoff_id })    # whole conversation
+reply_handoff({ handoff_id, message }) # threaded reply
+complete_handoff({ handoff_id, note, artifact })
+```
+
+Also: `list_handoffs({ direction: "outbound" })` to see unanswered questions you sent.
+Completing a handoff POSTs `handoff.done` to the **sender** wake URL when registered.
+
 ## Fallback
 
 If no wake URL: poll `team_standup` or `list_pending_handoffs` about every 15 minutes.

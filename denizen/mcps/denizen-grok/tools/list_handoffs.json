@@ -1,0 +1,41 @@
+{
+  "name": "list_handoffs",
+  "description": "List handoffs for your session with direction + status filters. Use direction=outbound to see unanswered questions you sent; status=open|read|done|all.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "direction": {
+        "type": "string",
+        "enum": [
+          "inbound",
+          "outbound",
+          "both"
+        ],
+        "description": "inbound (default) | outbound | both"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "open",
+          "read",
+          "done",
+          "all"
+        ],
+        "description": "open (default) | read | done | all"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "question",
+          "task",
+          "fyi",
+          "urgent"
+        ]
+      },
+      "limit": {
+        "type": "number",
+        "description": "Max rows (default 20)"
+      }
+    }
+  }
+}
