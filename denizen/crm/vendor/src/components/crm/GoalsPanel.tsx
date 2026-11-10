@@ -23,18 +23,10 @@ function goalCurrent(g: Goal, deals: Deal[], contacts: Contact[]): number {
 
 export function GoalsPanel({ goals, deals, contacts, onNavigate }: Props) {
   if (!goals.length) return null;
-  const card = {
-    background: `linear-gradient(145deg,${T.bg2},${T.bg3}88)`,
-    border: `1px solid ${T.bg4}`,
-    borderRadius: T.radius.lg,
-    padding: "16px 18px",
-    marginBottom: 16,
-  };
-
   return (
-    <div style={card}>
+    <div className="crm-panel" style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>🎯 Goals</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text0 }}>Goals</div>
         {onNavigate && (
           <button onClick={() => onNavigate("analytics")} style={{ background: "none", border: "none", color: T.accent, fontSize: 11, cursor: "pointer" }}>Analytics →</button>
         )}
@@ -46,7 +38,7 @@ export function GoalsPanel({ goals, deals, contacts, onNavigate }: Props) {
           const isMoney = g.metric === "mrr" || g.metric === "pipeline_value";
           return (
             <div key={g.id} style={{ background: T.bg3, borderRadius: T.radius.md, padding: "12px 14px", border: `1px solid ${T.bg4}` }}>
-              <div style={{ fontSize: 11, color: T.text3 }}>{g.icon} {g.label}</div>
+              <div style={{ fontSize: 11, color: T.text3 }}>{g.label}</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: T.text0, marginTop: 4 }}>
                 {isMoney ? fmt(current) : Math.round(current)}
                 <span style={{ fontSize: 12, color: T.text3, fontWeight: 500 }}> / {isMoney ? fmt(g.target) : g.target}</span>

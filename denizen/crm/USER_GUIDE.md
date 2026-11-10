@@ -354,9 +354,9 @@ Three **sub-tabs:**
 |------|----------------|
 | **Quotes** | Build, send, track status (draft → sent → signed → paid) |
 | **Portal link** | Generate client-facing URL (`#/portal/:token`) |
-| **Intake form config** | Questions for public form |
+| **Form builder** | Visual editor for intake fields (reorder, types, required, embed snippet); syncs to team workspace |
 | **Submissions** | Leads from public form; qualify → auto contact + deal |
-| **Public URL** | `/crm/intake.html?org=YOUR_ORG_SLUG` |
+| **Public URL** | `/crm/intake.html?org=YOUR_ORG_SLUG` (loads schema from `GET /api/crm/intake/form`) |
 
 ---
 

@@ -48,6 +48,7 @@ export type CrmSyncApplyFns = {
   setMarketingCampaigns?: (v: unknown[]) => void;
   setTeamPolicy?: (v: Record<string, unknown>) => void;
   setUsageLog?: (v: unknown[]) => void;
+  setIntakeQuestions?: (v: unknown[]) => void;
 };
 
 function applyWorkspace(state: CrmWorkspaceState, fns: CrmSyncApplyFns) {
@@ -85,6 +86,7 @@ function applyWorkspace(state: CrmWorkspaceState, fns: CrmSyncApplyFns) {
   if (state.marketingCampaigns && fns.setMarketingCampaigns) fns.setMarketingCampaigns(state.marketingCampaigns);
   if (state.teamPolicy && fns.setTeamPolicy) fns.setTeamPolicy(state.teamPolicy);
   if (state.usageLog && fns.setUsageLog) fns.setUsageLog(state.usageLog);
+  if (state.intakeQuestions && fns.setIntakeQuestions) fns.setIntakeQuestions(state.intakeQuestions);
 }
 
 function hasLocalData(state: CrmWorkspaceState): boolean {
@@ -263,24 +265,24 @@ export function crmSyncLabel(
   const bySuffix = updatedByName ? ` · ${updatedByName}` : "";
   switch (status) {
     case "loading":
-      return "Syncing…";
+      return "Connecting…";
     case "saving":
-      return "Saving to team workspace…";
+      return "Saving to your team…";
     case "synced":
-      return teamLabel ? `Team ${teamLabel}${timeSuffix}${bySuffix}` : `Synced to Denizen${timeSuffix}${bySuffix}`;
+      return teamLabel ? `Synced · ${teamLabel}${timeSuffix}${bySuffix}` : `Synced${timeSuffix}${bySuffix}`;
     case "draft":
       return teamLabel
-        ? `Local draft — add data or load sample to sync · Team ${teamLabel}`
-        : "Local draft — export or edit before team sync";
+        ? `On this device · Team ${teamLabel}`
+        : "On this device — add data to sync with your team";
     case "conflict":
-      return "Teammate updated — merged latest";
+      return "Updated from a teammate";
     case "no-session":
-      return "Local only — open Denizen office first";
+      return "On this device — open the Denizen office to sync";
     case "no-org":
-      return "Sign in with team access to sync CRM";
+      return "Join a team in Denizen to sync across devices";
     case "error":
-      return "Sync error — using local copy";
+      return "Couldn’t sync — still working on this device";
     default:
-      return "Local only";
+      return "On this device";
   }
 }

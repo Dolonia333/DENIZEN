@@ -14,14 +14,14 @@ export interface ActivityEvent {
 }
 
 const EVENT_META: Record<ActivityEvent["type"], { icon: string; color: string; verb: string }> = {
-  deal_move: { icon: "◆", color: "#f0b429", verb: "moved" },
-  deal_created: { icon: "💰", color: "#4d9ef7", verb: "created" },
-  deal_won: { icon: "🎉", color: "#22d3a0", verb: "won" },
-  deal_lost: { icon: "❌", color: "#f85b5b", verb: "lost" },
-  contact_created: { icon: "👤", color: "#8b5cf6", verb: "added" },
-  note_added: { icon: "📝", color: "#fb923c", verb: "logged" },
-  task_completed: { icon: "✅", color: "#22d3a0", verb: "completed" },
-  task_created: { icon: "📋", color: "#4d9ef7", verb: "created" },
+  deal_move: { icon: "→", color: "#d4a574", verb: "moved" },
+  deal_created: { icon: "+", color: "#38bdf8", verb: "created" },
+  deal_won: { icon: "✓", color: "#4ade80", verb: "won" },
+  deal_lost: { icon: "×", color: "#f87171", verb: "lost" },
+  contact_created: { icon: "+", color: "#3ecf9a", verb: "added" },
+  note_added: { icon: "·", color: "#fb923c", verb: "logged" },
+  task_completed: { icon: "✓", color: "#4ade80", verb: "completed" },
+  task_created: { icon: "+", color: "#38bdf8", verb: "created" },
 };
 
 interface Props {
@@ -126,7 +126,7 @@ export function ActivityFeed({
     // New deals
     deals.forEach(d => {
       if (!prevDeals.find(p => p.id === d.id)) {
-        addEvent({ type: "deal_created", title: `New deal: ${d.title}`, description: `${fmt(d.value)} · ${d.contact}`, icon: "💰", color: "#4d9ef7", entityName: d.title });
+        addEvent({ type: "deal_created", title: `New deal: ${d.title}`, description: `${fmt(d.value)} · ${d.contact}`, icon: EVENT_META.deal_created.icon, color: EVENT_META.deal_created.color, entityName: d.title });
       }
     });
 
@@ -135,11 +135,11 @@ export function ActivityFeed({
       const prev = prevDeals.find(p => p.id === d.id);
       if (prev && prev.stage !== d.stage) {
         if (d.stage === "Closed Won") {
-          addEvent({ type: "deal_won", title: `Deal won! ${d.title}`, description: `${fmt(d.value)} closed`, icon: "🎉", color: "#22d3a0", entityName: d.title });
+          addEvent({ type: "deal_won", title: `Deal won: ${d.title}`, description: `${fmt(d.value)} closed`, icon: EVENT_META.deal_won.icon, color: EVENT_META.deal_won.color, entityName: d.title });
         } else if (d.stage === "Closed Lost") {
-          addEvent({ type: "deal_lost", title: `Deal lost: ${d.title}`, description: `${fmt(d.value)}`, icon: "❌", color: "#f85b5b", entityName: d.title });
+          addEvent({ type: "deal_lost", title: `Deal lost: ${d.title}`, description: `${fmt(d.value)}`, icon: EVENT_META.deal_lost.icon, color: EVENT_META.deal_lost.color, entityName: d.title });
         } else {
-          addEvent({ type: "deal_move", title: `${d.title} → ${d.stage}`, description: `Moved from ${prev.stage}`, icon: "◆", color: "#f0b429", entityName: d.title });
+          addEvent({ type: "deal_move", title: `${d.title} → ${d.stage}`, description: `Moved from ${prev.stage}`, icon: EVENT_META.deal_move.icon, color: EVENT_META.deal_move.color, entityName: d.title });
         }
       }
     });
@@ -152,7 +152,7 @@ export function ActivityFeed({
     const prevContacts = prevContactsRef.current;
     contacts.forEach(c => {
       if (!prevContacts.find(p => p.id === c.id)) {
-        addEvent({ type: "contact_created", title: `New contact: ${c.name}`, description: `${c.company} · ${c.status}`, icon: "👤", color: "#8b5cf6", entityName: c.name });
+        addEvent({ type: "contact_created", title: `New contact: ${c.name}`, description: `${c.company} · ${c.status}`, icon: EVENT_META.contact_created.icon, color: EVENT_META.contact_created.color, entityName: c.name });
       }
     });
     prevContactsRef.current = contacts;
@@ -163,7 +163,7 @@ export function ActivityFeed({
     const prevNotes = prevNotesRef.current;
     notes.forEach(n => {
       if (!prevNotes.find(p => p.id === n.id)) {
-        addEvent({ type: "note_added", title: `Note on ${n.contact}`, description: n.text.slice(0, 50), icon: "📝", color: "#fb923c", entityName: n.contact });
+        addEvent({ type: "note_added", title: `Note on ${n.contact}`, description: n.text.slice(0, 50), icon: EVENT_META.note_added.icon, color: EVENT_META.note_added.color, entityName: n.contact });
       }
     });
     prevNotesRef.current = notes;
@@ -175,9 +175,9 @@ export function ActivityFeed({
     tasks.forEach(t => {
       const prev = prevTasks.find(p => p.id === t.id);
       if (!prev) {
-        addEvent({ type: "task_created", title: `New task`, description: t.title, icon: "📋", color: "#4d9ef7", entityName: t.title });
+        addEvent({ type: "task_created", title: `New task`, description: t.title, icon: EVENT_META.task_created.icon, color: EVENT_META.task_created.color, entityName: t.title });
       } else if (t.done && !prev.done) {
-        addEvent({ type: "task_completed", title: `Task completed`, description: t.title, icon: "✅", color: "#22d3a0", entityName: t.title });
+        addEvent({ type: "task_completed", title: `Task completed`, description: t.title, icon: EVENT_META.task_completed.icon, color: EVENT_META.task_completed.color, entityName: t.title });
       }
     });
     prevTasksRef.current = tasks;
@@ -214,18 +214,18 @@ export function ActivityFeed({
       {launcher === "fixed" && (
         <button onClick={handleToggle} style={{
           position: "fixed", bottom: 90, right: 76, zIndex: 800,
-          width: 42, height: 42, borderRadius: "50%",
-          background: isOpen ? T.bg3 : `linear-gradient(135deg, ${T.purple}, #6366f1)`,
-          color: isOpen ? T.text0 : "#fff",
-          border: `1px solid ${T.bg5}`, fontSize: 18, cursor: "pointer",
+          width: 42, height: 42, borderRadius: 10,
+          background: isOpen ? T.bg3 : T.bg2,
+          color: T.text0,
+          border: `1px solid ${isOpen ? T.accent : T.bg4}`, fontSize: 13, fontWeight: 700, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.6)", transition: "all 0.15s",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.4)", transition: "border-color 0.15s, background 0.15s",
         }}>
-          ⚡
+          Act
           {unread > 0 && (
             <span style={{
               position: "absolute", top: -4, right: -4,
-              width: 18, height: 18, borderRadius: "50%",
+              width: 18, height: 18, borderRadius: 6,
               background: T.red, color: "#fff", fontSize: 9, fontWeight: 800,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>{unread > 9 ? "9+" : unread}</span>
@@ -248,12 +248,8 @@ export function ActivityFeed({
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 14 }}>⚡</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>Activity Feed</span>
-              <span style={{
-                fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: T.radius.full,
-                background: `${T.purple}22`, color: T.purple,
-              }}>LIVE</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: T.text0 }}>Activity</span>
+              <span className="crm-kicker" style={{ color: T.accent }}>Live</span>
             </div>
             <button onClick={() => setIsOpen(false)} style={{
               background: "none", border: "none", color: T.text3, cursor: "pointer", fontSize: 16,
@@ -277,10 +273,10 @@ export function ActivityFeed({
                 onMouseLeave={e => e.currentTarget.style.background = ""}
                 >
                   <div style={{
-                    width: 28, height: 28, borderRadius: T.radius.full, flexShrink: 0,
+                    width: 28, height: 28, borderRadius: 8, flexShrink: 0,
                     background: `${event.color}18`, color: event.color,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12,
+                    fontSize: 12, fontWeight: 700,
                   }}>{event.icon}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: T.text0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

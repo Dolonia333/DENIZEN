@@ -15,12 +15,13 @@ interface Props {
 
 export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNavigate }: Props) {
   const { t } = useCRMTranslation();
-  // Collapsed groups state — persisted per session
+  // Collapsed groups — DAILY stays open; secondary groups start collapsed once (less overwhelm, all items kept).
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     try {
       const stored = localStorage.getItem("crm-sidebar-collapsed");
-      return stored ? JSON.parse(stored) : {};
-    } catch { return {}; }
+      if (stored) return JSON.parse(stored);
+    } catch { /* ignore */ }
+    return { SELL: true, COLLABORATE: true, INTELLIGENCE: true, SYSTEM: true };
   });
 
   const toggleGroup = useCallback((group: string) => {
@@ -127,7 +128,10 @@ export function CollapsibleSidebar({ tab, isMobile, contacts, deals, tasks, onNa
                         borderRadius: "0 2px 2px 0", background: T.accent,
                       }} />
                     )}
-                    <span style={{ fontSize: 16, width: 20, textAlign: "center", opacity: active ? 1 : 0.6 }}>{item.icon}</span>
+                    <span style={{
+                      fontSize: 11, width: 18, textAlign: "center", opacity: active ? 0.9 : 0.45,
+                      fontWeight: 700, letterSpacing: "0.02em",
+                    }} aria-hidden>{item.icon}</span>
                     <span style={{ flex: 1 }}>{termLabel}</span>
                     {/* Count badge */}
                     {count !== null && count > 0 && (

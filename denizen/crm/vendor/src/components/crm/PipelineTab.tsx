@@ -5,7 +5,7 @@ import { shareToGlobalChat } from "@/components/GlobalTeamChat";
 import type { IndustryConfig } from "@/lib/industry-config";
 import { StudioBoardPanel } from "./StudioBoardPanel";
 
-const STAGE_COLOR_PALETTE = ["#6366f1", "#f0b429", "#3b82f6", "#8b5cf6", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#f97316", "#06b6d4"];
+const STAGE_COLOR_PALETTE = ["#64748b", "#d4a574", "#38bdf8", "#3ecf9a", "#4ade80", "#f87171", "#fb923c", "#14b8a6", "#94a3b8", "#06b6d4"];
 let _stageList: string[] = [];
 function setStageList(stages: string[]) { _stageList = stages; }
 function getStageColor(stage: string): string {
@@ -53,7 +53,7 @@ function buildDealTimeline(
 
   for (const n of notes.filter((x) => x.contact === deal.contact)) {
     items.push({
-      icon: "📝",
+      icon: "N",
       label: n.text.length > 100 ? `${n.text.slice(0, 100)}…` : n.text,
       time: formatTimelineTime(n.date),
       color: T.blue,
@@ -62,15 +62,15 @@ function buildDealTimeline(
   }
   for (const e of emailLog.filter((x) => x.to === deal.contact || x.toEmail === deal.contact)) {
     items.push({
-      icon: "✉️",
+      icon: "E",
       label: `Email sent: ${e.subject}`,
       time: formatTimelineTime(e.sentAt),
-      color: T.purple,
+      color: T.copper,
       sortAt: Date.parse(e.sentAt) || 0,
     });
     if (e.opens?.length) {
       items.push({
-        icon: "👁️",
+        icon: "O",
         label: `Opened "${e.subject}" (${e.opens.length}×)`,
         time: formatTimelineTime(e.opens[e.opens.length - 1].at),
         color: T.green,
@@ -82,7 +82,7 @@ function buildDealTimeline(
     x.entity === "deal" && (x.entityName === deal.title || x.entityName?.includes(deal.title)),
   )) {
     items.push({
-      icon: "📋",
+      icon: "A",
       label: `${a.user} ${a.action} ${a.entityName}${a.field ? ` (${a.field})` : ""}`,
       time: formatTimelineTime(a.at),
       color: T.accent,
@@ -91,7 +91,7 @@ function buildDealTimeline(
   }
 
   items.push({
-    icon: "🎯",
+    icon: "D",
     label: `Deal in pipeline — ${deal.title}`,
     time: deal.closeDate ? `Close ${deal.closeDate}` : "Open",
     color: T.blue,
@@ -99,7 +99,7 @@ function buildDealTimeline(
   });
   if (deal.health === "at-risk") {
     items.push({
-      icon: "⚠️",
+      icon: "!",
       label: "Flagged at-risk — follow up soon",
       time: "Current",
       color: T.orange,
@@ -107,7 +107,7 @@ function buildDealTimeline(
     });
   }
   items.push({
-    icon: "⏱️",
+    icon: "T",
     label: `In ${deal.stage} for ${deal.daysInStage} days`,
     time: "Current",
     color: stageColor,
@@ -194,26 +194,24 @@ function DealSlideout({ deal, deals, contacts, stages, notes, emailLog, auditLog
   [deals, deal]);
 
   const glass = {
-    background: `linear-gradient(145deg, ${T.bg2}cc, ${T.bg3}66)`,
-    backdropFilter: "blur(12px)",
-    border: `1px solid ${T.bg4}66`,
-    borderRadius: T.radius.lg,
+    background: T.bg2,
+    border: `1px solid ${T.bg4}`,
+    borderRadius: 10,
   };
 
   return (
     <>
       {/* Overlay */}
       <div onClick={onClose} style={{
-        position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
-        backdropFilter: "blur(4px)", zIndex: 999,
-        animation: "fadeIn 0.2s ease",
+        position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
+        zIndex: 999,
       }} />
       {/* Panel */}
       <div style={{
         position: "fixed", top: 0, right: 0, bottom: 0, width: 480, maxWidth: "95vw",
-        background: `linear-gradient(180deg, ${T.bg1}, ${T.bg0})`,
-        borderLeft: `1px solid ${T.bg4}66`, zIndex: 1000,
-        overflowY: "auto", animation: "slideInRight 0.3s cubic-bezier(0.4,0,0.2,1)",
+        background: T.bg1,
+        borderLeft: `1px solid ${T.bg4}`, zIndex: 1000,
+        overflowY: "auto",
       }}>
         {/* Header */}
         <div style={{ padding: "24px 24px 0", position: "sticky", top: 0, background: T.bg1, zIndex: 1, paddingBottom: 16, borderBottom: `1px solid ${T.bg4}44` }}>
@@ -479,22 +477,18 @@ function VelocityMetrics({ deals, stages }: { deals: Deal[]; stages: string[] })
   const totalVelocity = useMemo(() => stageMetrics.reduce((s, m) => s + m.avg, 0), [stageMetrics]);
 
   const glass = {
-    background: `linear-gradient(135deg, ${T.bg2}dd, ${T.bg3}99)`,
-    backdropFilter: "blur(20px)",
-    border: `1px solid ${T.bg4}88`,
-    borderRadius: T.radius.xl,
+    background: T.bg2,
+    border: `1px solid ${T.bg4}`,
+    borderRadius: 12,
   };
 
   return (
     <div style={{ marginTop: 28 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: T.text0, margin: 0, letterSpacing: "-0.02em" }}>
           Pipeline Velocity
         </h3>
-        <span style={{
-          fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
-          background: `${T.blue}15`, color: T.blue, fontWeight: 600, border: `1px solid ${T.blue}33`,
-        }}>
+        <span className="crm-kicker" style={{ color: T.blue }}>
           {totalVelocity}d avg cycle
         </span>
       </div>
@@ -636,27 +630,22 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
 
   // ── Styles ──
   const glass = {
-    background: `linear-gradient(135deg, ${T.bg2}dd, ${T.bg3}99)`,
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    border: `1px solid ${T.bg4}88`,
-    borderRadius: T.radius.xl,
+    background: T.bg2,
+    border: `1px solid ${T.bg4}`,
+    borderRadius: 12,
   } as const;
 
   const glassSubtle = {
-    background: `linear-gradient(145deg, ${T.bg2}cc, ${T.bg3}66)`,
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-    border: `1px solid ${T.bg4}66`,
-    borderRadius: T.radius.lg,
+    background: T.bg2,
+    border: `1px solid ${T.bg4}`,
+    borderRadius: 10,
   } as const;
 
   // ── Stat Card ──
-  const StatCard = ({ label, value, sub, color, icon }: { label: string; value: string; sub?: string; color: string; icon: string }) => (
-    <div style={{ ...glassSubtle, padding: "18px 20px", flex: 1, minWidth: 140, position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: -8, right: -8, fontSize: 48, opacity: 0.04, color }}>{icon}</div>
-      <div style={{ fontSize: 11, color: T.text3, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color, letterSpacing: "-0.03em", lineHeight: 1, fontFamily: "'Inter', -apple-system, sans-serif" }}>{value}</div>
+  const StatCard = ({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string; icon?: string }) => (
+    <div style={{ ...glassSubtle, padding: "16px 18px", flex: 1, minWidth: 140 }}>
+      <div className="crm-kicker" style={{ marginBottom: 8 }}>{label}</div>
+      <div className="crm-metric" style={{ fontSize: 24, color, letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 11, color: T.text3, marginTop: 6 }}>{sub}</div>}
     </div>
   );
@@ -680,13 +669,11 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
           ...glassSubtle,
           padding: "16px",
           cursor: "pointer",
-          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-          transform: isHovered && !isDragging ? "translateY(-2px)" : "none",
-          boxShadow: isHovered && !isDragging
-            ? `0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px ${color}33`
-            : isDragging ? `0 16px 48px rgba(0,0,0,0.4)` : "0 1px 3px rgba(0,0,0,0.2)",
-          borderColor: isHovered ? `${color}44` : `${T.bg4}66`,
-          opacity: isDragging ? 0.6 : 1,
+          transition: "border-color 0.15s, background 0.15s",
+          boxShadow: "none",
+          borderColor: isHovered ? `${color}55` : T.bg4,
+          background: isHovered ? T.bg3 : T.bg2,
+          opacity: isDragging ? 0.55 : 1,
         }}
       >
         {/* Top row: title + actions */}
@@ -718,13 +705,13 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
               snapshot: { "Value": fmt(deal.value), "Stage": deal.stage, "Contact": deal.contact, "Probability": `${deal.probability}%`, "Close Date": deal.closeDate, "Days in Stage": `${deal.daysInStage}d` },
               status: deal.health === "at-risk" ? "Needs Review" : "In Progress",
             }); }} style={{
-              background: `${T.purple}18`, border: "none", color: T.purple, cursor: "pointer",
+              background: T.bg4, border: "none", color: T.text2, cursor: "pointer",
               fontSize: 11, padding: "4px 8px", borderRadius: T.radius.sm,
               transition: "background 0.15s",
-            }} onMouseOver={(e) => (e.currentTarget.style.background = `${T.purple}33`)}
-               onMouseOut={(e) => (e.currentTarget.style.background = `${T.purple}18`)}
+            }} onMouseOver={(e) => (e.currentTarget.style.background = T.bg5)}
+               onMouseOut={(e) => (e.currentTarget.style.background = T.bg4)}
               title="Share to Team Chat">
-              💬
+              Share
             </button>
             {confirmDelete === deal.id ? (
               <button onClick={(e) => { e.stopPropagation(); onDeleteDeal(deal.id); setConfirmDelete(null); }} style={{
@@ -851,43 +838,28 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
         />
       )}
 
-      {/* ═══ COMMAND CENTER HEADER ═══ */}
+      {/* ═══ PIPELINE HEADER ═══ */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-              <h1 style={{
-                fontSize: 28, fontWeight: 800, color: T.text0, margin: 0,
-                letterSpacing: "-0.04em", fontFamily: "'Inter', -apple-system, sans-serif",
-              }}>Pipeline</h1>
-              <div style={{
-                fontSize: 11, padding: "3px 10px", borderRadius: T.radius.full,
-                background: `${T.accent}15`, color: T.accent, fontWeight: 600,
-                border: `1px solid ${T.accent}33`,
-              }}>
-                {openDeals.length} active
-              </div>
+              <h1 className="crm-page-title">Pipeline</h1>
+              <span className="crm-kicker" style={{ color: T.accent }}>{openDeals.length} active</span>
             </div>
-            <p style={{ fontSize: 13, color: T.text3, margin: 0, fontWeight: 400 }}>
-              Revenue command center · Real-time deal intelligence
-            </p>
+            <p className="crm-page-sub">Deal stages, value, and health</p>
           </div>
 
           {/* View toggle */}
           {!isMobile && (
-            <div style={{
-              display: "flex", gap: 2, padding: 3, borderRadius: T.radius.md,
-              background: T.bg3, border: `1px solid ${T.bg4}66`,
-            }}>
+            <div className="crm-seg">
               {(["kanban", "list"] as const).map(mode => (
-                <button key={mode} onClick={() => setViewMode(mode)} style={{
-                  padding: "6px 14px", fontSize: 12, fontWeight: 600,
-                  borderRadius: T.radius.sm, border: "none", cursor: "pointer",
-                  background: viewMode === mode ? T.bg5 : "transparent",
-                  color: viewMode === mode ? T.text0 : T.text3,
-                  transition: "all 0.2s",
-                  textTransform: "capitalize",
-                }}>
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={viewMode === mode}
+                  className={`crm-seg-btn${viewMode === mode ? " is-active" : ""}`}
+                  onClick={() => setViewMode(mode)}
+                >
                   {mode === "kanban" ? "Board" : "List"}
                 </button>
               ))}
@@ -920,11 +892,11 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
 
           {/* Stat cards */}
           <StatCard label="Win Rate" value={`${wonDeals.length + lostDeals.length > 0 ? Math.round((wonDeals.length / (wonDeals.length + lostDeals.length)) * 100) : 0}%`}
-            sub={`${wonDeals.length} won · ${lostDeals.length} lost`} color={T.green} icon="◎" />
+            sub={`${wonDeals.length} won · ${lostDeals.length} lost`} color={T.green} />
           <StatCard label="Avg Probability" value={`${avgProbability}%`}
-            sub={`Across ${openDeals.length} deals`} color={T.blue} icon="◈" />
+            sub={`Across ${openDeals.length} deals`} color={T.blue} />
           <StatCard label="At Risk" value={`${atRiskCount}`}
-            sub={atRiskCount === 0 ? "All clear" : "Need attention"} color={atRiskCount > 0 ? T.orange : T.green} icon="◇" />
+            sub={atRiskCount === 0 ? "All clear" : "Need attention"} color={atRiskCount > 0 ? T.orange : T.green} />
         </div>
       </div>
 
@@ -970,30 +942,29 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
             display: "flex", gap: 6, overflowX: "auto", paddingBottom: 14,
             WebkitOverflowScrolling: "touch", msOverflowStyle: "none",
           }}>
-            {["All", ...STAGES].map(stage => {
-              const isActive = activeStage === stage;
-              const color = stage === "All" ? T.accent : (getStageColor(stage) || T.bg4);
-              const count = stage === "All" ? deals.length : deals.filter(d => d.stage === stage).length;
-              return (
-                <button key={stage} onClick={() => setActiveStage(stage)} style={{
-                  padding: "7px 16px", borderRadius: T.radius.full, fontSize: 12, fontWeight: 600,
-                  whiteSpace: "nowrap", cursor: "pointer", transition: "all 0.2s",
-                  background: isActive ? `${color}18` : T.bg3,
-                  color: isActive ? color : T.text3,
-                  border: `1px solid ${isActive ? `${color}44` : T.bg4}`,
-                  boxShadow: isActive ? `0 0 12px ${color}15` : "none",
-                }}>
-                  {stage === "All" ? "All" : stage} <span style={{ opacity: 0.5 }}>({count})</span>
-                </button>
-              );
-            })}
+            <div className="crm-seg" style={{ flexWrap: "nowrap" }}>
+              {["All", ...STAGES].map(stage => {
+                const isActive = activeStage === stage;
+                const count = stage === "All" ? deals.length : deals.filter(d => d.stage === stage).length;
+                return (
+                  <button
+                    key={stage}
+                    type="button"
+                    aria-pressed={isActive}
+                    className={`crm-seg-btn${isActive ? " is-active" : ""}`}
+                    onClick={() => setActiveStage(stage)}
+                  >
+                    {stage === "All" ? "All" : stage} ({count})
+                  </button>
+                );
+              })}
+            </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {filteredDeals.length === 0 && (
               <div className="crm-empty-state crm-panel-enter" style={{ padding: "32px 12px", ...glassSubtle }}>
-                <div className="icon" style={{ fontSize: 28 }}>📊</div>
                 <div className="title">No deals here</div>
-                <div className="desc">Drag deals into this stage or create a new one.</div>
+                <div className="desc">Move deals into this stage or create a new one.</div>
               </div>
             )}
             {filteredDeals.map(deal => (
@@ -1030,10 +1001,10 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
               onClick={() => setSelectedDeal(deal)}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: T.text0 }}>{deal.title}</span>
                 <span style={{ fontSize: 12, color: T.text2 }}>{deal.contact}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: T.text0, fontFamily: "'Inter', -apple-system, sans-serif" }}>{fmt(deal.value)}</span>
+                <span className="crm-metric" style={{ fontSize: 14, color: T.text0 }}>{fmt(deal.value)}</span>
                 <span>
                   <span style={{
-                    fontSize: 10, padding: "3px 10px", borderRadius: T.radius.full,
+                    fontSize: 10, padding: "3px 8px", borderRadius: 6,
                     background: `${color}15`, color, fontWeight: 600,
                     border: `1px solid ${color}33`,
                   }}>{deal.stage}</span>
@@ -1047,7 +1018,7 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                   </div>
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: isAtRisk ? T.orange : T.green, fontWeight: 600 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: isAtRisk ? T.orange : T.green, boxShadow: `0 0 6px ${isAtRisk ? T.orange : T.green}44` }} />
+                  <div style={{ width: 6, height: 6, borderRadius: 2, background: isAtRisk ? T.orange : T.green }} />
                   {isAtRisk ? "Risk" : "Good"}
                 </span>
                 <span style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
@@ -1079,11 +1050,11 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                 onDrop={(e) => handleDrop(e, stage)}
                 style={{
                   minWidth: 220, flex: "1 0 220px",
-                  borderRadius: T.radius.xl,
+                  borderRadius: 12,
                   padding: 8,
-                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                  background: isDropping ? `${color}08` : "transparent",
-                  boxShadow: isDropping ? `inset 0 0 0 2px ${color}33, 0 0 24px ${color}11` : "none",
+                  transition: "background 0.15s, box-shadow 0.15s",
+                  background: isDropping ? `${color}0a` : "transparent",
+                  boxShadow: isDropping ? `inset 0 0 0 1px ${color}55` : "none",
                 }}
               >
                 {/* Column header */}
@@ -1095,26 +1066,23 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{
-                      width: 8, height: 8, borderRadius: "50%",
+                      width: 8, height: 8, borderRadius: 2,
                       background: color,
-                      boxShadow: `0 0 8px ${color}55`,
                     }} />
                     <span style={{ fontSize: 12, fontWeight: 700, color: T.text1, letterSpacing: "-0.01em" }}>{stage}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, color,
-                      background: `${color}12`, padding: "2px 8px",
-                      borderRadius: T.radius.full,
+                    <span className="crm-metric" style={{
+                      fontSize: 10, color,
+                      background: `${color}12`, padding: "2px 7px",
+                      borderRadius: 6,
                     }}>{stageDeals.length}</span>
                   </div>
                 </div>
 
                 {/* Stage value */}
-                <div style={{
+                <div className="crm-metric" style={{
                   fontSize: 12, color: T.text3, marginBottom: 8, padding: "0 6px",
-                  fontWeight: 600,
-                  fontFamily: "'Inter', -apple-system, sans-serif",
                 }}>
                   {fmt(stageValue)}
                 </div>
@@ -1126,15 +1094,14 @@ export function PipelineTab({ deals, contacts, notes = [], emailLog = [], auditL
                   ))}
                   {stageDeals.length === 0 && (
                     <div className="crm-panel-enter" style={{
-                      padding: "28px 12px", textAlign: "center",
+                      padding: "24px 12px", textAlign: "center",
                       color: isDropping ? color : T.text3,
                       fontSize: 11, fontWeight: 500,
-                      border: `1.5px dashed ${isDropping ? `${color}66` : T.bg4}`,
-                      borderRadius: T.radius.lg,
-                      transition: "all 0.2s",
+                      border: `1px dashed ${isDropping ? `${color}66` : T.bg4}`,
+                      borderRadius: 10,
+                      transition: "border-color 0.15s, color 0.15s",
                       background: isDropping ? `${color}06` : "transparent",
                     }}>
-                      <div style={{ fontSize: 20, marginBottom: 6, opacity: 0.4 }}>{isDropping ? "⬇️" : "📊"}</div>
                       {isDropping ? "Drop here" : "No deals yet"}
                     </div>
                   )}

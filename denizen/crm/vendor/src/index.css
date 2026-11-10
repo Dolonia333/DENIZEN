@@ -4,38 +4,41 @@
 
 @layer base {
   :root {
-    --background: 222 52% 4%;
-    --foreground: 0 0% 100%;
-    --card: 220 45% 9%;
-    --card-foreground: 0 0% 100%;
-    --popover: 220 45% 9%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 42 87% 55%;
-    --primary-foreground: 222 52% 4%;
-    --secondary: 220 38% 18%;
-    --secondary-foreground: 214 27% 60%;
-    --muted: 221 44% 13%;
-    --muted-foreground: 214 27% 60%;
-    --accent: 263 90% 66%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 92% 66%;
+    /* Meridian Carbon + Verdigris */
+    --background: 220 18% 4%;
+    --foreground: 210 20% 97%;
+    --card: 215 16% 9%;
+    --card-foreground: 210 20% 97%;
+    --popover: 215 16% 9%;
+    --popover-foreground: 210 20% 97%;
+    --primary: 158 60% 53%;
+    --primary-foreground: 160 40% 6%;
+    --secondary: 215 14% 16%;
+    --secondary-foreground: 214 16% 62%;
+    --muted: 215 14% 12%;
+    --muted-foreground: 214 16% 62%;
+    --accent: 158 60% 53%;
+    --accent-foreground: 160 40% 6%;
+    --destructive: 0 84% 71%;
     --destructive-foreground: 0 0% 100%;
-    --border: 223 39% 18%;
-    --input: 223 39% 18%;
-    --ring: 42 87% 55%;
+    --border: 215 16% 20%;
+    --input: 215 16% 20%;
+    --ring: 158 60% 53%;
     --radius: 0.625rem;
-    --sidebar-background: 220 45% 9%;
-    --sidebar-foreground: 214 27% 60%;
-    --sidebar-primary: 42 87% 55%;
-    --sidebar-primary-foreground: 222 52% 4%;
-    --sidebar-accent: 221 44% 13%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 223 39% 18%;
-    --sidebar-ring: 42 87% 55%;
+    --sidebar-background: 215 16% 7%;
+    --sidebar-foreground: 214 16% 62%;
+    --sidebar-primary: 158 60% 53%;
+    --sidebar-primary-foreground: 160 40% 6%;
+    --sidebar-accent: 215 14% 12%;
+    --sidebar-accent-foreground: 210 20% 97%;
+    --sidebar-border: 215 16% 18%;
+    --sidebar-ring: 158 60% 53%;
 
-    --crm-success: 162 72% 48%;
-    --crm-purple: 263 90% 66%;
-    --crm-blue: 213 92% 63%;
+    --crm-success: 142 69% 58%;
+    --crm-copper: 30 52% 64%;
+    --crm-blue: 199 89% 60%;
+    --crm-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --crm-display: "Instrument Serif", "Times New Roman", serif;
   }
 }
 
@@ -46,10 +49,15 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: var(--crm-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.65;
+  }
+
+  h1, h2, .crm-display {
+    font-family: var(--crm-display);
+    letter-spacing: -0.02em;
   }
 
   /* Remove default browser tap highlight & outlines */
@@ -75,16 +83,76 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Button press effect */
-  button:active:not(:disabled),
-  [role="button"]:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  /* Cursor pointer on all clickables */
+  /* Cursor pointer on all clickables — no bounce/scale (reads as toy UI) */
   button, a, [role="button"], [role="tab"], [role="menuitem"],
   [role="row"], [data-clickable], summary, label[for] {
     cursor: pointer;
+  }
+
+  /* Product chrome — prefer classes over one-off inline cards */
+  .crm-panel {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+  }
+  .crm-panel-quiet {
+    background: transparent;
+    border: 1px solid hsl(var(--border) / 0.7);
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+  }
+  .crm-kicker {
+    font-family: var(--crm-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .crm-page-title {
+    font-family: var(--crm-display);
+    font-size: clamp(22px, 2.4vw, 28px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: hsl(var(--foreground));
+    margin: 0;
+  }
+  .crm-page-sub {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: hsl(var(--muted-foreground));
+  }
+  .crm-seg {
+    display: inline-flex;
+    gap: 0;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.55);
+  }
+  .crm-seg-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    font: 600 12px/1.2 var(--crm-sans);
+    padding: 7px 12px;
+    border-radius: 7px;
+    white-space: nowrap;
+  }
+  .crm-seg-btn[aria-pressed="true"],
+  .crm-seg-btn.is-active {
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+    box-shadow: 0 1px 0 hsl(var(--border));
+  }
+  .crm-metric {
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    letter-spacing: -0.02em;
   }
 
   /* Smooth panel/card entrance */

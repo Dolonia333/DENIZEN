@@ -1,14 +1,11 @@
 /**
- * Shared SubTabNav — reusable pill-style sub-tab navigation
- * used within consolidated sections (Sales, Schedule).
- * Horizontally scrollable on narrow screens so Calendar stays one-thumb reachable.
+ * Segmented sub-nav for consolidated sections (Sales, Schedule).
+ * Understated control — no emoji, no pill rainbow.
  */
-import { T } from "@/lib/crm-data";
-
 interface SubTab {
   key: string;
   label: string;
-  icon: string;
+  icon?: string;
 }
 
 interface Props {
@@ -20,41 +17,32 @@ interface Props {
 export function SubTabNav({ tabs, active, onSelect }: Props) {
   return (
     <div
+      className="crm-seg"
+      role="tablist"
       style={{
-        display: "flex",
-        gap: 6,
         marginBottom: 20,
-        flexWrap: "nowrap",
+        maxWidth: "100%",
         overflowX: "auto",
         WebkitOverflowScrolling: "touch",
         scrollbarWidth: "none",
-        msOverflowStyle: "none",
-        paddingBottom: 2,
-        maxWidth: "100%",
       }}
     >
-      {tabs.map(t => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => onSelect(t.key)}
-          style={{
-            padding: "8px 14px",
-            borderRadius: "9999px",
-            fontSize: 12,
-            fontWeight: 600,
-            background: active === t.key ? `${T.accent}22` : T.bg3,
-            color: active === t.key ? T.accent : T.text3,
-            border: `1px solid ${active === t.key ? `${T.accent}66` : T.bg4}`,
-            cursor: "pointer",
-            transition: "all 0.15s ease",
-            whiteSpace: "nowrap",
-            flex: "0 0 auto",
-          }}
-        >
-          {t.icon} {t.label}
-        </button>
-      ))}
+      {tabs.map((t) => {
+        const on = active === t.key;
+        return (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            aria-pressed={on}
+            className={`crm-seg-btn${on ? " is-active" : ""}`}
+            onClick={() => onSelect(t.key)}
+          >
+            {t.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

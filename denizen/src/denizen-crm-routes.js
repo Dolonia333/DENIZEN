@@ -9,7 +9,7 @@ const { sendCrmEmail } = require('./denizen-crm-email');
 const mailPolicy = require('./denizen-mail-policy');
 const { enrollContact } = require('./denizen-crm-sequences');
 const crmPortal = require('./denizen-crm-portal');
-const { submitPublicIntake } = require('./denizen-crm-intake-public');
+const { submitPublicIntake, getPublicIntakeForm } = require('./denizen-crm-intake-public');
 const { handleResendWebhook } = require('./denizen-crm-resend-webhook');
 const crmStripe = require('./denizen-crm-stripe');
 const crmCalendar = require('./denizen-crm-calendar');
@@ -377,6 +377,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'POST /api/crm/send-email',
           'POST /api/crm/sequence/enroll',
           'POST /api/crm/intake',
+          'GET /api/crm/intake/form',
           'POST /api/crm/intake-handoff',
           'GET /api/crm/team',
           'GET /api/crm/team/activity',
@@ -1094,6 +1095,22 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           return true;
         }
         json(res, 200, { ok: true });
+        return true;
+      } catch (err) {
+        json(res, 500, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    if ((path === '/api/crm/intake/form' || path === '/api/crm/intake-form') && req.method === 'GET') {
+      try {
+        const orgSlug = String(url.searchParams.get('org') || url.searchParams.get('org_slug') || '').trim();
+        const result = await getPublicIntakeForm(orgSlug);
+        if (!result.ok) {
+          json(res, 404, { ok: false, error: result.error });
+          return true;
+        }
+        json(res, 200, result);
         return true;
       } catch (err) {
         json(res, 500, { ok: false, error: err?.message || String(err) });

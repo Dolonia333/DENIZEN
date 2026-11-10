@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { T, S, STATUS_META, getLeadPriority, PRIORITY_META, fmt, type Submission, type Quote, type Package, type IntakeQuestion } from "@/lib/crm-data";
 import { publicIntakePageUrl } from "@/lib/crm-api";
 import { ProposalPDFButton } from "./ProposalPDF";
+import { IntakeFormBuilder } from "./IntakeFormBuilder";
 
 interface Props {
   submissions: Submission[];
@@ -14,6 +15,7 @@ interface Props {
   onAddSubmission: (sub: Submission) => void;
   onAddQuote: (quote: Quote) => void;
   onImportSubmissions: (subs: Submission[]) => void;
+  onUpdateIntakeQuestions?: (next: IntakeQuestion[]) => void;
 }
 
 // Mock AI quote generation that reads intake + packages
@@ -120,7 +122,7 @@ function generateAIQuote(sub: Submission, packages: Package[]): {
   return { recommendedPackage: bestPkg.name, lineItems: items, monthlyTotal, onetimeTotal, aiReasoning, customisations, upsellNote };
 }
 
-type View = "list" | "new-intake" | "new-quote" | "import";
+type View = "list" | "new-intake" | "new-quote" | "import" | "form-builder";
 
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "10px 14px", borderRadius: 8,
@@ -144,7 +146,7 @@ const btnSecondary: React.CSSProperties = {
 
 export function IntakeTab({
   submissions, quotes, packages, branding, intakeQuestions, orgSlug,
-  onStatusChange, onAddSubmission, onAddQuote, onImportSubmissions,
+  onStatusChange, onAddSubmission, onAddQuote, onImportSubmissions, onUpdateIntakeQuestions,
 }: Props) {
   const [view, setView] = useState<View>("list");
   const [copiedApi, setCopiedApi] = useState(false);
@@ -465,6 +467,9 @@ export function IntakeTab({
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button onClick={() => setView("new-intake")} style={btnPrimary}>+ New Intake</button>
           <button onClick={() => setView("new-quote")} style={{ ...btnPrimary, background: `${T.purple}` }}>+ New Quote</button>
+          {onUpdateIntakeQuestions && (
+            <button onClick={() => setView("form-builder")} style={btnSecondary}>Form builder</button>
+          )}
           <button onClick={() => setView("import")} style={btnSecondary}>↑ Import</button>
         </div>
       )}
@@ -499,11 +504,17 @@ export function IntakeTab({
         {intakeQuestions.map(q => (
           <div key={q.id}>
             <label style={labelStyle}>{q.icon} {q.label} {q.required && "*"}</label>
-            {q.type === "text" && (
-              <input style={inputStyle} value={intakeForm.answers[q.label] || ""} onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))} />
+            {(q.type === "text" || q.type === "email" || q.type === "phone" || q.type === "number") && (
+              <input
+                style={inputStyle}
+                type={q.type === "number" ? "number" : q.type === "email" ? "email" : q.type === "phone" ? "tel" : "text"}
+                placeholder={q.placeholder || ""}
+                value={intakeForm.answers[q.label] || ""}
+                onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))}
+              />
             )}
             {q.type === "textarea" && (
-              <textarea style={{ ...inputStyle, minHeight: 70, resize: "vertical" }} value={intakeForm.answers[q.label] || ""} onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))} />
+              <textarea style={{ ...inputStyle, minHeight: 70, resize: "vertical" }} placeholder={q.placeholder || ""} value={intakeForm.answers[q.label] || ""} onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))} />
             )}
             {q.type === "select" && (
               <select style={inputStyle} value={intakeForm.answers[q.label] || ""} onChange={e => setIntakeForm(f => ({ ...f, answers: { ...f.answers, [q.label]: e.target.value } }))}>
@@ -835,6 +846,15 @@ export function IntakeTab({
       {view === "new-intake" && renderNewIntake()}
       {view === "new-quote" && renderNewQuote()}
       {view === "import" && renderImport()}
+      {view === "form-builder" && onUpdateIntakeQuestions && (
+        <IntakeFormBuilder
+          questions={intakeQuestions}
+          orgSlug={orgSlug}
+          intakePageUrl={intakePageUrl}
+          onChange={onUpdateIntakeQuestions}
+          onClose={() => setView("list")}
+        />
+      )}
 
       {/* ── AI QUOTE EDITOR MODAL ── */}
       {aiQuoteEdit && (

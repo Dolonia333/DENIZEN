@@ -147,7 +147,7 @@ Meridian now includes **40+ templates**, including the ones you requested:
 
 ### Phase 1 — Marketing parity (HubSpot gap) — **highest ROI**
 
-- [ ] Visual **form builder** (embed + intake.html upgrade)
+- [x] Visual **form builder** (embed + intake.html upgrade) — Intake → Form builder; `GET /api/crm/intake/form`
 - [ ] **Email workflow** builder (if/then branches beyond linear sequences)
 - [ ] **Landing page** templates with UTM tracking
 - [ ] **Lead scoring** v2 — behavioral + firmographic rules UI

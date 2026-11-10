@@ -48,6 +48,9 @@ export type CrmWorkspaceState = {
   marketingCampaigns?: unknown[];
   teamPolicy?: Record<string, unknown>;
   usageLog?: unknown[];
+  /** Public + in-app intake form field definitions. */
+  intakeQuestions?: unknown[];
+  branding?: Record<string, unknown>;
 };
 
 export type CrmTeamMember = { display_name: string; email: string; role: string; is_self?: boolean };

@@ -46,9 +46,10 @@ export function PipelineVelocity({ deals }: Props) {
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text0, margin: 0 }}>⚡ Pipeline Velocity</h2>
-        <p style={{ fontSize: 12, color: T.text3, marginTop: 4 }}>
-          Average days deals spend in each stage — find where deals get stuck
+        <div className="crm-kicker">Pipeline</div>
+        <h2 className="crm-page-title" style={{ marginTop: 6 }}>Velocity</h2>
+        <p className="crm-page-sub">
+          Average days in each stage — find where deals stall
         </p>
       </div>
 
