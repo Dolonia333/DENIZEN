@@ -22,6 +22,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Architecture | [ACTIONS.md](ACTIONS.md) | on GitHub | NPC action vocabulary and execution semantics |
 | Architecture | [AGENT_BUS.md](AGENT_BUS.md) | on GitHub | Agent-to-agent messaging bus behavior and rules |
 | Architecture | [WORLD_ENGINE.md](WORLD_ENGINE.md) | on GitHub | World engine generation/runtime primitives |
+| Architecture | [GODOT_REA_ENGINE_STUDY.md](GODOT_REA_ENGINE_STUDY.md) | new/local | REA study of Godot 4.4.1 → AI engine steal list |
 | Architecture | [ROOM_GENERATOR.md](ROOM_GENERATOR.md) | on GitHub | Procedural room generation and archetypes |
 | Architecture | [CITY_GENERATOR.md](CITY_GENERATOR.md) | on GitHub | City generation pipeline and API integration |
 | Architecture | [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) | on GitHub | **Canonical** workspace module/layout map and ownership boundaries |
