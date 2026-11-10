@@ -4743,6 +4743,8 @@ class AgentOfficeManager {
         const toNpc = msg.to_npc || msg.handoff?.to_npc || msg.metadata?.to_npc;
         const fromKey = this._npcKeyForName(fromNpc) || fromNpc;
         const toKey = this._npcKeyForName(toNpc) || toNpc;
+        const kind = String(msg.kind || msg.handoff?.kind || msg.handoff?.metadata?.kind || 'fyi').toLowerCase();
+        const preview = String(msg.message || msg.handoff?.message || '').slice(0, 48);
         if (doc && this.agents.get(fromKey) && this.agents.get(toKey)) {
           this._playResearchHandoffTheater(fromKey, toKey, doc);
         } else if (doc) {
@@ -4752,6 +4754,36 @@ class AgentOfficeManager {
               name: msg.from_display_name || 'Teammate',
               kind: 'work',
               text: `MCP handoff · ${String(doc.title || doc.summary || 'research').slice(0, 40)}`,
+            });
+          } catch (_) {}
+        } else {
+          // Live floor beat: receiving NPC reacts when a handoff lands (webhook/MCP path).
+          const reactKey = (toKey && this.agents.get(toKey)) ? toKey : ((fromKey && this.agents.get(fromKey)) ? fromKey : null);
+          if (reactKey) {
+            const label = kind === 'urgent' ? 'Urgent handoff'
+              : kind === 'question' ? 'Question handoff'
+                : kind === 'task' ? 'Task handoff'
+                  : 'Handoff';
+            const speakText = `${label}${preview ? `: ${preview}` : ''}`;
+            try { this.actions.speak?.(reactKey, speakText.slice(0, 80)); } catch (_) {}
+            const player = this.scene?.player;
+            if (player && this.actions?.walkTo) {
+              try {
+                this.actions.standUp?.(reactKey);
+                const pf = this.scene?._pathfinder;
+                const dest = pf?.worldToTile
+                  ? pf.worldToTile(player.x, player.y)
+                  : { x: Math.floor((player.x || 0) / 16), y: Math.floor((player.y || 0) / 16) };
+                if (dest) this.actions.walkTo(reactKey, dest.x, dest.y);
+              } catch (_) {}
+            }
+          }
+          try {
+            window.DenizenFloorStrip?.push?.({
+              npcKey: reactKey || fromKey || 'xp_lucy',
+              name: msg.from_display_name || 'Teammate',
+              kind: kind === 'urgent' ? 'alert' : 'work',
+              text: `${kind} · ${preview || 'MCP handoff'}`.slice(0, 56),
             });
           } catch (_) {}
         }

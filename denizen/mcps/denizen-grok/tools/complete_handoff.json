@@ -1,0 +1,16 @@
+{
+  "name": "complete_handoff",
+  "description": "Mark a handoff as done (lifecycle=done) after the task/question is finished.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "handoff_id": {
+        "type": "string",
+        "description": "Handoff / message id"
+      }
+    },
+    "required": [
+      "handoff_id"
+    ]
+  }
+}

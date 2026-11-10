@@ -1,6 +1,6 @@
 {
   "name": "list_pending_handoffs",
-  "description": "Pending assistant handoffs addressed to your session.",
+  "description": "Open assistant handoffs addressed to your session (lifecycle=sent). Prefer wake webhooks (register_handoff_webhook) over polling; still safe as a fallback.",
   "inputSchema": {
     "type": "object",
     "properties": {

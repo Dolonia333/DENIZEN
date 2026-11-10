@@ -292,7 +292,8 @@
       label: 'Team & tasks',
       tools: [
         'team_standup', 'list_team', 'send_handoff',
-        'list_pending_handoffs', 'acknowledge_handoff',
+        'list_pending_handoffs', 'acknowledge_handoff', 'complete_handoff',
+        'register_handoff_webhook', 'get_handoff_webhook',
         'team_status', 'run_as_npc', 'broadcast_task',
         'delegate_task', 'assign_task', 'announce_in_office',
       ],

@@ -323,11 +323,56 @@ async function _listTeammatesRaw(sessionId) {
   }));
 }
 
-async function sendHandoff({ fromSessionId, toSessionId, fromNpc, toNpc, message, metadata } = {}) {
+function _enrichHandoffRow(row, fromDisplayName = null) {
+  const wake = require('./denizen-handoff-wake.js');
+  const meta = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const kind = wake.normalizeHandoffKind(meta.kind);
+  const lifecycle = wake.lifecycleFromStatus(row?.status);
+  return {
+    ...row,
+    from_display_name: fromDisplayName,
+    kind,
+    reply_to: meta.reply_to || null,
+    lifecycle,
+    suggested_actions: wake.suggestedActionsForKind(kind),
+  };
+}
+
+async function sendHandoff({
+  fromSessionId,
+  toSessionId,
+  fromNpc,
+  toNpc,
+  message,
+  metadata,
+  kind,
+  replyTo,
+} = {}) {
   _ensureDb();
   if (!fromSessionId || !toSessionId || !message) {
     throw new VisitorError('fromSessionId, toSessionId, and message required', 'BAD_INPUT');
   }
+
+  const wake = require('./denizen-handoff-wake.js');
+  const handoffKind = wake.normalizeHandoffKind(kind || metadata?.kind);
+  const parentId = replyTo || metadata?.reply_to || null;
+  if (parentId) {
+    const parent = await getHandoffById(parentId).catch(() => null);
+    if (!parent) {
+      throw new VisitorError('reply_to handoff not found', 'NOT_FOUND');
+    }
+    // Reply must stay in the same conversation pair (either direction).
+    const pair = new Set([parent.from_session_id, parent.to_session_id]);
+    if (!pair.has(fromSessionId) || !pair.has(toSessionId)) {
+      throw new VisitorError('reply_to must reference a handoff between the same sessions', 'BAD_INPUT');
+    }
+  }
+
+  const meta = {
+    ...(metadata && typeof metadata === 'object' ? metadata : {}),
+    kind: handoffKind,
+    reply_to: parentId,
+  };
 
   const rows = await denizenDb._post(
     'denizen_assistant_messages',
@@ -337,8 +382,9 @@ async function sendHandoff({ fromSessionId, toSessionId, fromNpc, toNpc, message
       from_npc: fromNpc || 'assistant',
       to_npc: toNpc || 'assistant',
       message: String(message).slice(0, 4000),
+      // pending = lifecycle "sent" (backward compatible with existing inbox queries)
       status: 'pending',
-      metadata: metadata || {},
+      metadata: meta,
     },
     { prefer: 'return=representation' },
   );
@@ -358,15 +404,27 @@ async function sendHandoff({ fromSessionId, toSessionId, fromNpc, toNpc, message
           to_npc: toNpc || 'assistant',
           message_id: rows?.[0]?.id || null,
           message_preview: String(message).slice(0, 200),
-          metadata: metadata || {},
+          kind: handoffKind,
+          reply_to: parentId,
+          metadata: meta,
         },
-        tags: ['visitor', 'handoff'],
+        tags: ['visitor', 'handoff', handoffKind],
       });
     } catch (_) {
       /* non-fatal */
     }
   }
 
+  const row = rows?.[0] || null;
+  return row ? _enrichHandoffRow(row) : null;
+}
+
+async function getHandoffById(messageId) {
+  _ensureDb();
+  if (!messageId) return null;
+  const rows = await denizenDb._get(
+    `denizen_assistant_messages?select=*&id=eq.${encodeURIComponent(messageId)}&limit=1`,
+  );
   return rows?.[0] || null;
 }
 
@@ -375,8 +433,9 @@ async function getPendingHandoffs(sessionId) {
   if (!sessionId) {
     throw new VisitorError('sessionId required', 'BAD_INPUT');
   }
+  // pending + sent are open; delivered/read/done are closed for the inbox.
   const rows = await denizenDb._get(
-    `denizen_assistant_messages?select=*&status=eq.pending&to_session_id=eq.${encodeURIComponent(sessionId)}&order=created_at.desc&limit=20`,
+    `denizen_assistant_messages?select=*&status=in.(pending,sent)&to_session_id=eq.${encodeURIComponent(sessionId)}&order=created_at.desc&limit=20`,
   );
   const enriched = [];
   for (const row of rows || []) {
@@ -389,25 +448,81 @@ async function getPendingHandoffs(sessionId) {
         /* optional enrichment */
       }
     }
-    enriched.push({ ...row, from_display_name: fromDisplayName });
+    enriched.push(_enrichHandoffRow(row, fromDisplayName));
   }
   return enriched;
 }
 
 async function markHandoffDelivered(messageId, sessionId) {
+  return markHandoffStatus(messageId, sessionId, 'read');
+}
+
+async function markHandoffStatus(messageId, sessionId, lifecycle) {
   _ensureDb();
   if (!messageId || !sessionId) {
     throw new VisitorError('messageId and sessionId required', 'BAD_INPUT');
   }
+  const wake = require('./denizen-handoff-wake.js');
+  const status = wake.statusFromLifecycle(lifecycle) || wake.statusFromLifecycle('read');
   const rows = await denizenDb._patch(
     `denizen_assistant_messages?id=eq.${encodeURIComponent(messageId)}&to_session_id=eq.${encodeURIComponent(sessionId)}`,
-    { status: 'delivered' },
+    { status },
     { prefer: 'return=representation' },
   );
   if (!rows?.length) {
     throw new VisitorError('Handoff not found', 'NOT_FOUND');
   }
-  return rows[0];
+  return _enrichHandoffRow(rows[0]);
+}
+
+async function setHandoffWakeUrl(sessionId, { url, secret, clear } = {}) {
+  _ensureDb();
+  if (!sessionId) {
+    throw new VisitorError('sessionId required', 'BAD_INPUT');
+  }
+  const wake = require('./denizen-handoff-wake.js');
+  if (clear || url === null || url === '') {
+    await createOrUpdateSession({
+      sessionId,
+      metadata: { handoff_wake_url: null, handoff_wake_secret: null },
+    });
+    return { ok: true, configured: false, url: null };
+  }
+  const check = wake.validateWakeUrl(url);
+  if (!check.ok) {
+    throw new VisitorError(check.error || 'invalid wake url', 'BAD_INPUT');
+  }
+  const meta = { handoff_wake_url: check.url };
+  if (secret !== undefined) {
+    meta.handoff_wake_secret = secret ? String(secret).slice(0, 512) : null;
+  }
+  const session = await createOrUpdateSession({ sessionId, metadata: meta });
+  const cfg = wake.wakeConfigFromSession(session);
+  return {
+    ok: true,
+    configured: true,
+    url: wake.maskWakeUrl(cfg.url),
+    has_secret: !!cfg.secret,
+  };
+}
+
+async function getHandoffWakeUrl(sessionId) {
+  _ensureDb();
+  if (!sessionId) {
+    throw new VisitorError('sessionId required', 'BAD_INPUT');
+  }
+  const wake = require('./denizen-handoff-wake.js');
+  const session = await getSession(sessionId);
+  if (!session) {
+    throw new VisitorError('Session not found', 'NOT_FOUND');
+  }
+  const cfg = wake.wakeConfigFromSession(session);
+  return {
+    ok: true,
+    configured: cfg.configured,
+    url: cfg.url ? wake.maskWakeUrl(cfg.url) : null,
+    has_secret: !!cfg.secret,
+  };
 }
 
 async function resolveHandoffTarget({ toSessionId, toCeo, toDisplayName } = {}) {
@@ -863,8 +978,12 @@ module.exports = {
   listTeammates,
   listTeammatesWithPresence,
   sendHandoff,
+  getHandoffById,
   getPendingHandoffs,
   markHandoffDelivered,
+  markHandoffStatus,
+  setHandoffWakeUrl,
+  getHandoffWakeUrl,
   resolveHandoffTarget,
   buildLucyHandoffAlertBroadcast,
   getSessionSettings,

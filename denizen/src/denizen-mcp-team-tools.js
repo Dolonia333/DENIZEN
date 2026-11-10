@@ -37,8 +37,9 @@ const TEAM_TOOL_DEFINITIONS = [
     name: 'send_handoff',
     description:
       'Send a message/handoff to a teammate, or escalate to the CEO office (Lucy bridge). '
-      + 'Optional document attaches a research brief (title/summary/citations) for same-org sharing '
-      + 'from ChatGPT/Claude/Cursor MCP — the office shows a folder-carry delivery.',
+      + 'If the recipient registered a wake webhook, Denizen POSTs handoff.received so their bot wakes in seconds. '
+      + 'Use kind (question|task|fyi|urgent) and reply_to to keep threads actionable. '
+      + 'Optional document attaches a research brief for same-org sharing — the office shows a folder-carry delivery.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -47,6 +48,15 @@ const TEAM_TOOL_DEFINITIONS = [
         to_display_name: { type: 'string', description: 'Target by display name (partial match)' },
         to_ceo: { type: 'boolean', description: 'Escalate to CEO / Lucy bridge' },
         to_npc: { type: 'string', description: 'Optional target NPC key for routing metadata' },
+        kind: {
+          type: 'string',
+          description: 'Handoff type: question | task | fyi | urgent (default fyi)',
+          enum: ['question', 'task', 'fyi', 'urgent'],
+        },
+        reply_to: {
+          type: 'string',
+          description: 'Parent handoff id — keeps a back-and-forth threaded',
+        },
         document: {
           type: 'object',
           description: 'Optional research handoff document shared inside the same Denizen org',
@@ -68,7 +78,8 @@ const TEAM_TOOL_DEFINITIONS = [
   {
     name: 'list_pending_handoffs',
     description:
-      'Pending assistant handoffs addressed to your session. Cloud AIs (ChatGPT/Cursor) should poll this regularly.',
+      'Open assistant handoffs addressed to your session (lifecycle=sent). '
+      + 'Prefer wake webhooks (register_handoff_webhook) over polling; still safe as a fallback.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -78,21 +89,60 @@ const TEAM_TOOL_DEFINITIONS = [
   },
   {
     name: 'acknowledge_handoff',
-    description: 'Mark a pending handoff as delivered/read after you acted on it (keeps the team inbox clean).',
+    description:
+      'Mark a handoff as read (lifecycle=read) after you saw/acted on it. '
+      + 'Use complete_handoff when the work is finished (lifecycle=done).',
     inputSchema: {
       type: 'object',
       properties: {
         handoff_id: { type: 'string', description: 'Handoff / message id from list_pending_handoffs' },
+        status: {
+          type: 'string',
+          description: 'Optional lifecycle override: read (default) or done',
+          enum: ['read', 'done'],
+        },
       },
       required: ['handoff_id'],
     },
+  },
+  {
+    name: 'complete_handoff',
+    description: 'Mark a handoff as done (lifecycle=done) after the task/question is finished.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        handoff_id: { type: 'string', description: 'Handoff / message id' },
+      },
+      required: ['handoff_id'],
+    },
+  },
+  {
+    name: 'register_handoff_webhook',
+    description:
+      'Register THIS bot\'s wake URL. Denizen POSTs {event:handoff.received,...} here whenever '
+      + 'send_handoff targets your session — wake within seconds instead of polling. HTTPS required '
+      + '(localhost allowed with DENIZEN_HANDOFF_WAKE_ALLOW_LOCALHOST=1). Optional secret becomes Authorization: Bearer.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'HTTPS webhook URL that wakes this bot' },
+        secret: { type: 'string', description: 'Optional Bearer token Denizen sends on wake POSTs' },
+        clear: { type: 'boolean', description: 'Set true to remove the wake URL' },
+      },
+    },
+  },
+  {
+    name: 'get_handoff_webhook',
+    description: 'Show whether this session has a handoff wake webhook registered (URL is masked).',
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'team_standup',
     description:
       'One-call team sync: human presence (WS + MCP), your handoff inbox, Cursor work queue, '
       + 'office directives, CRM tasks, Studio Board brief, Business Studio founder brief. '
-      + 'Start every collaborative session with this.',
+      + 'Start every collaborative session with this. Prefer wake webhooks for handoffs; '
+      + 'standup every ~15m is a fallback until the recipient registers register_handoff_webhook.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -523,6 +573,9 @@ async function toolSendHandoff(scope, args) {
   const toCeo = args?.to_ceo === true;
   const toSessionId = args?.to_session_id || args?.toSessionId || null;
   const toDisplayName = args?.to_display_name || args?.toDisplayName || null;
+  const wake = require('./denizen-handoff-wake.js');
+  const kind = wake.normalizeHandoffKind(args?.kind || args?.type);
+  const replyTo = args?.reply_to || args?.replyTo || null;
 
   if (!toCeo && !toSessionId && !toDisplayName) {
     return {
@@ -570,55 +623,102 @@ async function toolSendHandoff(scope, args) {
   }
   const hasDocument = !!(document && (document.title || document.summary || document.brief_id || document.citations.length));
 
-  const handoff = await visitor.sendHandoff({
-    fromSessionId: scope.session_id,
-    toSessionId: target.session_id,
-    fromNpc,
-    toNpc,
-    message,
-    metadata: {
-      source: 'mcp',
-      member_id: scope.member_id || null,
-      poll_hint: 'Recipient AI should call list_pending_handoffs then acknowledge_handoff',
-      document: hasDocument ? document : null,
-      from_npc: fromNpc,
-      to_npc: toNpc,
-    },
-  });
+  let fromDisplayName = displayNameForKey(fromNpc);
+  try {
+    const fromSession = await visitor.getSession?.(scope.session_id);
+    if (fromSession?.display_name) fromDisplayName = fromSession.display_name;
+  } catch (_) { /* optional */ }
+
+  let handoff;
+  try {
+    handoff = await visitor.sendHandoff({
+      fromSessionId: scope.session_id,
+      toSessionId: target.session_id,
+      fromNpc,
+      toNpc,
+      message,
+      kind,
+      replyTo,
+      metadata: {
+        source: 'mcp',
+        member_id: scope.member_id || null,
+        poll_hint: 'Recipient AI should call list_pending_handoffs then acknowledge_handoff',
+        wake_hint: 'If register_handoff_webhook is set, Denizen POSTs handoff.received on arrival',
+        document: hasDocument ? document : null,
+        from_npc: fromNpc,
+        to_npc: toNpc,
+        kind,
+        reply_to: replyTo,
+      },
+    });
+  } catch (e) {
+    return { ok: false, error: e?.message || String(e), code: e?.code };
+  }
 
   if (target.is_ceo_bridge && typeof _deps.notifyCeoHandoff === 'function' && handoff) {
     const enriched = {
       ...handoff,
-      from_display_name: displayNameForKey(fromNpc),
+      from_display_name: fromDisplayName,
       message,
+      kind,
       document: hasDocument ? document : null,
     };
     _deps.notifyCeoHandoff(enriched);
   }
 
-  // Office theater: folder-carry when a research document is attached.
-  if (hasDocument && typeof _deps.broadcast === 'function') {
+  // Office theater: always broadcast so the receiving NPC can walk/act; folder-carry when doc attached.
+  if (typeof _deps.broadcast === 'function' && handoff) {
     try {
       _deps.broadcast({
         type: 'assistant_handoff',
         handoff,
-        document,
+        document: hasDocument ? document : null,
+        kind,
+        reply_to: replyTo,
         from_npc: fromNpc,
         to_npc: toNpc,
-        from_display_name: displayNameForKey(fromNpc),
+        from_display_name: fromDisplayName,
         message,
         ts: Date.now(),
       });
     } catch (_) { /* non-fatal */ }
   }
 
+  let wakeResult = { skipped: true, reason: 'no_wake' };
+  try {
+    wakeResult = await wake.notifyHandoffWake({
+      visitor,
+      toSessionId: target.session_id,
+      handoff,
+      fromDisplayName,
+      kind,
+      replyTo,
+      fetchImpl: _deps.fetchImpl || globalThis.fetch,
+    });
+  } catch (e) {
+    wakeResult = { ok: false, skipped: false, reason: e?.message || String(e) };
+  }
+
+  const woke = !!wakeResult?.notified || !!wakeResult?.ok;
   return {
     ok: true,
     handoff_id: handoff?.id || null,
+    kind: handoff?.kind || kind,
+    lifecycle: handoff?.lifecycle || 'sent',
+    reply_to: replyTo,
     target,
     from_npc: fromNpc,
     document: hasDocument ? document : null,
-    next_step: 'Their ChatGPT/Cursor should poll list_pending_handoffs',
+    wake: {
+      notified: woke,
+      skipped: !!wakeResult?.skipped,
+      reason: wakeResult?.reason || null,
+      status: wakeResult?.status || null,
+      url: wakeResult?.url || null,
+    },
+    next_step: woke
+      ? 'Recipient bot should wake from webhook within seconds'
+      : 'Recipient has no wake webhook — their AI should poll list_pending_handoffs (or team_standup ~15m)',
   };
 }
 
@@ -633,15 +733,17 @@ async function toolListPendingHandoffs(scope, args) {
   const limit = Math.max(1, Math.min(50, Number(args?.limit) || 20));
   const rows = (handoffs || []).slice(0, limit).map((h) => ({
     ...h,
-    poll_action: 'Read message, act, then acknowledge_handoff with handoff_id',
+    poll_action: Array.isArray(h.suggested_actions)
+      ? h.suggested_actions.join(' → ')
+      : 'Read message, act, then acknowledge_handoff with handoff_id',
   }));
   return {
     ok: true,
     handoffs: rows,
     count: (handoffs || []).length,
     hint: rows.length
-      ? 'Process each handoff, then acknowledge_handoff so teammates know you saw it'
-      : 'Inbox empty',
+      ? 'Process each handoff (kind guides reply vs work vs FYI), then acknowledge_handoff / complete_handoff'
+      : 'Inbox empty — register_handoff_webhook so you wake on arrival instead of polling',
   };
 }
 
@@ -651,16 +753,65 @@ async function toolAcknowledgeHandoff(scope, args) {
   const handoffId = args?.handoff_id || args?.id || args?.message_id;
   if (!handoffId) return { ok: false, error: 'handoff_id required' };
   const visitor = _deps.denizenVisitor;
-  if (!visitor?.markHandoffDelivered) {
+  const lifecycleRaw = String(args?.status || args?.lifecycle || 'read').toLowerCase();
+  const lifecycle = lifecycleRaw === 'done' ? 'done' : 'read';
+  if (!visitor?.markHandoffStatus && !visitor?.markHandoffDelivered) {
     return { ok: false, error: 'handoff ack not configured' };
   }
   try {
-    const row = await visitor.markHandoffDelivered(handoffId, scope.session_id);
+    const row = visitor.markHandoffStatus
+      ? await visitor.markHandoffStatus(handoffId, scope.session_id, lifecycle)
+      : await visitor.markHandoffDelivered(handoffId, scope.session_id);
     return {
       ok: true,
       handoff_id: row?.id || handoffId,
-      status: row?.status || 'delivered',
+      status: row?.status || (lifecycle === 'done' ? 'done' : 'delivered'),
+      lifecycle: row?.lifecycle || lifecycle,
     };
+  } catch (e) {
+    return { ok: false, error: e?.message || String(e), code: e?.code };
+  }
+}
+
+async function toolCompleteHandoff(scope, args) {
+  return toolAcknowledgeHandoff(scope, { ...args, status: 'done' });
+}
+
+async function toolRegisterHandoffWebhook(scope, args) {
+  const err = requireSession(scope);
+  if (err) return err;
+  const visitor = _deps.denizenVisitor;
+  if (!visitor?.setHandoffWakeUrl) {
+    return { ok: false, error: 'handoff wake not configured' };
+  }
+  const clear = args?.clear === true;
+  const url = args?.url || args?.webhook_url || args?.wake_url || null;
+  const secret = args?.secret !== undefined ? args.secret : undefined;
+  if (!clear && !url) {
+    return { ok: false, error: 'url required (or clear: true)' };
+  }
+  try {
+    const result = await visitor.setHandoffWakeUrl(scope.session_id, { url, secret, clear });
+    return {
+      ...result,
+      hint: clear
+        ? 'Wake webhook cleared — bots will fall back to polling list_pending_handoffs'
+        : 'When someone send_handoff targets you, Denizen POSTs event=handoff.received to this URL',
+    };
+  } catch (e) {
+    return { ok: false, error: e?.message || String(e), code: e?.code };
+  }
+}
+
+async function toolGetHandoffWebhook(scope) {
+  const err = requireSession(scope);
+  if (err) return err;
+  const visitor = _deps.denizenVisitor;
+  if (!visitor?.getHandoffWakeUrl) {
+    return { ok: false, error: 'handoff wake not configured' };
+  }
+  try {
+    return await visitor.getHandoffWakeUrl(scope.session_id);
   } catch (e) {
     return { ok: false, error: e?.message || String(e), code: e?.code };
   }
@@ -904,6 +1055,9 @@ async function callTool(scope, name, args) {
     case 'send_handoff': return toolSendHandoff(scope, args);
     case 'list_pending_handoffs': return toolListPendingHandoffs(scope, args);
     case 'acknowledge_handoff': return toolAcknowledgeHandoff(scope, args);
+    case 'complete_handoff': return toolCompleteHandoff(scope, args);
+    case 'register_handoff_webhook': return toolRegisterHandoffWebhook(scope, args);
+    case 'get_handoff_webhook': return toolGetHandoffWebhook(scope, args);
     case 'team_standup': return toolTeamStandup(scope, args);
     default: return { ok: false, error: `unknown team tool: ${name}` };
   }
