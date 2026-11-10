@@ -1,0 +1,8 @@
+{
+  "name": "get_handoff_webhook",
+  "description": "Show whether this session has a handoff wake webhook registered (URL is masked).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

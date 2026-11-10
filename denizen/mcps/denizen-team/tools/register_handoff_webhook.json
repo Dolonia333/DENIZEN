@@ -1,0 +1,21 @@
+{
+  "name": "register_handoff_webhook",
+  "description": "Register THIS bot's wake URL. Denizen POSTs {event:handoff.received,...} here whenever send_handoff targets your session — wake within seconds instead of polling. HTTPS required (localhost allowed with DENIZEN_HANDOFF_WAKE_ALLOW_LOCALHOST=1). Optional secret becomes Authorization: Bearer.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "HTTPS webhook URL that wakes this bot"
+      },
+      "secret": {
+        "type": "string",
+        "description": "Optional Bearer token Denizen sends on wake POSTs"
+      },
+      "clear": {
+        "type": "boolean",
+        "description": "Set true to remove the wake URL"
+      }
+    }
+  }
+}

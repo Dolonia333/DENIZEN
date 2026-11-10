@@ -74,54 +74,8 @@ const TEAM_TOOL_DEFINITIONS = [
       required: ['npc_key'],
     },
   },
-  {
-    name: 'list_directives',
-    description:
-      'List NPC directives with lifecycle status (queued|running|done|blocked|expired). '
-      + 'Pass include_archived to see recent completions from the archive.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        status: { type: 'string', description: 'Filter: queued|running|done|blocked|expired' },
-        include_archived: { type: 'boolean', description: 'Include archived completions (default false)' },
-      },
-    },
-  },
-  {
-    name: 'complete_directive',
-    description:
-      'Close a directive: done|blocked|expired. Archives + writes an outcome receipt. '
-      + 'Use when MCP Jenny finishes work the local brain never acked.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        npc_key: { type: 'string', description: 'NPC folder key' },
-        status: { type: 'string', description: 'done (default) | blocked | expired' },
-        note: { type: 'string', description: 'Result note / blocker reason' },
-        artifact: { type: 'string', description: 'Commit, path, closed task id, etc.' },
-      },
-      required: ['npc_key'],
-    },
-  },
-  {
-    name: 'record_outcome',
-    description:
-      'Write one outcome ledger receipt (owner, type, artifact, pass/fail). '
-      + 'This is what morning standup reads — not log_activity diary lines.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        outcome_type: { type: 'string', description: 'e.g. hygiene.nightly, directive.done, crm.park_deal' },
-        value_text: { type: 'string', description: 'Human-readable receipt' },
-        entity_type: { type: 'string', description: 'deal|task|npc_directive|workspace|…' },
-        entity_key: { type: 'string', description: 'ID or key of the entity' },
-        artifact: { type: 'string', description: 'Commit SHA, path, ticket id' },
-        pass: { type: 'boolean', description: 'true=success (default), false=fail' },
-        actor: { type: 'string', description: 'Who produced this (default: caller NPC)' },
-      },
-      required: ['outcome_type', 'value_text'],
-    },
-  },
+  // list_directives / complete_directive / record_outcome live in denizen-mcp-team-tools
+  // so per-NPC Grok/Cursor tokens see them too (no duplicate definitions here).
   {
     name: 'schedule_job',
     description:
@@ -451,9 +405,6 @@ async function callToolImpl(scope, name, args) {
     case 'run_as_npc': return toolRunAsNpc(scope, args);
     case 'broadcast_task': return toolBroadcastTask(scope, args);
     case 'clear_directive': return toolClearDirective(scope, args);
-    case 'list_directives': return toolListDirectives(scope, args);
-    case 'complete_directive': return toolCompleteDirective(scope, args);
-    case 'record_outcome': return toolRecordOutcome(scope, args);
     case 'schedule_job': return toolScheduleJob(scope, args);
     case 'list_jobs': return toolListJobs(scope, args);
     default:

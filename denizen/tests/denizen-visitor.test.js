@@ -534,7 +534,7 @@ describe('denizen-visitor', () => {
 
     const getCall = calls.find((c) => c.method === 'GET' && c.url.includes('denizen_assistant_messages'));
     assert.ok(getCall);
-    assert.match(getCall.url, /status=eq\.pending/);
+    assert.match(getCall.url, /status=in\.\(pending,sent\)/);
     assert.match(getCall.url, /to_session_id=eq\./);
   });
 

@@ -119,15 +119,70 @@ function assignTaskBlockedResponse() {
   };
 }
 
+const SKILL_HINTS = Object.freeze({
+  research: {
+    category: 'research',
+    required_params: ['query'],
+    example_params: { query: '1921 GovCon pipeline competitors' },
+    wait_recommended: true,
+  },
+  'crm-draft-email': {
+    category: 'crm',
+    required_params: ['to', 'subject'],
+    example_params: { to: 'lead@example.com', subject: 'Follow-up', context: 'After demo' },
+    wait_recommended: true,
+  },
+  'crm-summary': {
+    category: 'crm',
+    required_params: [],
+    example_params: {},
+    wait_recommended: true,
+  },
+  'coding-agent': {
+    category: 'dev',
+    required_params: ['task'],
+    example_params: { task: 'Fix flaky MCP handoff test' },
+    wait_recommended: false,
+  },
+  github: {
+    category: 'dev',
+    required_params: ['task'],
+    example_params: { task: 'Open PR summary for handoff wake' },
+    wait_recommended: true,
+  },
+  'canvas-render': {
+    category: 'design',
+    required_params: ['prompt'],
+    example_params: { prompt: 'Office floor map thumbnail' },
+    wait_recommended: true,
+  },
+});
+
+function enrichSkillList(names) {
+  return (names || []).map((name) => {
+    const hint = SKILL_HINTS[name] || null;
+    return {
+      name,
+      category: hint?.category || null,
+      required_params: hint?.required_params || null,
+      example_params: hint?.example_params || null,
+      wait_recommended: hint?.wait_recommended ?? true,
+    };
+  });
+}
+
 async function toolListSkills(scope) {
   const display = displayNameForKey(scope.npc_key);
   const cap = npcCapabilities.getCapabilities(display);
+  const skills = listSkillsForNpc(scope.npc_key);
   return {
     ok: true,
     npc_key: scope.npc_key,
     display_name: display,
     role: cap?.role || null,
-    skills: listSkillsForNpc(scope.npc_key),
+    skills,
+    skill_details: enrichSkillList(skills),
+    next_step: 'run_skill with skill + params; wait=false + get_skill_job for long jobs',
   };
 }
 
@@ -264,8 +319,22 @@ async function toolAssignTask(scope, args, opts = {}) {
   const display = displayNameForKey(scope.npc_key);
   const from = String(args?.from || 'MCP teammate').slice(0, 80);
   const urgent = !!args?.urgent;
-  _deps.npcBrains.assignDirective(display, from, task, urgent);
-  return { ok: true, assigned_to: display, task, urgent };
+  const entry = _deps.npcBrains.assignDirective(display, from, task, urgent);
+  return {
+    ok: true,
+    assigned_to: display,
+    task,
+    urgent,
+    directive: entry ? {
+      id: entry.id || null,
+      npc: display,
+      status: entry.status || 'queued',
+      task: entry.task || task,
+      urgent: !!entry.urgent,
+      expires_at: entry.expires_at || null,
+    } : { npc: display, status: 'queued', task, urgent },
+    next_step: ['list_directives', 'complete_directive'],
+  };
 }
 
 async function toolDelegateTask(scope, args) {
@@ -281,8 +350,23 @@ async function toolDelegateTask(scope, args) {
   }
   const from = displayNameForKey(scope.npc_key);
   const urgent = !!args?.urgent;
-  _deps.npcBrains.assignDirective(target, `${from} (MCP)`, task, urgent);
-  return { ok: true, from_npc: from, to_npc: target, task, urgent };
+  const entry = _deps.npcBrains.assignDirective(target, `${from} (MCP)`, task, urgent);
+  return {
+    ok: true,
+    from_npc: from,
+    to_npc: target,
+    task,
+    urgent,
+    directive: entry ? {
+      id: entry.id || null,
+      npc: target,
+      status: entry.status || 'queued',
+      task: entry.task || task,
+      urgent: !!entry.urgent,
+      expires_at: entry.expires_at || null,
+    } : { npc: target, status: 'queued', task, urgent },
+    next_step: ['list_directives', 'complete_directive'],
+  };
 }
 
 async function toolAnnounce(scope, args) {

@@ -84,10 +84,26 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 **Team orchestration**
 
 9. **`list_team`** — org teammates with WS + MCP/AI presence
-10. **`send_handoff`** — message a teammate or escalate to CEO bridge
-11. **`list_pending_handoffs`** — your assistant handoff inbox (poll regularly)
-12. **`acknowledge_handoff`** — mark a handoff delivered after you act
-13. **`team_standup`** — one-call sync: presence, handoffs, Cursor work, directives, CRM
+10. **`send_handoff`** — message a teammate (`kind`, `reply_to`; wakes recipient webhook; returns full `handoff` + `thread_hint`)
+11. **`reply_handoff`** — threaded reply without re-resolving the teammate
+12. **`get_handoff`** / **`list_handoff_thread`** / **`list_handoffs`** — fetch one, whole thread, or filtered inbox/outbox
+13. **`list_pending_handoffs`** — open inbound inbox (fallback if no wake webhook)
+14. **`acknowledge_handoff`** / **`complete_handoff`** — **read** / **done** (+ note/artifact; wakes sender on done)
+15. **`register_handoff_webhook`** / **`get_handoff_webhook`** — wake URL for `handoff.received`
+16. **`list_directives`** / **`complete_directive`** / **`record_outcome`** — directive lifecycle + standup receipts
+17. **`team_standup`** — one-call sync: presence, handoffs, Cursor work, directives, CRM
+
+#### Handoff wake (bot ↔ bot)
+
+1. Each teammate bot calls **`register_handoff_webhook`** once with its HTTPS wake URL (optional `secret` → `Authorization: Bearer`).
+2. On **`send_handoff`**, Denizen saves the message, broadcasts office theater, then POSTs to the recipient’s wake URL:
+   `{ source, event: "handoff.received", handoff_id, kind, lifecycle, reply_to, from_display_name, message, suggested_actions, … }`
+3. Recipient bot wakes → `get_handoff` / `list_handoff_thread` → `reply_handoff` / `complete_handoff`.
+4. Completing POSTs `handoff.done` to the **sender** wake URL when registered.
+
+Kinds: `question` | `task` | `fyi` | `urgent`. Lifecycle: `sent` → `read` → `done` (DB statuses `pending` / `delivered` / `done`).
+
+Until a wake URL is registered, poll `team_standup` ~every 15 minutes as a fallback. See `docs/HANDOFF_WAKE.md`.
 
 **CRM** (NPCs with CRM skills only)
 
@@ -116,10 +132,10 @@ Tokens may carry scopes in `metadata.scopes`. Missing scopes = full access (back
 
 | Scope | Tools |
 |-------|--------|
-| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, `team_standup`, `list_pending_handoffs`, CRM read, market read |
+| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, `team_standup`, `list_pending_handoffs`, `list_handoffs`, `get_handoff`, `list_handoff_thread`, `get_handoff_webhook`, `list_directives`, `record_outcome`, CRM read, market read |
 | `skills` | `run_skill`, `run_as_npc` |
 | `crm_write` | `crm_draft_email` |
-| `handoff` | `send_handoff`, `acknowledge_handoff` |
+| `handoff` | `send_handoff`, `reply_handoff`, `acknowledge_handoff`, `complete_handoff`, `register_handoff_webhook` |
 | `delegate` | `assign_task`, `delegate_task`, `announce_in_office`, `broadcast_task` |
 
 **Presets** (Settings / Connect AI): `read`, `standard` (read+skills+handoff), `full`.

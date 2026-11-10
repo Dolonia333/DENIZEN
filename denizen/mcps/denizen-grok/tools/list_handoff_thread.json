@@ -1,0 +1,20 @@
+{
+  "name": "list_handoff_thread",
+  "description": "Return the full back-and-forth thread for a handoff (root + reply_to chain), chronological.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "handoff_id": {
+        "type": "string",
+        "description": "Any handoff id in the thread"
+      },
+      "limit": {
+        "type": "number",
+        "description": "Max messages (default 40)"
+      }
+    },
+    "required": [
+      "handoff_id"
+    ]
+  }
+}

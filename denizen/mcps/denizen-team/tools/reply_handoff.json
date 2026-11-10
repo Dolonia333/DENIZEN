@@ -1,0 +1,30 @@
+{
+  "name": "reply_handoff",
+  "description": "Reply to a handoff without re-resolving the teammate. Sets reply_to automatically and sends to the other party. Prefer this over send_handoff after get_handoff.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "handoff_id": {
+        "type": "string",
+        "description": "Parent handoff id to reply to"
+      },
+      "message": {
+        "type": "string",
+        "description": "Reply message"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "question",
+          "task",
+          "fyi",
+          "urgent"
+        ]
+      }
+    },
+    "required": [
+      "handoff_id",
+      "message"
+    ]
+  }
+}

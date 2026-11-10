@@ -975,11 +975,28 @@ async function handleRestSync(req, res, action) {
     }
     if (action === 'handoffs') {
       let limit = 20;
+      let handoffId = null;
+      let direction = 'inbound';
+      let status = 'open';
+      let kind = null;
       try {
         const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
         limit = Number(u.searchParams.get('limit')) || 20;
+        handoffId = u.searchParams.get('handoff_id') || u.searchParams.get('id');
+        direction = u.searchParams.get('direction') || 'inbound';
+        status = u.searchParams.get('status') || 'open';
+        kind = u.searchParams.get('kind') || null;
       } catch (_) { /* keep default */ }
-      const result = await callTool(scope, 'list_pending_handoffs', { limit });
+      if (handoffId) {
+        const result = await callTool(scope, 'get_handoff', { handoff_id: handoffId });
+        return sendJson(res, result?.ok ? 200 : 400, result);
+      }
+      const result = await callTool(scope, 'list_handoffs', {
+        limit,
+        direction,
+        status,
+        kind,
+      });
       return sendJson(res, result?.ok ? 200 : 400, result);
     }
     let limit = 10;
@@ -1036,6 +1053,11 @@ async function handleRestSync(req, res, action) {
     action === 'run-skill'
     || action === 'assign-task'
     || action === 'ack-handoff'
+    || action === 'send-handoff'
+    || action === 'reply-handoff'
+    || action === 'complete-handoff'
+    || action === 'handoff-thread'
+    || action === 'register-handoff-webhook'
     || action === 'browser-act'
     || action === 'browser-open'
     || action === 'browser-begin'
@@ -1053,6 +1075,26 @@ async function handleRestSync(req, res, action) {
     const payload = { ...(body || {}) };
     if (action === 'ack-handoff') {
       const result = await callTool(scope, 'acknowledge_handoff', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'send-handoff') {
+      const result = await callTool(scope, 'send_handoff', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'reply-handoff') {
+      const result = await callTool(scope, 'reply_handoff', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'complete-handoff') {
+      const result = await callTool(scope, 'complete_handoff', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'handoff-thread') {
+      const result = await callTool(scope, 'list_handoff_thread', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'register-handoff-webhook') {
+      const result = await callTool(scope, 'register_handoff_webhook', payload);
       return sendJson(res, result?.ok ? 200 : 400, result);
     }
     if (action === 'browser-begin') {
@@ -1446,21 +1488,151 @@ function buildOpenApiSpec(baseUrl) {
       '/api/npc-sync/handoffs': {
         get: {
           operationId: 'listHandoffs',
-          summary: 'Poll pending teammate handoffs addressed to your session',
-          parameters: [{
-            name: 'limit',
-            in: 'query',
-            schema: { type: 'integer', default: 20 },
-          }],
+          summary: 'List handoffs (inbound open by default). Pass handoff_id to fetch one.',
+          parameters: [
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } },
+            { name: 'handoff_id', in: 'query', schema: { type: 'string' } },
+            {
+              name: 'direction',
+              in: 'query',
+              schema: { type: 'string', enum: ['inbound', 'outbound', 'both'], default: 'inbound' },
+            },
+            {
+              name: 'status',
+              in: 'query',
+              schema: { type: 'string', enum: ['open', 'read', 'done', 'all'], default: 'open' },
+            },
+            {
+              name: 'kind',
+              in: 'query',
+              schema: { type: 'string', enum: ['question', 'task', 'fyi', 'urgent'] },
+            },
+          ],
           responses: {
-            200: { description: 'Pending handoffs inbox' },
+            200: { description: 'Handoff inbox or single handoff' },
           },
+        },
+      },
+      '/api/npc-sync/send-handoff': {
+        post: {
+          operationId: 'sendHandoff',
+          summary: 'Send a handoff to a teammate (wakes their webhook when registered)',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['message'],
+                  properties: {
+                    message: { type: 'string' },
+                    to_session_id: { type: 'string' },
+                    to_display_name: { type: 'string' },
+                    to_ceo: { type: 'boolean' },
+                    kind: { type: 'string', enum: ['question', 'task', 'fyi', 'urgent'] },
+                    reply_to: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Handoff sent' } },
+        },
+      },
+      '/api/npc-sync/reply-handoff': {
+        post: {
+          operationId: 'replyHandoff',
+          summary: 'Reply to a handoff (sets reply_to + routes to the other party)',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['handoff_id', 'message'],
+                  properties: {
+                    handoff_id: { type: 'string' },
+                    message: { type: 'string' },
+                    kind: { type: 'string', enum: ['question', 'task', 'fyi', 'urgent'] },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Reply sent' } },
+        },
+      },
+      '/api/npc-sync/complete-handoff': {
+        post: {
+          operationId: 'completeHandoff',
+          summary: 'Mark a handoff done (optional note + artifact; wakes sender)',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['handoff_id'],
+                  properties: {
+                    handoff_id: { type: 'string' },
+                    note: { type: 'string' },
+                    artifact: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Handoff completed' } },
+        },
+      },
+      '/api/npc-sync/handoff-thread': {
+        post: {
+          operationId: 'listHandoffThread',
+          summary: 'Return the reply_to thread for a handoff',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['handoff_id'],
+                  properties: {
+                    handoff_id: { type: 'string' },
+                    limit: { type: 'integer' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Thread messages' } },
+        },
+      },
+      '/api/npc-sync/register-handoff-webhook': {
+        post: {
+          operationId: 'registerHandoffWebhook',
+          summary: 'Register this bot wake URL for handoff.received POSTs',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    url: { type: 'string' },
+                    secret: { type: 'string' },
+                    clear: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Wake URL registered or cleared' } },
         },
       },
       '/api/npc-sync/ack-handoff': {
         post: {
           operationId: 'ackHandoff',
-          summary: 'Mark a handoff delivered/read after you acted on it',
+          summary: 'Mark a handoff read (or done) after you acted on it',
           requestBody: {
             required: true,
             content: {
@@ -1473,6 +1645,12 @@ function buildOpenApiSpec(baseUrl) {
                       type: 'string',
                       description: 'Id from listHandoffs / getTeamStandup',
                     },
+                    status: {
+                      type: 'string',
+                      enum: ['read', 'done'],
+                      description: 'Lifecycle: read (default) or done',
+                    },
+                    note: { type: 'string' },
                   },
                 },
               },
@@ -1509,6 +1687,11 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
       assign_task_url: `${base}/api/npc-sync/assign-task`,
       team_standup_url: `${base}/api/npc-sync/team-standup`,
       handoffs_url: `${base}/api/npc-sync/handoffs`,
+      send_handoff_url: `${base}/api/npc-sync/send-handoff`,
+      reply_handoff_url: `${base}/api/npc-sync/reply-handoff`,
+      complete_handoff_url: `${base}/api/npc-sync/complete-handoff`,
+      handoff_thread_url: `${base}/api/npc-sync/handoff-thread`,
+      register_handoff_webhook_url: `${base}/api/npc-sync/register-handoff-webhook`,
       ack_handoff_url: `${base}/api/npc-sync/ack-handoff`,
       openapi_url: openapiUrl,
     },

@@ -1,0 +1,23 @@
+{
+  "name": "complete_directive",
+  "description": "Close a directive: done|blocked|expired. Archives + writes an outcome receipt when available.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "npc_key": {
+        "type": "string",
+        "description": "NPC folder key (default: your NPC)"
+      },
+      "status": {
+        "type": "string",
+        "description": "done (default) | blocked | expired"
+      },
+      "note": {
+        "type": "string"
+      },
+      "artifact": {
+        "type": "string"
+      }
+    }
+  }
+}

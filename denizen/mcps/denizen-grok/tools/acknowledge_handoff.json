@@ -1,0 +1,28 @@
+{
+  "name": "acknowledge_handoff",
+  "description": "Mark a handoff as read (lifecycle=read) after you saw/acted on it. Use complete_handoff when the work is finished (lifecycle=done). Optional note.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "handoff_id": {
+        "type": "string",
+        "description": "Handoff / message id from list_pending_handoffs"
+      },
+      "status": {
+        "type": "string",
+        "description": "Optional lifecycle override: read (default) or done",
+        "enum": [
+          "read",
+          "done"
+        ]
+      },
+      "note": {
+        "type": "string",
+        "description": "Optional note stored on the handoff"
+      }
+    },
+    "required": [
+      "handoff_id"
+    ]
+  }
+}

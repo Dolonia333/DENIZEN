@@ -1,6 +1,6 @@
 {
   "name": "assign_task",
-  "description": "Assign a mandatory task to this NPC (wakes think loop, shows in directive inbox).",
+  "description": "Assign a mandatory task to this NPC (wakes think loop). Returns directive id + next_step list_directives/complete_directive.",
   "inputSchema": {
     "type": "object",
     "properties": {
