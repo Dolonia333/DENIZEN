@@ -43,12 +43,12 @@ function npcRow(key, { protected: prot = false, claimable = true } = {}) {
 }
 
 function eqParam(url, field) {
-  const m = url.match(new RegExp(`${field}=eq\\.([^&]+)`));
+  const m = url.match(new RegExp(`(?:^|[?&])${field}=eq\\.([^&]+)`));
   return m ? decodeURIComponent(m[1]) : null;
 }
 
 function neqParam(url, field) {
-  const m = url.match(new RegExp(`${field}=neq\\.([^&]+)`));
+  const m = url.match(new RegExp(`(?:^|[?&])${field}=neq\\.([^&]+)`));
   return m ? decodeURIComponent(m[1]) : null;
 }
 
@@ -254,11 +254,26 @@ function installMockFetch(store, calls) {
     }
 
     if (url.includes('denizen_assistant_messages') && method === 'GET') {
+      const msgId = eqParam(url, 'id');
+      if (msgId) {
+        const msg = store.messages.find((m) => m.id === msgId);
+        return jsonResponse(msg ? [msg] : []);
+      }
       const toSessionId = eqParam(url, 'to_session_id');
-      const pending = store.messages.filter(
-        (m) => m.to_session_id === toSessionId && m.status === 'pending',
-      );
-      return jsonResponse(pending);
+      const fromSessionId = eqParam(url, 'from_session_id');
+      let rows = store.messages.slice();
+      if (toSessionId) rows = rows.filter((m) => m.to_session_id === toSessionId);
+      if (fromSessionId) rows = rows.filter((m) => m.from_session_id === fromSessionId);
+      if (url.includes('status=eq.pending') || url.includes('status=in.(pending')) {
+        rows = rows.filter((m) => m.status === 'pending' || m.status === 'sent');
+      }
+      if (url.includes('status=in.(delivered,read)') || url.includes('status=eq.delivered')) {
+        rows = rows.filter((m) => m.status === 'delivered' || m.status === 'read');
+      }
+      if (url.includes('status=eq.done')) {
+        rows = rows.filter((m) => m.status === 'done');
+      }
+      return jsonResponse(rows);
     }
 
     if (url.includes('denizen_assistant_messages') && method === 'PATCH') {
