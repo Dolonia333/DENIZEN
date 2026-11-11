@@ -97,8 +97,40 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'list_skills',
-    description: 'List OpenClaw/Jelly skills this NPC is allowed to run (research, canvas-render, CRM, etc.).',
-    inputSchema: { type: 'object', properties: {} },
+    description:
+      'List OpenClaw/Jelly skills this NPC is allowed to run (research, canvas-render, CRM, etc.). '
+      + 'Use mode=names|summary|full with offset/limit to avoid connector truncation.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        mode: {
+          type: 'string',
+          enum: ['names', 'summary', 'full'],
+          description: 'names = skill names only; summary (default) = names + hinted params; full = every skill detail (paginate)',
+        },
+        offset: { type: 'number', description: 'Pagination offset (default 0)' },
+        limit: { type: 'number', description: 'Page size (default 200 summary / 40 full)' },
+      },
+    },
+  },
+  {
+    name: 'list_tools',
+    description:
+      'Return this NPC\'s MCP tool manifest (names, descriptions, input schemas) in one call. '
+      + 'Prefer mode=summary for a compact roster; mode=full pages schemas. Same data as tools/list, agent-callable.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        mode: {
+          type: 'string',
+          enum: ['names', 'summary', 'full'],
+          description: 'names = name list; summary (default) = name+description+required; full = full inputSchema (paginate)',
+        },
+        offset: { type: 'number', description: 'Pagination offset (default 0)' },
+        limit: { type: 'number', description: 'Page size (default 80 summary / 25 full)' },
+        prefix: { type: 'string', description: 'Optional name prefix filter, e.g. crm_ or studio_board_' },
+      },
+    },
   },
   {
     name: 'browser_begin',
@@ -467,6 +499,70 @@ async function logMcpAudit(scope, toolName, result) {
   } catch (_) { /* audit must not block tools */ }
 }
 
+function toolListTools(scope, args = {}) {
+  const mcpResponse = require('./denizen-mcp-response');
+  const mode = mcpResponse.modeOf(args, 'summary');
+  const prefix = String(args.prefix || '').trim().toLowerCase();
+  let tools = toolsForScope(scope);
+  if (prefix) {
+    tools = tools.filter((t) => String(t.name || '').toLowerCase().startsWith(prefix));
+  }
+  const page = mcpResponse.paginate(tools, args, {
+    defaultLimit: mode === 'full' ? 25 : 80,
+    maxLimit: 200,
+  });
+
+  const mapRow = (t) => {
+    if (mode === 'names') return t.name;
+    if (mode === 'summary') {
+      const required = Array.isArray(t.inputSchema?.required) ? t.inputSchema.required : [];
+      const props = t.inputSchema?.properties && typeof t.inputSchema.properties === 'object'
+        ? Object.keys(t.inputSchema.properties)
+        : [];
+      return {
+        name: t.name,
+        description: String(t.description || '').slice(0, 240),
+        required,
+        properties: props,
+      };
+    }
+    return {
+      name: t.name,
+      description: t.description || '',
+      inputSchema: t.inputSchema || { type: 'object', properties: {} },
+    };
+  };
+
+  const payload = {
+    ok: true,
+    mode,
+    npc_key: scope.npc_key,
+    count: page.total,
+    offset: page.offset,
+    limit: page.limit,
+    next_offset: page.next_offset,
+    has_more: page.has_more,
+    tools: page.items.map(mapRow),
+    hint: mode === 'full'
+      ? 'Full schemas — page with offset/limit if truncated. Prefer mode=summary for discovery.'
+      : 'Use mode=full + offset/limit for complete inputSchema; prefix filters by name (crm_, studio_board_, …).',
+  };
+
+  if (!page.total) {
+    return {
+      ...payload,
+      ...mcpResponse.emptyHealthy({
+        kind: 'tools',
+        create_with: 'mint a token with broader scopes / check npc capabilities',
+      }),
+    };
+  }
+  return mcpResponse.softCap(payload, {
+    dropKeys: mode === 'full' ? [] : [],
+    hint: 'Tool manifest truncated — re-call list_tools with mode=summary or smaller limit/offset.',
+  });
+}
+
 async function callToolImpl(scope, name, args) {
   if (mcpMarketTools.isMarketNpc(scope.npc_key) && mcpMarketTools.toolsForNpc(scope.npc_key).some((t) => t.name === name)) {
     return mcpMarketTools.callTool(scope.npc_key, name, args);
@@ -503,6 +599,7 @@ async function callToolImpl(scope, name, args) {
     case 'get_status': return toolGetStatus(scope, args);
     case 'log_activity': return toolLogActivity(scope, args);
     case 'list_skills': return mcpActions.toolListSkills(scope, args);
+    case 'list_tools': return toolListTools(scope, args);
     case 'run_skill': return mcpActions.toolRunSkill(scope, args);
     case 'get_skill_job': return mcpActions.toolGetSkillJob(scope, args);
     case 'browser_open': return browserEyes.browserOpen(scope.npc_key, args || {});
@@ -673,7 +770,21 @@ async function handleRpc(scope, req, res, message, sessionId) {
     }
     const toolArgs = params?.arguments || {};
     try {
-      const result = await callTool(scope, toolName, toolArgs);
+      const mcpResponse = require('./denizen-mcp-response');
+      let result = await callTool(scope, toolName, toolArgs);
+      if (result && typeof result === 'object') {
+        // Soft-cap oversized connector payloads. Prefer tool-level mode=summary;
+        // only drop enrichment keys that have a compact alternative.
+        const dropKeys = toolName === 'list_skills'
+          ? ['skill_details']
+          : (toolName === 'team_standup' ? ['office_directives', 'recent_outcomes'] : []);
+        result = mcpResponse.softCap(result, {
+          dropKeys,
+          hint:
+            'Payload soft-capped for connector size (~18k). '
+            + 'Re-call with mode=summary/names, smaller limit, or list_tools / a focused tool.',
+        });
+      }
       const content = [{ type: 'text', text: JSON.stringify(result, null, 2) }];
       // Vision clients: attach the JPEG (browser eyes) or PNG (office picture).
       mcpEngineTools.attachMcpImage(content, result);

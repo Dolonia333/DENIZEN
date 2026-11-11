@@ -212,6 +212,8 @@ const CRM_TOOL_DEFINITIONS = [
         notes: { type: 'string' },
         status: { type: 'string' },
         tags: { type: 'array', items: { type: 'string' } },
+        dry_run: { type: 'boolean', description: 'Validate without writing' },
+        validate_only: { type: 'boolean', description: 'Alias for dry_run' },
       },
     },
   },
@@ -232,6 +234,8 @@ const CRM_TOOL_DEFINITIONS = [
         health: { type: 'string' },
         close_date: { type: 'string' },
         notes: { type: 'string' },
+        dry_run: { type: 'boolean', description: 'Validate without writing' },
+        validate_only: { type: 'boolean', description: 'Alias for dry_run' },
         studio_task_ids: { type: 'array', items: { type: 'string' } },
       },
     },
@@ -905,14 +909,71 @@ async function toolBulk(scope, args, fn) {
   }
 }
 
+const CRM_WRITE_TOOLS = new Set([
+  'crm_operate',
+  'crm_upsert_company',
+  'crm_upsert_contact',
+  'crm_upsert_deal',
+  'crm_upsert_task',
+  'crm_upsert_package',
+  'crm_move_deal',
+  'crm_delete_contact',
+  'crm_complete_task',
+  'crm_close_task',
+  'crm_add_note',
+  'crm_park_deal',
+  'crm_create_quote',
+  'crm_bulk_update_deals',
+  'crm_bulk_update_tasks',
+  'crm_bulk_update_contacts',
+  'crm_bulk_link_records',
+  'crm_link_records',
+  'crm_update_profile',
+  'crm_update_task',
+  'send_draft',
+  'business_context_sync',
+  'business_context_update',
+]);
+
+function crmDryRunMissing(name, args = {}) {
+  const missing = [];
+  if (name === 'crm_operate' && !args.action) missing.push('action');
+  if (name === 'crm_upsert_contact' && !args.name && !args.id && !args.contact_id) missing.push('name|id');
+  if (name === 'crm_upsert_deal' && !args.title && !args.id && !args.deal_id) missing.push('title|id');
+  if (name === 'crm_upsert_task' && !args.title && !args.id && !args.task_id) missing.push('title|id');
+  if (name === 'crm_upsert_company' && !args.name && !args.id && !args.company_id) missing.push('name|id');
+  if (name === 'crm_move_deal' && !(args.deal_id || args.id)) missing.push('deal_id');
+  if (name === 'crm_move_deal' && !args.stage) missing.push('stage');
+  if ((name === 'crm_complete_task' || name === 'crm_close_task' || name === 'crm_update_task')
+    && !(args.task_id || args.id)) missing.push('task_id');
+  if (name === 'crm_delete_contact' && !(args.contact_id || args.id)) missing.push('contact_id');
+  if (name === 'send_draft' && !(args.draft_id || args.id || args.to)) missing.push('draft_id|to');
+  return missing;
+}
+
 async function callTool(scope, name, args) {
   const key = scope?.npc_key;
+  const mcpResponse = require('./denizen-mcp-response');
 
   // Read-only mail policy is always available (default deny must be inspectable).
   if (name === 'mail_policy_status') return toolMailPolicyStatus();
 
   if (!hasCrmAccess(key) && scope?.scope_mode !== 'team') {
     return { ok: false, error: 'CRM tools not available for this NPC' };
+  }
+
+  if (CRM_WRITE_TOOLS.has(name) && mcpResponse.isDryRun(args)) {
+    return mcpResponse.dryRunResult({
+      tool: name,
+      missing: crmDryRunMissing(name, args || {}),
+      args,
+      plan: { action: args?.action || null, ids: {
+        contact_id: args?.contact_id || args?.id || null,
+        deal_id: args?.deal_id || null,
+        task_id: args?.task_id || null,
+        company_id: args?.company_id || null,
+      } },
+    });
   }
 
   if (name === 'crm_working_set') return toolWorkingSet(scope, args);
