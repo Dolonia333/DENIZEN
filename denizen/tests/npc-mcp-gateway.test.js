@@ -96,11 +96,12 @@ describe('npc-mcp-gateway', () => {
   });
 
   it('exports core MCP action tools', () => {
-    assert.equal(gateway.TOOL_DEFINITIONS.length, 14);
+    assert.equal(gateway.TOOL_DEFINITIONS.length, 15);
     const names = gateway.TOOL_DEFINITIONS.map((t) => t.name);
     assert.ok(names.includes('run_skill'));
     assert.ok(names.includes('get_skill_job'));
     assert.ok(names.includes('list_skills'));
+    assert.ok(names.includes('list_tools'));
     assert.ok(names.includes('assign_task'));
     assert.ok(names.includes('browser_begin'));
     assert.ok(names.includes('browser_step'));

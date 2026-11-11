@@ -186,12 +186,24 @@ async function toolListCursorWork(scope, args) {
     return String(a.created_at).localeCompare(String(b.created_at));
   });
 
-  return {
+  const mcpResponse = require('./denizen-mcp-response');
+  const page = mcpResponse.paginate(rows, { ...args, limit }, { defaultLimit: 20, maxLimit: 50 });
+  return mcpResponse.withEmptyList({
     ok: true,
-    count: rows.length,
-    items: rows.slice(0, limit),
-    hint: 'Cursor: claim with claim_cursor_work, implement, then complete_cursor_work. Use run_skill coding-agent for in-repo worktrees.',
-  };
+    count: page.total,
+    items: page.items,
+    offset: page.offset,
+    limit: page.limit,
+    next_offset: page.next_offset,
+    has_more: page.has_more,
+    hint: page.total
+      ? 'Cursor: claim with claim_cursor_work, implement, then complete_cursor_work. Use run_skill coding-agent for in-repo worktrees.'
+      : 'No cursor work yet — enqueue with enqueue_cursor_work',
+  }, {
+    itemsKey: 'items',
+    kind: 'cursor work items',
+    create_with: 'enqueue_cursor_work',
+  });
 }
 
 async function toolClaimCursorWork(scope, args) {

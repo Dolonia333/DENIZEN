@@ -71,6 +71,14 @@ const TEAM_TOOL_DEFINITIONS = [
             brief_id: { type: 'string', description: 'Optional research brief id / path' },
           },
         },
+        dry_run: {
+          type: 'boolean',
+          description: 'Validate + preview without sending (no side effects)',
+        },
+        validate_only: {
+          type: 'boolean',
+          description: 'Alias for dry_run',
+        },
       },
       required: ['message'],
     },
@@ -269,11 +277,17 @@ const TEAM_TOOL_DEFINITIONS = [
     description:
       'One-call team sync: human presence (WS + MCP), your handoff inbox, Cursor work queue, '
       + 'office directives, CRM tasks, Studio Board brief, Business Studio founder brief. '
+      + 'Default mode=summary stays under connector size limits; mode=full returns full teammate rows. '
       + 'Start every collaborative session with this. Prefer wake webhooks for handoffs; '
       + 'standup every ~15m is a fallback until the recipient registers register_handoff_webhook.',
     inputSchema: {
       type: 'object',
       properties: {
+        mode: {
+          type: 'string',
+          enum: ['summary', 'full'],
+          description: 'summary (default) = counts + compact rows; full = full teammate/handoff objects',
+        },
         include_crm: {
           type: 'boolean',
           description: 'Include CRM open-task snapshot (default true)',
@@ -687,10 +701,38 @@ async function toolListTeam(scope) {
 }
 
 async function toolSendHandoff(scope, args) {
+  const mcpResponse = require('./denizen-mcp-response');
   const err = requireSession(scope);
   if (err) return err;
   const message = String(args?.message || '').trim().slice(0, 4000);
-  if (!message) return { ok: false, error: 'message required' };
+  const toCeo = args?.to_ceo === true;
+  const toSessionId = args?.to_session_id || args?.toSessionId || null;
+  const toDisplayName = args?.to_display_name || args?.toDisplayName || null;
+  const missing = [];
+  if (!message) missing.push('message');
+  if (!toCeo && !toSessionId && !toDisplayName) missing.push('to_session_id|to_display_name|to_ceo');
+  if (mcpResponse.isDryRun(args)) {
+    return mcpResponse.dryRunResult({
+      tool: 'send_handoff',
+      missing,
+      args,
+      plan: {
+        message: message || null,
+        to_ceo: toCeo,
+        to_session_id: toSessionId,
+        to_display_name: toDisplayName,
+        kind: args?.kind || args?.type || 'fyi',
+      },
+    });
+  }
+  if (missing.length) {
+    return {
+      ok: false,
+      error: missing.includes('message')
+        ? 'message required'
+        : 'Specify to_session_id, to_display_name, or to_ceo: true',
+    };
+  }
 
   const visitor = _deps.denizenVisitor;
   const connections = _deps.visitorConnections;
@@ -698,19 +740,9 @@ async function toolSendHandoff(scope, args) {
     return { ok: false, error: 'handoff not configured' };
   }
 
-  const toCeo = args?.to_ceo === true;
-  const toSessionId = args?.to_session_id || args?.toSessionId || null;
-  const toDisplayName = args?.to_display_name || args?.toDisplayName || null;
   const wake = require('./denizen-handoff-wake.js');
   const kind = wake.normalizeHandoffKind(args?.kind || args?.type);
   const replyTo = args?.reply_to || args?.replyTo || null;
-
-  if (!toCeo && !toSessionId && !toDisplayName) {
-    return {
-      ok: false,
-      error: 'Specify to_session_id, to_display_name, or to_ceo: true',
-    };
-  }
 
   let target;
   try {
@@ -905,7 +937,8 @@ async function toolListHandoffs(scope, args = {}) {
         : 'Read message, act, then acknowledge_handoff / reply_handoff / complete_handoff',
     };
   });
-  return {
+  const mcpResponse = require('./denizen-mcp-response');
+  return mcpResponse.withEmptyList({
     ok: true,
     direction: args?.direction || 'inbound',
     status: args?.status || 'open',
@@ -913,8 +946,12 @@ async function toolListHandoffs(scope, args = {}) {
     count: handoffs.length,
     hint: handoffs.length
       ? 'Use get_handoff / list_handoff_thread / reply_handoff / complete_handoff'
-      : 'Empty — register_handoff_webhook so you wake on arrival instead of polling',
-  };
+      : 'No handoffs yet — create one with send_handoff, or register_handoff_webhook to wake on arrival',
+  }, {
+    itemsKey: 'handoffs',
+    kind: 'handoffs',
+    create_with: 'send_handoff',
+  });
 }
 
 async function toolGetHandoff(scope, args) {
@@ -1179,6 +1216,8 @@ async function toolRecordOutcome(scope, args = {}) {
 }
 
 async function toolTeamStandup(scope, args = {}) {
+  const mcpResponse = require('./denizen-mcp-response');
+  const mode = mcpResponse.modeOf(args, 'summary');
   const includeCrm = args?.include_crm !== false;
   const includeCursor = args?.include_cursor !== false;
   const includeStudio = args?.include_studio !== false;
@@ -1306,11 +1345,42 @@ async function toolTeamStandup(scope, args = {}) {
     });
   }
 
-  return {
+  const teammateRows = team.teammates || [];
+  const handoffItems = handoffs.handoffs || [];
+  const cursorItems = cursorWork?.items || cursorWork?.work || [];
+  const compactTeammates = teammateRows.map((t) => ({
+    display_name: t.display_name || t.name || null,
+    npc_key: t.npc_key || t.claimed_npc || null,
+    online: !!t.online,
+    mcp_online: !!t.mcp_online,
+    presence: t.presence || null,
+  }));
+  const compactHandoffs = handoffItems.map((h) => ({
+    id: h.id || h.handoff_id || null,
+    kind: h.kind || null,
+    from: h.from_display_name || h.from || null,
+    preview: String(h.message || h.body || h.title || '').slice(0, 120),
+  }));
+  const compactCursor = cursorItems.map((w) => ({
+    id: w.id || null,
+    title: w.title || null,
+    priority: w.priority || null,
+    status: w.status || null,
+  }));
+
+  const payload = {
     ok: true,
+    mode,
     generated_at: new Date().toISOString(),
     org_slug: scope.org_slug,
     session_linked: sessionLinked,
+    empty: !needsYou && !pendingCursor && !teammateRows.length,
+    empty_state: (!needsYou && !pendingCursor)
+      ? 'healthy'
+      : 'populated',
+    message: (!needsYou && !pendingCursor)
+      ? 'No blocking handoffs or Cursor work — empty queues are OK'
+      : null,
     you: {
       session_id: scope.session_id || null,
       npc_key: scope.npc_key,
@@ -1322,24 +1392,37 @@ async function toolTeamStandup(scope, args = {}) {
       online_count: team.online_count || 0,
       raw_session_count: team.raw_session_count || team.count || 0,
       pruned_probe_count: team.pruned_probe_count || 0,
-      teammates: team.teammates || [],
+      teammates: mode === 'full' ? teammateRows : compactTeammates,
       presence_hint: team.presence_hint,
     },
     handoffs: {
       count: handoffs.count || 0,
-      items: handoffs.handoffs || [],
-      hint: handoffs.hint,
+      items: mode === 'full' ? handoffItems : compactHandoffs,
+      hint: handoffs.hint
+        || (handoffItems.length
+          ? null
+          : 'No handoffs yet — create one with send_handoff (or register_handoff_webhook to wake on arrival)'),
+      ...(!handoffItems.length ? mcpResponse.emptyHealthy({
+        kind: 'handoffs',
+        create_with: 'send_handoff',
+      }) : { empty: false }),
     },
     cursor_work: {
       count: pendingCursor,
-      items: cursorWork?.items || cursorWork?.work || [],
+      items: mode === 'full' ? cursorItems : compactCursor,
       error: cursorWork?.ok === false ? cursorWork.error : null,
+      ...(!pendingCursor ? mcpResponse.emptyHealthy({
+        kind: 'cursor work items',
+        create_with: 'enqueue_cursor_work',
+      }) : { empty: false }),
     },
-    office_directives: directiveRows.slice(0, 20),
+    office_directives: mode === 'full' ? directiveRows.slice(0, 20) : directiveRows.slice(0, 8).map((d) => ({
+      npc: d.npc, id: d.id, urgent: d.urgent, status: d.status, task: String(d.task || '').slice(0, 100),
+    })),
     recent_outcomes: {
       count: recentOutcomes.count || 0,
       breakdown: recentOutcomes.breakdown || {},
-      outcomes: recentOutcomes.outcomes || [],
+      outcomes: mode === 'full' ? (recentOutcomes.outcomes || []) : (recentOutcomes.outcomes || []).slice(0, 5),
       summary: recentOutcomes.summary || null,
     },
     crm_tasks: crmTasks,
@@ -1353,7 +1436,15 @@ async function toolTeamStandup(scope, args = {}) {
         : ['team_standup', 'list_directives', 'announce_in_office', 'get_status'],
       suggested_interval_seconds: needsYou || pendingCursor ? 60 : 300,
     },
+    truncation_hint: mode === 'summary'
+      ? 'mode=summary is compact — re-call with mode=full for full teammate/handoff objects'
+      : null,
   };
+
+  return mcpResponse.softCap(payload, {
+    dropKeys: ['teammates', 'office_directives', 'recent_outcomes'],
+    hint: 'Standup soft-capped — use mode=summary (default) or disable include_* sections.',
+  });
 }
 
 async function buildStatusExtras(scope, { work = [] } = {}) {

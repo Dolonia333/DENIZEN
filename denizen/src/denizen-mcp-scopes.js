@@ -20,6 +20,7 @@ const TOOL_SCOPE = Object.freeze({
   get_status: 'read',
   log_activity: 'read',
   list_skills: 'read',
+  list_tools: 'read',
   list_team: 'read',
   list_pending_handoffs: 'read',
   list_handoffs: 'read',

@@ -75,11 +75,12 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 
 **Actions (do real work)**
 
-4. **`list_skills`** — skills this NPC may run (design, research, CRM, etc.)
-5. **`run_skill`** — execute a skill (`canvas-render`, `research`, `crm-draft-email`, …)
-6. **`assign_task`** — queue a mandatory task for this NPC (wakes think loop)
-7. **`delegate_task`** — assign work to another teammate NPC
-8. **`announce_in_office`** — speech bubble in the virtual office for live viewers
+4. **`list_skills`** — skills this NPC may run (design, research, CRM, etc.). Supports `mode=names|summary|full` + `offset`/`limit` to stay under connector truncation (~20k).
+5. **`list_tools`** — agent-callable tool manifest (same inventory as `tools/list`) with `mode=names|summary|full`, `prefix`, and pagination
+6. **`run_skill`** — execute a skill (`canvas-render`, `research`, `crm-draft-email`, …)
+7. **`assign_task`** — queue a mandatory task for this NPC (wakes think loop)
+8. **`delegate_task`** — assign work to another teammate NPC
+9. **`announce_in_office`** — speech bubble in the virtual office for live viewers
 
 **Team orchestration**
 
@@ -91,7 +92,9 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 14. **`acknowledge_handoff`** / **`complete_handoff`** — **read** / **done** (+ note/artifact; wakes sender on done)
 15. **`register_handoff_webhook`** / **`get_handoff_webhook`** — wake URL for `handoff.received`
 16. **`list_directives`** / **`complete_directive`** / **`record_outcome`** — directive lifecycle + standup receipts
-17. **`team_standup`** — one-call sync: presence, handoffs, Cursor work, directives, CRM
+17. **`team_standup`** — one-call sync: presence, handoffs, Cursor work, directives, CRM. Default `mode=summary` stays under connector size limits; `mode=full` returns full rows. Write tools accept `dry_run` / `validate_only` to preview without committing.
+
+Empty list responses use `empty: true`, `empty_state: "healthy"`, and a `create_with` hint so agents can tell unused vs broken.
 
 #### Handoff wake (bot ↔ bot)
 

@@ -171,19 +171,56 @@ function enrichSkillList(names) {
   });
 }
 
-async function toolListSkills(scope) {
+async function toolListSkills(scope, args = {}) {
+  const mcpResponse = require('./denizen-mcp-response');
   const display = displayNameForKey(scope.npc_key);
   const cap = npcCapabilities.getCapabilities(display);
-  const skills = listSkillsForNpc(scope.npc_key);
-  return {
+  const allSkills = listSkillsForNpc(scope.npc_key);
+  const mode = mcpResponse.modeOf(args, 'summary');
+  const page = mcpResponse.paginate(allSkills, args, { defaultLimit: mode === 'full' ? 40 : 200, maxLimit: 500 });
+
+  const base = {
     ok: true,
     npc_key: scope.npc_key,
     display_name: display,
     role: cap?.role || null,
-    skills,
-    skill_details: enrichSkillList(skills),
+    mode,
+    skills: page.items,
+    count: page.total,
+    offset: page.offset,
+    limit: page.limit,
+    next_offset: page.next_offset,
+    has_more: page.has_more,
     next_step: 'run_skill with skill + params; wait=false + get_skill_job for long jobs',
   };
+
+  if (!page.total) {
+    return {
+      ...base,
+      ...mcpResponse.emptyHealthy({
+        kind: 'skills',
+        create_with: 'npc capabilities / CRM persona assignment',
+      }),
+    };
+  }
+
+  if (mode === 'names') {
+    return mcpResponse.softCap(base, { dropKeys: ['skill_details'] });
+  }
+
+  // summary: only skills with real param hints (avoids duplicating the whole roster)
+  // full: enrich every skill on this page
+  const detailsSource = mode === 'full'
+    ? page.items
+    : page.items.filter((name) => SKILL_HINTS[name]);
+  const skill_details = enrichSkillList(detailsSource);
+  return mcpResponse.softCap({
+    ...base,
+    skill_details,
+    skill_details_note: mode === 'summary'
+      ? 'summary mode returns details only for skills with known param hints — use mode=full (+ offset/limit) for every skill'
+      : null,
+  }, { dropKeys: mode === 'full' ? [] : [] });
 }
 
 function sleep(ms) {

@@ -287,7 +287,7 @@
     { label: 'Agency (CRM ↔ Board)', tools: ['agency_working_set', 'agency_list_deal_tasks', 'agency_link_deal_task', 'agency_unlink_deal_task', 'agency_create_delivery_task', 'agency_handoff_won_deal', 'agency_advance_deal_task'] },
     { label: 'Studio Board (deliver)', tools: ['studio_board_working_set', 'studio_board_brief', 'studio_board_my_day', 'studio_board_list_tasks', 'studio_board_get_task', 'studio_board_upsert_task', 'studio_board_advance_task', 'studio_board_assign_task', 'studio_board_add_comment', 'studio_board_list_people', 'studio_board_upsert_person', 'studio_board_standup', 'studio_board_timeline'] },
     { label: 'Business Studio (prove)', tools: ['business_studio_working_set', 'business_studio_brief', 'business_studio_explain', 'business_studio_list_programs', 'business_studio_chain_status', 'business_studio_funding_readiness', 'business_studio_apply_program_template', 'business_studio_add_evidence', 'business_studio_revoke_evidence', 'business_studio_upsert_task', 'business_studio_upsert_goal', 'business_studio_create_experiment'] },
-    { label: 'Coding & skills', tools: ['run_skill', 'list_skills'] },
+    { label: 'Coding & skills', tools: ['list_tools', 'run_skill', 'list_skills'] },
     {
       label: 'Team & tasks',
       tools: [
