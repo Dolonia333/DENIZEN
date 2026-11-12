@@ -28,10 +28,10 @@ test('getPatrolProbeTargets uses PORT and LM_STUDIO_REMOTE_URLS', () => {
   try {
     process.env.PORT = '8888';
     delete process.env.LM_STUDIO_URL;
-    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.232:1234';
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.50.20:1234';
     const t = getPatrolProbeTargets();
     assert.equal(t.ws.port, 8888);
-    assert.equal(t.lm.host, '192.168.1.232');
+    assert.equal(t.lm.host, '192.168.50.20');
     assert.equal(t.lm.port, 1234);
   } finally {
     if (prevPort === undefined) delete process.env.PORT;

@@ -1,7 +1,7 @@
 import { chromium, devices } from 'playwright';
 import { loginOwner } from './lib/probe-login.mjs';
 
-const BASE = (process.argv[2] || 'http://192.168.1.237:8888').replace(/\/$/, '');
+const BASE = (process.argv[2] || process.env.DENIZEN_URL || (console.error('Pass the Denizen base URL as argv[2] or set DENIZEN_URL'), process.exit(1))).replace(/\/$/, '');
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ ...devices['iPhone 13'] });
 const page = await ctx.newPage();

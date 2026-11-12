@@ -1,9 +1,9 @@
 #!/bin/bash
-# Run this ON the Kali laptop (100.110.205.49) if you cannot SSH from dolonia.
+# Run this ON the Kali laptop (<KALI_TAILSCALE_IP>) if you cannot SSH from dolonia.
 #
 # Pull install (recommended):
 #   export DENIZEN_FLEET_AGENT_TOKEN=<from denizen/.env on dolonia>
-#   export DENIZEN_PULL_URL=http://100.71.54.109:8081
+#   export DENIZEN_PULL_URL=http://<HOME_SERVER_TAILSCALE_IP>:8081
 #   bash infra/pull-install-kali-agent.sh
 #
 # Local bundle:

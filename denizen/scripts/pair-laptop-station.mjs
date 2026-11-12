@@ -14,10 +14,19 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const SERVER_URL = (process.env.DENIZEN_HOME_URL || 'http://100.71.54.109:8081').replace(/\/+$/, '');
-const LAPTOP_HOST = process.env.LAPTOP_SSH_HOST || '100.110.205.49';
-const LAPTOP_USER = process.env.LAPTOP_SSH_USER || 'dolo';
-const LAPTOP_PASS = process.env.LAPTOP_SSH_PASS || '333';
+function requireEnv(name) {
+  const v = process.env[name];
+  if (!v) {
+    console.error(`Missing required environment variable: ${name}`);
+    process.exit(1);
+  }
+  return v;
+}
+
+const SERVER_URL = requireEnv('DENIZEN_HOME_URL').replace(/\/+$/, '');
+const LAPTOP_HOST = requireEnv('LAPTOP_SSH_HOST');
+const LAPTOP_USER = requireEnv('LAPTOP_SSH_USER');
+const LAPTOP_PASS = requireEnv('LAPTOP_SSH_PASS');
 const SETUP_PATH = '~/.config/Denizen/denizen-desktop-setup.json';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -101,7 +110,7 @@ function launchLaptopDesktop() {
 async function loginDolonia() {
   const login = await j('POST', '/api/visitor/auth/login', {
     username: 'Dolonia',
-    password: process.env.PROBE_OWNER_PASS || '333',
+    password: requireEnv('PROBE_OWNER_PASS'),
     team_code: process.env.DENIZEN_TEAM_CODE || '1921',
   });
   if (!login.ok || !login.access_grant) {

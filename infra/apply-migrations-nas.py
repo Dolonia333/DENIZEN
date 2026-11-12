@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import load_infra_env  # noqa: F401 — loads infra/.env
 
 import os
@@ -13,7 +14,7 @@ from pathlib import Path
 
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 USER = os.environ.get("SYNO_USER", "admin")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = "/usr/local/bin/docker"

@@ -6,10 +6,8 @@ import tarfile
 import tempfile
 import time
 import paramiko
+from _laptop_env import connect_kwargs
 
-HOST = '100.110.205.49'
-USER = 'dolo'
-PASS = '333'
 LOCAL_DENIZEN = r'c:\Users\zionv\OneDrive\Desktop\multbot\denizen'
 REMOTE_ROOT = '/home/dolo/denizen-deploy'
 REMOTE_DESKTOP = f'{REMOTE_ROOT}/desktop'
@@ -70,8 +68,9 @@ def main():
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    print(f'Connecting to {HOST}...')
-    ssh.connect(HOST, username=USER, password=PASS, timeout=20)
+    kw = connect_kwargs()
+    print(f"Connecting to {kw['hostname']}...")
+    ssh.connect(**kw)
 
     # --- Clean old installs ---
     cleanup = '''

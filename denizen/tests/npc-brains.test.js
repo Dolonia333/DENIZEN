@@ -221,7 +221,7 @@ describe('reasoning leak stripping', () => {
   it('_bouncerIncidentFallback builds a spoken report from incident context', () => {
     const msg = [
       'You just caught a HIGH brute_force threat.',
-      'Detail: 12 failed logins from 192.168.1.232.',
+      'Detail: 12 failed logins from 192.168.50.20.',
       'Countermeasure you set up: added a 3-strike lockout on that door.',
     ].join(' ');
     const out = mgr._bouncerIncidentFallback(msg);
@@ -240,7 +240,7 @@ describe('reasoning leak stripping', () => {
   it('getResponse fast-paths Bouncer incident reports without LLM', async () => {
     const msg = [
       'You just caught a high brute_force threat.',
-      'Detail: Rate limit exceeded: 101 req/min from ::ffff:192.168.1.232.',
+      'Detail: Rate limit exceeded: 101 req/min from ::ffff:192.168.50.20.',
       'When you confronted them: they held their ground — threat is still active, keep your eyes open.',
       'Countermeasure you set up: added a 3-strike lockout on that door and flagged the access logs.',
     ].join(' ');

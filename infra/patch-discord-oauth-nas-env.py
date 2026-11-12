@@ -9,6 +9,7 @@ Only touches these two keys. Never prints their values.
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import base64
 import os
 import re
@@ -19,7 +20,7 @@ import paramiko
 ROOT = Path(__file__).resolve().parent.parent
 LOCAL_ENV = ROOT / "denizen" / ".env"
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = None  # loaded below from infra/.env
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 ENV_PATH = "/volume1/docker/denizen-server/.env.production"

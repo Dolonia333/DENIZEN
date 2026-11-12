@@ -10,6 +10,7 @@ Usage:
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import argparse
 import json
 import os
@@ -27,7 +28,7 @@ INFRA = Path(__file__).resolve().parent
 ROOT = INFRA.parent
 TOKEN_FILE = ROOT / ".mcp-token.local.json"
 LOCAL_QUEUE = ROOT / "denizen" / "data" / "grok-consult-queue.jsonl"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 BASE = os.environ.get("DENIZEN_MCP_BASE", f"http://{HOST}:8888").rstrip("/")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 

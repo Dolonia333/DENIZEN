@@ -3,7 +3,11 @@
 // Used by all job-apply skills for data persistence.
 
 const BRIDGE_URL = (process.env.SUPABASE_BRIDGE_URL || "http://127.0.0.1:18790").replace(/\/$/, "");
-const AGENT_TOKEN = process.env.AGENT_TOKEN || "rvJ4Odm7EYmHOxbEtO6dwUIQLv55aYybAyU3uZw6880";
+const AGENT_TOKEN = process.env.AGENT_TOKEN || "";
+function requireAgentToken() {
+  if (!AGENT_TOKEN) throw new Error("AGENT_TOKEN env var is not set");
+  return AGENT_TOKEN;
+}
 
 async function bridgeRequest(endpoint, body, maxRetries = 3) {
   let lastError;
@@ -12,7 +16,7 @@ async function bridgeRequest(endpoint, body, maxRetries = 3) {
       const res = await fetch(`${BRIDGE_URL}${endpoint}`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${AGENT_TOKEN}`,
+          "Authorization": `Bearer ${requireAgentToken()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
@@ -197,7 +201,7 @@ export async function setCredentials(site, email, password) {
 if (process.argv[2] === "--test") {
   try {
     const health = await fetch(`${BRIDGE_URL}/health`, {
-      headers: { "Authorization": `Bearer ${AGENT_TOKEN}` },
+      headers: { "Authorization": `Bearer ${requireAgentToken()}` },
     });
     console.log(JSON.stringify({
       success: true,

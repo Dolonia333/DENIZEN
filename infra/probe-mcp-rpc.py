@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+from hostcfg import get_host
 import load_infra_env  # noqa: F401
 import json
 import os
 import urllib.request
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = "/usr/local/bin/docker"
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """One-file hotfix: denizen-npc-mcp-gateway.js actor_type fix."""
+from hostcfg import get_host
 import os
 import sys
 from pathlib import Path
@@ -8,7 +9,7 @@ import load_infra_env  # noqa: F401
 import paramiko
 
 ROOT = Path(__file__).resolve().parent.parent
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 REMOTE = "/volume1/docker/denizen-server/hotfix-denizen-npc-mcp-gateway.js"

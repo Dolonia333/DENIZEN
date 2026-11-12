@@ -14,18 +14,18 @@ describe('lm-studio-router', () => {
 
   it('remote-only mode skips localhost host bootstrap', () => {
     delete process.env.LM_STUDIO_URL;
-    process.env.LM_STUDIO_REMOTE_URLS = 'http://100.71.54.109:1234';
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://100.64.0.10:1234';
     router.registerBootstrap();
     const nodes = router.listNodes();
     assert.equal(nodes.length, 1);
-    assert.equal(nodes[0].url, 'http://100.71.54.109:1234');
+    assert.equal(nodes[0].url, 'http://100.64.0.10:1234');
     assert.equal(router.isRemoteOnlyMode(), true);
-    assert.equal(router.defaultHostUrl(), 'http://100.71.54.109:1234');
+    assert.equal(router.defaultHostUrl(), 'http://100.64.0.10:1234');
   });
 
   it('remote-only mode excludes loopback nodes from selection', () => {
     delete process.env.LM_STUDIO_URL;
-    process.env.LM_STUDIO_REMOTE_URLS = 'http://100.71.54.109:1234';
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://100.64.0.10:1234';
     router.upsertNode({
       node_id: 'ghost-host',
       url: 'http://127.0.0.1:1234',
@@ -35,13 +35,13 @@ describe('lm-studio-router', () => {
     });
     router.upsertNode({
       node_id: 'remote',
-      url: 'http://100.71.54.109:1234',
+      url: 'http://100.64.0.10:1234',
       role: 'remote',
       reachable: true,
       last_probe_at: new Date().toISOString(),
     });
     const pick = router.selectEndpoint({ tier: 'main' });
-    assert.equal(pick.url, 'http://100.71.54.109:1234');
+    assert.equal(pick.url, 'http://100.64.0.10:1234');
   });
 
   it('unprobed nodes are not selected', () => {
@@ -64,12 +64,12 @@ describe('lm-studio-router', () => {
 
   it('registers bootstrap host and env remotes', () => {
     process.env.LM_STUDIO_URL = 'http://127.0.0.1:1234';
-    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.50:1234';
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.50.30:1234';
     router.registerBootstrap();
     const nodes = router.listNodes();
     assert.ok(nodes.length >= 2);
     assert.ok(nodes.some((n) => n.role === 'host'));
-    assert.ok(nodes.some((n) => n.url === 'http://192.168.1.50:1234'));
+    assert.ok(nodes.some((n) => n.url === 'http://192.168.50.30:1234'));
   });
 
   it('selectEndpoint prefers low inflight remote when queue is deep', () => {
@@ -84,7 +84,7 @@ describe('lm-studio-router', () => {
     });
     router.upsertNode({
       node_id: 'pc2',
-      url: 'http://192.168.1.50:1234',
+      url: 'http://192.168.50.30:1234',
       role: 'remote',
       reachable: true,
       inflight: 0,
@@ -93,13 +93,13 @@ describe('lm-studio-router', () => {
     });
 
     const pick = router.selectEndpoint({ tier: 'main', queueDepth: 8 });
-    assert.equal(pick.url, 'http://192.168.1.50:1234');
+    assert.equal(pick.url, 'http://192.168.50.30:1234');
   });
 
   it('resolveProviderConfig rewrites baseUrl and tracks node id', () => {
     router.upsertNode({
       node_id: 'pc2',
-      url: 'http://192.168.1.50:1234',
+      url: 'http://192.168.50.30:1234',
       role: 'remote',
       reachable: true,
       main_model: 'test/main',
@@ -113,7 +113,7 @@ describe('lm-studio-router', () => {
       apiKey: 'lm-studio',
     }, { tier: 'main', queueDepth: 0 });
 
-    assert.equal(cfg.baseUrl, 'http://192.168.1.50:1234');
+    assert.equal(cfg.baseUrl, 'http://192.168.50.30:1234');
     assert.equal(cfg._routerNodeId, 'pc2');
     assert.equal(cfg.model, 'test/main');
   });
@@ -141,7 +141,7 @@ describe('lm-studio-router', () => {
 
   it('ingestFromMachine prefers LAN probe URL over Tailscale advertise', () => {
     const prev = process.env.LM_STUDIO_REMOTE_URLS;
-    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.232:1234';
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.50.20:1234';
     try {
       const node = router.ingestFromMachine({
         machine_id: 'desktop-abc',
@@ -149,7 +149,7 @@ describe('lm-studio-router', () => {
         contributing: true,
         lm_studio: {
           url: 'http://127.0.0.1:1234',
-          advertise_url: 'http://100.71.54.109:1234',
+          advertise_url: 'http://100.64.0.10:1234',
           reachable: true,
           reachable_local: true,
           rpc_capable: true,
@@ -157,7 +157,7 @@ describe('lm-studio-router', () => {
           main_model: 'mistral/main',
         },
       });
-      assert.equal(node.url, 'http://192.168.1.232:1234');
+      assert.equal(node.url, 'http://192.168.50.20:1234');
     } finally {
       if (prev === undefined) delete process.env.LM_STUDIO_REMOTE_URLS;
       else process.env.LM_STUDIO_REMOTE_URLS = prev;

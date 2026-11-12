@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Install the master->NAS auto-deploy loop (GitOps-lite, pull-based).
 
-What it does on the NAS (192.168.1.237):
+What it does on the NAS (<NAS_IP>):
   1. Verifies /volume1/docker/denizen-server/.env.production and
      docker-compose.yml exist (aborts if not — never creates env).
   2. Creates /volume1/docker/denizen-repo for the git clone.
@@ -26,6 +26,7 @@ made it into a commit.
 """
 
 from __future__ import annotations
+from hostcfg import get_host
 import os
 import sys
 import time
@@ -33,7 +34,7 @@ import time
 import load_infra_env  # noqa: F401
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 USER = os.environ.get("SYNO_USER", "admin")
 PW = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

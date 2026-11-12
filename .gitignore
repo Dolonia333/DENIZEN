@@ -164,3 +164,5 @@ denizen-local-office.png
 .claude/scheduled_tasks.lock
 denizen/data/lesson-cite-events.jsonl
 denizen/discord-map/baked/_preview.png
+infra/hosts.local
+hosts.local

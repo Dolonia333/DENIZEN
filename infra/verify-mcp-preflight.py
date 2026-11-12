@@ -2,6 +2,7 @@
 """Pre-flight MCP: initialize + tools/list against LAN or public URL."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import subprocess
@@ -14,7 +15,7 @@ REPO = INFRA.parent
 sys.path.insert(0, str(INFRA))
 import load_infra_env  # noqa: F401
 
-BASE = os.environ.get("DENIZEN_MCP_BASE", f"http://{os.environ.get('SYNO_HOST', '192.168.1.237')}:8888")
+BASE = os.environ.get("DENIZEN_MCP_BASE", f"http://{get_host('SYNO_HOST')}:8888")
 NPC_KEY = sys.argv[1] if len(sys.argv) > 1 else "grok"
 TOKEN_FILES = {
     "grok": REPO / ".mcp-token.local.json",

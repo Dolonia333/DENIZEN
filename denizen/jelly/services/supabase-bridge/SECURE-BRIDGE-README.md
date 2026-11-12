@@ -12,14 +12,14 @@ secure-bridge.py (127.0.0.1:18790)
   |  validates: token, table whitelist, JSON schema
   |  translates: PostgREST query params
   v
-Supabase PostgREST (192.168.1.237:8000/rest/v1/...)
+Supabase PostgREST (<NAS_IP>:8000/rest/v1/...)
 ```
 
 ## Quick Start
 
 ### 1. Run the SQL schema
 
-Open your Supabase dashboard at `http://192.168.1.237:8000`, go to the SQL Editor, and paste the contents of `rfp-schema-secure.sql`. Click Run.
+Open your Supabase dashboard at `http://<NAS_IP>:8000`, go to the SQL Editor, and paste the contents of `rfp-schema-secure.sql`. Click Run.
 
 This creates three tables: `documents`, `key_value`, `logs` with RLS enabled.
 
@@ -148,7 +148,7 @@ python secure-bridge.py --cli delete documents '{"id":{"eq":"uuid"}}'
 
 **"AGENT_TOKEN is not set"** — Create `.env.secure` from the template and fill in all required values.
 
-**"Supabase not reachable"** — Check that Supabase is running at the configured URL. Try `curl http://192.168.1.237:8000/rest/v1/` manually.
+**"Supabase not reachable"** — Check that Supabase is running at the configured URL. Try `curl http://<NAS_IP>:8000/rest/v1/` manually.
 
 **403 "Table not allowed"** — The table isn't in `ALLOWED_TABLES`. Edit `.env.secure` to add it.
 

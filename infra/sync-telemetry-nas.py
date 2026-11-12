@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -14,7 +15,7 @@ import paramiko
 ROOT = Path(__file__).resolve().parents[1]
 LOCAL_TELEMETRY = ROOT / "denizen" / "data" / "grok-telemetry-latest.json"
 LOCAL_TELEMETRY_JSONL = ROOT / "denizen" / "data" / "llm-telemetry.jsonl"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 REMOTE_DIR = os.environ.get("SYNO_DENIZEN_DIR", "/volume1/docker/denizen-server")

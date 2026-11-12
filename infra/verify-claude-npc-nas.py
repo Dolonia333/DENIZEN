@@ -2,6 +2,7 @@
 """Verify Claude NPC is live on NAS — DB row, assets, MCP, roster."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -15,7 +16,7 @@ sys.path.insert(0, str(INFRA))
 from mcp_http import mcp_rpc  # noqa: E402
 
 ROOT = INFRA.parent
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 PUBLIC = os.environ.get("DENIZEN_MCP_PUBLIC", "https://denizen.dolonia.cloud").rstrip("/")

@@ -18,6 +18,6 @@ echo.
 echo   winget install --id Tailscale.Tailscale --accept-package-agreements
 echo   "C:\Program Files\Tailscale\tailscale.exe" login
 echo   "C:\Program Files\Tailscale\tailscale.exe" up
-echo   "C:\Program Files\Tailscale\tailscale.exe" ping 100.110.205.49
+echo   "C:\Program Files\Tailscale\tailscale.exe" ping <KALI_TAILSCALE_IP>
 echo.
 pause

@@ -53,7 +53,7 @@ This runs: migrations → `provision-nas-server.py` → `deploy-denizen-to-nas.p
 **Manual cutover (one time):**
 
 1. **Cloudflare Zero Trust** → Tunnels → your NAS tunnel → add/update hostname:
-   - `denizen.dolonia.cloud` → `http://192.168.1.237:8080`
+   - `denizen.dolonia.cloud` → `http://<NAS_IP>:8080`
 2. **Stop dolonia Denizen** so you don't run two primaries (disable watchdog `:8081` restart or stop that process).
 3. Verify:
    ```powershell
@@ -64,7 +64,7 @@ This runs: migrations → `provision-nas-server.py` → `deploy-denizen-to-nas.p
 **dolonia after cutover:** stays in the mesh as GPU worker — set `LM_STUDIO_URL` on dolonia and add its Tailscale/LAN URL to NAS `.env`:
 
 ```env
-LM_STUDIO_REMOTE_URLS=http://100.71.54.109:1234
+LM_STUDIO_REMOTE_URLS=http://<HOME_SERVER_TAILSCALE_IP>:1234
 LM_STUDIO_ROUTER=true
 ```
 
@@ -92,7 +92,7 @@ flowchart LR
 | Component | Primary (NAS) | Standby (dolonia) |
 |-----------|---------------|-------------------|
 | `DENIZEN_SERVER_ROLE` | `primary` | `standby` |
-| `DENIZEN_SERVER_ID` | `nas-192.168.1.237` | `dolonia-100.71.54.109` |
+| `DENIZEN_SERVER_ID` | `nas-<NAS_IP>` | `dolonia-<HOME_SERVER_TAILSCALE_IP>` |
 | Supabase | `http://127.0.0.1:8000` | `https://supabase.dolonia.cloud` |
 | LM Studio | via `LM_STUDIO_REMOTE_URLS` | local `:1234` |
 
@@ -127,7 +127,7 @@ For 100 users, the bottleneck is usually **LLM inference**, not static pages.
 1. Install LM Studio; listen on `0.0.0.0:1234`.
 2. Either add to NAS `.env`:
    ```env
-   LM_STUDIO_REMOTE_URLS=http://100.71.54.109:1234,http://100.110.205.49:1234
+   LM_STUDIO_REMOTE_URLS=http://<HOME_SERVER_TAILSCALE_IP>:1234,http://<KALI_TAILSCALE_IP>:1234
    ```
 3. Or run fleet agent on that machine:
    ```bash

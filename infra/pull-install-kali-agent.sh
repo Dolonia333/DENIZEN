@@ -1,12 +1,12 @@
 #!/bin/bash
 # Run ON Kali (hp81081d) — pull compute agent bundle from Denizen host over Tailscale/LAN.
 # Usage:
-#   export DENIZEN_PULL_URL=http://100.71.54.109:8081
+#   export DENIZEN_PULL_URL=http://<HOME_SERVER_TAILSCALE_IP>:8081
 #   export DENIZEN_FLEET_AGENT_TOKEN=<from denizen/.env>
 #   bash pull-install-kali-agent.sh
 
 set -euo pipefail
-DENIZEN_PULL_URL="${DENIZEN_PULL_URL:-http://100.71.54.109:8081}"
+DENIZEN_PULL_URL="${DENIZEN_PULL_URL:?Set DENIZEN_PULL_URL (e.g. http://<HOME_SERVER_TAILSCALE_IP>:8081)}"
 TOKEN="${DENIZEN_FLEET_AGENT_TOKEN:-}"
 AGENT_ROOT="${HOME}/denizen-agent"
 MACHINE_ID="${DENIZEN_MACHINE_ID:-hp81081d}"

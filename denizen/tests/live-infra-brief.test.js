@@ -19,12 +19,12 @@ describe('live-infra-brief', () => {
         ok: true,
         issues: [],
         sections: {
-          lm_studio: { reachable: true, url: 'http://192.168.1.232:1234' },
+          lm_studio: { reachable: true, url: 'http://192.168.50.20:1234' },
           mesh: { fleet_nodes: 2, queue_pending: 0 },
         },
       },
     });
-    assert.match(text, /reachable \(http:\/\/192\.168\.1\.232:1234\)/);
+    assert.match(text, /reachable \(http:\/\/192\.168\.50\.20:1234\)/);
     assert.match(text, /direct Supabase PostgREST/);
     assert.match(text, /2 fleet node/);
   });

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import argparse
 import os
 import sys
@@ -33,7 +34,7 @@ def parse_env_content(text: str) -> dict[str, str]:
 
 
 def ssh_fetch_supabase_keys() -> dict[str, str]:
-    host = os.environ.get("SYNO_HOST", "192.168.1.237")
+    host = get_host("SYNO_HOST")
     user = os.environ.get("SYNO_USER", "admin")
     password = os.environ.get("SYNO_SSH_PASSWORD", "")
     if not password:

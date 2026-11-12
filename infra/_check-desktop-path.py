@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+from hostcfg import get_host
 import os, sys
 from pathlib import Path
 INFRA = Path(__file__).resolve().parent
 sys.path.insert(0, str(INFRA))
 import load_infra_env
 import paramiko
-HOST=os.environ.get('SYNO_HOST','192.168.1.237'); PWD=os.environ['SYNO_SSH_PASSWORD']
+HOST=get_host("SYNO_HOST"); PWD=os.environ['SYNO_SSH_PASSWORD']
 DOCKER=os.environ.get('SYNO_DOCKER','/usr/local/bin/docker')
 client=paramiko.SSHClient(); client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect(HOST, username='admin', password=PWD, look_for_keys=False, allow_agent=False)

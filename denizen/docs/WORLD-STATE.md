@@ -354,7 +354,7 @@ Plus, if any peers messaged the NPC via the bus since the last cycle:
 ```markdown
 ## Direct Messages To You (since last think)
 - from Abby: PR ready for review
-- from Bouncer: scan_probe from 192.168.1.50
+- from Bouncer: scan_probe from <NAS_IP>
 ```
 
 This is what gives NPCs **live awareness** — they no longer plan from a

@@ -17,7 +17,7 @@ Runtime lives on the **Synology NAS**; source of truth for product code is **Git
 | **denizen-n8n** | NAS Docker | host `5679` · https://n8n.dolonia.cloud |
 | **supabase-db** | NAS Docker | Postgres for CRM + Dolonia tables |
 | **denizen-lavalink** | NAS Docker | music |
-| **LM Studio** | GPU host | `192.168.1.232:1234` |
+| **LM Studio** | GPU host | `<PC_LAN_IP>:1234` |
 | **Discord bot** | Sidecar inside denizen-server | when `DISCORD_BOT_TOKEN` set |
 
 Default NAS paths:
@@ -83,7 +83,7 @@ Default NAS paths:
 
 - Gmail credential: **Gmail account** (zionvanzandt@gmail.com)
 - Filter: `from:(vzion253@gmail.com OR angelavanzandt1921@gmail.com)`
-- POST → `http://192.168.1.237:8888/api/crm/email-inbound`
+- POST → `http://<NAS_IP>:8888/api/crm/email-inbound`
 - Workflow JSON in repo: `data/email-workflows/angela-gmail-to-crm.n8n.json`
 
 **Secondary path (optional):** Denizen polls Gmail directly
@@ -100,10 +100,10 @@ Doc: `docs/EMAIL_INTEGRATION.md`
 
 ```bash
 # From NAS or LAN
-curl -sS http://192.168.1.237:8888/api/health | head -c 400
-curl -sS http://192.168.1.237:8888/api/crm/health
-curl -sS http://192.168.1.237:8888/api/dolonia/conversation-quality
-curl -sS http://192.168.1.237:8888/api/crm/email-inbound/status
+curl -sS http://<NAS_IP>:8888/api/health | head -c 400
+curl -sS http://<NAS_IP>:8888/api/crm/health
+curl -sS http://<NAS_IP>:8888/api/dolonia/conversation-quality
+curl -sS http://<NAS_IP>:8888/api/crm/email-inbound/status
 ```
 
 Discord: `,sense` · CRM UI for Dolo/zion · n8n Executions for Angela mail.
@@ -131,7 +131,7 @@ Requires `infra/.env` with `SYNO_HOST`, `SYNO_SSH_PASSWORD`, etc. (never commit)
 
 ```bash
 # Inference
-LM_STUDIO_REMOTE_URLS=http://192.168.1.232:1234
+LM_STUDIO_REMOTE_URLS=http://<PC_LAN_IP>:1234
 
 # Discord
 DISCORD_BOT_TOKEN=...

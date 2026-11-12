@@ -4,7 +4,10 @@
 
 $ErrorActionPreference = "SilentlyContinue"
 
-$env:AGENT_TOKEN = "rvJ4Odm7EYmHOxbEtO6dwUIQLv55aYybAyU3uZw6880"
+if (-not $env:AGENT_TOKEN) {
+    Write-Error "AGENT_TOKEN is not set. Set it in the environment (user/system env var or a secret store) before running the watchdog."
+    exit 1
+}
 $GatewayDir = "C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw"
 $BridgeScript = "C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw\supabase-bridge\secure-bridge.py"
 $CloudflaredExe = "C:\Program Files (x86)\cloudflared\cloudflared.exe"

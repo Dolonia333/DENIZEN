@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import re
@@ -15,7 +16,7 @@ from urllib.parse import urlparse
 
 import load_infra_env  # noqa: F401
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PRIMARY_PORT = os.environ.get("SYNO_DENIZEN_PORT", "8888")
 FOLLOWER_PORT = os.environ.get("SYNO_DENIZEN_FOLLOWER_PORT", "8889")
 FOLLOWER_PORTS = [

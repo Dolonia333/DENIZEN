@@ -264,7 +264,7 @@ Only after P0–P3. From existing [GAP_CLOSURE_PLAN](GAP_CLOSURE_PLAN.md) / [MUL
 
 ## 7. Hardware policy (fixed constraints)
 
-**Box:** i9-14900KF, 64GB RAM, RTX 4070 Ti SUPER 16GB, water cooled, LM Studio @ 192.168.1.232.
+**Box:** i9-14900KF, 64GB RAM, RTX 4070 Ti SUPER 16GB, water cooled, LM Studio @ <PC_LAN_IP>.
 
 | Mode | Load | Use |
 |------|------|-----|

@@ -2,6 +2,7 @@
 """Set GROK_CLI_BRIDGE_* on NAS denizen-server .env and restart (no force-recreate)."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import base64
 import os
 import re
@@ -14,7 +15,7 @@ sys.path.insert(0, str(INFRA))
 import load_infra_env  # noqa: F401
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 # NOTE: docker-compose.yml for denizen-server declares env_file: .env.production,
@@ -25,7 +26,7 @@ DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 ENV_PATH = "/volume1/docker/denizen-server/.env.production"
 TOKEN_FILE = INFRA / "grok-bridge-token.txt"
 
-BRIDGE_URL = os.environ.get("GROK_CLI_BRIDGE_URL", "http://100.71.54.109:9876").strip()
+BRIDGE_URL = (os.environ.get("GROK_CLI_BRIDGE_URL") or "http://" + get_host("DENIZEN_HOME_HOST") + ":9876").strip()
 BRIDGE_TOKEN = os.environ.get("GROK_CLI_BRIDGE_TOKEN", "").strip()
 
 

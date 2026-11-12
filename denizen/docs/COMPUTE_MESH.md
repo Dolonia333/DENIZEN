@@ -54,7 +54,7 @@ Denizen uses **two different Kali contexts**. Do not conflate them when debuggin
 | **Purpose** | Bouncer NPC security investigations | Compute mesh headless worker |
 | **How it runs** | `wsl -d kali-linux -- bash -c "…"` from `server.js` / `linux-agent.js` | Native Linux on dedicated hardware |
 | **Triggered by** | Player asks Bouncer to run nmap, wireshark/tcpdump, etc.; visible terminal via `_openBouncerTerminal()` | `nas-compute-agent.js` polling `POST /api/compute/node/claim` |
-| **Network** | Loopback / Windows host networking through WSL | Tailscale IP `100.71.54.109:8081` → dolonia |
+| **Network** | Loopback / Windows host networking through WSL | Tailscale IP `<HOME_SERVER_TAILSCALE_IP>:8081` → dolonia |
 | **Machine id** | N/A (ephemeral WSL instance) | `DENIZEN_MACHINE_ID=hp81081d` |
 | **Install path** | Commands only — no persistent agent | `~/denizen-agent/` via `infra/pull-install-kali-agent.sh` |
 | **Docs** | [BOUNCER.md](BOUNCER.md) — investigations, relay, patrol | This doc — fleet nodes, mesh smokes |
@@ -68,8 +68,8 @@ Mesh job type **`bouncer_patrol`** (when `BOUNCER_MESH_PATROL=1`) runs TCP/healt
 | Node | Role | Agent | Typical URL |
 |------|------|-------|-------------|
 | **dolonia** | Host — LM Studio, primary inference | Denizen server + optional Desktop | `http://127.0.0.1:8081` |
-| **NAS** | Headless worker + Supabase host | `nas-compute-agent.js` | `http://192.168.1.232:8081` (LAN) |
-| **Kali** (`hp81081d`) | Headless worker | `nas-compute-agent.js` | `http://100.71.54.109:8081` (Tailscale) |
+| **NAS** | Headless worker + Supabase host | `nas-compute-agent.js` | `http://<PC_LAN_IP>:8081` (LAN) |
+| **Kali** (`hp81081d`) | Headless worker | `nas-compute-agent.js` | `http://<HOME_SERVER_TAILSCALE_IP>:8081` (Tailscale) |
 | **Desktop** | Contributor Electron app | `compute-worker.js` | Wizard-configured |
 
 Remote agents must **not** use `127.0.0.1` or LAN-only URLs unless they are on the same network segment.
@@ -178,7 +178,7 @@ Written to `~/denizen-agent/.env` (Kali) or `/volume1/docker/denizen-agent/.env`
 | `DENIZEN_URL` | **Must be reachable from the agent machine** (Tailscale IP for Kali) |
 | `DENIZEN_IDENTITY_ID` | Fleet identity |
 | `DENIZEN_FLEET_AGENT_TOKEN` | Metrics authentication |
-| `DENIZEN_MACHINE_ID` | Stable machine id (`hp81081d`, `nas-192.168.1.237`, …) |
+| `DENIZEN_MACHINE_ID` | Stable machine id (`hp81081d`, `nas-<NAS_IP>`, …) |
 | `DENIZEN_AGENT_ROOT` | Install directory (use `$HOME/denizen-agent`, not `~/…` in shell exports) |
 | `DENIZEN_NODE_ID` / `DENIZEN_NODE_TOKEN` | Optional; auto-registered and persisted in `.node-credentials.json` |
 
@@ -203,7 +203,7 @@ Provisions NAS + Kali bundles, applies migrations, deploys NAS agent, runs smoke
 ### NAS (Synology)
 
 ```powershell
-# infra/.env: SYNO_SSH_PASSWORD, SYNO_HOST=192.168.1.237
+# infra/.env: SYNO_SSH_PASSWORD, SYNO_HOST=<NAS_IP>
 py infra/provision-nas-agent.py
 py infra/deploy-nas-agent.py
 py infra/probe-nas-agent.py
@@ -215,20 +215,20 @@ On the Kali machine (`dolo@hp81081d`):
 
 ```bash
 export DENIZEN_FLEET_AGENT_TOKEN='<from denizen/.env>'
-export DENIZEN_PULL_URL='http://100.71.54.109:8081'   # dolonia Tailscale IP
+export DENIZEN_PULL_URL='http://<HOME_SERVER_TAILSCALE_IP>:8081'   # dolonia Tailscale IP
 bash infra/pull-install-kali-agent.sh
 ```
 
 Or manual steps — see [infra/README.md](../../infra/README.md) § Kali.
 
-### Denizen Desktop (GPU worker on 192.168.1.232)
+### Denizen Desktop (GPU worker on <PC_LAN_IP>)
 
 The missing piece for 0 fleet nodes is running the full Denizen Desktop app on the GPU PC (.232) and enabling it as a City Power contributor.
 
 **Exact steps:**
 1. On the .232 machine (the one with LM Studio):
    - Ensure Denizen Desktop is installed (or build: `cd denizen/desktop && npm run build:win` then install the exe).
-   - Run the app and complete the initial setup wizard (pair to your Denizen server at 192.168.1.237:8888 or the public URL).
+   - Run the app and complete the initial setup wizard (pair to your Denizen server at <NAS_IP>:8888 or the public URL).
 2. Open the in-app phone (or desktop compute panel):
    - Go to **Compute** tab (or "City Power").
    - Set contribution **level** to "light" or "host".
@@ -316,11 +316,11 @@ Pull the latest bundle or use a build with `detectAgentRoot()` (June 2026+).
 `.env` has a loopback URL. Fix:
 
 ```bash
-sed -i 's|^DENIZEN_URL=.*|DENIZEN_URL=http://100.71.54.109:8081|' ~/denizen-agent/.env
-sed -i 's|^DENIZEN_LAN_URL=.*|DENIZEN_LAN_URL=http://100.71.54.109:8081|' ~/denizen-agent/.env
+sed -i 's|^DENIZEN_URL=.*|DENIZEN_URL=http://<HOME_SERVER_TAILSCALE_IP>:8081|' ~/denizen-agent/.env
+sed -i 's|^DENIZEN_LAN_URL=.*|DENIZEN_LAN_URL=http://<HOME_SERVER_TAILSCALE_IP>:8081|' ~/denizen-agent/.env
 ```
 
-Verify reachability: `curl -fsS http://100.71.54.109:8081/api/health | head -c 60`
+Verify reachability: `curl -fsS http://<HOME_SERVER_TAILSCALE_IP>:8081/api/health | head -c 60`
 
 ### Kali agent dies after reboot
 

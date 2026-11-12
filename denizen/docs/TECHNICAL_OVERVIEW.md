@@ -267,7 +267,7 @@ Full column-level reference: [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md).
   `localhost:<port>`. Config: `~/.cloudflared/config.yml` **or** a token-based
   Windows service (routing then lives in the Zero Trust dashboard, not the file).
 - **Mesh networking**: Tailscale (`100.x` addresses) links station ↔ laptop ↔ NAS.
-- **Data**: cloud Supabase + optional NAS Supabase (`192.168.1.237`).
+- **Data**: cloud Supabase + optional NAS Supabase (`<NAS_IP>`).
 - **Key env vars**: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `DENIZEN_PUBLIC_URL`,
   `LM_STUDIO_URL`, `DENIZEN_TEAM_CODE`, `DENIZEN_CEO_IDENTITY_EMAIL`,
   `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`, `RESEND_WEBHOOK_SECRET`,

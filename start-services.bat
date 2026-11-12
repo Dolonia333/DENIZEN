@@ -3,7 +3,10 @@
 :: Run this script to start both services persistently.
 :: They will keep running even after this window closes.
 
-set AGENT_TOKEN=rvJ4Odm7EYmHOxbEtO6dwUIQLv55aYybAyU3uZw6880
+if "%AGENT_TOKEN%"=="" (
+    echo ERROR: AGENT_TOKEN is not set. Set it in your environment first.
+    exit /b 1
+)
 
 echo Starting Supabase Bridge on port 18790...
 start "Supabase Bridge" /min cmd /c "cd /d C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw\supabase-bridge && python secure-bridge.py"

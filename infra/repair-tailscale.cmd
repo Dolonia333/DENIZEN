@@ -29,7 +29,7 @@ echo ==^> This IP:
 "C:\Program Files\Tailscale\tailscale.exe" ip -4
 echo.
 echo ==^> Ping Kali:
-"C:\Program Files\Tailscale\tailscale.exe" ping 100.110.205.49
+"C:\Program Files\Tailscale\tailscale.exe" ping <KALI_TAILSCALE_IP>
 
 echo.
 echo If still NoState: REBOOT, then run reinstall-tailscale.cmd

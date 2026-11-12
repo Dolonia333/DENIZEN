@@ -2,13 +2,14 @@
 """Minimal NAS hotfix: MCP presence + roster collapse (cwr_2d111c46eafb79b4).
 
 Copies only the three runtime files into denizen-server and restarts.
-Requires SYNO_SSH_PASSWORD (infra/.env). Host defaults to 192.168.1.237.
+Requires SYNO_SSH_PASSWORD (infra/.env). Host comes from SYNO_HOST (env or infra/hosts.local).
 
   py infra/hotfix-mcp-presence-nas.py
 """
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import load_infra_env  # noqa: F401
 
 import os
@@ -21,7 +22,7 @@ import paramiko
 
 ROOT = Path(__file__).resolve().parent.parent
 DENIZEN = ROOT / "denizen"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 USER = os.environ.get("SYNO_USER", "admin")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

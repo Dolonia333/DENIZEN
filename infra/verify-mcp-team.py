@@ -2,6 +2,7 @@
 """Smoke test Team MCP — works via Cloudflare public URL or NAS LAN."""
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -15,7 +16,7 @@ from mcp_http import mcp_rpc  # noqa: E402
 
 ROOT = INFRA.parent
 TOKEN_FILE = ROOT / ".mcp-team-token.local.json"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PUBLIC = os.environ.get("DENIZEN_MCP_PUBLIC", "https://denizen.dolonia.cloud").rstrip("/")
 BASE = os.environ.get("DENIZEN_MCP_BASE", PUBLIC).rstrip("/")
 

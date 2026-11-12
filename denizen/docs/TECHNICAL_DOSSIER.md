@@ -1221,9 +1221,9 @@ commands inside Kali with a 20-second timeout, and a real terminal window opens 
 directive for Dan.
 
 > **Two distinct Kali contexts — do not conflate them.** The **security** Kali is a **WSL distro
-> (`kali-linux`) inside the Windows dev PC** (dolonia, LAN `192.168.1.232`, Tailscale
-> `100.71.54.109`); scans do not run on the physical laptop. The **compute** Kali is the physical
-> laptop `hp81081d` (LAN `192.168.1.240`, Tailscale `100.110.205.49`), a headless mesh worker. A third
+> (`kali-linux`) inside the Windows dev PC** (dolonia, LAN `<PC_LAN_IP>`, Tailscale
+> `<HOME_SERVER_TAILSCALE_IP>`); scans do not run on the physical laptop. The **compute** Kali is the physical
+> laptop `hp81081d` (LAN `<KALI_LAN_IP>`, Tailscale `<KALI_TAILSCALE_IP>`), a headless mesh worker. A third
 > thing also called bouncer is the mesh job type `bouncer_patrol`, which is TCP/health probing from any
 > fleet node.
 
@@ -1390,7 +1390,7 @@ successes on the live node.
 
 ⚠ **Correction: there are 3 shipped clients and 1 partial, not 4.** `VisionClaw/` is tracked (29 files,
 Kotlin) but contains **zero** references to Denizen, compute, mesh, or claim. It is a camera/audio
-WebSocket streamer hardcoded to `ws://192.168.1.232:18791` — and **18791 is OpenClaw's browser-control
+WebSocket streamer hardcoded to `ws://<PC_LAN_IP>:18791` — and **18791 is OpenClaw's browser-control
 port**, with `openclaw/` gitignored and zero tracked files. `MONOREPO.md:62` calling it a "Denizen
 relay" is wrong. Do not list Android as a Denizen client.
 
@@ -1879,16 +1879,16 @@ Authoritative for production: `denizen/docker-compose.production.yml`, `network_
 
 | Service | Host / role | Port | How it starts | Status |
 |---|---|---|---|---|
-| **denizen-server** | NAS `192.168.1.237`, Docker, host network | **8888** | `docker compose up -d` | Live primary |
+| **denizen-server** | NAS `<NAS_IP>`, Docker, host network | **8888** | `docker compose up -d` | Live primary |
 | denizen-follower / -b | NAS, same host | 8889 / 8890 | `docker run -e DENIZEN_SERVER_ROLE=follower` | Conditional (Redis pub/sub) |
 | **Discord bot** | **child process inside denizen-server** | 5180 internal | `spawn(...discord-bot/index.js)` | Live when token set — **not a container** |
 | supabase-db | NAS Docker | 5432 / Kong 8000 | Supabase self-host compose | Live |
 | denizen-lavalink | NAS Docker | 2333 | `_setup_lavalink_nas.py` | Live |
 | denizen-n8n | NAS Docker | 5679 → `n8n.dolonia.cloud` | `provision-n8n-tunnel.py` | Live (Angela Gmail → CRM) |
 | denizen-redis | NAS Docker | 6379, **bound 127.0.0.1** | `provision-redis-nas.py` | Conditional |
-| **LM Studio** | dolonia `192.168.1.232` | 1234 | **Manual GUI launch** | Live — **single point of failure** |
+| **LM Studio** | dolonia `<PC_LAN_IP>` | 1234 | **Manual GUI launch** | Live — **single point of failure** |
 | **Bouncer investigation agent** | dolonia (WSL `kali-linux`) | **8890, bound 0.0.0.0** | Windows Task, trigger **AtLogOn** | **Dies on logoff** |
-| Kali compute agent | `hp81081d` `192.168.1.240` | — | Hand-added `@reboot` crontab | Fragile — no systemd unit |
+| Kali compute agent | `hp81081d` `<KALI_LAN_IP>` | — | Hand-added `@reboot` crontab | Fragile — no systemd unit |
 | Desktop mesh node | dolonia (Electron) | 8081 | Windows Task, AtLogOn | **Broken build** (Part I §16) |
 | cloudflared | NAS Docker | — | Pre-existing tunnel | **The only ingress** |
 | Tailscale | dolonia + Kali | — | OS service | **The NAS is not on the tailnet** |

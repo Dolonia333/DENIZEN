@@ -10,13 +10,14 @@ Run: py -3.12 infra/setup-nas-db-backup.py
 """
 
 from __future__ import annotations
+from hostcfg import get_host
 import os
 import time
 
 import load_infra_env  # noqa: F401
 import paramiko
 
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 USER = os.environ.get("SYNO_USER", "admin")
 PW = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

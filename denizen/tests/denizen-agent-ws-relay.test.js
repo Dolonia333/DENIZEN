@@ -27,10 +27,10 @@ describe('denizen-agent-ws-relay', () => {
   });
 
   it('buildRuntimePublicConfig keeps LAN spectate off public auto-route', () => {
-    process.env.DENIZEN_SPECTATE_WS_URL = 'ws://192.168.1.237:8889/agent-ws';
+    process.env.DENIZEN_SPECTATE_WS_URL = 'ws://192.168.50.10:8889/agent-ws';
     const cfg = relay.buildRuntimePublicConfig();
     assert.equal(cfg.spectateEnabled, false);
-    assert.equal(cfg.spectateLanUrl, 'ws://192.168.1.237:8889/agent-ws');
+    assert.equal(cfg.spectateLanUrl, 'ws://192.168.50.10:8889/agent-ws');
     delete process.env.DENIZEN_SPECTATE_WS_URL;
   });
 

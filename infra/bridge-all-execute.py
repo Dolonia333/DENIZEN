@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from hostcfg import get_host
 import json
 import os
 import subprocess
@@ -19,7 +20,7 @@ import load_infra_env  # noqa: F401
 INFRA = Path(__file__).resolve().parent
 ROOT = INFRA.parent
 REPORT = ROOT / "denizen" / "reports" / "capture-bridge-report.json"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 BASE = os.environ.get("DENIZEN_MCP_BASE", f"http://{HOST}:8888").rstrip("/")
 NAS_URL = os.environ.get("DENIZEN_NAS_URL", BASE).rstrip("/")
 NPC = os.environ.get("DENIZEN_MCP_NPC", "grok")

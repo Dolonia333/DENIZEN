@@ -87,7 +87,7 @@ prepended to the system prompt:
 ```markdown
 ## Direct Messages To You (since last think)
 - from Abby: Review the auth PR
-- from Bouncer: scan_probe from 192.168.1.50 — heads up
+- from Bouncer: scan_probe from <NAS_IP> — heads up
 ```
 
 The NPC then reasons about those messages alongside the rest of its

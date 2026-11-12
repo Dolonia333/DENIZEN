@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from hostcfg import get_host
 import os, subprocess, paramiko
 
 tables = [
@@ -16,7 +17,7 @@ def dcount(t):
 
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect("192.168.1.237", username="admin", password=os.environ["SYNO_SSH_PASSWORD"], look_for_keys=False, allow_agent=False)
+c.connect(get_host("SYNO_HOST"), username="admin", password=os.environ["SYNO_SSH_PASSWORD"], look_for_keys=False, allow_agent=False)
 
 print(f"{'table':<30} {'desktop':>8} {'nas':>8}")
 ok = True

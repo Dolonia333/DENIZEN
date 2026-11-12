@@ -2,7 +2,7 @@
 
 **One page. Follow it exactly and the office never silently degrades.**
 
-Box: i9-14900KF · 64GB RAM · RTX 4070 Ti SUPER **16GB VRAM** · water-cooled · `http://192.168.1.232:1234`
+Box: i9-14900KF · 64GB RAM · RTX 4070 Ti SUPER **16GB VRAM** · water-cooled · `http://<PC_LAN_IP>:1234`
 
 Water cooling buys *sustained clocks* under multi-hour think loops. It does **not** buy VRAM — the model policy below is a hard rule.
 
@@ -22,7 +22,7 @@ Verified dual-load on 4070 Ti SUPER 16GB with those context caps.
 
 ### LM Studio settings checklist (Server tab)
 
-- [ ] **Serve on Local Network: ON** (Denizen NAS calls from 192.168.1.237)
+- [ ] **Serve on Local Network: ON** (Denizen NAS calls from <NAS_IP>)
 - [ ] Port **1234**
 - [ ] **Keep model loaded in memory: ON** for BOTH models (no TTL auto-unload)
 - [ ] **Context length: 12,288–16,384** on MAIN, ~8,192 on FAST — do not "max" the slider
@@ -32,7 +32,7 @@ Verified dual-load on 4070 Ti SUPER 16GB with those context caps.
 ### Env pins (denizen/.env + .env.production — must match what's loaded)
 
 ```
-LM_STUDIO_REMOTE_URLS=http://192.168.1.232:1234
+LM_STUDIO_REMOTE_URLS=http://<PC_LAN_IP>:1234
 LM_STUDIO_FAST_MODEL=google/gemma-4-e2b
 LM_STUDIO_MODEL=qwen/qwen3.6-27b
 LM_STUDIO_HEAVY_MODEL=qwen/qwen3.6-27b
@@ -55,7 +55,7 @@ Both modes degrade FAST-tier latency (everything queues on one model). The offic
 
 ## 3. Health verification (2 minutes)
 
-1. `curl http://192.168.1.232:1234/v1/models` → both model IDs listed
+1. `curl http://<PC_LAN_IP>:1234/v1/models` → both model IDs listed
 2. `https://denizen.dolonia.cloud/api/health` →
    - `issues` **does not** contain `main_model_unloaded`, `inference_unreachable`, or `director_offline`
    - `harness.harnessRate ≥ 0.95`

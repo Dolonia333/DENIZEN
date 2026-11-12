@@ -3,6 +3,7 @@
 Deploy CRM audit + switch Dolo/zion CRM to GovCon + promote Angela to admin.
 """
 from __future__ import annotations
+from hostcfg import get_host
 import json
 import os
 import sys
@@ -17,7 +18,7 @@ import load_infra_env  # noqa: F401
 import paramiko
 
 DENIZEN = INFRA.parent / "denizen"
-HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
+HOST = get_host("SYNO_HOST")
 PWD = os.environ.get("SYNO_SSH_PASSWORD", "")
 USER = os.environ.get("SYNO_USER", "admin")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")

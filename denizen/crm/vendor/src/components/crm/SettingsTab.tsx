@@ -531,7 +531,7 @@ export function SettingsTab({
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 6 }}>🔌 Outbound webhooks (n8n)</div>
           <p style={{ fontSize: 12, color: T.text3, marginBottom: 16, lineHeight: 1.5 }}>
             Denizen POSTs JSON to these URLs when events fire. In n8n, add a <strong>Webhook</strong> trigger node
-            (POST), copy its URL (e.g. <code style={{ fontSize: 11 }}>http://192.168.1.50:5678/webhook/deal-won</code> on your NAS),
+            (POST), copy its URL (e.g. <code style={{ fontSize: 11 }}>http://your-nas-host:5678/webhook/deal-won</code> on your NAS),
             and paste it here. The Denizen server must be able to reach your n8n host (same LAN is fine).
             Inbound leads still go to <code style={{ fontSize: 11 }}>POST /api/crm/intake</code>.
           </p>
@@ -539,14 +539,14 @@ export function SettingsTab({
           <input
             value={dealWonWebhook}
             onChange={(e) => setDealWonWebhook(e.target.value)}
-            placeholder="http://192.168.1.50:5678/webhook/deal-won"
+            placeholder="http://your-nas-host:5678/webhook/deal-won"
             style={{ ...S.input as React.CSSProperties, marginBottom: 12, width: "100%" }}
           />
           <label style={S.label as React.CSSProperties}>Contact added → n8n webhook URL</label>
           <input
             value={contactAddedWebhook}
             onChange={(e) => setContactAddedWebhook(e.target.value)}
-            placeholder="http://192.168.1.50:5678/webhook/contact-added"
+            placeholder="http://your-nas-host:5678/webhook/contact-added"
             style={{ ...S.input as React.CSSProperties, marginBottom: 16, width: "100%" }}
           />
           <button onClick={handleSaveWebhooks} style={{ ...S.btn as React.CSSProperties, background: webhooksSaved ? T.green : T.accent }}>

@@ -1,0 +1,27 @@
+title = "DENIZEN gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "denizen-internal-private-ip-in-code"
+description = "Hardcoded Tailscale/CGNAT address (100.64.0.0/10) outside test fixtures"
+regex = '''\b100\.(?:6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.\d{1,3}\.\d{1,3}\b'''
+tags = ["ip"]
+[rules.allowlist]
+paths = ['''(^|/)tests?/''', '''\.md$''']
+
+[[rules]]
+id = "denizen-brave-api-key"
+description = "Brave Search API key"
+regex = '''\bBSA[A-Za-z0-9_\-]{20,}\b'''
+tags = ["key", "brave"]
+
+[allowlist]
+description = "Global allowlist"
+paths = [
+  '''(^|/)node_modules/''',
+  '''package-lock\.json$''',
+  '''\.env\.example$''',
+  '''\.template$''',
+]

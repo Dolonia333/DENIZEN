@@ -163,7 +163,7 @@ perimeterPatrol()
 |------|-------|
 | Script | `denizen/scripts/bouncer-investigation-agent.js` |
 | Default port | `8890` (`BOUNCER_INVESTIGATION_PORT`) |
-| NAS env | `BOUNCER_INVESTIGATION_URL=http://192.168.1.232:8890` |
+| NAS env | `BOUNCER_INVESTIGATION_URL=http://<PC_LAN_IP>:8890` |
 | Auth | Optional `BOUNCER_INVESTIGATION_TOKEN` → `Authorization: Bearer` |
 | Health | `GET /api/health` → `{ ok, agent, wsl: true }` |
 | Windows task | `infra/setup-bouncer-scheduled-task.ps1` |
@@ -403,7 +403,7 @@ powershell -File infra/setup-bouncer-scheduled-task.ps1
 ```powershell
 $env:DENIZEN_URL = 'https://denizen.dolonia.cloud'
 $env:FOLLOWER_URL = 'https://spectate.dolonia.cloud'
-$env:BOUNCER_INVESTIGATION_URL = 'http://192.168.1.232:8890'
+$env:BOUNCER_INVESTIGATION_URL = 'http://<PC_LAN_IP>:8890'
 node denizen/scripts/smoke-bouncer-e2e.js
 ```
 

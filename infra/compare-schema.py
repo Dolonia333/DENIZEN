@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from hostcfg import get_host
 import os, subprocess, paramiko
 
 def desktop_cols(table):
@@ -9,7 +10,7 @@ def desktop_cols(table):
     return [x.strip() for x in out.splitlines() if x.strip()]
 
 c = paramiko.SSHClient(); c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect("192.168.1.237", username="admin", password=os.environ["SYNO_SSH_PASSWORD"], look_for_keys=False, allow_agent=False)
+c.connect(get_host("SYNO_HOST"), username="admin", password=os.environ["SYNO_SSH_PASSWORD"], look_for_keys=False, allow_agent=False)
 _, o, _ = c.exec_command(
     "/usr/local/bin/docker exec supabase-db psql -U postgres -d postgres -t -A -c "
     "\"SELECT table_name || '|' || column_name FROM information_schema.columns "
