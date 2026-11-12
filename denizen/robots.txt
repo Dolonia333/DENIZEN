@@ -1,0 +1,21 @@
+# DENIZEN — https://denizen.dolonia.cloud
+User-agent: *
+Allow: /
+Allow: /desktop/download.html
+Disallow: /api/
+Disallow: /office?login=
+Disallow: /admin
+Disallow: /crm
+Disallow: /llm-usage
+Disallow: /workflow-dashboard.html
+Disallow: /security
+Disallow: /mcp
+Disallow: /config/
+Disallow: /data/
+Disallow: /supabase/
+Disallow: /infra/
+Disallow: /tools/
+Disallow: /reports/
+Disallow: /*.md$
+
+Sitemap: https://denizen.dolonia.cloud/sitemap.xml
